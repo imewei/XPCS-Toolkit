@@ -72,14 +72,13 @@ repository = "https://github.com/imewei/XPCS-Toolkit.git"
 documentation = "https://github.com/imewei/XPCS-Toolkit/tree/master/docs"
 
 [tool.setuptools]
-package-dir = {"" = "src"}
 
 [tool.setuptools_scm]
 version_scheme = "post-release"
 local_scheme = "node-and-timestamp"
 
 [tool.setuptools.packages.find]
-where = ["src"]
+where = ["."]
 
 [tool.setuptools.package-data]
 "xpcs_toolkit" = ["configure/*.json", "ui/*.ui"]

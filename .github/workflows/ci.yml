@@ -56,7 +56,7 @@ jobs:
 
     - name: Type check with mypy
       run: |
-        mypy src/xpcs_toolkit --ignore-missing-imports
+        mypy xpcs_toolkit --ignore-missing-imports
       continue-on-error: true
 
     - name: Test with pytest
@@ -158,8 +158,8 @@ jobs:
 
     - name: Run bandit security scan
       run: |
-        bandit -r src/xpcs_toolkit -f json -o bandit-report.json || true
-        bandit -r src/xpcs_toolkit
+        bandit -r xpcs_toolkit -f json -o bandit-report.json || true
+        bandit -r xpcs_toolkit
 
     - name: Check dependencies for vulnerabilities
       run: |

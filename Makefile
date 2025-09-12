@@ -20,7 +20,7 @@
 # Python and package configuration
 PYTHON := python
 PACKAGE_NAME := xpcs_toolkit
-SRC_DIR := src/$(PACKAGE_NAME)
+SRC_DIR := $(PACKAGE_NAME)
 TESTS_DIR := tests
 DOCS_DIR := docs
 
