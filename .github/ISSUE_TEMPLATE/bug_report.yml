@@ -1,0 +1,98 @@
+name: 🐛 Bug Report
+description: Create a report to help us improve XPCS Toolkit
+title: "[BUG]: "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this bug report!
+        
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: A clear and concise description of the bug
+      placeholder: Tell us what you see!
+    validations:
+      required: true
+      
+  - type: textarea
+    id: expected-behavior
+    attributes:
+      label: Expected behavior
+      description: A clear and concise description of what you expected to happen
+    validations:
+      required: true
+      
+  - type: textarea  
+    id: steps-to-reproduce
+    attributes:
+      label: Steps to reproduce
+      description: Steps to reproduce the behavior
+      placeholder: |
+        1. Go to '...'
+        2. Click on '....'
+        3. Scroll down to '....'
+        4. See error
+    validations:
+      required: true
+
+  - type: textarea
+    id: data-info
+    attributes:
+      label: Data Information
+      description: Information about the XPCS dataset being analyzed
+      placeholder: |
+        - Dataset size:
+        - File format:
+        - Analysis type (multitau/twotime):
+        - Beamline source:
+    validations:
+      required: false
+
+  - type: dropdown
+    id: operating-system
+    attributes:
+      label: Operating System
+      options:
+        - Windows
+        - macOS
+        - Linux (Ubuntu)
+        - Linux (CentOS/RHEL)
+        - Linux (Other)
+    validations:
+      required: true
+      
+  - type: input
+    id: python-version
+    attributes:
+      label: Python Version
+      placeholder: "3.12.0"
+    validations:
+      required: true
+      
+  - type: input
+    id: toolkit-version
+    attributes:
+      label: XPCS Toolkit Version
+      placeholder: "1.0.0"
+    validations:
+      required: true
+
+  - type: textarea
+    id: error-traceback
+    attributes:
+      label: Error Messages/Traceback
+      description: Please copy and paste any relevant error messages or stack traces
+      render: shell
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional context
+      description: Add any other context about the problem here (screenshots, etc.)
+    validations:
+      required: false

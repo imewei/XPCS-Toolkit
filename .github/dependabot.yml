@@ -1,0 +1,59 @@
+version: 2
+updates:
+  # Enable version updates for Python packages
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "imewei"
+    assignees:
+      - "imewei"
+    commit-message:
+      prefix: "⬆️ deps"
+      prefix-development: "⬆️ dev-deps"
+      include: "scope"
+    groups:
+      scientific-computing:
+        patterns:
+          - "numpy"
+          - "scipy" 
+          - "matplotlib"
+          - "pandas"
+          - "scikit-learn"
+          - "h5py"
+      gui-framework:
+        patterns:
+          - "pyside6"
+          - "pyqtgraph"
+      development-tools:
+        patterns:
+          - "pytest*"
+          - "ruff"
+          - "mypy"
+          - "coverage"
+          - "sphinx*"
+      build-tools:
+        patterns:
+          - "setuptools*"
+          - "build"
+          - "twine"
+
+  # Enable version updates for GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly" 
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "imewei"
+    assignees:
+      - "imewei"
+    commit-message:
+      prefix: "⬆️ ci"
+      include: "scope"

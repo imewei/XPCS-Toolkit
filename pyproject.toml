@@ -65,9 +65,11 @@ docs = [
 ]
 
 [project.urls]
-bugs = "https://github.com/AZjk/xpcs-toolkit/issues"
-changelog = "https://github.com/AZjk/xpcs-toolkit/blob/master/changelog.md"
-homepage = "https://github.com/AZjk/xpcs-toolkit"
+bugs = "https://github.com/imewei/XPCS-Toolkit/issues"
+changelog = "https://github.com/imewei/XPCS-Toolkit/blob/master/HISTORY.rst"
+homepage = "https://github.com/imewei/XPCS-Toolkit"
+repository = "https://github.com/imewei/XPCS-Toolkit.git"
+documentation = "https://imewei.github.io/XPCS-Toolkit/"
 
 [tool.setuptools]
 package-dir = {"" = "src"}

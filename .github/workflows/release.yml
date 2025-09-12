@@ -1,0 +1,184 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g., v1.0.0)'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  id-token: write  # For trusted publishing to PyPI
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Full history for version info
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.12"
+
+    - name: Install build dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install build twine setuptools_scm
+
+    - name: Build package
+      run: |
+        python -m build
+
+    - name: Check package
+      run: |
+        twine check dist/*
+
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: dist-release-${{ github.sha }}
+        path: dist/
+
+  test-release:
+    runs-on: ${{ matrix.os }}
+    needs: build
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: ["3.12", "3.13"]
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Download build artifacts
+      uses: actions/download-artifact@v3
+      with:
+        name: dist-release-${{ github.sha }}
+        path: dist/
+
+    - name: Install system dependencies (Ubuntu)
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libgl1-mesa-glx libegl1-mesa libxrandr2 libxss1 libxcursor1 libxcomposite1 libasound2 libxi6 libxtst6
+
+    - name: Test installation from wheel
+      run: |
+        pip install --find-links dist/ xpcs-toolkit
+        python -c "import xpcs_toolkit; print(f'XPCS Toolkit {xpcs_toolkit.__version__} installed successfully')"
+
+    - name: Test CLI commands
+      run: |
+        xpcs-toolkit --help
+        pyxpcsviewer --help
+        run_viewer --help
+
+  github-release:
+    runs-on: ubuntu-latest
+    needs: [build, test-release]
+    if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Download build artifacts
+      uses: actions/download-artifact@v3
+      with:
+        name: dist-release-${{ github.sha }}
+        path: dist/
+
+    - name: Extract release notes
+      id: extract_notes
+      run: |
+        if [ -f "HISTORY.rst" ]; then
+          echo "RELEASE_NOTES<<EOF" >> $GITHUB_OUTPUT
+          head -20 HISTORY.rst >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+        else
+          echo "RELEASE_NOTES=See CHANGELOG for release notes." >> $GITHUB_OUTPUT
+        fi
+
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v1
+      with:
+        name: Release ${{ github.ref_name }}
+        body: |
+          ## XPCS Toolkit ${{ github.ref_name }}
+          
+          ### Installation
+          ```bash
+          pip install xpcs-toolkit==${{ github.ref_name }}
+          ```
+          
+          ### Usage
+          ```bash
+          xpcs-toolkit path_to_hdf_directory
+          ```
+          
+          ### Changes
+          ${{ steps.extract_notes.outputs.RELEASE_NOTES }}
+          
+          ### Package Files
+          - **Source Distribution**: `xpcs_toolkit-*.tar.gz`
+          - **Wheel**: `xpcs_toolkit-*-py3-none-any.whl`
+        files: |
+          dist/*
+        draft: false
+        prerelease: ${{ contains(github.ref, 'alpha') || contains(github.ref, 'beta') || contains(github.ref, 'rc') }}
+
+  pypi-publish:
+    runs-on: ubuntu-latest
+    needs: [build, test-release, github-release]
+    if: startsWith(github.ref, 'refs/tags/') && !contains(github.ref, 'alpha') && !contains(github.ref, 'beta') && !contains(github.ref, 'rc')
+    environment:
+      name: pypi
+      url: https://pypi.org/p/xpcs-toolkit
+
+    steps:
+    - name: Download build artifacts
+      uses: actions/download-artifact@v3
+      with:
+        name: dist-release-${{ github.sha }}
+        path: dist/
+
+    - name: Publish to PyPI
+      uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        verify-metadata: true
+        verbose: true
+
+  test-pypi-publish:
+    runs-on: ubuntu-latest
+    needs: [build, test-release]
+    if: startsWith(github.ref, 'refs/tags/') && (contains(github.ref, 'alpha') || contains(github.ref, 'beta') || contains(github.ref, 'rc'))
+    environment:
+      name: testpypi
+      url: https://test.pypi.org/p/xpcs-toolkit
+
+    steps:
+    - name: Download build artifacts
+      uses: actions/download-artifact@v3
+      with:
+        name: dist-release-${{ github.sha }}
+        path: dist/
+
+    - name: Publish to Test PyPI
+      uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        repository-url: https://test.pypi.org/legacy/
+        verify-metadata: true
+        verbose: true

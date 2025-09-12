@@ -1,0 +1,96 @@
+name: ✨ Feature Request
+description: Suggest a new feature or enhancement for XPCS Toolkit
+title: "[FEATURE]: "
+labels: ["enhancement", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for suggesting a new feature for XPCS Toolkit!
+        
+  - type: textarea
+    id: feature-description
+    attributes:
+      label: Feature Description
+      description: A clear and concise description of the feature you'd like to see
+      placeholder: Describe the feature...
+    validations:
+      required: true
+
+  - type: textarea
+    id: scientific-context
+    attributes:
+      label: Scientific/Technical Context
+      description: Explain the scientific or technical motivation for this feature
+      placeholder: |
+        - What scientific analysis would this enable?
+        - What problem does this solve?
+        - How would this improve XPCS data analysis workflows?
+    validations:
+      required: true
+      
+  - type: textarea
+    id: use-case
+    attributes:
+      label: Use Case
+      description: Describe how you would use this feature
+      placeholder: |
+        As a researcher analyzing XPCS data, I would use this feature to...
+    validations:
+      required: true
+
+  - type: dropdown
+    id: feature-category
+    attributes:
+      label: Feature Category
+      options:
+        - Data Analysis Algorithm
+        - Visualization/Plotting
+        - Performance Optimization
+        - User Interface
+        - Data Import/Export
+        - Documentation
+        - API Enhancement
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      description: How important is this feature for your workflow?
+      options:
+        - Low - Nice to have
+        - Medium - Would improve workflow
+        - High - Essential for my analysis
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposed-solution
+    attributes:
+      label: Proposed Solution
+      description: If you have ideas on how to implement this feature, describe them here
+      placeholder: |
+        - Implementation approach:
+        - Required dependencies:
+        - API design considerations:
+    validations:
+      required: false
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: Describe any alternative solutions or workarounds you've considered
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: Add any other context, screenshots, or references about the feature request
+    validations:
+      required: false
