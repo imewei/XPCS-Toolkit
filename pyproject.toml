@@ -69,7 +69,7 @@ bugs = "https://github.com/imewei/XPCS-Toolkit/issues"
 changelog = "https://github.com/imewei/XPCS-Toolkit/blob/master/HISTORY.rst"
 homepage = "https://github.com/imewei/XPCS-Toolkit"
 repository = "https://github.com/imewei/XPCS-Toolkit.git"
-documentation = "https://imewei.github.io/XPCS-Toolkit/"
+documentation = "https://github.com/imewei/XPCS-Toolkit/tree/master/docs"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
