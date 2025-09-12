@@ -1,11 +1,17 @@
 name: CI
 
 on:
-  push:
-    branches: [ master, main, develop ]
-  pull_request:
-    branches: [ master, main, develop ]
+  # Temporarily disabled - will resume when codebase is more mature
+  # push:
+  #   branches: [ master, main, develop ]
+  # pull_request:
+  #   branches: [ master, main, develop ]
   workflow_dispatch:
+    inputs:
+      reason:
+        description: 'Reason for manual CI run'
+        required: false
+        default: 'Manual testing'
 
 jobs:
   test:

@@ -1,20 +1,26 @@
 name: Documentation
 
 on:
-  push:
-    branches: [ master, main ]
-    paths:
-      - 'docs/**'
-      - 'src/**'
-      - 'README.rst'
-      - 'pyproject.toml'
-  pull_request:
-    branches: [ master, main ]
-    paths:
-      - 'docs/**'
-      - 'src/**'
-      - 'README.rst'
+  # Temporarily disabled - will resume when codebase is more mature
+  # push:
+  #   branches: [ master, main ]
+  #   paths:
+  #     - 'docs/**'
+  #     - 'src/**'
+  #     - 'README.rst'
+  #     - 'pyproject.toml'
+  # pull_request:
+  #   branches: [ master, main ]
+  #   paths:
+  #     - 'docs/**'
+  #     - 'src/**'
+  #     - 'README.rst'
   workflow_dispatch:
+    inputs:
+      reason:
+        description: 'Reason for manual docs build'
+        required: false
+        default: 'Manual documentation testing'
 
 permissions:
   contents: read

@@ -1,15 +1,20 @@
 name: Release
 
 on:
-  push:
-    tags:
-      - 'v*.*.*'
+  # Temporarily disabled - will resume when codebase is more mature
+  # push:
+  #   tags:
+  #     - 'v*.*.*'
   workflow_dispatch:
     inputs:
       version:
         description: 'Version to release (e.g., v1.0.0)'
         required: true
         type: string
+      reason:
+        description: 'Reason for manual release'
+        required: false
+        default: 'Manual release testing'
 
 permissions:
   contents: write
