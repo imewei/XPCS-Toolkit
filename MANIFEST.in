@@ -3,9 +3,28 @@ include CONTRIBUTING.rst
 include HISTORY.rst
 include LICENSE
 include README.rst
+include CODE_OF_CONDUCT.rst
 
 recursive-include tests *
 recursive-exclude * __pycache__
 recursive-exclude * *.py[co]
 
-recursive-include docs *.rst conf.py Makefile make.bat *.jpg *.png *.gif
+# Include docs directory with all formats
+recursive-include docs *.rst *.md conf.py Makefile make.bat *.jpg *.png *.gif
+
+# Include validation directory (active scripts only)
+include validation/comprehensive_validation_runner.py
+include validation/scientific_accuracy_validator.py
+include validation/README.md
+
+# Exclude temporary and build artifacts
+recursive-exclude * *.log
+recursive-exclude * *.db
+recursive-exclude * *debug*
+recursive-exclude * *benchmark*
+recursive-exclude * *validation*.json
+recursive-exclude * *optimization*.json
+recursive-exclude * *report*.json
+global-exclude .DS_Store
+global-exclude *.pyc
+global-exclude __pycache__

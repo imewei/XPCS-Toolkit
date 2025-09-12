@@ -9,7 +9,7 @@ if "%SPHINXBUILD%" == "" (
 )
 set SOURCEDIR=.
 set BUILDDIR=_build
-set SPHINXPROJ=pyxpcsviewer
+set SPHINXPROJ=xpcs_toolkit
 
 if "%1" == "" goto help
 

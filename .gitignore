@@ -1,5 +1,3 @@
-# Created by .ignore support plugin (hsz.mobi)
-### Python template
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -22,7 +20,6 @@ parts/
 sdist/
 var/
 wheels/
-pip-wheel-metadata/
 share/python-wheels/
 *.egg-info/
 .installed.cfg
@@ -45,6 +42,7 @@ htmlcov/
 .nox/
 .coverage
 .coverage.*
+coverage.json
 .cache
 nosetests.xml
 coverage.xml
@@ -53,6 +51,11 @@ coverage.xml
 .hypothesis/
 .pytest_cache/
 cover/
+bandit_report.json
+bandit-report.json
+.benchmarks/
+.claude
+.ruff_cache/
 
 # Translations
 *.mo
@@ -72,7 +75,8 @@ instance/
 .scrapy
 
 # Sphinx documentation
-docs/_build/*
+docs/_build/
+docs/build/
 
 # PyBuilder
 .pybuilder/
@@ -97,7 +101,22 @@ ipython_config.py
 #   install all needed dependencies.
 #Pipfile.lock
 
-# PEP 582; used by e.g. github.com/David-OConnor/pyflow
+# poetry
+#   Similar to Pipfile.lock, it is generally recommended to include poetry.lock in version control.
+#   This is especially recommended for binary packages to ensure reproducibility, and is more
+#   commonly ignored for libraries.
+#   https://python-poetry.org/docs/basic-usage/#commit-your-poetrylock-file-to-version-control
+#poetry.lock
+
+# pdm
+#   Similar to Pipfile.lock, it is generally recommended to include pdm.lock in version control.
+#pdm.lock
+#   pdm stores project-wide configurations in .pdm.toml, but it is recommended to not include it
+#   in version control.
+#   https://pdm.fming.dev/#use-with-ide
+.pdm.toml
+
+# PEP 582; used by e.g. github.com/David-OConnor/pyflow and github.com/pdm-project/pdm
 __pypackages__/
 
 # Celery stuff
@@ -115,6 +134,7 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+activate_venv.sh
 
 # Spyder project settings
 .spyderproject
@@ -140,13 +160,115 @@ dmypy.json
 # Cython debug symbols
 cython_debug/
 
-.idea/.gitignore
-.idea/inspectionProfiles/
-.idea/misc.xml
-.idea/modules.xml
-.idea/xpcs_gui.iml
-.idea
-.loglogin
-.vscode
-core
+# OS generated files
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Editor files
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+RELEASE_GUIDE.md
+WARP.md
+CLAUDE.md
+CLAUDE_COMMAND.md
+
+# Security reports
+bandit-report.json
+
+# Claude Code Quality Analysis artifacts
+bandit-claude-report.json
+coverage-claude.json
+consistency_report.json
+CLAUDE_QUALITY_SUMMARY.json
+scripts/claude_quality_report.py
+scripts/claude_summary_display.py
+CLAUDE*.md
+CODE_QUALITY_REPORT.md
+benchmark-results.json
+# Trigger fresh CI run - Wed Sep 10 09:22:37 CDT 2025
+# Final CI alignment - Wed Sep 10 09:27:52 CDT 2025
+# Force CI update - Wed Sep 10 09:32:42 CDT 2025
+# Import sorting fix applied - Wed Sep 10 09:53:48 CDT 2025
+
+# XPCS Toolkit Specific Files
+# ===========================
+
+# Performance and benchmark files
+benchmark_performance.db
+benchmarks/
+*benchmark*.json
+*benchmark*.db
+*performance*.json
+*performance*.db
+
+# Validation and optimization reports
+*validation*.json
+*optimization*.json
+*report*.json
+validation/
+archived_reports/
+archived_scripts/
+
+# Debug and log files specific to XPCS
+debug_*.log
+test_*.log
+*_debug*.log
+*_qselection*.log
+
+# Testing artifacts
+tests/integration/
+tests/test_suite_validation_report.json
+tests/validation_config.yaml
+tests/run_*.py
+tests/test_*_benchmarks.py
+tests/test_*_properties.py
+tests/test_*_system.py
+tests/test_suite_validation.py
+tests/test_vectorization_accuracy.py
+tests/test_advanced_*.py
+tests/test_io_*.py
+
+# Configuration and production files
+production_config.yaml
+production_deployment_guide.md
+PRODUCTION_READINESS*.md
+OPTIMIZATION_GUIDE.md
+
+# Documentation artifacts
+docs/DOCUMENTATION_INDEX.md
+docs/LOGGING_SYSTEM.md
+docs/OPTIMIZATION_GUIDE.md
+docs/TESTING.md
+docs/README.md
+DOCUMENTATION_INDEX.md
+OPTIMIZATION_VALIDATION_REPORT.md
+PRODUCTION_READINESS_REPORT.md
+
+# Examples and demo directories
+examples/
+
+# Temporary validation and test files
+optimization_validation_report_*.json
+test_cleanup_optimization.py
+test_memory_optimization.py
+verify_memory_optimization.py
+validate_*.py
+run_phase*.py
+
+# Claude Code specific settings
+.claude/

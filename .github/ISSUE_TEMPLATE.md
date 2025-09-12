@@ -1,4 +1,4 @@
-* pyXpcsViewer version:
+* XPCS Toolkit version:
 * Python version:
 * Operating System:
 

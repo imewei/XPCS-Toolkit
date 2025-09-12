@@ -2,6 +2,6 @@
 Usage
 =====
 
-To use pyXpcsViewer in a project::
+To use XPCS Toolkit in a project::
 
-    import pyxpcsviewer
+    import xpcs_toolkit

@@ -1,5 +1,5 @@
-Welcome to pyXpcsViewer's documentation!
-======================================
+Welcome to XPCS Toolkit's documentation!
+=========================================
 
 .. toctree::
    :maxdepth: 2
