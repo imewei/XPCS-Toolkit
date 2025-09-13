@@ -104,6 +104,20 @@ def plot_pre(xf_list, hdl):
     logger.info(f"Starting tau-q pre-plot for {len(xf_list)} files")
 
     hdl.clear()
+    
+    # Handle empty file list case
+    if len(xf_list) == 0:
+        logger.warning("No files provided for tau-q pre-plot")
+        ax = hdl.subplots(1, 1)
+        ax.text(0.5, 0.5, 'No files with G2 fitting results available.\n\nTo see diffusion analysis:\n1. Go to "g2" tab\n2. Select files and click "plot" to fit G2\n3. Return to "Diffusion" tab', 
+                ha='center', va='center', fontsize=12,
+                bbox=dict(boxstyle="round,pad=0.3", facecolor="lightblue", alpha=0.7))
+        ax.set_xlim(0, 1)
+        ax.set_ylim(0, 1)
+        ax.axis('off')
+        hdl.tight_layout()
+        return
+    
     ax = hdl.subplots(2, 2, sharex=True).flatten()
     titles = ["contrast", "tau (s)", "stretch", "baseline"]
 

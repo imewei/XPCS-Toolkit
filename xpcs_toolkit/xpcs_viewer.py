@@ -574,6 +574,16 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
 
     def update_plot_sync(self, tab_name):
         """Synchronous plot update (original behavior)."""
+        # Special handling for diffusion tab - always update the pre-plot
+        if tab_name == "diffusion":
+            try:
+                self.init_diffusion()
+                logger.debug("Diffusion pre-plot updated")
+            except Exception as e:
+                logger.error(f"Failed to update diffusion pre-plot: {e}")
+                traceback.print_exc()
+            # Don't return here - still allow the normal plot_diffusion to be called
+        
         func = getattr(self, "plot_" + tab_name)
         try:
             kwargs = func(dryrun=True)
