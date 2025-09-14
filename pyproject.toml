@@ -65,11 +65,24 @@ dev = [
     "pytest-qt",
     "hypothesis",
     "mypy",
-    "ruff"
+    "ruff",
+    "bandit[toml]",
+    "pre-commit"
 ]
 docs = [
     "sphinx",
-    "sphinx-rtd-theme"
+    "sphinx-rtd-theme",
+    "myst-parser"
+]
+validation = [
+    "memory-profiler",
+    "line-profiler",
+    "py-spy"
+]
+performance = [
+    "pytest-benchmark",
+    "memory-profiler",
+    "pympler"
 ]
 
 [project.urls]
@@ -91,6 +104,7 @@ where = ["."]
 [tool.setuptools.package-data]
 "xpcs_toolkit" = ["configure/*.json", "ui/*.ui"]
 "xpcs_toolkit.ui.resources" = ["*.qrc", "*.png"]
+"*" = ["*.md", "*.rst", "*.txt", "*.yaml", "*.yml"]
 
 # Mypy
 [tool.mypy]
@@ -124,13 +138,18 @@ python_files = ["test_*.py", "*_test.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
 markers = [
-    "unit: Unit tests",
-    "integration: Integration tests", 
+    "unit: Unit tests for individual components",
+    "integration: Integration tests across multiple components",
     "performance: Performance and benchmark tests",
-    "gui: GUI tests requiring display",
+    "gui: GUI tests requiring display (may be interactive)",
     "slow: Tests that take more than 1 second",
-    "scientific: Tests that verify scientific accuracy",
-    "parametrize: Parametrized tests with multiple inputs"
+    "scientific: Tests that verify scientific accuracy and algorithms",
+    "parametrize: Parametrized tests with multiple inputs",
+    "error_handling: Tests for error conditions and edge cases",
+    "end_to_end: Full workflow tests from file load to analysis",
+    "memory: Memory usage and leak detection tests",
+    "threading: Multithreading and async operation tests",
+    "logging: Logging system functionality tests"
 ]
 filterwarnings = [
     "ignore::UserWarning",
@@ -153,6 +172,8 @@ omit = [
     "*/site-packages/*",
     "xpcs_toolkit/ui/*",  # GUI code hard to test
     "xpcs_toolkit/icons_rc.py",  # Generated resource file
+    "*/validation/*",  # Validation scripts
+    "*/scripts/*",  # Utility scripts
 ]
 branch = true
 parallel = true
@@ -183,7 +204,15 @@ directory = "htmlcov"
 [tool.coverage.xml]
 output = "coverage.xml"
 
-# Ruff configuration for testing
+# Ruff configuration
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "C90", "I", "N", "UP", "S", "B", "A", "C4", "PIE", "T20", "RET", "SIM", "ARG", "ERA", "PL", "RUF"]
+ignore = ["E501", "RET504", "S101", "PLR0913"]
+
 [tool.ruff.lint.per-file-ignores]
 "tests/*" = [
     "S101",    # Use of assert detected (OK in tests)
@@ -191,4 +220,17 @@ output = "coverage.xml"
     "FBT",     # Boolean trap (OK in tests)
     "PLR2004", # Magic value used in comparison (OK in tests)
     "SLF001",  # Private member access (OK in tests)
+    "T201",    # Print statements (OK in tests)
 ]
+"validation/*" = [
+    "T201",    # Print statements (OK in validation scripts)
+    "S101",    # Assert statements (OK in validation)
+]
+"scripts/*" = [
+    "T201",    # Print statements (OK in utility scripts)
+]
+
+# Bandit security configuration
+[tool.bandit]
+exclude_dirs = ["tests", "validation", "docs"]
+skips = ["B101", "B601"]  # Skip assert and shell usage in specific contexts
