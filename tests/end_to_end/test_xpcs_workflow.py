@@ -171,9 +171,21 @@ class TestCompleteXpcsWorkflow(unittest.TestCase):
             sample.create_dataset("name", data=scenario["description"])
             sample.create_dataset("temperature", data=298.15)  # 25°C
 
+            # Instrument information
+            instrument = entry.create_group("instrument")
+            detector_1 = instrument.create_group("detector_1")
+            detector_1.create_dataset("frame_time", data=50e-6)  # 50 μs
+            detector_1.create_dataset("count_time", data=50e-6)
+
+            # Beam information
+            incident_beam = instrument.create_group("incident_beam")
+            incident_beam.create_dataset("incident_energy", data=8.0)  # keV
+
             # XPCS structure
             xpcs = f.create_group("xpcs")
             multitau = xpcs.create_group("multitau")
+            temporal_mean = xpcs.create_group("temporal_mean")
+            spatial_mean = xpcs.create_group("spatial_mean")
             qmap = xpcs.create_group("qmap")
 
             # Parameters
@@ -195,38 +207,43 @@ class TestCompleteXpcsWorkflow(unittest.TestCase):
             )
             g2_err = scenario["noise"] * g2_data
 
-            multitau.create_dataset("g2", data=g2_data)
-            multitau.create_dataset("g2_err", data=g2_err)
-            multitau.create_dataset("tau", data=tau)
+            multitau.create_dataset("normalized_g2", data=g2_data)
+            multitau.create_dataset("normalized_g2_err", data=g2_err)
+            multitau.create_dataset("delay_list", data=tau)
 
             # Multitau metadata
-            multitau.create_dataset("t0", data=50e-6)  # 50 μs
-            multitau.create_dataset("t1", data=50e-6)
-            multitau.create_dataset("stride_frame", data=1)
-            multitau.create_dataset("avg_frame", data=1)
             multitau.create_dataset("start_time", data=1600000000)
+
+            # Multitau config
+            multitau_config = multitau.create_group("config")
+            multitau_config.create_dataset("stride_frame", data=1)
+            multitau_config.create_dataset("avg_frame", data=1)
 
             # Realistic Q-map with proper detector geometry
             qmap_data = self._create_realistic_detector_qmap(n_q)
             for key, value in qmap_data.items():
                 qmap.create_dataset(key, data=value)
 
-            # Realistic SAXS scattering
-            saxs_data = self._create_realistic_scattering_data(n_saxs, scenario)
-            multitau.create_dataset(
-                "saxs_1d", data=saxs_data["intensity"].reshape(1, -1)
+            # Realistic SAXS scattering - must match Q-mapping size
+            saxs_data = self._create_realistic_scattering_data(n_q, scenario)  # Use n_q instead of n_saxs
+            temporal_mean.create_dataset(
+                "scattering_1d", data=saxs_data["intensity"].reshape(1, -1)
             )
-            multitau.create_dataset("q_saxs", data=saxs_data["q"])
+            temporal_mean.create_dataset("q_saxs", data=saxs_data["q"])
+
+            # Create 2D SAXS data (simple 100x100 detector)
+            saxs_2d_data = np.random.exponential(100, (100, 100)).astype(np.float32)
+            temporal_mean.create_dataset("scattering_2d", data=saxs_2d_data[None, :, :])
 
             # 2D SAXS (Iqp) with proper Q-dependence
             Iqp_data = self._create_realistic_iqp_data(
-                n_q, n_saxs, saxs_data, qmap_data
+                n_q, n_q, saxs_data, qmap_data  # Use n_q for both dimensions
             )
-            multitau.create_dataset("Iqp", data=Iqp_data)
+            temporal_mean.create_dataset("scattering_1d_segments", data=Iqp_data)
 
             # Stability data with realistic fluctuations
             stability_data = self._create_realistic_stability_data(scenario)
-            multitau.create_dataset("Int_t", data=stability_data)
+            spatial_mean.create_dataset("intensity_vs_time", data=stability_data)
 
     def _create_realistic_multitau_array(self, n_tau):
         """Create realistic multitau time array."""
@@ -306,16 +323,30 @@ class TestCompleteXpcsWorkflow(unittest.TestCase):
         # Azimuthal angles
         phi_values = np.linspace(-180, 180, 36)
 
+        # Create simple detector masks and maps
+        det_size = (1024, 1024)
+        mask = np.ones(det_size, dtype=np.int32)
+        dqmap = np.random.randint(0, n_q, det_size).astype(np.int32)
+        sqmap = np.random.randint(0, n_q, det_size).astype(np.int32)
+
         return {
-            "dqlist": q_values,
-            "sqlist": q_values,
-            "dplist": phi_values,
-            "splist": phi_values,
+            "mask": mask,
+            "dynamic_roi_map": dqmap,
+            "static_roi_map": sqmap,
+            "dynamic_v_list_dim0": q_values,
+            "static_v_list_dim0": q_values,
+            "dynamic_v_list_dim1": phi_values,
+            "static_v_list_dim1": phi_values,
             "dynamic_index_mapping": np.arange(n_q),
             "static_index_mapping": np.arange(n_q),
             "dynamic_num_pts": n_q,
             "static_num_pts": n_q,
-            **detector_params,
+            "beam_center_x": detector_params["beam_center_x"],
+            "beam_center_y": detector_params["beam_center_y"],
+            "detector_distance": detector_params["det_dist"],
+            "pixel_size": detector_params["pixel_size"],
+            "map_names": ["q", "phi"],
+            "map_units": ["1/A", "deg"],
         }
 
     def _create_realistic_scattering_data(self, n_points, scenario):
@@ -354,7 +385,7 @@ class TestCompleteXpcsWorkflow(unittest.TestCase):
         """Create realistic Iqp (2D SAXS) data."""
         Iqp_data = np.zeros((n_q, n_saxs))
 
-        q_dynamic = qmap_data["dqlist"]
+        q_dynamic = qmap_data["dynamic_v_list_dim0"]
         q_saxs = saxs_data["q"]
         I_saxs = saxs_data["intensity"]
 
@@ -428,7 +459,7 @@ class TestCompleteXpcsWorkflow(unittest.TestCase):
             result.file_info.update(
                 {
                     "loaded": True,
-                    "hdf_filename": xf.hdf_filename,
+                    "hdf_filename": xf.fname,
                     "load_time": time.perf_counter() - step_start,
                 }
             )
@@ -437,17 +468,17 @@ class TestCompleteXpcsWorkflow(unittest.TestCase):
             step_start = time.perf_counter()
 
             qmap_data = get_qmap(test_file)
-            self.assertIsInstance(qmap_data, dict)
-            self.assertIn("dqlist", qmap_data)
+            self.assertIsNotNone(qmap_data)
+            self.assertTrue(hasattr(qmap_data, "dqlist"))
 
             result.qmap_info.update(
                 {
                     "processed": True,
-                    "n_dynamic_q": len(qmap_data.get("dqlist", [])),
-                    "n_static_q": len(qmap_data.get("sqlist", [])),
+                    "n_dynamic_q": len(qmap_data.dqlist),
+                    "n_static_q": len(qmap_data.sqlist),
                     "q_range": (
-                        np.min(qmap_data["dqlist"]),
-                        np.max(qmap_data["dqlist"]),
+                        np.min(qmap_data.dqlist),
+                        np.max(qmap_data.dqlist),
                     ),
                     "process_time": time.perf_counter() - step_start,
                 }
@@ -673,7 +704,9 @@ class TestCompleteXpcsWorkflow(unittest.TestCase):
             )
 
         except Exception as e:
-            result.add_error("workflow", e)
+            import traceback
+            error_details = f"{type(e).__name__}: {str(e)}\nTraceback: {traceback.format_exc()}"
+            result.add_error("workflow", error_details)
 
         # Record performance metrics
         total_workflow_time = time.perf_counter() - workflow_start_time
