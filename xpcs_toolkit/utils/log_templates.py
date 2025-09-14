@@ -580,6 +580,7 @@ class TestLogCapture:
         self.messages = []
         self.records = []
         self.handler = None
+        self.original_level = None
 
     def __enter__(self):
         # Create custom handler to capture log messages
@@ -593,18 +594,25 @@ class TestLogCapture:
         else:
             logger = logging.getLogger()
 
+        # Store original level and set to capture level
+        self.original_level = logger.level
+        logger.setLevel(min(self.level, logger.level) if logger.level != logging.NOTSET else self.level)
+
         logger.addHandler(self.handler)
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         if self.handler:
-            # Remove handler from logger
+            # Remove handler from logger and restore original level
             if self.logger_name:
                 logger = logging.getLogger(self.logger_name)
             else:
                 logger = logging.getLogger()
 
             logger.removeHandler(self.handler)
+            # Restore original logger level
+            if hasattr(self, 'original_level'):
+                logger.setLevel(self.original_level)
 
     def _capture_record(self, record):
         """Capture a log record."""

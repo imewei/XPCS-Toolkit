@@ -341,6 +341,59 @@ class MemoryTracker:
 
         return data.dtype
 
+    def __init__(self):
+        """Initialize memory tracker."""
+        self._tracking = False
+        self._start_memory = None
+        self._snapshots = []
+
+    def start_tracking(self):
+        """Start memory tracking."""
+        self._tracking = True
+        self._start_memory = psutil.Process().memory_info().rss
+        self._snapshots = []
+        logger.debug("Memory tracking started")
+
+    def stop_tracking(self):
+        """Stop memory tracking and return final memory usage."""
+        if not self._tracking:
+            return None
+
+        final_memory = psutil.Process().memory_info().rss
+        memory_diff = final_memory - self._start_memory if self._start_memory else 0
+        self._tracking = False
+        logger.debug(f"Memory tracking stopped. Memory change: {memory_diff / (1024*1024):.2f} MB")
+        return memory_diff
+
+    def snapshot(self, label: str = None):
+        """Take a memory snapshot."""
+        if self._tracking:
+            current_memory = psutil.Process().memory_info().rss
+            snapshot = {
+                'label': label or f'snapshot_{len(self._snapshots)}',
+                'memory': current_memory,
+                'timestamp': time.time()
+            }
+            self._snapshots.append(snapshot)
+            return snapshot
+        return None
+
+    def get_snapshots(self):
+        """Get all memory snapshots."""
+        return self._snapshots.copy()
+
+    def get_current_usage(self):
+        """Get current memory usage in MB."""
+        current_memory = psutil.Process().memory_info().rss
+        return current_memory / (1024 * 1024)
+
+    def get_memory_change_mb(self):
+        """Get memory change since tracking started in MB."""
+        if not self._start_memory:
+            return 0
+        current_memory = psutil.Process().memory_info().rss
+        return (current_memory - self._start_memory) / (1024 * 1024)
+
 
 class MemoryOptimizer:
     """Provide memory-efficient alternatives for common operations."""

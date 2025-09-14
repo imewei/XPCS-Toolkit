@@ -310,7 +310,7 @@ class TestLogTemplates:
     def test_performance_monitor_decorator(self):
         """Test performance monitoring decorator functionality."""
 
-        @LogPerformanceMonitor()
+        @LogPerformanceMonitor(logger_name="tests.test_logging_system")
         def cpu_intensive_function(n):
             """Test function that performs computation."""
             return sum(i**2 for i in range(n))
@@ -322,7 +322,7 @@ class TestLogTemplates:
 
         # Check performance logging
         logs = log_capture.get_logs()
-        assert len(logs) >= 2  # Start and end logs
+        assert len(logs) >= 2, f"Expected at least 2 logs, got {len(logs)}: {logs}"  # Start and end logs
 
         # logs are strings, check content directly
         assert "Starting" in logs[0]
