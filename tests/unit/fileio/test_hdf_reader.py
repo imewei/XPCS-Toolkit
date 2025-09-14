@@ -38,7 +38,7 @@ class TestPooledConnection:
         assert conn.access_count == 0
         assert conn.is_healthy is True
         assert hasattr(conn, "lock")
-        assert isinstance(conn.lock, threading.RLock)
+        assert isinstance(conn.lock, type(threading.RLock()))
 
     def test_touch(self):
         """Test touch method updates access info."""
