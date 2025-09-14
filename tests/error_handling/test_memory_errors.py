@@ -127,7 +127,7 @@ class TestMemoryLeakDetection:
 
     def test_connection_pool_memory_cleanup(self, error_temp_dir):
         """Test that connection pool properly cleans up memory."""
-        pool = HDF5ConnectionPool(max_size=5)
+        pool = HDF5ConnectionPool(max_pool_size=5)
         len(pool._connections)
 
         # Create multiple temporary files
@@ -450,20 +450,21 @@ class TestMemoryMonitoringSystem:
         """Test MemoryTracker functionality."""
         tracker = MemoryTracker()
 
-        # Test peak memory tracking
-        initial_peak = tracker.get_peak_memory()
-        assert initial_peak >= 0
+        # Test current memory usage tracking
+        tracker.start_tracking()
+        initial_usage = tracker.get_current_usage()
+        assert initial_usage >= 0
 
         # Allocate some memory
         test_array = np.random.rand(10000)  # ~80KB
 
-        # Peak might increase (depending on implementation)
-        current_peak = tracker.get_peak_memory()
-        assert current_peak >= initial_peak
+        # Usage might increase
+        current_usage = tracker.get_current_usage()
+        assert current_usage >= 0
 
         # Test memory usage reporting
-        current_usage = tracker.get_current_memory()
-        assert current_usage > 0
+        current_usage_2 = tracker.get_current_usage()
+        assert current_usage_2 > 0
 
         # Cleanup
         del test_array
@@ -531,7 +532,7 @@ class TestMemoryErrorRecovery:
 
     def test_connection_pool_recovery_after_memory_error(self, error_temp_dir):
         """Test connection pool recovery after memory errors."""
-        pool = HDF5ConnectionPool(max_size=3)
+        pool = HDF5ConnectionPool(max_pool_size=3)
 
         # Create test files
         test_files = []

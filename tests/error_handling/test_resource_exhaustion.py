@@ -102,8 +102,9 @@ class TestMemoryExhaustion:
                 fragment = np.random.rand(100 + i % 50)  # Variable sizes
                 fragments.append(fragment)
 
-            # Delete every other fragment to create gaps
-            for i in range(0, len(fragments), 2):
+            # Delete every other fragment to create gaps (delete in reverse order to avoid index issues)
+            indices_to_delete = list(range(0, len(fragments), 2))
+            for i in reversed(indices_to_delete):
                 del fragments[i]
 
             gc.collect()  # Force garbage collection
@@ -125,7 +126,7 @@ class TestMemoryExhaustion:
 
     def test_connection_pool_memory_management(self, error_temp_dir):
         """Test connection pool behavior under memory pressure."""
-        pool = HDF5ConnectionPool(max_size=10)
+        pool = HDF5ConnectionPool(max_pool_size=10)
 
         # Create many test files
         test_files = []
@@ -389,7 +390,7 @@ class TestFileHandleExhaustion:
 
     def test_hdf5_connection_pool_handle_management(self, error_temp_dir):
         """Test HDF5 connection pool file handle management."""
-        pool = HDF5ConnectionPool(max_size=20)  # Reasonable limit
+        pool = HDF5ConnectionPool(max_pool_size=20)  # Reasonable limit
 
         # Create many test files
         test_files = []
@@ -768,7 +769,7 @@ class TestResourceRecoveryMechanisms:
 
     def test_connection_pool_recovery_after_exhaustion(self, error_temp_dir):
         """Test connection pool recovery after resource exhaustion."""
-        pool = HDF5ConnectionPool(max_size=5)
+        pool = HDF5ConnectionPool(max_pool_size=5)
 
         # Create test files
         test_files = []
@@ -841,7 +842,7 @@ class TestResourceRecoveryMechanisms:
     def test_long_running_resource_stability(self, error_temp_dir):
         """Test resource stability over extended operation."""
         kernel = ViewerKernel(error_temp_dir)
-        pool = HDF5ConnectionPool(max_size=10)
+        pool = HDF5ConnectionPool(max_pool_size=10)
 
         # Create test file
         test_file = os.path.join(error_temp_dir, "stability_test.h5")

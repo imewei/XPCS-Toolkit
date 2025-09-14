@@ -214,7 +214,7 @@ def hdf_reader(synthetic_hdf5_file):
 @pytest.fixture
 def connection_pool():
     """Create connection pool for testing."""
-    pool = HDF5ConnectionPool(max_size=5, cleanup_threshold=10)
+    pool = HDF5ConnectionPool(max_pool_size=5)
     yield pool
     pool.cleanup_all()
 
