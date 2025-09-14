@@ -831,25 +831,32 @@ class TestStatisticalProperties:
     @settings(max_examples=10, deadline=None)
     def test_throughput_scaling_property(self, throughput_tests):
         """Property: Linear scaling properties with load."""
-        with TemporaryDirectory() as temp_dir:
-            os.environ["PYXPCS_LOG_DIR"] = temp_dir
+        # Save original log dir
+        original_log_dir = os.environ.get("PYXPCS_LOG_DIR")
 
-            logger = get_logger("test.throughput_scaling")
-            throughput_data = []
+        try:
+            with TemporaryDirectory() as temp_dir:
+                os.environ["PYXPCS_LOG_DIR"] = temp_dir
 
-            for message_count, delay in throughput_tests:
-                start_time = time.perf_counter()
+                logger = get_logger("test.throughput_scaling")
+                throughput_data = []
 
-                for i in range(message_count):
-                    logger.info(f"Throughput test {i}")
-                    if delay > 0:
-                        time.sleep(delay / message_count)  # Distributed delay
+                for message_count, delay in throughput_tests:
+                    start_time = time.perf_counter()
 
-                end_time = time.perf_counter()
-                total_time = end_time - start_time
-                throughput = message_count / total_time if total_time > 0 else 0
+                    for i in range(message_count):
+                        logger.info(f"Throughput test {i}")
+                        if delay > 0:
+                            time.sleep(delay / message_count)  # Distributed delay
 
-                throughput_data.append((message_count, throughput))
+                    end_time = time.perf_counter()
+                    total_time = end_time - start_time
+                    throughput = message_count / total_time if total_time > 0 else 0
+
+                    throughput_data.append((message_count, throughput))
+
+                # Ensure all log operations are complete before cleanup
+                logging.shutdown()
 
             if len(throughput_data) >= 3:
                 # Check throughput scaling properties
@@ -869,6 +876,13 @@ class TestStatisticalProperties:
                     assert throughput_ratio < 100, (
                         f"Throughput scaling too variable: {throughput_ratio:.2f}x"
                     )
+        finally:
+            # Clean up logging configuration and restore original environment
+            reset_logging_config()
+            if original_log_dir is not None:
+                os.environ["PYXPCS_LOG_DIR"] = original_log_dir
+            elif "PYXPCS_LOG_DIR" in os.environ:
+                del os.environ["PYXPCS_LOG_DIR"]
 
 
 # =============================================================================
