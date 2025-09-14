@@ -11,10 +11,11 @@ from typing import Callable
 import h5py
 import numpy as np
 
+from xpcs_toolkit.utils.logging_config import get_logger
+
 # Local imports
 from ..fileIO.aps_8idi import key as key_map
 from ..fileIO.hdf_reader import _connection_pool
-from xpcs_toolkit.utils.logging_config import get_logger
 
 key_map = key_map["nexus"]
 logger = get_logger(__name__)
@@ -523,7 +524,9 @@ def get_single_c2_from_hdf(
         idxstr = list(f[c2_prefix])[selection]
 
         # Read C2 data using shared file handle (use 5 args to avoid legacy mode)
-        c2_mat, sampling_rate = read_single_c2((f, idxstr, max_size, correct_diag, True))
+        c2_mat, sampling_rate = read_single_c2(
+            (f, idxstr, max_size, correct_diag, True)
+        )
 
         # Read G2 partials in the same file operation
         g2_full_key = key_map["c2_g2"]  # Dataset {5000, 25}

@@ -15,12 +15,12 @@ import pyqtgraph as pg
 
 # Local imports
 from .fileIO.hdf_reader import (
+    batch_read_fields,
     get,
     get_analysis_type,
-    read_metadata_to_dict,
-    batch_read_fields,
     get_chunked_dataset,
     get_file_info,
+    read_metadata_to_dict,
 )
 from .fileIO.qmap_utils import get_qmap
 from .helper.fitting import fit_with_fixed
@@ -607,12 +607,27 @@ class XpcsFile(object):
             ret["t_el"] = ret["tau"] * ret["t0"]
             ret["g2_t0"] = ret["t0"]
 
-        ret["saxs_1d"] = self.qmap.reshape_phi_analysis(
-            ret["saxs_1d"], self.label, mode="saxs_1d"
-        )
-        ret["Iqp"] = self.qmap.reshape_phi_analysis(
-            ret["Iqp"], self.label, mode="stability"
-        )
+        # Handle qmap reshaping with fallback for when qmap is a dict (minimal mode)
+        if hasattr(self.qmap, "reshape_phi_analysis"):
+            ret["saxs_1d"] = self.qmap.reshape_phi_analysis(
+                ret["saxs_1d"], self.label, mode="saxs_1d"
+            )
+            ret["Iqp"] = self.qmap.reshape_phi_analysis(
+                ret["Iqp"], self.label, mode="stability"
+            )
+        else:
+            # Fallback for minimal qmap mode (when qmap is a dict)
+            ret["saxs_1d"] = (
+                np.array(ret["saxs_1d"])
+                if isinstance(ret["saxs_1d"], (list, np.ndarray))
+                and len(ret["saxs_1d"]) > 0
+                else ret["saxs_1d"]
+            )
+            ret["Iqp"] = (
+                np.array(ret["Iqp"])
+                if isinstance(ret["Iqp"], (list, np.ndarray)) and len(ret["Iqp"]) > 0
+                else ret["Iqp"]
+            )
 
         ret["abs_cross_section_scale"] = 1.0
         return ret
@@ -904,12 +919,16 @@ class XpcsFile(object):
         # Support both Multitau and Twotime analysis types
         supported_types = ["Multitau", "Twotime"]
         if not any(atype in self.atype for atype in supported_types):
-            raise ValueError(f"Analysis type {self.atype} not supported for G2 plotting. Supported types: {supported_types}")
+            raise ValueError(
+                f"Analysis type {self.atype} not supported for G2 plotting. Supported types: {supported_types}"
+            )
         # Check if required attributes exist
-        required_attrs = ['g2', 'g2_err', 't_el', 'qmap']
+        required_attrs = ["g2", "g2_err", "t_el", "qmap"]
         missing_attrs = [attr for attr in required_attrs if not hasattr(self, attr)]
         if missing_attrs:
-            raise AttributeError(f"Missing required attributes for G2 plotting: {missing_attrs}")
+            raise AttributeError(
+                f"Missing required attributes for G2 plotting: {missing_attrs}"
+            )
 
         # qrange can be None
         qindex_selected, qvalues = self.qmap.get_qbin_in_qrange(qrange, zero_based=True)
@@ -1292,7 +1311,7 @@ class XpcsFile(object):
             # Validate array dimensions and ensure compatibility
             if len(x.shape) > 1:
                 x = x.flatten()
-            
+
             # Ensure x and fit_val have compatible first dimension
             min_length = min(len(x), fit_val.shape[0])
             x = x[:min_length]
@@ -1300,14 +1319,16 @@ class XpcsFile(object):
 
             # Vectorized q-range filtering using boolean indexing
             q_slice = (x >= q_range[0]) & (x <= q_range[1])
-            
+
             # Validate boolean index dimensions
             if len(q_slice) != fit_val.shape[0]:
-                logger.warning(f"Boolean index size mismatch: q_slice={len(q_slice)}, fit_val={fit_val.shape[0]}. Adjusting.")
+                logger.warning(
+                    f"Boolean index size mismatch: q_slice={len(q_slice)}, fit_val={fit_val.shape[0]}. Adjusting."
+                )
                 min_slice_len = min(len(q_slice), fit_val.shape[0])
                 q_slice = q_slice[:min_slice_len]
                 fit_val = fit_val[:min_slice_len]
-            
+
             # Validate that we have data after filtering
             if not np.any(q_slice):
                 logger.warning(f"No data points in q_range {q_range}")
@@ -1315,11 +1336,11 @@ class XpcsFile(object):
                 self._computation_cache[tauq_cache_key] = tauq_result
                 self.fit_summary.update(tauq_result)
                 return self.fit_summary
-            
+
             x = x[q_slice]
             y = fit_val[q_slice, 0, 1]
             sigma = fit_val[q_slice, 1, 1]
-            
+
         except (IndexError, KeyError, ValueError) as e:
             logger.error(f"Array indexing error in fit_tauq: {e}")
             tauq_result = {"tauq_success": False}
@@ -1653,7 +1674,7 @@ class XpcsFile(object):
 
         # Create hash from concatenated parts
         cache_string = "|".join(key_parts)
-        return hashlib.md5(cache_string.encode()).hexdigest()
+        return hashlib.md5(cache_string.encode(), usedforsecurity=False).hexdigest()
 
     def _compute_int_t_fft_cached(self):
         """

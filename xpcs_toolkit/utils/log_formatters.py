@@ -14,13 +14,13 @@ Features:
 - Consistent timestamp formatting
 """
 
-import logging
 import json
+import logging
 import os
 import sys
 import threading
-from datetime import datetime
 import traceback
+from datetime import datetime
 
 
 class ColoredConsoleFormatter(logging.Formatter):
@@ -284,8 +284,6 @@ class JSONFormatter(logging.Formatter):
             return True
         except (TypeError, ValueError):
             return False
-
-
 
 
 class PerformanceFormatter(StructuredFileFormatter):

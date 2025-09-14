@@ -7,16 +7,16 @@ multi-level caching infrastructure for optimal performance in GUI operations.
 
 from __future__ import annotations
 
-import time
 import threading
+import time
 from typing import Any, Dict, List, Optional
 
+from .adaptive_memory import MemoryStrategy, get_adaptive_memory_manager
 from .advanced_cache import get_global_cache
 from .computation_cache import get_computation_cache
-from .metadata_cache import get_metadata_cache
-from .adaptive_memory import get_adaptive_memory_manager, MemoryStrategy
 from .enhanced_xpcs_file import SmartXpcsFileManager, enhance_xpcs_file_with_caching
 from .logging_config import get_logger
+from .metadata_cache import get_metadata_cache
 
 logger = get_logger(__name__)
 
@@ -333,7 +333,7 @@ class CachedViewerKernelMixin:
 
         # Create hash
         cache_string = "|".join(key_parts)
-        return f"plot:{hashlib.md5(cache_string.encode()).hexdigest()[:16]}"
+        return f"plot:{hashlib.md5(cache_string.encode(), usedforsecurity=False).hexdigest()[:16]}"
 
     def _apply_cached_plot_data(self, handler, cached_data: dict, plot_type: str):
         """Apply cached plot data to handler."""

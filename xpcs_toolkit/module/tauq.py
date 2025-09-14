@@ -1,4 +1,5 @@
 import numpy as np
+
 from xpcs_toolkit.utils.logging_config import get_logger
 
 logger = get_logger(__name__)
@@ -104,20 +105,26 @@ def plot_pre(xf_list, hdl):
     logger.info(f"Starting tau-q pre-plot for {len(xf_list)} files")
 
     hdl.clear()
-    
+
     # Handle empty file list case
     if len(xf_list) == 0:
         logger.warning("No files provided for tau-q pre-plot")
         ax = hdl.subplots(1, 1)
-        ax.text(0.5, 0.5, 'No files with G2 fitting results available.\n\nTo see diffusion analysis:\n1. Go to "g2" tab\n2. Select files and click "plot" to fit G2\n3. Return to "Diffusion" tab', 
-                ha='center', va='center', fontsize=12,
-                bbox=dict(boxstyle="round,pad=0.3", facecolor="lightblue", alpha=0.7))
+        ax.text(
+            0.5,
+            0.5,
+            'No files with G2 fitting results available.\n\nTo see diffusion analysis:\n1. Go to "g2" tab\n2. Select files and click "plot" to fit G2\n3. Return to "Diffusion" tab',
+            ha="center",
+            va="center",
+            fontsize=12,
+            bbox=dict(boxstyle="round,pad=0.3", facecolor="lightblue", alpha=0.7),
+        )
         ax.set_xlim(0, 1)
         ax.set_ylim(0, 1)
-        ax.axis('off')
+        ax.axis("off")
         hdl.tight_layout()
         return
-    
+
     ax = hdl.subplots(2, 2, sharex=True).flatten()
     titles = ["contrast", "tau (s)", "stretch", "baseline"]
 
@@ -154,7 +161,7 @@ def plot_pre(xf_list, hdl):
             # Validate array dimensions before plotting
             if len(x.shape) > 1:
                 x = x.flatten()
-            
+
             # Ensure x and fit_val have compatible shapes
             min_length = min(len(x), fit_val.shape[0])
             x = x[:min_length]
@@ -164,10 +171,12 @@ def plot_pre(xf_list, hdl):
             for n in range(4):
                 y = fit_val[:, 0, n]
                 e = fit_val[:, 1, n]
-                
+
                 # Additional safety check for array lengths
                 if len(x) != len(y):
-                    logger.warning(f"Size mismatch: x={len(x)}, y={len(y)}. Truncating to shorter length.")
+                    logger.warning(
+                        f"Size mismatch: x={len(x)}, y={len(y)}. Truncating to shorter length."
+                    )
                     min_len = min(len(x), len(y))
                     x_plot = x[:min_len]
                     y_plot = y[:min_len]
@@ -176,21 +185,29 @@ def plot_pre(xf_list, hdl):
                     x_plot = x
                     y_plot = y
                     e_plot = e
-                
+
                 # Skip plotting if arrays are empty
                 if len(x_plot) == 0 or len(y_plot) == 0:
-                    logger.warning(f"Empty arrays for file {getattr(xf, 'label', 'unknown')}, parameter {n}")
+                    logger.warning(
+                        f"Empty arrays for file {getattr(xf, 'label', 'unknown')}, parameter {n}"
+                    )
                     continue
-                    
+
                 ax[n].errorbar(
-                    x_plot, y_plot, yerr=e_plot, fmt=shape, markersize=3, color=color, mfc="white"
+                    x_plot,
+                    y_plot,
+                    yerr=e_plot,
+                    fmt=shape,
+                    markersize=3,
+                    color=color,
+                    mfc="white",
                 )
 
             # Store bounds and x range from the last valid file
             if "bounds" in fit_summary:
                 global_bounds = fit_summary["bounds"]
                 x_range = (np.min(x), np.max(x))
-                
+
         except Exception as e:
             logger.error(f"Error plotting file {getattr(xf, 'label', 'unknown')}: {e}")
             continue

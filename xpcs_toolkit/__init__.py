@@ -1,4 +1,5 @@
-from importlib.metadata import version, PackageNotFoundError
+from importlib.metadata import PackageNotFoundError, version
+
 from xpcs_toolkit.xpcs_file import XpcsFile as XpcsFile  # Explicit re-export
 
 # Version handling

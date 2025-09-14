@@ -7,21 +7,21 @@ of Qt signal handling and thread pool optimizations in the XPCS Toolkit.
 
 from __future__ import annotations
 
-import time
 import statistics
-from typing import Any, Dict, List
-from dataclasses import dataclass, field
+import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from dataclasses import dataclass, field
+from typing import Any, Dict, List
 
-from PySide6.QtCore import QObject, Signal, QCoreApplication
+from PySide6.QtCore import QCoreApplication, QObject, Signal
 
-# Import our optimization systems
-from .signal_optimization import initialize_signal_optimization, SignalPriority
+from ..utils.logging_config import get_logger
 from .enhanced_thread_pool import initialize_enhanced_threading
 from .optimized_workers import OptimizedBaseWorker, submit_optimized_worker
 from .performance_monitor import initialize_performance_monitoring
 
-from ..utils.logging_config import get_logger
+# Import our optimization systems
+from .signal_optimization import SignalPriority, initialize_signal_optimization
 
 logger = get_logger(__name__)
 

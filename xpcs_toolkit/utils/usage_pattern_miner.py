@@ -8,17 +8,17 @@ performance tuning.
 
 from __future__ import annotations
 
-import time
 import statistics
-from typing import Dict, List, Optional, Tuple, Set, Any, NamedTuple
-from dataclasses import dataclass, field
-from collections import defaultdict, Counter
-from datetime import datetime
 import threading
+import time
+from collections import Counter, defaultdict
+from dataclasses import dataclass, field
+from datetime import datetime
 from pathlib import Path
+from typing import Any, Dict, List, NamedTuple, Optional, Set, Tuple
 
-from .workflow_profiler import WorkflowProfile, WorkflowStep, workflow_profiler
 from .logging_config import get_logger
+from .workflow_profiler import WorkflowProfile, WorkflowStep, workflow_profiler
 
 logger = get_logger(__name__)
 

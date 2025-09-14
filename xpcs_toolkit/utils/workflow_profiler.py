@@ -7,17 +7,18 @@ user workflows and identify CPU bottlenecks during actual XPCS data processing o
 
 from __future__ import annotations
 
-import time
-import threading
 import functools
-import psutil
-import os
-from typing import Dict, List, Optional, Callable, Any, Tuple
-from collections import defaultdict
-from dataclasses import dataclass, field
-import numpy as np
-from contextlib import contextmanager
 import json
+import os
+import threading
+import time
+from collections import defaultdict
+from contextlib import contextmanager
+from dataclasses import dataclass, field
+from typing import Any, Callable, Dict, List, Optional, Tuple
+
+import numpy as np
+import psutil
 
 from .logging_config import get_logger
 from .performance_profiler import global_profiler

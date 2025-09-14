@@ -11,21 +11,21 @@ This module provides tools to keep the main GUI thread responsive by:
 from __future__ import annotations
 
 import time
-from typing import Any, Callable, Dict, List, Optional
 from dataclasses import dataclass, field
+from typing import Any, Callable, Dict, List, Optional
 
 from PySide6 import QtWidgets
 from PySide6.QtCore import QObject, QTimer, Signal, Slot
 
+from ..utils.logging_config import get_logger
 from .async_workers_enhanced import (
-    WorkerManager,
-    PlotWorker,
     DataLoadWorker,
+    PlotWorker,
+    WorkerManager,
     WorkerPriority,
     WorkerResult,
 )
 from .progress_manager import ProgressManager
-from ..utils.logging_config import get_logger
 
 logger = get_logger(__name__)
 

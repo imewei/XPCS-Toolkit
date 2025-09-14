@@ -4,17 +4,19 @@ import threading
 import time
 from collections import OrderedDict
 from contextlib import contextmanager
-from typing import Dict, Any, Optional, Tuple, List
+from typing import Any, Dict, List, Optional, Tuple
 
 # Third-party imports
 import h5py
 import numpy as np
 import psutil
 
+from xpcs_toolkit.utils.logging_config import get_logger
+
+from ..utils.io_performance import estimate_hdf5_dataset_size, get_performance_monitor
+
 # Local imports
 from .aps_8idi import key as hdf_key
-from ..utils.io_performance import get_performance_monitor, estimate_hdf5_dataset_size
-from xpcs_toolkit.utils.logging_config import get_logger
 
 logger = get_logger(__name__)
 _perf_monitor = get_performance_monitor()

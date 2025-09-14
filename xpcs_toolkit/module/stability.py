@@ -1,8 +1,9 @@
 # Third-party imports
 
 # Local imports
-from .saxs1d import get_pyqtgraph_anchor_params, plot_line_with_marker
 from xpcs_toolkit.utils.logging_config import get_logger
+
+from .saxs1d import get_pyqtgraph_anchor_params, plot_line_with_marker
 
 logger = get_logger(__name__)
 

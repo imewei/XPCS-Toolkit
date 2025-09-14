@@ -11,15 +11,16 @@ This module provides optimizations for:
 
 from __future__ import annotations
 
-import time
 import threading
+import time
 import weakref
 from collections import defaultdict
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Tuple, Callable
 from enum import Enum
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
-from PySide6.QtCore import QObject, QTimer, Signal, QMutex, QMutexLocker
+from PySide6.QtCore import QMutex, QMutexLocker, QObject, QTimer, Signal
+
 from xpcs_toolkit.utils.logging_config import get_logger
 
 logger = get_logger(__name__)

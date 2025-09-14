@@ -6,7 +6,8 @@
 .PHONY: help clean install lint format test coverage docs dist release
 .PHONY: clean-all clean-build clean-cache clean-test
 .PHONY: lint-ruff lint-flake8 format-ruff format-black
-.PHONY: test-unit test-integration test-properties test-benchmarks test-ci test-full
+.PHONY: test-unit test-integration test-logging test-scientific test-end-to-end test-properties test-performance test-gui test-ci test-full test-all test-benchmarks
+.PHONY: test-log test-unit-log test-integration-log test-logging-log test-full-log test-all-log
 .PHONY: coverage-html coverage-report coverage-logging 
 .PHONY: docs-build docs-serve docs-clean
 .PHONY: dev-setup dev-install quality-check
@@ -108,6 +109,7 @@ clean-test: ## remove test, coverage and benchmark artifacts
 	rm -rf .tox/ .coverage htmlcov/ .benchmark/ .benchmarks/ .hypothesis/
 	rm -f test_switching.log coverage.json
 	find . -name '*.log' -path './tests/*' -delete || true
+	rm -f test_*.log test_*.xml || true
 
 # =============================================================================
 # Code Quality and Formatting
@@ -136,36 +138,91 @@ quality-check: lint test-ci ## comprehensive quality check for CI/CD
 # Testing
 # =============================================================================
 
+# Default test target
 test: test-unit ## run basic unit tests (default test target)
 
+# Core test categories
 test-unit: ## run core unit and integration tests
-	$(PYTHON) -m pytest $(TESTS_DIR)/test_xpcs_toolkit.py $(TESTS_DIR)/test_logging_system.py $(PYTEST_OPTS)
+	$(PYTHON) -m pytest $(TESTS_DIR)/unit/test_package_basics.py $(TESTS_DIR)/logging/unit/ $(PYTEST_OPTS)
 
 test-integration: ## run integration tests for key components
-	$(PYTHON) -m pytest $(TESTS_DIR)/test_logging_system.py $(PYTEST_OPTS)
+	$(PYTHON) -m pytest $(TESTS_DIR)/integration/ $(PYTEST_OPTS)
 
-test-properties: ## run property-based tests with Hypothesis
-	$(PYTHON) -m pytest $(TESTS_DIR)/test_logging_properties.py $(PYTEST_OPTS)
-
-test-benchmarks: ## run performance benchmarks
-	$(PYTHON) -m pytest $(TESTS_DIR)/test_logging_benchmarks.py $(PYTEST_BENCH_OPTS)
-
-test-ci: ## run tests optimized for CI/CD environments
-	$(PYTHON) -m pytest $(TESTS_DIR)/test_xpcs_toolkit.py $(TESTS_DIR)/test_logging_system.py \
-		$(TESTS_DIR)/test_logging_properties.py \
-		$(PYTEST_OPTS) -m "not slow" --durations=10
-
-test-full: ## run comprehensive test suite including validation
-	$(PYTHON) -m pytest $(TESTS_DIR)/ $(PYTEST_OPTS)
-	$(PYTHON) $(TESTS_DIR)/run_validation.py --ci || echo "Validation script not available"
-
-test-performance: ## run all performance-related tests
-	$(PYTHON) -m pytest $(TESTS_DIR)/test_logging_benchmarks.py $(TESTS_DIR)/test_io_performance.py $(PYTEST_BENCH_OPTS)
-	$(PYTHON) $(TESTS_DIR)/run_logging_benchmarks.py --report || echo "Benchmark runner not available"
+test-logging: ## run comprehensive logging system tests
+	$(PYTHON) -m pytest $(TESTS_DIR)/logging/ $(PYTEST_OPTS)
 
 test-scientific: ## run scientific computing validation tests
-	$(PYTHON) -m pytest -k "scientific" $(PYTEST_OPTS)
-	$(PYTHON) $(TESTS_DIR)/test_vectorization_accuracy.py || echo "Scientific tests not available"
+	$(PYTHON) -m pytest $(TESTS_DIR)/scientific/ $(PYTEST_OPTS)
+	$(PYTHON) $(TESTS_DIR)/test_vectorization_accuracy.py || echo "Scientific validation script not available"
+
+test-end-to-end: ## run complete workflow validation tests
+	$(PYTHON) -m pytest $(TESTS_DIR)/end_to_end/ $(PYTEST_OPTS)
+
+# Specialized test categories
+test-properties: ## run property-based tests with Hypothesis
+	$(PYTHON) -m pytest $(TESTS_DIR)/logging/properties/ $(TESTS_DIR)/scientific/properties/ $(PYTEST_OPTS)
+
+test-performance: ## run performance benchmarks and profiling tests
+	$(PYTHON) -m pytest $(TESTS_DIR)/logging/performance/ $(TESTS_DIR)/performance/ $(TESTS_DIR)/test_io_performance.py $(PYTEST_BENCH_OPTS)
+	$(PYTHON) $(TESTS_DIR)/framework/runners/run_logging_benchmarks.py --report || echo "Benchmark runner not available"
+
+test-gui: ## run GUI interactive tests (requires display)
+	$(PYTHON) -m pytest $(TESTS_DIR)/gui_interactive/ $(PYTEST_OPTS) -s
+
+# CI/CD optimized tests
+test-ci: ## run tests optimized for CI/CD environments
+	$(PYTHON) -m pytest $(TESTS_DIR)/unit/test_package_basics.py $(TESTS_DIR)/logging/functional/ \
+		$(TESTS_DIR)/logging/unit/ $(TESTS_DIR)/integration/ \
+		$(PYTEST_OPTS) -m "not slow" --durations=10
+
+# Comprehensive test suites
+test-full: ## run comprehensive test suite including validation
+	$(PYTHON) -m pytest $(TESTS_DIR)/ $(PYTEST_OPTS) --ignore=$(TESTS_DIR)/gui_interactive/
+	$(PYTHON) $(TESTS_DIR)/framework/runners/run_validation.py --ci || echo "Validation script not available"
+
+test-all: ## run all tests including GUI tests (comprehensive)
+	$(PYTHON) -m pytest $(TESTS_DIR)/ $(PYTEST_OPTS)
+	$(PYTHON) $(TESTS_DIR)/framework/runners/run_validation.py --full || echo "Validation script not available"
+
+# Logging variants - save test results to log files
+test-log: test-unit-log ## run basic tests and save results to log file
+
+test-unit-log: ## run unit tests with detailed logging to file
+	@echo "Running unit tests with logging to test_unit_$(shell date +%Y%m%d_%H%M%S).log"
+	$(PYTHON) -m pytest $(TESTS_DIR)/unit/test_package_basics.py $(TESTS_DIR)/logging/unit/ \
+		$(PYTEST_OPTS) -v --tb=long --durations=0 \
+		--junitxml=test_unit_$(shell date +%Y%m%d_%H%M%S).xml \
+		2>&1 | tee test_unit_$(shell date +%Y%m%d_%H%M%S).log
+
+test-integration-log: ## run integration tests with detailed logging to file
+	@echo "Running integration tests with logging to test_integration_$(shell date +%Y%m%d_%H%M%S).log"
+	$(PYTHON) -m pytest $(TESTS_DIR)/integration/ \
+		$(PYTEST_OPTS) -v --tb=long --durations=0 \
+		--junitxml=test_integration_$(shell date +%Y%m%d_%H%M%S).xml \
+		2>&1 | tee test_integration_$(shell date +%Y%m%d_%H%M%S).log
+
+test-logging-log: ## run logging tests with detailed logging to file
+	@echo "Running logging tests with logging to test_logging_$(shell date +%Y%m%d_%H%M%S).log"
+	$(PYTHON) -m pytest $(TESTS_DIR)/logging/ \
+		$(PYTEST_OPTS) -v --tb=long --durations=0 \
+		--junitxml=test_logging_$(shell date +%Y%m%d_%H%M%S).xml \
+		2>&1 | tee test_logging_$(shell date +%Y%m%d_%H%M%S).log
+
+test-full-log: ## run comprehensive tests with detailed logging to file
+	@echo "Running comprehensive tests with logging to test_full_$(shell date +%Y%m%d_%H%M%S).log"
+	$(PYTHON) -m pytest $(TESTS_DIR)/ $(PYTEST_OPTS) --ignore=$(TESTS_DIR)/gui_interactive/ \
+		-v --tb=long --durations=0 \
+		--junitxml=test_full_$(shell date +%Y%m%d_%H%M%S).xml \
+		2>&1 | tee test_full_$(shell date +%Y%m%d_%H%M%S).log
+	$(PYTHON) $(TESTS_DIR)/framework/runners/run_validation.py --ci 2>&1 | tee -a test_full_$(shell date +%Y%m%d_%H%M%S).log || echo "Validation script not available"
+
+test-all-log: ## run all tests with detailed logging to file
+	@echo "Running all tests with logging to test_all_$(shell date +%Y%m%d_%H%M%S).log"
+	$(PYTHON) -m pytest $(TESTS_DIR)/ \
+		$(PYTEST_OPTS) -v --tb=long --durations=0 \
+		--junitxml=test_all_$(shell date +%Y%m%d_%H%M%S).xml \
+		2>&1 | tee test_all_$(shell date +%Y%m%d_%H%M%S).log
+	$(PYTHON) $(TESTS_DIR)/framework/runners/run_validation.py --full 2>&1 | tee -a test_all_$(shell date +%Y%m%d_%H%M%S).log || echo "Validation script not available"
 
 # =============================================================================
 # Coverage Reporting
@@ -180,7 +237,7 @@ coverage-html: coverage-report ## generate HTML coverage report and open in brow
 	$(BROWSER) htmlcov/index.html
 
 coverage-logging: ## focused coverage for logging system components
-	$(PYTHON) -m pytest $(TESTS_DIR)/test_logging_system.py $(TESTS_DIR)/test_logging_properties.py \
+	$(PYTHON) -m pytest $(TESTS_DIR)/logging/ \
 		--cov=$(SRC_DIR)/utils/logging_config \
 		--cov=$(SRC_DIR)/utils/log_formatters \
 		--cov=$(SRC_DIR)/utils/log_templates \
@@ -255,6 +312,6 @@ check-deps: ## verify all dependencies are installed
 # =============================================================================
 
 # Legacy compatibility aliases
-test-all: test-full ## alias for test-full (backward compatibility)
+test-benchmarks: test-performance ## alias for test-performance (backward compatibility)
 lint/flake8: lint-flake8 ## alias for lint-flake8 (backward compatibility)
 servedocs: docs-serve ## alias for docs-serve (backward compatibility)

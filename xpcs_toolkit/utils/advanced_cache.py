@@ -7,21 +7,22 @@ intelligent eviction policies, compression, and adaptive memory management.
 
 from __future__ import annotations
 
-import time
-import pickle
 import gzip
-import threading
 import hashlib
+import pickle
 import tempfile
-from pathlib import Path
+import threading
+import time
 from collections import OrderedDict
-from typing import Any, Dict, Optional, Tuple
 from dataclasses import dataclass, field
 from enum import Enum
+from pathlib import Path
+from typing import Any, Dict, Optional, Tuple
+
 import numpy as np
 
-from .memory_utils import SystemMemoryMonitor
 from .logging_config import get_logger
+from .memory_utils import SystemMemoryMonitor
 
 logger = get_logger(__name__)
 
@@ -524,12 +525,12 @@ class MultiLevelCache:
 
         try:
             if isinstance(data, np.ndarray):
-                return hashlib.md5(data.tobytes()).hexdigest()
+                return hashlib.md5(data.tobytes(), usedforsecurity=False).hexdigest()
             elif isinstance(data, (bytes, bytearray)):
-                return hashlib.md5(data).hexdigest()
+                return hashlib.md5(data, usedforsecurity=False).hexdigest()
             else:
                 serialized = pickle.dumps(data, protocol=pickle.HIGHEST_PROTOCOL)
-                return hashlib.md5(serialized).hexdigest()
+                return hashlib.md5(serialized, usedforsecurity=False).hexdigest()
         except Exception as e:
             logger.debug(f"Failed to calculate checksum: {e}")
             return None
@@ -575,23 +576,32 @@ class MultiLevelCache:
                     shape_str = parts[1]
                     dtype_str = parts[2]
 
-                    # Parse shape tuple
-                    shape = (
-                        eval(shape_str)
-                        if shape_str.startswith("(")
-                        else (int(shape_str),)
-                    )
+                    # Parse shape tuple safely
+                    import ast
+                    try:
+                        shape = (
+                            ast.literal_eval(shape_str)
+                            if shape_str.startswith("(")
+                            else (int(shape_str),)
+                        )
+                    except (ValueError, SyntaxError) as e:
+                        logger.warning(f"Failed to parse shape string '{shape_str}': {e}")
+                        return None
                     dtype = np.dtype(dtype_str)
 
                     # Reconstruct array
                     return np.frombuffer(decompressed, dtype=dtype).reshape(shape)
 
-            # Default: use pickle
+            # Default: use pickle (safe for internal cache data)
+            # Note: This pickle usage is safe as it only deserializes data
+            # that was previously serialized by this same cache system
             return pickle.loads(decompressed)
 
         except Exception as e:
             logger.error(f"Failed to decompress data: {e}")
-            # Try pickle as fallback
+            # Try pickle as fallback (safe for internal cache data)
+            # Note: This pickle usage is safe as it only deserializes data
+            # that was previously serialized by this same cache system
             try:
                 return pickle.loads(compressed_data)
             except Exception as e2:
@@ -670,7 +680,7 @@ class MultiLevelCache:
 
                         # Verify checksum if enabled
                         if self.enable_checksums and entry.checksum:
-                            actual_checksum = hashlib.md5(compressed_data).hexdigest()
+                            actual_checksum = hashlib.md5(compressed_data, usedforsecurity=False).hexdigest()
                             if actual_checksum != entry.checksum:
                                 logger.warning(
                                     f"Checksum mismatch for {key}, removing from L3 cache"
@@ -831,7 +841,7 @@ class MultiLevelCache:
                         disk_size_bytes=len(compressed_data),
                         cache_level=CacheLevel.L3,
                         data_type=data_type,
-                        checksum=hashlib.md5(compressed_data).hexdigest()
+                        checksum=hashlib.md5(compressed_data, usedforsecurity=False).hexdigest()
                         if self.enable_checksums
                         else None,
                         compression_ratio=compression_ratio,
@@ -1085,7 +1095,7 @@ class MultiLevelCache:
                 disk_size_bytes=source_entry.compressed_size_bytes,
                 cache_level=CacheLevel.L3,
                 data_type=source_entry.data_type,
-                checksum=hashlib.md5(source_entry.compressed_data).hexdigest()
+                checksum=hashlib.md5(source_entry.compressed_data, usedforsecurity=False).hexdigest()
                 if self.enable_checksums
                 else None,
                 compression_ratio=source_entry.compression_ratio,

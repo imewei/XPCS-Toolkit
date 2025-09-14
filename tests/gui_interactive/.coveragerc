@@ -1,0 +1,58 @@
+# Coverage configuration for GUI tests
+
+[run]
+# Source code to measure
+source = xpcs_toolkit
+
+# Files to include in coverage
+include =
+    xpcs_toolkit/*
+    xpcs_toolkit/module/*
+    xpcs_toolkit/plothandler/*
+    xpcs_toolkit/threading/*
+
+# Files to exclude from coverage
+omit =
+    xpcs_toolkit/test*
+    xpcs_toolkit/__pycache__/*
+    xpcs_toolkit/*/test*
+    */test*
+    */tests/*
+    setup.py
+    conftest.py
+    */site-packages/*
+    */dist-packages/*
+    */__pycache__/*
+    */migrations/*
+
+# Measurement options
+branch = true
+data_file = .coverage.gui
+parallel = true
+
+[report]
+# Reporting options
+precision = 2
+show_missing = true
+skip_covered = false
+exclude_lines =
+    pragma: no cover
+    def __repr__
+    raise AssertionError
+    raise NotImplementedError
+    if __name__ == .__main__.:
+    if TYPE_CHECKING:
+    class .*\(.*Protocol.*\):
+    @(abc\.)?abstractmethod
+
+# Coverage thresholds
+fail_under = 70
+
+[html]
+# HTML report options
+directory = htmlcov_gui
+title = XPCS Toolkit GUI Test Coverage
+
+[xml]
+# XML report options
+output = coverage-gui.xml

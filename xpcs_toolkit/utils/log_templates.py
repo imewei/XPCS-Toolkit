@@ -14,14 +14,13 @@ Features:
 """
 
 import functools
+import logging
 import time
 import uuid
-from typing import Callable, Dict, Any, Union, List
 from contextlib import contextmanager
-import logging
+from typing import Any, Callable, Dict, List, Union
 
 from .logging_config import get_logger
-
 
 # =============================================================================
 # Performance Logging Templates

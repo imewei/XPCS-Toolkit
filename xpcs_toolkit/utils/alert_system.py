@@ -17,24 +17,25 @@ Features:
 
 from __future__ import annotations
 
-import time
 import threading
-from typing import Dict, List, Optional, Any, Callable
-from dataclasses import dataclass, field
+import time
 from collections import defaultdict, deque
+from dataclasses import dataclass, field
 from enum import Enum
+from typing import Any, Callable, Dict, List, Optional
 
 from PySide6.QtCore import QObject, QTimer, Signal
 
-# Import existing optimization and monitoring systems
-from .optimization_health_monitor import (
-    get_health_monitor,
-    HealthCheckResult,
-    HealthStatus,
-)
+from .logging_config import get_logger
 from .maintenance_scheduler import get_maintenance_scheduler
 from .memory_utils import SystemMemoryMonitor
-from .logging_config import get_logger
+
+# Import existing optimization and monitoring systems
+from .optimization_health_monitor import (
+    HealthCheckResult,
+    HealthStatus,
+    get_health_monitor,
+)
 
 logger = get_logger(__name__)
 

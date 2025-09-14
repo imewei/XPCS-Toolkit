@@ -12,16 +12,16 @@ from typing import Any, Callable
 from PySide6 import QtCore
 from PySide6.QtCore import QObject, Signal, Slot
 
-from .async_workers import DataLoadWorker, ComputationWorker, WorkerManager
-from .plot_workers import (
-    SaxsPlotWorker,
-    G2PlotWorker,
-    TwotimePlotWorker,
-    IntensityPlotWorker,
-    StabilityPlotWorker,
-    QMapPlotWorker,
-)
 from ..utils.logging_config import get_logger
+from .async_workers import ComputationWorker, DataLoadWorker, WorkerManager
+from .plot_workers import (
+    G2PlotWorker,
+    IntensityPlotWorker,
+    QMapPlotWorker,
+    SaxsPlotWorker,
+    StabilityPlotWorker,
+    TwotimePlotWorker,
+)
 
 logger = get_logger(__name__)
 

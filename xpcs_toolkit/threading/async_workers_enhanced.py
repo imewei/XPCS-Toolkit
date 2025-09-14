@@ -13,21 +13,20 @@ heavy plotting and data processing operations in background threads with:
 
 from __future__ import annotations
 
+import hashlib
+import os
+import pickle
+import threading
 import time
 import traceback
-import threading
-import hashlib
-import pickle
-import os
-import psutil
-from typing import Any, Callable, Dict, Tuple
-from enum import Enum
-from dataclasses import dataclass
 from collections import defaultdict, deque
+from dataclasses import dataclass
+from enum import Enum
+from typing import Any, Callable, Dict, Tuple
 
+import psutil
 from PySide6 import QtCore
-from PySide6.QtCore import QObject, QRunnable, QTimer, Signal, Slot, QMutex
-
+from PySide6.QtCore import QMutex, QObject, QRunnable, QTimer, Signal, Slot
 
 from ..utils.logging_config import get_logger
 
@@ -517,7 +516,7 @@ class PlotWorker(BaseAsyncWorker):
             # Create a hash of the function name and arguments
             func_name = getattr(self.plot_func, "__name__", str(self.plot_func))
             args_hash = hashlib.md5(
-                pickle.dumps((self.plot_args, self.plot_kwargs))
+                pickle.dumps((self.plot_args, self.plot_kwargs)), usedforsecurity=False
             ).hexdigest()[:8]
             return f"plot_{func_name}_{args_hash}"
         except Exception:
@@ -723,9 +722,9 @@ class ComputationWorker(BaseAsyncWorker):
         """Generate cache key for computation results."""
         try:
             func_name = getattr(self.compute_func, "__name__", str(self.compute_func))
-            data_hash = hashlib.md5(pickle.dumps(self.data, protocol=2)).hexdigest()[:8]
+            data_hash = hashlib.md5(pickle.dumps(self.data, protocol=2), usedforsecurity=False).hexdigest()[:8]
             kwargs_hash = hashlib.md5(
-                pickle.dumps(self.compute_kwargs, protocol=2)
+                pickle.dumps(self.compute_kwargs, protocol=2), usedforsecurity=False
             ).hexdigest()[:8]
             return f"compute_{func_name}_{data_hash}_{kwargs_hash}"
         except Exception:

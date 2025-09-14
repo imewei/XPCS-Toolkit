@@ -1,9 +1,10 @@
 """Console script for xpcs-toolkit."""
 
-import sys
-import signal
-import atexit
 import argparse
+import atexit
+import signal
+import sys
+
 from xpcs_toolkit.utils.logging_config import (
     get_logger,
     initialize_logging,
@@ -29,9 +30,9 @@ def safe_shutdown():
     # 1. Shutdown threading components first
     try:
         from xpcs_toolkit.threading.cleanup_optimized import (
+            CleanupPriority,
             get_object_registry,
             schedule_type_cleanup,
-            CleanupPriority,
             shutdown_optimized_cleanup,
         )
 
@@ -43,7 +44,9 @@ def safe_shutdown():
 
         logger.debug(f"Shutdown {len(worker_managers)} WorkerManager instances")
     except Exception as e:
-        logger.debug(f"Error shutting down worker managers: {e}")  # Log but continue shutdown
+        logger.debug(
+            f"Error shutting down worker managers: {e}"
+        )  # Log but continue shutdown
 
     # 2. Clear HDF5 connection pool
     try:
@@ -51,13 +54,15 @@ def safe_shutdown():
 
         _connection_pool.clear_pool(from_destructor=True)
     except Exception as e:
-        logger.debug(f"Error clearing HDF5 connection pool: {e}")  # Log but continue shutdown
+        logger.debug(
+            f"Error clearing HDF5 connection pool: {e}"
+        )  # Log but continue shutdown
 
     # 3. Schedule XpcsFile cache clearing in background (non-blocking)
     try:
         from xpcs_toolkit.threading.cleanup_optimized import (
-            schedule_type_cleanup,
             CleanupPriority,
+            schedule_type_cleanup,
         )
 
         # Schedule high-priority cleanup for XpcsFile objects
@@ -74,7 +79,9 @@ def safe_shutdown():
         smart_gc_collect("shutdown")
         logger.info("Safe shutdown sequence completed")
     except Exception as e:
-        logger.debug(f"Error during smart garbage collection: {e}")  # Log but continue shutdown
+        logger.debug(
+            f"Error during smart garbage collection: {e}"
+        )  # Log but continue shutdown
 
     # 5. Shutdown cleanup system
     try:
@@ -82,7 +89,9 @@ def safe_shutdown():
 
         shutdown_optimized_cleanup()
     except Exception as e:
-        logger.debug(f"Error during cleanup system shutdown: {e}")  # Log but continue shutdown
+        logger.debug(
+            f"Error during cleanup system shutdown: {e}"
+        )  # Log but continue shutdown
 
 
 def signal_handler(signum, frame):

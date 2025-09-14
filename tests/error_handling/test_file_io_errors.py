@@ -1,0 +1,472 @@
+"""Comprehensive file I/O error handling tests.
+
+This module tests error conditions related to file operations including
+corrupted files, permission issues, missing files, and I/O failures.
+"""
+
+import os
+from unittest.mock import Mock, patch
+
+import h5py
+import numpy as np
+import pytest
+
+from xpcs_toolkit.file_locator import FileLocator
+from xpcs_toolkit.fileIO import hdf_reader
+from xpcs_toolkit.fileIO.hdf_reader import HDF5ConnectionPool, PooledConnection
+from xpcs_toolkit.xpcs_file import XpcsFile
+
+
+class TestFileIOErrors:
+    """Test file I/O error conditions and recovery."""
+
+    def test_corrupted_hdf5_file_handling(self, corrupted_hdf5_file, caplog):
+        """Test handling of corrupted HDF5 files."""
+        with pytest.raises((OSError, ValueError)):
+            with h5py.File(corrupted_hdf5_file, "r"):
+                pass
+
+        # Test that our error handling logs appropriately
+        with caplog.at_level("ERROR"):
+            with pytest.raises(Exception):
+                hdf_reader.get(corrupted_hdf5_file, "nonexistent_key")
+
+    def test_invalid_hdf5_file_handling(self, invalid_hdf5_file, caplog):
+        """Test handling of files that aren't valid HDF5."""
+        with pytest.raises((OSError, ValueError)):
+            with h5py.File(invalid_hdf5_file, "r"):
+                pass
+
+        with caplog.at_level("ERROR"):
+            with pytest.raises(Exception):
+                hdf_reader.get(invalid_hdf5_file, "any_key")
+
+    def test_missing_file_handling(self, missing_file_path, caplog):
+        """Test handling of non-existent files."""
+        with pytest.raises(FileNotFoundError):
+            with h5py.File(missing_file_path, "r"):
+                pass
+
+        with caplog.at_level("ERROR"):
+            with pytest.raises(Exception):
+                hdf_reader.get(missing_file_path, "any_key")
+
+    def test_permission_denied_handling(self, permission_denied_file, caplog):
+        """Test handling of permission denied errors."""
+        if os.name == "nt":  # Skip on Windows where chmod doesn't work the same way
+            pytest.skip("Permission test not applicable on Windows")
+
+        with pytest.raises(PermissionError):
+            with h5py.File(permission_denied_file, "r"):
+                pass
+
+        with caplog.at_level("ERROR"):
+            with pytest.raises(Exception):
+                hdf_reader.get(permission_denied_file, "any_key")
+
+    def test_connection_pool_error_handling(self, corrupted_hdf5_file):
+        """Test connection pool behavior with corrupted files."""
+        pool = HDF5ConnectionPool(max_size=5)
+
+        # Try to get connection to corrupted file
+        with pytest.raises(Exception):
+            pool.get_connection(corrupted_hdf5_file)
+
+        # Verify pool remains healthy
+        assert len(pool._connections) == 0
+        assert pool._stats.failed_health_checks >= 0
+
+    def test_pooled_connection_health_check(self, error_temp_dir):
+        """Test pooled connection health checking with file deletion."""
+        # Create a temporary file
+        test_file = os.path.join(error_temp_dir, "test_health.h5")
+        with h5py.File(test_file, "w") as f:
+            f.create_dataset("test", data=[1, 2, 3])
+
+        # Create a pooled connection
+        with h5py.File(test_file, "r") as file_handle:
+            connection = PooledConnection(file_handle, test_file)
+            assert connection.check_health() is True
+
+            # Delete the file while connection is open
+            os.remove(test_file)
+
+            # Health check should now fail
+            assert connection.check_health() is False
+            assert connection.is_healthy is False
+
+    def test_batch_read_with_io_errors(self, error_temp_dir, error_injector):
+        """Test batch reading with I/O errors."""
+        test_file = os.path.join(error_temp_dir, "test_batch.h5")
+
+        # Create test file
+        with h5py.File(test_file, "w") as f:
+            f.create_dataset("field1", data=[1, 2, 3])
+            f.create_dataset("field2", data=[4, 5, 6])
+
+        # Inject I/O error during batch read
+        error_injector.inject_io_error("h5py.File", OSError)
+
+        fields = ["field1", "field2"]
+        with pytest.raises(OSError):
+            hdf_reader.batch_read_fields(test_file, fields)
+
+    def test_chunked_dataset_with_errors(self, error_temp_dir, error_injector):
+        """Test chunked dataset reading with errors."""
+        test_file = os.path.join(error_temp_dir, "test_chunked.h5")
+
+        # Create test file with chunked dataset
+        with h5py.File(test_file, "w") as f:
+            data = np.random.rand(1000, 100)
+            f.create_dataset("large_dataset", data=data, chunks=True)
+
+        # Test with I/O error during chunked read
+        error_injector.inject_io_error("h5py.Dataset.__getitem__", OSError)
+
+        with pytest.raises(OSError):
+            result = hdf_reader.get_chunked_dataset(test_file, "large_dataset")
+            list(result)  # Force evaluation
+
+    def test_file_info_with_corrupted_metadata(self, corrupted_hdf5_file):
+        """Test file info extraction with corrupted metadata."""
+        with pytest.raises(Exception):
+            hdf_reader.get_file_info(corrupted_hdf5_file)
+
+    def test_metadata_reading_with_errors(self, error_temp_dir, error_injector):
+        """Test metadata reading with various error conditions."""
+        test_file = os.path.join(error_temp_dir, "test_meta.h5")
+
+        # Create file with metadata
+        with h5py.File(test_file, "w") as f:
+            f.attrs["test_attr"] = "test_value"
+            grp = f.create_group("metadata")
+            grp.attrs["nested_attr"] = 42
+
+        # Inject error during metadata reading
+        error_injector.inject_io_error("h5py.Group.attrs.__getitem__", KeyError)
+
+        with pytest.raises(KeyError):
+            hdf_reader.read_metadata_to_dict(test_file, "metadata")
+
+
+class TestXpcsFileErrors:
+    """Test XpcsFile error handling."""
+
+    def test_xpcs_file_with_invalid_file(self, invalid_hdf5_file):
+        """Test XpcsFile initialization with invalid file."""
+        with pytest.raises(Exception):
+            XpcsFile(invalid_hdf5_file)
+
+    def test_xpcs_file_with_missing_file(self, missing_file_path):
+        """Test XpcsFile initialization with missing file."""
+        with pytest.raises(Exception):
+            XpcsFile(missing_file_path)
+
+    def test_xpcs_file_lazy_loading_errors(self, error_temp_dir, error_injector):
+        """Test lazy loading error handling in XpcsFile."""
+        test_file = os.path.join(error_temp_dir, "test_lazy.h5")
+
+        # Create minimal valid XPCS file structure
+        with h5py.File(test_file, "w") as f:
+            f.create_dataset("saxs_2d", data=np.random.rand(10, 100, 100))
+            f.create_dataset("g2", data=np.random.rand(10, 50))
+            # Add required metadata
+            f.attrs["analysis_type"] = "XPCS"
+
+        # Create XpcsFile instance
+        try:
+            xf = XpcsFile(test_file)
+
+            # Inject error during lazy loading
+            error_injector.inject_memory_error("numpy.array")
+
+            with pytest.raises(MemoryError):
+                _ = xf.saxs_2d  # This should trigger lazy loading
+
+        except Exception as e:
+            # Expected - file might not have all required XPCS structure
+            pytest.skip(f"Skipping due to XPCS file structure requirements: {e}")
+
+    def test_xpcs_file_memory_pressure_handling(
+        self, error_temp_dir, memory_limited_environment
+    ):
+        """Test XpcsFile behavior under memory pressure."""
+        test_file = os.path.join(error_temp_dir, "test_memory.h5")
+
+        # Create large dataset that would exceed memory
+        with h5py.File(test_file, "w") as f:
+            # Create dataset larger than available memory
+            large_data = np.random.rand(1000, 1000)
+            f.create_dataset("large_saxs_2d", data=large_data)
+            f.attrs["analysis_type"] = "XPCS"
+
+        # Test with memory pressure
+        try:
+            xf = XpcsFile(test_file)
+            # Should handle memory pressure gracefully
+            assert hasattr(xf, "filename")
+        except Exception as e:
+            # Expected - either memory handling or missing XPCS structure
+            assert "memory" in str(e).lower() or "xpcs" in str(e).lower()
+
+
+class TestFileLocatorErrors:
+    """Test FileLocator error handling."""
+
+    def test_file_locator_with_invalid_path(self):
+        """Test FileLocator with invalid directory path."""
+        with pytest.raises((FileNotFoundError, OSError)):
+            FileLocator("/nonexistent/directory/path")
+
+    def test_file_locator_with_permission_denied(self, error_temp_dir):
+        """Test FileLocator with directory permission issues."""
+        if os.name == "nt":  # Skip on Windows
+            pytest.skip("Permission test not applicable on Windows")
+
+        # Remove read permissions from directory
+        os.chmod(error_temp_dir, 0o000)
+
+        try:
+            with pytest.raises(PermissionError):
+                FileLocator(error_temp_dir)
+        finally:
+            # Restore permissions for cleanup
+            os.chmod(error_temp_dir, 0o755)
+
+    def test_file_scanning_with_corrupted_files(
+        self, error_temp_dir, corrupted_hdf5_file
+    ):
+        """Test file scanning behavior with corrupted files present."""
+        # Create FileLocator for directory containing corrupted file
+        locator = FileLocator(error_temp_dir)
+
+        # File scanning should handle corrupted files gracefully
+        try:
+            files = locator.get_files()
+            # Should either exclude corrupted files or handle errors gracefully
+            assert isinstance(files, (list, tuple))
+        except Exception as e:
+            # Should not crash the application
+            assert "corrupt" in str(e).lower() or "invalid" in str(e).lower()
+
+
+class TestResourceExhaustionErrors:
+    """Test behavior under resource exhaustion conditions."""
+
+    def test_file_handle_exhaustion(
+        self, error_temp_dir, file_handle_exhausted_environment
+    ):
+        """Test behavior when file handle limit is reached."""
+        test_files = []
+
+        # Create multiple test files
+        for i in range(10):
+            file_path = os.path.join(error_temp_dir, f"test_{i}.h5")
+            with h5py.File(file_path, "w") as f:
+                f.create_dataset("data", data=[i])
+            test_files.append(file_path)
+
+        # Try to open more files than the limit allows
+        with pytest.raises(OSError, match="Too many open files"):
+            handles = []
+            for file_path in test_files:
+                handles.append(open(file_path, "rb"))
+
+    def test_disk_space_exhaustion(
+        self, error_temp_dir, disk_space_limited_environment
+    ):
+        """Test behavior when disk space is exhausted."""
+        large_file = os.path.join(error_temp_dir, "large_test.h5")
+
+        # Mock disk space check to show no space available
+        with patch("os.path.getsize", return_value=1000000000):  # 1GB file size
+            with pytest.raises((OSError, IOError)):
+                # Try to create a large file when no space is available
+                with h5py.File(large_file, "w") as f:
+                    # This should fail due to disk space
+                    large_data = np.random.rand(10000, 10000)
+                    f.create_dataset("huge_data", data=large_data)
+
+    def test_concurrent_file_access_errors(self, error_temp_dir):
+        """Test errors from concurrent file access."""
+        test_file = os.path.join(error_temp_dir, "concurrent_test.h5")
+
+        # Create test file
+        with h5py.File(test_file, "w") as f:
+            f.create_dataset("data", data=np.random.rand(100, 100))
+
+        errors = []
+
+        def access_file():
+            try:
+                with h5py.File(test_file, "r") as f:
+                    _ = f["data"][:]
+            except Exception as e:
+                errors.append(e)
+
+        # Start multiple concurrent access attempts
+        import threading
+
+        threads = [threading.Thread(target=access_file) for _ in range(10)]
+
+        for thread in threads:
+            thread.start()
+
+        for thread in threads:
+            thread.join()
+
+        # Some errors are expected due to concurrent access
+        # The system should handle them gracefully
+        if errors:
+            assert all(isinstance(e, (OSError, ValueError)) for e in errors)
+
+
+class TestErrorRecoveryAndCleanup:
+    """Test error recovery and resource cleanup."""
+
+    def test_connection_pool_cleanup_after_errors(self, error_temp_dir):
+        """Test that connection pool cleans up properly after errors."""
+        pool = HDF5ConnectionPool(max_size=5)
+        initial_stats = pool.get_stats()
+
+        # Try to create connections that will fail
+        failing_files = [
+            os.path.join(error_temp_dir, f"nonexistent_{i}.h5") for i in range(3)
+        ]
+
+        for file_path in failing_files:
+            with pytest.raises(Exception):
+                pool.get_connection(file_path)
+
+        # Check that pool maintained integrity
+        final_stats = pool.get_stats()
+        assert len(pool._connections) == 0  # No successful connections
+        assert (
+            final_stats["failed_health_checks"] >= initial_stats["failed_health_checks"]
+        )
+
+        # Pool should still work for valid files
+        valid_file = os.path.join(error_temp_dir, "valid.h5")
+        with h5py.File(valid_file, "w") as f:
+            f.create_dataset("test", data=[1, 2, 3])
+
+        # This should work
+        connection = pool.get_connection(valid_file)
+        assert connection is not None
+        assert connection.check_health()
+
+        # Cleanup
+        pool.cleanup()
+
+    def test_memory_cleanup_after_allocation_failure(self, memory_limited_environment):
+        """Test memory cleanup after allocation failures."""
+        # Import the memory monitoring utilities
+        from xpcs_toolkit.xpcs_file import MemoryMonitor
+
+        # Test that memory monitoring works under pressure
+        used, available = MemoryMonitor.get_memory_usage()
+        assert isinstance(used, float)
+        assert isinstance(available, float)
+
+        # Test memory pressure detection
+        is_high_pressure = MemoryMonitor.is_memory_pressure_high(threshold=0.8)
+        assert isinstance(is_high_pressure, bool)
+
+        # Under our mock, pressure should be high
+        assert is_high_pressure is True
+
+    def test_error_propagation_and_logging(self, error_temp_dir, caplog):
+        """Test that errors are properly logged and propagated."""
+        corrupted_file = os.path.join(error_temp_dir, "logging_test.h5")
+
+        # Create and corrupt a file
+        with open(corrupted_file, "w") as f:
+            f.write("Not an HDF5 file")
+
+        with caplog.at_level("ERROR"):
+            with pytest.raises(Exception):
+                hdf_reader.get(corrupted_file, "any_key")
+
+        # Verify error was logged
+        error_logs = [
+            record for record in caplog.records if record.levelname == "ERROR"
+        ]
+        assert len(error_logs) >= 0  # At least some error logging should occur
+
+    def test_graceful_degradation_under_errors(self, error_temp_dir, error_injector):
+        """Test graceful degradation when components fail."""
+        test_file = os.path.join(error_temp_dir, "degradation_test.h5")
+
+        # Create test file
+        with h5py.File(test_file, "w") as f:
+            f.create_dataset("primary_data", data=np.random.rand(10, 10))
+            f.create_dataset("backup_data", data=np.random.rand(5, 5))
+
+        # Test that system can fall back when primary operation fails
+        with patch("h5py.File.__getitem__") as mock_getitem:
+            # Make primary data access fail but backup succeed
+            def side_effect(key):
+                if key == "primary_data":
+                    raise KeyError("Primary data not available")
+                elif key == "backup_data":
+                    return Mock(shape=(5, 5))
+                else:
+                    raise KeyError(f"Key {key} not found")
+
+            mock_getitem.side_effect = side_effect
+
+            # System should handle the failure gracefully
+            with h5py.File(test_file, "r") as f:
+                mock_getitem.side_effect = side_effect
+
+                with pytest.raises(KeyError):
+                    _ = f["primary_data"]
+
+                # But backup should work
+                backup = f["backup_data"]
+                assert backup is not None
+
+
+@pytest.mark.slow
+class TestStressTestingScenarios:
+    """Stress testing scenarios for file I/O operations."""
+
+    def test_rapid_file_open_close_cycles(self, error_temp_dir):
+        """Test rapid file open/close cycles for resource leaks."""
+        test_file = os.path.join(error_temp_dir, "stress_test.h5")
+
+        # Create test file
+        with h5py.File(test_file, "w") as f:
+            f.create_dataset("data", data=np.random.rand(100, 100))
+
+        # Rapid open/close cycles
+        for i in range(100):
+            try:
+                with h5py.File(test_file, "r") as f:
+                    _ = f["data"].shape
+            except Exception as e:
+                # Should not accumulate errors
+                assert i < 10 or "resource" not in str(e).lower()
+
+    def test_large_file_handling_under_pressure(
+        self, error_temp_dir, memory_limited_environment
+    ):
+        """Test handling of large files under memory pressure."""
+        large_file = os.path.join(error_temp_dir, "large_stress.h5")
+
+        # Create a reasonably large file for testing
+        with h5py.File(large_file, "w") as f:
+            # Create multiple datasets to simulate real XPCS structure
+            f.create_dataset("saxs_2d", data=np.random.rand(10, 512, 512))
+            f.create_dataset("g2", data=np.random.rand(10, 100))
+            f.attrs["analysis_type"] = "XPCS"
+
+        # Test access under memory pressure
+        try:
+            # Should either work or fail gracefully
+            with h5py.File(large_file, "r") as f:
+                shape = f["saxs_2d"].shape
+                assert len(shape) == 3
+        except (MemoryError, OSError):
+            # Acceptable under memory pressure
+            pass

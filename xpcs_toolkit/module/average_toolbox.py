@@ -15,11 +15,13 @@ from PySide6.QtCore import QObject, Slot
 from sklearn.cluster import KMeans as sk_kmeans
 from tqdm import trange
 
+from xpcs_toolkit.utils.logging_config import get_logger
+
 # Local imports
 from ..fileIO.hdf_reader import put
 from ..helper.listmodel import ListDataModel
-from ..xpcs_file import XpcsFile as XF, MemoryMonitor
-from xpcs_toolkit.utils.logging_config import get_logger
+from ..xpcs_file import MemoryMonitor
+from ..xpcs_file import XpcsFile as XF
 
 logger = get_logger(__name__)
 

@@ -12,21 +12,21 @@ This module provides:
 from __future__ import annotations
 
 import time
-import psutil
 from collections import defaultdict, deque
 from dataclasses import dataclass, field
-from typing import Any, Dict, Optional, Set
 from enum import Enum
-from queue import PriorityQueue, Empty
+from queue import Empty, PriorityQueue
+from typing import Any, Dict, Optional, Set
 
+import psutil
 from PySide6.QtCore import (
-    QObject,
-    QTimer,
-    QRunnable,
-    QThreadPool,
-    Signal,
     QMutex,
     QMutexLocker,
+    QObject,
+    QRunnable,
+    QThreadPool,
+    QTimer,
+    Signal,
 )
 
 from ..utils.logging_config import get_logger

@@ -9,10 +9,10 @@ import pyqtgraph as pg
 # Local imports
 from .file_locator import FileLocator
 from .helper.listmodel import TableDataModel
-from .module import saxs2d, saxs1d, intt, stability, g2mod, tauq, twotime
+from .module import g2mod, intt, saxs1d, saxs2d, stability, tauq, twotime
 from .module.average_toolbox import AverageToolbox
 from .utils.logging_config import get_logger
-from .xpcs_file import XpcsFile, MemoryMonitor
+from .xpcs_file import MemoryMonitor, XpcsFile
 
 logger = get_logger(__name__)
 
@@ -160,8 +160,8 @@ class ViewerKernel(FileLocator):
         # Schedule background cleanup for XpcsFile objects (non-blocking)
         try:
             from .threading.cleanup_optimized import (
-                schedule_type_cleanup,
                 CleanupPriority,
+                schedule_type_cleanup,
             )
 
             schedule_type_cleanup("XpcsFile", CleanupPriority.HIGH)
@@ -296,23 +296,35 @@ class ViewerKernel(FileLocator):
     def plot_tauq_pre(self, hdl=None, rows=None):
         xf_list = self.get_xf_list(rows=rows, filter_atype="Multitau")
         short_list = [xf for xf in xf_list if xf.fit_summary is not None]
-        
+
         if len(short_list) == 0:
-            logger.warning(f"No files with G2 fitting results found for diffusion analysis. "
-                         f"Found {len(xf_list)} Multitau files but none have been fitted.")
+            logger.warning(
+                f"No files with G2 fitting results found for diffusion analysis. "
+                f"Found {len(xf_list)} Multitau files but none have been fitted."
+            )
             # Clear the plot and show a message
             if hdl is not None:
                 hdl.clear()
                 ax = hdl.subplots(1, 1)
-                ax.text(0.5, 0.5, 'No G2 fitting results available.\n\nPlease:\n1. Go to "g2" tab\n2. Select files\n3. Click "update plot" to perform G2 fitting\n4. Return to "Diffusion" tab', 
-                       ha='center', va='center', fontsize=12, 
-                       bbox=dict(boxstyle="round,pad=0.3", facecolor="lightblue", alpha=0.7))
+                ax.text(
+                    0.5,
+                    0.5,
+                    'No G2 fitting results available.\n\nPlease:\n1. Go to "g2" tab\n2. Select files\n3. Click "update plot" to perform G2 fitting\n4. Return to "Diffusion" tab',
+                    ha="center",
+                    va="center",
+                    fontsize=12,
+                    bbox=dict(
+                        boxstyle="round,pad=0.3", facecolor="lightblue", alpha=0.7
+                    ),
+                )
                 ax.set_xlim(0, 1)
                 ax.set_ylim(0, 1)
-                ax.axis('off')
+                ax.axis("off")
                 hdl.tight_layout()
         else:
-            logger.info(f"Found {len(short_list)} files with G2 fitting results for diffusion analysis")
+            logger.info(
+                f"Found {len(short_list)} files with G2 fitting results for diffusion analysis"
+            )
             tauq.plot_pre(short_list, hdl)
 
     def plot_tauq(
@@ -448,7 +460,9 @@ class ViewerKernel(FileLocator):
 
         # Use memory-aware caching for current dataset
         current_dset = self._get_cached_dataset(xfile.fname, xfile)
-        logger.debug(f"ViewerKernel.plot_twotime: current_dset cached={current_dset is not None}, fname={xfile.fname}")
+        logger.debug(
+            f"ViewerKernel.plot_twotime: current_dset cached={current_dset is not None}, fname={xfile.fname}"
+        )
 
         if current_dset is None or current_dset.fname != xfile.fname:
             logger.debug(f"Dataset changed, loading new qbin labels for {xfile.fname}")
@@ -460,7 +474,9 @@ class ViewerKernel(FileLocator):
             if MemoryMonitor.is_memory_pressure_high(self._memory_cleanup_threshold):
                 self._cleanup_memory()
         else:
-            logger.debug(f"Using cached dataset, getting qbin labels for ComboBox population")
+            logger.debug(
+                "Using cached dataset, getting qbin labels for ComboBox population"
+            )
             # Always get qbin labels for ComboBox population, even for cached datasets
             new_qbin_labels = current_dset.get_twotime_qbin_labels()
 

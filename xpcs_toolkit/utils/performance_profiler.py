@@ -7,14 +7,15 @@ to identify bottlenecks and measure optimization improvements.
 
 from __future__ import annotations
 
-import time
-import functools
 import cProfile
-import pstats
+import functools
 import io
-from typing import Callable, Any
-import numpy as np
+import pstats
+import time
 from contextlib import contextmanager
+from typing import Any, Callable
+
+import numpy as np
 
 from .logging_config import get_logger
 
@@ -327,8 +328,9 @@ def memory_usage_profiler(func: Callable):
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
         try:
-            import psutil
             import os
+
+            import psutil
 
             process = psutil.Process(os.getpid())
             memory_before = process.memory_info().rss / 1024 / 1024  # MB

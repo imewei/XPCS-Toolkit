@@ -11,17 +11,18 @@ This module provides:
 
 from __future__ import annotations
 
-import time
 import threading
-from typing import Any, Callable, Optional
+import time
 from dataclasses import dataclass, field
+from typing import Any, Callable, Optional
 
 from PySide6.QtCore import QObject, QRunnable, Signal
 
-# Import our optimization systems
-from .signal_optimization import get_signal_optimizer, SignalPriority
-from .enhanced_thread_pool import get_thread_pool_manager
 from ..utils.logging_config import get_logger
+from .enhanced_thread_pool import get_thread_pool_manager
+
+# Import our optimization systems
+from .signal_optimization import SignalPriority, get_signal_optimizer
 
 logger = get_logger(__name__)
 

@@ -11,21 +11,22 @@ This module provides comprehensive performance monitoring for:
 
 from __future__ import annotations
 
-import time
 import json
 import statistics
+import time
 from collections import deque
-from dataclasses import dataclass, field, asdict
-from typing import Any, Dict, List, Optional, Tuple
+from dataclasses import asdict, dataclass, field
 from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple
 
 from PySide6.QtCore import QObject, QTimer, Signal
 
-# Import our optimization systems
-from .signal_optimization import get_signal_optimizer
+from ..utils.logging_config import get_logger
 from .enhanced_thread_pool import get_thread_pool_manager
 from .optimized_workers import WorkerPerformanceMetrics
-from ..utils.logging_config import get_logger
+
+# Import our optimization systems
+from .signal_optimization import get_signal_optimizer
 
 logger = get_logger(__name__)
 

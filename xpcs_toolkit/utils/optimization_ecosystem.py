@@ -14,30 +14,30 @@ from __future__ import annotations
 import threading
 import time
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Any
 from enum import Enum
+from typing import Any, Dict, List, Optional
 
-from PySide6.QtCore import QObject, Signal, QTimer
+from PySide6.QtCore import QObject, QTimer, Signal
+
+from .alert_system import Alert, AlertSeverity, AlertSystem, get_alert_system
+from .cpu_bottleneck_analyzer import CPUBottleneckAnalyzer, get_bottleneck_analyzer
+from .logging_config import get_logger
+from .maintenance_scheduler import (
+    MaintenanceResult,
+    MaintenanceScheduler,
+    get_maintenance_scheduler,
+)
 
 # Import all subagent components
-from .optimization_health_monitor import get_health_monitor, OptimizationHealthMonitor
-from .performance_dashboard import create_performance_dashboard, PerformanceDashboard
-from .maintenance_scheduler import (
-    get_maintenance_scheduler,
-    MaintenanceScheduler,
-    MaintenanceResult,
-)
-from .alert_system import get_alert_system, AlertSystem, Alert, AlertSeverity
-from .workflow_profiler import get_workflow_profiler, WorkflowProfiler
-from .cpu_bottleneck_analyzer import get_bottleneck_analyzer, CPUBottleneckAnalyzer
-from .usage_pattern_miner import get_pattern_miner, UsagePatternMiner
+from .optimization_health_monitor import OptimizationHealthMonitor, get_health_monitor
+from .performance_dashboard import PerformanceDashboard, create_performance_dashboard
+from .usage_pattern_miner import UsagePatternMiner, get_pattern_miner
 from .workflow_optimization_report import (
-    get_report_generator,
-    WorkflowOptimizationReportGenerator,
     ReportFormat,
+    WorkflowOptimizationReportGenerator,
+    get_report_generator,
 )
-
-from .logging_config import get_logger
+from .workflow_profiler import WorkflowProfiler, get_workflow_profiler
 
 logger = get_logger(__name__)
 

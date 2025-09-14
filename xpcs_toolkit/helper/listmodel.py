@@ -1,4 +1,5 @@
 from PySide6 import QtCore
+
 from xpcs_toolkit.utils.logging_config import get_logger
 
 logger = get_logger(__name__)

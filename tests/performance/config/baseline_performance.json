@@ -1,0 +1,340 @@
+{
+  "_metadata": {
+    "created_date": "2024-09-13",
+    "xpcs_toolkit_version": "1.0.0",
+    "python_version": "3.12",
+    "system_info": {
+      "platform": "darwin",
+      "architecture": "arm64",
+      "cpu_cores": 8,
+      "memory_gb": 16
+    },
+    "description": "Baseline performance metrics for XPCS Toolkit performance regression detection"
+  },
+  "hdf5_basic_operations": {
+    "test_file_open_close_performance[tiny]": {
+      "mean_time": 0.0023,
+      "std_time": 0.0003,
+      "min_time": 0.0019,
+      "max_time": 0.0031,
+      "rounds": 20
+    },
+    "test_file_open_close_performance[small]": {
+      "mean_time": 0.0045,
+      "std_time": 0.0006,
+      "min_time": 0.0038,
+      "max_time": 0.0058,
+      "rounds": 20
+    },
+    "test_file_open_close_performance[medium]": {
+      "mean_time": 0.0087,
+      "std_time": 0.0011,
+      "min_time": 0.0072,
+      "max_time": 0.0108,
+      "rounds": 20
+    },
+    "test_metadata_access_performance": {
+      "mean_time": 0.0012,
+      "std_time": 0.0002,
+      "min_time": 0.0009,
+      "max_time": 0.0018,
+      "rounds": 50
+    }
+  },
+  "hdf5_data_reading": {
+    "test_full_dataset_read_performance[exchange/data]": {
+      "mean_time": 0.125,
+      "std_time": 0.018,
+      "min_time": 0.098,
+      "max_time": 0.165,
+      "rounds": 10
+    },
+    "test_full_dataset_read_performance[exchange/C2T_all]": {
+      "mean_time": 0.0045,
+      "std_time": 0.0008,
+      "min_time": 0.0034,
+      "max_time": 0.0062,
+      "rounds": 10
+    },
+    "test_batch_dataset_read_performance": {
+      "mean_time": 0.018,
+      "std_time": 0.003,
+      "min_time": 0.014,
+      "max_time": 0.025,
+      "rounds": 15
+    }
+  },
+  "connection_pool": {
+    "test_connection_pool_creation_performance": {
+      "mean_time": 0.00008,
+      "std_time": 0.00002,
+      "min_time": 0.00005,
+      "max_time": 0.00015,
+      "rounds": 100
+    },
+    "test_connection_acquisition_performance": {
+      "mean_time": 0.0034,
+      "std_time": 0.0006,
+      "min_time": 0.0025,
+      "max_time": 0.0048,
+      "rounds": 100
+    },
+    "test_concurrent_connection_usage": {
+      "mean_time": 0.0152,
+      "std_time": 0.0025,
+      "min_time": 0.0118,
+      "max_time": 0.0198,
+      "rounds": 20
+    }
+  },
+  "g2_analysis": {
+    "test_g2_data_extraction_performance[10]": {
+      "mean_time": 0.0045,
+      "std_time": 0.0008,
+      "min_time": 0.0035,
+      "max_time": 0.0062,
+      "rounds": 20
+    },
+    "test_g2_data_extraction_performance[20]": {
+      "mean_time": 0.0078,
+      "std_time": 0.0012,
+      "min_time": 0.0061,
+      "max_time": 0.0102,
+      "rounds": 20
+    },
+    "test_g2_data_extraction_performance[50]": {
+      "mean_time": 0.0185,
+      "std_time": 0.0028,
+      "min_time": 0.0148,
+      "max_time": 0.0234,
+      "rounds": 20
+    },
+    "test_g2_fitting_performance[single_exp]": {
+      "mean_time": 0.0234,
+      "std_time": 0.0045,
+      "min_time": 0.0178,
+      "max_time": 0.0312,
+      "rounds": 15
+    },
+    "test_g2_fitting_performance[double_exp]": {
+      "mean_time": 0.0456,
+      "std_time": 0.0089,
+      "min_time": 0.0334,
+      "max_time": 0.0623,
+      "rounds": 15
+    },
+    "test_multitau_algorithm_performance": {
+      "mean_time": 0.125,
+      "std_time": 0.023,
+      "min_time": 0.095,
+      "max_time": 0.168,
+      "rounds": 8
+    }
+  },
+  "saxs_analysis": {
+    "test_saxs_2d_analysis_performance[(64, 64)]": {
+      "mean_time": 0.0089,
+      "std_time": 0.0015,
+      "min_time": 0.0068,
+      "max_time": 0.0118,
+      "rounds": 15
+    },
+    "test_saxs_2d_analysis_performance[(128, 128)]": {
+      "mean_time": 0.0234,
+      "std_time": 0.0038,
+      "min_time": 0.0184,
+      "max_time": 0.0298,
+      "rounds": 15
+    },
+    "test_saxs_2d_analysis_performance[(256, 256)]": {
+      "mean_time": 0.0876,
+      "std_time": 0.0145,
+      "min_time": 0.0698,
+      "max_time": 0.1125,
+      "rounds": 15
+    },
+    "test_radial_averaging_performance": {
+      "mean_time": 0.0456,
+      "std_time": 0.0078,
+      "min_time": 0.0356,
+      "max_time": 0.0598,
+      "rounds": 10
+    }
+  },
+  "twotime_analysis": {
+    "test_twotime_correlation_matrix_performance[64]": {
+      "mean_time": 0.234,
+      "std_time": 0.045,
+      "min_time": 0.178,
+      "max_time": 0.312,
+      "rounds": 8
+    },
+    "test_twotime_correlation_matrix_performance[128]": {
+      "mean_time": 0.876,
+      "std_time": 0.145,
+      "min_time": 0.698,
+      "max_time": 1.125,
+      "rounds": 8
+    },
+    "test_twotime_correlation_matrix_performance[256]": {
+      "mean_time": 3.456,
+      "std_time": 0.567,
+      "min_time": 2.789,
+      "max_time": 4.234,
+      "rounds": 8
+    }
+  },
+  "memory_management": {
+    "test_numpy_array_allocation_performance[10]": {
+      "mean_time": 0.0123,
+      "std_time": 0.0023,
+      "min_time": 0.0095,
+      "max_time": 0.0156,
+      "rounds": 5,
+      "memory_peak": 25.6
+    },
+    "test_numpy_array_allocation_performance[50]": {
+      "mean_time": 0.0567,
+      "std_time": 0.0089,
+      "min_time": 0.0445,
+      "max_time": 0.0723,
+      "rounds": 5,
+      "memory_peak": 112.3
+    },
+    "test_garbage_collection_performance": {
+      "mean_time": 0.234,
+      "std_time": 0.045,
+      "min_time": 0.178,
+      "max_time": 0.298,
+      "rounds": 5,
+      "memory_delta": -15.2
+    }
+  },
+  "threading_performance": {
+    "test_thread_pool_performance[1]": {
+      "mean_time": 2.345,
+      "std_time": 0.234,
+      "min_time": 1.998,
+      "max_time": 2.789,
+      "rounds": 5
+    },
+    "test_thread_pool_performance[2]": {
+      "mean_time": 1.234,
+      "std_time": 0.156,
+      "min_time": 1.045,
+      "max_time": 1.456,
+      "rounds": 5
+    },
+    "test_thread_pool_performance[4]": {
+      "mean_time": 0.678,
+      "std_time": 0.089,
+      "min_time": 0.567,
+      "max_time": 0.798,
+      "rounds": 5
+    },
+    "test_thread_pool_performance[8]": {
+      "mean_time": 0.456,
+      "std_time": 0.067,
+      "min_time": 0.378,
+      "max_time": 0.534,
+      "rounds": 5
+    },
+    "test_producer_consumer_performance": {
+      "mean_time": 0.345,
+      "std_time": 0.056,
+      "min_time": 0.278,
+      "max_time": 0.423,
+      "rounds": 10
+    }
+  },
+  "data_size_scaling": {
+    "test_hdf5_read_scaling[tiny]": {
+      "mean_time": 0.0045,
+      "std_time": 0.0008,
+      "min_time": 0.0034,
+      "max_time": 0.0062,
+      "rounds": 5,
+      "throughput_mbps": 125.6
+    },
+    "test_hdf5_read_scaling[small]": {
+      "mean_time": 0.0234,
+      "std_time": 0.0045,
+      "min_time": 0.0178,
+      "max_time": 0.0298,
+      "rounds": 5,
+      "throughput_mbps": 89.3
+    },
+    "test_hdf5_read_scaling[medium]": {
+      "mean_time": 0.1234,
+      "std_time": 0.0234,
+      "min_time": 0.0945,
+      "max_time": 0.1567,
+      "rounds": 5,
+      "throughput_mbps": 65.7
+    },
+    "test_fitting_algorithm_scaling[100]": {
+      "mean_time": 0.0234,
+      "std_time": 0.0045,
+      "min_time": 0.0178,
+      "max_time": 0.0298,
+      "rounds": 10,
+      "fit_time_per_point": 0.000234
+    },
+    "test_fitting_algorithm_scaling[1000]": {
+      "mean_time": 0.1456,
+      "std_time": 0.0234,
+      "min_time": 0.1145,
+      "max_time": 0.1789,
+      "rounds": 10,
+      "fit_time_per_point": 0.0001456
+    }
+  },
+  "concurrency_scaling": {
+    "test_parallel_file_processing_scaling[1]": {
+      "mean_time": 1.234,
+      "std_time": 0.156,
+      "min_time": 1.045,
+      "max_time": 1.456,
+      "rounds": 3,
+      "efficiency": 1.0
+    },
+    "test_parallel_file_processing_scaling[2]": {
+      "mean_time": 0.678,
+      "std_time": 0.089,
+      "min_time": 0.567,
+      "max_time": 0.798,
+      "rounds": 3,
+      "efficiency": 0.91
+    },
+    "test_parallel_file_processing_scaling[4]": {
+      "mean_time": 0.389,
+      "std_time": 0.056,
+      "min_time": 0.323,
+      "max_time": 0.456,
+      "rounds": 3,
+      "efficiency": 0.79
+    },
+    "test_multiprocess_computation_scaling[1]": {
+      "mean_time": 4.567,
+      "std_time": 0.345,
+      "min_time": 4.123,
+      "max_time": 5.234,
+      "rounds": 2,
+      "parallel_efficiency": 1.0
+    },
+    "test_multiprocess_computation_scaling[4]": {
+      "mean_time": 1.345,
+      "std_time": 0.156,
+      "min_time": 1.156,
+      "max_time": 1.567,
+      "rounds": 2,
+      "parallel_efficiency": 0.85
+    }
+  },
+  "thresholds": {
+    "performance_regression_threshold": 0.2,
+    "memory_regression_threshold_mb": 100,
+    "statistical_confidence": 0.95,
+    "minimum_samples": 5
+  }
+}

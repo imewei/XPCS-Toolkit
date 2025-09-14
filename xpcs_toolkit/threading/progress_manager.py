@@ -13,13 +13,13 @@ from dataclasses import dataclass
 from PySide6 import QtCore, QtWidgets
 from PySide6.QtCore import QObject, QTimer, Signal, Slot
 from PySide6.QtWidgets import (
-    QProgressBar,
-    QLabel,
-    QPushButton,
+    QDialog,
     QHBoxLayout,
+    QLabel,
+    QProgressBar,
+    QPushButton,
     QVBoxLayout,
     QWidget,
-    QDialog,
 )
 
 from ..utils.logging_config import get_logger

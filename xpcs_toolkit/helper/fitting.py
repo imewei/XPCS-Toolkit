@@ -1,11 +1,11 @@
-import os
 import multiprocessing
+import os
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor, as_completed
 
 import numpy as np
+from joblib import Memory
 from scipy.optimize import curve_fit
 from sklearn import linear_model
-from joblib import Memory
 
 from ..utils.logging_config import get_logger
 

@@ -11,16 +11,16 @@ import pyqtgraph as pg
 from pyqtgraph.parametertree import Parameter
 from PySide6 import QtCore, QtWidgets
 
-# Local imports
-from .viewer_ui import Ui_mainWindow as Ui
-from .viewer_kernel import ViewerKernel
-
 # Import async components
-from .threading.async_kernel import AsyncViewerKernel, AsyncDataPreloader
+from .threading.async_kernel import AsyncDataPreloader, AsyncViewerKernel
 from .threading.progress_manager import ProgressManager
 
 # Import centralized logging
-from .utils import get_logger, setup_exception_logging, log_system_info
+from .utils import get_logger, log_system_info, setup_exception_logging
+from .viewer_kernel import ViewerKernel
+
+# Local imports
+from .viewer_ui import Ui_mainWindow as Ui
 
 # Initialize centralized logging and get logger
 logger = get_logger(__name__)
@@ -181,7 +181,9 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         self.list_view_target.doubleClicked.connect(self.show_dataset)
         self.btn_select_bkgfile.clicked.connect(self.select_bkgfile)
         self.spinBox_saxs2d_selection.valueChanged.connect(self.plot_saxs_2d_selection)
-        self.comboBox_twotime_selection.currentIndexChanged.connect(self.on_twotime_q_selection_changed)
+        self.comboBox_twotime_selection.currentIndexChanged.connect(
+            self.on_twotime_q_selection_changed
+        )
 
         self.g2_fitting_function.currentIndexChanged.connect(
             self.update_g2_fitting_function
@@ -239,7 +241,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
 
     def setup_progress_shortcut(self):
         """Set up keyboard shortcut to show progress dialog."""
-        from PySide6.QtGui import QShortcut, QKeySequence
+        from PySide6.QtGui import QKeySequence, QShortcut
 
         # Ctrl+P to show progress dialog
         shortcut = QShortcut(QKeySequence("Ctrl+P"), self)
@@ -406,28 +408,38 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         twotime.plot_twotime_g2(self.mp_2t_hdls, c2_result)
 
         if new_qbin_labels:
-            logger.debug(f"[ASYNC] Repopulating ComboBox with new labels: {new_qbin_labels}")
+            logger.debug(
+                f"[ASYNC] Repopulating ComboBox with new labels: {new_qbin_labels}"
+            )
             # Preserve current selection when repopulating
             current_selection = self.comboBox_twotime_selection.currentIndex()
-            logger.debug(f"COMBOBOX POPULATE: [ASYNC] Current selection before repopulation: {current_selection}")
-            logger.debug(f"COMBOBOX POPULATE: [ASYNC] Adding {len(new_qbin_labels)} items to ComboBox: {new_qbin_labels[:5]}...")  # Show first 5 items
-            
+            logger.debug(
+                f"COMBOBOX POPULATE: [ASYNC] Current selection before repopulation: {current_selection}"
+            )
+            logger.debug(
+                f"COMBOBOX POPULATE: [ASYNC] Adding {len(new_qbin_labels)} items to ComboBox: {new_qbin_labels[:5]}..."
+            )  # Show first 5 items
+
             # Block signals to prevent recursive updates
             self.comboBox_twotime_selection.blockSignals(True)
             self.horizontalSlider_twotime_selection.blockSignals(True)
-            
+
             try:
                 self.comboBox_twotime_selection.clear()
                 self.comboBox_twotime_selection.addItems(new_qbin_labels)
-                self.horizontalSlider_twotime_selection.setMaximum(len(new_qbin_labels) - 1)
-                
+                self.horizontalSlider_twotime_selection.setMaximum(
+                    len(new_qbin_labels) - 1
+                )
+
                 # Restore selection if it's valid
                 if 0 <= current_selection < len(new_qbin_labels):
                     self.comboBox_twotime_selection.setCurrentIndex(current_selection)
                     self.horizontalSlider_twotime_selection.setValue(current_selection)
                     logger.debug(f"[ASYNC] Restored selection to: {current_selection}")
                 else:
-                    logger.debug(f"[ASYNC] Selection {current_selection} is invalid for {len(new_qbin_labels)} items, defaulting to 0")
+                    logger.debug(
+                        f"[ASYNC] Selection {current_selection} is invalid for {len(new_qbin_labels)} items, defaulting to 0"
+                    )
             finally:
                 # Always restore signal connections
                 self.comboBox_twotime_selection.blockSignals(False)
@@ -551,7 +563,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         idx = self.tabWidget.currentIndex()
         tab_name = tab_mapping[idx]
         logger.debug(f"update_plot called for tab: {tab_name} (index: {idx})")
-        
+
         if tab_name == "average":
             return
 
@@ -565,7 +577,9 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
             "qmap",
         ]
 
-        logger.debug(f"Using {'async' if use_async else 'sync'} plotting for {tab_name}")
+        logger.debug(
+            f"Using {'async' if use_async else 'sync'} plotting for {tab_name}"
+        )
 
         if use_async:
             self.update_plot_async(tab_name)
@@ -583,7 +597,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
                 logger.error(f"Failed to update diffusion pre-plot: {e}")
                 traceback.print_exc()
             # Don't return here - still allow the normal plot_diffusion to be called
-        
+
         func = getattr(self, "plot_" + tab_name)
         try:
             kwargs = func(dryrun=True)
@@ -700,16 +714,22 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
     def on_twotime_q_selection_changed(self, index):
         """Handle Q value selection changes in twotime ComboBox."""
         logger.debug(f"TWOTIME Q SELECTION CHANGED: ComboBox index changed to {index}")
-        logger.debug(f"TWOTIME Q SELECTION CHANGED: ComboBox current text = '{self.comboBox_twotime_selection.currentText()}'")
-        logger.debug(f"TWOTIME Q SELECTION CHANGED: ComboBox item count = {self.comboBox_twotime_selection.count()}")
-        logger.debug(f"TWOTIME Q SELECTION CHANGED: Current tab = {self.tabWidget.currentIndex()}")
-        
+        logger.debug(
+            f"TWOTIME Q SELECTION CHANGED: ComboBox current text = '{self.comboBox_twotime_selection.currentText()}'"
+        )
+        logger.debug(
+            f"TWOTIME Q SELECTION CHANGED: ComboBox item count = {self.comboBox_twotime_selection.count()}"
+        )
+        logger.debug(
+            f"TWOTIME Q SELECTION CHANGED: Current tab = {self.tabWidget.currentIndex()}"
+        )
+
         # Also update the slider to stay in sync
         if 0 <= index < self.comboBox_twotime_selection.count():
             self.horizontalSlider_twotime_selection.blockSignals(True)
             self.horizontalSlider_twotime_selection.setValue(index)
             self.horizontalSlider_twotime_selection.blockSignals(False)
-        
+
         # Now trigger the plot update
         logger.debug("TWOTIME Q SELECTION CHANGED: Calling update_plot()")
         self.update_plot()
@@ -854,8 +874,10 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
 
     def plot_twotime(self, dryrun=False, highlight_xy=None):
         current_selection = self.comboBox_twotime_selection.currentIndex()
-        logger.debug(f"plot_twotime called: dryrun={dryrun}, ComboBox currentIndex={current_selection}, count={self.comboBox_twotime_selection.count()}")
-        
+        logger.debug(
+            f"plot_twotime called: dryrun={dryrun}, ComboBox currentIndex={current_selection}, count={self.comboBox_twotime_selection.count()}"
+        )
+
         kwargs = {
             "rows": self.get_selected_rows(),
             "auto_crop": self.twotime_autocrop.isChecked(),
@@ -867,7 +889,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
             "autolevel": self.checkBox_twotime_autolevel.isChecked(),
             "selection": max(0, current_selection),
         }
-        
+
         logger.debug(f"Twotime plot kwargs: {kwargs}")
         if dryrun:
             return kwargs
@@ -879,25 +901,31 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
             logger.debug(f"Repopulating ComboBox with new labels: {new_labels}")
             # Preserve current selection when repopulating
             current_selection = self.comboBox_twotime_selection.currentIndex()
-            logger.debug(f"COMBOBOX POPULATE: [SYNC] Current selection before repopulation: {current_selection}")
-            logger.debug(f"COMBOBOX POPULATE: [SYNC] Adding {len(new_labels)} items to ComboBox: {new_labels[:5]}...")  # Show first 5 items
-            
+            logger.debug(
+                f"COMBOBOX POPULATE: [SYNC] Current selection before repopulation: {current_selection}"
+            )
+            logger.debug(
+                f"COMBOBOX POPULATE: [SYNC] Adding {len(new_labels)} items to ComboBox: {new_labels[:5]}..."
+            )  # Show first 5 items
+
             # Block signals to prevent recursive updates
             self.comboBox_twotime_selection.blockSignals(True)
             self.horizontalSlider_twotime_selection.blockSignals(True)
-            
+
             try:
                 self.comboBox_twotime_selection.clear()
                 self.comboBox_twotime_selection.addItems(new_labels)
                 self.horizontalSlider_twotime_selection.setMaximum(len(new_labels) - 1)
-                
+
                 # Restore selection if it's valid
                 if 0 <= current_selection < len(new_labels):
                     self.comboBox_twotime_selection.setCurrentIndex(current_selection)
                     self.horizontalSlider_twotime_selection.setValue(current_selection)
                     logger.debug(f"Restored selection to: {current_selection}")
                 else:
-                    logger.debug(f"Selection {current_selection} is invalid for {len(new_labels)} items, defaulting to 0")
+                    logger.debug(
+                        f"Selection {current_selection} is invalid for {len(new_labels)} items, defaulting to 0"
+                    )
             finally:
                 # Always restore signal connections
                 self.comboBox_twotime_selection.blockSignals(False)

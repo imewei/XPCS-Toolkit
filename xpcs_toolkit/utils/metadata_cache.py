@@ -7,18 +7,19 @@ Q-map calculations, and other frequently accessed file-based data.
 
 from __future__ import annotations
 
-import os
-import time
-import threading
 import hashlib
-from typing import Any, Dict, Optional, List, Set
-from dataclasses import dataclass, field
+import os
+import threading
+import time
 from collections import OrderedDict
+from dataclasses import dataclass, field
+from typing import Any, Dict, List, Optional, Set
+
 import numpy as np
 
 from .advanced_cache import get_global_cache
-from .memory_utils import SystemMemoryMonitor
 from .logging_config import get_logger
+from .memory_utils import SystemMemoryMonitor
 
 logger = get_logger(__name__)
 
@@ -79,7 +80,7 @@ class QMapData:
             self.mask.tobytes(),
         ]
         combined_data = b"".join(data_parts)
-        return hashlib.md5(combined_data).hexdigest()
+        return hashlib.md5(combined_data, usedforsecurity=False).hexdigest()
 
     def verify_integrity(self) -> bool:
         """Verify data integrity using checksum."""
@@ -201,13 +202,13 @@ class MetadataCache:
 
     def _generate_metadata_key(self, file_path: str) -> str:
         """Generate cache key for file metadata."""
-        return f"metadata:{hashlib.md5(file_path.encode()).hexdigest()}"
+        return f"metadata:{hashlib.md5(file_path.encode(), usedforsecurity=False).hexdigest()}"
 
     def _generate_qmap_key(self, file_path: str, params: Dict[str, Any]) -> str:
         """Generate cache key for Q-map data."""
         # Include file path and relevant parameters
         key_data = f"{file_path}:{str(sorted(params.items()))}"
-        return f"qmap:{hashlib.md5(key_data.encode()).hexdigest()}"
+        return f"qmap:{hashlib.md5(key_data.encode(), usedforsecurity=False).hexdigest()}"
 
     def _record_access(self, file_path: str):
         """Record file access for pattern analysis."""

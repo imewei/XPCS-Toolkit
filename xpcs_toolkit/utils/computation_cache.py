@@ -7,12 +7,14 @@ SAXS analysis, and two-time correlation calculations.
 
 from __future__ import annotations
 
-import time
-import threading
 import hashlib
-import numpy as np
-from typing import Any, Dict, Optional, Tuple, List, Callable
+import threading
+import time
 from dataclasses import dataclass
+from typing import Any, Callable, Dict, List, Optional, Tuple
+
+import numpy as np
+
 from .advanced_cache import get_global_cache
 from .logging_config import get_logger
 

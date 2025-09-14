@@ -17,38 +17,37 @@ Features:
 
 from __future__ import annotations
 
-import time
-import statistics
-from typing import Dict, Optional
-from dataclasses import dataclass, field
-from collections import deque
-from datetime import datetime
 import json
+import statistics
+import time
+from collections import deque
+from dataclasses import dataclass, field
+from datetime import datetime
 from pathlib import Path
+from typing import Dict, Optional
 
-from PySide6.QtCore import QTimer, Signal
+from PySide6.QtCore import Qt, QTimer, Signal
+from PySide6.QtGui import QColor, QFont
 from PySide6.QtWidgets import (
-    QWidget,
-    QVBoxLayout,
-    QHBoxLayout,
     QGridLayout,
+    QGroupBox,
+    QHBoxLayout,
     QLabel,
     QPushButton,
-    QTabWidget,
     QTableWidget,
     QTableWidgetItem,
+    QTabWidget,
     QTextEdit,
-    QGroupBox,
+    QVBoxLayout,
+    QWidget,
 )
-from PySide6.QtGui import QFont, QColor
-from PySide6.QtCore import Qt
 
 # Import existing optimization systems
 from ..threading.performance_monitor import PerformanceMonitor
-from .optimization_health_monitor import get_health_monitor, HealthCheckResult
 from .cache_monitor import CacheMonitor
-from .memory_utils import SystemMemoryMonitor
 from .logging_config import get_logger
+from .memory_utils import SystemMemoryMonitor
+from .optimization_health_monitor import HealthCheckResult, get_health_monitor
 
 logger = get_logger(__name__)
 

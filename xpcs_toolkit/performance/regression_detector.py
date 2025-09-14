@@ -31,14 +31,14 @@ import json
 import os
 import sys
 import time
-from dataclasses import dataclass, field, asdict
+from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Any, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
-from scipy import stats
 import psutil
+from scipy import stats
 
 # Add project root to path for testing
 project_root = Path(__file__).parent.parent

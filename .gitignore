@@ -184,8 +184,6 @@ Thumbs.db
 *.bak
 RELEASE_GUIDE.md
 WARP.md
-CLAUDE.md
-CLAUDE_COMMAND.md
 
 # Security reports
 bandit-report.json
@@ -197,7 +195,6 @@ consistency_report.json
 CLAUDE_QUALITY_SUMMARY.json
 scripts/claude_quality_report.py
 scripts/claude_summary_display.py
-CLAUDE*.md
 CODE_QUALITY_REPORT.md
 benchmark-results.json
 # Trigger fresh CI run - Wed Sep 10 09:22:37 CDT 2025
@@ -208,67 +205,49 @@ benchmark-results.json
 # XPCS Toolkit Specific Files
 # ===========================
 
-# Performance and benchmark files
+# Runtime generated files only - preserve source files
 benchmark_performance.db
-benchmarks/
-*benchmark*.json
-*benchmark*.db
-*performance*.json
-*performance*.db
+*benchmark_results*.json
+*benchmark_output*.db
+*performance_results*.json
+*performance_output*.db
 
-# Validation and optimization reports
-*validation*.json
-*optimization*.json
-*report*.json
-validation/
+# Generated reports only - preserve framework files
+*_validation_report_*.json
+*_optimization_report_*.json
+*_analysis_report*.json
+validation_report_*.json
+optimization_report_*.json
 archived_reports/
 archived_scripts/
 
-# Debug and log files specific to XPCS
+# Runtime debug and log files only
 debug_*.log
 test_*.log
 *_debug*.log
 *_qselection*.log
+*.log
 
-# Testing artifacts
-tests/integration/
-tests/test_suite_validation_report.json
-tests/validation_config.yaml
-tests/run_*.py
-tests/test_*_benchmarks.py
-tests/test_*_properties.py
-tests/test_*_system.py
-tests/test_suite_validation.py
-tests/test_vectorization_accuracy.py
-tests/test_advanced_*.py
-tests/test_io_*.py
+# Generated test reports only - preserve test source code
+tests/*_report*.json
+tests/*_results*.json
 
-# Configuration and production files
-production_config.yaml
-production_deployment_guide.md
-PRODUCTION_READINESS*.md
-OPTIMIZATION_GUIDE.md
+# Generated configuration files only
+production_config_generated.yaml
+deployment_config_generated.yaml
 
-# Documentation artifacts
-docs/DOCUMENTATION_INDEX.md
-docs/LOGGING_SYSTEM.md
-docs/OPTIMIZATION_GUIDE.md
-docs/TESTING.md
-docs/README.md
-DOCUMENTATION_INDEX.md
-OPTIMIZATION_VALIDATION_REPORT.md
-PRODUCTION_READINESS_REPORT.md
+# Generated documentation only - preserve source documentation
+*_GENERATED.md
+*_OUTPUT.md
 
-# Examples and demo directories
-examples/
-
-# Temporary validation and test files
+# Temporary validation and test files (but keep core framework files)
 optimization_validation_report_*.json
+validation_results_*.json
 test_cleanup_optimization.py
 test_memory_optimization.py
 verify_memory_optimization.py
-validate_*.py
-run_phase*.py
+validate_temp_*.py
+run_phase*_temp.py
 
 # Claude Code specific settings
 .claude/

@@ -56,6 +56,14 @@ dev = [
     "coverage",
     "pytest",
     "pytest-cov",
+    "pytest-xdist",
+    "pytest-benchmark",
+    "pytest-mock",
+    "pytest-timeout",
+    "pytest-sugar",
+    "pytest-html",
+    "pytest-qt",
+    "hypothesis",
     "mypy",
     "ruff"
 ]
@@ -95,3 +103,92 @@ warn_no_return = true
 module = "tests.*"
 allow_untyped_defs = true
 disable_error_code = "attr-defined"
+
+# Pytest configuration
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = [
+    "-ra",
+    "--strict-markers",
+    "--strict-config",
+    "--cov=xpcs_toolkit",
+    "--cov-report=term-missing",
+    "--cov-report=html",
+    "--cov-report=xml",
+    "--cov-fail-under=80",
+    "--tb=short",
+    "--durations=10"
+]
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+markers = [
+    "unit: Unit tests",
+    "integration: Integration tests", 
+    "performance: Performance and benchmark tests",
+    "gui: GUI tests requiring display",
+    "slow: Tests that take more than 1 second",
+    "scientific: Tests that verify scientific accuracy",
+    "parametrize: Parametrized tests with multiple inputs"
+]
+filterwarnings = [
+    "ignore::UserWarning",
+    "ignore::DeprecationWarning",
+    "ignore::PendingDeprecationWarning",
+    "ignore::RuntimeWarning:numpy.*",
+    "ignore::FutureWarning:pandas.*",
+    "ignore::UserWarning:matplotlib.*"
+]
+timeout = 300
+timeout_method = "thread"
+
+# Coverage configuration
+[tool.coverage.run]
+source = ["xpcs_toolkit"]
+omit = [
+    "*/tests/*",
+    "*/test_*",
+    "*/__pycache__/*",
+    "*/site-packages/*",
+    "xpcs_toolkit/ui/*",  # GUI code hard to test
+    "xpcs_toolkit/icons_rc.py",  # Generated resource file
+]
+branch = true
+parallel = true
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if self.debug:",
+    "if settings.DEBUG",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if 0:",
+    "if __name__ == .__main__.:",
+    "class .*\\bProtocol\\):",
+    "@(abc\\.)?abstractmethod",
+    "@overload",
+    "except ImportError:",
+    "if TYPE_CHECKING:"
+]
+precision = 2
+show_missing = true
+skip_covered = false
+
+[tool.coverage.html]
+directory = "htmlcov"
+
+[tool.coverage.xml]
+output = "coverage.xml"
+
+# Ruff configuration for testing
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = [
+    "S101",    # Use of assert detected (OK in tests)
+    "ARG",     # Unused function args (fixtures)
+    "FBT",     # Boolean trap (OK in tests)
+    "PLR2004", # Magic value used in comparison (OK in tests)
+    "SLF001",  # Private member access (OK in tests)
+]

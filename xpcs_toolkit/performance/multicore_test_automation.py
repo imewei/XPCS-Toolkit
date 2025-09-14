@@ -34,20 +34,20 @@ import json
 import multiprocessing as mp
 import os
 import platform
-import psutil
 import sys
 import time
 from concurrent.futures import ThreadPoolExecutor
-from dataclasses import dataclass, field, asdict
+from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Dict, List, Any, Optional, Union, Callable
+from typing import Any, Callable, Dict, List, Optional, Union
 
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
+import psutil
 
+from .benchmark_database import BenchmarkDatabase, PerformanceRecord
 from .cpu_performance_test_suite import PerformanceMeasurement
 from .regression_detector import RegressionDetector
-from .benchmark_database import BenchmarkDatabase, PerformanceRecord
 
 # Add project root to path
 project_root = Path(__file__).parent.parent

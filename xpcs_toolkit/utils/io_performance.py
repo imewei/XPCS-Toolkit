@@ -5,14 +5,15 @@ This module provides comprehensive performance monitoring, optimization
 strategies, and diagnostics for HDF5 file operations.
 """
 
-import time
-import threading
-import h5py
-from typing import Dict, Any, List, Optional, Callable
-from dataclasses import dataclass, field
-from collections import defaultdict
-import psutil
 import os
+import threading
+import time
+from collections import defaultdict
+from dataclasses import dataclass, field
+from typing import Any, Callable, Dict, List, Optional
+
+import h5py
+import psutil
 
 from .logging_config import get_logger
 

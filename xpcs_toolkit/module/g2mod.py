@@ -35,7 +35,10 @@ symbols = ["o", "t", "t1", "t2", "t3", "s", "p", "h", "star", "+", "d", "x"]
 def get_data(xf_list, q_range=None, t_range=None):
     # Early validation - check all files have correlation analysis (Multitau or Twotime)
     analysis_types = [xf.atype for xf in xf_list]
-    if not all(any(atype_part in ["Multitau", "Twotime"] for atype_part in atype) for atype in analysis_types):
+    if not all(
+        any(atype_part in ["Multitau", "Twotime"] for atype_part in atype)
+        for atype in analysis_types
+    ):
         return False, None, None, None, None
 
     # Pre-allocate lists with known size for better memory efficiency

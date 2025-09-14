@@ -10,9 +10,9 @@ from __future__ import annotations
 
 import time
 import traceback
-from typing import Any, Callable, Tuple
-from enum import Enum
 from dataclasses import dataclass
+from enum import Enum
+from typing import Any, Callable, Tuple
 
 from PySide6 import QtCore
 from PySide6.QtCore import QObject, QRunnable, Signal, Slot
@@ -598,23 +598,25 @@ class WorkerManager(QObject):
     def shutdown(self):
         """
         Shutdown the WorkerManager gracefully.
-        
+
         Cancels all active workers and cleans up resources.
         This method provides compatibility with the enhanced WorkerManager.
         """
-        logger.debug(f"WorkerManager shutdown: cancelling {len(self.active_workers)} active workers")
-        
+        logger.debug(
+            f"WorkerManager shutdown: cancelling {len(self.active_workers)} active workers"
+        )
+
         # Cancel all active workers
         for worker_id, worker in list(self.active_workers.items()):
             try:
-                if hasattr(worker, 'cancel'):
+                if hasattr(worker, "cancel"):
                     worker.cancel()
             except Exception as e:
                 logger.debug(f"Error cancelling worker {worker_id}: {e}")
-        
+
         # Clear collections
         self.active_workers.clear()
         self.worker_results.clear()
         self.worker_errors.clear()
-        
+
         logger.debug("WorkerManager shutdown complete")

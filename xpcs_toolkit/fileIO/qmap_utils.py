@@ -3,10 +3,11 @@
 # Third-party imports
 import numpy as np
 
+from xpcs_toolkit.utils.logging_config import get_logger
+
 # Local imports
 from .aps_8idi import key as key_map
 from .hdf_reader import _connection_pool
-from xpcs_toolkit.utils.logging_config import get_logger
 
 logger = get_logger(__name__)
 
@@ -185,6 +186,13 @@ class QMap:
         self.qbin_labels = ["q=0.01 1/A"]
         self.is_loaded = False
         logger.warning(f"Created minimal fallback qmap for {self.fname}")
+
+    def reshape_phi_analysis(self, data, label=None, mode=None):
+        """Fallback method for phi analysis reshaping when in minimal mode."""
+        # For fallback mode, just return the data as-is since we can't do proper reshaping
+        if isinstance(data, (list, np.ndarray)) and len(data) > 0:
+            return np.array(data)
+        return data
 
     def get_detector_extent(self):
         """

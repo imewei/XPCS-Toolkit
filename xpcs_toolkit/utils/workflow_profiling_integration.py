@@ -8,24 +8,24 @@ bottleneck identification systems with existing XPCS Toolkit components.
 from __future__ import annotations
 
 import time
-from typing import Dict, Any, Optional
 from contextlib import contextmanager
+from typing import Any, Dict, Optional
 
-from .workflow_profiler import (
-    workflow_profiler,
-    profile_workflow,
-    profile_workflow_step,
-    profile_workflow_function,
-)
 from .cpu_bottleneck_analyzer import analyze_recent_workflows
-from .usage_pattern_miner import usage_pattern_miner, get_optimization_recommendations
-from .workflow_optimization_report import (
-    optimization_report_generator,
-    generate_optimization_report,
-    export_optimization_report,
-    ReportFormat,
-)
 from .logging_config import get_logger
+from .usage_pattern_miner import get_optimization_recommendations, usage_pattern_miner
+from .workflow_optimization_report import (
+    ReportFormat,
+    export_optimization_report,
+    generate_optimization_report,
+    optimization_report_generator,
+)
+from .workflow_profiler import (
+    profile_workflow,
+    profile_workflow_function,
+    profile_workflow_step,
+    workflow_profiler,
+)
 
 logger = get_logger(__name__)
 
@@ -399,9 +399,16 @@ def demonstrate_performance_reporting():
     # Run some demo workflows first
     demonstrate_workflow_profiling()
 
-    # Generate performance report
+    # Generate performance report using secure temp directory
+    import tempfile
+    import os
+
+    # Use system temp directory securely
+    temp_dir = tempfile.gettempdir()
+    output_file = os.path.join(temp_dir, "xpcs_performance_report.md")
+
     report_summary = profiling_integration.generate_performance_report(
-        output_file="/tmp/xpcs_performance_report.md", format=ReportFormat.MARKDOWN
+        output_file=output_file, format=ReportFormat.MARKDOWN
     )
 
     logger.info("Performance report generated:")

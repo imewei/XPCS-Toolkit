@@ -8,15 +8,16 @@ thread contention issues, and inefficient algorithms that cause performance bott
 from __future__ import annotations
 
 import statistics
-import numpy as np
-from typing import Any, Dict, List, Optional, Tuple, NamedTuple
+import time
+from collections import Counter, defaultdict
 from dataclasses import dataclass, field
 from enum import Enum
-from collections import defaultdict, Counter
-import time
+from typing import Any, Dict, List, NamedTuple, Optional, Tuple
 
-from .workflow_profiler import WorkflowProfile, WorkflowStep, workflow_profiler
+import numpy as np
+
 from .logging_config import get_logger
+from .workflow_profiler import WorkflowProfile, WorkflowStep, workflow_profiler
 
 logger = get_logger(__name__)
 

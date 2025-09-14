@@ -8,14 +8,14 @@ to replace the GUI-blocking operations that iterate through all Python objects.
 from __future__ import annotations
 
 import gc
-import time
 import threading
+import time
 import weakref
 from collections import defaultdict, deque
 from concurrent.futures import ThreadPoolExecutor
+from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Dict, List, Optional, Set, Type, TypeVar, Union
-from dataclasses import dataclass, field
 
 from PySide6.QtCore import QObject, QTimer, Signal
 

@@ -7,16 +7,16 @@ existing GUI code to use the enhanced threading capabilities.
 
 from __future__ import annotations
 
-from typing import Any, Callable, Dict, List, Optional
 from functools import wraps
+from typing import Any, Callable, Dict, List, Optional
 
 from PySide6 import QtWidgets
 from PySide6.QtCore import QObject
 
-from .async_workers_enhanced import WorkerManager, EnhancedThreadPool, WorkerPriority
-from .progress_manager import ProgressManager
-from .main_thread_optimizer import MainThreadOptimizer
 from ..utils.logging_config import get_logger
+from .async_workers_enhanced import EnhancedThreadPool, WorkerManager, WorkerPriority
+from .main_thread_optimizer import MainThreadOptimizer
+from .progress_manager import ProgressManager
 
 logger = get_logger(__name__)
 
@@ -204,7 +204,7 @@ def setup_enhanced_threading(main_window: QtWidgets.QMainWindow) -> ThreadingInt
     main_window._threading_integrator = integrator
 
     # Set up keyboard shortcuts for progress dialog
-    from PySide6.QtGui import QShortcut, QKeySequence
+    from PySide6.QtGui import QKeySequence, QShortcut
 
     # Ctrl+P to show progress dialog
     progress_shortcut = QShortcut(QKeySequence("Ctrl+P"), main_window)

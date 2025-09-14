@@ -7,20 +7,20 @@ recommendations for the multi-level caching system.
 
 from __future__ import annotations
 
-import time
-import threading
-from typing import Any, Dict, List, Optional, Callable, Tuple
-from dataclasses import dataclass, field
-from collections import defaultdict, deque
-from enum import Enum
 import json
+import threading
+import time
+from collections import defaultdict, deque
+from dataclasses import dataclass, field
+from enum import Enum
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
+from .adaptive_memory import get_adaptive_memory_manager
 from .advanced_cache import get_global_cache
 from .computation_cache import get_computation_cache
-from .metadata_cache import get_metadata_cache
-from .adaptive_memory import get_adaptive_memory_manager
-from .memory_utils import SystemMemoryMonitor
 from .logging_config import get_logger
+from .memory_utils import SystemMemoryMonitor
+from .metadata_cache import get_metadata_cache
 
 logger = get_logger(__name__)
 

@@ -7,11 +7,12 @@ and implementing memory-efficient alternatives for common operations.
 
 from __future__ import annotations
 
+import threading
+import time
+from typing import NamedTuple
+
 import numpy as np
 import psutil
-import time
-import threading
-from typing import NamedTuple
 
 from .logging_config import get_logger
 

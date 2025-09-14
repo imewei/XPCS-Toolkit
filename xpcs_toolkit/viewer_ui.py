@@ -8,6 +8,8 @@
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
 
+from pyqtgraph import DataTreeWidget, GraphicsLayoutWidget, ImageView, PlotWidget
+from pyqtgraph.parametertree import ParameterTree
 from PySide6.QtCore import QCoreApplication, QMetaObject, QRect, QSize, Qt
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import (
@@ -29,15 +31,13 @@ from PySide6.QtWidgets import (
     QSpinBox,
     QSplitter,
     QStatusBar,
-    QTabWidget,
     QTableView,
+    QTabWidget,
     QVBoxLayout,
     QWidget,
 )
 
 from .plothandler import ImageViewDev, ImageViewPlotItem, MplCanvasBarV, PlotWidgetDev
-from pyqtgraph import DataTreeWidget, GraphicsLayoutWidget, ImageView, PlotWidget
-from pyqtgraph.parametertree import ParameterTree
 
 
 class Ui_mainWindow(object):

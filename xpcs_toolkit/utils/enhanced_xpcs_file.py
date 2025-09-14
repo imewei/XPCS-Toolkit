@@ -9,17 +9,18 @@ from __future__ import annotations
 
 import time
 from typing import Any, Dict, Tuple
+
 import numpy as np
 
-from .advanced_cache import get_global_cache
-from .computation_cache import get_computation_cache, G2FitResult
-from .metadata_cache import get_metadata_cache, FileMetadata, QMapData
 from .adaptive_memory import (
+    MemoryStrategy,
     get_adaptive_memory_manager,
     smart_cache_decorator,
-    MemoryStrategy,
 )
+from .advanced_cache import get_global_cache
+from .computation_cache import G2FitResult, get_computation_cache
 from .logging_config import get_logger
+from .metadata_cache import FileMetadata, QMapData, get_metadata_cache
 
 logger = get_logger(__name__)
 

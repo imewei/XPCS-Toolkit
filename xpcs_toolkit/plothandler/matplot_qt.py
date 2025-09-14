@@ -1,12 +1,13 @@
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
-from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
-from matplotlib.figure import Figure
-from PySide6 import QtWidgets, QtCore
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout
-import numpy as np
-import matplotlib.pyplot as plt
 import random
 import time
+
+import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg, NavigationToolbar2QT
+from matplotlib.figure import Figure
+from PySide6 import QtCore, QtWidgets
+from PySide6.QtWidgets import QHBoxLayout, QVBoxLayout, QWidget
+
 from xpcs_toolkit.utils.logging_config import get_logger
 
 logger = get_logger(__name__)

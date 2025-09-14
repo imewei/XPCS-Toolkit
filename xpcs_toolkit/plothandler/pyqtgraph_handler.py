@@ -1,7 +1,7 @@
-import pyqtgraph as pg
-from pyqtgraph import ImageView, GraphicsLayoutWidget
-from pyqtgraph import QtGui, QtCore
 import numpy as np
+import pyqtgraph as pg
+from pyqtgraph import GraphicsLayoutWidget, ImageView, QtCore, QtGui
+
 from xpcs_toolkit.utils.logging_config import get_logger
 
 logger = get_logger(__name__)
@@ -69,7 +69,7 @@ class ImageViewDev(ImageView):
         # Handle parameter consolidation: 'center' takes precedence over 'cen'
         if center is not None:
             cen = center
-        
+
         # label: label of roi; default is None, which is for roi-draw
         logger.debug(f"Adding ROI: type='{sl_type}', label='{label}', cen={cen}")
 
@@ -85,7 +85,7 @@ class ImageViewDev(ImageView):
 
         if sl_type == "Circle":
             if cen is None:
-                logger.warning(f"Cannot add Circle ROI: center coordinates not provided")
+                logger.warning("Cannot add Circle ROI: center coordinates not provided")
                 return None
             if second_point is not None:
                 radius = np.sqrt(
@@ -100,19 +100,21 @@ class ImageViewDev(ImageView):
 
         elif sl_type == "Line":
             if cen is None or second_point is None:
-                logger.warning(f"Cannot add Line ROI: center ({cen}) or second_point ({second_point}) not provided")
+                logger.warning(
+                    f"Cannot add Line ROI: center ({cen}) or second_point ({second_point}) not provided"
+                )
                 return None
             width = kwargs.pop("width", 1)
             new_roi = pg.LineROI(cen, second_point, width, **kwargs)
         elif sl_type == "Pie":
             if cen is None:
-                logger.warning(f"Cannot add Pie ROI: center coordinates not provided")
+                logger.warning("Cannot add Pie ROI: center coordinates not provided")
                 return None
             width = kwargs.pop("width", 1)
             new_roi = PieROI(cen, radius, movable=False, **kwargs)
         elif sl_type == "Center":
             if cen is None:
-                logger.warning(f"Cannot add Center ROI: center coordinates not provided")
+                logger.warning("Cannot add Center ROI: center coordinates not provided")
                 return None
             new_roi = pg.ScatterPlotItem()
             new_roi.addPoints(x=[cen[0]], y=[cen[1]], symbol="+", size=15)

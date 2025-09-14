@@ -30,12 +30,12 @@ import os
 import sys
 import threading
 from pathlib import Path
-from typing import Dict, Any, Union
+from typing import Any, Dict, Union
 
 from .log_formatters import (
     ColoredConsoleFormatter,
-    StructuredFileFormatter,
     JSONFormatter,
+    StructuredFileFormatter,
 )
 
 
@@ -97,7 +97,11 @@ class LoggingConfig:
             self.max_file_size = int(max_size_mb * 1024 * 1024)  # MB to bytes
         except ValueError:
             self.max_file_size = 10 * 1024 * 1024  # Default 10MB
-        self.backup_count = int(os.environ.get("PYXPCS_LOG_BACKUP_COUNT", "5"))
+
+        try:
+            self.backup_count = int(os.environ.get("PYXPCS_LOG_BACKUP_COUNT", "5"))
+        except ValueError:
+            self.backup_count = 5  # Default backup count
 
         # Qt warnings suppression
         self.suppress_qt_warnings = (

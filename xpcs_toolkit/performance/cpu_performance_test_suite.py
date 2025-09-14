@@ -39,7 +39,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from statistics import mean, stdev
 from tempfile import TemporaryDirectory
-from typing import Dict, List, Any, Optional, Callable
+from typing import Any, Callable, Dict, List, Optional
 from unittest.mock import Mock
 
 import numpy as np
@@ -51,14 +51,14 @@ sys.path.insert(0, str(project_root / "src"))
 
 # Import optimization systems for testing
 try:
-    from xpcs_toolkit.threading.signal_optimization import get_signal_optimizer
     from xpcs_toolkit.threading.enhanced_thread_pool import get_thread_pool_manager
-    from xpcs_toolkit.threading.performance_monitor import get_performance_monitor
     from xpcs_toolkit.threading.optimized_workers import OptimizedWorkerPool
-    from xpcs_toolkit.utils.advanced_cache import AdvancedCache
+    from xpcs_toolkit.threading.performance_monitor import get_performance_monitor
+    from xpcs_toolkit.threading.signal_optimization import get_signal_optimizer
     from xpcs_toolkit.utils.adaptive_memory import AdaptiveMemoryManager
-    from xpcs_toolkit.utils.performance_profiler import global_profiler
+    from xpcs_toolkit.utils.advanced_cache import AdvancedCache
     from xpcs_toolkit.utils.io_performance import HDF5ConnectionPool
+    from xpcs_toolkit.utils.performance_profiler import global_profiler
 except ImportError:
     # Mock imports if optimization systems not available
     get_signal_optimizer = Mock()

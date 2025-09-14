@@ -11,14 +11,14 @@ Components:
 - Multi-Core Test Automation: Multi-core scaling performance validation
 """
 
-from .cpu_performance_test_suite import CPUPerformanceTestSuite, CPUTestConfig
 from .benchmark_database import (
     BenchmarkDatabase,
     PerformanceRecord,
     SystemConfiguration,
 )
-from .regression_detector import RegressionDetector, RegressionAnalysisConfig
+from .cpu_performance_test_suite import CPUPerformanceTestSuite, CPUTestConfig
 from .multicore_test_automation import MultiCoreTestAutomation, MultiCoreTestConfig
+from .regression_detector import RegressionAnalysisConfig, RegressionDetector
 
 __all__ = [
     "CPUPerformanceTestSuite",

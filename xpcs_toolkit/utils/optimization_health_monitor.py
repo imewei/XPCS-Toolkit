@@ -15,23 +15,23 @@ Features:
 
 from __future__ import annotations
 
-import time
-import threading
 import statistics
-from typing import Dict, List, Optional, Any, Callable, NamedTuple
-from dataclasses import dataclass, field
+import threading
+import time
 from collections import defaultdict, deque
+from dataclasses import dataclass, field
 from enum import Enum
+from typing import Any, Callable, Dict, List, NamedTuple, Optional
 
 from PySide6.QtCore import QObject, QTimer, Signal
 
 # Import existing optimization systems
 from ..threading.enhanced_thread_pool import get_thread_pool_manager
 from ..threading.signal_optimization import get_signal_optimizer
-from .advanced_cache import get_global_cache
 from .adaptive_memory import get_adaptive_memory_manager
-from .memory_utils import SystemMemoryMonitor
+from .advanced_cache import get_global_cache
 from .logging_config import get_logger
+from .memory_utils import SystemMemoryMonitor
 
 logger = get_logger(__name__)
 

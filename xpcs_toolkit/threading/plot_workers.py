@@ -7,11 +7,12 @@ that can run in background threads to maintain GUI responsiveness.
 
 from __future__ import annotations
 
-import numpy as np
 from typing import Any
 
-from .async_workers import BaseAsyncWorker
+import numpy as np
+
 from ..utils.logging_config import get_logger
+from .async_workers import BaseAsyncWorker
 
 logger = get_logger(__name__)
 
@@ -161,7 +162,7 @@ class G2PlotWorker(BaseAsyncWorker):
 
         if not q or q[0] is False:
             # Check what analysis types are available for better error messaging
-            available_types = [getattr(xf, 'atype', 'unknown') for xf in xf_list]
+            available_types = [getattr(xf, "atype", "unknown") for xf in xf_list]
             return {
                 "message": f"No G2 correlation data found. Available analysis types: {available_types}. Files must contain Multitau or Twotime correlation analysis.",
                 "type": "info",
@@ -282,10 +283,7 @@ class TwotimePlotWorker(BaseAsyncWorker):
         new_qbin_labels = None
         try:
             current_dset = self.viewer_kernel._get_cached_dataset(xfile.fname, xfile)
-            if (
-                current_dset is None
-                or current_dset.fname != xfile.fname
-            ):
+            if current_dset is None or current_dset.fname != xfile.fname:
                 # Cache the new dataset
                 self.viewer_kernel._current_dset_cache[xfile.fname] = xfile
                 new_qbin_labels = xfile.get_twotime_qbin_labels()
@@ -300,7 +298,7 @@ class TwotimePlotWorker(BaseAsyncWorker):
 
         # Get selection and processing parameters
         selection = self.plot_kwargs.get("selection", 0)
-        auto_crop = self.plot_kwargs.get("auto_crop", True)
+        self.plot_kwargs.get("auto_crop", True)
         correct_diag = self.plot_kwargs.get("correct_diag", True)
 
         self.check_cancelled()
