@@ -41,7 +41,7 @@ def run_pytest(test_args, verbose=True):
     cmd.extend(test_args)
 
     print(f"Running: {' '.join(cmd)}")
-    result = subprocess.run(cmd, cwd=project_root)
+    result = subprocess.run(cmd, check=False, cwd=project_root)
     return result.returncode
 
 
@@ -215,24 +215,23 @@ Examples:
     # Route to appropriate test function
     if args.mode == "quick":
         return run_quick_tests()
-    elif args.mode == "full":
+    if args.mode == "full":
         return run_full_test_suite()
-    elif args.mode == "performance":
+    if args.mode == "performance":
         return run_performance_tests()
-    elif args.mode == "errors":
+    if args.mode == "errors":
         return run_error_handling_tests()
-    elif args.mode == "scenarios":
+    if args.mode == "scenarios":
         return run_user_scenario_tests()
-    elif args.mode == "ci":
+    if args.mode == "ci":
         return run_ci_tests()
-    elif args.mode == "coverage":
+    if args.mode == "coverage":
         return run_coverage_tests()
-    elif args.mode.endswith(".py"):
+    if args.mode.endswith(".py"):
         return run_specific_test_file(args.mode)
-    else:
-        print(f"Unknown test mode: {args.mode}")
-        parser.print_help()
-        return 1
+    print(f"Unknown test mode: {args.mode}")
+    parser.print_help()
+    return 1
 
 
 if __name__ == "__main__":

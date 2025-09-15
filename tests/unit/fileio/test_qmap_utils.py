@@ -320,12 +320,13 @@ class TestQMapDetectorExtent:
         """Test get_detector_extent method."""
         qmap = QMap.__new__(QMap)
 
-        # Setup mock qmap data
-        qmap.qmap_data = {
-            "mask": np.ones((1024, 1024)),
-            "bcx": 512.0,
-            "bcy": 512.0,
-        }
+        # Setup mock qmap data - set attributes directly
+        qmap.mask = np.ones((1024, 1024))
+        qmap.bcx = 512.0
+        qmap.bcy = 512.0
+        qmap.pixel_size = 75e-6
+        qmap.det_dist = 5.0
+        qmap.k0 = 2 * np.pi / (12.398 / 8.0)
 
         extent = qmap.get_detector_extent()
 
@@ -372,9 +373,14 @@ class TestQMapCreateQbinLabels:
         """Test qbin labels creation."""
         qmap = QMap.__new__(QMap)
 
-        # Setup qmap data
+        # Setup qmap data - set attributes directly
         qmap.qmap = {"q": np.array([0.01, 0.02, 0.03]), "phi": np.array([-180, 0, 180])}
         qmap.qmap_units = {"q": "1/A", "phi": "degree"}
+        qmap.map_names = ["q", "phi"]
+        qmap.map_units = ["1/A", "degree"]
+        qmap.dqlist = np.array([0.01, 0.02, 0.03])
+        qmap.dplist = np.array([-180, 0, 180])
+        qmap.dynamic_num_pts = np.array([3, 3])
 
         labels = qmap.create_qbin_labels()
 

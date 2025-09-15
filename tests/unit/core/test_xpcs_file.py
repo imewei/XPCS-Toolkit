@@ -262,6 +262,11 @@ class TestXpcsFileDataAccess:
             "t0": 0.001,
             "tau": np.array([0.001]),
             "g2": np.array([2.0]),
+            "saxs_1d": np.array([1.0, 2.0]),
+            "Iqp": np.array([[1.0, 2.0]]),
+            "Int_t": np.array([10, 20]),
+            "stride_frame": 1,
+            "avg_frame": 1,
         }
         mock_read_metadata.return_value = {"entry": {"instrument": "APS-8IDI"}}
 
@@ -285,7 +290,15 @@ class TestXpcsFileDataAccess:
         """Test update_label method."""
         mock_get_qmap.return_value = {"dqmap": np.zeros((5, 5))}
         mock_get_atype.return_value = "Multitau"
-        mock_batch_read.return_value = {"t0": 0.001}
+        mock_batch_read.return_value = {
+            "t0": 0.001,
+            "tau": np.array([0.001]),
+            "saxs_1d": np.array([1.0, 2.0]),
+            "Iqp": np.array([[1.0, 2.0]]),
+            "Int_t": np.array([10, 20]),
+            "stride_frame": 1,
+            "avg_frame": 1,
+        }
 
         with patch("xpcs_toolkit.xpcs_file.create_id") as mock_create_id:
             mock_create_id.side_effect = ["initial_label", "updated_label"]
@@ -509,7 +522,15 @@ class TestCreateId:
             ),
             patch("xpcs_toolkit.xpcs_file.get_analysis_type", return_value="Multitau"),
             patch(
-                "xpcs_toolkit.xpcs_file.batch_read_fields", return_value={"t0": 0.001}
+                "xpcs_toolkit.xpcs_file.batch_read_fields", return_value={
+                    "t0": 0.001,
+                    "tau": np.array([0.001]),
+                    "saxs_1d": np.array([1.0, 2.0]),
+                    "Iqp": np.array([[1.0, 2.0]]),
+                    "Int_t": np.array([10, 20]),
+                    "stride_frame": 1,
+                    "avg_frame": 1,
+                }
             ),
         ):
             xfile = XpcsFile("test_file.hdf", label_style="custom")
@@ -534,9 +555,12 @@ class TestXpcsFilePerformance:
         mock_batch_read.return_value = {
             "saxs_1d": np.random.rand(1000),
             "g2": np.random.rand(50),
+            "tau": np.random.rand(50),
             "t0": 0.001,
             "stride_frame": 1,
             "avg_frame": 1,
+            "Iqp": np.random.rand(10, 100),
+            "Int_t": np.random.rand(1000),
         }
 
         performance_timer.start()
@@ -583,7 +607,15 @@ class TestXpcsFileEdgeCases:
         """Test handling when extra_fields is None."""
         mock_get_qmap.return_value = {"dqmap": np.zeros((5, 5))}
         mock_get_atype.return_value = "Multitau"
-        mock_batch_read.return_value = {"t0": 0.001, "stride_frame": 1, "avg_frame": 1}
+        mock_batch_read.return_value = {
+            "t0": 0.001,
+            "stride_frame": 1,
+            "avg_frame": 1,
+            "tau": np.array([0.001]),
+            "saxs_1d": np.array([1.0, 2.0]),
+            "Iqp": np.array([[1.0, 2.0]]),
+            "Int_t": np.array([10, 20]),
+        }
 
         with patch("xpcs_toolkit.xpcs_file.create_id", return_value="test"):
             # Should not raise exception with fields=None

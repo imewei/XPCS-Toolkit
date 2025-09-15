@@ -401,10 +401,9 @@ def gui_widget_inspector():
         def find_widget_by_text(parent, text, widget_type=None):
             """Find widget containing specific text."""
             for child in parent.findChildren(QtWidgets.QWidget):
-                if hasattr(child, "text") and text in child.text():
-                    if widget_type is None or isinstance(child, widget_type):
-                        return child
-                elif hasattr(child, "windowTitle") and text in child.windowTitle():
+                if (hasattr(child, "text") and text in child.text()) or (
+                    hasattr(child, "windowTitle") and text in child.windowTitle()
+                ):
                     if widget_type is None or isinstance(child, widget_type):
                         return child
             return None

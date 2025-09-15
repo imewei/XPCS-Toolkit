@@ -104,7 +104,7 @@ class TestMultiLevelCache(unittest.TestCase):
 
         # Access it multiple times to trigger promotion to L1
         for _ in range(5):
-            data, found = self.cache.get("medium_data")
+            _data, found = self.cache.get("medium_data")
             self.assertTrue(found)
 
         # Data should now be in L1 for faster access

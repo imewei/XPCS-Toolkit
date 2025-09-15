@@ -196,7 +196,7 @@ class Phase1MemoryIntegrationTests(unittest.TestCase):
         initial_memory = psutil.Process().memory_info().rss
 
         # Perform repeated file load/unload cycles
-        for cycle in range(10):
+        for _cycle in range(10):
             for filepath in self.test_files:
                 try:
                     with h5py.File(filepath, "r") as f:
@@ -688,10 +688,10 @@ class Phase5CachingIntegrationTests(unittest.TestCase):
             # Load data multiple times - should use cache on subsequent loads
             times = []
 
-            for i in range(3):
+            for _i in range(3):
                 start_time = time.perf_counter()
 
-                cache_key = f"test_data_{str(self.test_file)}"
+                cache_key = f"test_data_{self.test_file!s}"
                 cached_data = cache.get(cache_key)
 
                 if cached_data is None:
@@ -996,7 +996,7 @@ class CrossPhaseIntegrationTests(unittest.TestCase):
                 )
 
             # Access cached items
-            for key, data in cached_items.items():
+            for _key, data in cached_items.items():
                 result = np.mean(data)
                 self.assertIsInstance(
                     result, (int, float), "Cached data should be accessible"

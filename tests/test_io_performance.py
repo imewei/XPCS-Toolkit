@@ -94,7 +94,7 @@ class TestIOPerformance(unittest.TestCase):
             tau = np.logspace(-6, 1, 50)
             g2 = (
                 1.0
-                + 0.5 * np.exp(-tau * 100)
+                + 0.5 * np.exp(-tau * 100)[:, np.newaxis]
                 + np.random.normal(0, 0.01, size=(50, 10))
             )
             g2_err = np.random.exponential(0.01, size=(50, 10))

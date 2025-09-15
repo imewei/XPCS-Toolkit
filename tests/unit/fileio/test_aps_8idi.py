@@ -295,20 +295,18 @@ class TestAPS8IDIKeyAccess:
         # Test that we can access different categories of keys
         qmap_keys = [
             k
-            for k in nexus_keys.keys()
+            for k in nexus_keys
             if k in ["mask", "dqmap", "sqmap", "bcx", "bcy", "det_dist"]
         ]
         assert len(qmap_keys) >= 6, "Should have at least 6 qmap keys"
 
         analysis_keys = [
-            k
-            for k in nexus_keys.keys()
-            if k in ["tau", "g2", "G2", "saxs_1d", "saxs_2d"]
+            k for k in nexus_keys if k in ["tau", "g2", "G2", "saxs_1d", "saxs_2d"]
         ]
         assert len(analysis_keys) >= 5, "Should have at least 5 analysis keys"
 
         detector_keys = [
-            k for k in nexus_keys.keys() if k in ["t0", "t1", "pix_dim_x", "pix_dim_y"]
+            k for k in nexus_keys if k in ["t0", "t1", "pix_dim_x", "pix_dim_y"]
         ]
         assert len(detector_keys) >= 4, "Should have at least 4 detector keys"
 
@@ -320,7 +318,7 @@ class TestAPS8IDIKeyAccess:
 
         # Test that we can iterate over keys
         nexus_keys = key["nexus"]
-        key_count = sum(1 for _ in nexus_keys.keys())
+        key_count = sum(1 for _ in nexus_keys)
         assert key_count > 20, "Should have more than 20 keys defined"
 
         # Test that we can access values
@@ -369,7 +367,7 @@ class TestAPS8IDICompatibility:
         """Test that paths follow NeXus standard conventions."""
         nexus_keys = key["nexus"]
 
-        for key_name, path in nexus_keys.items():
+        for _key_name, path in nexus_keys.items():
             # Paths should not contain double slashes
             assert "//" not in path, f"Path contains double slash: {path}"
 
@@ -388,7 +386,7 @@ class TestAPS8IDIKeyValidation:
         """Test that key names are valid Python identifiers."""
         nexus_keys = key["nexus"]
 
-        for key_name in nexus_keys.keys():
+        for key_name in nexus_keys:
             # Key names should be strings
             assert isinstance(key_name, str), f"Key name is not a string: {key_name}"
 
@@ -419,7 +417,7 @@ class TestAPS8IDIKeyValidation:
         # Most paths should contain 'xpcs' or 'entry'
         paths_with_required_components = 0
 
-        for key_name, path in nexus_keys.items():
+        for _key_name, path in nexus_keys.items():
             if "xpcs" in path or "entry" in path:
                 paths_with_required_components += 1
 

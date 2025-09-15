@@ -7,9 +7,10 @@ conditions and validating system behavior under controlled failure scenarios.
 import os
 import threading
 import time
-from contextlib import contextmanager
+from collections.abc import Callable
+from contextlib import contextmanager, suppress
 from dataclasses import dataclass, field
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any
 from unittest.mock import patch
 
 import h5py
@@ -27,7 +28,7 @@ class ErrorScenario:
     target_function: str
     error_type: type
     error_message: str
-    trigger_condition: Optional[Callable] = None
+    trigger_condition: Callable | None = None
     recovery_expected: bool = True
     cleanup_required: bool = True
     max_occurrences: int = 1
@@ -43,7 +44,7 @@ class InjectionResult:
     errors_handled: int
     recovery_successful: bool
     cleanup_successful: bool
-    unexpected_errors: List[str] = field(default_factory=list)
+    unexpected_errors: list[str] = field(default_factory=list)
     execution_time: float = 0.0
 
 
@@ -51,12 +52,12 @@ class SystematicErrorInjector:
     """Advanced error injection system with controlled failure scenarios."""
 
     def __init__(self):
-        self.active_injections: Dict[str, Any] = {}
-        self.injection_stats: Dict[str, int] = {}
-        self.error_history: List[Dict[str, Any]] = []
+        self.active_injections: dict[str, Any] = {}
+        self.injection_stats: dict[str, int] = {}
+        self.error_history: list[dict[str, Any]] = []
 
     @contextmanager
-    def inject_systematic_errors(self, scenarios: List[ErrorScenario]):
+    def inject_systematic_errors(self, scenarios: list[ErrorScenario]):
         """Context manager for systematic error injection."""
         patchers = []
 
@@ -70,11 +71,9 @@ class SystematicErrorInjector:
             yield self
 
         finally:
-            for name, patcher in patchers:
-                try:
+            for _name, patcher in patchers:
+                with suppress(Exception):
                     patcher.stop()
-                except Exception:
-                    pass
 
     def _create_error_patcher(self, scenario: ErrorScenario):
         """Create a patcher for the given error scenario."""
@@ -127,19 +126,19 @@ class SystematicErrorInjector:
         """Get the original function before patching."""
         if target_function == "builtins.open":
             return open
-        elif target_function == "numpy.array":
+        if target_function == "numpy.array":
             return np.array
-        elif target_function == "numpy.zeros":
+        if target_function == "numpy.zeros":
             return np.zeros
-        elif target_function == "numpy.random.rand":
+        if target_function == "numpy.random.rand":
             return np.random.rand
-        elif target_function == "numpy.divide":
+        if target_function == "numpy.divide":
             return np.divide
-        elif target_function == "numpy.sqrt":
+        if target_function == "numpy.sqrt":
             return np.sqrt
-        elif target_function == "h5py.File":
+        if target_function == "h5py.File":
             return h5py.File
-        elif target_function == "time.sleep":
+        if target_function == "time.sleep":
             return time.sleep
         # Add more function mappings as needed
         return None
@@ -160,7 +159,7 @@ class SystematicErrorInjector:
             pass
         return None
 
-    def get_injection_summary(self) -> Dict[str, Any]:
+    def get_injection_summary(self) -> dict[str, Any]:
         """Get summary of all error injections."""
         return {
             "total_scenarios": len(self.injection_stats),
@@ -176,7 +175,7 @@ class ErrorInjectionTestSuite:
     def __init__(self, temp_dir: str):
         self.temp_dir = temp_dir
         self.injector = SystematicErrorInjector()
-        self.results: List[InjectionResult] = []
+        self.results: list[InjectionResult] = []
 
     def run_scenario_test(
         self, scenario: ErrorScenario, test_function: Callable
@@ -233,7 +232,7 @@ class ErrorInjectionTestSuite:
         test_array = np.array([1, 2, 3])
         assert len(test_array) == 3
 
-    def run_comprehensive_suite(self) -> List[InjectionResult]:
+    def run_comprehensive_suite(self) -> list[InjectionResult]:
         """Run comprehensive error injection test suite."""
         scenarios = self._generate_comprehensive_scenarios()
         results = []
@@ -246,7 +245,7 @@ class ErrorInjectionTestSuite:
 
         return results
 
-    def _generate_comprehensive_scenarios(self) -> List[ErrorScenario]:
+    def _generate_comprehensive_scenarios(self) -> list[ErrorScenario]:
         """Generate comprehensive set of error scenarios."""
         scenarios = []
 
@@ -335,18 +334,17 @@ class ErrorInjectionTestSuite:
 
     def _get_test_function_for_scenario(
         self, scenario: ErrorScenario
-    ) -> Optional[Callable]:
+    ) -> Callable | None:
         """Get appropriate test function for a scenario."""
         if "hdf5" in scenario.name:
             return self._test_hdf5_operations
-        elif "numpy" in scenario.name or "memory" in scenario.name:
+        if "numpy" in scenario.name or "memory" in scenario.name:
             return self._test_numpy_operations
-        elif "timeout" in scenario.name:
+        if "timeout" in scenario.name:
             return self._test_timeout_operations
-        elif "division" in scenario.name or "invalid" in scenario.name:
+        if "division" in scenario.name or "invalid" in scenario.name:
             return self._test_mathematical_operations
-        else:
-            return self._test_generic_operations
+        return self._test_generic_operations
 
     def _test_hdf5_operations(self):
         """Test HDF5 operations that might trigger errors."""
@@ -360,17 +358,28 @@ class ErrorInjectionTestSuite:
 
             # Add comprehensive XPCS structure
             f.create_dataset("/xpcs/multitau/normalized_g2", data=np.random.rand(5, 50))
-            f.create_dataset("/xpcs/temporal_mean/scattering_1d", data=np.random.rand(50))
-            f.create_dataset("/xpcs/temporal_mean/scattering_2d", data=np.random.rand(10, 50, 50))
+            f.create_dataset(
+                "/xpcs/temporal_mean/scattering_1d", data=np.random.rand(50)
+            )
+            f.create_dataset(
+                "/xpcs/temporal_mean/scattering_2d", data=np.random.rand(10, 50, 50)
+            )
             f.create_dataset("/entry/start_time", data="2023-01-01T00:00:00")
             f.create_dataset("/xpcs/multitau/config/avg_frame", data=1)
             f.create_dataset("/xpcs/multitau/delay_list", data=np.random.rand(50))
             f.create_dataset("/entry/instrument/detector_1/count_time", data=0.1)
-            f.create_dataset("/xpcs/temporal_mean/scattering_1d_segments", data=np.random.rand(10, 50))
-            f.create_dataset("/xpcs/multitau/normalized_g2_err", data=np.random.rand(5, 50))
+            f.create_dataset(
+                "/xpcs/temporal_mean/scattering_1d_segments",
+                data=np.random.rand(10, 50),
+            )
+            f.create_dataset(
+                "/xpcs/multitau/normalized_g2_err", data=np.random.rand(5, 50)
+            )
             f.create_dataset("/xpcs/multitau/config/stride_frame", data=1)
             f.create_dataset("/entry/instrument/detector_1/frame_time", data=0.01)
-            f.create_dataset("/xpcs/spatial_mean/intensity_vs_time", data=np.random.rand(1000))
+            f.create_dataset(
+                "/xpcs/spatial_mean/intensity_vs_time", data=np.random.rand(1000)
+            )
 
     def _test_numpy_operations(self):
         """Test numpy operations that might trigger errors."""
@@ -417,7 +426,7 @@ class TestErrorInjectionFramework:
         with injector.inject_systematic_errors([scenario]):
             # This should trigger the injected error
             with pytest.raises(IOError, match="Injected I/O error"):
-                open("/nonexistent/file.txt", "r")
+                open("/nonexistent/file.txt")
 
         # Check injection statistics
         stats = injector.get_injection_summary()
@@ -453,7 +462,7 @@ class TestErrorInjectionFramework:
             with pytest.raises(
                 FileNotFoundError, match="Conditional injection triggered"
             ):
-                open("trigger_file.txt", "r")
+                open("trigger_file.txt")
 
     def test_limited_error_occurrences(self, error_temp_dir):
         """Test that error injection respects max occurrences."""
@@ -577,25 +586,45 @@ class TestSystematicErrorScenarios:
                     f.attrs["analysis_type"] = "XPCS"
 
                     # Add comprehensive XPCS structure
-                    f.create_dataset("/xpcs/multitau/normalized_g2", data=np.random.rand(5, 50))
-                    f.create_dataset("/xpcs/temporal_mean/scattering_1d", data=np.random.rand(10))
-                    f.create_dataset("/xpcs/temporal_mean/scattering_2d", data=saxs_data)
+                    f.create_dataset(
+                        "/xpcs/multitau/normalized_g2", data=np.random.rand(5, 50)
+                    )
+                    f.create_dataset(
+                        "/xpcs/temporal_mean/scattering_1d", data=np.random.rand(10)
+                    )
+                    f.create_dataset(
+                        "/xpcs/temporal_mean/scattering_2d", data=saxs_data
+                    )
                     f.create_dataset("/entry/start_time", data="2023-01-01T00:00:00")
                     f.create_dataset("/xpcs/multitau/config/avg_frame", data=1)
-                    f.create_dataset("/xpcs/multitau/delay_list", data=np.random.rand(50))
-                    f.create_dataset("/entry/instrument/detector_1/count_time", data=0.1)
-                    f.create_dataset("/xpcs/temporal_mean/scattering_1d_segments", data=np.random.rand(10, 10))
-                    f.create_dataset("/xpcs/multitau/normalized_g2_err", data=np.random.rand(5, 50))
+                    f.create_dataset(
+                        "/xpcs/multitau/delay_list", data=np.random.rand(50)
+                    )
+                    f.create_dataset(
+                        "/entry/instrument/detector_1/count_time", data=0.1
+                    )
+                    f.create_dataset(
+                        "/xpcs/temporal_mean/scattering_1d_segments",
+                        data=np.random.rand(10, 10),
+                    )
+                    f.create_dataset(
+                        "/xpcs/multitau/normalized_g2_err", data=np.random.rand(5, 50)
+                    )
                     f.create_dataset("/xpcs/multitau/config/stride_frame", data=1)
-                    f.create_dataset("/entry/instrument/detector_1/frame_time", data=0.01)
-                    f.create_dataset("/xpcs/spatial_mean/intensity_vs_time", data=np.random.rand(1000))
+                    f.create_dataset(
+                        "/entry/instrument/detector_1/frame_time", data=0.01
+                    )
+                    f.create_dataset(
+                        "/xpcs/spatial_mean/intensity_vs_time",
+                        data=np.random.rand(1000),
+                    )
             except OSError:
                 # Expected from injection
                 pass
 
         # Run concurrent tests
         threads = []
-        for i in range(5):
+        for _i in range(5):
             thread = threading.Thread(target=concurrent_test)
             threads.append(thread)
 
@@ -644,18 +673,38 @@ class TestSystematicErrorScenarios:
                     f.attrs["analysis_type"] = "XPCS"
 
                     # Add comprehensive XPCS structure
-                    f.create_dataset("/xpcs/multitau/normalized_g2", data=np.random.rand(5, 50))
-                    f.create_dataset("/xpcs/temporal_mean/scattering_1d", data=np.random.rand(20))
-                    f.create_dataset("/xpcs/temporal_mean/scattering_2d", data=saxs_data)
+                    f.create_dataset(
+                        "/xpcs/multitau/normalized_g2", data=np.random.rand(5, 50)
+                    )
+                    f.create_dataset(
+                        "/xpcs/temporal_mean/scattering_1d", data=np.random.rand(20)
+                    )
+                    f.create_dataset(
+                        "/xpcs/temporal_mean/scattering_2d", data=saxs_data
+                    )
                     f.create_dataset("/entry/start_time", data="2023-01-01T00:00:00")
                     f.create_dataset("/xpcs/multitau/config/avg_frame", data=1)
-                    f.create_dataset("/xpcs/multitau/delay_list", data=np.random.rand(50))
-                    f.create_dataset("/entry/instrument/detector_1/count_time", data=0.1)
-                    f.create_dataset("/xpcs/temporal_mean/scattering_1d_segments", data=np.random.rand(10, 20))
-                    f.create_dataset("/xpcs/multitau/normalized_g2_err", data=np.random.rand(5, 50))
+                    f.create_dataset(
+                        "/xpcs/multitau/delay_list", data=np.random.rand(50)
+                    )
+                    f.create_dataset(
+                        "/entry/instrument/detector_1/count_time", data=0.1
+                    )
+                    f.create_dataset(
+                        "/xpcs/temporal_mean/scattering_1d_segments",
+                        data=np.random.rand(10, 20),
+                    )
+                    f.create_dataset(
+                        "/xpcs/multitau/normalized_g2_err", data=np.random.rand(5, 50)
+                    )
                     f.create_dataset("/xpcs/multitau/config/stride_frame", data=1)
-                    f.create_dataset("/entry/instrument/detector_1/frame_time", data=0.01)
-                    f.create_dataset("/xpcs/spatial_mean/intensity_vs_time", data=np.random.rand(1000))
+                    f.create_dataset(
+                        "/entry/instrument/detector_1/frame_time", data=0.01
+                    )
+                    f.create_dataset(
+                        "/xpcs/spatial_mean/intensity_vs_time",
+                        data=np.random.rand(1000),
+                    )
 
             except FileNotFoundError:
                 # Fallback operation that might also fail
@@ -717,23 +766,50 @@ class TestErrorRecoveryValidation:
                             f.attrs["analysis_type"] = "XPCS"
 
                             # Add comprehensive XPCS structure
-                            f.create_dataset("/xpcs/multitau/normalized_g2", data=np.random.rand(5, 50))
-                            f.create_dataset("/xpcs/temporal_mean/scattering_1d", data=np.random.rand(30))
-                            f.create_dataset("/xpcs/temporal_mean/scattering_2d", data=saxs_data)
-                            f.create_dataset("/entry/start_time", data="2023-01-01T00:00:00")
+                            f.create_dataset(
+                                "/xpcs/multitau/normalized_g2",
+                                data=np.random.rand(5, 50),
+                            )
+                            f.create_dataset(
+                                "/xpcs/temporal_mean/scattering_1d",
+                                data=np.random.rand(30),
+                            )
+                            f.create_dataset(
+                                "/xpcs/temporal_mean/scattering_2d", data=saxs_data
+                            )
+                            f.create_dataset(
+                                "/entry/start_time", data="2023-01-01T00:00:00"
+                            )
                             f.create_dataset("/xpcs/multitau/config/avg_frame", data=1)
-                            f.create_dataset("/xpcs/multitau/delay_list", data=np.random.rand(50))
-                            f.create_dataset("/entry/instrument/detector_1/count_time", data=0.1)
-                            f.create_dataset("/xpcs/temporal_mean/scattering_1d_segments", data=np.random.rand(10, 30))
-                            f.create_dataset("/xpcs/multitau/normalized_g2_err", data=np.random.rand(5, 50))
-                            f.create_dataset("/xpcs/multitau/config/stride_frame", data=1)
-                            f.create_dataset("/entry/instrument/detector_1/frame_time", data=0.01)
-                            f.create_dataset("/xpcs/spatial_mean/intensity_vs_time", data=np.random.rand(1000))
+                            f.create_dataset(
+                                "/xpcs/multitau/delay_list", data=np.random.rand(50)
+                            )
+                            f.create_dataset(
+                                "/entry/instrument/detector_1/count_time", data=0.1
+                            )
+                            f.create_dataset(
+                                "/xpcs/temporal_mean/scattering_1d_segments",
+                                data=np.random.rand(10, 30),
+                            )
+                            f.create_dataset(
+                                "/xpcs/multitau/normalized_g2_err",
+                                data=np.random.rand(5, 50),
+                            )
+                            f.create_dataset(
+                                "/xpcs/multitau/config/stride_frame", data=1
+                            )
+                            f.create_dataset(
+                                "/entry/instrument/detector_1/frame_time", data=0.01
+                            )
+                            f.create_dataset(
+                                "/xpcs/spatial_mean/intensity_vs_time",
+                                data=np.random.rand(1000),
+                            )
 
                         # Memory operations
                         np.zeros(100)
 
-                    except (IOError, MemoryError):
+                    except (OSError, MemoryError):
                         # Expected from injection
                         continue
 
@@ -752,18 +828,38 @@ class TestErrorRecoveryValidation:
                     f.attrs["analysis_type"] = "XPCS"
 
                     # Add comprehensive XPCS structure
-                    f.create_dataset("/xpcs/multitau/normalized_g2", data=np.random.rand(5, 50))
-                    f.create_dataset("/xpcs/temporal_mean/scattering_1d", data=np.random.rand(40))
-                    f.create_dataset("/xpcs/temporal_mean/scattering_2d", data=saxs_data)
+                    f.create_dataset(
+                        "/xpcs/multitau/normalized_g2", data=np.random.rand(5, 50)
+                    )
+                    f.create_dataset(
+                        "/xpcs/temporal_mean/scattering_1d", data=np.random.rand(40)
+                    )
+                    f.create_dataset(
+                        "/xpcs/temporal_mean/scattering_2d", data=saxs_data
+                    )
                     f.create_dataset("/entry/start_time", data="2023-01-01T00:00:00")
                     f.create_dataset("/xpcs/multitau/config/avg_frame", data=1)
-                    f.create_dataset("/xpcs/multitau/delay_list", data=np.random.rand(50))
-                    f.create_dataset("/entry/instrument/detector_1/count_time", data=0.1)
-                    f.create_dataset("/xpcs/temporal_mean/scattering_1d_segments", data=np.random.rand(10, 40))
-                    f.create_dataset("/xpcs/multitau/normalized_g2_err", data=np.random.rand(5, 50))
+                    f.create_dataset(
+                        "/xpcs/multitau/delay_list", data=np.random.rand(50)
+                    )
+                    f.create_dataset(
+                        "/entry/instrument/detector_1/count_time", data=0.1
+                    )
+                    f.create_dataset(
+                        "/xpcs/temporal_mean/scattering_1d_segments",
+                        data=np.random.rand(10, 40),
+                    )
+                    f.create_dataset(
+                        "/xpcs/multitau/normalized_g2_err", data=np.random.rand(5, 50)
+                    )
                     f.create_dataset("/xpcs/multitau/config/stride_frame", data=1)
-                    f.create_dataset("/entry/instrument/detector_1/frame_time", data=0.01)
-                    f.create_dataset("/xpcs/spatial_mean/intensity_vs_time", data=np.random.rand(1000))
+                    f.create_dataset(
+                        "/entry/instrument/detector_1/frame_time", data=0.01
+                    )
+                    f.create_dataset(
+                        "/xpcs/spatial_mean/intensity_vs_time",
+                        data=np.random.rand(1000),
+                    )
 
                 recovery_array = np.zeros(50)
                 assert len(recovery_array) == 50
@@ -833,7 +929,7 @@ class TestErrorRecoveryValidation:
         try:
             with suite.injector.inject_systematic_errors([scenario]):
                 # Allocate resources that might leak on error
-                for i in range(20):
+                for _i in range(20):
                     try:
                         resource = np.random.rand(1000, 1000)  # 8MB each
                         allocated_resources.append(resource)
@@ -883,11 +979,17 @@ class TestComprehensiveErrorInjection:
         # Adjust expectations based on error injection realities
         # Error injection tests should either inject errors or handle them gracefully
         # If all errors are injected successfully, recovery_rate may be 0
-        total_successful_operations = successful_recoveries + sum(1 for r in results if r.errors_injected > 0)
-        operation_success_rate = total_successful_operations / total_scenarios if total_scenarios > 0 else 0
+        total_successful_operations = successful_recoveries + sum(
+            1 for r in results if r.errors_injected > 0
+        )
+        operation_success_rate = (
+            total_successful_operations / total_scenarios if total_scenarios > 0 else 0
+        )
 
         # Either errors should be injected OR recovery should occur
-        assert operation_success_rate >= 0.5  # At least 50% operations should succeed (injection or recovery)
+        assert (
+            operation_success_rate >= 0.5
+        )  # At least 50% operations should succeed (injection or recovery)
         assert cleanup_rate >= 0.5  # At least 50% should cleanup properly
 
         # No test should take excessively long

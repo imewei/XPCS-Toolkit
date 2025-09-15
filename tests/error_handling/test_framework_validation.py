@@ -43,7 +43,7 @@ class TestFrameworkValidation:
         assert os.path.exists(invalid_hdf5_file)
 
         # File should exist but not be valid HDF5
-        with open(invalid_hdf5_file, "r") as f:
+        with open(invalid_hdf5_file) as f:
             content = f.read()
             assert "This is not a valid HDF5 file" in content
 
@@ -57,9 +57,8 @@ class TestFrameworkValidation:
         assert not os.path.exists(missing_file_path)
 
         # Should fail when trying to access
-        with pytest.raises(FileNotFoundError):
-            with open(missing_file_path, "r"):
-                pass
+        with pytest.raises(FileNotFoundError), open(missing_file_path):
+            pass
 
     def test_edge_case_data_fixture(self, edge_case_data):
         """Test that edge_case_data fixture provides expected data structures."""
@@ -79,13 +78,13 @@ class TestFrameworkValidation:
 
         # Check empty arrays
         empty_arrays = edge_case_data["empty_arrays"]
-        for dtype_name, array in empty_arrays.items():
+        for _dtype_name, array in empty_arrays.items():
             assert isinstance(array, np.ndarray)
             assert len(array) == 0
 
         # Check single element arrays
         single_arrays = edge_case_data["single_element_arrays"]
-        for name, array in single_arrays.items():
+        for _name, array in single_arrays.items():
             assert isinstance(array, np.ndarray)
             assert len(array) == 1
 
@@ -208,9 +207,8 @@ class TestBasicErrorHandling:
 
         try:
             # Should raise permission error
-            with pytest.raises(PermissionError):
-                with open(restricted_file, "r") as f:
-                    pass
+            with pytest.raises(PermissionError), open(restricted_file) as f:
+                pass
         finally:
             # Restore permissions for cleanup
             os.chmod(restricted_file, 0o644)
@@ -225,11 +223,10 @@ class TestBasicErrorHandling:
 
         # Simulate I/O error using mock
         with patch("builtins.open") as mock_open:
-            mock_open.side_effect = IOError("Simulated I/O error")
+            mock_open.side_effect = OSError("Simulated I/O error")
 
-            with pytest.raises(IOError):
-                with open(test_file, "r") as f:
-                    pass
+            with pytest.raises(IOError), open(test_file) as f:
+                pass
 
     def test_type_error_handling(self):
         """Test type error handling."""
@@ -328,7 +325,7 @@ class TestFrameworkIntegration:
         """Test that error handling is consistent across different scenarios."""
         # Test multiple error types in sequence
         error_types = [
-            (FileNotFoundError, lambda: open("/nonexistent/file.txt", "r")),
+            (FileNotFoundError, lambda: open("/nonexistent/file.txt")),
             (ValueError, lambda: int("not_a_number")),
             (TypeError, lambda: len(None)),
             (ZeroDivisionError, lambda: 1 / 0),
@@ -355,9 +352,9 @@ class TestFrameworkIntegration:
         failed_operations = 0
         for test_file in test_files:
             try:
-                with open(test_file, "r") as f:
+                with open(test_file) as f:
                     pass
-            except IOError:
+            except OSError:
                 failed_operations += 1
 
         # Cleanup should work
@@ -369,6 +366,6 @@ class TestFrameworkIntegration:
 
         # Should be able to access files normally after cleanup
         for test_file in test_files:
-            with open(test_file, "r") as f:
+            with open(test_file) as f:
                 content = f.read()
                 assert "test content" in content

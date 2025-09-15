@@ -6,15 +6,13 @@ including parameter estimation properties, uncertainty quantification,
 and statistical test validation.
 """
 
-from typing import Dict, Optional, Tuple
-
 import numpy as np
 from scipy import stats
 
 
 def verify_parameter_uncertainty_scaling(
     parameter_estimates: np.ndarray, parameter_errors: np.ndarray, n_samples: np.ndarray
-) -> Tuple[bool, str]:
+) -> tuple[bool, str]:
     """
     Verify that parameter uncertainties scale properly with sample size
 
@@ -72,7 +70,7 @@ def verify_chi_squared_distribution(
     errors: np.ndarray,
     n_params: int,
     significance_level: float = 0.05,
-) -> Tuple[bool, str]:
+) -> tuple[bool, str]:
     """
     Verify that normalized residuals follow chi-squared distribution
 
@@ -117,7 +115,7 @@ def verify_chi_squared_distribution(
 
 def verify_residual_normality(
     residuals: np.ndarray, significance_level: float = 0.01
-) -> Tuple[bool, str]:
+) -> tuple[bool, str]:
     """
     Verify that fitting residuals are normally distributed
 
@@ -140,7 +138,7 @@ def verify_residual_normality(
 
     # Shapiro-Wilk test for normality
     try:
-        shapiro_stat, shapiro_p = stats.shapiro(clean_residuals)
+        _shapiro_stat, shapiro_p = stats.shapiro(clean_residuals)
 
         if shapiro_p < significance_level:
             return False, f"Residuals not normal (Shapiro-Wilk p = {shapiro_p:.4f})"
@@ -166,7 +164,7 @@ def verify_bootstrap_consistency(
     bootstrap_estimates: np.ndarray,
     bootstrap_error: float,
     confidence_level: float = 0.68,
-) -> Tuple[bool, str]:
+) -> tuple[bool, str]:
     """
     Verify bootstrap parameter estimation consistency
 
@@ -232,9 +230,9 @@ def verify_bootstrap_consistency(
 
 def verify_correlation_structure(
     correlation_matrix: np.ndarray,
-    expected_correlations: Optional[Dict] = None,
+    expected_correlations: dict | None = None,
     tolerance: float = 0.2,
-) -> Tuple[bool, str]:
+) -> tuple[bool, str]:
     """
     Verify parameter correlation structure in fitting
 
@@ -289,7 +287,7 @@ def verify_correlation_structure(
 
 def verify_monte_carlo_convergence(
     estimates: np.ndarray, true_value: float, convergence_rate: float = -0.5
-) -> Tuple[bool, str]:
+) -> tuple[bool, str]:
     """
     Verify Monte Carlo estimation convergence
 
@@ -350,7 +348,7 @@ def verify_statistical_power(
     null_hypothesis_stats: np.ndarray,
     significance_level: float = 0.05,
     expected_power: float = 0.8,
-) -> Tuple[bool, str]:
+) -> tuple[bool, str]:
     """
     Verify statistical power of hypothesis tests
 
@@ -394,9 +392,9 @@ def verify_information_criteria(
     log_likelihood: float,
     n_params: int,
     n_data: int,
-    reference_aic: Optional[float] = None,
-    reference_bic: Optional[float] = None,
-) -> Tuple[bool, str]:
+    reference_aic: float | None = None,
+    reference_bic: float | None = None,
+) -> tuple[bool, str]:
     """
     Verify information criteria calculations (AIC, BIC)
 

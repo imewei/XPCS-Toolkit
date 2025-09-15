@@ -29,7 +29,7 @@ import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any
 
 import h5py
 import numpy as np
@@ -75,10 +75,10 @@ class SystemStabilityReport:
 
     test_timestamp: str
     overall_stability_score: float
-    stress_test_results: List[StressTestMetrics]
-    system_info: Dict[str, Any]
-    recommendations: List[str]
-    critical_issues: List[str]
+    stress_test_results: list[StressTestMetrics]
+    system_info: dict[str, Any]
+    recommendations: list[str]
+    critical_issues: list[str]
 
 
 class ResourceMonitor:
@@ -127,7 +127,7 @@ class ResourceMonitor:
 
             time.sleep(self.monitoring_interval)
 
-    def get_summary_metrics(self) -> Dict[str, float]:
+    def get_summary_metrics(self) -> dict[str, float]:
         """Get summary metrics from monitoring history"""
         if not self.metrics_history:
             return {}
@@ -894,7 +894,7 @@ class SystemStabilityTestSuite:
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(exist_ok=True, parents=True)
         self.monitor = ResourceMonitor()
-        self.test_results: List[StressTestMetrics] = []
+        self.test_results: list[StressTestMetrics] = []
 
         # Initialize stress test modules
         self.memory_tests = MemoryStressTests(self.monitor)

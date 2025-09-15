@@ -6,7 +6,8 @@ algorithms can be validated. These benchmarks include exact analytical solutions
 for various physical systems and mathematical models.
 """
 
-from typing import Any, Callable, Dict, List, Tuple
+from collections.abc import Callable
+from typing import Any
 
 import numpy as np
 from scipy import special
@@ -346,7 +347,7 @@ class AnalyticalBenchmarkSuite:
 
     # Utility methods
 
-    def get_benchmark(self, benchmark_name: str) -> Dict[str, Any]:
+    def get_benchmark(self, benchmark_name: str) -> dict[str, Any]:
         """Get benchmark data by name"""
         if benchmark_name not in self.benchmarks:
             available = list(self.benchmarks.keys())
@@ -359,9 +360,9 @@ class AnalyticalBenchmarkSuite:
     def evaluate_benchmark(
         self,
         benchmark_name: str,
-        custom_parameters: Dict[str, Any] = None,
+        custom_parameters: dict[str, Any] | None = None,
         custom_domain: np.ndarray = None,
-    ) -> Tuple[np.ndarray, np.ndarray]:
+    ) -> tuple[np.ndarray, np.ndarray]:
         """
         Evaluate a benchmark with given or default parameters
 
@@ -390,7 +391,7 @@ class AnalyticalBenchmarkSuite:
 
     def validate_benchmark_properties(
         self, benchmark_name: str, domain: np.ndarray, values: np.ndarray
-    ) -> Dict[str, bool]:
+    ) -> dict[str, bool]:
         """
         Validate that benchmark results satisfy expected properties
 
@@ -482,7 +483,7 @@ class AnalyticalBenchmarkSuite:
 
         return validation_results
 
-    def run_comprehensive_benchmark_validation(self) -> Dict[str, Any]:
+    def run_comprehensive_benchmark_validation(self) -> dict[str, Any]:
         """
         Run validation on all benchmarks with their default parameters
 
@@ -551,11 +552,11 @@ class AnalyticalBenchmarkSuite:
 
 def create_custom_analytical_benchmark(
     function: Callable,
-    parameters: Dict[str, Any],
+    parameters: dict[str, Any],
     domain: np.ndarray,
-    properties: List[str] = None,
+    properties: list[str] | None = None,
     description: str = "Custom benchmark",
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Create a custom analytical benchmark
 

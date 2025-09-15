@@ -38,7 +38,7 @@ from contextlib import contextmanager
 from pathlib import Path
 from statistics import mean, median, stdev
 from tempfile import TemporaryDirectory
-from typing import Any, Dict, List
+from typing import Any
 
 import numpy as np
 import psutil
@@ -185,7 +185,7 @@ def memory_profiler():
         tracemalloc.stop()
 
 
-def create_test_data(size: int, data_type: str = "mixed") -> Dict[str, Any]:
+def create_test_data(size: int, data_type: str = "mixed") -> dict[str, Any]:
     """Create test data for logging benchmarks."""
     if data_type == "simple":
         return {
@@ -193,7 +193,7 @@ def create_test_data(size: int, data_type: str = "mixed") -> Dict[str, Any]:
             "value": size,
             "timestamp": time.time(),
         }
-    elif data_type == "numpy":
+    if data_type == "numpy":
         return {
             "array": np.random.random((min(size, 1000), min(size, 1000))),
             "metadata": {
@@ -202,7 +202,7 @@ def create_test_data(size: int, data_type: str = "mixed") -> Dict[str, Any]:
                 "operation": "random_generation",
             },
         }
-    elif data_type == "structured":
+    if data_type == "structured":
         return {
             "experiment_id": str(uuid.uuid4()),
             "parameters": {
@@ -228,22 +228,22 @@ def create_test_data(size: int, data_type: str = "mixed") -> Dict[str, Any]:
                 ).tolist(),
             },
         }
-    else:  # mixed
-        return {
-            "simple_data": create_test_data(size, "simple"),
-            "numpy_data": np.random.random(min(size, 100)),
-            "nested_dict": {
-                "level1": {
-                    "level2": {
-                        "values": list(range(min(size, 20))),
-                        "metadata": f"Generated for size {size}",
-                    }
+    # mixed
+    return {
+        "simple_data": create_test_data(size, "simple"),
+        "numpy_data": np.random.random(min(size, 100)),
+        "nested_dict": {
+            "level1": {
+                "level2": {
+                    "values": list(range(min(size, 20))),
+                    "metadata": f"Generated for size {size}",
                 }
-            },
-        }
+            }
+        },
+    }
 
 
-def calculate_performance_metrics(times: List[float]) -> Dict[str, float]:
+def calculate_performance_metrics(times: list[float]) -> dict[str, float]:
     """Calculate comprehensive performance metrics."""
     if not times:
         return {}
@@ -294,7 +294,6 @@ class TestThroughputBenchmarks:
 
         # Note: Performance validation happens in the benchmark reporting
         # The benchmark fixture doesn't return stats in our version
-        pass
 
     @pytest.mark.benchmark(group="throughput")
     @pytest.mark.parametrize(
@@ -318,7 +317,6 @@ class TestThroughputBenchmarks:
         benchmark(log_structured_data)
 
         # Note: Performance validation through benchmark reporting
-        pass
 
     @pytest.mark.benchmark(group="throughput")
     @pytest.mark.parametrize("thread_count", BenchmarkConfig.THREAD_COUNTS)
@@ -351,7 +349,6 @@ class TestThroughputBenchmarks:
         benchmark(concurrent_logging)
 
         # Note: Concurrent performance validation through benchmark reporting
-        pass
 
     @pytest.mark.benchmark(group="throughput")
     def test_bulk_numpy_array_logging(self, benchmark, clean_logging_state):
@@ -378,7 +375,6 @@ class TestThroughputBenchmarks:
         benchmark(log_numpy_arrays)
 
         # Note: Performance validation through benchmark reporting
-        pass
 
 
 # =============================================================================
@@ -401,7 +397,7 @@ class TestLatencyBenchmarks:
 
         benchmark(log_single_message)
 
-        pass  # Benchmark validation through reporting
+        # Benchmark validation through reporting
 
     @pytest.mark.benchmark(group="latency")
     def test_formatter_overhead(self, benchmark, clean_logging_state):
@@ -432,7 +428,7 @@ class TestLatencyBenchmarks:
 
         benchmark.pedantic(format_message, rounds=100, iterations=1)
 
-        pass  # Benchmark validation through reporting
+        # Benchmark validation through reporting
 
     @pytest.mark.benchmark(group="latency")
     def test_handler_switching_latency(self, benchmark, clean_logging_state):
@@ -455,7 +451,7 @@ class TestLatencyBenchmarks:
         benchmark(log_with_multiple_handlers)
 
         # Multiple handlers should not significantly impact latency
-        pass  # Benchmark validation through reporting
+        # Benchmark validation through reporting
 
     @pytest.mark.benchmark(group="latency")
     @pytest.mark.parametrize("filter_complexity", ["simple", "moderate", "complex"])
@@ -527,7 +523,7 @@ class TestMemoryBenchmarks:
         benchmark(memory_scaling_test)
 
         # Memory growth should be reasonable
-        pass  # Benchmark validation through reporting
+        # Benchmark validation through reporting
 
     @pytest.mark.benchmark(group="memory")
     def test_memory_leak_detection(self, benchmark, clean_logging_state):
@@ -564,7 +560,7 @@ class TestMemoryBenchmarks:
         benchmark(extended_logging_session)
 
         # Should not show significant memory leaks
-        pass  # Benchmark validation through reporting
+        # Benchmark validation through reporting
 
     @pytest.mark.benchmark(group="memory")
     @pytest.mark.parametrize("array_size", [1000, 10000, 100000])
@@ -599,7 +595,7 @@ class TestMemoryBenchmarks:
 
         # Memory usage should be reasonable regardless of array size
         # (since we're not logging the array data itself)
-        pass  # Benchmark validation through reporting
+        # Benchmark validation through reporting
 
     @pytest.mark.benchmark(group="memory")
     def test_handler_memory_footprint(
@@ -655,7 +651,7 @@ class TestMemoryBenchmarks:
         benchmark(measure_handler_memory)
 
         # Handler memory footprint should be reasonable
-        pass  # Benchmark validation through reporting
+        # Benchmark validation through reporting
 
 
 # =============================================================================
@@ -698,7 +694,7 @@ class TestScientificComputingBenchmarks:
         benchmark(mcmc_logging_simulation)
 
         # MCMC simulation should complete in reasonable time
-        pass  # Benchmark validation through reporting
+        # Benchmark validation through reporting
 
     @pytest.mark.benchmark(group="scientific")
     def test_real_time_data_stream_logging(self, benchmark, clean_logging_state):
@@ -738,7 +734,7 @@ class TestScientificComputingBenchmarks:
         benchmark(realtime_stream_simulation)
 
         # Real-time logging should not significantly impact performance
-        pass  # Benchmark validation through reporting
+        # Benchmark validation through reporting
 
     @pytest.mark.benchmark(group="scientific")
     @pytest.mark.parametrize("correlation_size", [64, 128, 256])
@@ -787,7 +783,7 @@ class TestScientificComputingBenchmarks:
         benchmark(correlation_analysis_with_logging)
 
         # Analysis should scale reasonably with correlation size
-        pass  # Benchmark validation through reporting
+        # Benchmark validation through reporting
 
     @pytest.mark.benchmark(group="scientific")
     def test_performance_monitoring_decorator_overhead(
@@ -865,7 +861,7 @@ class TestScalabilityBenchmarks:
         benchmark(multiple_logger_test)
 
         # Performance should not degrade significantly with more loggers
-        pass  # Benchmark validation through reporting
+        # Benchmark validation through reporting
 
     @pytest.mark.benchmark(group="scalability")
     def test_log_file_rotation_performance(
@@ -929,7 +925,7 @@ class TestScalabilityBenchmarks:
         benchmark(multiprocess_test)
 
         # Multiprocess logging should scale reasonably
-        pass  # Benchmark validation through reporting
+        # Benchmark validation through reporting
 
     @pytest.mark.benchmark(group="scalability")
     def test_gui_thread_logging_impact(self, benchmark, clean_logging_state):
@@ -960,7 +956,7 @@ class TestScalabilityBenchmarks:
         benchmark(gui_simulation_with_logging)
 
         # GUI logging should not significantly impact frame rates
-        pass  # Benchmark validation through reporting
+        # Benchmark validation through reporting
 
 
 # =============================================================================
@@ -1014,7 +1010,7 @@ class TestPerformanceValidation:
         benchmark(comprehensive_logging_test)
 
         # Validate overall performance requirements
-        pass  # Benchmark validation through reporting
+        # Benchmark validation through reporting
 
     def test_performance_baseline_comparison(self, benchmark):
         """Compare current performance against established baselines."""
@@ -1023,7 +1019,6 @@ class TestPerformanceValidation:
 
         # In a real implementation, this would compare against stored baselines
         # and alert if regressions exceed thresholds
-        pass
 
     @pytest.mark.benchmark(group="validation")
     def test_memory_efficiency_validation(self, clean_logging_state):
@@ -1045,7 +1040,7 @@ class TestPerformanceValidation:
             final_memory - initial_memory
 
         # Validate memory efficiency
-        pass  # Benchmark validation through reporting
+        # Benchmark validation through reporting
 
     def test_performance_requirements_summary(self):
         """Generate performance requirements summary report."""
@@ -1087,7 +1082,7 @@ def pytest_benchmark_update_json(config, benchmarks, output_json):
             "performance_analysis": {
                 "total_benchmarks": len(benchmarks),
                 "benchmark_groups": list(
-                    set(b.get("group", "default") for b in benchmarks)
+                    {b.get("group", "default") for b in benchmarks}
                 ),
             },
         }

@@ -49,7 +49,7 @@ try:
     from xpcs_toolkit.viewer_kernel import ViewerKernel
     from xpcs_toolkit.xpcs_file import MemoryMonitor, XpcsFile
 except ImportError as e:
-    warnings.warn(f"Could not import all XPCS components: {e}")
+    warnings.warn(f"Could not import all XPCS components: {e}", stacklevel=2)
     sys.exit(0)
 
 logger = get_logger(__name__)
@@ -343,7 +343,7 @@ class TestCompleteDataPipeline(unittest.TestCase):
 
             # Step 4: SAXS Analysis
             try:
-                saxs_data = get(test_file, "/xpcs/multitau/saxs_1d")
+                saxs_data = get(test_file, ["/xpcs/multitau/saxs_1d"])["/xpcs/multitau/saxs_1d"]
                 if saxs_data is not None and saxs_data.size > 0:
                     # Basic SAXS validation
                     self.assertGreater(saxs_data.size, 10)
@@ -359,7 +359,7 @@ class TestCompleteDataPipeline(unittest.TestCase):
 
             # Step 5: Stability Analysis
             try:
-                int_t_data = get(test_file, "/xpcs/multitau/Int_t")
+                int_t_data = get(test_file, ["/xpcs/multitau/Int_t"])["/xpcs/multitau/Int_t"]
                 if int_t_data is not None and int_t_data.size > 0:
                     self.assertEqual(int_t_data.shape[0], 2)  # Time and intensity
                     int_t_data[0, :]

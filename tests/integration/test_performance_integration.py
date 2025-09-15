@@ -49,7 +49,7 @@ try:
     from xpcs_toolkit.viewer_kernel import ViewerKernel
     from xpcs_toolkit.xpcs_file import MemoryMonitor, XpcsFile
 except ImportError as e:
-    warnings.warn(f"Could not import all XPCS components: {e}")
+    warnings.warn(f"Could not import all XPCS components: {e}", stacklevel=2)
     sys.exit(0)
 
 logger = get_logger(__name__)
@@ -133,7 +133,7 @@ class TestPerformanceSystemIntegration(unittest.TestCase):
         # Log performance summary
         logger.info("Performance Test Summary:")
         for operation, stats in [
-            (op, self.benchmark.get_stats(op)) for op in self.benchmark.timings.keys()
+            (op, self.benchmark.get_stats(op)) for op in self.benchmark.timings
         ]:
             if stats:
                 logger.info(
@@ -194,9 +194,24 @@ class TestPerformanceSystemIntegration(unittest.TestCase):
     def _create_performance_file(self, hdf_path, config):
         """Create HDF5 file optimized for performance testing."""
         with h5py.File(hdf_path, "w") as f:
+            # File attributes
+            f.attrs["format_version"] = "2.0"
+            f.attrs["analysis_type"] = "Multitau"
+
             # Standard structure
             entry = f.create_group("entry")
             entry.attrs["NX_class"] = "NXentry"
+            entry.create_dataset("start_time", data="2024-01-01T00:00:00")
+
+            # Create instrument/detector structure
+            instrument = entry.create_group("instrument")
+            detector_1 = instrument.create_group("detector_1")
+            detector_1.create_dataset("frame_time", data=0.001)
+            detector_1.create_dataset("count_time", data=0.001)
+
+            # Create incident_beam structure
+            incident_beam = instrument.create_group("incident_beam")
+            incident_beam.create_dataset("incident_energy", data=8000.0)
 
             xpcs = f.create_group("xpcs")
             multitau = xpcs.create_group("multitau")
@@ -226,10 +241,10 @@ class TestPerformanceSystemIntegration(unittest.TestCase):
 
             # Use appropriate compression for performance testing
             multitau.create_dataset(
-                "g2", data=g2_data, compression="gzip", compression_opts=6
+                "normalized_g2", data=g2_data, compression="gzip", compression_opts=6
             )
             multitau.create_dataset(
-                "g2_err", data=g2_err, compression="gzip", compression_opts=6
+                "normalized_g2_err", data=g2_err, compression="gzip", compression_opts=6
             )
             multitau.create_dataset("tau", data=tau)
 
@@ -238,8 +253,10 @@ class TestPerformanceSystemIntegration(unittest.TestCase):
             I_saxs = 1000 * q_saxs ** (-2.5) + 100
             I_saxs += np.random.normal(0, 0.05 * I_saxs)  # Add noise
 
-            multitau.create_dataset(
-                "saxs_1d",
+            # Create temporal_mean group for SAXS data
+            temporal_mean = xpcs.create_group("temporal_mean")
+            temporal_mean.create_dataset(
+                "scattering_1d",
                 data=I_saxs.reshape(1, -1),
                 compression="gzip",
                 compression_opts=6,
@@ -251,8 +268,14 @@ class TestPerformanceSystemIntegration(unittest.TestCase):
                 q_factor = (i + 1) / n_q
                 Iqp_data[i, :] = I_saxs * q_factor + np.random.normal(0, 10, n_saxs)
 
-            multitau.create_dataset(
-                "Iqp", data=Iqp_data, compression="gzip", compression_opts=6
+            temporal_mean.create_dataset(
+                "scattering_1d_segments", data=Iqp_data, compression="gzip", compression_opts=6
+            )
+
+            # Also create 2D SAXS data
+            saxs_2d_data = np.random.rand(50, 50) * 1000
+            temporal_mean.create_dataset(
+                "scattering_2d", data=saxs_2d_data, compression="gzip", compression_opts=6
             )
 
             # Time series data for stability analysis
@@ -262,8 +285,10 @@ class TestPerformanceSystemIntegration(unittest.TestCase):
             )
             intensity_data = np.maximum(intensity_data, 10)  # Ensure positive
 
-            multitau.create_dataset(
-                "Int_t",
+            # Create spatial_mean group for intensity vs time data
+            spatial_mean = xpcs.create_group("spatial_mean")
+            spatial_mean.create_dataset(
+                "intensity_vs_time",
                 data=np.vstack([time_data, intensity_data]),
                 compression="gzip",
                 compression_opts=6,
@@ -279,11 +304,16 @@ class TestPerformanceSystemIntegration(unittest.TestCase):
             qmap.create_dataset("splist", data=np.linspace(-180, 180, 36))
 
             # Add metadata for realistic file structure
+            multitau.create_dataset("delay_list", data=tau)
+
+            # Create config subgroup
+            config = multitau.create_group("config")
+            config.create_dataset("stride_frame", data=1)
+            config.create_dataset("avg_frame", data=1)
+
+            # Other metadata
             multitau.create_dataset("t0", data=0.001)
             multitau.create_dataset("t1", data=0.001)
-            multitau.create_dataset("stride_frame", data=1)
-            multitau.create_dataset("avg_frame", data=1)
-            multitau.create_dataset("start_time", data=1600000000)
 
             # Two-time data (small to keep file sizes reasonable)
             twotime_group = xpcs.create_group("twotime")
@@ -321,8 +351,8 @@ class TestPerformanceSystemIntegration(unittest.TestCase):
 
             # Test 4: Large dataset access
             self.benchmark.start_timing(f"large_dataset_access_{i}")
-            get(test_file, "/xpcs/multitau/saxs_1d")
-            get(test_file, "/xpcs/multitau/Iqp")
+            get(test_file, ["/xpcs/multitau/saxs_1d"])["/xpcs/multitau/saxs_1d"]
+            get(test_file, ["/xpcs/multitau/Iqp"])["/xpcs/multitau/Iqp"]
             large_access_time = self.benchmark.end_timing(f"large_dataset_access_{i}")
 
             # Performance assertions
@@ -506,9 +536,9 @@ class TestPerformanceSystemIntegration(unittest.TestCase):
     def test_concurrent_performance_integration(self):
         """Test performance under concurrent operations."""
         kernel = ViewerKernel(self.temp_dir)
-        kernel.refresh_file_list()
+        kernel.build()
 
-        if len(kernel.raw_hdf_files) == 0:
+        if len(kernel.source) == 0:
             self.skipTest("No test files available")
 
         # Test concurrent performance
@@ -523,7 +553,7 @@ class TestPerformanceSystemIntegration(unittest.TestCase):
                 thread_results = []
                 start_time = time.perf_counter()
 
-                for i in range(min(3, len(kernel.raw_hdf_files))):
+                for i in range(min(3, len(kernel.source))):
                     xf = kernel.load_xpcs_file(i)
                     g2_data = xf.g2
 
@@ -643,9 +673,9 @@ class TestPerformanceSystemIntegration(unittest.TestCase):
     def test_end_to_end_performance_integration(self):
         """Test end-to-end performance of complete workflows."""
         kernel = ViewerKernel(self.temp_dir)
-        kernel.refresh_file_list()
+        kernel.build()
 
-        if len(kernel.raw_hdf_files) == 0:
+        if len(kernel.source) == 0:
             self.skipTest("No test files available")
 
         # Test complete XPCS workflow performance
@@ -668,10 +698,10 @@ class TestPerformanceSystemIntegration(unittest.TestCase):
                 qmap_data = get_qmap(test_file)
 
                 # Step 4: SAXS analysis
-                saxs_data = get(test_file, "/xpcs/multitau/saxs_1d")
+                saxs_data = get(test_file, ["/xpcs/multitau/saxs_1d"])["/xpcs/multitau/saxs_1d"]
 
                 # Step 5: Stability analysis
-                int_t_data = get(test_file, "/xpcs/multitau/Int_t")
+                int_t_data = get(test_file, ["/xpcs/multitau/Int_t"])["/xpcs/multitau/Int_t"]
 
                 # Step 6: Basic analysis computations
                 if g2_data is not None and g2_data.size > 0:
@@ -758,7 +788,7 @@ class TestPerformanceSystemIntegration(unittest.TestCase):
         regression_issues = []
 
         # File loading performance
-        for i, test_file in enumerate(self.test_files):
+        for _i, test_file in enumerate(self.test_files):
             file_size_mb = os.path.getsize(test_file) / 1024 / 1024
 
             start_time = time.perf_counter()

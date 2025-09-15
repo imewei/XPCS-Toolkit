@@ -6,7 +6,7 @@ Ensures all optimizations preserve exact scientific accuracy.
 
 import os
 import sys
-from typing import Any, Dict
+from typing import Any
 
 import numpy as np
 import pytest
@@ -138,7 +138,7 @@ class NumericalAccuracyValidator:
                     case_data["g2_err"] = 0.1 * np.sqrt(case_data["g2"])
             elif case_name == "edge_cases" and isinstance(case_data, dict):
                 # Handle nested edge cases
-                for edge_name, edge_data in case_data.items():
+                for _edge_name, edge_data in case_data.items():
                     if edge_data.get("g2_err") is None and "g2" in edge_data:
                         edge_data["g2_err"] = 0.1 * np.sqrt(edge_data["g2"])
 
@@ -149,11 +149,11 @@ class NumericalAccuracyValidator:
                     case_data["I_err"] = 0.05 * np.sqrt(case_data["I"])
             elif case_name == "edge_cases" and isinstance(case_data, dict):
                 # Handle nested edge cases
-                for edge_name, edge_data in case_data.items():
+                for _edge_name, edge_data in case_data.items():
                     if edge_data.get("I_err") is None and "I" in edge_data:
                         edge_data["I_err"] = 0.05 * np.sqrt(edge_data["I"])
 
-    def validate_c2_diagonal_correction(self) -> Dict[str, bool]:
+    def validate_c2_diagonal_correction(self) -> dict[str, bool]:
         """Validate C2 diagonal correction accuracy."""
         results = {}
 
@@ -192,7 +192,7 @@ class NumericalAccuracyValidator:
             print(f"Error in diagonal correction test: {e}")
             return False
 
-    def validate_c2_matrix_reconstruction(self) -> Dict[str, bool]:
+    def validate_c2_matrix_reconstruction(self) -> dict[str, bool]:
         """Validate C2 matrix reconstruction accuracy."""
         results = {}
 
@@ -222,7 +222,7 @@ class NumericalAccuracyValidator:
 
         return results
 
-    def validate_g2_processing(self) -> Dict[str, bool]:
+    def validate_g2_processing(self) -> dict[str, bool]:
         """Validate G2 processing accuracy."""
         results = {}
 
@@ -272,7 +272,7 @@ class NumericalAccuracyValidator:
 
         return results
 
-    def validate_saxs_analysis(self) -> Dict[str, bool]:
+    def validate_saxs_analysis(self) -> dict[str, bool]:
         """Validate SAXS analysis accuracy."""
         results = {}
 
@@ -296,7 +296,7 @@ class NumericalAccuracyValidator:
                     binned_I_manual[i] = np.mean(intensity[mask])
 
             # Vectorized binning
-            bin_centers_vec, binned_I_vec, _ = saxs1d.vectorized_q_binning(
+            _bin_centers_vec, binned_I_vec, _ = saxs1d.vectorized_q_binning(
                 q, intensity, q_min, q_max, num_bins
             )
 
@@ -332,7 +332,7 @@ class NumericalAccuracyValidator:
 
         return results
 
-    def validate_fitting_operations(self) -> Dict[str, bool]:
+    def validate_fitting_operations(self) -> dict[str, bool]:
         """Validate fitting operations accuracy."""
         results = {}
 
@@ -396,7 +396,7 @@ class NumericalAccuracyValidator:
 
         return results
 
-    def validate_mathematical_properties(self) -> Dict[str, bool]:
+    def validate_mathematical_properties(self) -> dict[str, bool]:
         """Validate that mathematical properties are preserved."""
         results = {}
 
@@ -442,7 +442,7 @@ class NumericalAccuracyValidator:
 
         return results
 
-    def run_comprehensive_validation(self) -> Dict[str, Any]:
+    def run_comprehensive_validation(self) -> dict[str, Any]:
         """Run all validation tests."""
         print("Running Phase 3 Vectorization Numerical Accuracy Validation...")
         print("=" * 70)

@@ -439,7 +439,7 @@ class TestGetCachedMemoryMonitor:
 
         # All should be the same instance
         assert all(monitor is monitors[0] for monitor in monitors)
-        assert len(set(id(monitor) for monitor in monitors)) == 1
+        assert len({id(monitor) for monitor in monitors}) == 1
 
 
 class TestCachedMemoryMonitorPerformance:

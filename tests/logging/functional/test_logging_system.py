@@ -125,7 +125,7 @@ class TestLoggingConfiguration:
         LoggingConfig()
         logger = get_logger("test_module")
 
-        assert logger.level == expected or logger.parent.level == expected
+        assert expected in (logger.level, logger.parent.level)
 
     def test_log_directory_creation(self):
         """Test automatic log directory creation."""
@@ -322,7 +322,9 @@ class TestLogTemplates:
 
         # Check performance logging
         logs = log_capture.get_logs()
-        assert len(logs) >= 2, f"Expected at least 2 logs, got {len(logs)}: {logs}"  # Start and end logs
+        assert len(logs) >= 2, (
+            f"Expected at least 2 logs, got {len(logs)}: {logs}"
+        )  # Start and end logs
 
         # logs are strings, check content directly
         assert "Starting" in logs[0]
@@ -469,6 +471,9 @@ class TestErrorHandling:
 
     def test_invalid_log_directory_fallback(self):
         """Test fallback behavior when log directory cannot be created."""
+        # Reset logging config first
+        reset_logging_config()
+
         # Try to use a directory that requires root permissions
         os.environ["PYXPCS_LOG_DIR"] = "/root/impossible_logs"
 
@@ -484,6 +489,9 @@ class TestErrorHandling:
 
     def test_disk_full_simulation(self):
         """Test behavior when disk is full (simulated)."""
+        # Reset logging config first
+        reset_logging_config()
+
         # This is a simplified test - in production we'd use more sophisticated
         # disk space simulation
         logger = get_logger("disk.full.test")
@@ -512,7 +520,7 @@ class TestErrorHandling:
             logger.debug(message)
             logger.warning(message)
         except Exception as e:
-            pytest.fail(f"Failed to log message: {repr(message)}, Error: {e}")
+            pytest.fail(f"Failed to log message: {message!r}, Error: {e}")
 
     def test_unicode_and_special_characters(self):
         """Test logging with Unicode and special characters."""
@@ -536,9 +544,7 @@ class TestErrorHandling:
                 logger.info(message)
                 logger.debug(message)
             except Exception as e:
-                pytest.fail(
-                    f"Failed to log Unicode message: {repr(message)}, Error: {e}"
-                )
+                pytest.fail(f"Failed to log Unicode message: {message!r}, Error: {e}")
 
     def test_logging_with_exceptions(self):
         """Test logging system behavior when exceptions occur during logging."""
@@ -921,7 +927,7 @@ class TestEndToEndWorkflows:
         @LogPerformanceMonitor(logger_name=analysis_logger.name)
         def monte_carlo_analysis(data, n_samples=1000):
             results = []
-            for i in range(n_samples):
+            for _i in range(n_samples):
                 sample = data[np.random.choice(len(data), size=100)]
                 estimate = np.mean(sample)
                 results.append(estimate)

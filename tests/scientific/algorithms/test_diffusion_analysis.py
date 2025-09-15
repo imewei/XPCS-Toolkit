@@ -179,9 +179,13 @@ class TestDiffusionPhysicalConstraints(unittest.TestCase):
             # Use bounds to ensure physical constraints - more relaxed bounds
             bounds = ([1e-30], [1e-2])  # Very wide D bounds for robustness
             popt, pcov = optimize.curve_fit(
-                fit_function, self.q_values, tau_noisy, bounds=bounds, maxfev=10000,
+                fit_function,
+                self.q_values,
+                tau_noisy,
+                bounds=bounds,
+                maxfev=10000,
                 # Add initial guess to help convergence
-                p0=[diffusion_coeff]  # Start close to true value
+                p0=[diffusion_coeff],  # Start close to true value
             )
 
             fitted_D = popt[0]
@@ -228,9 +232,11 @@ class TestDiffusionPhysicalConstraints(unittest.TestCase):
             # Check if this is an extreme parameter case (very small diffusion coefficient)
             is_extreme_case = diffusion_coeff < 1e-14
 
-            if noise_level < 0.15 and not is_extreme_case:  # Should converge for reasonable parameters with low noise
+            if (
+                noise_level < 0.15 and not is_extreme_case
+            ):  # Should converge for reasonable parameters with low noise
                 self.fail(
-                    f"Fitting failed for low noise level {noise_level:.3f}: {str(e)}"
+                    f"Fitting failed for low noise level {noise_level:.3f}: {e!s}"
                 )
             # For moderate noise (0.15-0.2) or extreme parameter values, convergence failure is acceptable
             else:
@@ -467,7 +473,7 @@ class TestFittingAlgorithmValidation(unittest.TestCase):
         )
 
         # Fit without weights for comparison
-        popt_unweighted, pcov_unweighted = optimize.curve_fit(
+        popt_unweighted, _pcov_unweighted = optimize.curve_fit(
             fit_function, q_values, tau_noisy, bounds=([1e-16], [1e-8])
         )
 
@@ -605,7 +611,7 @@ class TestFittingAlgorithmValidation(unittest.TestCase):
             def model(q, D):
                 return 1.0 / (D * q**2)
 
-            popt, pcov = optimize.curve_fit(model, q, tau, bounds=([1e-16], [1e-8]))
+            popt, _pcov = optimize.curve_fit(model, q, tau, bounds=([1e-16], [1e-8]))
             tau_fit = model(q, popt[0])
 
             # Calculate R-squared
@@ -624,7 +630,7 @@ class TestFittingAlgorithmValidation(unittest.TestCase):
         # Test fits
         r2_perfect, chi2_perfect, D_perfect = fit_brownian(q_values, tau1_perfect)
         r2_noisy, chi2_noisy, D_noisy = fit_brownian(q_values, tau1_noisy)
-        r2_subdiff, chi2_subdiff, D_subdiff = fit_brownian(q_values, tau_subdiff)
+        r2_subdiff, _chi2_subdiff, _D_subdiff = fit_brownian(q_values, tau_subdiff)
 
         # Perfect data should give excellent fit
         self.assertGreater(r2_perfect, 0.999, "Perfect Brownian should give R² ≈ 1")

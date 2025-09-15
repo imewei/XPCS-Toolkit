@@ -16,7 +16,8 @@ The framework supports:
 import unittest
 import warnings
 from abc import ABC, abstractmethod
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from collections.abc import Callable
+from typing import Any
 
 import numpy as np
 from scipy import optimize
@@ -27,8 +28,8 @@ class ReferenceValidator(ABC):
 
     @abstractmethod
     def validate_against_reference(
-        self, input_data: Dict[str, Any], algorithm_output: Dict[str, Any]
-    ) -> Tuple[bool, Dict[str, Any]]:
+        self, input_data: dict[str, Any], algorithm_output: dict[str, Any]
+    ) -> tuple[bool, dict[str, Any]]:
         """
         Validate algorithm output against reference implementation
 
@@ -39,7 +40,6 @@ class ReferenceValidator(ABC):
         Returns:
             Tuple of (is_valid, validation_report)
         """
-        pass
 
 
 class AnalyticalValidator(ReferenceValidator):
@@ -50,8 +50,8 @@ class AnalyticalValidator(ReferenceValidator):
         self.relative_tolerance = relative_tolerance
 
     def validate_against_reference(
-        self, input_data: Dict[str, Any], algorithm_output: Dict[str, Any]
-    ) -> Tuple[bool, Dict[str, Any]]:
+        self, input_data: dict[str, Any], algorithm_output: dict[str, Any]
+    ) -> tuple[bool, dict[str, Any]]:
         """
         Validate against analytical solutions
 
@@ -134,7 +134,7 @@ class AnalyticalValidator(ReferenceValidator):
 class StatisticalCrossValidator:
     """Cross-validator using statistical methods like k-fold validation"""
 
-    def __init__(self, n_folds: int = 5, random_state: Optional[int] = None):
+    def __init__(self, n_folds: int = 5, random_state: int | None = None):
         self.n_folds = n_folds
         self.random_state = random_state
 
@@ -146,8 +146,8 @@ class StatisticalCrossValidator:
         x_data: np.ndarray,
         y_data: np.ndarray,
         fitting_function: Callable,
-        parameter_bounds: Optional[Tuple] = None,
-    ) -> Dict[str, Any]:
+        parameter_bounds: tuple | None = None,
+    ) -> dict[str, Any]:
         """
         Perform k-fold cross-validation on fitting algorithm
 
@@ -298,12 +298,13 @@ class ReferenceImplementationValidator(ReferenceValidator):
         if reference_software not in self.supported_software:
             warnings.warn(
                 f"Reference software '{reference_software}' not in supported list: "
-                f"{self.supported_software}"
+                f"{self.supported_software}",
+                stacklevel=2,
             )
 
     def validate_against_reference(
-        self, input_data: Dict[str, Any], algorithm_output: Dict[str, Any]
-    ) -> Tuple[bool, Dict[str, Any]]:
+        self, input_data: dict[str, Any], algorithm_output: dict[str, Any]
+    ) -> tuple[bool, dict[str, Any]]:
         """
         Validate against reference software implementation
 
@@ -408,8 +409,8 @@ class ComprehensiveCrossValidationFramework:
         self.validators[name] = validator
 
     def run_comprehensive_validation(
-        self, algorithm_name: str, test_cases: List[Dict[str, Any]]
-    ) -> Dict[str, Any]:
+        self, algorithm_name: str, test_cases: list[dict[str, Any]]
+    ) -> dict[str, Any]:
         """
         Run comprehensive validation across multiple test cases and validators
 
@@ -485,7 +486,7 @@ class ComprehensiveCrossValidationFramework:
 
         return validation_report
 
-    def generate_validation_certificate(self, validation_report: Dict[str, Any]) -> str:
+    def generate_validation_certificate(self, validation_report: dict[str, Any]) -> str:
         """Generate a validation certificate summarizing results"""
 
         summary = validation_report["summary"]

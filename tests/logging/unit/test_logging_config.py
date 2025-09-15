@@ -52,7 +52,7 @@ class TestLoggingConfig:
 
         # All instances should be the same
         assert all(instance is instances[0] for instance in instances)
-        assert len(set(id(instance) for instance in instances)) == 1
+        assert len({id(instance) for instance in instances}) == 1
 
     @patch.dict(os.environ, {}, clear=True)
     def test_default_configuration(self):

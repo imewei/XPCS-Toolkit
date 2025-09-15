@@ -311,7 +311,7 @@ class TestTwoTimeMatrixOperations(unittest.TestCase):
 
     def test_matrix_condition_number(self):
         """Test condition number for numerical stability"""
-        condition_number = linalg.cond(self.test_matrix)
+        condition_number = np.linalg.cond(self.test_matrix)
 
         # Condition number should not be too large
         self.assertLess(

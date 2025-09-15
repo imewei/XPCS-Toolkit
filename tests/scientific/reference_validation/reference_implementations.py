@@ -8,7 +8,7 @@ established XPCS analysis software packages and literature implementations.
 import json
 import warnings
 from pathlib import Path
-from typing import Any, Dict, List, Tuple
+from typing import Any
 
 import numpy as np
 
@@ -22,7 +22,7 @@ class LiteratureReferenceValidator(ReferenceValidator):
         self.tolerance = tolerance
         self.reference_library = self._load_literature_references()
 
-    def _load_literature_references(self) -> Dict[str, Any]:
+    def _load_literature_references(self) -> dict[str, Any]:
         """Load literature reference data"""
         # In a real implementation, this would load from a database
         # or external files containing validated literature results
@@ -54,8 +54,8 @@ class LiteratureReferenceValidator(ReferenceValidator):
         }
 
     def validate_against_reference(
-        self, input_data: Dict[str, Any], algorithm_output: Dict[str, Any]
-    ) -> Tuple[bool, Dict[str, Any]]:
+        self, input_data: dict[str, Any], algorithm_output: dict[str, Any]
+    ) -> tuple[bool, dict[str, Any]]:
         """
         Validate against literature reference
 
@@ -88,17 +88,16 @@ class LiteratureReferenceValidator(ReferenceValidator):
             return self._validate_sphere_form_factor(
                 reference, algorithm_output, report
             )
-        elif "g2_fitting" in reference_key:
+        if "g2_fitting" in reference_key:
             return self._validate_g2_fitting(reference, algorithm_output, report)
-        elif "twotime" in reference_key:
+        if "twotime" in reference_key:
             return self._validate_twotime_analysis(reference, algorithm_output, report)
-        else:
-            report["error"] = f"Unknown reference type for {reference_key}"
-            return False, report
+        report["error"] = f"Unknown reference type for {reference_key}"
+        return False, report
 
     def _validate_sphere_form_factor(
-        self, reference: Dict, output: Dict, report: Dict
-    ) -> Tuple[bool, Dict]:
+        self, reference: dict, output: dict, report: dict
+    ) -> tuple[bool, dict]:
         """Validate sphere form factor against literature"""
 
         try:
@@ -153,8 +152,8 @@ class LiteratureReferenceValidator(ReferenceValidator):
             return False, report
 
     def _validate_g2_fitting(
-        self, reference: Dict, output: Dict, report: Dict
-    ) -> Tuple[bool, Dict]:
+        self, reference: dict, output: dict, report: dict
+    ) -> tuple[bool, dict]:
         """Validate G2 fitting parameters against literature"""
 
         try:
@@ -205,8 +204,8 @@ class LiteratureReferenceValidator(ReferenceValidator):
             return False, report
 
     def _validate_twotime_analysis(
-        self, reference: Dict, output: Dict, report: Dict
-    ) -> Tuple[bool, Dict]:
+        self, reference: dict, output: dict, report: dict
+    ) -> tuple[bool, dict]:
         """Validate two-time analysis against literature"""
 
         try:
@@ -303,12 +302,13 @@ class SoftwarePackageValidator(ReferenceValidator):
         if package_name not in self.supported_packages:
             warnings.warn(
                 f"Package '{package_name}' not in supported list: "
-                f"{list(self.supported_packages.keys())}"
+                f"{list(self.supported_packages.keys())}",
+                stacklevel=2,
             )
 
     def validate_against_reference(
-        self, input_data: Dict[str, Any], algorithm_output: Dict[str, Any]
-    ) -> Tuple[bool, Dict[str, Any]]:
+        self, input_data: dict[str, Any], algorithm_output: dict[str, Any]
+    ) -> tuple[bool, dict[str, Any]]:
         """
         Validate against reference software package results
 
@@ -389,7 +389,7 @@ class SoftwarePackageValidator(ReferenceValidator):
 
     def _compare_field_data(
         self, field_name: str, reference_data: np.ndarray, algorithm_data: np.ndarray
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Compare data from a specific field"""
 
         if reference_data.shape != algorithm_data.shape:
@@ -438,7 +438,7 @@ class SoftwarePackageValidator(ReferenceValidator):
         }
 
     def _validate_matlab_dls_specific(
-        self, reference_results: Dict, algorithm_output: Dict, comparison_results: Dict
+        self, reference_results: dict, algorithm_output: dict, comparison_results: dict
     ) -> bool:
         """MATLAB DLS toolbox specific validation"""
 
@@ -464,7 +464,7 @@ class SoftwarePackageValidator(ReferenceValidator):
         return matlab_specific_checks
 
     def _validate_igor_pro_specific(
-        self, reference_results: Dict, algorithm_output: Dict, comparison_results: Dict
+        self, reference_results: dict, algorithm_output: dict, comparison_results: dict
     ) -> bool:
         """Igor Pro XPCS package specific validation"""
 
@@ -490,7 +490,7 @@ class SoftwarePackageValidator(ReferenceValidator):
         return igor_specific_checks
 
 
-def load_reference_data_from_file(file_path: str) -> Dict[str, Any]:
+def load_reference_data_from_file(file_path: str) -> dict[str, Any]:
     """
     Load reference data from external file
 
@@ -506,7 +506,7 @@ def load_reference_data_from_file(file_path: str) -> Dict[str, Any]:
         raise FileNotFoundError(f"Reference data file not found: {file_path}")
 
     if file_path.suffix == ".json":
-        with open(file_path, "r") as f:
+        with open(file_path) as f:
             return json.load(f)
 
     elif file_path.suffix == ".npz":
@@ -518,7 +518,7 @@ def load_reference_data_from_file(file_path: str) -> Dict[str, Any]:
         raise ValueError(f"Unsupported file format: {file_path.suffix}")
 
 
-def create_reference_comparison_report(validation_results: List[Dict[str, Any]]) -> str:
+def create_reference_comparison_report(validation_results: list[dict[str, Any]]) -> str:
     """
     Create a comprehensive report comparing multiple reference validations
 

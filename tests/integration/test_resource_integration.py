@@ -41,7 +41,7 @@ try:
     from xpcs_toolkit.viewer_kernel import ViewerKernel
     from xpcs_toolkit.xpcs_file import MemoryMonitor, XpcsFile
 except ImportError as e:
-    warnings.warn(f"Could not import all XPCS components: {e}")
+    warnings.warn(f"Could not import all XPCS components: {e}", stacklevel=2)
     sys.exit(0)
 
 logger = get_logger(__name__)
@@ -103,6 +103,7 @@ class ResourceMonitor:
             except Exception as e:
                 logger.debug(f"Failed to take measurement: {e}")
                 return None
+        return None
 
     def get_summary(self):
         """Get resource usage summary."""
@@ -191,6 +192,10 @@ class TestResourceManagementIntegration(unittest.TestCase):
     def _create_resource_test_file(self, hdf_path, config):
         """Create HDF5 file for resource testing."""
         with h5py.File(hdf_path, "w") as f:
+            # File attributes
+            f.attrs["format_version"] = "2.0"
+            f.attrs["analysis_type"] = "Multitau"
+
             # Standard structure
             f.create_group("entry")
             xpcs = f.create_group("xpcs")
@@ -218,13 +223,13 @@ class TestResourceManagementIntegration(unittest.TestCase):
             compression = "gzip" if compression_opts else None
 
             multitau.create_dataset(
-                "g2",
+                "normalized_g2",
                 data=g2_data,
                 compression=compression,
                 compression_opts=compression_opts,
             )
             multitau.create_dataset(
-                "g2_err",
+                "normalized_g2_err",
                 data=g2_err,
                 compression=compression,
                 compression_opts=compression_opts,
@@ -235,17 +240,25 @@ class TestResourceManagementIntegration(unittest.TestCase):
             saxs_data = np.random.rand(1, n_saxs) * 1000
             Iqp_data = np.random.rand(n_q, n_saxs) * 1000
 
-            multitau.create_dataset(
-                "saxs_1d",
+            # Create temporal_mean group for SAXS data
+            temporal_mean = xpcs.create_group("temporal_mean")
+            temporal_mean.create_dataset(
+                "scattering_1d",
                 data=saxs_data,
                 compression=compression,
                 compression_opts=compression_opts,
             )
-            multitau.create_dataset(
-                "Iqp",
+            temporal_mean.create_dataset(
+                "scattering_1d_segments",
                 data=Iqp_data,
                 compression=compression,
                 compression_opts=compression_opts,
+            )
+
+            # Also create 2D SAXS data
+            saxs_2d_data = np.random.rand(50, 50) * 1000
+            temporal_mean.create_dataset(
+                "scattering_2d", data=saxs_2d_data, compression=compression, compression_opts=compression_opts
             )
 
             # Time series data
@@ -377,7 +390,7 @@ class TestResourceManagementIntegration(unittest.TestCase):
             self.resource_monitor.take_measurement(f"before_sequential_{i}")
 
             XpcsFile(test_file)
-            get(test_file, "/xpcs/multitau/saxs_1d")
+            get(test_file, ["/xpcs/multitau/saxs_1d"])["/xpcs/multitau/saxs_1d"]
 
             sequential_time = time.perf_counter() - start_time
             self.resource_monitor.take_measurement(f"after_sequential_{i}")
@@ -387,8 +400,8 @@ class TestResourceManagementIntegration(unittest.TestCase):
             self.resource_monitor.take_measurement(f"before_random_{i}")
 
             # Access data in different order
-            get(test_file, "/xpcs/multitau/Int_t")
-            get(test_file, "/xpcs/multitau/Iqp")
+            get(test_file, ["/xpcs/multitau/Int_t"])["/xpcs/multitau/Int_t"]
+            get(test_file, ["/xpcs/multitau/Iqp"])["/xpcs/multitau/Iqp"]
 
             random_time = time.perf_counter() - start_time
             self.resource_monitor.take_measurement(f"after_random_{i}")
@@ -583,9 +596,9 @@ class TestResourceManagementIntegration(unittest.TestCase):
 
                 # Access large datasets to increase memory pressure
                 try:
-                    saxs_data = get(test_file, "/xpcs/multitau/saxs_1d")
-                    Iqp_data = get(test_file, "/xpcs/multitau/Iqp")
-                    int_t_data = get(test_file, "/xpcs/multitau/Int_t")
+                    saxs_data = get(test_file, ["/xpcs/multitau/saxs_1d"])["/xpcs/multitau/saxs_1d"]
+                    Iqp_data = get(test_file, ["/xpcs/multitau/Iqp"])["/xpcs/multitau/Iqp"]
+                    int_t_data = get(test_file, ["/xpcs/multitau/Int_t"])["/xpcs/multitau/Int_t"]
 
                     # Keep references to maintain memory usage
                     loaded_objects.append(
@@ -698,10 +711,10 @@ class TestResourceManagementIntegration(unittest.TestCase):
         self.resource_monitor.take_measurement("phase1_start")
 
         kernel = ViewerKernel(self.temp_dir)
-        kernel.refresh_file_list()
+        kernel.build()
 
         loaded_files = []
-        for i in range(min(3, len(kernel.raw_hdf_files))):
+        for i in range(min(3, len(kernel.source))):
             xf = kernel.load_xpcs_file(i)
             loaded_files.append(xf)
             _ = xf.g2  # Access data
@@ -762,7 +775,7 @@ class TestResourceManagementIntegration(unittest.TestCase):
 
         logger.info("Resource cleanup progression:")
         for i, (phase_name, memory_mb) in enumerate(
-            zip(phase_names, memory_progression)
+            zip(phase_names, memory_progression, strict=False)
         ):
             logger.info(f"  {phase_name}: {memory_mb:.1f} MB")
 

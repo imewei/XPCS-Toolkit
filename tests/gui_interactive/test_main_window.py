@@ -231,7 +231,7 @@ class TestWindowStateManagement:
 
         try:
             # Create multiple windows
-            for i in range(2):
+            for _i in range(2):
                 with patch("xpcs_toolkit.xpcs_viewer.ViewerKernel"):
                     window = XpcsViewer(path=None)
                     qtbot.addWidget(window)

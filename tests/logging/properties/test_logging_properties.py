@@ -138,7 +138,7 @@ def scientific_arrays(draw):
                 ),
             )
         )
-    elif np.issubdtype(dtype, np.complexfloating):
+    if np.issubdtype(dtype, np.complexfloating):
         return draw(
             arrays(
                 dtype,
@@ -151,20 +151,17 @@ def scientific_arrays(draw):
                 ),
             )
         )
+    # Handle integer bounds correctly for different types
+    if np.issubdtype(dtype, np.unsignedinteger):
+        min_val, max_val = 0, min(1000000, np.iinfo(dtype).max)
     else:
-        # Handle integer bounds correctly for different types
-        if np.issubdtype(dtype, np.unsignedinteger):
-            min_val, max_val = 0, min(1000000, np.iinfo(dtype).max)
-        else:
-            info = np.iinfo(dtype)
-            min_val = max(-1000000, info.min)
-            max_val = min(1000000, info.max)
+        info = np.iinfo(dtype)
+        min_val = max(-1000000, info.min)
+        max_val = min(1000000, info.max)
 
-        return draw(
-            arrays(
-                dtype, shape, elements=st.integers(min_value=min_val, max_value=max_val)
-            )
-        )
+    return draw(
+        arrays(dtype, shape, elements=st.integers(min_value=min_val, max_value=max_val))
+    )
 
 
 @st.composite
@@ -197,7 +194,7 @@ def log_messages(draw):
 
     if message_type == "simple":
         return draw(st.text(min_size=1, max_size=200))
-    elif message_type == "formatted":
+    if message_type == "formatted":
         template = draw(
             st.sampled_from(
                 [
@@ -1027,7 +1024,7 @@ class TestScientificComputingProperties:
             )
 
             # Log time series with temporal metadata
-            for i, (t, value) in enumerate(zip(time_points, signal)):
+            for i, (t, value) in enumerate(zip(time_points, signal, strict=False)):
                 if (
                     i % max(1, time_series_length // 10) == 0
                 ):  # Log subset for performance
@@ -1194,7 +1191,7 @@ class LoggingStateMachine(RuleBasedStateMachine):
     @invariant()
     def logger_consistency(self):
         """Invariant: All loggers should be consistent."""
-        for logger_name, logger in self.active_loggers.items():
+        for _logger_name, logger in self.active_loggers.items():
             # Logger should have a name
             assert logger.name is not None
             assert isinstance(logger.name, str)
@@ -1206,7 +1203,7 @@ class LoggingStateMachine(RuleBasedStateMachine):
     @invariant()
     def handler_consistency(self):
         """Invariant: All handlers should be consistent."""
-        for handler_id, handler in self.active_handlers.items():
+        for _handler_id, handler in self.active_handlers.items():
             # Handler should have a formatter
             assert handler.formatter is not None
 
@@ -1398,7 +1395,7 @@ class TestPerformanceProperties:
                 n = len(x_values)
                 sum_x = sum(x_values)
                 sum_y = sum(y_values)
-                sum_xy = sum(x * y for x, y in zip(x_values, y_values))
+                sum_xy = sum(x * y for x, y in zip(x_values, y_values, strict=False))
                 sum_x2 = sum(x * x for x in x_values)
 
                 if n * sum_x2 - sum_x * sum_x != 0:

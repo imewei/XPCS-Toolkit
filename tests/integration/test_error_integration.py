@@ -39,7 +39,7 @@ try:
     from xpcs_toolkit.viewer_kernel import ViewerKernel
     from xpcs_toolkit.xpcs_file import MemoryMonitor, XpcsFile
 except ImportError as e:
-    warnings.warn(f"Could not import all XPCS components: {e}")
+    warnings.warn(f"Could not import all XPCS components: {e}", stacklevel=2)
     sys.exit(0)
 
 logger = get_logger(__name__)
@@ -227,14 +227,14 @@ class TestErrorHandlingIntegration(unittest.TestCase):
 
         # Test ViewerKernel handling
         kernel = ViewerKernel(self.temp_dir)
-        kernel.refresh_file_list()
+        kernel.build()
 
         # Should handle files with missing data gracefully
-        if len(kernel.raw_hdf_files) > 0:
+        if len(kernel.source) > 0:
             try:
                 # Find the missing data file in the list
                 missing_file_idx = None
-                for i, hdf_file in enumerate(kernel.raw_hdf_files):
+                for i, hdf_file in enumerate(kernel.source):
                     if "missing_data" in hdf_file:
                         missing_file_idx = i
                         break
@@ -343,7 +343,7 @@ class TestErrorHandlingIntegration(unittest.TestCase):
     def test_concurrent_error_handling(self):
         """Test error handling under concurrent access conditions."""
         kernel = ViewerKernel(self.temp_dir)
-        kernel.refresh_file_list()
+        kernel.build()
 
         results = []
         errors = []

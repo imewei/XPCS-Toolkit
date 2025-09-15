@@ -45,7 +45,7 @@ class TestPyQtGraphIntegration:
     @pytest.mark.gui
     def test_plot_zoom_functionality(self, plot_widget_with_data, qtbot):
         """Test plot zooming via mouse wheel."""
-        plot_widget, x_data, y_data, plot_item = plot_widget_with_data
+        plot_widget, _x_data, _y_data, _plot_item = plot_widget_with_data
         qtbot.addWidget(plot_widget)
 
         # Get initial view range
@@ -80,7 +80,7 @@ class TestPyQtGraphIntegration:
     @pytest.mark.gui
     def test_plot_pan_functionality(self, plot_widget_with_data, qtbot):
         """Test plot panning via mouse drag."""
-        plot_widget, x_data, y_data, plot_item = plot_widget_with_data
+        plot_widget, _x_data, _y_data, _plot_item = plot_widget_with_data
         qtbot.addWidget(plot_widget)
 
         view_box = plot_widget.getViewBox()
@@ -207,7 +207,7 @@ class TestMatplotlibIntegration:
     @pytest.mark.gui
     def test_matplotlib_canvas_creation(self, matplotlib_canvas, qtbot):
         """Test Matplotlib canvas creation and basic plotting."""
-        canvas, figure, axes = matplotlib_canvas
+        canvas, _figure, axes = matplotlib_canvas
         qtbot.addWidget(canvas)
 
         # Create test plot
@@ -230,7 +230,7 @@ class TestMatplotlibIntegration:
     @pytest.mark.gui
     def test_matplotlib_canvas_interaction(self, matplotlib_canvas, qtbot):
         """Test Matplotlib canvas mouse interactions."""
-        canvas, figure, axes = matplotlib_canvas
+        canvas, _figure, axes = matplotlib_canvas
         qtbot.addWidget(canvas)
 
         # Create test plot
@@ -250,7 +250,7 @@ class TestMatplotlibIntegration:
     @pytest.mark.gui
     def test_matplotlib_plot_updates(self, matplotlib_canvas, qtbot):
         """Test dynamic Matplotlib plot updates."""
-        canvas, figure, axes = matplotlib_canvas
+        canvas, _figure, axes = matplotlib_canvas
         qtbot.addWidget(canvas)
 
         # Initial plot

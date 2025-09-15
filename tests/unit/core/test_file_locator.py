@@ -526,7 +526,7 @@ def test_get_xf_list_row_variations(rows_input, expected_behavior):
     locator.target = ["file1.hdf", "file2.hdf"]  # 2 files available
 
     # Mock cache with valid objects
-    for i, filename in enumerate(locator.target):
+    for _i, filename in enumerate(locator.target):
         mock_xf = Mock()
         mock_xf.fit_summary = None
         mock_xf.atype = "Multitau"

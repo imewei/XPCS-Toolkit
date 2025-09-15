@@ -6,8 +6,6 @@ ensuring that computed results are physically meaningful and consistent with
 known physics principles.
 """
 
-from typing import Dict, Optional, Tuple
-
 import numpy as np
 
 from tests.scientific.constants import SCIENTIFIC_CONSTANTS
@@ -19,7 +17,7 @@ def verify_stokes_einstein_relation(
     viscosity: float,
     particle_radius: float,
     tolerance: float = 0.1,
-) -> Tuple[bool, str]:
+) -> tuple[bool, str]:
     """
     Verify Stokes-Einstein relation: D = kT/(6πηr)
 
@@ -69,9 +67,9 @@ def verify_stokes_einstein_relation(
 
 def verify_thermodynamic_constraints(
     temperature: float,
-    energy_scale: Optional[float] = None,
-    time_scale: Optional[float] = None,
-) -> Tuple[bool, str]:
+    energy_scale: float | None = None,
+    time_scale: float | None = None,
+) -> tuple[bool, str]:
     """
     Verify thermodynamic constraints and energy scales
 
@@ -130,9 +128,9 @@ def verify_scattering_physics(
     q_values: np.ndarray,
     intensity: np.ndarray,
     wavelength: float,
-    detector_distance: Optional[float] = None,
-    pixel_size: Optional[float] = None,
-) -> Tuple[bool, str]:
+    detector_distance: float | None = None,
+    pixel_size: float | None = None,
+) -> tuple[bool, str]:
     """
     Verify X-ray scattering physics constraints
 
@@ -202,8 +200,8 @@ def verify_correlation_physics(
     g2_values: np.ndarray,
     temperature: float,
     viscosity: float,
-    particle_size: Optional[float] = None,
-) -> Tuple[bool, str]:
+    particle_size: float | None = None,
+) -> tuple[bool, str]:
     """
     Verify physics of intensity correlation functions
 
@@ -278,7 +276,7 @@ def verify_conservation_laws(
     input_intensity: np.ndarray,
     output_intensity: np.ndarray,
     conservation_type: str = "photon_number",
-) -> Tuple[bool, str]:
+) -> tuple[bool, str]:
     """
     Verify conservation laws in scattering processes
 
@@ -333,7 +331,7 @@ def verify_fluctuation_dissipation_theorem(
     response_function: np.ndarray,
     temperature: float,
     frequency: np.ndarray,
-) -> Tuple[bool, str]:
+) -> tuple[bool, str]:
     """
     Verify fluctuation-dissipation theorem for correlation and response functions
 
@@ -405,7 +403,7 @@ def verify_fluctuation_dissipation_theorem(
 
 def verify_causality_constraint(
     response_function: np.ndarray, time: np.ndarray
-) -> Tuple[bool, str]:
+) -> tuple[bool, str]:
     """
     Verify causality constraint: response function must be zero for t < 0
 
@@ -454,10 +452,10 @@ def verify_causality_constraint(
 
 
 def verify_detailed_balance(
-    transition_rates: Dict[Tuple[int, int], float],
-    energies: Dict[int, float],
+    transition_rates: dict[tuple[int, int], float],
+    energies: dict[int, float],
     temperature: float,
-) -> Tuple[bool, str]:
+) -> tuple[bool, str]:
     """
     Verify detailed balance condition for transition rates
 

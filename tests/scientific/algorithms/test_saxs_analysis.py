@@ -314,7 +314,7 @@ class TestSAXSVectorizedOperations(unittest.TestCase):
         num_bins = 30
 
         # Bin 2D data
-        q_binned, I_binned_2d, bin_counts = vectorized_q_binning(
+        _q_binned, I_binned_2d, _bin_counts = vectorized_q_binning(
             self.q_values, self.intensities_2d, q_min, q_max, num_bins
         )
 

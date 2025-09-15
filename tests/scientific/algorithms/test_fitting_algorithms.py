@@ -16,7 +16,8 @@ Fitting algorithms must satisfy several requirements:
 
 import unittest
 import warnings
-from typing import Any, Callable, Dict, Tuple
+from collections.abc import Callable
+from typing import Any
 
 import numpy as np
 from hypothesis import given, settings
@@ -38,7 +39,7 @@ class TestFittingAlgorithmProperties(unittest.TestCase):
         self.x_range = (0.001, 10.0)
         self.n_points = 100
 
-    def create_test_function(self, model_type: str) -> Tuple[Callable, Dict[str, Any]]:
+    def create_test_function(self, model_type: str) -> tuple[Callable, dict[str, Any]]:
         """Create test function with known parameters"""
         if model_type == "exponential":
             # Single exponential: f(x) = A * exp(-x/tau) + B
@@ -49,7 +50,7 @@ class TestFittingAlgorithmProperties(unittest.TestCase):
 
             return model_func, true_params
 
-        elif model_type == "power_law":
+        if model_type == "power_law":
             # Power law: f(x) = A * x^(-alpha) + B
             true_params = {"A": 10.0, "alpha": 2.0, "B": 0.01}
 
@@ -58,7 +59,7 @@ class TestFittingAlgorithmProperties(unittest.TestCase):
 
             return model_func, true_params
 
-        elif model_type == "double_exponential":
+        if model_type == "double_exponential":
             # Double exponential: f(x) = A1*exp(-x/tau1) + A2*exp(-x/tau2) + B
             true_params = {"A1": 1.5, "tau1": 0.5, "A2": 0.8, "tau2": 3.0, "B": 0.05}
 
@@ -67,7 +68,7 @@ class TestFittingAlgorithmProperties(unittest.TestCase):
 
             return model_func, true_params
 
-        elif model_type == "stretched_exponential":
+        if model_type == "stretched_exponential":
             # Stretched exponential: f(x) = A * exp(-(x/tau)^beta) + B
             true_params = {"A": 3.0, "tau": 2.0, "beta": 0.7, "B": 0.02}
 
@@ -76,8 +77,7 @@ class TestFittingAlgorithmProperties(unittest.TestCase):
 
             return model_func, true_params
 
-        else:
-            raise ValueError(f"Unknown model type: {model_type}")
+        raise ValueError(f"Unknown model type: {model_type}")
 
     def test_parameter_recovery_accuracy(self):
         """Test that fitting algorithms recover known parameters accurately"""
@@ -119,7 +119,7 @@ class TestFittingAlgorithmProperties(unittest.TestCase):
                     elif model_type == "stretched_exponential":
                         bounds = ([0, 0.1, 0.1, 0], [10, 10, 2, 1])
 
-                    popt, pcov = optimize.curve_fit(
+                    popt, _pcov = optimize.curve_fit(
                         model_func,
                         x_data,
                         y_data,
@@ -169,7 +169,7 @@ class TestFittingAlgorithmProperties(unittest.TestCase):
         bounds = ([0, 0.1, 0], [10, 10, 1])
 
         try:
-            popt, pcov = optimize.curve_fit(
+            popt, _pcov = optimize.curve_fit(
                 model_func, x_data, y_data, p0=initial_guess, bounds=bounds, maxfev=5000
             )
 
@@ -184,7 +184,7 @@ class TestFittingAlgorithmProperties(unittest.TestCase):
             max_allowed_errors = [2 * noise_level, 3 * noise_level, 5 * noise_level]
 
             for i, (param_name, max_error) in enumerate(
-                zip(param_names, max_allowed_errors)
+                zip(param_names, max_allowed_errors, strict=False)
             ):
                 fitted_value = popt[i]
                 true_value = true_params[param_name]
@@ -365,7 +365,7 @@ class TestSpecificFittingModels(unittest.TestCase):
         bounds = ([0.9, 0.1, 100, 0.1, 10], [1.1, 1.0, 20000, 1.0, 2000])
 
         try:
-            popt, pcov = optimize.curve_fit(
+            popt, _pcov = optimize.curve_fit(
                 g2_double_exp,
                 tau,
                 g2_data,
@@ -440,7 +440,7 @@ class TestSpecificFittingModels(unittest.TestCase):
         initial_guess = [500.0, 20.0]
         bounds = ([10, 5], [10000, 100])
 
-        popt, pcov = optimize.curve_fit(
+        popt, _pcov = optimize.curve_fit(
             sphere_form_factor,
             q_values,
             I_data,
@@ -509,7 +509,7 @@ class TestSpecificFittingModels(unittest.TestCase):
         initial_guess = [50.0, 2.0, 0.5]
         bounds = ([1, 0.1, 0], [1000, 5, 10])  # α > 0 constraint
 
-        popt, pcov = optimize.curve_fit(
+        popt, _pcov = optimize.curve_fit(
             power_law, q_values, I_data, p0=initial_guess, bounds=bounds, maxfev=5000
         )
 
@@ -580,7 +580,7 @@ class TestFittingStatisticalValidation(unittest.TestCase):
         initial_guess = [1.5, 0.8, 0.6, 0.05]
         bounds = ([0.1, 0.1, 0.1, 0], [10, 10, 2, 1])
 
-        popt, pcov = optimize.curve_fit(
+        _popt, pcov = optimize.curve_fit(
             stretched_exp, x_data, y_data, p0=initial_guess, bounds=bounds, maxfev=5000
         )
 
@@ -644,7 +644,7 @@ class TestFittingStatisticalValidation(unittest.TestCase):
         A_coverage = 0
         tau_coverage = 0
 
-        for trial in range(n_trials):
+        for _trial in range(n_trials):
             # Generate noisy data
             y_true = exp_model(x_data, A_true, tau_true)
             y_data = y_true + noise_level * y_true * np.random.normal(size=len(y_true))
@@ -728,7 +728,7 @@ class TestFittingStatisticalValidation(unittest.TestCase):
         y_data = y_true + y_errors * np.random.normal(size=len(y_true))
 
         # Fit model
-        popt, pcov = optimize.curve_fit(
+        popt, _pcov = optimize.curve_fit(
             exp_model,
             x_data,
             y_data,
@@ -762,7 +762,7 @@ class TestFittingStatisticalValidation(unittest.TestCase):
         # Test 3: Residuals should be approximately normally distributed
         # Use Shapiro-Wilk test (with relaxed threshold due to limited data)
         if len(standardized_residuals) > 8:  # Need minimum samples for test
-            shapiro_stat, shapiro_p = stats.shapiro(standardized_residuals)
+            _shapiro_stat, shapiro_p = stats.shapiro(standardized_residuals)
             self.assertGreater(
                 shapiro_p,
                 0.01,  # Relaxed threshold

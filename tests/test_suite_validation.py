@@ -33,7 +33,7 @@ import sys
 import time
 from collections import Counter
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any
 
 # Add project root to path
 project_root = Path(__file__).parent.parent
@@ -50,7 +50,7 @@ class TestSuiteValidator:
     and completeness across the entire logging test suite.
     """
 
-    def __init__(self, test_directory: Path = None):
+    def __init__(self, test_directory: Path | None = None):
         """Initialize the test suite validator."""
         self.test_dir = test_directory or Path(__file__).parent
         self.src_dir = project_root / "src" / "xpcs_toolkit"
@@ -73,7 +73,7 @@ class TestSuiteValidator:
         self.infrastructure_quality = {}
         self.validation_results = {}
 
-    def run_comprehensive_validation(self) -> Dict[str, Any]:
+    def run_comprehensive_validation(self) -> dict[str, Any]:
         """
         Execute complete test suite validation analysis.
 
@@ -108,7 +108,7 @@ class TestCoverageAnalyzer:
         self.edge_case_coverage = {}
         self.integration_coverage = {}
 
-    def analyze_function_coverage(self) -> Dict[str, Any]:
+    def analyze_function_coverage(self) -> dict[str, Any]:
         """
         Analyze function coverage across all logging modules.
 
@@ -159,7 +159,7 @@ class TestCoverageAnalyzer:
 
         return coverage_data
 
-    def analyze_branch_coverage(self) -> Dict[str, Any]:
+    def analyze_branch_coverage(self) -> dict[str, Any]:
         """
         Analyze branch coverage for conditional logic in logging system.
 
@@ -206,7 +206,7 @@ class TestCoverageAnalyzer:
 
         return branch_data
 
-    def analyze_edge_case_coverage(self) -> Dict[str, Any]:
+    def analyze_edge_case_coverage(self) -> dict[str, Any]:
         """
         Analyze coverage of edge cases and boundary conditions.
 
@@ -261,7 +261,7 @@ class TestCoverageAnalyzer:
 
         return edge_case_data
 
-    def analyze_integration_coverage(self) -> Dict[str, Any]:
+    def analyze_integration_coverage(self) -> dict[str, Any]:
         """
         Analyze integration test coverage for module interactions.
 
@@ -310,12 +310,12 @@ class TestCoverageAnalyzer:
 
         return integration_data
 
-    def _extract_public_functions(self, file_path: Path) -> Dict[str, Dict]:
+    def _extract_public_functions(self, file_path: Path) -> dict[str, dict]:
         """Extract all public functions and methods from a Python file."""
         functions = {}
 
         try:
-            with open(file_path, "r", encoding="utf-8") as f:
+            with open(file_path, encoding="utf-8") as f:
                 tree = ast.parse(f.read(), filename=str(file_path))
 
             for node in ast.walk(tree):
@@ -350,7 +350,7 @@ class TestCoverageAnalyzer:
 
         return functions
 
-    def _find_function_tests(self, func_name: str) -> List[str]:
+    def _find_function_tests(self, func_name: str) -> list[str]:
         """Find test functions that test the given function."""
         test_cases = []
 
@@ -360,7 +360,7 @@ class TestCoverageAnalyzer:
                 continue
 
             try:
-                with open(test_file, "r", encoding="utf-8") as f:
+                with open(test_file, encoding="utf-8") as f:
                     content = f.read()
 
                 # Look for test functions that might test this function
@@ -379,13 +379,13 @@ class TestCoverageAnalyzer:
 
         return list(set(test_cases))  # Remove duplicates
 
-    def _extract_branches(self, file_path: Path) -> Dict[str, Dict]:
+    def _extract_branches(self, file_path: Path) -> dict[str, dict]:
         """Extract all branching constructs from a Python file."""
         branches = {}
         branch_counter = 0
 
         try:
-            with open(file_path, "r", encoding="utf-8") as f:
+            with open(file_path, encoding="utf-8") as f:
                 tree = ast.parse(f.read(), filename=str(file_path))
 
             for node in ast.walk(tree):
@@ -438,19 +438,19 @@ class TestCoverageAnalyzer:
 
         return branches
 
-    def _analyze_branch_tests(self, branch_info: Dict) -> Dict[str, Any]:
+    def _analyze_branch_tests(self, branch_info: dict) -> dict[str, Any]:
         """Analyze test coverage for a specific branch."""
         return {
             "covered": True,  # Placeholder - would need actual coverage data
             "test_cases": [],  # List of test cases covering this branch
         }
 
-    def _identify_edge_cases(self, file_path: Path) -> List[Dict]:
+    def _identify_edge_cases(self, file_path: Path) -> list[dict]:
         """Identify potential edge cases in source code."""
         edge_cases = []
 
         try:
-            with open(file_path, "r", encoding="utf-8") as f:
+            with open(file_path, encoding="utf-8") as f:
                 content = f.read()
 
             # Look for common edge case patterns
@@ -487,13 +487,13 @@ class TestCoverageAnalyzer:
 
         return edge_cases
 
-    def _is_edge_case_tested(self, edge_case: Dict) -> bool:
+    def _is_edge_case_tested(self, edge_case: dict) -> bool:
         """Check if a specific edge case is covered by tests."""
         # Placeholder implementation - would search through test files
         # for relevant test cases covering this edge case
         return True  # Assume tested for now
 
-    def _identify_module_interactions(self) -> Dict[str, Dict]:
+    def _identify_module_interactions(self) -> dict[str, dict]:
         """Identify interactions between logging system modules."""
         interactions = {}
 
@@ -503,7 +503,7 @@ class TestCoverageAnalyzer:
                 continue
 
             try:
-                with open(src_file, "r", encoding="utf-8") as f:
+                with open(src_file, encoding="utf-8") as f:
                     content = f.read()
 
                 # Look for imports from other logging modules
@@ -528,7 +528,7 @@ class TestCoverageAnalyzer:
 
         return interactions
 
-    def _find_integration_tests(self, interaction_info: Dict) -> List[str]:
+    def _find_integration_tests(self, interaction_info: dict) -> list[str]:
         """Find integration tests for specific module interactions."""
         # Placeholder - would search test files for tests covering module interactions
         return []
@@ -556,7 +556,7 @@ class TestQualityAnalyzer:
         self.validator = validator
         self.quality_metrics = {}
 
-    def analyze_assertion_density(self) -> Dict[str, Any]:
+    def analyze_assertion_density(self) -> dict[str, Any]:
         """
         Analyze assertion density across test functions.
 
@@ -627,7 +627,7 @@ class TestQualityAnalyzer:
 
         return density_data
 
-    def analyze_test_independence(self) -> Dict[str, Any]:
+    def analyze_test_independence(self) -> dict[str, Any]:
         """
         Analyze test independence to ensure tests don't depend on each other.
 
@@ -679,7 +679,7 @@ class TestQualityAnalyzer:
 
         return independence_data
 
-    def analyze_test_determinism(self) -> Dict[str, Any]:
+    def analyze_test_determinism(self) -> dict[str, Any]:
         """
         Analyze test determinism to identify potentially flaky tests.
 
@@ -731,7 +731,7 @@ class TestQualityAnalyzer:
 
         return determinism_data
 
-    def analyze_test_performance(self) -> Dict[str, Any]:
+    def analyze_test_performance(self) -> dict[str, Any]:
         """
         Analyze test performance to ensure reasonable execution times.
 
@@ -794,7 +794,7 @@ class TestQualityAnalyzer:
 
         return performance_data
 
-    def analyze_test_maintainability(self) -> Dict[str, Any]:
+    def analyze_test_maintainability(self) -> dict[str, Any]:
         """
         Analyze test maintainability including readability and documentation.
 
@@ -843,12 +843,12 @@ class TestQualityAnalyzer:
 
         return maintainability_data
 
-    def _extract_test_functions(self, file_path: Path) -> Dict[str, Dict]:
+    def _extract_test_functions(self, file_path: Path) -> dict[str, dict]:
         """Extract all test functions from a test file."""
         test_functions = {}
 
         try:
-            with open(file_path, "r", encoding="utf-8") as f:
+            with open(file_path, encoding="utf-8") as f:
                 content = f.read()
                 tree = ast.parse(content, filename=str(file_path))
 
@@ -899,7 +899,7 @@ class TestQualityAnalyzer:
 
         return assertion_count
 
-    def _analyze_file_independence(self, file_path: Path) -> Dict[str, Any]:
+    def _analyze_file_independence(self, file_path: Path) -> dict[str, Any]:
         """Analyze independence patterns in a test file."""
         return {
             "shared_state": [],
@@ -910,7 +910,7 @@ class TestQualityAnalyzer:
             "violations": [],
         }
 
-    def _analyze_file_determinism(self, file_path: Path) -> Dict[str, Any]:
+    def _analyze_file_determinism(self, file_path: Path) -> dict[str, Any]:
         """Analyze determinism patterns in a test file."""
         return {
             "random": [],
@@ -921,7 +921,7 @@ class TestQualityAnalyzer:
             "recommendations": [],
         }
 
-    def _analyze_file_maintainability(self, file_path: Path) -> Dict[str, Any]:
+    def _analyze_file_maintainability(self, file_path: Path) -> dict[str, Any]:
         """Analyze maintainability patterns in a test file."""
         return {
             "naming": {"compliant": 0, "non_compliant": 0},
@@ -931,7 +931,7 @@ class TestQualityAnalyzer:
             "recommendations": [],
         }
 
-    def _estimate_test_execution_time(self, func_info: Dict) -> float:
+    def _estimate_test_execution_time(self, func_info: dict) -> float:
         """Estimate test execution time based on complexity and patterns."""
         base_time = 0.1  # Base execution time
         complexity_factor = func_info.get("complexity", 1) * 0.05
@@ -953,7 +953,7 @@ class TestQualityAnalyzer:
 
         return complexity
 
-    def _calculate_independence_score(self, data: Dict) -> float:
+    def _calculate_independence_score(self, data: dict) -> float:
         """Calculate overall test independence score."""
         # Placeholder calculation - would be more sophisticated in practice
         total_violations = len(data["isolation_violations"])
@@ -964,7 +964,7 @@ class TestQualityAnalyzer:
 
         return max(0, 100 - (total_violations * 10) - (total_dependencies * 5))
 
-    def _calculate_determinism_score(self, data: Dict) -> float:
+    def _calculate_determinism_score(self, data: dict) -> float:
         """Calculate overall test determinism score."""
         # Placeholder calculation
         flaky_count = len(data["potentially_flaky_tests"])
@@ -975,7 +975,7 @@ class TestQualityAnalyzer:
 
         return max(0, 100 - (flaky_count * 15) - (pattern_count * 5))
 
-    def _calculate_maintainability_score(self, data: Dict) -> float:
+    def _calculate_maintainability_score(self, data: dict) -> float:
         """Calculate overall test maintainability score."""
         # Placeholder calculation based on various factors
         return 85.0  # Assume good maintainability for now
@@ -988,7 +988,7 @@ class ScientificRigorValidator:
         self.validator = validator
         self.rigor_analysis = {}
 
-    def validate_statistical_significance(self) -> Dict[str, Any]:
+    def validate_statistical_significance(self) -> dict[str, Any]:
         """
         Validate statistical significance of performance tests.
 
@@ -1020,7 +1020,7 @@ class ScientificRigorValidator:
 
         return stats_data
 
-    def validate_numerical_precision(self) -> Dict[str, Any]:
+    def validate_numerical_precision(self) -> dict[str, Any]:
         """
         Validate numerical precision in floating-point comparisons.
 
@@ -1061,7 +1061,7 @@ class ScientificRigorValidator:
 
         return precision_data
 
-    def validate_hypothesis_testing(self) -> Dict[str, Any]:
+    def validate_hypothesis_testing(self) -> dict[str, Any]:
         """
         Validate hypothesis testing in property-based tests.
 
@@ -1092,7 +1092,7 @@ class ScientificRigorValidator:
 
         return hypothesis_data
 
-    def validate_baseline_management(self) -> Dict[str, Any]:
+    def validate_baseline_management(self) -> dict[str, Any]:
         """
         Validate performance baseline management and currency.
 
@@ -1128,7 +1128,7 @@ class ScientificRigorValidator:
 
         return baseline_data
 
-    def validate_reproducibility(self) -> Dict[str, Any]:
+    def validate_reproducibility(self) -> dict[str, Any]:
         """
         Validate test reproducibility across environments.
 
@@ -1174,7 +1174,7 @@ class ScientificRigorValidator:
 
         return reproducibility_data
 
-    def _analyze_benchmark_statistics(self, file_path: Path) -> Dict[str, Any]:
+    def _analyze_benchmark_statistics(self, file_path: Path) -> dict[str, Any]:
         """Analyze statistical methods in benchmark tests."""
         return {
             "performance_tests": {},
@@ -1184,7 +1184,7 @@ class ScientificRigorValidator:
             "power_analysis": {"conducted": False, "power_level": 0.8},
         }
 
-    def _analyze_numerical_precision(self, file_path: Path) -> Dict[str, Any]:
+    def _analyze_numerical_precision(self, file_path: Path) -> dict[str, Any]:
         """Analyze numerical precision handling in tests."""
         return {
             "comparisons": {"direct": 0, "with_tolerance": 0},
@@ -1193,7 +1193,7 @@ class ScientificRigorValidator:
             "suggestions": [],
         }
 
-    def _analyze_property_tests(self, file_path: Path) -> Dict[str, Any]:
+    def _analyze_property_tests(self, file_path: Path) -> dict[str, Any]:
         """Analyze property-based tests and strategies."""
         return {
             "property_tests": {},
@@ -1202,7 +1202,7 @@ class ScientificRigorValidator:
             "hypothesis_coverage": {"properties_covered": 0, "total_properties": 0},
         }
 
-    def _analyze_baseline_file(self, file_path: Path) -> Dict[str, Any]:
+    def _analyze_baseline_file(self, file_path: Path) -> dict[str, Any]:
         """Analyze performance baseline file."""
         return {
             "last_updated": None,
@@ -1211,7 +1211,7 @@ class ScientificRigorValidator:
             "version_info": {},
         }
 
-    def _analyze_reproducibility(self, file_path: Path) -> Dict[str, Any]:
+    def _analyze_reproducibility(self, file_path: Path) -> dict[str, Any]:
         """Analyze reproducibility factors in test file."""
         return {
             "env_deps": [],
@@ -1221,23 +1221,23 @@ class ScientificRigorValidator:
             "recommendations": [],
         }
 
-    def _calculate_statistical_rigor_score(self, data: Dict) -> float:
+    def _calculate_statistical_rigor_score(self, data: dict) -> float:
         """Calculate statistical rigor score."""
         return 88.0  # Placeholder
 
-    def _calculate_precision_score(self, data: Dict) -> float:
+    def _calculate_precision_score(self, data: dict) -> float:
         """Calculate numerical precision score."""
         return 92.0  # Placeholder
 
-    def _calculate_hypothesis_score(self, data: Dict) -> float:
+    def _calculate_hypothesis_score(self, data: dict) -> float:
         """Calculate hypothesis testing score."""
         return 85.0  # Placeholder
 
-    def _calculate_baseline_score(self, data: Dict) -> float:
+    def _calculate_baseline_score(self, data: dict) -> float:
         """Calculate baseline management score."""
         return 75.0  # Placeholder
 
-    def _calculate_reproducibility_score(self, data: Dict) -> float:
+    def _calculate_reproducibility_score(self, data: dict) -> float:
         """Calculate reproducibility score."""
         return 90.0  # Placeholder
 
@@ -1249,7 +1249,7 @@ class TestSuiteCompletenessAnalyzer:
         self.validator = validator
         self.completeness_data = {}
 
-    def analyze_requirement_coverage(self) -> Dict[str, Any]:
+    def analyze_requirement_coverage(self) -> dict[str, Any]:
         """
         Analyze coverage of functional requirements.
 
@@ -1276,8 +1276,8 @@ class TestSuiteCompletenessAnalyzer:
         requirement_data["requirement_test_mapping"] = test_mapping
 
         # Calculate coverage
-        for req_id, req_info in requirements.items():
-            if req_id in test_mapping and test_mapping[req_id]:
+        for req_id, _req_info in requirements.items():
+            if test_mapping.get(req_id):
                 requirement_data["covered_requirements"].append(req_id)
             else:
                 requirement_data["uncovered_requirements"].append(req_id)
@@ -1292,7 +1292,7 @@ class TestSuiteCompletenessAnalyzer:
 
         return requirement_data
 
-    def analyze_error_scenario_coverage(self) -> Dict[str, Any]:
+    def analyze_error_scenario_coverage(self) -> dict[str, Any]:
         """
         Analyze coverage of error scenarios and failure modes.
 
@@ -1329,7 +1329,7 @@ class TestSuiteCompletenessAnalyzer:
 
         return error_data
 
-    def analyze_configuration_coverage(self) -> Dict[str, Any]:
+    def analyze_configuration_coverage(self) -> dict[str, Any]:
         """
         Analyze coverage of configuration options and settings.
 
@@ -1365,7 +1365,7 @@ class TestSuiteCompletenessAnalyzer:
 
         return config_data
 
-    def analyze_performance_coverage(self) -> Dict[str, Any]:
+    def analyze_performance_coverage(self) -> dict[str, Any]:
         """
         Analyze coverage of performance-critical code paths.
 
@@ -1403,7 +1403,7 @@ class TestSuiteCompletenessAnalyzer:
 
         return perf_data
 
-    def _extract_requirements(self) -> Dict[str, Any]:
+    def _extract_requirements(self) -> dict[str, Any]:
         """Extract functional requirements from source code and documentation."""
         requirements = {}
 
@@ -1413,7 +1413,7 @@ class TestSuiteCompletenessAnalyzer:
                 continue
 
             try:
-                with open(src_file, "r", encoding="utf-8") as f:
+                with open(src_file, encoding="utf-8") as f:
                     content = f.read()
 
                 # Extract requirements from docstrings
@@ -1440,7 +1440,7 @@ class TestSuiteCompletenessAnalyzer:
 
         return requirements
 
-    def _map_tests_to_requirements(self, requirements: Dict) -> Dict[str, List[str]]:
+    def _map_tests_to_requirements(self, requirements: dict) -> dict[str, list[str]]:
         """Map test functions to requirements they validate."""
         mapping = {}
 
@@ -1453,7 +1453,7 @@ class TestSuiteCompletenessAnalyzer:
                     continue
 
                 try:
-                    with open(test_file, "r", encoding="utf-8") as f:
+                    with open(test_file, encoding="utf-8") as f:
                         content = f.read()
 
                     # Look for test functions that might test this requirement
@@ -1472,7 +1472,7 @@ class TestSuiteCompletenessAnalyzer:
 
         return mapping
 
-    def _identify_error_scenarios(self) -> List[Dict]:
+    def _identify_error_scenarios(self) -> list[dict]:
         """Identify potential error scenarios from source code."""
         error_scenarios = []
 
@@ -1481,7 +1481,7 @@ class TestSuiteCompletenessAnalyzer:
                 continue
 
             try:
-                with open(src_file, "r", encoding="utf-8") as f:
+                with open(src_file, encoding="utf-8") as f:
                     content = f.read()
 
                 # Look for error-related patterns
@@ -1511,7 +1511,7 @@ class TestSuiteCompletenessAnalyzer:
 
         return error_scenarios
 
-    def _analyze_error_tests(self) -> Dict[str, Any]:
+    def _analyze_error_tests(self) -> dict[str, Any]:
         """Analyze existing error handling tests."""
         error_tests = {}
 
@@ -1520,7 +1520,7 @@ class TestSuiteCompletenessAnalyzer:
                 continue
 
             try:
-                with open(test_file, "r", encoding="utf-8") as f:
+                with open(test_file, encoding="utf-8") as f:
                     content = f.read()
 
                 # Look for error testing patterns
@@ -1544,7 +1544,7 @@ class TestSuiteCompletenessAnalyzer:
 
         return error_tests
 
-    def _extract_configuration_parameters(self) -> Dict[str, Any]:
+    def _extract_configuration_parameters(self) -> dict[str, Any]:
         """Extract configuration parameters from logging system."""
         config_params = {}
 
@@ -1552,7 +1552,7 @@ class TestSuiteCompletenessAnalyzer:
         config_file = self.validator.src_dir / "utils" / "logging_config.py"
         if config_file.exists():
             try:
-                with open(config_file, "r", encoding="utf-8") as f:
+                with open(config_file, encoding="utf-8") as f:
                     content = f.read()
 
                 # Look for environment variables and configuration parameters
@@ -1579,7 +1579,7 @@ class TestSuiteCompletenessAnalyzer:
 
         return config_params
 
-    def _analyze_configuration_tests(self) -> Dict[str, List]:
+    def _analyze_configuration_tests(self) -> dict[str, list]:
         """Analyze tests for configuration parameters."""
         config_tests = {}
 
@@ -1588,7 +1588,7 @@ class TestSuiteCompletenessAnalyzer:
                 continue
 
             try:
-                with open(test_file, "r", encoding="utf-8") as f:
+                with open(test_file, encoding="utf-8") as f:
                     content = f.read()
 
                 # Look for configuration-related tests
@@ -1612,7 +1612,7 @@ class TestSuiteCompletenessAnalyzer:
 
         return config_tests
 
-    def _identify_critical_paths(self) -> List[Dict]:
+    def _identify_critical_paths(self) -> list[dict]:
         """Identify performance-critical code paths."""
         critical_paths = []
 
@@ -1632,7 +1632,7 @@ class TestSuiteCompletenessAnalyzer:
                 continue
 
             try:
-                with open(src_file, "r", encoding="utf-8") as f:
+                with open(src_file, encoding="utf-8") as f:
                     content = f.read()
 
                 for pattern in critical_patterns:
@@ -1653,14 +1653,14 @@ class TestSuiteCompletenessAnalyzer:
 
         return critical_paths
 
-    def _analyze_benchmark_coverage(self) -> Dict[str, Any]:
+    def _analyze_benchmark_coverage(self) -> dict[str, Any]:
         """Analyze existing benchmark test coverage."""
         benchmark_coverage = {}
 
         benchmark_file = self.validator.test_dir / "test_logging_benchmarks.py"
         if benchmark_file.exists():
             try:
-                with open(benchmark_file, "r", encoding="utf-8") as f:
+                with open(benchmark_file, encoding="utf-8") as f:
                     content = f.read()
 
                 # Look for benchmark functions
@@ -1685,7 +1685,7 @@ class TestSuiteCompletenessAnalyzer:
 
         return benchmark_coverage
 
-    def _has_error_test(self, scenario: Dict) -> bool:
+    def _has_error_test(self, scenario: dict) -> bool:
         """Check if error scenario has corresponding test."""
         # Simplified check - look for related test names
         scenario_keywords = scenario.get("scenario_id", "").lower().split("_")
@@ -1695,7 +1695,7 @@ class TestSuiteCompletenessAnalyzer:
                 continue
 
             try:
-                with open(test_file, "r", encoding="utf-8") as f:
+                with open(test_file, encoding="utf-8") as f:
                     content = f.read().lower()
 
                 # Check if any keywords appear in test function names
@@ -1717,7 +1717,7 @@ class TestSuiteCompletenessAnalyzer:
                 continue
 
             try:
-                with open(test_file, "r", encoding="utf-8") as f:
+                with open(test_file, encoding="utf-8") as f:
                     content = f.read().lower()
 
                 if param_lower in content or param in content:
@@ -1728,7 +1728,7 @@ class TestSuiteCompletenessAnalyzer:
 
         return False
 
-    def _has_benchmark_test(self, path: Dict) -> bool:
+    def _has_benchmark_test(self, path: dict) -> bool:
         """Check if critical path has corresponding benchmark test."""
         path_keywords = path.get("pattern", "").lower().split()
 
@@ -1737,7 +1737,7 @@ class TestSuiteCompletenessAnalyzer:
             return False
 
         try:
-            with open(benchmark_file, "r", encoding="utf-8") as f:
+            with open(benchmark_file, encoding="utf-8") as f:
                 content = f.read().lower()
 
             for keyword in path_keywords:
@@ -1757,7 +1757,7 @@ class TestInfrastructureValidator:
         self.validator = validator
         self.infrastructure_data = {}
 
-    def validate_fixture_quality(self) -> Dict[str, Any]:
+    def validate_fixture_quality(self) -> dict[str, Any]:
         """
         Validate quality of test fixtures.
 
@@ -1799,7 +1799,7 @@ class TestInfrastructureValidator:
 
         return fixture_data
 
-    def validate_mock_quality(self) -> Dict[str, Any]:
+    def validate_mock_quality(self) -> dict[str, Any]:
         """
         Validate quality of mock objects and test doubles.
 
@@ -1833,7 +1833,7 @@ class TestInfrastructureValidator:
 
         return mock_data
 
-    def validate_test_data_quality(self) -> Dict[str, Any]:
+    def validate_test_data_quality(self) -> dict[str, Any]:
         """
         Validate quality of test data and data generation strategies.
 
@@ -1877,7 +1877,7 @@ class TestInfrastructureValidator:
 
         return data_quality
 
-    def validate_helper_functions(self) -> Dict[str, Any]:
+    def validate_helper_functions(self) -> dict[str, Any]:
         """
         Validate test helper functions and utilities.
 
@@ -1917,7 +1917,7 @@ class TestInfrastructureValidator:
 
         return helper_data
 
-    def validate_ci_cd_integration(self) -> Dict[str, Any]:
+    def validate_ci_cd_integration(self) -> dict[str, Any]:
         """
         Validate CI/CD integration and automation quality.
 
@@ -1960,15 +1960,15 @@ class TestInfrastructureValidator:
 
         return cicd_data
 
-    def _analyze_file_fixtures(self, file_path: Path) -> Dict[str, Any]:
+    def _analyze_file_fixtures(self, file_path: Path) -> dict[str, Any]:
         """Analyze fixtures in a test file."""
         return {"fixtures": [], "scopes": {}, "reusability": {}, "recommendations": []}
 
-    def _analyze_file_mocks(self, file_path: Path) -> Dict[str, Any]:
+    def _analyze_file_mocks(self, file_path: Path) -> dict[str, Any]:
         """Analyze mock usage in a test file."""
         return {"usage": {}, "accuracy": {}, "configuration": {}, "recommendations": []}
 
-    def _analyze_test_data(self, file_path: Path) -> Dict[str, Any]:
+    def _analyze_test_data(self, file_path: Path) -> dict[str, Any]:
         """Analyze test data quality in a test file."""
         return {
             "sources": [],
@@ -1978,7 +1978,7 @@ class TestInfrastructureValidator:
             "recommendations": [],
         }
 
-    def _analyze_helper_functions(self, file_path: Path) -> Dict[str, Any]:
+    def _analyze_helper_functions(self, file_path: Path) -> dict[str, Any]:
         """Analyze helper functions in a test file."""
         return {
             "functions": [],
@@ -1987,7 +1987,7 @@ class TestInfrastructureValidator:
             "recommendations": [],
         }
 
-    def _analyze_cicd_config(self, config_file: Path) -> Dict[str, Any]:
+    def _analyze_cicd_config(self, config_file: Path) -> dict[str, Any]:
         """Analyze CI/CD configuration file."""
         return {
             "test_commands": [],
@@ -1996,7 +1996,7 @@ class TestInfrastructureValidator:
             "quality_gates": [],
         }
 
-    def _analyze_automation_compatibility(self) -> Dict[str, Any]:
+    def _analyze_automation_compatibility(self) -> dict[str, Any]:
         """Analyze test automation compatibility."""
         return {
             "parallel_execution": True,
@@ -2005,23 +2005,23 @@ class TestInfrastructureValidator:
             "timeout_handling": True,
         }
 
-    def _calculate_fixture_quality_score(self, data: Dict) -> float:
+    def _calculate_fixture_quality_score(self, data: dict) -> float:
         """Calculate fixture quality score."""
         return 85.0  # Placeholder
 
-    def _calculate_mock_quality_score(self, data: Dict) -> float:
+    def _calculate_mock_quality_score(self, data: dict) -> float:
         """Calculate mock quality score."""
         return 88.0  # Placeholder
 
-    def _calculate_data_quality_score(self, data: Dict) -> float:
+    def _calculate_data_quality_score(self, data: dict) -> float:
         """Calculate test data quality score."""
         return 90.0  # Placeholder
 
-    def _calculate_helper_quality_score(self, data: Dict) -> float:
+    def _calculate_helper_quality_score(self, data: dict) -> float:
         """Calculate helper function quality score."""
         return 82.0  # Placeholder
 
-    def _calculate_cicd_quality_score(self, data: Dict) -> float:
+    def _calculate_cicd_quality_score(self, data: dict) -> float:
         """Calculate CI/CD integration quality score."""
         return 78.0  # Placeholder
 
@@ -2033,7 +2033,7 @@ class MutationTester:
         self.validator = validator
         self.mutation_results = {}
 
-    def run_mutation_testing(self) -> Dict[str, Any]:
+    def run_mutation_testing(self) -> dict[str, Any]:
         """
         Execute mutation testing to validate test effectiveness.
 
@@ -2084,7 +2084,7 @@ class MutationTester:
 
         return mutation_data
 
-    def _generate_mutations(self) -> List[Dict]:
+    def _generate_mutations(self) -> list[dict]:
         """Generate mutations for the logging system code."""
         mutations = []
         mutation_operators = [
@@ -2101,7 +2101,7 @@ class MutationTester:
                 continue
 
             try:
-                with open(src_file, "r", encoding="utf-8") as f:
+                with open(src_file, encoding="utf-8") as f:
                     content = f.read()
                     tree = ast.parse(content, filename=str(src_file))
 
@@ -2117,7 +2117,7 @@ class MutationTester:
 
     def _arithmetic_operator_replacement(
         self, tree, file_path: Path, content: str
-    ) -> List[Dict]:
+    ) -> list[dict]:
         """Generate arithmetic operator replacement mutations."""
         mutations = []
         replacements = {"+": "-", "-": "+", "*": "/", "/": "*", "%": "*", "**": "*"}
@@ -2142,7 +2142,7 @@ class MutationTester:
 
     def _relational_operator_replacement(
         self, tree, file_path: Path, content: str
-    ) -> List[Dict]:
+    ) -> list[dict]:
         """Generate relational operator replacement mutations."""
         mutations = []
 
@@ -2166,7 +2166,7 @@ class MutationTester:
 
     def _logical_operator_replacement(
         self, tree, file_path: Path, content: str
-    ) -> List[Dict]:
+    ) -> list[dict]:
         """Generate logical operator replacement mutations."""
         mutations = []
 
@@ -2189,7 +2189,7 @@ class MutationTester:
 
         return mutations
 
-    def _constant_replacement(self, tree, file_path: Path, content: str) -> List[Dict]:
+    def _constant_replacement(self, tree, file_path: Path, content: str) -> list[dict]:
         """Generate constant replacement mutations."""
         mutations = []
 
@@ -2220,7 +2220,7 @@ class MutationTester:
 
         return mutations
 
-    def _statement_deletion(self, tree, file_path: Path, content: str) -> List[Dict]:
+    def _statement_deletion(self, tree, file_path: Path, content: str) -> list[dict]:
         """Generate statement deletion mutations."""
         mutations = []
 
@@ -2241,7 +2241,7 @@ class MutationTester:
 
     def _condition_boundary_mutation(
         self, tree, file_path: Path, content: str
-    ) -> List[Dict]:
+    ) -> list[dict]:
         """Generate condition boundary mutations."""
         mutations = []
 
@@ -2262,7 +2262,7 @@ class MutationTester:
 
         return mutations
 
-    def _apply_mutation_and_test(self, mutation: Dict) -> Dict[str, Any]:
+    def _apply_mutation_and_test(self, mutation: dict) -> dict[str, Any]:
         """Apply a mutation and run tests to check if it's caught."""
         # This is a simplified simulation - actual implementation would:
         # 1. Create temporary mutated file
@@ -2283,8 +2283,8 @@ class MutationTester:
         }
 
     def _generate_effectiveness_recommendations(
-        self, weak_areas: List[str]
-    ) -> List[str]:
+        self, weak_areas: list[str]
+    ) -> list[str]:
         """Generate recommendations based on mutation testing results."""
         recommendations = []
 
@@ -2503,7 +2503,7 @@ def run_validation_methods(validator):
         for test_file in self.logging_test_files:
             if test_file.exists():
                 try:
-                    with open(test_file, "r", encoding="utf-8") as f:
+                    with open(test_file, encoding="utf-8") as f:
                         content = f.read()
 
                     # Count test functions
@@ -2521,7 +2521,7 @@ def run_validation_methods(validator):
                 except Exception as e:
                     print(f"⚠️  Error analyzing performance for {test_file}: {e}")
 
-    def generate_validation_report(self) -> Dict[str, Any]:
+    def generate_validation_report(self) -> dict[str, Any]:
         """Generate comprehensive validation report with recommendations."""
         print("📊 Generating Comprehensive Validation Report...")
 
@@ -2606,7 +2606,7 @@ def run_validation_methods(validator):
 
         return report
 
-    def _generate_comprehensive_recommendations(self) -> List[Dict[str, Any]]:
+    def _generate_comprehensive_recommendations(self) -> list[dict[str, Any]]:
         """Generate comprehensive, actionable recommendations."""
         recommendations = []
 
@@ -2839,7 +2839,7 @@ class TestSuiteValidationTests:
             assert "impact" in rec
 
 
-def print_validation_summary(report: Dict[str, Any]) -> None:
+def print_validation_summary(report: dict[str, Any]) -> None:
     """Print a formatted validation summary."""
     print("\n" + "=" * 80)
     print("🔬 TEST SUITE VALIDATION SUMMARY")
@@ -2913,7 +2913,7 @@ def print_validation_summary(report: Dict[str, Any]) -> None:
 if __name__ == "__main__":
     """
     Main execution for standalone validation runs.
-    
+
     This allows the validation framework to be run directly from command line
     for continuous integration or manual quality assessment.
     """

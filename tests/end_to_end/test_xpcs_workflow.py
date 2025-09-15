@@ -44,7 +44,7 @@ try:
     from xpcs_toolkit.viewer_kernel import ViewerKernel
     from xpcs_toolkit.xpcs_file import XpcsFile
 except ImportError as e:
-    warnings.warn(f"Could not import all XPCS components: {e}")
+    warnings.warn(f"Could not import all XPCS components: {e}", stacklevel=2)
     sys.exit(0)
 
 logger = get_logger(__name__)
@@ -191,7 +191,6 @@ class TestCompleteXpcsWorkflow(unittest.TestCase):
             # Parameters
             n_q = scenario["n_q"]
             n_tau = 60  # Realistic multitau points
-            n_saxs = 200
 
             # Create realistic tau array with multitau structure
             tau = self._create_realistic_multitau_array(n_tau)
@@ -225,7 +224,9 @@ class TestCompleteXpcsWorkflow(unittest.TestCase):
                 qmap.create_dataset(key, data=value)
 
             # Realistic SAXS scattering - must match Q-mapping size
-            saxs_data = self._create_realistic_scattering_data(n_q, scenario)  # Use n_q instead of n_saxs
+            saxs_data = self._create_realistic_scattering_data(
+                n_q, scenario
+            )  # Use n_q instead of n_saxs
             temporal_mean.create_dataset(
                 "scattering_1d", data=saxs_data["intensity"].reshape(1, -1)
             )
@@ -237,7 +238,10 @@ class TestCompleteXpcsWorkflow(unittest.TestCase):
 
             # 2D SAXS (Iqp) with proper Q-dependence
             Iqp_data = self._create_realistic_iqp_data(
-                n_q, n_q, saxs_data, qmap_data  # Use n_q for both dimensions
+                n_q,
+                n_q,
+                saxs_data,
+                qmap_data,  # Use n_q for both dimensions
             )
             temporal_mean.create_dataset("scattering_1d_segments", data=Iqp_data)
 
@@ -535,14 +539,14 @@ class TestCompleteXpcsWorkflow(unittest.TestCase):
 
                 if np.sum(valid) > 20:  # Need sufficient points for fitting
                     tau_fit = tau_data[valid]
-                    g2_fit = g2_single[valid]
+                    g2_single[valid]
 
                     try:
                         # Simple exponential fitting using XpcsFile method
                         # Provide proper bounds for single exponential fit [baseline, beta, tau_c, extra]
                         bounds = [
-                            [1.0, 0.1, 1e-5, 0.0],    # Lower bounds
-                            [2.0, 2.0, 1.0, 1.0]      # Upper bounds
+                            [1.0, 0.1, 1e-5, 0.0],  # Lower bounds
+                            [2.0, 2.0, 1.0, 1.0],  # Upper bounds
                         ]
                         fit_result = xf.fit_g2(
                             q_range=(q_idx, q_idx), fit_func="single", bounds=bounds
@@ -552,7 +556,9 @@ class TestCompleteXpcsWorkflow(unittest.TestCase):
                             # Check if the fit was successful (not -1.0 values)
                             fit_values = fit_result.get("fit_val", [])
                             if len(fit_values) > q_idx and len(fit_values[q_idx]) > 0:
-                                if fit_values[q_idx][0][0] != -1.0:  # Check if baseline fit value is not -1
+                                if (
+                                    fit_values[q_idx][0][0] != -1.0
+                                ):  # Check if baseline fit value is not -1
                                     successful_fits += 1
 
                                     # Extract fit parameters
@@ -560,7 +566,7 @@ class TestCompleteXpcsWorkflow(unittest.TestCase):
                                         "baseline": fit_values[q_idx][0][0],
                                         "beta": fit_values[q_idx][0][1],
                                         "tau_c": fit_values[q_idx][0][2],
-                                        "status": "success"
+                                        "status": "success",
                                     }
                                 else:
                                     fit_params = {"status": "fit_failed"}
@@ -706,7 +712,10 @@ class TestCompleteXpcsWorkflow(unittest.TestCase):
 
         except Exception as e:
             import traceback
-            error_details = f"{type(e).__name__}: {str(e)}\nTraceback: {traceback.format_exc()}"
+
+            error_details = (
+                f"{type(e).__name__}: {e!s}\nTraceback: {traceback.format_exc()}"
+            )
             result.add_error("workflow", error_details)
 
         # Record performance metrics
@@ -1005,7 +1014,7 @@ class TestCompleteXpcsWorkflow(unittest.TestCase):
         # Test passes if either data quality issues are detected OR errors are handled gracefully
         self.assertTrue(
             any(data_quality.values()) or has_errors,
-            "Should detect data quality problems or handle errors gracefully"
+            "Should detect data quality problems or handle errors gracefully",
         )
 
 

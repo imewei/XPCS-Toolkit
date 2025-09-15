@@ -44,7 +44,7 @@ try:
     from xpcs_toolkit.viewer_kernel import ViewerKernel
     from xpcs_toolkit.xpcs_file import MemoryMonitor, XpcsFile
 except ImportError as e:
-    warnings.warn(f"Could not import all XPCS components: {e}")
+    warnings.warn(f"Could not import all XPCS components: {e}", stacklevel=2)
     sys.exit(0)
 
 logger = get_logger(__name__)
@@ -145,7 +145,9 @@ class TestMemoryManagementIntegration(unittest.TestCase):
             temporal_mean.create_dataset("scattering_1d_segments", data=Iqp_data)
 
             # Q-map data for proper recognition
-            qmap.create_dataset("dynamic_v_list_dim0", data=np.linspace(0.001, 0.1, n_q))
+            qmap.create_dataset(
+                "dynamic_v_list_dim0", data=np.linspace(0.001, 0.1, n_q)
+            )
             qmap.create_dataset("static_v_list_dim0", data=np.linspace(0.001, 0.1, n_q))
             qmap.create_dataset("dynamic_index_mapping", data=np.arange(n_q))
             qmap.create_dataset("static_index_mapping", data=np.arange(n_q))
@@ -166,7 +168,7 @@ class TestMemoryManagementIntegration(unittest.TestCase):
         memory_points = []
 
         # Track memory during file loading
-        for i, test_file in enumerate(self.test_files):
+        for _i, test_file in enumerate(self.test_files):
             # Record memory before loading
             memory_before = tracker.get_current_usage()
 
@@ -176,7 +178,7 @@ class TestMemoryManagementIntegration(unittest.TestCase):
             # Access data to trigger loading
             g2_data = xf.g2
             tau_data = xf.tau
-            saxs_data = get(test_file, "/xpcs/temporal_mean/scattering_1d")
+            saxs_data = get(test_file, ["/xpcs/temporal_mean/scattering_1d"])["/xpcs/temporal_mean/scattering_1d"]
 
             # Record memory after loading
             memory_after = tracker.get_current_usage()
@@ -256,9 +258,9 @@ class TestMemoryManagementIntegration(unittest.TestCase):
         # Access all data to maximize memory usage
         _ = xf.g2
         _ = xf.tau
-        _ = get(large_file, "/xpcs/temporal_mean/scattering_1d")
-        _ = get(large_file, "/xpcs/temporal_mean/scattering_1d_segments")
-        _ = get(large_file, "/xpcs/spatial_mean/intensity_vs_time")
+        _ = get(large_file, ["/xpcs/temporal_mean/scattering_1d"])["/xpcs/temporal_mean/scattering_1d"]
+        _ = get(large_file, ["/xpcs/temporal_mean/scattering_1d_segments"])["/xpcs/temporal_mean/scattering_1d_segments"]
+        _ = get(large_file, ["/xpcs/spatial_mean/intensity_vs_time"])["/xpcs/spatial_mean/intensity_vs_time"]
 
         final_pressure = MemoryMonitor.get_memory_pressure()
 
@@ -268,7 +270,7 @@ class TestMemoryManagementIntegration(unittest.TestCase):
     def test_memory_cleanup_integration(self):
         """Test memory cleanup mechanisms in integrated system."""
         kernel = ViewerKernel(self.temp_dir)
-        kernel.refresh_file_list()
+        kernel.build()
 
         initial_memory = self._get_process_memory()
         loaded_files = []
@@ -277,7 +279,7 @@ class TestMemoryManagementIntegration(unittest.TestCase):
         memory_checkpoints = []
 
         for i in range(len(self.test_files)):
-            if i < len(kernel.raw_hdf_files):
+            if i < len(kernel.source):
                 # Load file
                 xf = kernel.load_xpcs_file(i)
                 loaded_files.append(xf)
@@ -323,7 +325,7 @@ class TestMemoryManagementIntegration(unittest.TestCase):
     def test_concurrent_memory_management(self):
         """Test memory management under concurrent access."""
         kernel = ViewerKernel(self.temp_dir)
-        kernel.refresh_file_list()
+        kernel.build()
 
         memory_tracker = MemoryTracker()
         memory_tracker.start_tracking()
@@ -336,7 +338,7 @@ class TestMemoryManagementIntegration(unittest.TestCase):
             """Access files concurrently and track memory."""
             try:
                 for i in range(len(self.test_files)):
-                    if i < len(kernel.raw_hdf_files):
+                    if i < len(kernel.source):
                         # Load and access file
                         xf = kernel.load_xpcs_file(i)
                         g2_data = xf.g2
@@ -429,7 +431,7 @@ class TestMemoryManagementIntegration(unittest.TestCase):
 
         # Access SAXS data
         memory_before_saxs = self._get_process_memory()
-        saxs_data = get(large_file, "/xpcs/temporal_mean/scattering_1d")
+        saxs_data = get(large_file, ["/xpcs/temporal_mean/scattering_1d"])["/xpcs/temporal_mean/scattering_1d"]
         memory_after_saxs = self._get_process_memory()
 
         datasets_accessed.append(
@@ -466,13 +468,13 @@ class TestMemoryManagementIntegration(unittest.TestCase):
 
         # Load files progressively and monitor pressure
         kernel = ViewerKernel(self.temp_dir)
-        kernel.refresh_file_list()
+        kernel.build()
 
         loaded_files = []
         pressure_history = [initial_pressure]
 
         for i in range(len(self.test_files)):
-            if i < len(kernel.raw_hdf_files):
+            if i < len(kernel.source):
                 # Load file and access large datasets
                 xf = kernel.load_xpcs_file(i)
                 loaded_files.append(xf)
@@ -483,8 +485,10 @@ class TestMemoryManagementIntegration(unittest.TestCase):
 
                 # Try to access large datasets
                 try:
-                    _ = get(kernel.raw_hdf_files[i], "/xpcs/temporal_mean/scattering_1d_segments")
-                    _ = get(kernel.raw_hdf_files[i], "/xpcs/spatial_mean/intensity_vs_time")
+                    _ = get(
+                        kernel.source[i], "/xpcs/temporal_mean/scattering_1d_segments"
+                    )
+                    _ = get(kernel.source[i], ["/xpcs/spatial_mean/intensity_vs_time"])["/xpcs/spatial_mean/intensity_vs_time"]
                 except Exception as e:
                     logger.debug(f"Could not access large dataset: {e}")
 

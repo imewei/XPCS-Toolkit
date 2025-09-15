@@ -15,7 +15,7 @@ import time
 from dataclasses import asdict, dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 import numpy as np
 from scipy import stats
@@ -35,9 +35,9 @@ class BenchmarkResult:
     max_time: float
     rounds: int
     timestamp: float = None
-    memory_peak: Optional[float] = None
-    memory_delta: Optional[float] = None
-    extra_info: Optional[Dict[str, Any]] = None
+    memory_peak: float | None = None
+    memory_delta: float | None = None
+    extra_info: dict[str, Any] | None = None
 
     def __post_init__(self):
         if self.timestamp is None:
@@ -45,11 +45,11 @@ class BenchmarkResult:
         if self.extra_info is None:
             self.extra_info = {}
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return asdict(self)
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "BenchmarkResult":
+    def from_dict(cls, data: dict[str, Any]) -> "BenchmarkResult":
         return cls(**data)
 
     def get_coefficient_of_variation(self) -> float:
@@ -69,17 +69,17 @@ class RegressionAnalysis:
 
     benchmark_name: str
     current_result: BenchmarkResult
-    baseline_result: Optional[BenchmarkResult]
+    baseline_result: BenchmarkResult | None
     performance_change: float
     is_regression: bool
     is_improvement: bool
     confidence_level: float
-    p_value: Optional[float]
-    effect_size: Optional[float]
+    p_value: float | None
+    effect_size: float | None
     severity: str  # 'critical', 'major', 'minor', 'none'
     message: str
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return asdict(self)
 
 
@@ -88,9 +88,9 @@ class PerformanceRegressionDetector:
 
     def __init__(
         self,
-        baseline_file: Path = None,
-        regression_threshold: float = None,
-        confidence_level: float = None,
+        baseline_file: Path | None = None,
+        regression_threshold: float | None = None,
+        confidence_level: float | None = None,
     ):
         """
         Initialize regression detector.
@@ -112,8 +112,8 @@ class PerformanceRegressionDetector:
             confidence_level or PERFORMANCE_CONFIG["statistical_confidence"]
         )
 
-        self.baseline_data: Dict[str, Any] = {}
-        self.current_results: List[BenchmarkResult] = []
+        self.baseline_data: dict[str, Any] = {}
+        self.current_results: list[BenchmarkResult] = []
 
         if self.baseline_file and self.baseline_file.exists():
             self.load_baseline()
@@ -121,14 +121,14 @@ class PerformanceRegressionDetector:
     def load_baseline(self) -> None:
         """Load baseline performance data."""
         try:
-            with open(self.baseline_file, "r") as f:
+            with open(self.baseline_file) as f:
                 self.baseline_data = json.load(f)
         except Exception as e:
             print(f"Warning: Could not load baseline data: {e}")
             self.baseline_data = {}
 
     def save_baseline(
-        self, results: List[BenchmarkResult], output_file: Path = None
+        self, results: list[BenchmarkResult], output_file: Path | None = None
     ) -> None:
         """Save benchmark results as new baseline."""
         output_file = output_file or self.baseline_file
@@ -245,7 +245,7 @@ class PerformanceRegressionDetector:
             message=message,
         )
 
-    def analyze_all_results(self) -> List[RegressionAnalysis]:
+    def analyze_all_results(self) -> list[RegressionAnalysis]:
         """Analyze all current results for regressions."""
         analyses = []
         for result in self.current_results:
@@ -254,8 +254,8 @@ class PerformanceRegressionDetector:
         return analyses
 
     def generate_report(
-        self, analyses: List[RegressionAnalysis] = None
-    ) -> Dict[str, Any]:
+        self, analyses: list[RegressionAnalysis] | None = None
+    ) -> dict[str, Any]:
         """
         Generate comprehensive regression analysis report.
 
@@ -329,14 +329,14 @@ class PerformanceRegressionDetector:
 
         return report
 
-    def save_report(self, report: Dict[str, Any], output_file: Path) -> None:
+    def save_report(self, report: dict[str, Any], output_file: Path) -> None:
         """Save regression analysis report to file."""
         with open(output_file, "w") as f:
             json.dump(report, f, indent=2)
 
     def check_ci_failure_conditions(
-        self, analyses: List[RegressionAnalysis] = None
-    ) -> Tuple[bool, str]:
+        self, analyses: list[RegressionAnalysis] | None = None
+    ) -> tuple[bool, str]:
         """
         Check if CI should fail based on regression analysis.
 
@@ -380,7 +380,7 @@ class PerformanceRegressionDetector:
 
         return False, "Performance regression check passed"
 
-    def _get_baseline_result(self, benchmark_name: str) -> Optional[BenchmarkResult]:
+    def _get_baseline_result(self, benchmark_name: str) -> BenchmarkResult | None:
         """Get baseline result for a benchmark by name."""
         # Search through all categories in baseline data
         for category_name, category_data in self.baseline_data.items():
@@ -405,7 +405,7 @@ class PerformanceRegressionDetector:
 
     def _statistical_test(
         self, current: BenchmarkResult, baseline: BenchmarkResult
-    ) -> Tuple[Optional[float], Optional[float]]:
+    ) -> tuple[float | None, float | None]:
         """
         Perform statistical test to determine significance of performance change.
 
@@ -451,10 +451,9 @@ class PerformanceRegressionDetector:
 
         if performance_change > 1.0:  # >100% slower
             return "critical"
-        elif performance_change > 0.5:  # >50% slower
+        if performance_change > 0.5:  # >50% slower
             return "major"
-        else:
-            return "minor"
+        return "minor"
 
     def _generate_message(
         self,
@@ -466,38 +465,34 @@ class PerformanceRegressionDetector:
         """Generate human-readable message for regression analysis."""
         if is_regression:
             return f"{severity.capitalize()} regression: {performance_change:.1%} slower than baseline"
-        elif is_improvement:
+        if is_improvement:
             return f"Performance improvement: {abs(performance_change):.1%} faster than baseline"
-        else:
-            return (
-                f"Performance is stable: {performance_change:.1%} change from baseline"
-            )
+        return f"Performance is stable: {performance_change:.1%} change from baseline"
 
     def _extract_category(self, benchmark_name: str) -> str:
         """Extract category name from benchmark name."""
         # Simple heuristic to categorize benchmarks
         if "hdf5" in benchmark_name.lower():
             return "hdf5_operations"
-        elif "g2" in benchmark_name.lower():
+        if "g2" in benchmark_name.lower():
             return "g2_analysis"
-        elif "saxs" in benchmark_name.lower():
+        if "saxs" in benchmark_name.lower():
             return "saxs_analysis"
-        elif "twotime" in benchmark_name.lower():
+        if "twotime" in benchmark_name.lower():
             return "twotime_analysis"
-        elif "memory" in benchmark_name.lower():
+        if "memory" in benchmark_name.lower():
             return "memory_management"
-        elif "thread" in benchmark_name.lower() or "parallel" in benchmark_name.lower():
+        if "thread" in benchmark_name.lower() or "parallel" in benchmark_name.lower():
             return "threading_performance"
-        elif "scaling" in benchmark_name.lower():
+        if "scaling" in benchmark_name.lower():
             return "scalability"
-        else:
-            return "general_performance"
+        return "general_performance"
 
 
 class PerformanceTrendAnalyzer:
     """Analyze performance trends over time."""
 
-    def __init__(self, history_file: Path = None):
+    def __init__(self, history_file: Path | None = None):
         """
         Initialize trend analyzer.
 
@@ -507,7 +502,7 @@ class PerformanceTrendAnalyzer:
             Path to historical performance data file
         """
         self.history_file = history_file
-        self.history_data: List[Dict[str, Any]] = []
+        self.history_data: list[dict[str, Any]] = []
 
         if self.history_file and self.history_file.exists():
             self.load_history()
@@ -515,14 +510,14 @@ class PerformanceTrendAnalyzer:
     def load_history(self) -> None:
         """Load historical performance data."""
         try:
-            with open(self.history_file, "r") as f:
+            with open(self.history_file) as f:
                 self.history_data = json.load(f)
         except Exception as e:
             print(f"Warning: Could not load history data: {e}")
             self.history_data = []
 
     def add_results(
-        self, results: List[BenchmarkResult], commit_hash: str = None
+        self, results: list[BenchmarkResult], commit_hash: str | None = None
     ) -> None:
         """Add benchmark results to history."""
         entry = {
@@ -540,7 +535,7 @@ class PerformanceTrendAnalyzer:
 
     def analyze_trends(
         self, benchmark_name: str, days_back: int = 30
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Analyze performance trends for a specific benchmark.
 
@@ -586,7 +581,7 @@ class PerformanceTrendAnalyzer:
         values_array = np.array(values)
 
         # Linear regression
-        slope, intercept, r_value, p_value, std_err = stats.linregress(
+        slope, _intercept, r_value, p_value, _std_err = stats.linregress(
             timestamps_norm, values_array
         )
 
@@ -618,7 +613,7 @@ class PerformanceTrendAnalyzer:
 
     def detect_anomalies(
         self, benchmark_name: str, sensitivity: float = 2.0
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         Detect performance anomalies using statistical methods.
 
@@ -654,7 +649,7 @@ class PerformanceTrendAnalyzer:
 
         anomalies = []
 
-        for i, (timestamp, value) in enumerate(zip(timestamps, values)):
+        for i, (timestamp, value) in enumerate(zip(timestamps, values, strict=False)):
             z_score = abs(value - mean_val) / std_val if std_val > 0 else 0
 
             if z_score > sensitivity:
@@ -671,8 +666,8 @@ class PerformanceTrendAnalyzer:
         return anomalies
 
     def generate_trend_report(
-        self, benchmark_names: List[str] = None, days_back: int = 30
-    ) -> Dict[str, Any]:
+        self, benchmark_names: list[str] | None = None, days_back: int = 30
+    ) -> dict[str, Any]:
         """Generate comprehensive trend analysis report."""
         if benchmark_names is None:
             # Extract all unique benchmark names
@@ -727,7 +722,7 @@ class CIIntegration:
     """Utilities for CI/CD pipeline integration."""
 
     @staticmethod
-    def generate_github_actions_output(report: Dict[str, Any]) -> str:
+    def generate_github_actions_output(report: dict[str, Any]) -> str:
         """Generate GitHub Actions output format."""
         summary = report["summary"]
 
@@ -746,15 +741,13 @@ class CIIntegration:
 
     @staticmethod
     def generate_junit_xml(
-        analyses: List[RegressionAnalysis], output_file: Path
+        analyses: list[RegressionAnalysis], output_file: Path
     ) -> None:
         """Generate JUnit XML report for CI systems."""
         # Simple JUnit XML generation
         xml_content = ['<?xml version="1.0" encoding="UTF-8"?>']
         xml_content.append(
-            '<testsuite name="Performance Regression Tests" tests="{}" failures="{}" errors="0">'.format(
-                len(analyses), len([a for a in analyses if a.is_regression])
-            )
+            f'<testsuite name="Performance Regression Tests" tests="{len(analyses)}" failures="{len([a for a in analyses if a.is_regression])}" errors="0">'
         )
 
         for analysis in analyses:
@@ -782,7 +775,7 @@ class CIIntegration:
             f.write("\n".join(xml_content))
 
     @staticmethod
-    def generate_markdown_report(report: Dict[str, Any]) -> str:
+    def generate_markdown_report(report: dict[str, Any]) -> str:
         """Generate Markdown report for GitHub PR comments."""
         lines = [
             "# Performance Regression Analysis Report",
@@ -843,7 +836,7 @@ class CIIntegration:
 
 # Example usage functions
 def run_regression_analysis(
-    results: List[BenchmarkResult], baseline_file: Path, output_dir: Path
+    results: list[BenchmarkResult], baseline_file: Path, output_dir: Path
 ) -> bool:
     """
     Run complete regression analysis pipeline.

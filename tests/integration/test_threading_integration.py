@@ -54,7 +54,7 @@ try:
         logger.warning("Qt components not available, skipping GUI threading tests")
 
 except ImportError as e:
-    warnings.warn(f"Could not import all XPCS components: {e}")
+    warnings.warn(f"Could not import all XPCS components: {e}", stacklevel=2)
     sys.exit(0)
 
 logger = get_logger(__name__)
@@ -112,6 +112,10 @@ class TestThreadingIntegration(unittest.TestCase):
             hdf_path = os.path.join(self.temp_dir, f"thread_test_{i}.hdf")
 
             with h5py.File(hdf_path, "w") as f:
+                # File attributes
+                f.attrs["format_version"] = "2.0"
+                f.attrs["analysis_type"] = "Multitau"
+
                 # Basic structure
                 f.create_group("entry")
                 xpcs = f.create_group("xpcs")
@@ -126,8 +130,8 @@ class TestThreadingIntegration(unittest.TestCase):
                 g2_data = np.random.rand(n_q, n_tau) * 0.5 + 1.0
                 g2_err = 0.02 * g2_data
 
-                multitau.create_dataset("g2", data=g2_data)
-                multitau.create_dataset("g2_err", data=g2_err)
+                multitau.create_dataset("normalized_g2", data=g2_data)
+                multitau.create_dataset("normalized_g2_err", data=g2_err)
                 multitau.create_dataset("tau", data=tau)
 
                 # SAXS and other data
@@ -137,9 +141,15 @@ class TestThreadingIntegration(unittest.TestCase):
                     [np.linspace(0, 1000, 1000), 1000 + 50 * np.random.randn(1000)]
                 )
 
-                multitau.create_dataset("saxs_1d", data=saxs_data)
-                multitau.create_dataset("Iqp", data=Iqp_data)
-                multitau.create_dataset("Int_t", data=int_t_data)
+                # Create temporal_mean group for SAXS data
+                temporal_mean = xpcs.create_group("temporal_mean")
+                temporal_mean.create_dataset("scattering_1d", data=saxs_data)
+                temporal_mean.create_dataset("scattering_1d_segments", data=Iqp_data)
+                temporal_mean.create_dataset("scattering_2d", data=np.random.rand(50, 50) * 1000)
+
+                # Keep intensity vs time in spatial_mean as expected
+                spatial_mean = xpcs.create_group("spatial_mean")
+                spatial_mean.create_dataset("intensity_vs_time", data=int_t_data)
 
                 # Q-map data
                 qmap.create_dataset("dqlist", data=np.linspace(0.001, 0.1, n_q))
@@ -152,7 +162,7 @@ class TestThreadingIntegration(unittest.TestCase):
     def test_concurrent_file_loading_integration(self):
         """Test concurrent file loading with thread safety."""
         kernel = ViewerKernel(self.temp_dir)
-        kernel.refresh_file_list()
+        kernel.build()
 
         results = {}
         errors = {}
@@ -190,7 +200,7 @@ class TestThreadingIntegration(unittest.TestCase):
         n_threads = min(len(self.test_files), 3)
 
         for i in range(n_threads):
-            file_index = i % len(kernel.raw_hdf_files) if kernel.raw_hdf_files else 0
+            file_index = i % len(kernel.source) if kernel.source else 0
             thread = threading.Thread(
                 target=load_and_analyze_file, args=(file_index, f"thread_{i}")
             )
@@ -206,7 +216,7 @@ class TestThreadingIntegration(unittest.TestCase):
         self.assertEqual(len(errors), 0, f"Concurrent loading errors: {errors}")
 
         # Verify data integrity
-        for thread_id, result in results.items():
+        for _thread_id, result in results.items():
             if "error" not in result:
                 self.assertGreater(result["n_q"], 0)
                 self.assertGreater(result["n_tau"], 0)
@@ -215,9 +225,9 @@ class TestThreadingIntegration(unittest.TestCase):
     def test_background_analysis_integration(self):
         """Test background analysis with mock async workers."""
         kernel = ViewerKernel(self.temp_dir)
-        kernel.refresh_file_list()
+        kernel.build()
 
-        if len(kernel.raw_hdf_files) == 0:
+        if len(kernel.source) == 0:
             self.skipTest("No test files available")
 
         # Load a test file
@@ -294,9 +304,9 @@ class TestThreadingIntegration(unittest.TestCase):
     def test_thread_pool_analysis_integration(self):
         """Test thread pool integration with analysis workflows."""
         kernel = ViewerKernel(self.temp_dir)
-        kernel.refresh_file_list()
+        kernel.build()
 
-        if len(kernel.raw_hdf_files) == 0:
+        if len(kernel.source) == 0:
             self.skipTest("No test files available")
 
         def analyze_file(file_index):
@@ -330,12 +340,12 @@ class TestThreadingIntegration(unittest.TestCase):
                 return {"error": str(e), "file_index": file_index}
 
         # Use thread pool for analysis
-        max_workers = min(len(kernel.raw_hdf_files), 3)
+        max_workers = min(len(kernel.source), 3)
 
         with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
             # Submit analysis tasks
             futures = []
-            for i in range(len(kernel.raw_hdf_files)):
+            for i in range(len(kernel.source)):
                 future = executor.submit(analyze_file, i)
                 futures.append(future)
 
@@ -476,7 +486,7 @@ class TestThreadingIntegration(unittest.TestCase):
                         result = {
                             "mean_g2": float(np.mean(g2_data)),
                             "n_q": int(g2_data.shape[0]),
-                            "n_tau": int(len(tau_data)),
+                            "n_tau": len(tau_data),
                         }
                         self.progress_updated.emit(100)
                         self.analysis_completed.emit(result)
@@ -665,9 +675,9 @@ class TestThreadingIntegration(unittest.TestCase):
     def test_resource_contention_handling(self):
         """Test handling of resource contention in concurrent operations."""
         kernel = ViewerKernel(self.temp_dir)
-        kernel.refresh_file_list()
+        kernel.build()
 
-        if len(kernel.raw_hdf_files) == 0:
+        if len(kernel.source) == 0:
             self.skipTest("No test files available")
 
         # Create high contention scenario
@@ -681,7 +691,7 @@ class TestThreadingIntegration(unittest.TestCase):
 
                 # Rapid file access
                 for i in range(5):
-                    file_idx = i % len(kernel.raw_hdf_files)
+                    file_idx = i % len(kernel.source)
 
                     # Load file
                     xf = kernel.load_xpcs_file(file_idx)
@@ -691,9 +701,7 @@ class TestThreadingIntegration(unittest.TestCase):
                     tau_data = xf.tau
 
                     # HDF5 direct access (potential contention)
-                    saxs_data = get(
-                        kernel.raw_hdf_files[file_idx], "/xpcs/multitau/saxs_1d"
-                    )
+                    saxs_data = get(kernel.source[file_idx], ["/xpcs/multitau/saxs_1d"])["/xpcs/multitau/saxs_1d"]
 
                     results.append(
                         {
@@ -751,7 +759,7 @@ class TestThreadingIntegration(unittest.TestCase):
         )
 
         # Verify operation consistency
-        for thread_id, results in contention_results:
+        for _thread_id, results in contention_results:
             for result in results:
                 if result["g2_shape"] is not None:
                     self.assertIsInstance(result["g2_shape"], tuple)

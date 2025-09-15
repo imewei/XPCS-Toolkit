@@ -4,6 +4,7 @@ This module tests system behavior under various resource exhaustion scenarios
 including memory, disk space, file handles, CPU, and network resources.
 """
 
+import contextlib
 import gc
 import os
 import time
@@ -21,6 +22,9 @@ from xpcs_toolkit.viewer_kernel import ViewerKernel
 from xpcs_toolkit.xpcs_file import MemoryMonitor, XpcsFile
 
 
+@pytest.mark.stress
+@pytest.mark.system_dependent
+@pytest.mark.slow
 class TestMemoryExhaustion:
     """Test behavior under memory exhaustion scenarios."""
 
@@ -236,6 +240,9 @@ class TestMemoryExhaustion:
             )
 
 
+@pytest.mark.stress
+@pytest.mark.system_dependent
+@pytest.mark.slow
 class TestDiskSpaceExhaustion:
     """Test behavior when disk space is exhausted."""
 
@@ -254,7 +261,7 @@ class TestDiskSpaceExhaustion:
                     large_data = np.random.rand(1000, 1000, 1000)  # ~8GB
                     f.create_dataset("huge_data", data=large_data)
 
-            except (OSError, IOError) as e:
+            except OSError as e:
                 # Expected when disk is full
                 assert any(
                     keyword in str(e).lower()
@@ -315,7 +322,7 @@ class TestDiskSpaceExhaustion:
                     modest_data = np.random.rand(100, 512, 512)  # ~200MB
                     f.create_dataset("data", data=modest_data)
 
-            except (OSError, IOError) as e:
+            except OSError as e:
                 # Expected when space is insufficient
                 assert any(
                     keyword in str(e).lower()
@@ -354,6 +361,8 @@ class TestDiskSpaceExhaustion:
             handler.close()
 
 
+@pytest.mark.stress
+@pytest.mark.system_dependent
 class TestFileHandleExhaustion:
     """Test behavior when file handle limits are reached."""
 
@@ -374,8 +383,7 @@ class TestFileHandleExhaustion:
                     if "too many open files" in str(e).lower():
                         # Reached the limit
                         break
-                    else:
-                        raise
+                    raise
 
             # System should handle file handle exhaustion
             assert len(open_files) <= max_files
@@ -383,10 +391,8 @@ class TestFileHandleExhaustion:
         finally:
             # Clean up open files
             for f in open_files:
-                try:
+                with contextlib.suppress(Exception):
                     f.close()
-                except Exception:
-                    pass
 
     def test_hdf5_connection_pool_handle_management(self, error_temp_dir):
         """Test HDF5 connection pool file handle management."""
@@ -442,7 +448,7 @@ class TestFileHandleExhaustion:
             local_results = []
             local_errors = []
 
-            for i in range(10):  # Each thread tries 10 file opens
+            for _i in range(10):  # Each thread tries 10 file opens
                 try:
                     with h5py.File(test_file, "r") as f:
                         shape = f["data"].shape
@@ -453,8 +459,7 @@ class TestFileHandleExhaustion:
                     if "too many open files" in str(e).lower():
                         local_errors.append(e)
                         break
-                    else:
-                        local_errors.append(e)
+                    local_errors.append(e)
 
             return local_results, local_errors
 
@@ -496,12 +501,12 @@ class TestFileHandleExhaustion:
             try:
                 # Inject random errors to test cleanup
                 if np.random.rand() < 0.3:  # 30% chance of artificial error
-                    raise IOError("Simulated I/O error")
+                    raise OSError("Simulated I/O error")
 
                 with h5py.File(file_path, "r") as f:
                     _ = f["data"].shape
 
-            except (IOError, OSError):
+            except OSError:
                 # Errors should not leak file descriptors
                 continue
 
@@ -512,6 +517,9 @@ class TestFileHandleExhaustion:
             assert fd_growth < 10  # Should not leak many descriptors
 
 
+@pytest.mark.stress
+@pytest.mark.performance
+@pytest.mark.slow
 class TestCPUResourceExhaustion:
     """Test behavior under CPU resource exhaustion."""
 
@@ -534,17 +542,26 @@ class TestCPUResourceExhaustion:
             f.attrs["analysis_type"] = "XPCS"
             # Add comprehensive XPCS structure
             f.create_dataset("/xpcs/multitau/normalized_g2", data=np.random.rand(5, 50))
-            f.create_dataset("/xpcs/temporal_mean/scattering_1d", data=np.random.rand(100))
+            f.create_dataset(
+                "/xpcs/temporal_mean/scattering_1d", data=np.random.rand(100)
+            )
             f.create_dataset("/xpcs/temporal_mean/scattering_2d", data=large_data)
             f.create_dataset("/entry/start_time", data="2023-01-01T00:00:00")
             f.create_dataset("/xpcs/multitau/config/avg_frame", data=1)
             f.create_dataset("/xpcs/multitau/delay_list", data=np.random.rand(50))
             f.create_dataset("/entry/instrument/detector_1/count_time", data=0.1)
-            f.create_dataset("/xpcs/temporal_mean/scattering_1d_segments", data=np.random.rand(10, 100))
-            f.create_dataset("/xpcs/multitau/normalized_g2_err", data=np.random.rand(5, 50))
+            f.create_dataset(
+                "/xpcs/temporal_mean/scattering_1d_segments",
+                data=np.random.rand(10, 100),
+            )
+            f.create_dataset(
+                "/xpcs/multitau/normalized_g2_err", data=np.random.rand(5, 50)
+            )
             f.create_dataset("/xpcs/multitau/config/stride_frame", data=1)
             f.create_dataset("/entry/instrument/detector_1/frame_time", data=0.01)
-            f.create_dataset("/xpcs/spatial_mean/intensity_vs_time", data=np.random.rand(1000))
+            f.create_dataset(
+                "/xpcs/spatial_mean/intensity_vs_time", data=np.random.rand(1000)
+            )
 
         try:
             xf = XpcsFile(cpu_file)
@@ -589,18 +606,39 @@ class TestCPUResourceExhaustion:
                     f.create_dataset("saxs_2d", data=np.random.rand(10, 50, 50))
                     f.attrs["analysis_type"] = "XPCS"
                     # Add comprehensive XPCS structure
-                    f.create_dataset("/xpcs/multitau/normalized_g2", data=np.random.rand(5, 50))
-                    f.create_dataset("/xpcs/temporal_mean/scattering_1d", data=np.random.rand(100))
-                    f.create_dataset("/xpcs/temporal_mean/scattering_2d", data=np.random.rand(10, 50, 50))
+                    f.create_dataset(
+                        "/xpcs/multitau/normalized_g2", data=np.random.rand(5, 50)
+                    )
+                    f.create_dataset(
+                        "/xpcs/temporal_mean/scattering_1d", data=np.random.rand(100)
+                    )
+                    f.create_dataset(
+                        "/xpcs/temporal_mean/scattering_2d",
+                        data=np.random.rand(10, 50, 50),
+                    )
                     f.create_dataset("/entry/start_time", data="2023-01-01T00:00:00")
                     f.create_dataset("/xpcs/multitau/config/avg_frame", data=1)
-                    f.create_dataset("/xpcs/multitau/delay_list", data=np.random.rand(50))
-                    f.create_dataset("/entry/instrument/detector_1/count_time", data=0.1)
-                    f.create_dataset("/xpcs/temporal_mean/scattering_1d_segments", data=np.random.rand(10, 50))
-                    f.create_dataset("/xpcs/multitau/normalized_g2_err", data=np.random.rand(5, 50))
+                    f.create_dataset(
+                        "/xpcs/multitau/delay_list", data=np.random.rand(50)
+                    )
+                    f.create_dataset(
+                        "/entry/instrument/detector_1/count_time", data=0.1
+                    )
+                    f.create_dataset(
+                        "/xpcs/temporal_mean/scattering_1d_segments",
+                        data=np.random.rand(10, 50),
+                    )
+                    f.create_dataset(
+                        "/xpcs/multitau/normalized_g2_err", data=np.random.rand(5, 50)
+                    )
                     f.create_dataset("/xpcs/multitau/config/stride_frame", data=1)
-                    f.create_dataset("/entry/instrument/detector_1/frame_time", data=0.01)
-                    f.create_dataset("/xpcs/spatial_mean/intensity_vs_time", data=np.random.rand(1000))
+                    f.create_dataset(
+                        "/entry/instrument/detector_1/frame_time", data=0.01
+                    )
+                    f.create_dataset(
+                        "/xpcs/spatial_mean/intensity_vs_time",
+                        data=np.random.rand(1000),
+                    )
                 test_files.append(file_path)
             except Exception:
                 continue
@@ -694,9 +732,16 @@ class TestCPUResourceExhaustion:
             )
 
 
+@pytest.mark.stress
+@pytest.mark.system_dependent
+@pytest.mark.flaky
 class TestNetworkResourceExhaustion:
     """Test behavior when network resources are exhausted."""
 
+    @pytest.mark.skipif(
+        not hasattr(__import__("socket"), "socket"),
+        reason="Network tests require socket support",
+    )
     def test_network_timeout_handling(self, error_temp_dir, resource_exhaustion):
         """Test handling of network timeouts and failures."""
         with resource_exhaustion.simulate_network_failure():
@@ -757,6 +802,9 @@ class TestNetworkResourceExhaustion:
                 assert success_count == 0  # All should fail under network failure
 
 
+@pytest.mark.stress
+@pytest.mark.error_handling
+@pytest.mark.system_dependent
 class TestResourceRecoveryMechanisms:
     """Test resource recovery and cleanup mechanisms."""
 

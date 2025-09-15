@@ -16,7 +16,7 @@ import threading
 import time
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any
 
 import h5py
 import numpy as np
@@ -48,10 +48,10 @@ class BenchmarkResult:
     min_time: float
     max_time: float
     rounds: int
-    memory_peak: Optional[float] = None
-    memory_delta: Optional[float] = None
+    memory_peak: float | None = None
+    memory_delta: float | None = None
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "name": self.name,
             "mean_time": self.mean_time,
@@ -235,7 +235,7 @@ def benchmark_baseline():
     """Load baseline performance metrics for comparison."""
     baseline_file = Path(__file__).parent / "config" / "baseline_performance.json"
     if baseline_file.exists():
-        with open(baseline_file, "r") as f:
+        with open(baseline_file) as f:
             return json.load(f)
     return {}
 
@@ -324,15 +324,14 @@ def pytest_runtest_setup(item):
         if available_memory < 4:  # Require at least 4GB free
             pytest.skip("Insufficient memory for memory intensive test")
 
-    if item.get_closest_marker("scalability"):
-        if not HAS_PROFILING:
-            pytest.skip("Profiling tools not available for scalability test")
+    if item.get_closest_marker("scalability") and not HAS_PROFILING:
+        pytest.skip("Profiling tools not available for scalability test")
 
 
 # Performance regression detection
 def compare_with_baseline(
-    benchmark_result: BenchmarkResult, baseline: Dict[str, Any]
-) -> Dict[str, Any]:
+    benchmark_result: BenchmarkResult, baseline: dict[str, Any]
+) -> dict[str, Any]:
     """Compare benchmark result with baseline performance."""
     if not baseline or benchmark_result.name not in baseline:
         return {
@@ -358,7 +357,7 @@ def compare_with_baseline(
             "current_time": benchmark_result.mean_time,
             "baseline_time": baseline_mean,
         }
-    elif performance_change < -0.1:  # 10% improvement
+    if performance_change < -0.1:  # 10% improvement
         return {
             "status": "improvement",
             "message": f"Performance improvement detected: {abs(performance_change):.2%} faster than baseline",
@@ -366,11 +365,10 @@ def compare_with_baseline(
             "current_time": benchmark_result.mean_time,
             "baseline_time": baseline_mean,
         }
-    else:
-        return {
-            "status": "stable",
-            "message": "Performance is stable compared to baseline",
-            "change_percent": performance_change,
-            "current_time": benchmark_result.mean_time,
-            "baseline_time": baseline_mean,
-        }
+    return {
+        "status": "stable",
+        "message": "Performance is stable compared to baseline",
+        "change_percent": performance_change,
+        "current_time": benchmark_result.mean_time,
+        "baseline_time": baseline_mean,
+    }

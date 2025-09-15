@@ -6,7 +6,7 @@ without requiring actual experimental data files.
 """
 
 from pathlib import Path
-from typing import Any, Dict, List, Tuple
+from typing import Any
 from unittest.mock import Mock
 
 import h5py
@@ -15,7 +15,7 @@ import numpy as np
 
 def generate_synthetic_g2_data(
     num_tau: int, num_q: int, decay_type: str = "single_exp"
-) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
     Generate synthetic G2 correlation data.
 
@@ -75,7 +75,7 @@ def generate_synthetic_g2_data(
 
 
 def generate_synthetic_saxs_data(
-    image_size: Tuple[int, int], pattern_type: str = "rings"
+    image_size: tuple[int, int], pattern_type: str = "rings"
 ) -> np.ndarray:
     """
     Generate synthetic 2D SAXS scattering data.
@@ -136,7 +136,7 @@ def generate_synthetic_saxs_data(
 
 
 def generate_synthetic_twotime_data(
-    num_frames: int, roi_size: Tuple[int, int]
+    num_frames: int, roi_size: tuple[int, int]
 ) -> np.ndarray:
     """
     Generate synthetic intensity time series for two-time correlation.
@@ -189,7 +189,7 @@ def generate_synthetic_twotime_data(
     return intensity_series.astype(np.uint16)
 
 
-def generate_synthetic_xpcs_file_list(num_files: int) -> List[Mock]:
+def generate_synthetic_xpcs_file_list(num_files: int) -> list[Mock]:
     """
     Generate a list of mock XPCS file objects for testing.
 
@@ -236,7 +236,7 @@ def generate_synthetic_xpcs_file_list(num_files: int) -> List[Mock]:
     return mock_files
 
 
-def create_synthetic_hdf5_file(filepath: Path, data_config: Dict[str, Any]) -> None:
+def create_synthetic_hdf5_file(filepath: Path, data_config: dict[str, Any]) -> None:
     """
     Create a synthetic HDF5 file with XPCS data structure.
 
@@ -306,7 +306,7 @@ def create_synthetic_hdf5_file(filepath: Path, data_config: Dict[str, Any]) -> N
         )
 
 
-def generate_performance_test_dataset(size_category: str) -> Dict[str, Any]:
+def generate_performance_test_dataset(size_category: str) -> dict[str, Any]:
     """
     Generate data configuration for performance testing.
 
@@ -356,7 +356,7 @@ def generate_performance_test_dataset(size_category: str) -> Dict[str, Any]:
     return size_configs.get(size_category, size_configs["medium"])
 
 
-def create_memory_stress_dataset(memory_target_mb: float) -> Dict[str, Any]:
+def create_memory_stress_dataset(memory_target_mb: float) -> dict[str, Any]:
     """
     Create dataset configuration targeting specific memory usage.
 
@@ -411,7 +411,7 @@ def create_memory_stress_dataset(memory_target_mb: float) -> Dict[str, Any]:
     return config
 
 
-def estimate_dataset_memory_usage(config: Dict[str, Any]) -> float:
+def estimate_dataset_memory_usage(config: dict[str, Any]) -> float:
     """
     Estimate memory usage of dataset configuration in MB.
 
@@ -451,7 +451,7 @@ def estimate_dataset_memory_usage(config: Dict[str, Any]) -> float:
 
 
 def create_correlation_test_data(
-    correlation_type: str, num_frames: int, roi_size: Tuple[int, int]
+    correlation_type: str, num_frames: int, roi_size: tuple[int, int]
 ) -> np.ndarray:
     """
     Create test data with specific correlation properties.
@@ -496,10 +496,7 @@ def create_correlation_test_data(
     elif correlation_type == "power_law":
         # Power law correlation
         for t in range(num_frames):
-            if t > 0:
-                correlation = t ** (-0.5)
-            else:
-                correlation = 1.0
+            correlation = t ** (-0.5) if t > 0 else 1.0
             fluctuation = correlation * np.random.normal(0, 0.3, (height, width))
             intensity_data[t] = base_level * (1 + fluctuation)
 
@@ -519,7 +516,7 @@ def create_correlation_test_data(
 
 # Validation functions
 def validate_synthetic_data(
-    data: np.ndarray, expected_properties: Dict[str, Any]
+    data: np.ndarray, expected_properties: dict[str, Any]
 ) -> bool:
     """
     Validate that synthetic data has expected properties.
@@ -557,10 +554,7 @@ def validate_synthetic_data(
                 return False
 
         # Check for NaN or infinite values
-        if np.any(np.isnan(data)) or np.any(np.isinf(data)):
-            return False
-
-        return True
+        return not (np.any(np.isnan(data)) or np.any(np.isinf(data)))
 
     except Exception:
         return False

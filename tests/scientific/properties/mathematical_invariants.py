@@ -13,14 +13,12 @@ The invariants cover:
 - General mathematical constraints
 """
 
-from typing import Optional, Tuple
-
 import numpy as np
 
 
 def verify_g2_normalization(
     g2_data: np.ndarray, tau: np.ndarray, tolerance: float = 1e-10
-) -> Tuple[bool, str]:
+) -> tuple[bool, str]:
     """
     Verify G2 normalization property: G2(τ=0) ≥ 1
 
@@ -58,7 +56,7 @@ def verify_g2_normalization(
 
 def verify_g2_monotonicity(
     g2_data: np.ndarray, tau: np.ndarray, allow_exceptions: float = 0.05
-) -> Tuple[bool, str]:
+) -> tuple[bool, str]:
     """
     Verify G2 monotonicity for simple exponential decay systems
 
@@ -98,7 +96,7 @@ def verify_g2_monotonicity(
 
 def verify_g2_asymptotic_behavior(
     g2_data: np.ndarray, tau: np.ndarray, baseline: float = 1.0, tolerance: float = 0.1
-) -> Tuple[bool, str]:
+) -> tuple[bool, str]:
     """
     Verify G2 asymptotic behavior: G2(τ→∞) → baseline
 
@@ -141,7 +139,7 @@ def verify_g2_asymptotic_behavior(
 
 def verify_g2_causality(
     g2_matrix: np.ndarray, tolerance: float = 1e-12
-) -> Tuple[bool, str]:
+) -> tuple[bool, str]:
     """
     Verify G2 causality principle through time-reversal symmetry
 
@@ -169,7 +167,7 @@ def verify_g2_causality(
 
 def verify_intensity_positivity(
     intensity: np.ndarray, min_value: float = 0.0
-) -> Tuple[bool, str]:
+) -> tuple[bool, str]:
     """
     Verify that scattering intensities are non-negative
 
@@ -196,7 +194,7 @@ def verify_intensity_positivity(
 
 def verify_form_factor_properties(
     q_values: np.ndarray, form_factor: np.ndarray, particle_type: str = "sphere"
-) -> Tuple[bool, str]:
+) -> tuple[bool, str]:
     """
     Verify form factor mathematical properties
 
@@ -234,7 +232,7 @@ def verify_form_factor_properties(
 
 def verify_correlation_matrix_properties(
     correlation_matrix: np.ndarray, tolerance: float = 1e-10
-) -> Tuple[bool, str]:
+) -> tuple[bool, str]:
     """
     Verify mathematical properties of correlation matrices
 
@@ -277,9 +275,9 @@ def verify_correlation_matrix_properties(
 def verify_power_law_scaling(
     x_values: np.ndarray,
     y_values: np.ndarray,
-    expected_exponent: Optional[float] = None,
+    expected_exponent: float | None = None,
     tolerance: float = 0.2,
-) -> Tuple[bool, str]:
+) -> tuple[bool, str]:
     """
     Verify power law scaling relationships: y ∝ x^α
 
@@ -345,7 +343,7 @@ def verify_power_law_scaling(
 
 def verify_diffusion_constraints(
     tau_values: np.ndarray, q_values: np.ndarray, diffusion_type: str = "brownian"
-) -> Tuple[bool, str]:
+) -> tuple[bool, str]:
     """
     Verify physical constraints for diffusion analysis
 
@@ -406,10 +404,10 @@ def verify_diffusion_constraints(
 
 def verify_statistical_moments(
     data: np.ndarray,
-    expected_mean: Optional[float] = None,
-    expected_var: Optional[float] = None,
+    expected_mean: float | None = None,
+    expected_var: float | None = None,
     tolerance: float = 0.1,
-) -> Tuple[bool, str]:
+) -> tuple[bool, str]:
     """
     Verify statistical moments of data distributions
 
@@ -454,7 +452,7 @@ def verify_conservation_laws(
     output_data: np.ndarray,
     conservation_type: str = "intensity",
     tolerance: float = 1e-6,
-) -> Tuple[bool, str]:
+) -> tuple[bool, str]:
     """
     Verify conservation laws in data processing
 
@@ -519,7 +517,7 @@ def generate_valid_g2_data(
 
         return baseline + beta * np.exp(-gamma * tau)
 
-    elif decay_type == "double_exponential":
+    if decay_type == "double_exponential":
         beta1 = kwargs.get("beta1", 0.5)
         gamma1 = kwargs.get("gamma1", 5000.0)
         beta2 = kwargs.get("beta2", 0.3)
@@ -528,7 +526,7 @@ def generate_valid_g2_data(
 
         return baseline + beta1 * np.exp(-gamma1 * tau) + beta2 * np.exp(-gamma2 * tau)
 
-    elif decay_type == "stretched":
+    if decay_type == "stretched":
         beta = kwargs.get("beta", 0.7)
         tau_char = kwargs.get("tau_char", 0.001)
         stretch_exp = kwargs.get("stretch_exp", 0.8)
@@ -536,8 +534,7 @@ def generate_valid_g2_data(
 
         return baseline + beta * np.exp(-((tau / tau_char) ** stretch_exp))
 
-    else:
-        raise ValueError(f"Unknown decay type: {decay_type}")
+    raise ValueError(f"Unknown decay type: {decay_type}")
 
 
 def generate_valid_intensity_data(
@@ -564,18 +561,17 @@ def generate_valid_intensity_data(
         form_factor = 3 * (np.sin(qR) - qR * np.cos(qR)) / (qR**3)
         return intensity_0 * form_factor**2
 
-    elif scattering_type == "power_law":
+    if scattering_type == "power_law":
         amplitude = kwargs.get("amplitude", 100.0)
         exponent = kwargs.get("exponent", 2.5)
         background = kwargs.get("background", 1.0)
 
         return amplitude * q_values ** (-exponent) + background
 
-    elif scattering_type == "guinier":
+    if scattering_type == "guinier":
         intensity_0 = kwargs.get("intensity_0", 1000.0)
         rg = kwargs.get("rg", 20.0)  # Radius of gyration
 
         return intensity_0 * np.exp(-(q_values**2) * rg**2 / 3)
 
-    else:
-        raise ValueError(f"Unknown scattering type: {scattering_type}")
+    raise ValueError(f"Unknown scattering type: {scattering_type}")
