@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 ################################################################################
 ## Form generated from reading UI file 'xpcs.ui'
 ##
@@ -40,7 +38,7 @@ from PySide6.QtWidgets import (
 from .plothandler import ImageViewDev, ImageViewPlotItem, MplCanvasBarV, PlotWidgetDev
 
 
-class Ui_mainWindow(object):
+class Ui_mainWindow:
     def setupUi(self, mainWindow):
         if not mainWindow.objectName():
             mainWindow.setObjectName("mainWindow")

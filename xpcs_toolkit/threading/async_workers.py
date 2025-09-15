@@ -10,9 +10,10 @@ from __future__ import annotations
 
 import time
 import traceback
+from collections.abc import Callable
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Callable, Tuple
+from typing import Any
 
 from PySide6 import QtCore
 from PySide6.QtCore import QObject, QRunnable, Signal, Slot
@@ -341,7 +342,7 @@ class BaseAsyncWorker(QRunnable):
 
         except Exception as e:
             # Handle any other exception
-            error_msg = f"Error in worker {self.worker_id}: {str(e)}"
+            error_msg = f"Error in worker {self.worker_id}: {e!s}"
             tb_str = traceback.format_exc()
             logger.error(f"{error_msg}\n{tb_str}")
             # Emit error signal with worker_id, error_message, traceback_string, retry_count (0)
@@ -356,8 +357,8 @@ class PlotWorker(BaseAsyncWorker):
     def __init__(
         self,
         plot_func: Callable,
-        plot_args: Tuple = (),
-        plot_kwargs: dict = None,
+        plot_args: tuple = (),
+        plot_kwargs: dict | None = None,
         worker_id: str | None = None,
     ):
         super().__init__(worker_id)
@@ -385,7 +386,7 @@ class DataLoadWorker(BaseAsyncWorker):
         self,
         load_func: Callable,
         file_paths: list,
-        load_kwargs: dict = None,
+        load_kwargs: dict | None = None,
         worker_id: str | None = None,
     ):
         super().__init__(worker_id)
@@ -433,7 +434,7 @@ class ComputationWorker(BaseAsyncWorker):
         data: Any,
         progress_callback: Callable | None = None,
         progress_interval: float = 1.0,
-        compute_kwargs: dict = None,
+        compute_kwargs: dict | None = None,
         worker_id: str | None = None,
     ):
         super().__init__(worker_id)

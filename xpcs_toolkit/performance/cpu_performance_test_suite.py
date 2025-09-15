@@ -34,12 +34,13 @@ import sys
 import threading
 import time
 import unittest
+from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from pathlib import Path
 from statistics import mean, stdev
 from tempfile import TemporaryDirectory
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any
 from unittest.mock import Mock
 
 import numpy as np
@@ -93,7 +94,7 @@ class PerformanceMetrics:
     latency_p95_ms: float
     latency_p99_ms: float
     error_rate_percent: float
-    additional_metrics: Dict[str, Any] = field(default_factory=dict)
+    additional_metrics: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -114,11 +115,11 @@ class CPUTestConfig:
     MIN_IO_THROUGHPUT_MB_SEC: float = 10.0
 
     # Scale test parameters
-    THREAD_COUNT_RANGE: List[int] = field(default_factory=lambda: [1, 2, 4, 8, 16, 32])
-    DATA_SIZE_RANGE: List[int] = field(
+    THREAD_COUNT_RANGE: list[int] = field(default_factory=lambda: [1, 2, 4, 8, 16, 32])
+    DATA_SIZE_RANGE: list[int] = field(
         default_factory=lambda: [100, 1000, 10000, 100000]
     )
-    CONCURRENT_OPERATION_RANGE: List[int] = field(
+    CONCURRENT_OPERATION_RANGE: list[int] = field(
         default_factory=lambda: [10, 50, 100, 500]
     )
 
@@ -176,7 +177,7 @@ class PerformanceMeasurement:
 
 def measure_latency_distribution(
     func: Callable, iterations: int = 1000
-) -> Dict[str, float]:
+) -> dict[str, float]:
     """Measure latency distribution for a function."""
     times = []
 
@@ -433,7 +434,7 @@ class MemoryPerformanceTests(unittest.TestCase):
     def test_cache_performance_optimization(self):
         """Test cache system performance."""
 
-        if not hasattr(AdvancedCache, "__call__"):
+        if not callable(AdvancedCache):
             self.skipTest("AdvancedCache not available")
 
         cache = AdvancedCache(max_size=10000, ttl_seconds=300)
@@ -526,7 +527,7 @@ class MemoryPerformanceTests(unittest.TestCase):
             # Allocate large amounts of memory
             large_objects = []
 
-            for i in range(100):
+            for _i in range(100):
                 # Create large numpy arrays
                 array = np.random.random((1000, 1000))
                 large_objects.append(array)
@@ -571,7 +572,7 @@ class MemoryPerformanceTests(unittest.TestCase):
                     get_signal_optimizer().emit_signal("leak_test", f"data_{i}")
 
                 # Cache operations
-                if hasattr(AdvancedCache, "__call__"):
+                if callable(AdvancedCache):
                     cache = AdvancedCache(max_size=1000)
                     cache.set(f"leak_key_{i}", np.random.random(100))
                     del cache  # Should clean up properly
@@ -689,7 +690,7 @@ class IOPerformanceTests(unittest.TestCase):
                 # Batch read operations
                 total_lines = 0
                 for file_path in files:
-                    with open(file_path, "r") as f:
+                    with open(file_path) as f:
                         total_lines += len(f.readlines())
 
                 return total_lines
@@ -840,7 +841,7 @@ class ScientificComputingPerformanceTests(unittest.TestCase):
     def test_fft_computation_performance(self):
         """Test FFT computation performance."""
 
-        def fft_operations(array_sizes: List[int], operation_count: int):
+        def fft_operations(array_sizes: list[int], operation_count: int):
             """Test FFT computation performance."""
             results = []
 
@@ -998,19 +999,21 @@ class EndToEndWorkflowTests(unittest.TestCase):
         results = {}
 
         for worker_count in worker_counts:
-            with PerformanceMeasurement(
-                f"concurrent_analysis_{worker_count}"
-            ) as measurement:
-                with ThreadPoolExecutor(max_workers=worker_count) as executor:
-                    futures = []
-                    for worker_id in range(worker_count):
-                        future = executor.submit(concurrent_analysis_worker, worker_id)
-                        futures.append(future)
+            with (
+                PerformanceMeasurement(
+                    f"concurrent_analysis_{worker_count}"
+                ) as measurement,
+                ThreadPoolExecutor(max_workers=worker_count) as executor,
+            ):
+                futures = []
+                for worker_id in range(worker_count):
+                    future = executor.submit(concurrent_analysis_worker, worker_id)
+                    futures.append(future)
 
-                    # Wait for all workers to complete
-                    worker_results = []
-                    for future in futures:
-                        worker_results.append(future.result())
+                # Wait for all workers to complete
+                worker_results = []
+                for future in futures:
+                    worker_results.append(future.result())
 
             metrics = measurement.get_metrics(worker_count)
             results[worker_count] = metrics
@@ -1033,11 +1036,11 @@ class EndToEndWorkflowTests(unittest.TestCase):
 class CPUPerformanceTestSuite:
     """Main test suite runner for CPU performance tests."""
 
-    def __init__(self, config: Optional[CPUTestConfig] = None):
+    def __init__(self, config: CPUTestConfig | None = None):
         self.config = config or CPUTestConfig()
-        self.test_results: Dict[str, Any] = {}
+        self.test_results: dict[str, Any] = {}
 
-    def run_all_tests(self) -> Dict[str, Any]:
+    def run_all_tests(self) -> dict[str, Any]:
         """Run all CPU performance tests."""
 
         test_classes = [
@@ -1076,7 +1079,7 @@ class CPUPerformanceTestSuite:
         self.test_results = all_results
         return all_results
 
-    def generate_performance_report(self) -> Dict[str, Any]:
+    def generate_performance_report(self) -> dict[str, Any]:
         """Generate comprehensive performance report."""
 
         report = {
@@ -1122,10 +1125,6 @@ if __name__ == "__main__":
     # Run the complete CPU performance test suite
     suite = CPUPerformanceTestSuite()
 
-    print("=" * 80)
-    print("XPCS Toolkit CPU Performance Test Suite")
-    print("=" * 80)
-
     # Run all tests
     results = suite.run_all_tests()
 
@@ -1134,16 +1133,6 @@ if __name__ == "__main__":
     suite.save_report(report_path)
 
     # Print summary
-    print("\n" + "=" * 80)
-    print("PERFORMANCE TEST SUMMARY")
-    print("=" * 80)
 
-    for class_name, result in results.items():
-        print(
-            f"{class_name:40} | Success: {result['success_rate']:.1f}% | "
-            f"Tests: {result['tests_run']} | Failures: {result['failures']} | "
-            f"Errors: {result['errors']}"
-        )
-
-    print("=" * 80)
-    print(f"Performance report saved to: {report_path}")
+    for _class_name, _result in results.items():
+        pass

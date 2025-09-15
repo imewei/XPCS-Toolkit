@@ -316,7 +316,7 @@ class DataCache:
         """Clear all cached data for a specific file."""
         with self._lock:
             keys_to_remove = [
-                key for key in self._cache.keys() if key.startswith(f"{file_path}:")
+                key for key in self._cache if key.startswith(f"{file_path}:")
             ]
             freed_memory = 0.0
 
@@ -476,10 +476,16 @@ def create_id(fname, label_style=None, simplify_flag=True):
     try:
         selection = [int(x.strip()) for x in label_style.split(",")]
         if not selection:
-            warnings.warn("Empty label_style selection. Returning simplified filename.")
+            warnings.warn(
+                "Empty label_style selection. Returning simplified filename.",
+                stacklevel=2,
+            )
             return fname
     except ValueError:
-        warnings.warn("Invalid label_style format. Must be comma-separated integers.")
+        warnings.warn(
+            "Invalid label_style format. Must be comma-separated integers.",
+            stacklevel=2,
+        )
         return fname
 
     segments = fname.split("_")
@@ -489,7 +495,9 @@ def create_id(fname, label_style=None, simplify_flag=True):
         if i < len(segments):
             selected_segments.append(segments[i])
         else:
-            warnings.warn(f"Index {i} out of range for segments {segments}")
+            warnings.warn(
+                f"Index {i} out of range for segments {segments}", stacklevel=2
+            )
 
     if not selected_segments:
         return fname  # fallback if nothing valid was selected
@@ -497,7 +505,7 @@ def create_id(fname, label_style=None, simplify_flag=True):
     return "_".join(selected_segments)
 
 
-class XpcsFile(object):
+class XpcsFile:
     """
     XpcsFile is a class that wraps an Xpcs analysis hdf file;
     """
@@ -542,7 +550,7 @@ class XpcsFile(object):
             # omit those to avoid lengthy output
             if key == "hdf_info":
                 continue
-            elif isinstance(val, np.ndarray) and val.size > 1:
+            if isinstance(val, np.ndarray) and val.size > 1:
                 val = str(val.shape)
             else:
                 val = str(val)
@@ -571,9 +579,10 @@ class XpcsFile(object):
         fields = ["saxs_1d", "Iqp", "Int_t", "t0", "t1", "start_time"]
 
         if "Multitau" in self.atype:
-            fields = fields + ["tau", "g2", "g2_err", "stride_frame", "avg_frame"]
+            fields = [*fields, "tau", "g2", "g2_err", "stride_frame", "avg_frame"]
         if "Twotime" in self.atype:
-            fields = fields + [
+            fields = [
+                *fields,
                 "c2_g2",
                 "c2_g2_segments",
                 "c2_processed_bins",
@@ -600,40 +609,50 @@ class XpcsFile(object):
         if "Multitau" in self.atype:
             # correct g2_err to avoid fitting divergence
             # ret['g2_err_mod'] = self.correct_g2_err(ret['g2_err'])
-            ret["g2_err"] = self.correct_g2_err(ret["g2_err"])
-            stride_frame = ret.pop("stride_frame")
-            avg_frame = ret.pop("avg_frame")
-            ret["t0"] = ret["t0"] * stride_frame * avg_frame
-            ret["t_el"] = ret["tau"] * ret["t0"]
-            ret["g2_t0"] = ret["t0"]
+            if "g2_err" in ret:
+                ret["g2_err"] = self.correct_g2_err(ret["g2_err"])
+            if "stride_frame" in ret and "avg_frame" in ret:
+                stride_frame = ret.pop("stride_frame")
+                avg_frame = ret.pop("avg_frame")
+                ret["t0"] = ret["t0"] * stride_frame * avg_frame
+                if "tau" in ret:
+                    ret["t_el"] = ret["tau"] * ret["t0"]
+                ret["g2_t0"] = ret["t0"]
 
         # Handle qmap reshaping with fallback for when qmap is a dict (minimal mode)
         if hasattr(self.qmap, "reshape_phi_analysis"):
-            ret["saxs_1d"] = self.qmap.reshape_phi_analysis(
-                ret["saxs_1d"], self.label, mode="saxs_1d"
-            )
-            ret["Iqp"] = self.qmap.reshape_phi_analysis(
-                ret["Iqp"], self.label, mode="stability"
-            )
+            if "saxs_1d" in ret:
+                ret["saxs_1d"] = self.qmap.reshape_phi_analysis(
+                    ret["saxs_1d"], self.label, mode="saxs_1d"
+                )
+            if "Iqp" in ret:
+                ret["Iqp"] = self.qmap.reshape_phi_analysis(
+                    ret["Iqp"], self.label, mode="stability"
+                )
         else:
             # Fallback for minimal qmap mode (when qmap is a dict)
-            ret["saxs_1d"] = (
-                np.array(ret["saxs_1d"])
-                if isinstance(ret["saxs_1d"], (list, np.ndarray))
-                and len(ret["saxs_1d"]) > 0
-                else ret["saxs_1d"]
-            )
-            ret["Iqp"] = (
-                np.array(ret["Iqp"])
-                if isinstance(ret["Iqp"], (list, np.ndarray)) and len(ret["Iqp"]) > 0
-                else ret["Iqp"]
-            )
+            if "saxs_1d" in ret:
+                ret["saxs_1d"] = (
+                    np.array(ret["saxs_1d"])
+                    if isinstance(ret["saxs_1d"], (list, np.ndarray))
+                    and len(ret["saxs_1d"]) > 0
+                    else ret["saxs_1d"]
+                )
+            if "Iqp" in ret:
+                ret["Iqp"] = (
+                    np.array(ret["Iqp"])
+                    if isinstance(ret["Iqp"], (list, np.ndarray))
+                    and len(ret["Iqp"]) > 0
+                    else ret["Iqp"]
+                )
 
         ret["abs_cross_section_scale"] = 1.0
         return ret
 
     def _load_saxs_data_batch(
-        self, use_memory_mapping: bool = None, chunk_processing: bool = None
+        self,
+        use_memory_mapping: bool | None = None,
+        chunk_processing: bool | None = None,
     ):
         """
         Enhanced SAXS 2D data loading with chunked processing and memory mapping support.
@@ -649,7 +668,7 @@ class XpcsFile(object):
             return
 
         # Check memory pressure before loading large data
-        memory_before_mb, available_mb = MemoryMonitor.get_memory_usage()
+        memory_before_mb, _available_mb = MemoryMonitor.get_memory_usage()
         memory_pressure = MemoryMonitor.get_memory_pressure()
 
         if memory_pressure > 0.85:
@@ -778,10 +797,9 @@ class XpcsFile(object):
         roi = saxs > 0
         if np.sum(roi) == 0:
             return np.zeros_like(saxs, dtype=np.uint8)
-        else:
-            min_val = np.min(saxs[roi])
-            saxs[~roi] = min_val
-            return np.log10(saxs).astype(np.float32)
+        min_val = np.min(saxs[roi])
+        saxs[~roi] = min_val
+        return np.log10(saxs).astype(np.float32)
 
     def _compute_saxs_log_chunked(
         self, saxs_data: np.ndarray, chunk_size: int = 1024
@@ -878,33 +896,31 @@ class XpcsFile(object):
         ]:
             return self.qmap.__dict__[key]
         # delayed loading of saxs_2d due to its large size - now using connection pool and batch loading
-        elif key == "saxs_2d":
+        if key == "saxs_2d":
             if not self._saxs_data_loaded:
                 self._load_saxs_data_batch()
             return self.saxs_2d_data
-        elif key == "saxs_2d_log":
+        if key == "saxs_2d_log":
             if not self._saxs_data_loaded:
                 self._load_saxs_data_batch()
             return self.saxs_2d_log_data
-        elif key == "Int_t_fft":
+        if key == "Int_t_fft":
             return self._compute_int_t_fft_cached()
-        elif key in self.__dict__:
+        if key in self.__dict__:
             return self.__dict__[key]
-        else:
-            # Raise AttributeError so hasattr() works correctly
-            raise AttributeError(
-                f"'{self.__class__.__name__}' object has no attribute '{key}'"
-            )
+        # Raise AttributeError so hasattr() works correctly
+        raise AttributeError(
+            f"'{self.__class__.__name__}' object has no attribute '{key}'"
+        )
 
     def get_info_at_position(self, x, y):
         x, y = int(x), int(y)
         shape = self.saxs_2d.shape
         if x < 0 or x >= shape[1] or y < 0 or y >= shape[0]:
             return None
-        else:
-            scat_intensity = self.saxs_2d[y, x]
-            qmap_info = self.qmap.get_qmap_at_pos(x, y)
-            return f"I={scat_intensity:.4e} {qmap_info}"
+        scat_intensity = self.saxs_2d[y, x]
+        qmap_info = self.qmap.get_qmap_at_pos(x, y)
+        return f"I={scat_intensity:.4e} {qmap_info}"
 
     def get_detector_extent(self):
         return self.qmap.extent
@@ -1015,10 +1031,7 @@ class XpcsFile(object):
     ):
         # emphasize the beamstop region which has qindex = 0;
         dqmap = np.copy(self.dqmap)
-        if scale == "log":
-            saxs = self.saxs_2d_log
-        else:
-            saxs = self.saxs_2d
+        saxs = self.saxs_2d_log if scale == "log" else self.saxs_2d
 
         if auto_crop:
             idx = np.nonzero(dqmap >= 1)
@@ -1054,43 +1067,40 @@ class XpcsFile(object):
         dq_processed = tuple(self.c2_processed_bins.tolist())
         assert selection >= 0 and selection < len(dq_processed), (
             f"selection {selection} out of range {dq_processed}"
-        )  # noqa: E501
+        )
         config = (selection, correct_diag, max_size)
         if self.c2_kwargs == config:
             return self.c2_all_data
-        else:
-            # Monitor memory for large two-time correlation data
-            memory_before_mb, _ = MemoryMonitor.get_memory_usage()
+        # Monitor memory for large two-time correlation data
+        memory_before_mb, _ = MemoryMonitor.get_memory_usage()
 
-            # Estimate memory needed for C2 data
-            estimated_mb = MemoryMonitor.estimate_array_memory(
-                (max_size, max_size), np.float64
-            )
+        # Estimate memory needed for C2 data
+        estimated_mb = MemoryMonitor.estimate_array_memory(
+            (max_size, max_size), np.float64
+        )
 
-            if estimated_mb > 500:  # Large C2 matrix
-                logger.info(f"Loading large C2 matrix: estimated {estimated_mb:.1f}MB")
+        if estimated_mb > 500:  # Large C2 matrix
+            logger.info(f"Loading large C2 matrix: estimated {estimated_mb:.1f}MB")
 
-            if MemoryMonitor.is_memory_pressure_high(threshold=0.75):
-                logger.warning(
-                    "High memory pressure before C2 loading, clearing caches"
-                )
-                self.clear_cache("saxs")
-            c2_result = get_single_c2_from_hdf(
-                self.fname,
-                selection=selection,
-                max_size=max_size,
-                t0=self.t0,
-                correct_diag=correct_diag,
-            )
-            self.c2_all_data = c2_result
-            self.c2_kwargs = config
+        if MemoryMonitor.is_memory_pressure_high(threshold=0.75):
+            logger.warning("High memory pressure before C2 loading, clearing caches")
+            self.clear_cache("saxs")
+        c2_result = get_single_c2_from_hdf(
+            self.fname,
+            selection=selection,
+            max_size=max_size,
+            t0=self.t0,
+            correct_diag=correct_diag,
+        )
+        self.c2_all_data = c2_result
+        self.c2_kwargs = config
 
-            # Log memory usage after C2 data loading
-            memory_after_mb, _ = MemoryMonitor.get_memory_usage()
-            memory_used = memory_after_mb - memory_before_mb
+        # Log memory usage after C2 data loading
+        memory_after_mb, _ = MemoryMonitor.get_memory_usage()
+        memory_used = memory_after_mb - memory_before_mb
 
-            if memory_used > 50:  # Log significant memory usage
-                logger.info(f"C2 data loaded: {memory_used:.1f}MB memory used")
+        if memory_used > 50:  # Log significant memory usage
+            logger.info(f"C2 data loaded: {memory_used:.1f}MB memory used")
 
         return c2_result
 
@@ -1113,7 +1123,7 @@ class XpcsFile(object):
 
     def get_fitting_info(self, mode="g2_fitting"):
         if self.fit_summary is None:
-            return "fitting is not ready for %s" % self.label
+            return f"fitting is not ready for {self.label}"
 
         if mode == "g2_fitting":
             result = self.fit_summary.copy()
@@ -1129,9 +1139,7 @@ class XpcsFile(object):
             for n in range(val.shape[0]):
                 temp = []
                 for m in range(len(prefix)):
-                    temp.append(
-                        "%s = %f ± %f" % (prefix[m], val[n, 0, m], val[n, 1, m])
-                    )
+                    temp.append(f"{prefix[m]} = {val[n, 0, m]:f} ± {val[n, 1, m]:f}")
                 msg.append(", ".join(temp))
             result["fit_val"] = np.array(msg)
 
@@ -1140,12 +1148,7 @@ class XpcsFile(object):
                 result = "tauq fitting is not available"
             else:
                 v = self.fit_summary["tauq_fit_val"]
-                result = "a = %e ± %e; b = %f ± %f" % (
-                    v[0, 0],
-                    v[1, 0],
-                    v[0, 1],
-                    v[1, 1],
-                )
+                result = f"a = {v[0, 0]:e} ± {v[1, 0]:e}; b = {v[0, 1]:f} ± {v[1, 1]:f}"
         else:
             raise ValueError("mode not supported.")
 
@@ -1292,7 +1295,7 @@ class XpcsFile(object):
         Optimized tau-q fitting with improved data filtering and caching.
         """
         if self.fit_summary is None:
-            return
+            return None
 
         # Generate cache key for tauq fitting
         cache_key = self._generate_cache_key("fit_tauq", q_range, bounds, fit_flag)
@@ -1472,7 +1475,7 @@ class XpcsFile(object):
             )
             return self.sqlist, saxs_roi
 
-        elif roi_parameter["sl_type"] == "Ring":
+        if roi_parameter["sl_type"] == "Ring":
             rmin, rmax = roi_parameter["radius"]
             if rmin > rmax:
                 rmin, rmax = rmax, rmin
@@ -1514,6 +1517,7 @@ class XpcsFile(object):
                 )
 
             return x, saxs_roi
+        return None
 
     def export_saxs1d(self, roi_list, folder):
         # export ROI
@@ -1646,7 +1650,7 @@ class XpcsFile(object):
                                 results["memory_saved_mb"] += saved_mb
 
                     except Exception as e:
-                        results["errors"].append(f"Failed to optimize {attr}: {str(e)}")
+                        results["errors"].append(f"Failed to optimize {attr}: {e!s}")
 
         return results
 
@@ -1743,12 +1747,11 @@ class XpcsFile(object):
                 self._computation_cache.clear()
                 logger.info(f"Cleared computation cache ({cache_size} items)")
 
-        if cache_type in ("all", "saxs"):
-            if self._saxs_data_loaded:
-                self.saxs_2d_data = None
-                self.saxs_2d_log_data = None
-                self._saxs_data_loaded = False
-                logger.info("Cleared SAXS 2D data cache")
+        if cache_type in ("all", "saxs") and self._saxs_data_loaded:
+            self.saxs_2d_data = None
+            self.saxs_2d_log_data = None
+            self._saxs_data_loaded = False
+            logger.info("Cleared SAXS 2D data cache")
 
         if cache_type in ("all", "fit"):
             if self.fit_summary is not None:

@@ -20,9 +20,10 @@ import threading
 import time
 import traceback
 from collections import defaultdict, deque
+from collections.abc import Callable
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Callable, Dict, Tuple
+from typing import Any
 
 import psutil
 from PySide6 import QtCore
@@ -210,7 +211,6 @@ class BaseAsyncWorker(QRunnable):
 
     def _cleanup(self):
         """Cleanup resources. Override in subclasses if needed."""
-        pass
 
     def _set_state(self, new_state: WorkerState):
         """Thread-safe state setter."""
@@ -258,8 +258,7 @@ class BaseAsyncWorker(QRunnable):
             memory_info = self._process.memory_info()
             memory_mb = memory_info.rss / (1024 * 1024)
 
-            if memory_mb > self._peak_memory:
-                self._peak_memory = memory_mb
+            self._peak_memory = max(self._peak_memory, memory_mb)
 
             self.signals.resource_usage.emit(self.worker_id, cpu_percent, memory_mb)
         except Exception as e:
@@ -289,7 +288,7 @@ class BaseAsyncWorker(QRunnable):
         # Weight recent rates more heavily
         weights = [2**i for i in range(len(recent_rates))]
         weighted_rate = sum(
-            rate * weight for rate, weight in zip(recent_rates, weights)
+            rate * weight for rate, weight in zip(recent_rates, weights, strict=False)
         ) / sum(weights)
 
         remaining = total - current
@@ -321,7 +320,7 @@ class BaseAsyncWorker(QRunnable):
         # Override in subclasses to implement caching
         return f"{self.__class__.__name__}_{self.worker_id}"
 
-    def _get_cached_result(self) -> Tuple[bool, Any]:
+    def _get_cached_result(self) -> tuple[bool, Any]:
         """Check for cached result. Returns (found, result)."""
         if not self.cache_results:
             return False, None
@@ -445,10 +444,9 @@ class BaseAsyncWorker(QRunnable):
             )
             self.emit_status(info_msg, 1)
             result = None  # No actual data
-        else:
-            # Cache successful result
-            if self.cache_results:
-                self._cache_result(result)
+        # Cache successful result
+        elif self.cache_results:
+            self._cache_result(result)
 
         # Create result object with metrics
         worker_result = WorkerResult(
@@ -472,7 +470,7 @@ class BaseAsyncWorker(QRunnable):
         """Handle operation error."""
         self._set_state(WorkerState.FAILED)
 
-        error_msg = f"Error in worker {self.worker_id}: {str(exception)}"
+        error_msg = f"Error in worker {self.worker_id}: {exception!s}"
         tb_str = traceback.format_exc()
         logger.error(f"{error_msg}\n{tb_str}")
 
@@ -499,7 +497,7 @@ class PlotWorker(BaseAsyncWorker):
         self,
         plot_func: Callable,
         plot_args: tuple = (),
-        plot_kwargs: dict = None,
+        plot_kwargs: dict | None = None,
         worker_id: str | None = None,
         priority: WorkerPriority = WorkerPriority.NORMAL,
         cache_results: bool = True,
@@ -559,7 +557,7 @@ class DataLoadWorker(BaseAsyncWorker):
         self,
         load_func: Callable,
         file_paths: list,
-        load_kwargs: dict = None,
+        load_kwargs: dict | None = None,
         worker_id: str | None = None,
         priority: WorkerPriority = WorkerPriority.NORMAL,
         max_retries: int = 2,
@@ -687,7 +685,7 @@ class ComputationWorker(BaseAsyncWorker):
         data: Any,
         progress_callback: Callable | None = None,
         progress_interval: float = 0.5,
-        compute_kwargs: dict = None,
+        compute_kwargs: dict | None = None,
         worker_id: str | None = None,
         priority: WorkerPriority = WorkerPriority.NORMAL,
         cache_results: bool = False,
@@ -722,7 +720,9 @@ class ComputationWorker(BaseAsyncWorker):
         """Generate cache key for computation results."""
         try:
             func_name = getattr(self.compute_func, "__name__", str(self.compute_func))
-            data_hash = hashlib.md5(pickle.dumps(self.data, protocol=2), usedforsecurity=False).hexdigest()[:8]
+            data_hash = hashlib.md5(
+                pickle.dumps(self.data, protocol=2), usedforsecurity=False
+            ).hexdigest()[:8]
             kwargs_hash = hashlib.md5(
                 pickle.dumps(self.compute_kwargs, protocol=2), usedforsecurity=False
             ).hexdigest()[:8]
@@ -899,9 +899,9 @@ class WorkerManager(QObject):
             self.thread_pool = thread_pool
 
         # Worker tracking
-        self.active_workers: Dict[str, BaseAsyncWorker] = {}
-        self.worker_results: Dict[str, WorkerResult] = {}
-        self.worker_errors: Dict[str, tuple] = {}
+        self.active_workers: dict[str, BaseAsyncWorker] = {}
+        self.worker_results: dict[str, WorkerResult] = {}
+        self.worker_errors: dict[str, tuple] = {}
         self.worker_stats = WorkerStats()
 
         # Register for optimized cleanup
@@ -920,7 +920,7 @@ class WorkerManager(QObject):
         self._resource_check_timer.start(5000)  # Check every 5 seconds
 
         # Result caching
-        self._result_cache: Dict[
+        self._result_cache: dict[
             str, tuple
         ] = {}  # cache_key -> (result, timestamp, ttl)
         self._cache_cleanup_timer = QTimer()
@@ -1066,7 +1066,7 @@ class WorkerManager(QObject):
         """Get count of currently active workers."""
         return len(self.active_workers)
 
-    def get_priority_queue_status(self) -> Dict[str, int]:
+    def get_priority_queue_status(self) -> dict[str, int]:
         """Get status of priority queues if using enhanced thread pool."""
         if isinstance(self.thread_pool, EnhancedThreadPool):
             with self.thread_pool._queue_mutex:
@@ -1077,7 +1077,7 @@ class WorkerManager(QObject):
         return {}
 
     def set_resource_limits(
-        self, max_memory_mb: float = None, max_cpu_percent: float = None
+        self, max_memory_mb: float | None = None, max_cpu_percent: float | None = None
     ):
         """Set resource limits for worker submission."""
         if max_memory_mb is not None:
@@ -1212,7 +1212,7 @@ class WorkerManager(QObject):
         timestamp = time.time()
         self._result_cache[cache_key] = (result, timestamp, ttl)
 
-    def _get_cached_result(self, cache_key: str) -> Tuple[bool, Any]:
+    def _get_cached_result(self, cache_key: str) -> tuple[bool, Any]:
         """Get cached result if valid. Returns (found, result)."""
         if cache_key not in self._result_cache:
             return False, None
@@ -1229,7 +1229,7 @@ class WorkerManager(QObject):
         current_time = time.time()
         expired_keys = []
 
-        for key, (result, timestamp, ttl) in self._result_cache.items():
+        for key, (_result, timestamp, ttl) in self._result_cache.items():
             if current_time - timestamp > ttl:
                 expired_keys.append(key)
 

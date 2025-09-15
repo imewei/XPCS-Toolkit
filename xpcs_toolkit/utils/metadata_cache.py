@@ -13,7 +13,7 @@ import threading
 import time
 from collections import OrderedDict
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Set
+from typing import Any
 
 import numpy as np
 
@@ -32,8 +32,8 @@ class FileMetadata:
     file_size: int
     file_mtime: float
     analysis_type: str
-    metadata_dict: Dict[str, Any]
-    large_datasets: List[Dict[str, Any]]
+    metadata_dict: dict[str, Any]
+    large_datasets: list[dict[str, Any]]
     cached_at: float = field(default_factory=time.time)
     access_count: int = 0
 
@@ -60,13 +60,13 @@ class QMapData:
     """Cached Q-map data with detector geometry."""
 
     file_path: str
-    qmap_params: Dict[str, Any]
+    qmap_params: dict[str, Any]
     sqmap: np.ndarray
     dqmap: np.ndarray
     sqlist: np.ndarray
     dqlist: np.ndarray
     mask: np.ndarray
-    geometry_params: Dict[str, float]
+    geometry_params: dict[str, float]
     cached_at: float = field(default_factory=time.time)
     checksum: str = ""
 
@@ -94,7 +94,7 @@ class PrefetchRequest:
     """Request for prefetching data."""
 
     file_path: str
-    data_types: List[str]
+    data_types: list[str]
     priority: int = 1  # Higher = more important
     requested_at: float = field(default_factory=time.time)
 
@@ -132,12 +132,12 @@ class MetadataCache:
         self._qmap_keys: OrderedDict[str, str] = OrderedDict()  # file_path -> cache_key
 
         # Access pattern tracking
-        self._access_patterns: Dict[str, List[float]] = {}  # file_path -> access_times
-        self._file_relationships: Dict[str, Set[str]] = {}  # file_path -> related_files
+        self._access_patterns: dict[str, list[float]] = {}  # file_path -> access_times
+        self._file_relationships: dict[str, set[str]] = {}  # file_path -> related_files
 
         # Prefetch queue
-        self._prefetch_queue: List[PrefetchRequest] = []
-        self._prefetch_thread: Optional[threading.Thread] = None
+        self._prefetch_queue: list[PrefetchRequest] = []
+        self._prefetch_thread: threading.Thread | None = None
         self._prefetch_stop_event = threading.Event()
 
         if self._enable_prefetch:
@@ -194,7 +194,7 @@ class MetadataCache:
         # Check if metadata is already cached
         if "metadata" in request.data_types:
             metadata_key = self._generate_metadata_key(request.file_path)
-            cached_metadata, found = self._cache.get(metadata_key)
+            _cached_metadata, found = self._cache.get(metadata_key)
             if not found:
                 logger.debug(f"Prefetching metadata for {request.file_path}")
                 # This would trigger actual metadata loading - simplified here
@@ -204,11 +204,13 @@ class MetadataCache:
         """Generate cache key for file metadata."""
         return f"metadata:{hashlib.md5(file_path.encode(), usedforsecurity=False).hexdigest()}"
 
-    def _generate_qmap_key(self, file_path: str, params: Dict[str, Any]) -> str:
+    def _generate_qmap_key(self, file_path: str, params: dict[str, Any]) -> str:
         """Generate cache key for Q-map data."""
         # Include file path and relevant parameters
-        key_data = f"{file_path}:{str(sorted(params.items()))}"
-        return f"qmap:{hashlib.md5(key_data.encode(), usedforsecurity=False).hexdigest()}"
+        key_data = f"{file_path}:{sorted(params.items())!s}"
+        return (
+            f"qmap:{hashlib.md5(key_data.encode(), usedforsecurity=False).hexdigest()}"
+        )
 
     def _record_access(self, file_path: str):
         """Record file access for pattern analysis."""
@@ -226,7 +228,7 @@ class MetadataCache:
                 t for t in self._access_patterns[file_path] if t > cutoff_time
             ]
 
-    def _predict_related_files(self, file_path: str) -> List[str]:
+    def _predict_related_files(self, file_path: str) -> list[str]:
         """Predict related files based on naming patterns and directory structure."""
         related_files = []
 
@@ -237,7 +239,7 @@ class MetadataCache:
             # Look for files with similar patterns
             if os.path.exists(file_dir):
                 for filename in os.listdir(file_dir):
-                    if filename.endswith(".hdf") or filename.endswith(".h5"):
+                    if filename.endswith((".hdf", ".h5")):
                         # Simple pattern matching - could be more sophisticated
                         base_pattern = (
                             file_name.split("_")[0]
@@ -258,7 +260,7 @@ class MetadataCache:
 
     def get_file_metadata(
         self, file_path: str, force_refresh: bool = False
-    ) -> Optional[FileMetadata]:
+    ) -> FileMetadata | None:
         """
         Get cached file metadata with automatic invalidation.
 
@@ -289,9 +291,8 @@ class MetadataCache:
                     self._schedule_related_prefetch(file_path)
 
                     return cached_metadata
-                else:
-                    # Invalid metadata, remove from cache
-                    self._cache.invalidate(cache_key)
+                # Invalid metadata, remove from cache
+                self._cache.invalidate(cache_key)
 
         logger.debug(f"Metadata cache miss: {file_path}")
         return None
@@ -322,7 +323,7 @@ class MetadataCache:
 
                 # Enforce entry limits
                 while len(self._metadata_keys) > self._max_metadata_entries:
-                    old_path, old_key = self._metadata_keys.popitem(last=False)
+                    _old_path, old_key = self._metadata_keys.popitem(last=False)
                     self._cache.invalidate(old_key)
 
             logger.debug(f"Cached metadata for {file_path}")
@@ -330,8 +331,8 @@ class MetadataCache:
             logger.warning(f"Failed to cache metadata for {file_path}")
 
     def get_qmap_data(
-        self, file_path: str, params: Dict[str, Any], force_refresh: bool = False
-    ) -> Optional[QMapData]:
+        self, file_path: str, params: dict[str, Any], force_refresh: bool = False
+    ) -> QMapData | None:
         """
         Get cached Q-map data.
 
@@ -359,12 +360,11 @@ class MetadataCache:
                 if cached_qmap.verify_integrity():
                     logger.debug(f"Q-map cache hit: {file_path}")
                     return cached_qmap
-                else:
-                    # Data corruption detected, remove from cache
-                    logger.warning(
-                        f"Q-map data corruption detected, removing from cache: {file_path}"
-                    )
-                    self._cache.invalidate(cache_key)
+                # Data corruption detected, remove from cache
+                logger.warning(
+                    f"Q-map data corruption detected, removing from cache: {file_path}"
+                )
+                self._cache.invalidate(cache_key)
 
         logger.debug(f"Q-map cache miss: {file_path}")
         return None
@@ -372,7 +372,7 @@ class MetadataCache:
     def put_qmap_data(
         self,
         file_path: str,
-        params: Dict[str, Any],
+        params: dict[str, Any],
         qmap_data: QMapData,
         ttl_seconds: float = 14400.0,
     ):  # 4 hours default TTL
@@ -404,7 +404,7 @@ class MetadataCache:
 
                 # Enforce entry limits
                 while len(self._qmap_keys) > self._max_qmap_entries:
-                    old_path, old_key = self._qmap_keys.popitem(last=False)
+                    _old_path, old_key = self._qmap_keys.popitem(last=False)
                     self._cache.invalidate(old_key)
 
             # Estimate data size for logging
@@ -484,7 +484,7 @@ class MetadataCache:
 
         return invalidated_count
 
-    def warm_cache(self, file_paths: List[str], data_types: List[str] = None):
+    def warm_cache(self, file_paths: list[str], data_types: list[str] | None = None):
         """
         Warm cache by prefetching data for multiple files.
 
@@ -513,7 +513,7 @@ class MetadataCache:
 
         logger.info(f"Scheduled cache warming for {len(file_paths)} files")
 
-    def get_cache_statistics(self) -> Dict[str, Any]:
+    def get_cache_statistics(self) -> dict[str, Any]:
         """Get comprehensive cache statistics."""
         with self._lock:
             base_stats = self._cache.get_stats()
@@ -610,7 +610,7 @@ class MetadataCache:
 
 
 # Global metadata cache instance
-_global_metadata_cache: Optional[MetadataCache] = None
+_global_metadata_cache: MetadataCache | None = None
 
 
 def get_metadata_cache(enable_prefetch: bool = True) -> MetadataCache:

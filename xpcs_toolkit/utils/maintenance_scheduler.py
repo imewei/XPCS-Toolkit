@@ -22,9 +22,10 @@ import statistics
 import threading
 import time
 from collections import defaultdict, deque
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any
 
 from PySide6.QtCore import QObject, QTimer, Signal
 
@@ -87,14 +88,14 @@ class MaintenanceTask:
     next_run: float = 0.0
 
     # Conditions
-    conditions: Dict[str, Any] = field(default_factory=dict)
+    conditions: dict[str, Any] = field(default_factory=dict)
     max_runtime_seconds: float = 300.0  # 5 minutes max
 
     # Results tracking
     success_count: int = 0
     failure_count: int = 0
     average_runtime: float = 0.0
-    last_error: Optional[str] = None
+    last_error: str | None = None
 
     def __lt__(self, other) -> bool:
         """For priority queue ordering."""
@@ -112,10 +113,10 @@ class MaintenanceResult:
     success: bool
     runtime_seconds: float
     message: str
-    details: Dict[str, Any] = field(default_factory=dict)
+    details: dict[str, Any] = field(default_factory=dict)
     timestamp: float = field(default_factory=time.time)
-    actions_taken: List[str] = field(default_factory=list)
-    recommendations: List[str] = field(default_factory=list)
+    actions_taken: list[str] = field(default_factory=list)
+    recommendations: list[str] = field(default_factory=list)
 
 
 class MaintenanceScheduler(QObject):
@@ -145,13 +146,13 @@ class MaintenanceScheduler(QObject):
         self._lock = threading.RLock()
 
         # Task management
-        self._tasks: Dict[str, MaintenanceTask] = {}
-        self._task_queue: List[MaintenanceTask] = []  # Priority queue
-        self._running_tasks: Dict[str, threading.Thread] = {}
+        self._tasks: dict[str, MaintenanceTask] = {}
+        self._task_queue: list[MaintenanceTask] = []  # Priority queue
+        self._running_tasks: dict[str, threading.Thread] = {}
 
         # Results tracking
         self._results_history: deque[MaintenanceResult] = deque(maxlen=1000)
-        self._last_maintenance_times: Dict[str, float] = {}
+        self._last_maintenance_times: dict[str, float] = {}
 
         # System monitoring
         self._health_monitor = get_health_monitor()
@@ -163,7 +164,7 @@ class MaintenanceScheduler(QObject):
 
         # Performance tracking
         self._system_load_history: deque = deque(maxlen=100)
-        self._maintenance_stats: Dict[str, Dict[str, float]] = defaultdict(
+        self._maintenance_stats: dict[str, dict[str, float]] = defaultdict(
             lambda: defaultdict(float)
         )
 
@@ -249,7 +250,7 @@ class MaintenanceScheduler(QObject):
         task = self._tasks[task_id]
         return self._run_maintenance_task(task)
 
-    def get_maintenance_report(self) -> Dict[str, Any]:
+    def get_maintenance_report(self) -> dict[str, Any]:
         """
         Get comprehensive maintenance report.
 
@@ -342,7 +343,7 @@ class MaintenanceScheduler(QObject):
                 with self._lock:
                     heapq.heappush(self._task_queue, task)
 
-    def _check_health_triggers(self) -> List[MaintenanceTask]:
+    def _check_health_triggers(self) -> list[MaintenanceTask]:
         """Check for maintenance tasks triggered by health conditions."""
         triggered_tasks = []
 
@@ -801,7 +802,7 @@ class MaintenanceScheduler(QObject):
 
 
 # Global instance
-_maintenance_scheduler_instance: Optional[MaintenanceScheduler] = None
+_maintenance_scheduler_instance: MaintenanceScheduler | None = None
 _scheduler_lock = threading.Lock()
 
 

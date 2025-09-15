@@ -12,8 +12,9 @@ import functools
 import io
 import pstats
 import time
+from collections.abc import Callable
 from contextlib import contextmanager
-from typing import Any, Callable
+from typing import Any
 
 import numpy as np
 
@@ -172,35 +173,15 @@ class PerformanceProfiler:
         summary = self.get_performance_summary()
 
         if not summary:
-            print("No profiling data available.")
             return
-
-        print("\n" + "=" * 80)
-        print("PERFORMANCE PROFILING REPORT")
-        print("=" * 80)
 
         # Sort functions by total time
         sorted_funcs = sorted(
             summary.items(), key=lambda x: x[1]["total_time"], reverse=True
         )
 
-        print(
-            f"{'Function':<30} {'Calls':<8} {'Total(s)':<10} {'Avg(s)':<10} {'Max(s)':<10}"
-        )
-        print("-" * 80)
-
-        for func_name, stats in sorted_funcs:
-            print(
-                f"{func_name:<30} {stats['call_count']:<8} "
-                f"{stats['total_time']:<10.3f} {stats['average_time']:<10.6f} "
-                f"{stats['max_time']:<10.6f}"
-            )
-
-        print("-" * 80)
-        print(f"Total profiled functions: {len(summary)}")
-        print(
-            f"Total execution time: {sum(s['total_time'] for s in summary.values()):.3f}s"
-        )
+        for _func_name, _stats in sorted_funcs:
+            pass
 
     def get_bottlenecks(self, threshold: float = 0.1) -> list[str]:
         """
@@ -394,8 +375,6 @@ if __name__ == "__main__":
 
     # Identify bottlenecks
     bottlenecks = profiler.get_bottlenecks(0.05)
-    print(f"\nBottlenecks: {bottlenecks}")
 
     # Benchmark example
     benchmark_results = benchmark_function(example_fast_function, iterations=100)
-    print(f"\nBenchmark results: {benchmark_results}")

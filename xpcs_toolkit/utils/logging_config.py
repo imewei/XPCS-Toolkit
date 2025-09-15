@@ -30,7 +30,7 @@ import os
 import sys
 import threading
 from pathlib import Path
-from typing import Any, Dict, Union
+from typing import Any
 
 from .log_formatters import (
     ColoredConsoleFormatter,
@@ -50,7 +50,7 @@ class LoggingConfig:
         if cls._instance is None:
             with cls._lock:
                 if cls._instance is None:
-                    cls._instance = super(LoggingConfig, cls).__new__(cls)
+                    cls._instance = super().__new__(cls)
         return cls._instance
 
     def __init__(self):
@@ -75,7 +75,19 @@ class LoggingConfig:
         self.log_dir = Path(os.environ.get("PYXPCS_LOG_DIR", default_log_dir))
 
         # Create log directory if it doesn't exist
-        self.log_dir.mkdir(parents=True, exist_ok=True)
+        try:
+            self.log_dir.mkdir(parents=True, exist_ok=True)
+        except (OSError, PermissionError):
+            # Fall back to default directory if the requested directory cannot be created
+            self.log_dir = Path(default_log_dir)
+            try:
+                self.log_dir.mkdir(parents=True, exist_ok=True)
+            except (OSError, PermissionError):
+                # Final fallback to temp directory
+                import tempfile
+
+                self.log_dir = Path(tempfile.gettempdir()) / "xpcs_toolkit_logs"
+                self.log_dir.mkdir(parents=True, exist_ok=True)
 
         # Log file configuration
         default_log_file = self.log_dir / "xpcs_toolkit.log"
@@ -219,7 +231,7 @@ class LoggingConfig:
         )
         config_logger.debug(f"Backup count: {self.backup_count}")
 
-    def get_logger_info(self) -> Dict[str, Any]:
+    def get_logger_info(self) -> dict[str, Any]:
         """Get current logging configuration info."""
         return {
             "log_level": logging.getLevelName(self.log_level),
@@ -233,7 +245,7 @@ class LoggingConfig:
             "app_version": self.app_version,
         }
 
-    def update_log_level(self, level: Union[str, int]):
+    def update_log_level(self, level: str | int):
         """Update the log level for all handlers."""
         if isinstance(level, str):
             level = getattr(logging, level.upper(), logging.INFO)
@@ -264,7 +276,7 @@ def initialize_logging() -> LoggingConfig:
     return _config
 
 
-def get_logger(name: str = None) -> logging.Logger:
+def get_logger(name: str | None = None) -> logging.Logger:
     """
     Get a configured logger instance.
 
@@ -296,7 +308,7 @@ def get_logging_config() -> LoggingConfig:
 # Note: reset_logging_config and get_log_directory are defined later with enhanced functionality
 
 
-def set_log_level(level: Union[str, int]):
+def set_log_level(level: str | int):
     """
     Set the logging level globally.
 
@@ -392,7 +404,7 @@ def setup_exception_logging():
 
 
 # Compatibility function for existing code
-def setup_logging(level: Union[str, int] = None) -> logging.Logger:
+def setup_logging(level: str | int | None = None) -> logging.Logger:
     """
     Setup logging with optional level override.
 

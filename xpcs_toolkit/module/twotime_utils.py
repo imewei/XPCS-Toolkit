@@ -2,10 +2,10 @@ from __future__ import annotations
 
 # Standard library imports
 import multiprocessing as mp
+from collections.abc import Callable
 from concurrent.futures import ProcessPoolExecutor
 from functools import lru_cache
 from multiprocessing import Pool
-from typing import Callable
 
 # Third-party imports
 import h5py
@@ -120,7 +120,7 @@ def get_shared_array(name: str) -> np.ndarray | None:
 def cleanup_shared_arrays():
     """Clean up all shared memory arrays."""
     global _shared_arrays
-    for name, (shm, array) in _shared_arrays.items():
+    for name, (shm, _array) in _shared_arrays.items():
         try:
             shm.close()
             shm.unlink()
@@ -175,7 +175,7 @@ def read_single_c2_enhanced(args: tuple) -> tuple[np.ndarray, int, str]:
         return c2, sampling_rate, "success"
 
     except Exception as e:
-        error_msg = f"Error reading {index_str}: {str(e)}"
+        error_msg = f"Error reading {index_str}: {e!s}"
         logger.error(error_msg)
         return None, 0, error_msg
 
@@ -337,8 +337,7 @@ def get_all_c2_from_hdf(
         for idx in idxlist:
             if dq_selection is not None and int(idx[4:]) not in dq_selection:
                 continue
-            else:
-                idx_toload.append(idx)
+            idx_toload.append(idx)
             if max_c2_num > 0 and len(idx_toload) > max_c2_num:
                 break
 
@@ -357,11 +356,11 @@ def get_all_c2_from_hdf(
             result = [read_single_c2(args) for args in args_list]
 
     c2_all = np.array([res[0] for res in result])
-    sampling_rate_all = set([res[1] for res in result])
+    sampling_rate_all = {res[1] for res in result}
     assert len(sampling_rate_all) == 1, (
         f"Sampling rate not consistent {sampling_rate_all}"
     )
-    sampling_rate = list(sampling_rate_all)[0]
+    sampling_rate = next(iter(sampling_rate_all))
     c2_result = {
         "c2_all": c2_all,
         "delta_t": 1.0 * sampling_rate,  # put absolute time in xpcs_file
@@ -413,8 +412,7 @@ def get_all_c2_from_hdf_enhanced(
             for idx in idxlist:
                 if dq_selection is not None and int(idx[4:]) not in dq_selection:
                     continue
-                else:
-                    idx_toload.append(idx)
+                idx_toload.append(idx)
                 if max_c2_num > 0 and len(idx_toload) >= max_c2_num:
                     break
 
@@ -479,7 +477,7 @@ def get_all_c2_from_hdf_enhanced(
             sampling_rate = rate_counts.most_common(1)[0][0]
             logger.info(f"Using most common sampling rate: {sampling_rate}")
         else:
-            sampling_rate = list(unique_rates)[0]
+            sampling_rate = next(iter(unique_rates))
 
         # Convert to numpy array
         c2_all = np.array(c2_matrices)
@@ -586,7 +584,7 @@ def get_c2_stream(full_path, max_size=-1):
 
     def generator():
         for idx in idxlist:  # Use idxlist for iteration
-            c2, sampling_rate = read_single_c2((full_path, idx, max_size, False))
+            c2, _sampling_rate = read_single_c2((full_path, idx, max_size, False))
             yield int(idx[3:]), c2
 
     return idxlist, generator()
@@ -683,14 +681,14 @@ def optimized_c2_sampling(c2_matrix, target_size, method="bilinear"):
         step = current_size // target_size
         return c2_matrix[::step, ::step]
 
-    elif method == "bilinear":
+    if method == "bilinear":
         # Bilinear interpolation using vectorized operations
         from scipy.ndimage import zoom
 
         zoom_factor = target_size / current_size
         return zoom(c2_matrix, zoom_factor, order=1)
 
-    elif method == "adaptive":
+    if method == "adaptive":
         # Adaptive sampling preserving important features
         # Use block averaging for better feature preservation
         block_size = current_size // target_size

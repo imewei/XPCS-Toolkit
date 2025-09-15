@@ -15,7 +15,7 @@ import threading
 import time
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from PySide6.QtCore import QObject, QTimer, Signal
 
@@ -58,15 +58,15 @@ class EcosystemStatus:
 
     state: EcosystemState = EcosystemState.STOPPED
     uptime_seconds: float = 0.0
-    components_active: Dict[str, bool] = field(default_factory=dict)
-    last_health_check: Optional[float] = None
+    components_active: dict[str, bool] = field(default_factory=dict)
+    last_health_check: float | None = None
     performance_score: float = 0.0
     active_alerts: int = 0
     critical_issues: int = 0
     total_workflows_profiled: int = 0
     total_bottlenecks_found: int = 0
     total_maintenance_tasks: int = 0
-    last_error: Optional[str] = None
+    last_error: str | None = None
 
 
 class OptimizationEcosystem(QObject):
@@ -88,22 +88,22 @@ class OptimizationEcosystem(QObject):
         super().__init__()
 
         self._state = EcosystemState.STOPPED
-        self._start_time: Optional[float] = None
+        self._start_time: float | None = None
         self._lock = threading.RLock()
 
         # Component references
-        self._health_monitor: Optional[OptimizationHealthMonitor] = None
-        self._dashboard: Optional[PerformanceDashboard] = None
-        self._maintenance_scheduler: Optional[MaintenanceScheduler] = None
-        self._alert_system: Optional[AlertSystem] = None
-        self._workflow_profiler: Optional[WorkflowProfiler] = None
-        self._bottleneck_analyzer: Optional[CPUBottleneckAnalyzer] = None
-        self._pattern_miner: Optional[UsagePatternMiner] = None
-        self._report_generator: Optional[WorkflowOptimizationReportGenerator] = None
+        self._health_monitor: OptimizationHealthMonitor | None = None
+        self._dashboard: PerformanceDashboard | None = None
+        self._maintenance_scheduler: MaintenanceScheduler | None = None
+        self._alert_system: AlertSystem | None = None
+        self._workflow_profiler: WorkflowProfiler | None = None
+        self._bottleneck_analyzer: CPUBottleneckAnalyzer | None = None
+        self._pattern_miner: UsagePatternMiner | None = None
+        self._report_generator: WorkflowOptimizationReportGenerator | None = None
 
         # Status tracking
         self._status = EcosystemStatus()
-        self._update_timer: Optional[QTimer] = None
+        self._update_timer: QTimer | None = None
 
         logger.info("Optimization ecosystem initialized")
 
@@ -166,10 +166,9 @@ class OptimizationEcosystem(QObject):
                     self._start_status_updates()
                     logger.info("Optimization ecosystem started successfully")
                     return True
-                else:
-                    self._set_state(EcosystemState.ERROR)
-                    logger.error("Failed to start optimization ecosystem")
-                    return False
+                self._set_state(EcosystemState.ERROR)
+                logger.error("Failed to start optimization ecosystem")
+                return False
 
         except Exception as e:
             logger.error(f"Error starting ecosystem: {e}")
@@ -217,9 +216,9 @@ class OptimizationEcosystem(QObject):
 
     def get_comprehensive_report(
         self,
-        output_file: Optional[str] = None,
+        output_file: str | None = None,
         format: ReportFormat = ReportFormat.JSON,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Generate comprehensive optimization ecosystem report.
 
@@ -322,7 +321,7 @@ class OptimizationEcosystem(QObject):
             logger.error(f"Error generating comprehensive report: {e}")
             return {"error": str(e), "timestamp": time.time()}
 
-    def run_maintenance_cycle(self, force: bool = False) -> List[MaintenanceResult]:
+    def run_maintenance_cycle(self, force: bool = False) -> list[MaintenanceResult]:
         """
         Run a complete maintenance cycle across all systems.
 
@@ -362,7 +361,7 @@ class OptimizationEcosystem(QObject):
             logger.error(f"Error running maintenance cycle: {e}")
             return []
 
-    def analyze_current_performance(self) -> Dict[str, Any]:
+    def analyze_current_performance(self) -> dict[str, Any]:
         """
         Analyze current system performance across all components.
 
@@ -662,7 +661,7 @@ class OptimizationEcosystem(QObject):
             return (time.time() - self._start_time) / 3600.0
         return 0.0
 
-    def _get_status_dict(self) -> Dict[str, Any]:
+    def _get_status_dict(self) -> dict[str, Any]:
         """Get status as dictionary."""
         return {
             "state": self._status.state.value,
@@ -678,7 +677,7 @@ class OptimizationEcosystem(QObject):
 
 
 # Global ecosystem instance
-_ecosystem: Optional[OptimizationEcosystem] = None
+_ecosystem: OptimizationEcosystem | None = None
 _ecosystem_lock = threading.RLock()
 
 
@@ -758,8 +757,8 @@ def get_ecosystem_status() -> EcosystemStatus:
 
 
 def generate_ecosystem_report(
-    output_file: Optional[str] = None, format: ReportFormat = ReportFormat.JSON
-) -> Dict[str, Any]:
+    output_file: str | None = None, format: ReportFormat = ReportFormat.JSON
+) -> dict[str, Any]:
     """
     Generate comprehensive ecosystem report.
 
@@ -779,7 +778,7 @@ def generate_ecosystem_report(
     return ecosystem.get_comprehensive_report(output_file, format)
 
 
-def run_ecosystem_maintenance(force: bool = False) -> List[MaintenanceResult]:
+def run_ecosystem_maintenance(force: bool = False) -> list[MaintenanceResult]:
     """
     Run a complete maintenance cycle across all systems.
 
@@ -797,7 +796,7 @@ def run_ecosystem_maintenance(force: bool = False) -> List[MaintenanceResult]:
     return ecosystem.run_maintenance_cycle(force)
 
 
-def analyze_ecosystem_performance() -> Dict[str, Any]:
+def analyze_ecosystem_performance() -> dict[str, Any]:
     """
     Analyze current ecosystem performance.
 

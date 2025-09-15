@@ -65,20 +65,20 @@ except ImportError:
 
 # Define essential exports
 __all__ = [
+    "ColoredConsoleFormatter",
+    "JSONFormatter",
+    "PerformanceFormatter",
+    "StructuredFileFormatter",
+    "create_formatter",
+    "get_log_file_path",
     # Always available logging utilities
     "get_logger",
     "get_logging_config",
-    "set_log_level",
-    "get_log_file_path",
+    "initialize_logging",
     "log_system_info",
+    "set_log_level",
     "setup_exception_logging",
     "setup_logging",
-    "initialize_logging",
-    "ColoredConsoleFormatter",
-    "StructuredFileFormatter",
-    "JSONFormatter",
-    "PerformanceFormatter",
-    "create_formatter",
 ]
 
 # Add optional exports based on availability
@@ -95,8 +95,8 @@ if _profiler_available:
 if _memory_available:
     __all__.extend(
         [
-            "MemoryTracker",
             "MemoryOptimizer",
+            "MemoryTracker",
             "SystemMemoryMonitor",
         ]
     )
@@ -104,10 +104,10 @@ if _memory_available:
 if _caching_available:
     __all__.extend(
         [
-            "get_global_cache",
-            "MultiLevelCache",
             "CacheLevel",
+            "MultiLevelCache",
             "cache_computation",
+            "get_global_cache",
         ]
     )
 

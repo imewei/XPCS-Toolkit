@@ -19,9 +19,10 @@ import statistics
 import threading
 import time
 from collections import defaultdict, deque
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Callable, Dict, List, NamedTuple, Optional
+from typing import Any, NamedTuple
 
 from PySide6.QtCore import QObject, QTimer, Signal
 
@@ -64,9 +65,9 @@ class HealthCheckResult:
     status: HealthStatus
     score: float  # 0.0 to 1.0
     message: str
-    details: Dict[str, Any] = field(default_factory=dict)
+    details: dict[str, Any] = field(default_factory=dict)
     timestamp: float = field(default_factory=time.time)
-    recommendations: List[str] = field(default_factory=list)
+    recommendations: list[str] = field(default_factory=list)
 
     def is_healthy(self) -> bool:
         """Check if the component is in healthy state."""
@@ -113,12 +114,12 @@ class OptimizationHealthMonitor(QObject):
         self._lock = threading.RLock()
 
         # Health check registry
-        self._health_checks: Dict[str, HealthCheck] = {}
-        self._last_check_times: Dict[str, float] = {}
-        self._check_results: Dict[str, HealthCheckResult] = {}
+        self._health_checks: dict[str, HealthCheck] = {}
+        self._last_check_times: dict[str, float] = {}
+        self._check_results: dict[str, HealthCheckResult] = {}
 
         # Health history for trend analysis
-        self._health_history: Dict[str, deque] = defaultdict(lambda: deque(maxlen=100))
+        self._health_history: dict[str, deque] = defaultdict(lambda: deque(maxlen=100))
 
         # Timer for periodic health checks
         self._timer = QTimer()
@@ -150,7 +151,7 @@ class OptimizationHealthMonitor(QObject):
             self._timer.stop()
             logger.info("Health monitoring stopped")
 
-    def run_health_check(self, check_name: str) -> Optional[HealthCheckResult]:
+    def run_health_check(self, check_name: str) -> HealthCheckResult | None:
         """
         Run a specific health check.
 
@@ -200,7 +201,7 @@ class OptimizationHealthMonitor(QObject):
                 component_type=health_check.component_type,
                 status=HealthStatus.UNKNOWN,
                 score=0.0,
-                message=f"Health check failed: {str(e)}",
+                message=f"Health check failed: {e!s}",
             )
 
             with self._lock:
@@ -222,7 +223,7 @@ class OptimizationHealthMonitor(QObject):
             scores = [result.score for result in self._check_results.values()]
             return statistics.mean(scores) if scores else 0.0
 
-    def get_health_report(self) -> Dict[str, HealthCheckResult]:
+    def get_health_report(self) -> dict[str, HealthCheckResult]:
         """
         Get comprehensive health report for all components.
 
@@ -269,10 +270,9 @@ class OptimizationHealthMonitor(QObject):
 
         if recent_avg > older_avg * 1.05:
             return "improving"
-        elif recent_avg < older_avg * 0.95:
+        if recent_avg < older_avg * 0.95:
             return "degrading"
-        else:
-            return "stable"
+        return "stable"
 
     def _run_scheduled_checks(self) -> None:
         """Run scheduled health checks based on their intervals."""
@@ -461,7 +461,7 @@ class OptimizationHealthMonitor(QObject):
                 component_type=ComponentType.THREADING,
                 status=HealthStatus.UNKNOWN,
                 score=0.0,
-                message=f"Health check error: {str(e)}",
+                message=f"Health check error: {e!s}",
             )
 
     def _check_signal_optimization_health(self) -> HealthCheckResult:
@@ -524,7 +524,7 @@ class OptimizationHealthMonitor(QObject):
                 component_type=ComponentType.THREADING,
                 status=HealthStatus.UNKNOWN,
                 score=0.0,
-                message=f"Health check error: {str(e)}",
+                message=f"Health check error: {e!s}",
             )
 
     def _check_worker_system_health(self) -> HealthCheckResult:
@@ -553,7 +553,7 @@ class OptimizationHealthMonitor(QObject):
                 component_type=ComponentType.THREADING,
                 status=HealthStatus.UNKNOWN,
                 score=0.0,
-                message=f"Health check error: {str(e)}",
+                message=f"Health check error: {e!s}",
             )
 
     def _check_cache_system_health(self) -> HealthCheckResult:
@@ -614,7 +614,7 @@ class OptimizationHealthMonitor(QObject):
                 component_type=ComponentType.CACHING,
                 status=HealthStatus.UNKNOWN,
                 score=0.0,
-                message=f"Health check error: {str(e)}",
+                message=f"Health check error: {e!s}",
             )
 
     def _check_adaptive_memory_health(self) -> HealthCheckResult:
@@ -663,7 +663,7 @@ class OptimizationHealthMonitor(QObject):
                 component_type=ComponentType.MEMORY,
                 status=HealthStatus.UNKNOWN,
                 score=0.0,
-                message=f"Health check error: {str(e)}",
+                message=f"Health check error: {e!s}",
             )
 
     def _check_memory_pressure_health(self) -> HealthCheckResult:
@@ -726,7 +726,7 @@ class OptimizationHealthMonitor(QObject):
                 component_type=ComponentType.MEMORY,
                 status=HealthStatus.UNKNOWN,
                 score=0.0,
-                message=f"Health check error: {str(e)}",
+                message=f"Health check error: {e!s}",
             )
 
     def _check_performance_monitor_health(self) -> HealthCheckResult:
@@ -753,12 +753,12 @@ class OptimizationHealthMonitor(QObject):
                 component_type=ComponentType.PERFORMANCE_MONITORING,
                 status=HealthStatus.UNKNOWN,
                 score=0.0,
-                message=f"Health check error: {str(e)}",
+                message=f"Health check error: {e!s}",
             )
 
 
 # Global instance
-_health_monitor_instance: Optional[OptimizationHealthMonitor] = None
+_health_monitor_instance: OptimizationHealthMonitor | None = None
 _monitor_lock = threading.Lock()
 
 

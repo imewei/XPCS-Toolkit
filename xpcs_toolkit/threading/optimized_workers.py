@@ -13,8 +13,9 @@ from __future__ import annotations
 
 import threading
 import time
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Any, Callable, Optional
+from typing import Any
 
 from PySide6.QtCore import QObject, QRunnable, Signal
 
@@ -137,7 +138,7 @@ class OptimizedBaseWorker(QRunnable):
         self.setAutoDelete(True)
 
     def get_cached_attribute(
-        self, attr_name: str, compute_func: Optional[Callable] = None
+        self, attr_name: str, compute_func: Callable | None = None
     ) -> Any:
         """
         Get cached attribute value with automatic cache management.
@@ -178,7 +179,7 @@ class OptimizedBaseWorker(QRunnable):
 
             return value
 
-    def invalidate_cache(self, attr_name: Optional[str] = None):
+    def invalidate_cache(self, attr_name: str | None = None):
         """Invalidate cached attributes."""
         with self._cache_mutex:
             if attr_name:
@@ -330,7 +331,7 @@ class OptimizedBaseWorker(QRunnable):
         """Handle execution error."""
         import traceback
 
-        error_msg = f"Error in worker {self.worker_id}: {str(exception)}"
+        error_msg = f"Error in worker {self.worker_id}: {exception!s}"
         tb_str = traceback.format_exc()
 
         # Emit error with critical priority (never batch)
@@ -369,7 +370,7 @@ class OptimizedPlotWorker(OptimizedBaseWorker):
         self,
         plot_func: Callable,
         plot_args: tuple = (),
-        plot_kwargs: dict = None,
+        plot_kwargs: dict | None = None,
         worker_id: str | None = None,
         cache_results: bool = True,
         pool_id: str = "plotting",
@@ -416,7 +417,7 @@ class OptimizedDataLoadWorker(OptimizedBaseWorker):
         self,
         load_func: Callable,
         file_paths: list,
-        load_kwargs: dict = None,
+        load_kwargs: dict | None = None,
         worker_id: str | None = None,
         batch_size: int = 10,
         pool_id: str = "data_loading",
@@ -485,7 +486,7 @@ class OptimizedComputationWorker(OptimizedBaseWorker):
         compute_func: Callable,
         data: Any,
         progress_callback: Callable | None = None,
-        compute_kwargs: dict = None,
+        compute_kwargs: dict | None = None,
         worker_id: str | None = None,
         pool_id: str = "computation",
     ):

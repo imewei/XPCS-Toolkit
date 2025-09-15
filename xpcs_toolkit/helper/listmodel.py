@@ -19,6 +19,7 @@ class ListDataModel(QtCore.QAbstractListModel):
         if role == QtCore.Qt.DisplayRole:
             content = self.input_list[index.row()]
             return str(content)
+        return None
 
     # overwrite parent method
     def rowCount(self, index):
@@ -52,6 +53,7 @@ class ListDataModel(QtCore.QAbstractListModel):
     def copy(self):
         return self.input_list.copy()
         self.layoutChanged.emit()
+        return None
 
     def remove(self, x):
         self.input_list.remove(x)
@@ -78,6 +80,7 @@ class TableDataModel(QtCore.QAbstractTableModel):
             x = self.input_list[index.row()]
             ret = [x.jid, x.size, x._progress, x.stime, x.eta, x.etime, x.short_name]
             return ret[index.column()]
+        return None
 
     # overwrite parent method
     def rowCount(self, index):
@@ -91,6 +94,7 @@ class TableDataModel(QtCore.QAbstractTableModel):
         if role == QtCore.Qt.DisplayRole:
             if orientation == QtCore.Qt.Horizontal:
                 return self.xlabels[section]
+        return None
 
     def extend(self, new_input_list):
         self.input_list.extend(new_input_list)

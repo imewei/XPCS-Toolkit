@@ -117,9 +117,13 @@ class QMap:
             # Ensure dynamic_num_pts and static_num_pts are properly formatted arrays
             # They should be [n_dim0, n_dim1] but may be stored as scalars in some files
             if "dynamic_num_pts" in info:
-                info["dynamic_num_pts"] = self._normalize_num_pts(info["dynamic_num_pts"], info.get("dplist", []))
+                info["dynamic_num_pts"] = self._normalize_num_pts(
+                    info["dynamic_num_pts"], info.get("dplist", [])
+                )
             if "static_num_pts" in info:
-                info["static_num_pts"] = self._normalize_num_pts(info["static_num_pts"], info.get("splist", []))
+                info["static_num_pts"] = self._normalize_num_pts(
+                    info["static_num_pts"], info.get("splist", [])
+                )
 
             self.__dict__.update(info)
             self.is_loaded = True
@@ -148,20 +152,19 @@ class QMap:
             n_dim0 = int(num_pts_array)
             n_dim1 = len(corresponding_list) if len(corresponding_list) > 0 else 1
             return np.array([n_dim0, n_dim1])
-        elif num_pts_array.ndim == 1 and len(num_pts_array) >= 2:
+        if num_pts_array.ndim == 1 and len(num_pts_array) >= 2:
             # Already in correct format
             return num_pts_array[:2]  # Take first 2 elements
-        elif num_pts_array.ndim == 1 and len(num_pts_array) == 1:
+        if num_pts_array.ndim == 1 and len(num_pts_array) == 1:
             # 1-element array, treat as scalar
             n_dim0 = int(num_pts_array[0])
             n_dim1 = len(corresponding_list) if len(corresponding_list) > 0 else 1
             return np.array([n_dim0, n_dim1])
-        else:
-            # Fallback: assume it's total number of bins
-            total_bins = int(num_pts_array.flat[0])
-            n_dim1 = len(corresponding_list) if len(corresponding_list) > 0 else 1
-            n_dim0 = total_bins // n_dim1 if n_dim1 > 0 else total_bins
-            return np.array([n_dim0, n_dim1])
+        # Fallback: assume it's total number of bins
+        total_bins = int(num_pts_array.flat[0])
+        n_dim1 = len(corresponding_list) if len(corresponding_list) > 0 else 1
+        n_dim0 = total_bins // n_dim1 if n_dim1 > 0 else total_bins
+        return np.array([n_dim0, n_dim1])
 
     def _get_default_value(self, key):
         """Get default values for missing qmap keys."""
@@ -221,8 +224,12 @@ class QMap:
         info["bcy"] = float(info["bcy"])
 
         # Ensure num_pts are in correct format
-        info["dynamic_num_pts"] = self._normalize_num_pts(info["dynamic_num_pts"], info.get("dplist", []))
-        info["static_num_pts"] = self._normalize_num_pts(info["static_num_pts"], info.get("splist", []))
+        info["dynamic_num_pts"] = self._normalize_num_pts(
+            info["dynamic_num_pts"], info.get("dplist", [])
+        )
+        info["static_num_pts"] = self._normalize_num_pts(
+            info["static_num_pts"], info.get("splist", [])
+        )
 
         self.__dict__.update(info)
         self.is_loaded = True
@@ -255,7 +262,6 @@ class QMap:
         self.sqmap = np.ones((10, 10), dtype=np.int32)
         self.map_names = ["q", "phi"]
         self.map_units = ["1/A", "degree"]
-
         self.is_loaded = False
         logger.warning(f"Created minimal fallback qmap for {self.fname}")
 
@@ -269,28 +275,43 @@ class QMap:
         assert mode in ("saxs_1d", "stability")
 
         # Defensive check for static_index_mapping
-        if not hasattr(self, 'static_index_mapping') or self.static_index_mapping is None:
-            logger.warning(f"Missing static_index_mapping in QMap for {self.fname}, using fallback")
+        if (
+            not hasattr(self, "static_index_mapping")
+            or self.static_index_mapping is None
+        ):
+            logger.warning(
+                f"Missing static_index_mapping in QMap for {self.fname}, using fallback"
+            )
             return self._fallback_reshape_phi_analysis(compressed_data_raw, label, mode)
 
         # Ensure static_index_mapping is a numpy array
         if not isinstance(self.static_index_mapping, np.ndarray):
-            logger.warning(f"static_index_mapping is not a numpy array in QMap for {self.fname}, using fallback")
+            logger.warning(
+                f"static_index_mapping is not a numpy array in QMap for {self.fname}, using fallback"
+            )
             return self._fallback_reshape_phi_analysis(compressed_data_raw, label, mode)
 
         # Check if arrays have compatible sizes
         try:
             num_samples = compressed_data_raw.size // self.static_index_mapping.size
-            assert num_samples * self.static_index_mapping.size == compressed_data_raw.size
+            assert (
+                num_samples * self.static_index_mapping.size == compressed_data_raw.size
+            )
         except (AttributeError, ZeroDivisionError, AssertionError) as e:
-            logger.warning(f"Size mismatch in QMap for {self.fname}: {e}, using fallback")
+            logger.warning(
+                f"Size mismatch in QMap for {self.fname}: {e}, using fallback"
+            )
             return self._fallback_reshape_phi_analysis(compressed_data_raw, label, mode)
 
         # Check required attributes exist
-        for attr in ['sqlist', 'splist']:
+        for attr in ["sqlist", "splist"]:
             if not hasattr(self, attr) or getattr(self, attr) is None:
-                logger.warning(f"Missing attribute {attr} in QMap for {self.fname}, using fallback")
-                return self._fallback_reshape_phi_analysis(compressed_data_raw, label, mode)
+                logger.warning(
+                    f"Missing attribute {attr} in QMap for {self.fname}, using fallback"
+                )
+                return self._fallback_reshape_phi_analysis(
+                    compressed_data_raw, label, mode
+                )
 
         shape = (num_samples, len(self.sqlist), len(self.splist))
         compressed_data = compressed_data_raw.reshape(num_samples, -1)
@@ -307,13 +328,17 @@ class QMap:
 
         if mode == "saxs_1d":
             if num_samples != 1:
-                logger.warning(f"saxs1d mode expects 1 sample but got {num_samples}, using fallback for {self.fname}")
-                return self._fallback_reshape_phi_analysis(compressed_data_raw, label, mode)
+                logger.warning(
+                    f"saxs1d mode expects 1 sample but got {num_samples}, using fallback for {self.fname}"
+                )
+                return self._fallback_reshape_phi_analysis(
+                    compressed_data_raw, label, mode
+                )
             if shape[2] > 1:
                 saxs1d = np.concatenate([avg[..., None], full_data], axis=-1)
                 saxs1d = saxs1d[0].T  # shape: (num_lines + 1, num_q)
                 labels = [label + "_%d" % (n + 1) for n in range(shape[2])]
-                labels = [label] + labels
+                labels = [label, *labels]
             else:
                 saxs1d = avg.reshape(1, -1)  # shape: (1, num_q)
                 labels = [label]
@@ -326,13 +351,20 @@ class QMap:
                 "data_raw": compressed_data_raw,
             }
             return saxs1d_info
-        elif mode == "stability":  # saxs1d_segments
+        if mode == "stability":  # saxs1d_segments
             # avg shape is (num_samples, num_q)
             return avg
+        return None
 
-    def _fallback_reshape_phi_analysis(self, compressed_data_raw, label="data", mode="saxs_1d"):
+    def _fallback_reshape_phi_analysis(
+        self, compressed_data_raw, label="data", mode="saxs_1d"
+    ):
         """Fallback method when normal reshape fails."""
-        data = np.array(compressed_data_raw) if not isinstance(compressed_data_raw, np.ndarray) else compressed_data_raw
+        data = (
+            np.array(compressed_data_raw)
+            if not isinstance(compressed_data_raw, np.ndarray)
+            else compressed_data_raw
+        )
 
         if mode == "saxs_1d":
             # For saxs_1d, return simple structure
@@ -342,19 +374,19 @@ class QMap:
             # Ensure data is at least 1D with 10 points to match sqlist
             if data.size < 10:
                 padded_data = np.zeros(10)
-                padded_data[:data.size] = data.flatten()
+                padded_data[: data.size] = data.flatten()
                 data = padded_data
 
             saxs1d_info = {
-                "q": getattr(self, 'sqlist', np.linspace(0.01, 0.1, 10)),
+                "q": getattr(self, "sqlist", np.linspace(0.01, 0.1, 10)),
                 "Iq": data.reshape(1, -1),
-                "phi": getattr(self, 'splist', np.array([0])),
+                "phi": getattr(self, "splist", np.array([0])),
                 "num_lines": 1,
                 "labels": [label],
                 "data_raw": compressed_data_raw,
             }
             return saxs1d_info
-        elif mode == "stability":
+        if mode == "stability":
             # For stability mode, return reshaped data
             if data.size == 0:
                 data = np.ones((1, 10)) * 100  # Minimal default values
@@ -369,7 +401,7 @@ class QMap:
         :return:
         """
         # Check cache first
-        if self._extent_cache is not None:
+        if hasattr(self, '_extent_cache') and self._extent_cache is not None:
             return self._extent_cache
 
         shape = self.mask.shape
@@ -388,19 +420,22 @@ class QMap:
         self._extent_cache = extent
         return extent
 
+    def get(self, key, default=None):
+        """Provide dictionary-like access to QMap attributes."""
+        return getattr(self, key, default)
+
     def get_qmap_at_pos(self, x, y):
         shape = self.mask.shape
         if x < 0 or x >= shape[1] or y < 0 or y >= shape[0]:
             return None
-        else:
-            qmap, qmap_units = self.qmap, self.qmap_units
-            result = ""
-            for key in self.qmap.keys():
-                if key in ["q", "qx", "qy", "phi", "alpha"]:
-                    result += f" {key}={qmap[key][y, x]:.3f} {qmap_units[key]},"
-                else:
-                    result += f" {key}={qmap[key][y, x]} {qmap_units[key]},"
-            return result[:-1]
+        qmap, qmap_units = self.qmap, self.qmap_units
+        result = ""
+        for key in self.qmap:
+            if key in ["q", "qx", "qy", "phi", "alpha"]:
+                result += f" {key}={qmap[key][y, x]:.3f} {qmap_units[key]},"
+            else:
+                result += f" {key}={qmap[key][y, x]} {qmap_units[key]},"
+        return result[:-1]
 
     def create_qbin_labels(self):
         if self.map_names == ["q", "phi"]:
@@ -416,22 +451,20 @@ class QMap:
 
         if self.dynamic_num_pts[1] == 1:
             return label_0
-        else:
-            combined_list = []
-            for item_a in label_0:
-                for item_b in label_1:
-                    combined_list.append(f"{item_a}, {item_b}")
-            return combined_list
+        combined_list = []
+        for item_a in label_0:
+            for item_b in label_1:
+                combined_list.append(f"{item_a}, {item_b}")
+        return combined_list
 
     def get_qbin_label(self, qbin: int, append_qbin=False):
         qbin_absolute = self.dynamic_index_mapping[qbin - 1]
         if qbin_absolute < 0 or qbin_absolute > len(self.qbin_labels):
             return "invalid qbin"
-        else:
-            label = self.qbin_labels[qbin_absolute]
-            if append_qbin:
-                label = f"qbin={qbin}, {label}"
-            return label
+        label = self.qbin_labels[qbin_absolute]
+        if append_qbin:
+            label = f"qbin={qbin}, {label}"
+        return label
 
     def get_qbin_in_qrange(self, qrange, zero_based=True):
         """
@@ -569,17 +602,15 @@ class QMap:
         return result
 
 
-
 def get_hash(fname, root_key="/xpcs/qmap"):
     """Extracts the hash from the HDF5 file."""
     try:
         with _connection_pool.get_connection(fname, "r") as f:
             if root_key in f:
                 return f[root_key].attrs.get("hash", fname)
-            else:
-                # If qmap doesn't exist, use filename as hash
-                logger.warning(f"QMap not found in {fname}, using filename as hash")
-                return fname
+            # If qmap doesn't exist, use filename as hash
+            logger.warning(f"QMap not found in {fname}, using filename as hash")
+            return fname
     except Exception as e:
         logger.warning(f"Error reading hash from {fname}: {e}")
         return fname
@@ -592,7 +623,7 @@ def get_qmap(fname, **kwargs):
 def test_qmap_manager():
     import time
 
-    for i in range(5):
+    for _i in range(5):
         t0 = time.perf_counter()
         get_qmap(
             "/net/s8iddata/export/8-id-ECA/MQICHU/projects/2025_0223_boost_corr_nexus/cluster_results1/Z1113_Sanjeeva-h60_a0004_t0600_f008000_r00003_results.hdf"

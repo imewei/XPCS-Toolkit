@@ -11,8 +11,9 @@ This module provides tools to keep the main GUI thread responsive by:
 from __future__ import annotations
 
 import time
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any
 
 from PySide6 import QtWidgets
 from PySide6.QtCore import QObject, QTimer, Signal, Slot
@@ -37,8 +38,8 @@ class OperationContext:
     operation_id: str
     operation_type: str
     start_time: float = field(default_factory=time.perf_counter)
-    params: Dict[str, Any] = field(default_factory=dict)
-    callbacks: Dict[str, Callable] = field(default_factory=dict)
+    params: dict[str, Any] = field(default_factory=dict)
+    callbacks: dict[str, Callable] = field(default_factory=dict)
     is_critical: bool = False
     user_initiated: bool = True
 
@@ -67,13 +68,13 @@ class MainThreadOptimizer(QObject):
         self.progress_manager = progress_manager
 
         # Operation tracking
-        self.active_operations: Dict[str, OperationContext] = {}
-        self.operation_queue: List[OperationContext] = []
+        self.active_operations: dict[str, OperationContext] = {}
+        self.operation_queue: list[OperationContext] = []
         self.max_concurrent_operations = 3
 
         # Progressive loading state
         self.progressive_loading_active = False
-        self.progressive_operations: Dict[str, Dict] = {}
+        self.progressive_operations: dict[str, dict] = {}
 
         # UI responsiveness monitoring
         self.ui_response_timer = QTimer()
@@ -92,10 +93,10 @@ class MainThreadOptimizer(QObject):
 
     def optimize_file_loading(
         self,
-        file_paths: List[str],
+        file_paths: list[str],
         load_function: Callable,
-        progress_callback: Optional[Callable] = None,
-        completion_callback: Optional[Callable] = None,
+        progress_callback: Callable | None = None,
+        completion_callback: Callable | None = None,
         batch_size: int = 5,
     ) -> str:
         """
@@ -166,7 +167,7 @@ class MainThreadOptimizer(QObject):
         self,
         plot_function: Callable,
         plot_args: tuple = (),
-        plot_kwargs: dict = None,
+        plot_kwargs: dict | None = None,
         plot_type: str = "generic",
         cache_results: bool = True,
         priority: WorkerPriority = WorkerPriority.NORMAL,
@@ -441,9 +442,9 @@ class MainThreadOptimizer(QObject):
 
     def validate_parameters_async(
         self,
-        params: Dict[str, Any],
+        params: dict[str, Any],
         validation_function: Callable,
-        validation_callback: Optional[Callable] = None,
+        validation_callback: Callable | None = None,
     ) -> str:
         """
         Validate parameters in background thread to avoid blocking main thread.
@@ -486,7 +487,7 @@ class MainThreadOptimizer(QObject):
         return operation_id
 
     def _on_validation_finished(
-        self, operation_id: str, result: WorkerResult, callback: Optional[Callable]
+        self, operation_id: str, result: WorkerResult, callback: Callable | None
     ):
         """Handle parameter validation completion."""
         if callback:
@@ -500,7 +501,7 @@ class MainThreadOptimizer(QObject):
         logger.debug(f"Parameter validation completed: {operation_id}")
 
     def _on_validation_error(
-        self, operation_id: str, error_message: str, callback: Optional[Callable]
+        self, operation_id: str, error_message: str, callback: Callable | None
     ):
         """Handle parameter validation error."""
         if callback:
@@ -534,7 +535,7 @@ class MainThreadOptimizer(QObject):
 
         return False
 
-    def get_operation_status(self, operation_id: str) -> Dict[str, Any]:
+    def get_operation_status(self, operation_id: str) -> dict[str, Any]:
         """Get status information for an operation."""
         status = {
             "exists": False,
@@ -596,7 +597,7 @@ class MainThreadOptimizer(QObject):
         """Handle partial loading results for immediate UI updates."""
         if worker_id in self.active_operations:
             context = self.active_operations[worker_id]
-            if "progress" in context.callbacks and context.callbacks["progress"]:
+            if context.callbacks.get("progress"):
                 try:
                     context.callbacks["progress"](partial_result, is_final)
                 except Exception as e:
@@ -611,7 +612,7 @@ class MainThreadOptimizer(QObject):
             context = self.active_operations[operation_id]
 
             # Call completion callback
-            if "completion" in context.callbacks and context.callbacks["completion"]:
+            if context.callbacks.get("completion"):
                 try:
                     context.callbacks["completion"](
                         result.result if result.success else None

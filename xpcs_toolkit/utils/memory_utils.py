@@ -312,32 +312,28 @@ class MemoryTracker:
             if min_val >= 0:  # Unsigned integers
                 if max_val < 2**8:
                     return np.uint8
-                elif max_val < 2**16:
+                if max_val < 2**16:
                     return np.uint16
-                elif max_val < 2**32:
+                if max_val < 2**32:
                     return np.uint32
-                else:
-                    return np.uint64
-            else:  # Signed integers
-                if min_val >= -(2**7) and max_val < 2**7:
-                    return np.int8
-                elif min_val >= -(2**15) and max_val < 2**15:
-                    return np.int16
-                elif min_val >= -(2**31) and max_val < 2**31:
-                    return np.int32
-                else:
-                    return np.int64
+                return np.uint64
+            if min_val >= -(2**7) and max_val < 2**7:
+                return np.int8
+            if min_val >= -(2**15) and max_val < 2**15:
+                return np.int16
+            if min_val >= -(2**31) and max_val < 2**31:
+                return np.int32
+            return np.int64
 
-        elif np.issubdtype(data.dtype, np.floating):
+        if np.issubdtype(data.dtype, np.floating):
             if preserve_precision:
                 return np.float32 if data.dtype == np.float64 else data.dtype
-            else:
-                # Check if data can be represented as float32 without significant loss
-                if data.dtype == np.float64:
-                    data_f32 = data.astype(np.float32)
-                    if np.allclose(data, data_f32, rtol=1e-6):
-                        return np.float32
-                return data.dtype
+            # Check if data can be represented as float32 without significant loss
+            if data.dtype == np.float64:
+                data_f32 = data.astype(np.float32)
+                if np.allclose(data, data_f32, rtol=1e-6):
+                    return np.float32
+            return data.dtype
 
         return data.dtype
 
@@ -362,17 +358,19 @@ class MemoryTracker:
         final_memory = psutil.Process().memory_info().rss
         memory_diff = final_memory - self._start_memory if self._start_memory else 0
         self._tracking = False
-        logger.debug(f"Memory tracking stopped. Memory change: {memory_diff / (1024*1024):.2f} MB")
+        logger.debug(
+            f"Memory tracking stopped. Memory change: {memory_diff / (1024 * 1024):.2f} MB"
+        )
         return memory_diff
 
-    def snapshot(self, label: str = None):
+    def snapshot(self, label: str | None = None):
         """Take a memory snapshot."""
         if self._tracking:
             current_memory = psutil.Process().memory_info().rss
             snapshot = {
-                'label': label or f'snapshot_{len(self._snapshots)}',
-                'memory': current_memory,
-                'timestamp': time.time()
+                "label": label or f"snapshot_{len(self._snapshots)}",
+                "memory": current_memory,
+                "timestamp": time.time(),
             }
             self._snapshots.append(snapshot)
             return snapshot
@@ -448,12 +446,11 @@ class MemoryOptimizer:
         """
         if operation == "fill":
             return np.where(mask, arr, value)
-        elif operation == "replace":
+        if operation == "replace":
             return np.where(mask, value, arr)
-        elif operation == "nan_fill":
+        if operation == "nan_fill":
             return np.where(mask, arr, np.nan)
-        else:
-            raise ValueError(f"Unknown operation: {operation}")
+        raise ValueError(f"Unknown operation: {operation}")
 
     @staticmethod
     def efficient_bincount(

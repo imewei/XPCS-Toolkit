@@ -15,7 +15,7 @@ from collections import defaultdict, deque
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set, Type, TypeVar, Union
+from typing import Any, TypeVar
 
 from PySide6.QtCore import QObject, QTimer, Signal
 
@@ -65,10 +65,10 @@ class ObjectRegistry:
     lookup for cleanup operations. Thread-safe and singleton pattern.
     """
 
-    _instance: Optional["ObjectRegistry"] = None
+    _instance: ObjectRegistry | None = None
     _lock = threading.Lock()
 
-    def __new__(cls) -> "ObjectRegistry":
+    def __new__(cls) -> ObjectRegistry:
         if cls._instance is None:
             with cls._lock:
                 if cls._instance is None:
@@ -83,10 +83,10 @@ class ObjectRegistry:
         self._registry_lock = threading.RLock()
 
         # Registry maps: type_name -> set of weak references
-        self._objects_by_type: Dict[str, Set[weakref.ReferenceType]] = defaultdict(set)
+        self._objects_by_type: dict[str, set[weakref.ReferenceType]] = defaultdict(set)
 
         # Cleanup callbacks for each type
-        self._cleanup_callbacks: Dict[str, List[str]] = defaultdict(list)
+        self._cleanup_callbacks: dict[str, list[str]] = defaultdict(list)
 
         # Statistics
         self._registration_count = 0
@@ -95,7 +95,7 @@ class ObjectRegistry:
 
         logger.debug("ObjectRegistry initialized")
 
-    def register(self, obj: Any, cleanup_methods: Optional[List[str]] = None) -> None:
+    def register(self, obj: Any, cleanup_methods: list[str] | None = None) -> None:
         """
         Register an object for tracking and cleanup.
 
@@ -125,7 +125,7 @@ class ObjectRegistry:
             f"Registered {obj_type} object (total registered: {self._registration_count})"
         )
 
-    def get_objects_by_type(self, obj_type: Union[Type, str]) -> List[Any]:
+    def get_objects_by_type(self, obj_type: type | str) -> list[Any]:
         """
         Get all registered objects of a specific type.
 
@@ -139,10 +139,7 @@ class ObjectRegistry:
         List[Any]
             Live objects of the specified type
         """
-        if isinstance(obj_type, type):
-            type_name = obj_type.__name__
-        else:
-            type_name = obj_type
+        type_name = obj_type.__name__ if isinstance(obj_type, type) else obj_type
 
         live_objects = []
 
@@ -165,9 +162,9 @@ class ObjectRegistry:
 
     def get_cleanup_tasks(
         self,
-        obj_type: Union[Type, str],
+        obj_type: type | str,
         priority: CleanupPriority = CleanupPriority.NORMAL,
-    ) -> List[CleanupTask]:
+    ) -> list[CleanupTask]:
         """
         Generate cleanup tasks for objects of a specific type.
 
@@ -183,10 +180,7 @@ class ObjectRegistry:
         List[CleanupTask]
             Cleanup tasks for live objects
         """
-        if isinstance(obj_type, type):
-            type_name = obj_type.__name__
-        else:
-            type_name = obj_type
+        type_name = obj_type.__name__ if isinstance(obj_type, type) else obj_type
 
         cleanup_methods = self._cleanup_callbacks.get(type_name, [])
         if not cleanup_methods:
@@ -221,10 +215,10 @@ class ObjectRegistry:
         """Callback when a registered object is garbage collected."""
         with self._registry_lock:
             # Remove from all type sets
-            for type_name, weak_refs in self._objects_by_type.items():
+            for _type_name, weak_refs in self._objects_by_type.items():
                 weak_refs.discard(weak_ref)
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get registry statistics."""
         with self._registry_lock:
             type_counts = {}
@@ -271,11 +265,11 @@ class BackgroundCleanupManager(QObject):
 
         self._max_workers = max_workers
         self._max_tasks_per_batch = max_tasks_per_batch
-        self._executor: Optional[ThreadPoolExecutor] = None
+        self._executor: ThreadPoolExecutor | None = None
         self._shutdown_requested = False
 
         # Task queues by priority
-        self._task_queues: Dict[CleanupPriority, deque] = {
+        self._task_queues: dict[CleanupPriority, deque] = {
             priority: deque() for priority in CleanupPriority
         }
         self._queue_lock = threading.RLock()
@@ -320,7 +314,7 @@ class BackgroundCleanupManager(QObject):
 
         logger.info("Background cleanup manager stopped")
 
-    def schedule_cleanup(self, tasks: List[CleanupTask]) -> None:
+    def schedule_cleanup(self, tasks: list[CleanupTask]) -> None:
         """
         Schedule cleanup tasks for background execution.
 
@@ -340,7 +334,7 @@ class BackgroundCleanupManager(QObject):
 
     def schedule_object_cleanup(
         self,
-        obj_type: Union[Type, str],
+        obj_type: type | str,
         priority: CleanupPriority = CleanupPriority.NORMAL,
     ) -> None:
         """
@@ -380,7 +374,7 @@ class BackgroundCleanupManager(QObject):
             self._executor.submit(self._execute_batch, batch_tasks)
             # Don't wait for completion to avoid blocking GUI
 
-    def _get_next_batch(self) -> List[CleanupTask]:
+    def _get_next_batch(self) -> list[CleanupTask]:
         """Get the next batch of tasks to process, respecting priorities."""
         batch = []
 
@@ -406,7 +400,7 @@ class BackgroundCleanupManager(QObject):
 
         return batch
 
-    def _execute_batch(self, tasks: List[CleanupTask]) -> None:
+    def _execute_batch(self, tasks: list[CleanupTask]) -> None:
         """Execute a batch of cleanup tasks in background thread."""
         if not tasks:
             return
@@ -467,7 +461,7 @@ class BackgroundCleanupManager(QObject):
 
         logger.debug(f"Cleanup batch completed: {completed} success, {failed} failed")
 
-    def get_queue_stats(self) -> Dict[str, int]:
+    def get_queue_stats(self) -> dict[str, int]:
         """Get current queue statistics."""
         with self._queue_lock:
             return {
@@ -475,7 +469,7 @@ class BackgroundCleanupManager(QObject):
                 for priority, queue in self._task_queues.items()
             }
 
-    def get_performance_stats(self) -> Dict[str, Any]:
+    def get_performance_stats(self) -> dict[str, Any]:
         """Get performance statistics."""
         return {
             "tasks_completed": self._tasks_completed,
@@ -496,10 +490,10 @@ class SmartGarbageCollector:
     garbage collection without blocking user interactions.
     """
 
-    _instance: Optional["SmartGarbageCollector"] = None
+    _instance: SmartGarbageCollector | None = None
     _lock = threading.Lock()
 
-    def __new__(cls) -> "SmartGarbageCollector":
+    def __new__(cls) -> SmartGarbageCollector:
         if cls._instance is None:
             with cls._lock:
                 if cls._instance is None:
@@ -516,7 +510,7 @@ class SmartGarbageCollector:
         self._gc_interval = 30.0  # Minimum 30 seconds between GC
         self._idle_threshold = 5.0  # 5 seconds of no activity = idle
         self._memory_threshold = 0.85  # Trigger GC at 85% memory usage
-        self._executor: Optional[ThreadPoolExecutor] = None
+        self._executor: ThreadPoolExecutor | None = None
 
         logger.debug("SmartGarbageCollector initialized")
 
@@ -622,7 +616,7 @@ def get_smart_gc() -> SmartGarbageCollector:
     return _smart_gc
 
 
-def register_for_cleanup(obj: Any, cleanup_methods: Optional[List[str]] = None) -> None:
+def register_for_cleanup(obj: Any, cleanup_methods: list[str] | None = None) -> None:
     """
     Convenience function to register an object for cleanup.
 
@@ -638,7 +632,7 @@ def register_for_cleanup(obj: Any, cleanup_methods: Optional[List[str]] = None) 
 
 
 def schedule_type_cleanup(
-    obj_type: Union[Type, str], priority: CleanupPriority = CleanupPriority.NORMAL
+    obj_type: type | str, priority: CleanupPriority = CleanupPriority.NORMAL
 ) -> None:
     """
     Convenience function to schedule cleanup for all objects of a type.

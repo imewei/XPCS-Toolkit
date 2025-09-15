@@ -66,7 +66,9 @@ class WorkerSignal(QObject):
 
 
 class AverageToolbox(QtCore.QRunnable):
-    def __init__(self, work_dir=None, flist=["hello"], jid=None) -> None:
+    def __init__(self, work_dir=None, flist=None, jid=None) -> None:
+        if flist is None:
+            flist = ["hello"]
         super().__init__()
         self.file_list = flist.copy()
         self.model = ListDataModel(self.file_list)
@@ -103,7 +105,7 @@ class AverageToolbox(QtCore.QRunnable):
 
     def generate_avg_fname(self):
         if len(self.model) == 0:
-            return
+            return None
         fname = self.model[0]
         end = fname.rfind("_")
         if end == -1:
@@ -129,8 +131,10 @@ class AverageToolbox(QtCore.QRunnable):
         avg_qindex=0,
         avg_blmin=0.95,
         avg_blmax=1.05,
-        fields=["saxs_2d"],
+        fields=None,
     ):
+        if fields is None:
+            fields = ["saxs_2d"]
         self.stime = time.strftime("%H:%M:%S")
         self.status = "running"
         logger.info("average job %d starts", self.jid)
@@ -148,8 +152,7 @@ class AverageToolbox(QtCore.QRunnable):
             g2_baseline = np.mean(g2_data[-avg_window:, idx])
             if avg_blmax >= g2_baseline >= avg_blmin:
                 return True, g2_baseline
-            else:
-                return False, g2_baseline
+            return False, g2_baseline
 
         result = {}
         for key in fields:
@@ -196,23 +199,22 @@ class AverageToolbox(QtCore.QRunnable):
         if np.sum(mask) == 0:
             logger.info("no dataset is valid; check the baseline criteria.")
             return
-        else:
-            for key in fields:
-                if key == "saxs_1d":
-                    # only keep the Iq component, put method doesn't accept dict
-                    result["saxs_1d"] = result["saxs_1d"] / np.sum(mask)
-                else:
-                    result[key] /= np.sum(mask)
-                if key == "g2_err":
-                    result[key] /= np.sqrt(np.sum(mask))
-                if key == "saxs_2d":
-                    # saxs_2d needs to be (1, height, width)
-                    saxs_2d = result[key]
-                    if saxs_2d.ndim == 2:
-                        saxs_2d = np.expand_dims(saxs_2d, axis=0)
-                    result[key] = saxs_2d
+        for key in fields:
+            if key == "saxs_1d":
+                # only keep the Iq component, put method doesn't accept dict
+                result["saxs_1d"] = result["saxs_1d"] / np.sum(mask)
+            else:
+                result[key] /= np.sum(mask)
+            if key == "g2_err":
+                result[key] /= np.sqrt(np.sum(mask))
+            if key == "saxs_2d":
+                # saxs_2d needs to be (1, height, width)
+                saxs_2d = result[key]
+                if saxs_2d.ndim == 2:
+                    saxs_2d = np.expand_dims(saxs_2d, axis=0)
+                result[key] = saxs_2d
 
-            logger.info("the valid dataset number is %d / %d" % (np.sum(mask), tot_num))
+        logger.info("the valid dataset number is %d / %d" % (np.sum(mask), tot_num))
 
         # Report final memory usage and peak memory reduction
         final_memory_mb, _ = MemoryMonitor.get_memory_usage()
@@ -222,7 +224,7 @@ class AverageToolbox(QtCore.QRunnable):
             f"(final: {final_memory_mb:.1f}MB)"
         )
 
-        logger.info("create file: {}".format(save_path))
+        logger.info(f"create file: {save_path}")
         copyfile(self.origin_path, save_path)
         put(save_path, result, ftype="nexus", mode="alias")
 
@@ -246,7 +248,7 @@ class AverageToolbox(QtCore.QRunnable):
         self.model.layoutChanged.emit()
         self.signals.progress.emit((self.jid, 100))
         logger.info("average job %d finished", self.jid)
-        return None  # Return None since we deleted result to save memory
+        return  # Return None since we deleted result to save memory
 
     def _process_files_sequential(
         self,
@@ -393,7 +395,9 @@ class AverageToolbox(QtCore.QRunnable):
 
                     # Merge batch results into main result
                     for m, (file_result, baseline_val) in zip(
-                        batch_indices, zip(batch_results, batch_baselines)
+                        batch_indices,
+                        zip(batch_results, batch_baselines, strict=False),
+                        strict=False,
                     ):
                         self.baseline[self.ptr] = baseline_val
                         self.ptr += 1
@@ -481,8 +485,6 @@ class AverageToolbox(QtCore.QRunnable):
             t.addItem(up)
         t.setMouseEnabled(x=False, y=False)
 
-        return
-
     def update_plot(self):
         if self.ax is not None:
             self.ax.setData(self.baseline[: self.ptr])
@@ -523,10 +525,7 @@ def _process_file_for_average(args):
     fname, work_dir, fields, avg_window, avg_qindex, avg_blmin, avg_blmax = args
 
     def validate_g2_baseline(g2_data, q_idx):
-        if q_idx >= g2_data.shape[1]:
-            idx = 0
-        else:
-            idx = q_idx
+        idx = 0 if q_idx >= g2_data.shape[1] else q_idx
         g2_baseline = np.mean(g2_data[-avg_window:, idx])
         return avg_blmax >= g2_baseline >= avg_blmin, g2_baseline
 
@@ -548,10 +547,9 @@ def _process_file_for_average(args):
 
             scale = xf.abs_cross_section_scale if "saxs_1d" in fields else 1.0
             return True, val, result, scale if scale is not None else 1.0
-        else:
-            return False, val, None, 1.0
+        return False, val, None, 1.0
     except Exception as ec:
-        logger.error(f"file {fname} is damaged, skip: {str(ec)}")
+        logger.error(f"file {fname} is damaged, skip: {ec!s}")
         return False, 0, None, 1.0
 
 
@@ -563,9 +561,11 @@ def do_average(
     avg_qindex=0,
     avg_blmin=0.95,
     avg_blmax=1.05,
-    fields=["saxs_2d", "saxs_1d", "g2", "g2_err"],
+    fields=None,
     n_jobs=None,
 ):
+    if fields is None:
+        fields = ["saxs_2d", "saxs_1d", "g2", "g2_err"]
     if work_dir is None:
         work_dir = "./"
 
@@ -699,17 +699,16 @@ def do_average(
 
     if np.sum(mask) == 0:
         logger.info("no dataset is valid; check the baseline criteria.")
-        return
-    else:
-        for key in fields:
-            if key == "saxs_1d":
-                result["saxs_1d"] /= abs_cs_scale_tot
-            else:
-                result[key] /= np.sum(mask)
-            if key == "g2_err":
-                result[key] /= np.sqrt(np.sum(mask))
+        return None
+    for key in fields:
+        if key == "saxs_1d":
+            result["saxs_1d"] /= abs_cs_scale_tot
+        else:
+            result[key] /= np.sum(mask)
+        if key == "g2_err":
+            result[key] /= np.sqrt(np.sum(mask))
 
-        logger.info("the valid dataset number is %d / %d" % (np.sum(mask), tot_num))
+    logger.info("the valid dataset number is %d / %d" % (np.sum(mask), tot_num))
 
     # Report final memory usage and peak memory reduction
     final_memory_mb, _ = MemoryMonitor.get_memory_usage()
@@ -722,7 +721,7 @@ def do_average(
     original_file = os.path.join(work_dir, flist[0])
     if save_path is None:
         save_path = "AVG" + os.path.basename(flist[0])
-    logger.info("create file: {}".format(save_path))
+    logger.info(f"create file: {save_path}")
     copyfile(original_file, save_path)
     put(save_path, result, ftype="nexus", mode="alias")
 

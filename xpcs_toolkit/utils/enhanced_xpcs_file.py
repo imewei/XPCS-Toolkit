@@ -8,7 +8,7 @@ multi-level caching infrastructure for optimal performance.
 from __future__ import annotations
 
 import time
-from typing import Any, Dict, Tuple
+from typing import Any
 
 import numpy as np
 
@@ -50,7 +50,9 @@ class CachedXpcsFileMixin:
 
     @smart_cache_decorator("saxs_2d", memory_cost_mb=100.0)
     def get_saxs_2d_cached(
-        self, use_memory_mapping: bool = None, chunk_processing: bool = None
+        self,
+        use_memory_mapping: bool | None = None,
+        chunk_processing: bool | None = None,
     ) -> np.ndarray:
         """
         Enhanced SAXS 2D data loading with intelligent caching.
@@ -120,7 +122,7 @@ class CachedXpcsFileMixin:
 
     def fit_g2_cached(
         self, q_range=None, t_range=None, bounds=None, fit_flag=None, fit_func="single"
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Enhanced G2 fitting with result caching and performance tracking.
 
@@ -181,7 +183,7 @@ class CachedXpcsFileMixin:
 
     def get_saxs1d_data_cached(
         self, **kwargs
-    ) -> Tuple[np.ndarray, np.ndarray, str, str]:
+    ) -> tuple[np.ndarray, np.ndarray, str, str]:
         """
         Enhanced SAXS 1D data extraction with caching.
 
@@ -208,8 +210,7 @@ class CachedXpcsFileMixin:
         # Handle cached result object
         if hasattr(result, "q"):  # SAXSResult object
             return result.q, result.intensity, result.xlabel, result.ylabel
-        else:
-            return result
+        return result
 
     def get_twotime_c2_cached(self, selection=0, correct_diag=True, max_size=32678):
         """
@@ -245,10 +246,9 @@ class CachedXpcsFileMixin:
         # Handle cached result object
         if hasattr(result, "c2_data"):  # TwoTimeResult object
             return result.c2_data
-        else:
-            return result
+        return result
 
-    def get_file_metadata_cached(self, force_refresh: bool = False) -> Dict[str, Any]:
+    def get_file_metadata_cached(self, force_refresh: bool = False) -> dict[str, Any]:
         """
         Get cached file metadata with automatic validation.
 
@@ -349,7 +349,7 @@ class CachedXpcsFileMixin:
 
         return qmap_obj
 
-    def _g2_result_to_dict(self, g2_result: G2FitResult) -> Dict[str, Any]:
+    def _g2_result_to_dict(self, g2_result: G2FitResult) -> dict[str, Any]:
         """Convert G2FitResult object back to dictionary format."""
         if isinstance(g2_result, G2FitResult):
             return {
@@ -415,7 +415,7 @@ class CachedXpcsFileMixin:
         # This is simplified - a full implementation would track all keys
         logger.info(f"Cache invalidated for {self.fname}")
 
-    def get_cache_statistics(self) -> Dict[str, Any]:
+    def get_cache_statistics(self) -> dict[str, Any]:
         """Get comprehensive cache statistics for this file."""
         return {
             "file_path": self.fname,
@@ -426,7 +426,7 @@ class CachedXpcsFileMixin:
             "memory_manager_stats": self._memory_manager.get_performance_stats(),
         }
 
-    def warm_file_cache(self, data_types: list = None):
+    def warm_file_cache(self, data_types: list | None = None):
         """
         Warm cache for this file by prefetching common data.
 
@@ -518,8 +518,8 @@ class SmartXpcsFileManager:
 
     def __init__(self, memory_strategy: MemoryStrategy = MemoryStrategy.BALANCED):
         self._memory_manager = get_adaptive_memory_manager(strategy=memory_strategy)
-        self._active_files: Dict[str, Any] = {}  # file_path -> XpcsFile instance
-        self._file_relationships: Dict[str, set] = {}  # file_path -> related files
+        self._active_files: dict[str, Any] = {}  # file_path -> XpcsFile instance
+        self._file_relationships: dict[str, set] = {}  # file_path -> related files
 
         logger.info(
             f"SmartXpcsFileManager initialized with {memory_strategy.value} strategy"
@@ -623,7 +623,7 @@ class SmartXpcsFileManager:
             )
 
             # Clean least recently used files
-            for file_path, file_instance in list(self._active_files.items()):
+            for _file_path, file_instance in list(self._active_files.items()):
                 if hasattr(file_instance, "clear_cache"):
                     file_instance.clear_cache("saxs")  # Clear large SAXS data
 
@@ -637,7 +637,7 @@ class SmartXpcsFileManager:
             advanced_cache = get_global_cache()
             advanced_cache._promote_l1_to_l2(force=True, target_freed_mb=100.0)
 
-    def get_manager_statistics(self) -> Dict[str, Any]:
+    def get_manager_statistics(self) -> dict[str, Any]:
         """Get comprehensive statistics for the manager."""
         stats = {
             "active_files": len(self._active_files),

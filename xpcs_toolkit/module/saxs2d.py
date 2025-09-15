@@ -20,10 +20,7 @@ def plot(
     )
 
     center = (xfile.bcx, xfile.bcy)
-    if plot_type == "log":
-        img = xfile.saxs_2d_log
-    else:
-        img = xfile.saxs_2d
+    img = xfile.saxs_2d_log if plot_type == "log" else xfile.saxs_2d
 
     logger.debug(f"Image data: shape={img.shape}, center=({xfile.bcx}, {xfile.bcy})")
 
@@ -50,9 +47,8 @@ def plot(
         pg_hdl.setLevels(vmin, vmax)
 
     # Restore intensity levels (if needed)
-    if not autolevel:
-        if vmin is not None and vmax is not None:
-            pg_hdl.setLevels(vmin, vmax)
+    if not autolevel and vmin is not None and vmax is not None:
+        pg_hdl.setLevels(vmin, vmax)
 
     if center is not None:
         pg_hdl.add_roi(sl_type="Center", center=center, label="Center")

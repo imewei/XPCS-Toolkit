@@ -9,8 +9,9 @@ import os
 import threading
 import time
 from collections import defaultdict
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any
 
 import h5py
 import psutil
@@ -26,12 +27,12 @@ class IOOperation:
 
     operation_type: str  # 'read', 'write', 'open', 'close'
     file_path: str
-    dataset_path: Optional[str] = None
+    dataset_path: str | None = None
     start_time: float = 0.0
     end_time: float = 0.0
     data_size_mb: float = 0.0
     success: bool = True
-    error_message: Optional[str] = None
+    error_message: str | None = None
     thread_id: int = 0
 
     @property
@@ -56,7 +57,7 @@ class IOStats:
     total_data_mb: float = 0.0
     successful_operations: int = 0
     failed_operations: int = 0
-    operations_by_type: Dict[str, int] = field(default_factory=dict)
+    operations_by_type: dict[str, int] = field(default_factory=dict)
 
     @property
     def average_duration_ms(self) -> float:
@@ -104,8 +105,8 @@ class IOPerformanceMonitor:
 
         # Thread-safe containers
         self._lock = threading.RLock()
-        self._operations: List[IOOperation] = []
-        self._stats_by_file: Dict[str, IOStats] = defaultdict(IOStats)
+        self._operations: list[IOOperation] = []
+        self._stats_by_file: dict[str, IOStats] = defaultdict(IOStats)
         self._stats_global = IOStats()
 
         # Performance thresholds (can be configured)
@@ -118,7 +119,7 @@ class IOPerformanceMonitor:
         self,
         operation_type: str,
         file_path: str,
-        dataset_path: Optional[str] = None,
+        dataset_path: str | None = None,
         data_size_mb: float = 0.0,
     ) -> IOOperation:
         """
@@ -155,7 +156,7 @@ class IOPerformanceMonitor:
         self,
         operation: IOOperation,
         success: bool = True,
-        error_message: Optional[str] = None,
+        error_message: str | None = None,
     ):
         """
         Complete tracking of an I/O operation.
@@ -236,7 +237,7 @@ class IOPerformanceMonitor:
             file_stats.operations_by_type[operation.operation_type] = 0
         file_stats.operations_by_type[operation.operation_type] += 1
 
-    def get_global_stats(self) -> Dict[str, Any]:
+    def get_global_stats(self) -> dict[str, Any]:
         """Get comprehensive global I/O statistics."""
         with self._lock:
             stats_dict = {
@@ -261,7 +262,7 @@ class IOPerformanceMonitor:
 
             return stats_dict
 
-    def get_file_stats(self, file_path: str) -> Optional[Dict[str, Any]]:
+    def get_file_stats(self, file_path: str) -> dict[str, Any] | None:
         """Get statistics for a specific file."""
         with self._lock:
             if file_path not in self._stats_by_file:
@@ -282,7 +283,7 @@ class IOPerformanceMonitor:
                 else 0,
             }
 
-    def get_recent_operations(self, limit: int = 100) -> List[Dict[str, Any]]:
+    def get_recent_operations(self, limit: int = 100) -> list[dict[str, Any]]:
         """Get recent operations for detailed analysis."""
         with self._lock:
             recent_ops = self._operations[-limit:] if self._operations else []
@@ -302,7 +303,7 @@ class IOPerformanceMonitor:
                 for op in recent_ops
             ]
 
-    def identify_bottlenecks(self) -> Dict[str, Any]:
+    def identify_bottlenecks(self) -> dict[str, Any]:
         """Identify potential I/O performance bottlenecks."""
         with self._lock:
             bottlenecks = {
@@ -375,8 +376,8 @@ class IOPerformanceMonitor:
 
     def set_thresholds(
         self,
-        slow_operation_ms: Optional[float] = None,
-        low_throughput_mbps: Optional[float] = None,
+        slow_operation_ms: float | None = None,
+        low_throughput_mbps: float | None = None,
     ):
         """Update performance thresholds for bottleneck detection."""
         if slow_operation_ms is not None:

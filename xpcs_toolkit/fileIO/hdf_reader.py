@@ -4,7 +4,7 @@ import threading
 import time
 from collections import OrderedDict
 from contextlib import contextmanager
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 # Third-party imports
 import h5py
@@ -110,7 +110,7 @@ class ConnectionStats:
         with self._lock:
             self.io_time_seconds += duration
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         with self._lock:
             uptime = time.time() - self.start_time
             total_operations = self.cache_hits + self.cache_misses
@@ -165,7 +165,7 @@ class HDF5ConnectionPool:
         # LRU cache for connections
         self._pool: OrderedDict[str, PooledConnection] = OrderedDict()
         self._pool_lock = threading.RLock()
-        self._file_locks: Dict[str, threading.RLock] = {}
+        self._file_locks: dict[str, threading.RLock] = {}
         self._file_locks_lock = threading.RLock()
 
         # Statistics tracking
@@ -176,7 +176,7 @@ class HDF5ConnectionPool:
         self._unhealthy_files = set()
 
         # Read-ahead cache for batch operations
-        self._read_cache: Dict[str, Dict[str, Any]] = {}
+        self._read_cache: dict[str, dict[str, Any]] = {}
         self._read_cache_lock = threading.RLock()
         self._read_cache_max_size = 50  # Maximum cached read results per file
 
@@ -444,7 +444,7 @@ class HDF5ConnectionPool:
         if not from_destructor:
             logger.info("Connection pool cleared")
 
-    def get_pool_stats(self) -> Dict[str, Any]:
+    def get_pool_stats(self) -> dict[str, Any]:
         """Get comprehensive pool statistics."""
         with self._pool_lock:
             pool_info = {
@@ -484,8 +484,8 @@ class HDF5ConnectionPool:
         logger.debug(f"Removed {fname} from unhealthy files set")
 
     def batch_read_datasets(
-        self, fname: str, dataset_paths: List[str], use_cache: bool = True
-    ) -> Dict[str, Any]:
+        self, fname: str, dataset_paths: list[str], use_cache: bool = True
+    ) -> dict[str, Any]:
         """
         Optimized batch reading of multiple datasets from the same file.
 
@@ -576,7 +576,7 @@ class HDF5ConnectionPool:
 
         return results
 
-    def clear_read_cache(self, fname: Optional[str] = None):
+    def clear_read_cache(self, fname: str | None = None):
         """Clear read cache for specific file or all files."""
         with self._read_cache_lock:
             if fname:
@@ -641,8 +641,7 @@ def get_abs_cs_scale(fname, ftype="nexus", use_pool=True):
     with context_manager as f:
         if key not in f:
             return None
-        else:
-            return float(f[key][()])
+        return float(f[key][()])
 
 
 def read_metadata_to_dict(file_path, use_pool=True):
@@ -730,8 +729,7 @@ def get(fname, fields, mode="raw", ret_type="dict", ftype="nexus", use_pool=True
             if path not in HDF_Result:
                 logger.error("path to field not found: %s", path)
                 raise ValueError("key not found: %s:%s", key, path)
-            else:
-                val = HDF_Result.get(path)[()]
+            val = HDF_Result.get(path)[()]
             if key in ["saxs_2d"] and val.ndim == 3:  # saxs_2d is in [1xNxM] format
                 val = val[0]
             # converts bytes to unicode;
@@ -743,8 +741,9 @@ def get(fname, fields, mode="raw", ret_type="dict", ftype="nexus", use_pool=True
 
     if ret_type == "dict":
         return ret
-    elif ret_type == "list":
+    if ret_type == "list":
         return [ret[key] for key in fields]
+    return None
 
 
 def get_analysis_type(fname, ftype="nexus", use_pool=True):
@@ -785,11 +784,11 @@ def get_analysis_type(fname, ftype="nexus", use_pool=True):
 
 def batch_read_fields(
     fname: str,
-    fields: List[str],
+    fields: list[str],
     mode: str = "raw",
     ftype: str = "nexus",
     use_pool: bool = True,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Optimized batch reading of multiple fields from HDF5 file.
 
@@ -845,7 +844,7 @@ def batch_read_fields(
     return processed_results
 
 
-def get_file_info(fname: str, use_pool: bool = True) -> Dict[str, Any]:
+def get_file_info(fname: str, use_pool: bool = True) -> dict[str, Any]:
     """
     Get basic file information and statistics.
 
@@ -897,7 +896,7 @@ def get_file_info(fname: str, use_pool: bool = True) -> Dict[str, Any]:
     return info
 
 
-def get_connection_pool_stats() -> Dict[str, Any]:
+def get_connection_pool_stats() -> dict[str, Any]:
     """
     Get comprehensive statistics about the global connection pool.
 
@@ -923,7 +922,7 @@ def force_connection_health_check():
     _connection_pool.force_health_check()
 
 
-def get_io_performance_stats() -> Dict[str, Any]:
+def get_io_performance_stats() -> dict[str, Any]:
     """
     Get comprehensive I/O performance statistics.
 
@@ -942,7 +941,7 @@ def get_io_performance_stats() -> Dict[str, Any]:
     }
 
 
-def get_file_performance_report(fname: str) -> Optional[Dict[str, Any]]:
+def get_file_performance_report(fname: str) -> dict[str, Any] | None:
     """
     Get detailed performance report for a specific file.
 
@@ -967,7 +966,7 @@ def clear_performance_stats():
 def get_chunked_dataset(
     fname: str,
     dataset_path: str,
-    chunk_size: Tuple[int, ...] = None,
+    chunk_size: tuple[int, ...] | None = None,
     use_pool: bool = True,
 ) -> np.ndarray:
     """
@@ -1029,7 +1028,7 @@ def get_chunked_dataset(
                 chunk_size = (chunk_rows, chunk_cols)
             else:
                 # For other dimensions, read in smaller slices along first dimension
-                chunk_size = (min(1000, dataset.shape[0]),) + dataset.shape[1:]
+                chunk_size = (min(1000, dataset.shape[0]), *dataset.shape[1:])
 
             logger.debug(f"Using computed chunking: {chunk_size}")
 

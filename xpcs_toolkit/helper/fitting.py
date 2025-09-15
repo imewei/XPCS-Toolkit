@@ -148,7 +148,7 @@ def _fit_single_q(args):
         # Vectorized error result generation
         result.update(
             {
-                "err_msg": f"q_index fit error: {str(e)}",
+                "err_msg": f"q_index fit error: {e!s}",
                 "fit_x": fit_x,
                 "fit_y": np.ones_like(fit_x),
                 "success": False,
@@ -309,7 +309,7 @@ def _fit_single_column_with_fixed(args):
         flag = True
         msg = "FittingSuccess"
     except (Exception, RuntimeError, ValueError, Warning) as err:
-        msg = f"Fitting failed: {str(err)}"
+        msg = f"Fitting failed: {err!s}"
         flag = False
         fit_val_col[0, fit_flag] = p0
         fit_val_col[0, fix_flag] = bounds[1, fix_flag]
@@ -355,10 +355,7 @@ def fit_with_fixed_raw(
     # process boundaries and initial values
     bounds_fit = bounds[:, fit_flag]
     # doing a simple average to get the initial guess;
-    if p0 is None:
-        p0 = np.mean(bounds_fit, axis=0)
-    else:
-        p0 = np.array(p0)[fit_flag]
+    p0 = np.mean(bounds_fit, axis=0) if p0 is None else np.array(p0)[fit_flag]
 
     fit_val = np.zeros((y.shape[1], 2, num_args))
 
@@ -450,7 +447,7 @@ def vectorized_parameter_estimation(x_data, y_data, func_type="exponential"):
 
         return [tau_est, B_est, A_est]
 
-    elif func_type == "power":
+    if func_type == "power":
         # For power law: y = A * x^(-n)
         log_x = np.log(x_clean)
         log_y = np.log(y_clean)
@@ -461,7 +458,7 @@ def vectorized_parameter_estimation(x_data, y_data, func_type="exponential"):
 
         return [A_est, n_est]
 
-    elif func_type == "gaussian":
+    if func_type == "gaussian":
         # For Gaussian: y = A * exp(-(x-mu)^2/(2*sigma^2)) + B
         B_est = np.min(y_clean)
         A_est = np.max(y_clean) - B_est

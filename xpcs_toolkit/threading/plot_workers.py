@@ -320,7 +320,7 @@ class TwotimePlotWorker(BaseAsyncWorker):
         except Exception as e:
             logger.error(f"Error processing two-time data: {e}")
             return {
-                "message": f"Error processing two-time data: {str(e)}",
+                "message": f"Error processing two-time data: {e!s}",
                 "type": "info",
             }
 
@@ -485,27 +485,26 @@ class StabilityPlotWorker(BaseAsyncWorker):
         if hasattr(xf_obj, "stability_data"):
             stability_data = xf_obj.stability_data
             logger.info("  Using existing stability_data")
-        else:
-            # Compute stability from intensity data if available
-            if hasattr(xf_obj, "Int_t"):
-                try:
-                    logger.info(f"  Int_t shape: {xf_obj.Int_t.shape}")
-                    # Int_t[1] contains the intensity vs time data
-                    intensity_data = xf_obj.Int_t[1]
-                    logger.info(f"  Int_t[1] shape: {intensity_data.shape}")
-                    stability_data = self._compute_stability_metrics(intensity_data)
-                    logger.info("  Computed stability metrics")
-                except Exception as e:
-                    logger.error(f"  Error computing stability metrics: {e}")
-                    return {
-                        "message": f"Error processing intensity data: {str(e)}",
-                        "type": "info",
-                    }
-            else:
+        # Compute stability from intensity data if available
+        elif hasattr(xf_obj, "Int_t"):
+            try:
+                logger.info(f"  Int_t shape: {xf_obj.Int_t.shape}")
+                # Int_t[1] contains the intensity vs time data
+                intensity_data = xf_obj.Int_t[1]
+                logger.info(f"  Int_t[1] shape: {intensity_data.shape}")
+                stability_data = self._compute_stability_metrics(intensity_data)
+                logger.info("  Computed stability metrics")
+            except Exception as e:
+                logger.error(f"  Error computing stability metrics: {e}")
                 return {
-                    "message": "No intensity vs time data available. Please load a file with intensity data.",
+                    "message": f"Error processing intensity data: {e!s}",
                     "type": "info",
                 }
+        else:
+            return {
+                "message": "No intensity vs time data available. Please load a file with intensity data.",
+                "type": "info",
+            }
 
         self.check_cancelled()
         self.emit_progress(3, 3, "Stability analysis complete")

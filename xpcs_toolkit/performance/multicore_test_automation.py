@@ -36,10 +36,11 @@ import os
 import platform
 import sys
 import time
+from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -52,6 +53,8 @@ from .regression_detector import RegressionDetector
 # Add project root to path
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root / "src"))
+
+import contextlib
 
 from ..utils.logging_config import get_logger
 
@@ -71,13 +74,13 @@ class CPUTopology:
     logical_cores: int
     threads_per_core: int
     numa_nodes: int
-    l1_cache_size: Optional[str] = None
-    l2_cache_size: Optional[str] = None
-    l3_cache_size: Optional[str] = None
+    l1_cache_size: str | None = None
+    l2_cache_size: str | None = None
+    l3_cache_size: str | None = None
     cpu_model: str = ""
     cpu_frequency_mhz: float = 0.0
     architecture: str = ""
-    features: List[str] = field(default_factory=list)
+    features: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -93,11 +96,11 @@ class ScalingTestResult:
     speedup_factor: float  # Relative to single-core baseline
     cpu_utilization_percent: float
     memory_usage_mb: float
-    cache_hit_rate: Optional[float] = None
+    cache_hit_rate: float | None = None
     context_switches: int = 0
     load_balance_score: float = 0.0  # How well work was distributed
     thermal_throttling: bool = False
-    additional_metrics: Dict[str, Any] = field(default_factory=dict)
+    additional_metrics: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -105,10 +108,10 @@ class MultiCoreTestConfig:
     """Configuration for multi-core testing."""
 
     # Core configurations to test
-    core_configurations: List[int] = field(default_factory=lambda: [1, 2, 4, 8, 16, 32])
+    core_configurations: list[int] = field(default_factory=lambda: [1, 2, 4, 8, 16, 32])
 
     # Thread configurations (multipliers of core count)
-    thread_multipliers: List[float] = field(
+    thread_multipliers: list[float] = field(
         default_factory=lambda: [0.5, 1.0, 1.5, 2.0, 3.0]
     )
 
@@ -133,7 +136,7 @@ class MultiCoreTestConfig:
     test_hyperthreading: bool = True
 
     # Load testing parameters
-    load_levels: List[float] = field(
+    load_levels: list[float] = field(
         default_factory=lambda: [0.25, 0.5, 0.75, 1.0, 1.25]
     )  # CPU utilization targets
 
@@ -185,7 +188,7 @@ class CPUTopologyDetector:
         # Try to get CPU model from /proc/cpuinfo on Linux
         if platform.system() == "Linux":
             try:
-                with open("/proc/cpuinfo", "r") as f:
+                with open("/proc/cpuinfo") as f:
                     for line in f:
                         if line.startswith("model name"):
                             cpu_model = line.split(":", 1)[1].strip()
@@ -212,7 +215,7 @@ class CPUTopologyDetector:
         )
 
     @staticmethod
-    def get_cache_info() -> Dict[str, str]:
+    def get_cache_info() -> dict[str, str]:
         """Get CPU cache information."""
         cache_info = {}
 
@@ -227,7 +230,7 @@ class CPUTopologyDetector:
                                 # Read cache size
                                 size_file = os.path.join(level_path, "size")
                                 if os.path.exists(size_file):
-                                    with open(size_file, "r") as f:
+                                    with open(size_file) as f:
                                         cache_info[level_dir] = f.read().strip()
             except Exception:
                 pass
@@ -296,7 +299,7 @@ class WorkloadGenerator:
     @staticmethod
     def mixed_workload(
         cpu_size: int = 10000, mem_size: int = 100000
-    ) -> Callable[[], Dict[str, float]]:
+    ) -> Callable[[], dict[str, float]]:
         """Generate mixed CPU and memory workload."""
 
         def workload():
@@ -334,11 +337,11 @@ class WorkloadGenerator:
 class MultiCoreTestAutomation:
     """Main class for multi-core performance test automation."""
 
-    def __init__(self, config: Optional[MultiCoreTestConfig] = None):
+    def __init__(self, config: MultiCoreTestConfig | None = None):
         """Initialize multi-core test automation."""
         self.config = config or MultiCoreTestConfig()
         self.topology = CPUTopologyDetector.detect_topology()
-        self.results: Dict[str, List[ScalingTestResult]] = {}
+        self.results: dict[str, list[ScalingTestResult]] = {}
 
         # Adjust core configurations based on available cores
         max_cores = self.topology.physical_cores
@@ -356,14 +359,14 @@ class MultiCoreTestAutomation:
 
     def initialize_integrations(
         self,
-        benchmark_db: Optional[BenchmarkDatabase] = None,
-        regression_detector: Optional[RegressionDetector] = None,
+        benchmark_db: BenchmarkDatabase | None = None,
+        regression_detector: RegressionDetector | None = None,
     ):
         """Initialize integrations with other systems."""
         self.benchmark_db = benchmark_db
         self.regression_detector = regression_detector
 
-    def run_scaling_performance_tests(self) -> Dict[str, List[ScalingTestResult]]:
+    def run_scaling_performance_tests(self) -> dict[str, list[ScalingTestResult]]:
         """Run comprehensive scaling performance tests."""
 
         logger.info("Starting scaling performance tests...")
@@ -392,7 +395,7 @@ class MultiCoreTestAutomation:
 
     def _test_workload_scaling(
         self, workload_name: str, workload_func: Callable
-    ) -> List[ScalingTestResult]:
+    ) -> list[ScalingTestResult]:
         """Test scaling performance for a specific workload."""
 
         results = []
@@ -499,7 +502,7 @@ class MultiCoreTestAutomation:
 
     def _execute_parallel_workload(
         self, workload_func: Callable, thread_count: int, warmup: bool = False
-    ) -> List[Any]:
+    ) -> list[Any]:
         """Execute workload in parallel with specified thread count."""
 
         results = []
@@ -554,7 +557,7 @@ class MultiCoreTestAutomation:
         # Score from 0 to 1, where 1 is perfect balance
         return 1.0 - min(balance_deviation, 1.0)
 
-    def run_cpu_affinity_tests(self) -> Dict[str, Any]:
+    def run_cpu_affinity_tests(self) -> dict[str, Any]:
         """Test CPU affinity and NUMA awareness."""
 
         if not self.config.test_cpu_affinity:
@@ -576,7 +579,7 @@ class MultiCoreTestAutomation:
 
         return affinity_results
 
-    def _test_single_core_affinity(self) -> Dict[str, float]:
+    def _test_single_core_affinity(self) -> dict[str, float]:
         """Test performance with single core affinity."""
 
         workload = WorkloadGenerator.cpu_intensive_workload(50000)
@@ -601,16 +604,14 @@ class MultiCoreTestAutomation:
                 logger.warning(f"Failed to test affinity for core {core_id}: {e}")
             finally:
                 # Reset CPU affinity
-                try:
+                with contextlib.suppress(Exception):
                     current_process.cpu_affinity(
                         list(range(self.topology.logical_cores))
                     )
-                except Exception:
-                    pass
 
         return results
 
-    def _test_core_spreading(self) -> Dict[str, float]:
+    def _test_core_spreading(self) -> dict[str, float]:
         """Test performance with core spreading strategy."""
 
         workload = WorkloadGenerator.cpu_intensive_workload(50000)
@@ -632,7 +633,7 @@ class MultiCoreTestAutomation:
 
         return results
 
-    def _test_numa_affinity(self) -> Dict[str, Any]:
+    def _test_numa_affinity(self) -> dict[str, Any]:
         """Test NUMA node affinity performance."""
 
         # This is a simplified NUMA test
@@ -650,7 +651,7 @@ class MultiCoreTestAutomation:
             "numa_nodes_detected": self.topology.numa_nodes,
         }
 
-    def run_load_testing(self) -> Dict[str, List[ScalingTestResult]]:
+    def run_load_testing(self) -> dict[str, list[ScalingTestResult]]:
         """Run load testing under various CPU utilization levels."""
 
         logger.info("Running load testing...")
@@ -685,7 +686,7 @@ class MultiCoreTestAutomation:
 
         return load_test_results
 
-    def _generate_background_load(self, target_load: float) -> List:
+    def _generate_background_load(self, target_load: float) -> list:
         """Generate background CPU load."""
 
         # Calculate number of processes needed for target load
@@ -717,7 +718,7 @@ class MultiCoreTestAutomation:
 
         return load_processes
 
-    def _cleanup_background_load(self, load_processes: List):
+    def _cleanup_background_load(self, load_processes: list):
         """Clean up background load processes."""
 
         for process in load_processes:
@@ -730,7 +731,7 @@ class MultiCoreTestAutomation:
             except Exception as e:
                 logger.warning(f"Failed to clean up load process: {e}")
 
-    def run_architecture_optimization_tests(self) -> Dict[str, Any]:
+    def run_architecture_optimization_tests(self) -> dict[str, Any]:
         """Test architecture-specific optimizations."""
 
         if not self.config.enable_architecture_optimization:
@@ -752,7 +753,7 @@ class MultiCoreTestAutomation:
 
         return arch_results
 
-    def _test_vectorization_performance(self) -> Dict[str, float]:
+    def _test_vectorization_performance(self) -> dict[str, float]:
         """Test vectorized vs non-vectorized operations."""
 
         size = 100000
@@ -781,7 +782,7 @@ class MultiCoreTestAutomation:
 
         return results
 
-    def _test_memory_alignment(self) -> Dict[str, float]:
+    def _test_memory_alignment(self) -> dict[str, float]:
         """Test memory alignment effects on performance."""
 
         # Test aligned vs unaligned memory access patterns
@@ -806,7 +807,7 @@ class MultiCoreTestAutomation:
             else 0,
         }
 
-    def _test_instruction_parallelism(self) -> Dict[str, float]:
+    def _test_instruction_parallelism(self) -> dict[str, float]:
         """Test instruction-level parallelism."""
 
         # Test independent vs dependent operations
@@ -867,7 +868,7 @@ class MultiCoreTestAutomation:
         except Exception as e:
             logger.error(f"Failed to store result in database: {e}")
 
-    def generate_scaling_analysis_report(self) -> Dict[str, Any]:
+    def generate_scaling_analysis_report(self) -> dict[str, Any]:
         """Generate comprehensive scaling analysis report."""
 
         if not self.results:
@@ -894,8 +895,8 @@ class MultiCoreTestAutomation:
         return report
 
     def _analyze_scaling_characteristics(
-        self, results: List[ScalingTestResult]
-    ) -> Dict[str, Any]:
+        self, results: list[ScalingTestResult]
+    ) -> dict[str, Any]:
         """Analyze scaling characteristics from test results."""
 
         analysis = {
@@ -933,7 +934,7 @@ class MultiCoreTestAutomation:
 
         return analysis
 
-    def _generate_optimization_recommendations(self) -> List[str]:
+    def _generate_optimization_recommendations(self) -> list[str]:
         """Generate optimization recommendations based on test results."""
 
         recommendations = []
@@ -992,9 +993,7 @@ class MultiCoreTestAutomation:
 
         return recommendations
 
-    def create_scaling_visualizations(
-        self, output_dir: Union[str, Path]
-    ) -> Dict[str, str]:
+    def create_scaling_visualizations(self, output_dir: str | Path) -> dict[str, str]:
         """Create scaling performance visualizations."""
 
         output_dir = Path(output_dir)
@@ -1067,7 +1066,7 @@ class MultiCoreTestAutomation:
 
             workload_names = list(self.results.keys())
             core_counts = sorted(
-                set(r.core_count for results in self.results.values() for r in results)
+                {r.core_count for results in self.results.values() for r in results}
             )
 
             # Create heatmap data
@@ -1157,7 +1156,7 @@ def main():
     # Load configuration
     config = MultiCoreTestConfig()
     if args.config and Path(args.config).exists():
-        with open(args.config, "r") as f:
+        with open(args.config) as f:
             config_data = json.load(f)
             # Update config (simplified)
             for key, value in config_data.items():
@@ -1178,37 +1177,20 @@ def main():
 
     # Detect topology
     if args.detect_topology:
-        topology = automation.topology
-        print("CPU Topology Information:")
-        print(f"  Physical Cores: {topology.physical_cores}")
-        print(f"  Logical Cores: {topology.logical_cores}")
-        print(f"  Threads per Core: {topology.threads_per_core}")
-        print(f"  NUMA Nodes: {topology.numa_nodes}")
-        print(f"  CPU Model: {topology.cpu_model}")
-        print(f"  Architecture: {topology.architecture}")
-        print(f"  CPU Frequency: {topology.cpu_frequency_mhz:.1f} MHz")
         return
 
     # Run tests
     if args.run_scaling_tests:
-        print("Running scaling performance tests...")
-        results = automation.run_scaling_performance_tests()
-        print(f"Completed scaling tests for {len(results)} workload types")
+        automation.run_scaling_performance_tests()
 
     if args.run_affinity_tests:
-        print("Running CPU affinity tests...")
-        affinity_results = automation.run_cpu_affinity_tests()
-        print(f"CPU affinity test results: {affinity_results}")
+        automation.run_cpu_affinity_tests()
 
     if args.run_load_tests:
-        print("Running load tests...")
-        load_results = automation.run_load_testing()
-        print(f"Completed load tests for {len(load_results)} load levels")
+        automation.run_load_testing()
 
     if args.run_architecture_tests:
-        print("Running architecture optimization tests...")
-        arch_results = automation.run_architecture_optimization_tests()
-        print(f"Architecture test results: {arch_results}")
+        automation.run_architecture_optimization_tests()
 
     # Generate report
     if args.generate_report:
@@ -1217,21 +1199,14 @@ def main():
         with open(args.generate_report, "w") as f:
             json.dump(report, f, indent=2)
 
-        print(f"Generated report: {args.generate_report}")
-
         # Print summary
         if "scaling_analysis" in report:
-            print("\nScaling Analysis Summary:")
-            for workload, analysis in report["scaling_analysis"].items():
-                print(
-                    f"  {workload}: Optimal threads={analysis.get('optimal_thread_count', 'N/A')}, "
-                    f"Peak efficiency={analysis.get('peak_efficiency', 0):.1f}%"
-                )
+            for _workload, _analysis in report["scaling_analysis"].items():
+                pass
 
     # Create visualizations
     if args.create_visualizations:
-        viz_files = automation.create_scaling_visualizations(args.create_visualizations)
-        print(f"Created visualizations: {list(viz_files.values())}")
+        automation.create_scaling_visualizations(args.create_visualizations)
 
     if not any(
         [
@@ -1244,7 +1219,7 @@ def main():
             args.create_visualizations,
         ]
     ):
-        print("Use --help for usage information")
+        pass
 
 
 if __name__ == "__main__":

@@ -12,7 +12,7 @@ import time
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 from .cpu_bottleneck_analyzer import (
     BottleneckFinding,
@@ -65,12 +65,11 @@ class PerformanceImprovement:
         """Determine impact level based on improvement percentage."""
         if self.improvement_percentage >= 50:
             return OptimizationImpact.CRITICAL
-        elif self.improvement_percentage >= 25:
+        if self.improvement_percentage >= 25:
             return OptimizationImpact.HIGH
-        elif self.improvement_percentage >= 10:
+        if self.improvement_percentage >= 10:
             return OptimizationImpact.MEDIUM
-        else:
-            return OptimizationImpact.LOW
+        return OptimizationImpact.LOW
 
 
 @dataclass
@@ -80,15 +79,15 @@ class OptimizationRecommendation:
     title: str
     category: str
     description: str
-    implementation_steps: List[str]
+    implementation_steps: list[str]
     estimated_improvement: PerformanceImprovement
-    prerequisites: List[str] = field(default_factory=list)
-    risks: List[str] = field(default_factory=list)
-    testing_requirements: List[str] = field(default_factory=list)
-    affected_components: List[str] = field(default_factory=list)
+    prerequisites: list[str] = field(default_factory=list)
+    risks: list[str] = field(default_factory=list)
+    testing_requirements: list[str] = field(default_factory=list)
+    affected_components: list[str] = field(default_factory=list)
     priority_score: float = 0.0
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for serialization."""
         return {
             "title": self.title,
@@ -110,23 +109,23 @@ class WorkflowOptimizationReport:
 
     report_id: str
     generation_timestamp: float
-    analysis_period: Tuple[float, float]  # (start_time, end_time)
+    analysis_period: tuple[float, float]  # (start_time, end_time)
     analyzed_workflows: int
 
     # Analysis results
-    bottleneck_findings: List[BottleneckFinding] = field(default_factory=list)
-    optimization_recommendations: List[OptimizationRecommendation] = field(
+    bottleneck_findings: list[BottleneckFinding] = field(default_factory=list)
+    optimization_recommendations: list[OptimizationRecommendation] = field(
         default_factory=list
     )
-    usage_patterns: Dict[str, Any] = field(default_factory=dict)
-    performance_baseline: Dict[str, Any] = field(default_factory=dict)
+    usage_patterns: dict[str, Any] = field(default_factory=dict)
+    performance_baseline: dict[str, Any] = field(default_factory=dict)
 
     # Summary statistics
     critical_issues: int = 0
     high_priority_optimizations: int = 0
     estimated_total_improvement: float = 0.0
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert report to dictionary for serialization."""
         return {
             "report_id": self.report_id,
@@ -154,8 +153,8 @@ class WorkflowOptimizationReportGenerator:
     """
 
     def __init__(self):
-        self.report_cache: Dict[str, WorkflowOptimizationReport] = {}
-        self.baseline_metrics: Dict[str, Any] = {}
+        self.report_cache: dict[str, WorkflowOptimizationReport] = {}
+        self.baseline_metrics: dict[str, Any] = {}
 
         # Integration with existing optimization systems
         self._load_baseline_metrics()
@@ -276,8 +275,8 @@ class WorkflowOptimizationReportGenerator:
         )
 
     def _generate_optimization_recommendations(
-        self, bottlenecks: List[BottleneckFinding], usage_patterns: Dict[str, Any]
-    ) -> List[OptimizationRecommendation]:
+        self, bottlenecks: list[BottleneckFinding], usage_patterns: dict[str, Any]
+    ) -> list[OptimizationRecommendation]:
         """Generate comprehensive optimization recommendations."""
         recommendations = []
 
@@ -297,8 +296,8 @@ class WorkflowOptimizationReportGenerator:
         return recommendations
 
     def _recommendations_from_bottlenecks(
-        self, bottlenecks: List[BottleneckFinding]
-    ) -> List[OptimizationRecommendation]:
+        self, bottlenecks: list[BottleneckFinding]
+    ) -> list[OptimizationRecommendation]:
         """Generate recommendations from bottleneck findings."""
         recommendations = []
 
@@ -315,7 +314,7 @@ class WorkflowOptimizationReportGenerator:
 
     def _create_bottleneck_recommendation(
         self, bottleneck: BottleneckFinding
-    ) -> Optional[OptimizationRecommendation]:
+    ) -> OptimizationRecommendation | None:
         """Create optimization recommendation from bottleneck finding."""
 
         # Calculate estimated improvement
@@ -427,7 +426,7 @@ class WorkflowOptimizationReportGenerator:
 
     def _analyze_bottleneck_requirements(
         self, bottleneck: BottleneckFinding
-    ) -> Tuple[List[str], List[str]]:
+    ) -> tuple[list[str], list[str]]:
         """Analyze prerequisites and risks for bottleneck optimization."""
 
         prerequisites = [
@@ -456,8 +455,8 @@ class WorkflowOptimizationReportGenerator:
         return prerequisites, risks
 
     def _recommendations_from_patterns(
-        self, usage_patterns: Dict[str, Any]
-    ) -> List[OptimizationRecommendation]:
+        self, usage_patterns: dict[str, Any]
+    ) -> list[OptimizationRecommendation]:
         """Generate recommendations from usage patterns."""
         recommendations = []
 
@@ -510,8 +509,8 @@ class WorkflowOptimizationReportGenerator:
             title=f"Implement {cache_opt.resource_type} caching",
             category="caching",
             description=cache_opt.description,
-            implementation_steps=cache_opt.implementation_notes
-            + [
+            implementation_steps=[
+                *cache_opt.implementation_notes,
                 f"Allocate {cache_opt.cache_size_mb:.1f}MB for cache",
                 "Implement cache key generation strategy",
                 "Add cache hit/miss monitoring",
@@ -642,7 +641,7 @@ class WorkflowOptimizationReportGenerator:
         return max(0, priority_score)
 
     def _calculate_total_improvement(
-        self, recommendations: List[OptimizationRecommendation]
+        self, recommendations: list[OptimizationRecommendation]
     ) -> float:
         """Calculate estimated total improvement from all recommendations."""
         if not recommendations:
@@ -742,7 +741,7 @@ class WorkflowOptimizationReportGenerator:
                 <p>Generated: {datetime.fromtimestamp(report.generation_timestamp).strftime("%Y-%m-%d %H:%M:%S")}</p>
                 <p>Report ID: {report.report_id}</p>
             </div>
-            
+
             <div class="summary">
                 <h2>Executive Summary</h2>
                 <p><strong>Analyzed Workflows:</strong> {report.analyzed_workflows}</p>
@@ -750,7 +749,7 @@ class WorkflowOptimizationReportGenerator:
                 <p><strong>High Priority Optimizations:</strong> {report.high_priority_optimizations}</p>
                 <p><strong>Estimated Total Improvement:</strong> {report.estimated_total_improvement:.1f}%</p>
             </div>
-            
+
             <h2>Optimization Recommendations</h2>
         """
 
@@ -783,14 +782,14 @@ class WorkflowOptimizationReportGenerator:
         """Generate Markdown report content."""
         md = f"""# XPCS Toolkit Workflow Optimization Report
 
-**Report ID:** {report.report_id}  
+**Report ID:** {report.report_id}
 **Generated:** {datetime.fromtimestamp(report.generation_timestamp).strftime("%Y-%m-%d %H:%M:%S")}
 
 ## Executive Summary
 
 - **Analyzed Workflows:** {report.analyzed_workflows}
 - **Critical Issues:** {report.critical_issues}
-- **High Priority Optimizations:** {report.high_priority_optimizations}  
+- **High Priority Optimizations:** {report.high_priority_optimizations}
 - **Estimated Total Improvement:** {report.estimated_total_improvement:.1f}%
 
 ## Top Optimization Recommendations
@@ -807,9 +806,9 @@ class WorkflowOptimizationReportGenerator:
 
             md += f"""### {i}. {impact_emoji} {rec.title}
 
-**Category:** {rec.category}  
-**Impact:** {rec.estimated_improvement.improvement_percentage:.1f}% improvement  
-**Implementation Effort:** {rec.estimated_improvement.implementation_effort}  
+**Category:** {rec.category}
+**Impact:** {rec.estimated_improvement.improvement_percentage:.1f}% improvement
+**Implementation Effort:** {rec.estimated_improvement.implementation_effort}
 **Priority Score:** {rec.priority_score:.1f}
 
 {rec.description}
@@ -850,9 +849,9 @@ TOP OPTIMIZATION RECOMMENDATIONS
    Impact: {rec.estimated_improvement.improvement_percentage:.1f}% improvement
    Implementation Effort: {rec.estimated_improvement.implementation_effort}
    Priority Score: {rec.priority_score:.1f}
-   
+
    Description: {rec.description}
-   
+
    Implementation Steps:
 """
             for step in rec.implementation_steps:
@@ -862,7 +861,7 @@ TOP OPTIMIZATION RECOMMENDATIONS
 
         return text
 
-    def get_report_summary(self, report_id: str) -> Dict[str, Any]:
+    def get_report_summary(self, report_id: str) -> dict[str, Any]:
         """Get a summary of a specific report."""
         if report_id not in self.report_cache:
             return {"error": f"Report {report_id} not found"}
@@ -924,13 +923,13 @@ def export_optimization_report(
     optimization_report_generator.export_report(report, file_path, format)
 
 
-def get_quick_optimization_summary() -> Dict[str, Any]:
+def get_quick_optimization_summary() -> dict[str, Any]:
     """Get a quick summary of current optimization opportunities."""
     report = generate_optimization_report(20)  # Analyze last 20 workflows
     return optimization_report_generator.get_report_summary(report.report_id)
 
 
-def get_top_optimization_recommendations(count: int = 5) -> List[Dict[str, Any]]:
+def get_top_optimization_recommendations(count: int = 5) -> list[dict[str, Any]]:
     """Get top optimization recommendations."""
     report = generate_optimization_report(30)
 

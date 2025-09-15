@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import time
 from contextlib import contextmanager
-from typing import Any, Dict, Optional
+from typing import Any
 
 from .cpu_bottleneck_analyzer import analyze_recent_workflows
 from .logging_config import get_logger
@@ -40,7 +40,7 @@ class WorkflowProfilingIntegration:
 
     def __init__(self):
         self.enabled = True
-        self.current_session_id: Optional[str] = None
+        self.current_session_id: str | None = None
         self.auto_analysis_threshold = 10  # Auto-analyze after 10 workflows
         self.workflow_count = 0
 
@@ -102,7 +102,7 @@ class WorkflowProfilingIntegration:
         with profile_workflow_step(self.current_session_id, step_name, **step_params):
             yield
 
-    def profile_xpcs_function(self, func_name: Optional[str] = None):
+    def profile_xpcs_function(self, func_name: str | None = None):
         """
         Decorator for profiling individual functions within workflows.
 
@@ -164,9 +164,9 @@ class WorkflowProfilingIntegration:
 
     def generate_performance_report(
         self,
-        output_file: Optional[str] = None,
+        output_file: str | None = None,
         format: ReportFormat = ReportFormat.MARKDOWN,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Generate and optionally export a comprehensive performance report.
 
@@ -195,7 +195,7 @@ class WorkflowProfilingIntegration:
             logger.error(f"Error generating performance report: {e}")
             return {"error": str(e)}
 
-    def get_current_bottlenecks(self, count: int = 5) -> Dict[str, Any]:
+    def get_current_bottlenecks(self, count: int = 5) -> dict[str, Any]:
         """Get current performance bottlenecks."""
         try:
             bottlenecks = analyze_recent_workflows(count=20)
@@ -224,7 +224,7 @@ class WorkflowProfilingIntegration:
             logger.error(f"Error analyzing current bottlenecks: {e}")
             return {"error": str(e)}
 
-    def get_usage_insights(self) -> Dict[str, Any]:
+    def get_usage_insights(self) -> dict[str, Any]:
         """Get insights about current usage patterns."""
         try:
             from .usage_pattern_miner import analyze_current_usage_patterns
@@ -400,8 +400,8 @@ def demonstrate_performance_reporting():
     demonstrate_workflow_profiling()
 
     # Generate performance report using secure temp directory
-    import tempfile
     import os
+    import tempfile
 
     # Use system temp directory securely
     temp_dir = tempfile.gettempdir()
@@ -444,10 +444,8 @@ if __name__ == "__main__":
     try:
         # Run demonstrations
         demonstrate_workflow_profiling()
-        print("\n" + "=" * 60 + "\n")
 
         demonstrate_performance_reporting()
-        print("\n" + "=" * 60 + "\n")
 
         logger.info("All workflow profiling demonstrations completed successfully")
 

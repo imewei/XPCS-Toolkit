@@ -47,7 +47,7 @@ def get_color_marker(n, backend="matplotlib"):
 
 class NavigationToolbarSimple(NavigationToolbar2QT):
     def __init__(self, *kw, **kwargs):
-        super(NavigationToolbarSimple, self).__init__(*kw, **kwargs)
+        super().__init__(*kw, **kwargs)
 
     def mouse_move(self, event):
         # just disable the mose_move event
@@ -114,7 +114,7 @@ class MplCanvas(FigureCanvasQTAgg):
     def __init__(self, parent=None, width=15, height=12, dpi=100):
         self.fig = Figure(figsize=(width, height), dpi=dpi)
         # self.axes = fig.add_subplot(111)
-        super(MplCanvas, self).__init__(self.fig)
+        super().__init__(self.fig)
         self.shape = None
         self.axes = None
         self.obj = None
@@ -159,10 +159,7 @@ class MplCanvas(FigureCanvasQTAgg):
 
     def adjust_canvas_size(self, num_col, num_row):
         t = self.parent().parent().parent()
-        if t is None:
-            aspect = 1 / 1.618
-        else:
-            aspect = t.height() / self.width()
+        aspect = 1 / 1.618 if t is None else t.height() / self.width()
 
         min_size = t.height() - 20
         width = self.width()
@@ -172,28 +169,26 @@ class MplCanvas(FigureCanvasQTAgg):
     def clear_axes(self):
         if self.axes is None:
             return
+        if self.shape == (1, 1):
+            self.axes.clear()
         else:
-            if self.shape == (1, 1):
-                self.axes.clear()
-            else:
-                for ax in self.axes.ravel():
-                    ax.clear()
+            for ax in self.axes.ravel():
+                ax.clear()
 
     def auto_scale(self, ylim=None, xlim=None, xscale=None, yscale=None):
         if self.axes is None:
             return
-        else:
-            for ax in np.array(self.axes).ravel():
-                if xscale is not None:
-                    ax.set_xscale(xscale)
-                if yscale is not None:
-                    ax.set_yscale(yscale)
-                ax.relim()
-                ax.autoscale_view(True, True, True)
-                if ylim is not None:
-                    ax.set_ylim(ylim)
-                if xlim is not None:
-                    ax.set_xlim(xlim)
+        for ax in np.array(self.axes).ravel():
+            if xscale is not None:
+                ax.set_xscale(xscale)
+            if yscale is not None:
+                ax.set_yscale(yscale)
+            ax.relim()
+            ax.autoscale_view(True, True, True)
+            if ylim is not None:
+                ax.set_ylim(ylim)
+            if xlim is not None:
+                ax.set_xlim(xlim)
 
     def update_lin(self, loc, x, y, visible=True):
         if self.obj is None:
@@ -263,7 +258,6 @@ class MplCanvas(FigureCanvasQTAgg):
             self.axes.set_ylabel(ylabel)
 
         self.draw()
-        return
 
     def show_lines(
         self,
@@ -330,7 +324,6 @@ class MplCanvas(FigureCanvasQTAgg):
         self.axes.set_ylabel(ylabel)
         self.fig.tight_layout(rect=(0.07, 0.07, 0.93, 0.93))
         self.draw()
-        return
 
     def show_scatter(
         self,
@@ -363,7 +356,6 @@ class MplCanvas(FigureCanvasQTAgg):
         self.axes.set_xlabel(xlabel)
         self.axes.set_ylabel(ylabel)
         self.draw()
-        return
 
 
 # https://github.com/matplotlib/matplotlib/issues/4556
@@ -380,7 +372,8 @@ def adjust_yerr(err_obj, x, y, y_error):
     # err_bot.set_ydata(yerr_bot)
 
     new_segments = [
-        np.array([[x, yt], [x, yb]]) for x, yt, yb in zip(x, yerr_top, yerr_bot)
+        np.array([[x, yt], [x, yb]])
+        for x, yt, yb in zip(x, yerr_top, yerr_bot, strict=False)
     ]
 
     bars.set_segments(new_segments)
@@ -400,7 +393,7 @@ MplToolbar = NavigationToolbar2QT
 #         self.setCentralWidget(widget)
 
 
-class LineBuilder(object):
+class LineBuilder:
     """
         code copied from
         http://chuanshuoge2.blogspot.com/2019/12/matplotlib-mouse-click-event\
@@ -425,9 +418,9 @@ class LineBuilder(object):
         self.xs = []
         self.ys = []
         self.color_hist = []
-        for n in range(len(self.ax.lines) - self.reserve_lines):
+        for _n in range(len(self.ax.lines) - self.reserve_lines):
             self.ax.lines.pop()
-        for n in range(len(self.labels)):
+        for _n in range(len(self.labels)):
             label = self.labels.pop()
             label.remove()
         self.fig.canvas.draw()
@@ -440,7 +433,7 @@ class LineBuilder(object):
             if dn_term == 0:
                 dn_term = 1e-8
             slope = np.log(ya / yb) / dn_term
-            txt = "$q^{%.2f}$" % slope
+            txt = f"$q^{{{slope:.2f}}}$"
 
             # compute position to add label, notice the plot should be
             # logx-logy; slightly offset cen_x to make the label more clear
@@ -451,7 +444,7 @@ class LineBuilder(object):
             xa, xb = self.xs[-2], self.xs[-1]
             ya, yb = self.ys[-1], self.ys[-1]
             delta_x = 2 * np.pi / abs(xa - xb)
-            txt = "$\\Delta_x={%.1f}\\AA$" % delta_x
+            txt = f"$\\Delta_x={{{delta_x:.1f}}}\\AA$"
 
             cen_x = np.sqrt(xa * xa)
             cen_y = np.sqrt(ya * yb * 0.3)
@@ -488,11 +481,10 @@ class LineBuilder(object):
         if event.button == 3:
             if len(self.xs) == 0:
                 return
-            else:
-                self.xs.pop()
-                self.ys.pop()
-                if self.lb_type == "hline":
-                    self.ax.lines.pop()
+            self.xs.pop()
+            self.ys.pop()
+            if self.lb_type == "hline":
+                self.ax.lines.pop()
             # delete last line drawn if the line is missing a point,
             # never delete the original stock plot
             if len(self.xs) % 2 == 1 and len(self.ax.lines) > self.reserve_lines:

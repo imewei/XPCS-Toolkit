@@ -21,13 +21,13 @@ from .multicore_test_automation import MultiCoreTestAutomation, MultiCoreTestCon
 from .regression_detector import RegressionAnalysisConfig, RegressionDetector
 
 __all__ = [
+    "BenchmarkDatabase",
     "CPUPerformanceTestSuite",
     "CPUTestConfig",
-    "BenchmarkDatabase",
-    "PerformanceRecord",
-    "SystemConfiguration",
-    "RegressionDetector",
-    "RegressionAnalysisConfig",
     "MultiCoreTestAutomation",
     "MultiCoreTestConfig",
+    "PerformanceRecord",
+    "RegressionAnalysisConfig",
+    "RegressionDetector",
+    "SystemConfiguration",
 ]

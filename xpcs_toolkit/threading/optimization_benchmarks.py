@@ -11,7 +11,7 @@ import statistics
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field
-from typing import Any, Dict, List
+from typing import Any
 
 from PySide6.QtCore import QCoreApplication, QObject, Signal
 
@@ -53,7 +53,7 @@ class BenchmarkSuite:
     """Collection of benchmark results."""
 
     suite_name: str
-    results: List[BenchmarkResult] = field(default_factory=list)
+    results: list[BenchmarkResult] = field(default_factory=list)
     total_improvement: float = field(init=False, default=0.0)
 
     def add_result(self, result: BenchmarkResult):
@@ -129,7 +129,7 @@ class BenchmarkWorker(OptimizedBaseWorker):
         self,
         work_duration: float = 0.1,
         signal_frequency: float = 0.01,
-        worker_id: str = None,
+        worker_id: str | None = None,
     ):
         super().__init__(worker_id)
         self.work_duration = work_duration
@@ -448,7 +448,7 @@ class ThreadingBenchmarks:
         # Baseline: Direct attribute access
         baseline_start = time.perf_counter()
 
-        for i in range(num_accesses):
+        for _i in range(num_accesses):
             # Simulate frequent attribute access patterns
             _ = worker._is_cancelled
             _ = worker.worker_id
@@ -461,7 +461,7 @@ class ThreadingBenchmarks:
         worker._start_time = time.perf_counter()  # Set for execution time calculation
         optimized_start = time.perf_counter()
 
-        for i in range(num_accesses):
+        for _i in range(num_accesses):
             # Use cached attribute access
             _ = worker.is_cancelled  # Uses cache
             _ = worker.get_cached_attribute("worker_id", lambda: worker.worker_id)
@@ -520,7 +520,7 @@ class ThreadingBenchmarks:
 
         return self.benchmark_results
 
-    def generate_performance_report(self) -> Dict[str, Any]:
+    def generate_performance_report(self) -> dict[str, Any]:
         """Generate detailed performance report."""
 
         # Get optimization statistics
@@ -572,7 +572,7 @@ class ThreadingBenchmarks:
         return report
 
 
-def run_optimization_benchmarks() -> Dict[str, Any]:
+def run_optimization_benchmarks() -> dict[str, Any]:
     """
     Run comprehensive optimization benchmarks and return results.
 
@@ -619,6 +619,3 @@ if __name__ == "__main__":
     results = run_optimization_benchmarks()
 
     # Print results
-    import json
-
-    print(json.dumps(results, indent=2))

@@ -7,8 +7,9 @@ existing GUI code to use the enhanced threading capabilities.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from functools import wraps
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any
 
 from PySide6 import QtWidgets
 from PySide6.QtCore import QObject
@@ -65,10 +66,10 @@ class ThreadingIntegrator(QObject):
 
     def async_file_load(
         self,
-        file_paths: List[str],
+        file_paths: list[str],
         load_function: Callable,
-        progress_callback: Optional[Callable] = None,
-        completion_callback: Optional[Callable] = None,
+        progress_callback: Callable | None = None,
+        completion_callback: Callable | None = None,
         batch_size: int = 5,
     ) -> str:
         """Convenience method for async file loading."""
@@ -84,7 +85,7 @@ class ThreadingIntegrator(QObject):
         self,
         plot_function: Callable,
         plot_args: tuple = (),
-        plot_kwargs: dict = None,
+        plot_kwargs: dict | None = None,
         plot_type: str = "generic",
         priority: WorkerPriority = WorkerPriority.NORMAL,
     ) -> str:
@@ -107,9 +108,9 @@ class ThreadingIntegrator(QObject):
 
     def validate_params_async(
         self,
-        params: Dict[str, Any],
+        params: dict[str, Any],
         validation_function: Callable,
-        validation_callback: Optional[Callable] = None,
+        validation_callback: Callable | None = None,
     ) -> str:
         """Convenience method for async parameter validation."""
         return self.main_thread_optimizer.validate_parameters_async(
@@ -232,7 +233,7 @@ class AsyncMethodMixin:
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._async_operations: Dict[str, str] = {}  # method_name -> operation_id
+        self._async_operations: dict[str, str] = {}  # method_name -> operation_id
 
     def make_method_async(self, method_name: str, *args, **kwargs):
         """
@@ -287,7 +288,7 @@ class AsyncMethodMixin:
                 return success
         return False
 
-    def get_async_method_status(self, method_name: str) -> Dict[str, Any]:
+    def get_async_method_status(self, method_name: str) -> dict[str, Any]:
         """Get status of an async method execution."""
         if method_name in self._async_operations and hasattr(
             self, "_threading_integrator"
@@ -367,8 +368,8 @@ def create_completion_callback(
 
 def async_load_xpcs_files(
     integrator: ThreadingIntegrator,
-    file_paths: List[str],
-    ui_update_callback: Optional[Callable] = None,
+    file_paths: list[str],
+    ui_update_callback: Callable | None = None,
 ) -> str:
     """
     Load XPCS files asynchronously with progress feedback.
@@ -388,7 +389,7 @@ def async_load_xpcs_files(
 
         return XpcsFile(file_path)
 
-    def progress_callback(partial_result: Dict[str, Any], is_final: bool):
+    def progress_callback(partial_result: dict[str, Any], is_final: bool):
         if ui_update_callback:
             ui_update_callback(partial_result, is_final)
 
@@ -398,7 +399,7 @@ def async_load_xpcs_files(
 
 
 def async_generate_saxs_plot(
-    integrator: ThreadingIntegrator, plot_handler, xf_list: List, **plot_kwargs
+    integrator: ThreadingIntegrator, plot_handler, xf_list: list, **plot_kwargs
 ) -> str:
     """
     Generate SAXS plot asynchronously.
@@ -427,7 +428,7 @@ def async_generate_saxs_plot(
 def async_generate_g2_plot(
     integrator: ThreadingIntegrator,
     plot_handler,
-    xf_list: List,
+    xf_list: list,
     q_range: tuple,
     t_range: tuple,
     y_range: tuple,

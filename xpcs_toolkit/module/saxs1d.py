@@ -104,8 +104,7 @@ def get_pyqtgraph_anchor_params(loc, padding=10):
         itemPos, parentPos, offset_mult = _ANCHOR_MAP[loc_str]
         offset = (padding * offset_mult[0], padding * offset_mult[1])
         return {"itemPos": itemPos, "parentPos": parentPos, "offset": offset}
-    else:
-        raise ValueError(f"Invalid or unsupported Matplotlib location string: '{loc}'")
+    raise ValueError(f"Invalid or unsupported Matplotlib location string: '{loc}'")
 
 
 def offset_intensity(Iq, n, plot_offset=None, yscale=None):
@@ -121,7 +120,7 @@ def offset_intensity(Iq, n, plot_offset=None, yscale=None):
         offset = -plot_offset * n * max_Iq
         return Iq + offset
 
-    elif yscale == "log":
+    if yscale == "log":
         # Vectorized logarithmic offset using optimized power calculation
         offset = np.power(10.0, plot_offset * n)
         return Iq / offset
@@ -140,7 +139,7 @@ def plot_line_with_marker(
     Vectorized plotting function with advanced data filtering and memory optimization.
     """
     color_hex, marker = get_color_marker(index, backend="pyqtgraph")
-    rgba = pg.mkColor(color_hex).getRgb()[:3] + (int(alpha_val * 255),)
+    rgba = (*pg.mkColor(color_hex).getRgb()[:3], int(alpha_val * 255))
 
     # Vectorized data validation - single pass filtering
     if log_y:
@@ -327,7 +326,6 @@ def pg_plot(
         plot_item.setLabel("left", ylabel)
 
     plot_item.showGrid(x=True, y=True, alpha=0.3)
-    return
 
 
 def vectorized_q_binning(q_values, intensities, q_min, q_max, num_bins):
@@ -447,32 +445,28 @@ def vectorized_intensity_normalization(
         # 1D case
         if method == "q2":
             return intensities * q_values**2
-        elif method == "q4":
+        if method == "q4":
             return intensities * q_values**4
-        elif method == "max":
+        if method == "max":
             return intensities / np.max(intensities)
-        elif method == "area":
+        if method == "area":
             # Numerical integration for area normalization
             area = np.trapz(intensities, q_values)
             return intensities / area
-    else:
-        # 2D case: multiple curves
-        if method == "q2":
-            return intensities * q_values[np.newaxis, :] ** 2
-        elif method == "q4":
-            return intensities * q_values[np.newaxis, :] ** 4
-        elif method == "max":
-            max_vals = np.max(intensities, axis=1, keepdims=True)
-            return intensities / max_vals
-        elif method == "area":
-            # Vectorized area normalization for multiple curves
-            areas = np.array(
-                [
-                    np.trapz(intensities[i], q_values)
-                    for i in range(intensities.shape[0])
-                ]
-            )
-            return intensities / areas[:, np.newaxis]
+    # 2D case: multiple curves
+    elif method == "q2":
+        return intensities * q_values[np.newaxis, :] ** 2
+    elif method == "q4":
+        return intensities * q_values[np.newaxis, :] ** 4
+    elif method == "max":
+        max_vals = np.max(intensities, axis=1, keepdims=True)
+        return intensities / max_vals
+    elif method == "area":
+        # Vectorized area normalization for multiple curves
+        areas = np.array(
+            [np.trapz(intensities[i], q_values) for i in range(intensities.shape[0])]
+        )
+        return intensities / areas[:, np.newaxis]
 
     return intensities
 

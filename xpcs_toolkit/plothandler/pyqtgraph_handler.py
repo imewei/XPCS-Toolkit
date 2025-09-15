@@ -14,12 +14,12 @@ class ImageViewPlotItem(ImageView):
     # ImageView only supports x/y tics when view is a PlotItem
     def __init__(self, *args, **kwargs) -> None:
         plot_item = pg.PlotItem()
-        super(ImageViewPlotItem, self).__init__(*args, view=plot_item, **kwargs)
+        super().__init__(*args, view=plot_item, **kwargs)
 
 
 class ImageViewDev(ImageView):
     def __init__(self, *args, **kwargs) -> None:
-        super(ImageViewDev, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.roi_record = {}
         self.roi_idx = 0
         logger.debug("ImageViewDev initialized")
@@ -42,7 +42,7 @@ class ImageViewDev(ImageView):
 
     def clear(self):
         logger.debug("Clearing ImageViewDev")
-        super(ImageViewDev, self).clear()
+        super().clear()
 
         self.remove_rois()
         self.reset_limits()
@@ -119,7 +119,7 @@ class ImageViewDev(ImageView):
             new_roi = pg.ScatterPlotItem()
             new_roi.addPoints(x=[cen[0]], y=[cen[1]], symbol="+", size=15)
         else:
-            raise TypeError("type not implemented. %s" % sl_type)
+            raise TypeError(f"type not implemented. {sl_type}")
 
         new_roi.sl_mode = sl_mode
 
@@ -150,7 +150,7 @@ class ImageViewDev(ImageView):
         for key, roi in self.roi_record.items():
             if key == "Center":
                 continue
-            elif key.startswith("RingB"):
+            if key.startswith("RingB"):
                 temp = {
                     "sl_type": "Ring",
                     "radius": (
@@ -167,15 +167,12 @@ class ImageViewDev(ImageView):
 
 class PlotWidgetDev(GraphicsLayoutWidget):
     def __init__(self, *args, **kwargs) -> None:
-        super(PlotWidgetDev, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.setBackground("w")
 
     def adjust_canvas_size(self, num_col, num_row):
         t = self.parent().parent().parent()
-        if t is None:
-            aspect = 1 / 1.618
-        else:
-            aspect = t.height() / self.width()
+        aspect = 1 / 1.618 if t is None else t.height() / self.width()
 
         min_size = t.height() - 20
         width = self.width()
@@ -219,7 +216,7 @@ class PieROI(pg.ROI):
         y = y / (np.max(y) - np.min(y)) + 0.5
         poly = QtGui.QPolygonF()
         poly.append(QtCore.QPointF(0.0, 0.5))
-        for pt in zip(x, y):
+        for pt in zip(x, y, strict=False):
             poly.append(QtCore.QPointF(*pt))
         self.poly = None
         self.poly = poly

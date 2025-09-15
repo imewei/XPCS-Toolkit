@@ -1,3 +1,5 @@
+import contextlib
+
 import numpy as np
 import pyqtgraph as pg
 
@@ -159,16 +161,12 @@ def plot(xf_list, pg_hdl, enable_zoom=True, xlabel="Frame Index", **kwargs):
     if enable_zoom and lr is not None:
 
         def update_plot():
-            try:
+            with contextlib.suppress(Exception):
                 tz.setXRange(*lr.getRegion(), padding=0)
-            except Exception:
-                pass
 
         def update_region():
-            try:
+            with contextlib.suppress(Exception):
                 lr.setRegion(tz.getViewBox().viewRange()[0])
-            except Exception:
-                pass
 
         lr.sigRegionChanged.connect(update_plot)
         tz.sigXRangeChanged.connect(update_region)

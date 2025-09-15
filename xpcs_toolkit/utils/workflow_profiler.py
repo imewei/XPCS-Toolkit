@@ -13,9 +13,10 @@ import os
 import threading
 import time
 from collections import defaultdict
+from collections.abc import Callable
 from contextlib import contextmanager
 from dataclasses import dataclass, field
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any
 
 import numpy as np
 import psutil
@@ -32,24 +33,24 @@ class WorkflowStep:
 
     name: str
     start_time: float
-    end_time: Optional[float] = None
-    cpu_time: Optional[float] = None
-    memory_before: Optional[float] = None
-    memory_after: Optional[float] = None
-    thread_count: Optional[int] = None
-    io_wait_time: Optional[float] = None
-    parameters: Dict[str, Any] = field(default_factory=dict)
-    sub_steps: List["WorkflowStep"] = field(default_factory=list)
+    end_time: float | None = None
+    cpu_time: float | None = None
+    memory_before: float | None = None
+    memory_after: float | None = None
+    thread_count: int | None = None
+    io_wait_time: float | None = None
+    parameters: dict[str, Any] = field(default_factory=dict)
+    sub_steps: list[WorkflowStep] = field(default_factory=list)
 
     @property
-    def duration(self) -> Optional[float]:
+    def duration(self) -> float | None:
         """Calculate the duration of the workflow step."""
         if self.end_time is None:
             return None
         return self.end_time - self.start_time
 
     @property
-    def memory_delta(self) -> Optional[float]:
+    def memory_delta(self) -> float | None:
         """Calculate memory usage delta in MB."""
         if self.memory_before is None or self.memory_after is None:
             return None
@@ -63,13 +64,13 @@ class WorkflowProfile:
     session_id: str
     workflow_type: str
     start_time: float
-    end_time: Optional[float] = None
-    steps: List[WorkflowStep] = field(default_factory=list)
-    system_info: Dict[str, Any] = field(default_factory=dict)
-    file_info: Dict[str, Any] = field(default_factory=dict)
+    end_time: float | None = None
+    steps: list[WorkflowStep] = field(default_factory=list)
+    system_info: dict[str, Any] = field(default_factory=dict)
+    file_info: dict[str, Any] = field(default_factory=dict)
 
     @property
-    def total_duration(self) -> Optional[float]:
+    def total_duration(self) -> float | None:
         """Total workflow duration."""
         if self.end_time is None:
             return None
@@ -80,8 +81,8 @@ class ThreadingProfiler:
     """Profiles thread utilization during workflows."""
 
     def __init__(self):
-        self.thread_samples: List[
-            Tuple[float, int, float]
+        self.thread_samples: list[
+            tuple[float, int, float]
         ] = []  # (timestamp, thread_count, cpu_percent)
         self.sampling_interval = 0.5  # Sample every 500ms
         self._sampling_active = False
@@ -133,7 +134,7 @@ class ThreadingProfiler:
 
     def get_utilization_stats(
         self, start_time: float, end_time: float
-    ) -> Dict[str, float]:
+    ) -> dict[str, float]:
         """Get thread utilization statistics for a time range."""
         relevant_samples = [
             (ts, threads, cpu)
@@ -162,11 +163,11 @@ class IOProfiler:
     """Profiles I/O operations during workflows."""
 
     def __init__(self):
-        self.io_operations: List[Dict[str, Any]] = []
-        self._io_start_times: Dict[str, float] = {}
+        self.io_operations: list[dict[str, Any]] = []
+        self._io_start_times: dict[str, float] = {}
 
     def start_io_operation(
-        self, operation_id: str, operation_type: str, file_path: Optional[str] = None
+        self, operation_id: str, operation_type: str, file_path: str | None = None
     ):
         """Start tracking an I/O operation."""
         self._io_start_times[operation_id] = time.time()
@@ -175,7 +176,7 @@ class IOProfiler:
     def end_io_operation(
         self,
         operation_id: str,
-        bytes_transferred: Optional[int] = None,
+        bytes_transferred: int | None = None,
         success: bool = True,
     ):
         """End tracking an I/O operation."""
@@ -200,7 +201,7 @@ class IOProfiler:
         self.io_operations.append(operation_record)
         logger.debug(f"Completed I/O operation: {operation_id} in {duration:.3f}s")
 
-    def get_io_stats(self, start_time: float, end_time: float) -> Dict[str, Any]:
+    def get_io_stats(self, start_time: float, end_time: float) -> dict[str, Any]:
         """Get I/O statistics for a time range."""
         relevant_ops = [
             op
@@ -248,8 +249,8 @@ class WorkflowProfiler:
     """
 
     def __init__(self):
-        self.active_profiles: Dict[str, WorkflowProfile] = {}
-        self.completed_profiles: List[WorkflowProfile] = []
+        self.active_profiles: dict[str, WorkflowProfile] = {}
+        self.completed_profiles: list[WorkflowProfile] = []
         self.threading_profiler = ThreadingProfiler()
         self.io_profiler = IOProfiler()
 
@@ -257,7 +258,7 @@ class WorkflowProfiler:
         self.performance_profiler = global_profiler
 
         # Workflow step stack for nested profiling
-        self._step_stack: Dict[str, List[WorkflowStep]] = defaultdict(list)
+        self._step_stack: dict[str, list[WorkflowStep]] = defaultdict(list)
 
         # System info cache
         self._system_info = self._get_system_info()
@@ -267,7 +268,7 @@ class WorkflowProfiler:
 
         logger.info("WorkflowProfiler initialized")
 
-    def _get_system_info(self) -> Dict[str, Any]:
+    def _get_system_info(self) -> dict[str, Any]:
         """Get system information for profiling context."""
         try:
             return {
@@ -393,8 +394,8 @@ class WorkflowProfiler:
         return step
 
     def end_step(
-        self, session_id: str, step_name: Optional[str] = None
-    ) -> Optional[WorkflowStep]:
+        self, session_id: str, step_name: str | None = None
+    ) -> WorkflowStep | None:
         """
         End profiling a workflow step.
 
@@ -517,14 +518,14 @@ class WorkflowProfiler:
             {"timestamp": time.time(), "annotation": annotation, "data": data}
         )
 
-    def get_active_workflows(self) -> Dict[str, str]:
+    def get_active_workflows(self) -> dict[str, str]:
         """Get currently active workflow sessions."""
         return {
             session_id: profile.workflow_type
             for session_id, profile in self.active_profiles.items()
         }
 
-    def get_workflow_profile(self, session_id: str) -> Optional[WorkflowProfile]:
+    def get_workflow_profile(self, session_id: str) -> WorkflowProfile | None:
         """Get a workflow profile by session ID."""
         # Check active profiles first
         if session_id in self.active_profiles:
@@ -538,8 +539,8 @@ class WorkflowProfiler:
         return None
 
     def get_recent_profiles(
-        self, count: int = 10, workflow_type: Optional[str] = None
-    ) -> List[WorkflowProfile]:
+        self, count: int = 10, workflow_type: str | None = None
+    ) -> list[WorkflowProfile]:
         """
         Get recent workflow profiles.
 
@@ -583,7 +584,7 @@ class WorkflowProfiler:
 
         logger.info(f"Exported profile data to {file_path}")
 
-    def _serialize_steps(self, steps: List[WorkflowStep]) -> List[Dict[str, Any]]:
+    def _serialize_steps(self, steps: list[WorkflowStep]) -> list[dict[str, Any]]:
         """Convert WorkflowStep objects to serializable format."""
         serialized = []
         for step in steps:
@@ -633,7 +634,7 @@ ProfileStep = WorkflowStep
 
 
 def start_workflow_profiling(
-    workflow_type: str, session_id: Optional[str] = None, **params
+    workflow_type: str, session_id: str | None = None, **params
 ) -> str:
     """
     Convenience function to start workflow profiling.
@@ -658,7 +659,7 @@ def end_workflow_profiling(session_id: str):
 
 
 @contextmanager
-def profile_workflow(workflow_type: str, session_id: Optional[str] = None, **params):
+def profile_workflow(workflow_type: str, session_id: str | None = None, **params):
     """
     Context manager for profiling an entire workflow.
 
@@ -688,7 +689,7 @@ def profile_workflow_step(session_id: str, step_name: str, **params):
         yield
 
 
-def profile_workflow_function(session_id: str, func_name: Optional[str] = None):
+def profile_workflow_function(session_id: str, func_name: str | None = None):
     """
     Decorator for profiling individual functions within a workflow.
 

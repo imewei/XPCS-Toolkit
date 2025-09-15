@@ -12,14 +12,13 @@ def get_min_max(data, min_percent=0, max_percent=100, **kwargs):
     vmin = np.percentile(data.ravel(), min_percent)
     vmax = np.percentile(data.ravel(), max_percent)
     logger.debug(f"Percentile values: vmin={vmin}, vmax={vmax}")
-    if "plot_norm" in kwargs and "plot_type" in kwargs:
-        if kwargs["plot_norm"] == 3:
-            if kwargs["plot_type"] == "log":
-                t = max(abs(vmin), abs(vmax))
-                vmin, vmax = -t, t
-            else:
-                t = max(abs(1 - vmin), abs(vmax - 1))
-                vmin, vmax = 1 - t, 1 + t
+    if "plot_norm" in kwargs and "plot_type" in kwargs and kwargs["plot_norm"] == 3:
+        if kwargs["plot_type"] == "log":
+            t = max(abs(vmin), abs(vmax))
+            vmin, vmax = -t, t
+        else:
+            t = max(abs(1 - vmin), abs(vmax - 1))
+            vmin, vmax = 1 - t, 1 + t
 
     return vmin, vmax
 

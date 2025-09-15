@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import threading
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from .adaptive_memory import MemoryStrategy, get_adaptive_memory_manager
 from .advanced_cache import get_global_cache
@@ -163,7 +163,7 @@ class CachedViewerKernelMixin:
             from ..module import g2mod
 
             g2mod.pg_plot(handler, xf_list, q_range, t_range, y_range, **kwargs)
-            q, tel, *unused = g2mod.get_data(xf_list)
+            q, tel, *_unused = g2mod.get_data(xf_list)
 
             # Cache the plot data
             plot_data = {
@@ -202,7 +202,7 @@ class CachedViewerKernelMixin:
         plot_key = self._generate_plot_cache_key("saxs_2d", *args, rows=rows, **kwargs)
 
         # Try cache first
-        cached_data, found = self._advanced_cache.get(plot_key)
+        _cached_data, found = self._advanced_cache.get(plot_key)
         if found:
             self._plot_cache_hits += 1
             logger.debug("SAXS 2D plot cache hit")
@@ -372,7 +372,7 @@ class CachedViewerKernelMixin:
             f"memory_pressure={memory_stats['current_memory_pressure']:.1f}%"
         )
 
-    def warm_gui_caches(self, file_paths: List[str] = None):
+    def warm_gui_caches(self, file_paths: list[str] | None = None):
         """
         Warm GUI-related caches for better responsiveness.
 
@@ -404,7 +404,7 @@ class CachedViewerKernelMixin:
             except Exception as e:
                 logger.debug(f"Failed to warm cache for {file_path}: {e}")
 
-    def get_gui_cache_statistics(self) -> Dict[str, Any]:
+    def get_gui_cache_statistics(self) -> dict[str, Any]:
         """Get comprehensive GUI cache statistics."""
         plot_cache_total = self._plot_cache_hits + self._plot_cache_misses
         plot_hit_rate = (
@@ -422,7 +422,7 @@ class CachedViewerKernelMixin:
             "memory_manager_stats": self._memory_manager.get_performance_stats(),
         }
 
-    def clear_gui_caches(self, cache_types: List[str] = None):
+    def clear_gui_caches(self, cache_types: list[str] | None = None):
         """
         Clear GUI-related caches.
 
@@ -554,7 +554,7 @@ class SmartViewerKernelManager:
     """
 
     def __init__(self):
-        self._active_kernels: Dict[str, Any] = {}
+        self._active_kernels: dict[str, Any] = {}
         self._global_cache = get_global_cache()
         self._memory_manager = get_adaptive_memory_manager()
 
@@ -623,7 +623,7 @@ class SmartViewerKernelManager:
             if hasattr(kernel, "optimize_gui_performance"):
                 kernel.optimize_gui_performance()
 
-    def get_global_statistics(self) -> Dict[str, Any]:
+    def get_global_statistics(self) -> dict[str, Any]:
         """Get global statistics across all kernels."""
         stats = {
             "active_kernels": len(self._active_kernels),
@@ -653,7 +653,7 @@ class SmartViewerKernelManager:
 
 
 # Global manager instance
-_global_viewer_manager: Optional[SmartViewerKernelManager] = None
+_global_viewer_manager: SmartViewerKernelManager | None = None
 
 
 def get_global_viewer_manager() -> SmartViewerKernelManager:

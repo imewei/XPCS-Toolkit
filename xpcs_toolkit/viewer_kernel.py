@@ -104,7 +104,6 @@ class ViewerKernel(FileLocator):
             "avg_g2_avg": None,
             # g2
         }
-        return
 
     def reset_kernel(self):
         """
@@ -198,7 +197,7 @@ class ViewerKernel(FileLocator):
                     f"Fallback: cleared cache for {cleared_count} XpcsFile objects"
                 )
 
-        used_mb, available_mb = MemoryMonitor.get_memory_usage()
+        used_mb, _available_mb = MemoryMonitor.get_memory_usage()
         logger.debug(f"Memory cleanup completed, current usage: {used_mb:.1f}MB")
 
     def select_bkgfile(self, fname):
@@ -226,8 +225,7 @@ class ViewerKernel(FileLocator):
         xf_list = self.get_xf_list(rows)
         if xf_list:
             return xf_list[0].get_pg_tree()
-        else:
-            return None
+        return None
 
     def get_fitting_tree(self, rows):
         xf_list = self.get_xf_list(rows, filter_atype="Multitau")
@@ -276,10 +274,9 @@ class ViewerKernel(FileLocator):
         xf_list = self.get_xf_list(rows=rows, filter_atype="Multitau")
         if xf_list:
             g2mod.pg_plot(handler, xf_list, q_range, t_range, y_range, **kwargs)
-            q, tel, *unused = g2mod.get_data(xf_list)
+            q, tel, *_unused = g2mod.get_data(xf_list)
             return q, tel
-        else:
-            return None, None
+        return None, None
 
     def plot_qmap(self, hdl, rows=None, target=None):
         xf_list = self.get_xf_list(rows=rows)
@@ -313,9 +310,11 @@ class ViewerKernel(FileLocator):
                     ha="center",
                     va="center",
                     fontsize=12,
-                    bbox=dict(
-                        boxstyle="round,pad=0.3", facecolor="lightblue", alpha=0.7
-                    ),
+                    bbox={
+                        "boxstyle": "round,pad=0.3",
+                        "facecolor": "lightblue",
+                        "alpha": 0.7,
+                    },
                 )
                 ax.set_xlim(0, 1)
                 ax.set_ylim(0, 1)
@@ -331,12 +330,14 @@ class ViewerKernel(FileLocator):
         self,
         hdl=None,
         bounds=None,
-        rows=[],
+        rows=None,
         plot_type=3,
         fit_flag=None,
         offset=None,
         q_range=None,
     ):
+        if rows is None:
+            rows = []
         xf_list = self.get_xf_list(
             rows=rows, filter_atype="Multitau", filter_fitted=True
         )
@@ -360,6 +361,7 @@ class ViewerKernel(FileLocator):
         if xf:
             info = xf[0].get_info_at_position(x, y)
             return info
+        return None
 
     def plot_saxs_2d(self, *args, rows=None, **kwargs):
         """
@@ -417,7 +419,6 @@ class ViewerKernel(FileLocator):
         roi_list = pg_hdl.get_roi_list()
         for xf in xf_list:
             xf.export_saxs1d(roi_list, folder)
-        return
 
     def switch_saxs1d_line(self, mp_hdl, lb_type):
         pass
@@ -575,7 +576,6 @@ class ViewerKernel(FileLocator):
 
     def remove_job(self, index):
         self.avg_worker.pop(index)
-        return
 
     def update_avg_info(self, jid):
         self.avg_worker.layoutChanged.emit()
@@ -622,8 +622,6 @@ class ViewerKernel(FileLocator):
             record[1] = new_g2
         record[1][record[0]] = val
         record[0] += 1
-
-        return
 
     def get_memory_stats(self):
         """

@@ -17,8 +17,9 @@ import functools
 import logging
 import time
 import uuid
+from collections.abc import Callable
 from contextlib import contextmanager
-from typing import Any, Callable, Dict, List, Union
+from typing import Any
 
 from .logging_config import get_logger
 
@@ -28,9 +29,9 @@ from .logging_config import get_logger
 
 
 def log_performance(
-    func: Callable = None,
+    func: Callable | None = None,
     *,
-    logger_name: str = None,
+    logger_name: str | None = None,
     level: str = "INFO",
     include_args: bool = False,
     include_result: bool = False,
@@ -127,8 +128,7 @@ def log_performance(
 
     if func is None:
         return decorator
-    else:
-        return decorator(func)
+    return decorator(func)
 
 
 class LogPerformanceContext:
@@ -137,7 +137,7 @@ class LogPerformanceContext:
     def __init__(
         self,
         operation_name: str,
-        logger: logging.Logger = None,
+        logger: logging.Logger | None = None,
         level: str = "INFO",
         log_memory: bool = False,
     ):
@@ -246,7 +246,7 @@ class LogPerformanceContext:
                 },
             )
 
-    def update(self, message: str, progress: float = None):
+    def update(self, message: str, progress: float | None = None):
         """Update progress message with optional progress percentage."""
         elapsed = time.time() - self.start_time
 
@@ -274,7 +274,7 @@ class LogPerformanceContext:
 # Convenience function for performance context
 def log_context(
     operation_name: str,
-    logger: logging.Logger = None,
+    logger: logging.Logger | None = None,
     level: str = "INFO",
     log_memory: bool = False,
 ) -> LogPerformanceContext:
@@ -296,10 +296,10 @@ def log_context(
 
 
 def log_exceptions(
-    func: Callable = None,
+    func: Callable | None = None,
     *,
-    logger_name: str = None,
-    logger: logging.Logger = None,
+    logger_name: str | None = None,
+    logger: logging.Logger | None = None,
     reraise: bool = True,
     default_return: Any = None,
     return_value: Any = None,
@@ -348,18 +348,16 @@ def log_exceptions(
 
                 if reraise:
                     raise
-                else:
-                    exc_logger.warning(
-                        "Returning default value due to exception in %s", f.__name__
-                    )
-                    return return_value if return_value is not None else default_return
+                exc_logger.warning(
+                    "Returning default value due to exception in %s", f.__name__
+                )
+                return return_value if return_value is not None else default_return
 
         return wrapper
 
     if func is None:
         return decorator
-    else:
-        return decorator(func)
+    return decorator(func)
 
 
 def retry_with_logging(
@@ -367,7 +365,7 @@ def retry_with_logging(
     delay: float = 1.0,
     backoff_factor: float = 2.0,
     exceptions: tuple = (Exception,),
-    logger_name: str = None,
+    logger_name: str | None = None,
 ) -> Callable:
     """
     Decorator to retry function execution with exponential backoff and logging.
@@ -449,7 +447,7 @@ def retry_with_logging(
 # =============================================================================
 
 
-def create_module_logger(module_name: str, level: str = None) -> logging.Logger:
+def create_module_logger(module_name: str, level: str | None = None) -> logging.Logger:
     """
     Create a properly configured logger for a module.
 
@@ -574,7 +572,7 @@ class TestLogCapture:
         assert log_capture.has_error()
     """
 
-    def __init__(self, logger_name: str = None, level: str = "DEBUG"):
+    def __init__(self, logger_name: str | None = None, level: str = "DEBUG"):
         self.logger_name = logger_name
         self.level = getattr(logging, level.upper())
         self.messages = []
@@ -596,7 +594,11 @@ class TestLogCapture:
 
         # Store original level and set to capture level
         self.original_level = logger.level
-        logger.setLevel(min(self.level, logger.level) if logger.level != logging.NOTSET else self.level)
+        logger.setLevel(
+            min(self.level, logger.level)
+            if logger.level != logging.NOTSET
+            else self.level
+        )
 
         logger.addHandler(self.handler)
         return self
@@ -611,7 +613,7 @@ class TestLogCapture:
 
             logger.removeHandler(self.handler)
             # Restore original logger level
-            if hasattr(self, 'original_level'):
+            if hasattr(self, "original_level"):
                 logger.setLevel(self.original_level)
 
     def _capture_record(self, record):
@@ -632,15 +634,15 @@ class TestLogCapture:
         """Check if any warning messages were logged."""
         return self.has_level("WARNING")
 
-    def get_messages_containing(self, text: str) -> List[str]:
+    def get_messages_containing(self, text: str) -> list[str]:
         """Get all messages containing the specified text."""
         return [msg for msg in self.messages if text in msg]
 
-    def get_logs(self) -> List[str]:
+    def get_logs(self) -> list[str]:
         """Get all captured log messages."""
         return self.messages
 
-    def assert_logged(self, text: str, level: str = None):
+    def assert_logged(self, text: str, level: str | None = None):
         """Assert that a message containing text was logged."""
         matching_messages = self.get_messages_containing(text)
         if not matching_messages:
@@ -701,8 +703,8 @@ class StructuredLogger:
 
     def __init__(
         self,
-        logger_name: Union[str, logging.Logger],
-        base_context: Dict[str, Any] = None,
+        logger_name: str | logging.Logger,
+        base_context: dict[str, Any] | None = None,
         **kwargs,
     ):
         if isinstance(logger_name, str):
@@ -743,7 +745,7 @@ class StructuredLogger:
             **context,
         )
 
-    def log_user_action(self, action: str, user_id: str = None, **context):
+    def log_user_action(self, action: str, user_id: str | None = None, **context):
         """Log a user action."""
         self.log_event(
             "INFO",
@@ -766,7 +768,7 @@ class StructuredLogger:
 # =============================================================================
 
 
-def generate_module_template(module_name: str, class_name: str = None) -> str:
+def generate_module_template(module_name: str, class_name: str | None = None) -> str:
     """
     Generate a template for a new module with logging integration.
 
@@ -784,7 +786,7 @@ This module provides functionality for...
 
 Example:
     from xpcs_toolkit.{module_name} import MyClass
-    
+
     processor = MyClass()
     result = processor.process(data)
 """
@@ -804,33 +806,33 @@ logger = get_logger(__name__)
         template += f'''
 class {class_name}:
     """Main class for {module_name} functionality."""
-    
+
     def __init__(self, config: Optional[Dict[str, Any]] = None):
         self.logger = get_logger(f"{{__name__}}.{{self.__class__.__name__}}")
         self.config = config or {{}}
-        
-        self.logger.info("Initializing %s with config: %s", 
+
+        self.logger.info("Initializing %s with config: %s",
                         self.__class__.__name__, self.config)
-        
+
         # Initialize your class here
-        
+
         self.logger.info("%s initialized successfully", self.__class__.__name__)
-    
+
     def process(self, data: np.ndarray, **kwargs) -> np.ndarray:
         """Process data with comprehensive logging."""
         self.logger.info("Processing data: shape=%s, dtype=%s", data.shape, data.dtype)
-        
+
         if data.size == 0:
             self.logger.warning("Processing empty data array")
             return data
-        
+
         try:
             # Your processing logic here
             result = data.copy()  # Placeholder
-            
+
             self.logger.info("Processing completed: output shape=%s", result.shape)
             return result
-            
+
         except Exception as e:
             self.logger.error("Processing failed for data shape %s", data.shape)
             self.logger.exception("Processing exception details")
@@ -843,7 +845,7 @@ logger.info("Module %s loaded successfully", __name__)
     return template
 
 
-def generate_test_template(module_name: str, class_name: str = None) -> str:
+def generate_test_template(module_name: str, class_name: str | None = None) -> str:
     """
     Generate a template for test files with logging integration.
 
@@ -877,13 +879,13 @@ logger = get_logger(__name__)
 
 class Test{class_name or module_name.replace("_", " ").title().replace(" ", "")}:
     """Test class with logging integration."""
-    
+
     @classmethod
     def setup_class(cls):
         """Setup for entire test class."""
         set_log_level('DEBUG')  # Enable detailed logging for tests
         logger.info("Starting test class: %s", cls.__name__)
-    
+
     def setup_method(self, method):
         """Setup for each test method."""
         logger.info("Starting test: %s", method.__name__)'''
@@ -893,7 +895,7 @@ class Test{class_name or module_name.replace("_", " ").title().replace(" ", "")}
         self.instance = {class_name}()"""
 
     template += '''
-    
+
     def teardown_method(self, method):
         """Teardown for each test method."""
         logger.info("Completed test: %s", method.__name__)'''
@@ -905,15 +907,15 @@ class Test{class_name or module_name.replace("_", " ").title().replace(" ", "")}
             pass"""
 
     template += '''
-    
+
     def test_basic_functionality(self):
         """Test basic functionality with logging."""
         logger.debug("Testing basic functionality")
-        
+
         # Create test data
         test_data = np.random.random((10, 10))
         logger.debug("Created test data: shape=%s", test_data.shape)
-        
+
         # Test the functionality
         with TestLogCapture() as log_capture:'''
 
@@ -926,41 +928,41 @@ class Test{class_name or module_name.replace("_", " ").title().replace(" ", "")}
             result = test_data * 2  # Placeholder"""
 
     template += '''
-            
+
             # Verify no errors were logged
             assert not log_capture.has_error(), "Unexpected errors in logs"
-            
+
             # Verify expected log messages
             log_capture.assert_logged("Processing")
-        
+
         # Verify results
         assert result is not None
         logger.info("Basic functionality test passed")
-    
+
     def test_error_handling(self):
         """Test error handling with logging."""
         logger.debug("Testing error handling")
-        
+
         with TestLogCapture() as log_capture:
             with pytest.raises(ValueError):
                 # Test code that should raise an error
                 pass  # Replace with actual error-inducing code
-            
+
             # Verify error was logged
             assert log_capture.has_error(), "Expected error was not logged"
-        
+
         logger.info("Error handling test passed")
-    
+
     @pytest.mark.parametrize("test_size", [0, 1, 100])
     def test_various_sizes(self, test_size):
         """Test with various input sizes."""
         logger.debug("Testing with size: %d", test_size)
-        
+
         if test_size == 0:
             test_data = np.array([])
         else:
             test_data = np.random.random(test_size)
-        
+
         with temp_log_level('DEBUG'):'''
 
     if class_name:
@@ -973,7 +975,7 @@ class Test{class_name or module_name.replace("_", " ").title().replace(" ", "")}
 
     template += '''
             assert len(result) == test_size
-        
+
         logger.info("Size %d test passed", test_size)
 
 # Performance test
@@ -981,7 +983,7 @@ class Test{class_name or module_name.replace("_", " ").title().replace(" ", "")}
 def test_performance():
     """Test performance with timing and logging."""
     logger.info("Starting performance test")
-    
+
     import time'''
 
     if class_name:
@@ -989,10 +991,10 @@ def test_performance():
     instance = {class_name}()"""
 
     template += """
-    
+
     # Large test data
     large_data = np.random.random((1000, 1000))
-    
+
     start_time = time.time()"""
 
     if class_name:
@@ -1004,12 +1006,12 @@ def test_performance():
 
     template += """
     elapsed = time.time() - start_time
-    
+
     logger.info("Performance test completed in %.3fs", elapsed)
-    
+
     # Assert performance requirements
     assert elapsed < 10.0, f"Processing took too long: {elapsed:.3f}s"
-    
+
     # Log performance metrics
     throughput = large_data.size / elapsed
     logger.info("Processing throughput: %.0f elements/second", throughput)
@@ -1024,7 +1026,7 @@ def test_performance():
 
 
 def setup_module_logging(
-    module_name: str, extra_context: Dict[str, Any] = None
+    module_name: str, extra_context: dict[str, Any] | None = None
 ) -> logging.Logger:
     """
     Setup logging for a module with optional extra context.
@@ -1056,7 +1058,7 @@ def log_function_signature(func: Callable, args: tuple, kwargs: dict) -> str:
     Useful for debugging complex function calls with many parameters.
     """
     arg_strs = [repr(arg) for arg in args]
-    kwarg_strs = [f"{k}={repr(v)}" for k, v in kwargs.items()]
+    kwarg_strs = [f"{k}={v!r}" for k, v in kwargs.items()]
     all_args = arg_strs + kwarg_strs
 
     return f"{func.__name__}({', '.join(all_args)})"
@@ -1075,26 +1077,26 @@ LogExceptionHandler = log_exceptions
 # =============================================================================
 
 __all__ = [
-    # Performance logging
-    "log_performance",
     "LogPerformanceContext",
-    "log_context",
-    # Error handling
-    "log_exceptions",
-    "retry_with_logging",
-    # Module integration
-    "create_module_logger",
     "ModuleLoggerMixin",
-    "log_method_calls",
-    # Test helpers
-    "TestLogCapture",
-    "temp_log_level",
     # Structured logging
     "StructuredLogger",
+    # Test helpers
+    "TestLogCapture",
+    # Module integration
+    "create_module_logger",
     # Template generation
     "generate_module_template",
     "generate_test_template",
+    "log_context",
+    # Error handling
+    "log_exceptions",
+    "log_function_signature",
+    "log_method_calls",
+    # Performance logging
+    "log_performance",
+    "retry_with_logging",
     # Utilities
     "setup_module_logging",
-    "log_function_signature",
+    "temp_log_level",
 ]

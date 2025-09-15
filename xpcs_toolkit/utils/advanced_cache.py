@@ -17,7 +17,7 @@ from collections import OrderedDict
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, Optional, Tuple
+from typing import Any
 
 import numpy as np
 
@@ -51,13 +51,13 @@ class CacheEntry:
     key: str
     data: Any = None
     compressed_data: bytes = field(default=None)
-    disk_path: Optional[Path] = None
+    disk_path: Path | None = None
 
     # Timing information
     created_at: float = field(default_factory=time.time)
     last_accessed: float = field(default_factory=time.time)
     last_modified: float = field(default_factory=time.time)
-    ttl_expires_at: Optional[float] = None
+    ttl_expires_at: float | None = None
 
     # Usage statistics
     access_count: int = 0
@@ -71,7 +71,7 @@ class CacheEntry:
     # Metadata
     cache_level: CacheLevel = CacheLevel.L1
     data_type: str = "unknown"
-    checksum: Optional[str] = None
+    checksum: str | None = None
     compression_ratio: float = 1.0
 
     def touch(self):
@@ -99,27 +99,25 @@ class CacheEntry:
 
         if policy == EvictionPolicy.LRU:
             return -self.last_accessed  # Older = lower score
-        elif policy == EvictionPolicy.LFU:
+        if policy == EvictionPolicy.LFU:
             return self.access_frequency
-        elif policy == EvictionPolicy.TTL:
+        if policy == EvictionPolicy.TTL:
             if self.ttl_expires_at:
                 return self.ttl_expires_at - current_time
             return float("inf")
-        else:  # MIXED policy
-            # Combined score: frequency (40%) + recency (40%) + size efficiency (20%)
-            recency_score = 1.0 / (1.0 + age_hours)  # Higher for recent access
-            frequency_score = (
-                min(self.access_frequency, 10.0) / 10.0
-            )  # Normalized frequency
-            size_efficiency = (
-                self.compression_ratio if self.compression_ratio > 0 else 1.0
-            )
+        # MIXED policy
+        # Combined score: frequency (40%) + recency (40%) + size efficiency (20%)
+        recency_score = 1.0 / (1.0 + age_hours)  # Higher for recent access
+        frequency_score = (
+            min(self.access_frequency, 10.0) / 10.0
+        )  # Normalized frequency
+        size_efficiency = self.compression_ratio if self.compression_ratio > 0 else 1.0
 
-            return (
-                0.4 * frequency_score
-                + 0.4 * recency_score
-                + 0.2 * min(size_efficiency, 2.0) / 2.0
-            )
+        return (
+            0.4 * frequency_score
+            + 0.4 * recency_score
+            + 0.2 * min(size_efficiency, 2.0) / 2.0
+        )
 
 
 class CacheStatistics:
@@ -230,7 +228,7 @@ class CacheStatistics:
             self.current_l3_disk_mb = l3_mb
             self.peak_l3_disk_mb = max(self.peak_l3_disk_mb, l3_mb)
 
-    def get_hit_rate(self) -> Dict[str, float]:
+    def get_hit_rate(self) -> dict[str, float]:
         """Calculate hit rates for each level."""
         with self._lock:
             total_l1 = self.l1_hits + self.l1_misses
@@ -248,7 +246,7 @@ class CacheStatistics:
                 else 0.0,
             }
 
-    def get_compression_efficiency(self) -> Dict[str, float]:
+    def get_compression_efficiency(self) -> dict[str, float]:
         """Calculate compression efficiency metrics."""
         with self._lock:
             if self.total_bytes_compressed == 0:
@@ -266,7 +264,7 @@ class CacheStatistics:
                 "bytes_saved_percentage": bytes_saved_percentage,
             }
 
-    def get_summary(self) -> Dict[str, Any]:
+    def get_summary(self) -> dict[str, Any]:
         """Get comprehensive statistics summary."""
         with self._lock:
             runtime_hours = (time.time() - self.start_time) / 3600.0
@@ -313,7 +311,7 @@ class MultiLevelCache:
         l1_max_memory_mb: float = 500.0,
         l2_max_memory_mb: float = 1000.0,
         l3_max_disk_mb: float = 5000.0,
-        l3_cache_dir: Optional[Path] = None,
+        l3_cache_dir: Path | None = None,
         eviction_policy: EvictionPolicy = EvictionPolicy.MIXED,
         compression_level: int = 6,
         enable_checksums: bool = True,
@@ -506,17 +504,16 @@ class MultiLevelCache:
         """Calculate memory size of data in bytes."""
         if isinstance(data, np.ndarray):
             return data.nbytes
-        elif isinstance(data, (bytes, bytearray)):
+        if isinstance(data, (bytes, bytearray)):
             return len(data)
-        else:
-            # Use pickle to estimate size for other objects
-            try:
-                return len(pickle.dumps(data, protocol=pickle.HIGHEST_PROTOCOL))
-            except Exception:
-                # Fallback to sys.getsizeof for unpickleable objects
-                import sys
+        # Use pickle to estimate size for other objects
+        try:
+            return len(pickle.dumps(data, protocol=pickle.HIGHEST_PROTOCOL))
+        except Exception:
+            # Fallback to sys.getsizeof for unpickleable objects
+            import sys
 
-                return sys.getsizeof(data)
+            return sys.getsizeof(data)
 
     def _calculate_checksum(self, data: Any) -> str:
         """Calculate checksum for data integrity verification."""
@@ -526,16 +523,15 @@ class MultiLevelCache:
         try:
             if isinstance(data, np.ndarray):
                 return hashlib.md5(data.tobytes(), usedforsecurity=False).hexdigest()
-            elif isinstance(data, (bytes, bytearray)):
+            if isinstance(data, (bytes, bytearray)):
                 return hashlib.md5(data, usedforsecurity=False).hexdigest()
-            else:
-                serialized = pickle.dumps(data, protocol=pickle.HIGHEST_PROTOCOL)
-                return hashlib.md5(serialized, usedforsecurity=False).hexdigest()
+            serialized = pickle.dumps(data, protocol=pickle.HIGHEST_PROTOCOL)
+            return hashlib.md5(serialized, usedforsecurity=False).hexdigest()
         except Exception as e:
             logger.debug(f"Failed to calculate checksum: {e}")
             return None
 
-    def _compress_data(self, data: Any) -> Tuple[bytes, float]:
+    def _compress_data(self, data: Any) -> tuple[bytes, float]:
         """Compress data and return (compressed_bytes, compression_time_ms)."""
         start_time = time.time()
 
@@ -578,6 +574,7 @@ class MultiLevelCache:
 
                     # Parse shape tuple safely
                     import ast
+
                     try:
                         shape = (
                             ast.literal_eval(shape_str)
@@ -585,7 +582,9 @@ class MultiLevelCache:
                             else (int(shape_str),)
                         )
                     except (ValueError, SyntaxError) as e:
-                        logger.warning(f"Failed to parse shape string '{shape_str}': {e}")
+                        logger.warning(
+                            f"Failed to parse shape string '{shape_str}': {e}"
+                        )
                         return None
                     dtype = np.dtype(dtype_str)
 
@@ -612,14 +611,13 @@ class MultiLevelCache:
         """Generate data type string for metadata."""
         if isinstance(data, np.ndarray):
             return f"array_{data.shape}_{data.dtype}"
-        elif isinstance(data, dict):
+        if isinstance(data, dict):
             return "dict"
-        elif isinstance(data, (list, tuple)):
+        if isinstance(data, (list, tuple)):
             return f"{type(data).__name__}_{len(data)}"
-        else:
-            return type(data).__name__
+        return type(data).__name__
 
-    def get(self, key: str) -> Tuple[Any, bool]:
+    def get(self, key: str) -> tuple[Any, bool]:
         """
         Get data from cache with multi-level lookup.
 
@@ -641,8 +639,7 @@ class MultiLevelCache:
                     time_ms = (time.time() - start_time) * 1000.0
                     self.stats.record_hit(CacheLevel.L1, time_ms)
                     return entry.data, True
-                else:
-                    self._remove_entry(key, CacheLevel.L1)
+                self._remove_entry(key, CacheLevel.L1)
 
             # Try L2 (compressed memory cache)
             if key in self._l2_cache:
@@ -680,7 +677,9 @@ class MultiLevelCache:
 
                         # Verify checksum if enabled
                         if self.enable_checksums and entry.checksum:
-                            actual_checksum = hashlib.md5(compressed_data, usedforsecurity=False).hexdigest()
+                            actual_checksum = hashlib.md5(
+                                compressed_data, usedforsecurity=False
+                            ).hexdigest()
                             if actual_checksum != entry.checksum:
                                 logger.warning(
                                     f"Checksum mismatch for {key}, removing from L3 cache"
@@ -712,7 +711,7 @@ class MultiLevelCache:
             self.stats.record_miss(CacheLevel.L1)
             return None, False
 
-    def put(self, key: str, data: Any, ttl_seconds: Optional[float] = None) -> bool:
+    def put(self, key: str, data: Any, ttl_seconds: float | None = None) -> bool:
         """
         Put data into cache with intelligent tier placement.
 
@@ -779,7 +778,7 @@ class MultiLevelCache:
                     return True
 
                 # Try L2 for medium-sized data
-                elif data_size_mb < 500.0:  # Less than 500MB
+                if data_size_mb < 500.0:  # Less than 500MB
                     compressed_data, compression_time_ms = self._compress_data(data)
                     compressed_size_mb = len(compressed_data) / (1024 * 1024)
 
@@ -841,7 +840,9 @@ class MultiLevelCache:
                         disk_size_bytes=len(compressed_data),
                         cache_level=CacheLevel.L3,
                         data_type=data_type,
-                        checksum=hashlib.md5(compressed_data, usedforsecurity=False).hexdigest()
+                        checksum=hashlib.md5(
+                            compressed_data, usedforsecurity=False
+                        ).hexdigest()
                         if self.enable_checksums
                         else None,
                         compression_ratio=compression_ratio,
@@ -1001,7 +1002,7 @@ class MultiLevelCache:
         entries.sort(key=lambda x: x[2])
 
         # Evict entries until under limit
-        for key, entry, score in entries:
+        for key, entry, _score in entries:
             if current_mb <= target_mb:
                 break
 
@@ -1036,7 +1037,7 @@ class MultiLevelCache:
         entries.sort(key=lambda x: x[2])
 
         # Evict entries until under limit
-        for key, entry, score in entries:
+        for key, entry, _score in entries:
             if current_mb <= target_mb:
                 break
 
@@ -1070,7 +1071,7 @@ class MultiLevelCache:
         entries.sort(key=lambda x: x[2])
 
         # Evict entries until under limit
-        for key, entry, score in entries:
+        for key, entry, _score in entries:
             if current_mb <= target_mb:
                 break
 
@@ -1095,7 +1096,9 @@ class MultiLevelCache:
                 disk_size_bytes=source_entry.compressed_size_bytes,
                 cache_level=CacheLevel.L3,
                 data_type=source_entry.data_type,
-                checksum=hashlib.md5(source_entry.compressed_data, usedforsecurity=False).hexdigest()
+                checksum=hashlib.md5(
+                    source_entry.compressed_data, usedforsecurity=False
+                ).hexdigest()
                 if self.enable_checksums
                 else None,
                 compression_ratio=source_entry.compression_ratio,
@@ -1188,7 +1191,7 @@ class MultiLevelCache:
                 found = True
             return found
 
-    def clear(self, level: Optional[CacheLevel] = None):
+    def clear(self, level: CacheLevel | None = None):
         """Clear cache entries."""
         with self._lock:
             if level is None or level == CacheLevel.L1:
@@ -1207,7 +1210,7 @@ class MultiLevelCache:
 
         logger.info(f"Cleared cache level: {level or 'ALL'}")
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get comprehensive cache statistics."""
         with self._lock:
             base_stats = self.stats.get_summary()
@@ -1248,7 +1251,7 @@ class MultiLevelCache:
 
 
 # Global cache instance with reasonable defaults
-_global_multi_cache: Optional[MultiLevelCache] = None
+_global_multi_cache: MultiLevelCache | None = None
 
 
 def get_global_cache(

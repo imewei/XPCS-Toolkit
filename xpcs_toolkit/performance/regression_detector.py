@@ -34,7 +34,7 @@ import time
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 import numpy as np
 import psutil
@@ -62,11 +62,11 @@ class PerformanceBaseline:
     baseline_value: float
     baseline_std: float
     sample_size: int
-    confidence_interval: Tuple[float, float]
+    confidence_interval: tuple[float, float]
     timestamp: float
-    git_commit: Optional[str] = None
-    system_info: Dict[str, Any] = field(default_factory=dict)
-    test_conditions: Dict[str, Any] = field(default_factory=dict)
+    git_commit: str | None = None
+    system_info: dict[str, Any] = field(default_factory=dict)
+    test_conditions: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -85,8 +85,8 @@ class RegressionTest:
     confidence_level: float
     statistical_power: float
     timestamp: float
-    git_commit: Optional[str] = None
-    additional_context: Dict[str, Any] = field(default_factory=dict)
+    git_commit: str | None = None
+    additional_context: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -117,18 +117,18 @@ class RegressionAnalysisConfig:
 
     # Alerting configuration
     enable_alerts: bool = True
-    alert_channels: List[str] = field(default_factory=lambda: ["console", "log"])
-    slack_webhook_url: Optional[str] = None
-    email_recipients: List[str] = field(default_factory=list)
+    alert_channels: list[str] = field(default_factory=lambda: ["console", "log"])
+    slack_webhook_url: str | None = None
+    email_recipients: list[str] = field(default_factory=list)
 
 
 class RegressionDetector:
     """Main regression detection system."""
 
-    def __init__(self, config: Optional[RegressionAnalysisConfig] = None):
+    def __init__(self, config: RegressionAnalysisConfig | None = None):
         self.config = config or RegressionAnalysisConfig()
-        self.baselines: Dict[str, PerformanceBaseline] = {}
-        self.historical_results: List[RegressionTest] = []
+        self.baselines: dict[str, PerformanceBaseline] = {}
+        self.historical_results: list[RegressionTest] = []
         self.baseline_storage_path = Path("performance_baselines.json")
         self.results_storage_path = Path("regression_test_results.json")
 
@@ -140,7 +140,7 @@ class RegressionDetector:
         """Load performance baselines from storage."""
         if self.baseline_storage_path.exists():
             try:
-                with open(self.baseline_storage_path, "r") as f:
+                with open(self.baseline_storage_path) as f:
                     baseline_data = json.load(f)
 
                 self.baselines = {
@@ -170,7 +170,7 @@ class RegressionDetector:
         """Load historical regression test results."""
         if self.results_storage_path.exists():
             try:
-                with open(self.results_storage_path, "r") as f:
+                with open(self.results_storage_path) as f:
                     results_data = json.load(f)
 
                 self.historical_results = [
@@ -196,9 +196,9 @@ class RegressionDetector:
     def create_baseline(
         self,
         metric_name: str,
-        values: List[float],
-        git_commit: Optional[str] = None,
-        test_conditions: Optional[Dict[str, Any]] = None,
+        values: list[float],
+        git_commit: str | None = None,
+        test_conditions: dict[str, Any] | None = None,
     ) -> PerformanceBaseline:
         """Create a new performance baseline from measurement values."""
 
@@ -254,9 +254,9 @@ class RegressionDetector:
         self,
         metric_name: str,
         current_value: float,
-        test_name: Optional[str] = None,
-        git_commit: Optional[str] = None,
-        additional_context: Optional[Dict[str, Any]] = None,
+        test_name: str | None = None,
+        git_commit: str | None = None,
+        additional_context: dict[str, Any] | None = None,
     ) -> RegressionTest:
         """Detect performance regression for a metric."""
 
@@ -315,9 +315,8 @@ class RegressionDetector:
                 ):
                     severity = "minor"
                     is_regression = True
-            else:  # Performance improvement (lower is better)
-                if abs_relative_change >= self.config.improvement_threshold * 100:
-                    severity = "improvement"
+            elif abs_relative_change >= self.config.improvement_threshold * 100:
+                severity = "improvement"
 
         # Calculate statistical power
         effect_size = abs(absolute_change) / baseline.baseline_std
@@ -375,8 +374,8 @@ class RegressionDetector:
             return 0.5  # Default moderate power
 
     def analyze_trends(
-        self, metric_name: str, window_size: Optional[int] = None
-    ) -> Dict[str, Any]:
+        self, metric_name: str, window_size: int | None = None
+    ) -> dict[str, Any]:
         """Analyze performance trends for a metric."""
 
         window_size = window_size or self.config.trend_analysis_window
@@ -399,7 +398,7 @@ class RegressionDetector:
         timestamps = [r.timestamp for r in recent_results]
 
         # Perform linear regression to detect trends
-        slope, intercept, r_value, p_value, std_err = stats.linregress(
+        slope, intercept, r_value, p_value, _std_err = stats.linregress(
             timestamps, values
         )
 
@@ -431,10 +430,10 @@ class RegressionDetector:
 
     def batch_regression_detection(
         self,
-        performance_data: Dict[str, float],
-        test_name: Optional[str] = None,
-        git_commit: Optional[str] = None,
-    ) -> List[RegressionTest]:
+        performance_data: dict[str, float],
+        test_name: str | None = None,
+        git_commit: str | None = None,
+    ) -> list[RegressionTest]:
         """Perform regression detection on multiple metrics."""
 
         results = []
@@ -508,11 +507,11 @@ Performance Change:
   Current: {regression_test.current_value:.3f}
   Baseline: {regression_test.baseline_value:.3f}
   Change: {regression_test.relative_change_percent:+.1f}%
-  
+
 Statistical Analysis:
   P-value: {regression_test.p_value:.6f}
   Statistical Power: {regression_test.statistical_power:.3f}
-  
+
 {f"Git Commit: {regression_test.git_commit}" if regression_test.git_commit else ""}
 Timestamp: {datetime.fromtimestamp(regression_test.timestamp).strftime("%Y-%m-%d %H:%M:%S")}
         """.strip()
@@ -531,7 +530,7 @@ Timestamp: {datetime.fromtimestamp(regression_test.timestamp).strftime("%Y-%m-%d
 
     def generate_regression_report(
         self, days_back: int = 7, include_trends: bool = True
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Generate comprehensive regression analysis report."""
 
         cutoff_time = time.time() - (days_back * 24 * 3600)
@@ -554,13 +553,13 @@ Timestamp: {datetime.fromtimestamp(regression_test.timestamp).strftime("%Y-%m-%d
         }
 
         # Metrics summary
-        metrics_analyzed = len(set(r.metric_name for r in recent_results))
-        unique_tests = len(set(r.test_name for r in recent_results))
+        metrics_analyzed = len({r.metric_name for r in recent_results})
+        unique_tests = len({r.test_name for r in recent_results})
 
         # Trend analysis
         trends = {}
         if include_trends:
-            unique_metrics = set(r.metric_name for r in recent_results)
+            unique_metrics = {r.metric_name for r in recent_results}
             for metric_name in unique_metrics:
                 trends[metric_name] = self.analyze_trends(metric_name)
 
@@ -602,8 +601,8 @@ Timestamp: {datetime.fromtimestamp(regression_test.timestamp).strftime("%Y-%m-%d
         return report
 
     def _generate_recommendations(
-        self, regressions: List[RegressionTest], trends: Dict[str, Any]
-    ) -> List[str]:
+        self, regressions: list[RegressionTest], trends: dict[str, Any]
+    ) -> list[str]:
         """Generate actionable recommendations based on analysis."""
 
         recommendations = []
@@ -668,8 +667,8 @@ class CICDIntegration:
         self.detector = detector
 
     def github_actions_integration(
-        self, performance_data: Dict[str, float], pr_number: Optional[int] = None
-    ) -> Dict[str, Any]:
+        self, performance_data: dict[str, float], pr_number: int | None = None
+    ) -> dict[str, Any]:
         """GitHub Actions integration for regression detection."""
 
         # Get GitHub environment variables
@@ -715,8 +714,8 @@ class CICDIntegration:
         }
 
     def jenkins_integration(
-        self, performance_data: Dict[str, float], build_number: Optional[str] = None
-    ) -> Dict[str, Any]:
+        self, performance_data: dict[str, float], build_number: str | None = None
+    ) -> dict[str, Any]:
         """Jenkins integration for regression detection."""
 
         # Get Jenkins environment variables
@@ -749,7 +748,7 @@ class CICDIntegration:
             },
         }
 
-    def generate_ci_summary(self, results: List[RegressionTest]) -> str:
+    def generate_ci_summary(self, results: list[RegressionTest]) -> str:
         """Generate CI-friendly summary of regression detection results."""
 
         regressions = [r for r in results if r.is_regression]
@@ -826,7 +825,7 @@ def main():
     # Load configuration
     config = RegressionAnalysisConfig()
     if args.config and Path(args.config).exists():
-        with open(args.config, "r") as f:
+        with open(args.config) as f:
             config_data = json.load(f)
             # Update config with loaded data (simplified)
             for key, value in config_data.items():
@@ -839,10 +838,7 @@ def main():
     # Create baseline
     if args.baseline and args.baseline_values:
         values = [float(v.strip()) for v in args.baseline_values.split(",")]
-        baseline = detector.create_baseline(args.baseline, values, args.git_commit)
-        print(
-            f"Created baseline for {args.baseline}: {baseline.baseline_value:.3f} ± {baseline.baseline_std:.3f}"
-        )
+        detector.create_baseline(args.baseline, values, args.git_commit)
         return
 
     # Test for regression
@@ -851,39 +847,21 @@ def main():
             args.test, args.test_value, git_commit=args.git_commit
         )
 
-        print("Regression Test Result:")
-        print(f"  Metric: {result.metric_name}")
-        print(f"  Current: {result.current_value:.3f}")
-        print(f"  Baseline: {result.baseline_value:.3f}")
-        print(f"  Change: {result.relative_change_percent:+.1f}%")
-        print(f"  Regression: {'YES' if result.is_regression else 'NO'}")
-        print(f"  Severity: {result.severity}")
-        print(f"  P-value: {result.p_value:.6f}")
-
         return
 
     # Generate report
     if args.report:
         report = detector.generate_regression_report(args.days_back)
 
-        print("Performance Regression Analysis Report")
-        print("=" * 50)
-        print(f"Analysis Period: {args.days_back} days")
-        print(f"Total Results: {report['report_metadata']['total_results_analyzed']}")
-        print(f"Regressions: {report['summary']['total_regressions']}")
-        print(f"Improvements: {report['summary']['total_improvements']}")
-        print(f"Stability Rate: {report['summary']['stability_rate_percent']:.1f}%")
-
         if report["recommendations"]:
-            print("\nRecommendations:")
-            for i, rec in enumerate(report["recommendations"], 1):
-                print(f"  {i}. {rec}")
+            for _i, _rec in enumerate(report["recommendations"], 1):
+                pass
 
         return
 
     # CI/CD mode
     if args.ci_mode and args.performance_data:
-        with open(args.performance_data, "r") as f:
+        with open(args.performance_data) as f:
             performance_data = json.load(f)
 
         ci_integration = CICDIntegration(detector)
@@ -893,16 +871,13 @@ def main():
         elif args.ci_mode == "jenkins":
             result = ci_integration.jenkins_integration(performance_data)
 
-        summary = ci_integration.generate_ci_summary(result["results"])
-        print(summary)
+        ci_integration.generate_ci_summary(result["results"])
 
         # Exit with appropriate code for CI
-        if "should_fail_ci" in result and result["should_fail_ci"]:
+        if result.get("should_fail_ci"):
             sys.exit(1)
 
         return
-
-    print("Use --help for usage information")
 
 
 if __name__ == "__main__":

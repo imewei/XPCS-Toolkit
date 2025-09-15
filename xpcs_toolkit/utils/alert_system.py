@@ -20,9 +20,10 @@ from __future__ import annotations
 import threading
 import time
 from collections import defaultdict, deque
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any
 
 from PySide6.QtCore import QObject, QTimer, Signal
 
@@ -85,13 +86,13 @@ class AlertRule:
     duration_seconds: float = 0.0  # How long condition must persist
 
     # Action configuration
-    corrective_actions: List[str] = field(default_factory=list)
+    corrective_actions: list[str] = field(default_factory=list)
     escalation_time_seconds: float = 300.0  # 5 minutes
     max_escalations: int = 3
 
     # Conditions
     enabled: bool = True
-    conditions: Dict[str, Any] = field(default_factory=dict)
+    conditions: dict[str, Any] = field(default_factory=dict)
 
     # Tracking
     last_triggered: float = 0.0
@@ -119,12 +120,12 @@ class Alert:
     status: AlertStatus = AlertStatus.ACTIVE
     created_time: float = field(default_factory=time.time)
     updated_time: float = field(default_factory=time.time)
-    resolved_time: Optional[float] = None
+    resolved_time: float | None = None
 
     # Context
     component: str = ""
-    details: Dict[str, Any] = field(default_factory=dict)
-    actions_taken: List[str] = field(default_factory=list)
+    details: dict[str, Any] = field(default_factory=dict)
+    actions_taken: list[str] = field(default_factory=list)
     escalation_level: int = 0
 
     def is_active(self) -> bool:
@@ -135,7 +136,7 @@ class Alert:
         """Get age of alert in seconds."""
         return time.time() - self.created_time
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert alert to dictionary for serialization."""
         return {
             "alert_id": self.alert_id,
@@ -200,12 +201,12 @@ class AlertSystem(QObject):
         self._lock = threading.RLock()
 
         # Alert management
-        self._alert_rules: Dict[str, AlertRule] = {}
-        self._active_alerts: Dict[str, Alert] = {}
+        self._alert_rules: dict[str, AlertRule] = {}
+        self._active_alerts: dict[str, Alert] = {}
         self._alert_history: deque[Alert] = deque(maxlen=10000)
 
         # Corrective actions registry
-        self._corrective_actions: Dict[str, CorrectiveAction] = {}
+        self._corrective_actions: dict[str, CorrectiveAction] = {}
 
         # System integrations
         self._health_monitor = get_health_monitor()
@@ -213,15 +214,15 @@ class AlertSystem(QObject):
         self._memory_monitor = SystemMemoryMonitor()
 
         # Metrics tracking for alert evaluation
-        self._metric_values: Dict[str, deque] = defaultdict(lambda: deque(maxlen=100))
-        self._last_metric_update: Dict[str, float] = {}
+        self._metric_values: dict[str, deque] = defaultdict(lambda: deque(maxlen=100))
+        self._last_metric_update: dict[str, float] = {}
 
         # Timer for alert checking
         self._timer = QTimer()
         self._timer.timeout.connect(self._check_alert_conditions)
 
         # Alert statistics
-        self._alert_stats: Dict[str, Dict[str, int]] = defaultdict(
+        self._alert_stats: dict[str, dict[str, int]] = defaultdict(
             lambda: defaultdict(int)
         )
 
@@ -282,8 +283,8 @@ class AlertSystem(QObject):
         rule_id: str,
         current_value: float,
         component: str = "",
-        details: Optional[Dict[str, Any]] = None,
-    ) -> Optional[str]:
+        details: dict[str, Any] | None = None,
+    ) -> str | None:
         """
         Manually trigger an alert.
 
@@ -357,12 +358,12 @@ class AlertSystem(QObject):
             logger.info(f"Alert '{alert_id}' resolved: {resolution_message}")
             return True
 
-    def get_active_alerts(self) -> List[Alert]:
+    def get_active_alerts(self) -> list[Alert]:
         """Get list of all active alerts."""
         with self._lock:
             return list(self._active_alerts.values())
 
-    def get_alert_statistics(self) -> Dict[str, Any]:
+    def get_alert_statistics(self) -> dict[str, Any]:
         """Get comprehensive alert statistics."""
         with self._lock:
             stats = {
@@ -524,17 +525,16 @@ class AlertSystem(QObject):
         """Evaluate if a condition is met."""
         if operator == "gt":
             return current_value > threshold
-        elif operator == "gte":
+        if operator == "gte":
             return current_value >= threshold
-        elif operator == "lt":
+        if operator == "lt":
             return current_value < threshold
-        elif operator == "lte":
+        if operator == "lte":
             return current_value <= threshold
-        elif operator == "eq":
+        if operator == "eq":
             return abs(current_value - threshold) < 1e-6
-        else:
-            logger.error(f"Unknown comparison operator: {operator}")
-            return False
+        logger.error(f"Unknown comparison operator: {operator}")
+        return False
 
     def _process_new_alert(self, alert: Alert, rule: AlertRule) -> str:
         """Process a newly created alert."""
@@ -635,7 +635,7 @@ class AlertSystem(QObject):
             return success
 
         except Exception as e:
-            error_msg = f"Corrective action '{action.name}' failed: {str(e)}"
+            error_msg = f"Corrective action '{action.name}' failed: {e!s}"
             logger.error(error_msg)
             alert.actions_taken.append(error_msg)
 
@@ -865,9 +865,8 @@ class AlertSystem(QObject):
             if success:
                 logger.info("Memory cleanup corrective action completed successfully")
                 return True
-            else:
-                logger.warning("Memory cleanup corrective action failed")
-                return False
+            logger.warning("Memory cleanup corrective action failed")
+            return False
 
         except Exception as e:
             logger.error(f"Memory cleanup action failed: {e}")
@@ -886,9 +885,8 @@ class AlertSystem(QObject):
                     "Emergency memory cleanup corrective action completed successfully"
                 )
                 return True
-            else:
-                logger.warning("Emergency memory cleanup corrective action failed")
-                return False
+            logger.warning("Emergency memory cleanup corrective action failed")
+            return False
 
         except Exception as e:
             logger.error(f"Emergency memory cleanup action failed: {e}")
@@ -905,9 +903,8 @@ class AlertSystem(QObject):
                     "Cache optimization corrective action completed successfully"
                 )
                 return True
-            else:
-                logger.warning("Cache optimization corrective action failed")
-                return False
+            logger.warning("Cache optimization corrective action failed")
+            return False
 
         except Exception as e:
             logger.error(f"Cache optimization action failed: {e}")
@@ -924,9 +921,8 @@ class AlertSystem(QObject):
                     "Thread pool expansion corrective action completed successfully"
                 )
                 return True
-            else:
-                logger.warning("Thread pool expansion corrective action failed")
-                return False
+            logger.warning("Thread pool expansion corrective action failed")
+            return False
 
         except Exception as e:
             logger.error(f"Thread pool expansion action failed: {e}")
@@ -962,11 +958,10 @@ class AlertSystem(QObject):
                     "Performance optimization corrective action completed successfully"
                 )
                 return True
-            else:
-                logger.warning(
-                    "Performance optimization corrective action partially failed"
-                )
-                return False
+            logger.warning(
+                "Performance optimization corrective action partially failed"
+            )
+            return False
 
         except Exception as e:
             logger.error(f"Performance optimization action failed: {e}")
@@ -974,7 +969,7 @@ class AlertSystem(QObject):
 
 
 # Global instance
-_alert_system_instance: Optional[AlertSystem] = None
+_alert_system_instance: AlertSystem | None = None
 _alert_lock = threading.Lock()
 
 

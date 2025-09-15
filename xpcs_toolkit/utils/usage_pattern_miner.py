@@ -15,7 +15,7 @@ from collections import Counter, defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, NamedTuple, Optional, Set, Tuple
+from typing import Any, NamedTuple
 
 from .logging_config import get_logger
 from .workflow_profiler import WorkflowProfile, WorkflowStep, workflow_profiler
@@ -31,7 +31,7 @@ class AccessPattern(NamedTuple):
     first_access: float
     last_access: float
     avg_interval: float
-    access_sequence: List[float]
+    access_sequence: list[float]
 
 
 class WorkflowPattern(NamedTuple):
@@ -40,10 +40,10 @@ class WorkflowPattern(NamedTuple):
     workflow_type: str
     frequency: int
     avg_duration: float
-    common_steps: List[str]
-    common_parameters: Dict[str, Any]
-    typical_file_sizes: List[float]
-    peak_hours: List[int]
+    common_steps: list[str]
+    common_parameters: dict[str, Any]
+    typical_file_sizes: list[float]
+    peak_hours: list[int]
 
 
 @dataclass
@@ -59,8 +59,8 @@ class UsagePattern:
     detection_count: int
     first_detected: float
     last_seen: float
-    affected_workflows: Set[str] = field(default_factory=set)
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    affected_workflows: set[str] = field(default_factory=set)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -72,7 +72,7 @@ class CacheOptimization:
     hit_rate_improvement: float
     priority: int
     description: str
-    implementation_notes: List[str] = field(default_factory=list)
+    implementation_notes: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -110,14 +110,14 @@ class UsagePatternMiner:
 
     def __init__(self, max_history_days: int = 30):
         self.max_history_days = max_history_days
-        self.access_history: Dict[str, List[Tuple[float, str]]] = defaultdict(
+        self.access_history: dict[str, list[tuple[float, str]]] = defaultdict(
             list
         )  # resource_id -> [(timestamp, workflow_id)]
-        self.workflow_sequences: List[
-            Tuple[str, float, str]
+        self.workflow_sequences: list[
+            tuple[str, float, str]
         ] = []  # (workflow_type, timestamp, session_id)
-        self.file_access_patterns: Dict[str, AccessPattern] = {}
-        self.workflow_patterns: Dict[str, WorkflowPattern] = {}
+        self.file_access_patterns: dict[str, AccessPattern] = {}
+        self.workflow_patterns: dict[str, WorkflowPattern] = {}
 
         # Pattern analysis cache
         self._pattern_cache = {}
@@ -129,7 +129,7 @@ class UsagePatternMiner:
 
         logger.info("UsagePatternMiner initialized")
 
-    def analyze_usage_patterns(self, profiles: List[WorkflowProfile]) -> Dict[str, Any]:
+    def analyze_usage_patterns(self, profiles: list[WorkflowProfile]) -> dict[str, Any]:
         """
         Analyze usage patterns from workflow profiles.
 
@@ -160,7 +160,7 @@ class UsagePatternMiner:
             logger.info("Completed usage pattern analysis")
             return patterns
 
-    def _update_access_history(self, profiles: List[WorkflowProfile]):
+    def _update_access_history(self, profiles: list[WorkflowProfile]):
         """Update access history with new workflow profiles."""
         current_time = time.time()
         cutoff_time = current_time - (self.max_history_days * 24 * 3600)
@@ -191,7 +191,7 @@ class UsagePatternMiner:
             if not self.access_history[resource_id]:
                 del self.access_history[resource_id]
 
-    def _update_workflow_sequences(self, profiles: List[WorkflowProfile]):
+    def _update_workflow_sequences(self, profiles: list[WorkflowProfile]):
         """Update workflow sequences for pattern analysis."""
         current_time = time.time()
         cutoff_time = current_time - (self.max_history_days * 24 * 3600)
@@ -212,8 +212,8 @@ class UsagePatternMiner:
         self.workflow_sequences.sort(key=lambda x: x[1])
 
     def _analyze_temporal_patterns(
-        self, profiles: List[WorkflowProfile]
-    ) -> Dict[str, Any]:
+        self, profiles: list[WorkflowProfile]
+    ) -> dict[str, Any]:
         """Analyze temporal usage patterns."""
         if not profiles:
             return {}
@@ -258,8 +258,8 @@ class UsagePatternMiner:
         }
 
     def _analyze_data_access_patterns(
-        self, profiles: List[WorkflowProfile]
-    ) -> Dict[str, Any]:
+        self, profiles: list[WorkflowProfile]
+    ) -> dict[str, Any]:
         """Analyze data access patterns for cache optimization."""
         access_patterns = {}
 
@@ -325,8 +325,8 @@ class UsagePatternMiner:
         }
 
     def _find_sequential_access_patterns(
-        self, profiles: List[WorkflowProfile]
-    ) -> List[Dict[str, Any]]:
+        self, profiles: list[WorkflowProfile]
+    ) -> list[dict[str, Any]]:
         """Find patterns where files are accessed in sequence."""
         sequential_patterns = []
 
@@ -367,8 +367,8 @@ class UsagePatternMiner:
         return sequential_patterns
 
     def _analyze_workflow_sequences(
-        self, profiles: List[WorkflowProfile]
-    ) -> Dict[str, Any]:
+        self, profiles: list[WorkflowProfile]
+    ) -> dict[str, Any]:
         """Analyze sequences of workflow types for prediction."""
         if len(self.workflow_sequences) < 5:
             return {"insufficient_data": True}
@@ -412,8 +412,8 @@ class UsagePatternMiner:
         }
 
     def _analyze_resource_utilization_patterns(
-        self, profiles: List[WorkflowProfile]
-    ) -> Dict[str, Any]:
+        self, profiles: list[WorkflowProfile]
+    ) -> dict[str, Any]:
         """Analyze resource utilization patterns for thread pool optimization."""
         utilization_by_workflow = defaultdict(list)
 
@@ -430,7 +430,7 @@ class UsagePatternMiner:
             if thread_counts and durations:
                 # Weight thread count by duration
                 weighted_avg_threads = sum(
-                    tc * dur for tc, dur in zip(thread_counts, durations)
+                    tc * dur for tc, dur in zip(thread_counts, durations, strict=False)
                 ) / sum(durations)
                 max_threads = max(thread_counts)
 
@@ -464,8 +464,8 @@ class UsagePatternMiner:
         return utilization_stats
 
     def _analyze_file_size_patterns(
-        self, profiles: List[WorkflowProfile]
-    ) -> Dict[str, Any]:
+        self, profiles: list[WorkflowProfile]
+    ) -> dict[str, Any]:
         """Analyze file size patterns for memory optimization."""
         file_sizes_by_workflow = defaultdict(list)
 
@@ -493,8 +493,8 @@ class UsagePatternMiner:
         return size_patterns
 
     def _analyze_user_behavior_clusters(
-        self, profiles: List[WorkflowProfile]
-    ) -> Dict[str, Any]:
+        self, profiles: list[WorkflowProfile]
+    ) -> dict[str, Any]:
         """Analyze user behavior to identify common usage clusters."""
         # Group profiles by similar characteristics
         behavior_vectors = []
@@ -530,7 +530,9 @@ class UsagePatternMiner:
         # Simple clustering based on workflow type and duration
         clusters = defaultdict(list)
 
-        for i, (vector, info) in enumerate(zip(behavior_vectors, profile_info)):
+        for _i, (vector, info) in enumerate(
+            zip(behavior_vectors, profile_info, strict=False)
+        ):
             # Create cluster key based on workflow type and duration ranges
             duration = vector[0]
             if duration < 10:
@@ -569,8 +571,8 @@ class UsagePatternMiner:
         }
 
     def generate_cache_optimization_recommendations(
-        self, patterns: Dict[str, Any]
-    ) -> List[CacheOptimization]:
+        self, patterns: dict[str, Any]
+    ) -> list[CacheOptimization]:
         """Generate cache optimization recommendations based on usage patterns."""
         recommendations = []
 
@@ -623,8 +625,8 @@ class UsagePatternMiner:
         return recommendations
 
     def generate_preloading_recommendations(
-        self, patterns: Dict[str, Any]
-    ) -> List[PreloadingRecommendation]:
+        self, patterns: dict[str, Any]
+    ) -> list[PreloadingRecommendation]:
         """Generate preloading recommendations based on usage patterns."""
         recommendations = []
 
@@ -678,8 +680,8 @@ class UsagePatternMiner:
         return recommendations
 
     def generate_thread_pool_recommendations(
-        self, patterns: Dict[str, Any]
-    ) -> List[ThreadPoolRecommendation]:
+        self, patterns: dict[str, Any]
+    ) -> list[ThreadPoolRecommendation]:
         """Generate thread pool optimization recommendations."""
         recommendations = []
 
@@ -718,7 +720,7 @@ class UsagePatternMiner:
 
         return recommendations
 
-    def _flatten_steps(self, steps: List[WorkflowStep]) -> List[WorkflowStep]:
+    def _flatten_steps(self, steps: list[WorkflowStep]) -> list[WorkflowStep]:
         """Flatten nested workflow steps."""
         flattened = []
         for step in steps:
@@ -727,7 +729,7 @@ class UsagePatternMiner:
                 flattened.extend(self._flatten_steps(step.sub_steps))
         return flattened
 
-    def get_pattern_summary(self, patterns: Dict[str, Any]) -> Dict[str, Any]:
+    def get_pattern_summary(self, patterns: dict[str, Any]) -> dict[str, Any]:
         """Generate a summary of identified usage patterns."""
         summary = {
             "analysis_timestamp": time.time(),
@@ -832,13 +834,13 @@ def get_pattern_miner() -> UsagePatternMiner:
 # Convenience functions
 
 
-def analyze_current_usage_patterns() -> Dict[str, Any]:
+def analyze_current_usage_patterns() -> dict[str, Any]:
     """Analyze current usage patterns from recent workflows."""
     profiles = workflow_profiler.get_recent_profiles(50)  # Last 50 workflows
     return usage_pattern_miner.analyze_usage_patterns(profiles)
 
 
-def get_optimization_recommendations() -> Dict[str, List]:
+def get_optimization_recommendations() -> dict[str, list]:
     """Get all optimization recommendations based on current usage patterns."""
     patterns = analyze_current_usage_patterns()
 
@@ -856,7 +858,7 @@ def get_optimization_recommendations() -> Dict[str, List]:
     }
 
 
-def get_data_access_insights(workflow_type: Optional[str] = None) -> Dict[str, Any]:
+def get_data_access_insights(workflow_type: str | None = None) -> dict[str, Any]:
     """Get insights about data access patterns for a specific workflow type."""
     profiles = workflow_profiler.get_recent_profiles(30, workflow_type)
     if not profiles:
@@ -866,7 +868,7 @@ def get_data_access_insights(workflow_type: Optional[str] = None) -> Dict[str, A
     return patterns.get("data_access_patterns", {})
 
 
-def get_temporal_usage_insights() -> Dict[str, Any]:
+def get_temporal_usage_insights() -> dict[str, Any]:
     """Get insights about temporal usage patterns."""
     profiles = workflow_profiler.get_recent_profiles(100)
     if not profiles:

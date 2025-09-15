@@ -24,7 +24,6 @@ from collections import deque
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, Optional
 
 from PySide6.QtCore import Qt, QTimer, Signal
 from PySide6.QtGui import QColor, QFont
@@ -160,7 +159,7 @@ class HealthStatusWidget(QWidget):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self._health_results: Dict[str, HealthCheckResult] = {}
+        self._health_results: dict[str, HealthCheckResult] = {}
         self._setup_ui()
 
     def _setup_ui(self) -> None:
@@ -185,7 +184,7 @@ class HealthStatusWidget(QWidget):
         layout.addWidget(self.health_table)
 
     def update_health_status(
-        self, health_results: Dict[str, HealthCheckResult]
+        self, health_results: dict[str, HealthCheckResult]
     ) -> None:
         """Update the health status display."""
         self._health_results = health_results
@@ -301,14 +300,14 @@ class PerformanceDashboard(QWidget):
         super().__init__(parent)
 
         # Dashboard state
-        self._metrics: Dict[str, DashboardMetric] = {}
+        self._metrics: dict[str, DashboardMetric] = {}
         self._update_interval = 2.0  # seconds
         self._running = False
 
         # Monitoring systems
         self._health_monitor = get_health_monitor()
-        self._performance_monitor: Optional[PerformanceMonitor] = None
-        self._cache_monitor: Optional[CacheMonitor] = None
+        self._performance_monitor: PerformanceMonitor | None = None
+        self._cache_monitor: CacheMonitor | None = None
         self._memory_monitor = SystemMemoryMonitor()
 
         # Timer for updates
@@ -316,9 +315,9 @@ class PerformanceDashboard(QWidget):
         self._timer.timeout.connect(self._update_dashboard)
 
         # UI components
-        self._metric_widgets: Dict[str, MetricWidget] = {}
-        self._health_widget: Optional[HealthStatusWidget] = None
-        self._alerts_widget: Optional[AlertsWidget] = None
+        self._metric_widgets: dict[str, MetricWidget] = {}
+        self._health_widget: HealthStatusWidget | None = None
+        self._alerts_widget: AlertsWidget | None = None
 
         self._setup_ui()
         self._initialize_metrics()
@@ -557,7 +556,7 @@ class PerformanceDashboard(QWidget):
             logger.info(f"Performance report exported to {report_file}")
 
         except Exception as e:
-            error_msg = f"Failed to export performance report: {str(e)}"
+            error_msg = f"Failed to export performance report: {e!s}"
             if self._alerts_widget:
                 self._alerts_widget.add_alert("error", error_msg)
             logger.error(error_msg)
@@ -574,7 +573,7 @@ class PerformanceDashboard(QWidget):
             self._update_cache_metrics()
 
             # Update metric widget displays
-            for name, widget in self._metric_widgets.items():
+            for _name, widget in self._metric_widgets.items():
                 widget.update_display()
 
             # Check thresholds
@@ -661,7 +660,7 @@ class PerformanceDashboard(QWidget):
                     )
 
     def _on_health_report_ready(
-        self, health_results: Dict[str, HealthCheckResult]
+        self, health_results: dict[str, HealthCheckResult]
     ) -> None:
         """Handle health report updates."""
         if self._health_widget:

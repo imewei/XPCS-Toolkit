@@ -11,9 +11,10 @@ import json
 import threading
 import time
 from collections import defaultdict, deque
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any
 
 from .adaptive_memory import get_adaptive_memory_manager
 from .advanced_cache import get_global_cache
@@ -45,9 +46,9 @@ class PerformanceAlert:
     current_value: float
     threshold: float
     timestamp: float = field(default_factory=time.time)
-    recommendations: List[str] = field(default_factory=list)
+    recommendations: list[str] = field(default_factory=list)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert alert to dictionary for serialization."""
         return {
             "level": self.level.value,
@@ -94,10 +95,9 @@ class PerformanceMetric:
 
         if recent_avg > older_avg * 1.1:
             return "increasing"
-        elif recent_avg < older_avg * 0.9:
+        if recent_avg < older_avg * 0.9:
             return "decreasing"
-        else:
-            return "stable"
+        return "stable"
 
 
 class CacheMonitor:
@@ -129,7 +129,7 @@ class CacheMonitor:
         self._memory_manager = get_adaptive_memory_manager()
 
         # Metrics storage
-        self._metrics: Dict[str, PerformanceMetric] = {}
+        self._metrics: dict[str, PerformanceMetric] = {}
         self._alerts: deque[PerformanceAlert] = deque(maxlen=1000)
         self._alert_history: deque[PerformanceAlert] = deque(maxlen=5000)
 
@@ -137,16 +137,16 @@ class CacheMonitor:
         self._alert_thresholds = self._initialize_alert_thresholds()
 
         # Monitoring state
-        self._monitoring_thread: Optional[threading.Thread] = None
+        self._monitoring_thread: threading.Thread | None = None
         self._stop_monitoring = threading.Event()
         self._lock = threading.RLock()
 
         # Performance baselines
-        self._baselines: Dict[str, float] = {}
+        self._baselines: dict[str, float] = {}
         self._baseline_period_hours = 2.0
 
         # Alert callbacks
-        self._alert_callbacks: List[Callable[[PerformanceAlert], None]] = []
+        self._alert_callbacks: list[Callable[[PerformanceAlert], None]] = []
 
         # Start monitoring
         self._start_monitoring()
@@ -155,7 +155,7 @@ class CacheMonitor:
             f"CacheMonitor initialized with {monitoring_interval_seconds}s interval"
         )
 
-    def _initialize_alert_thresholds(self) -> Dict[str, Dict[str, float]]:
+    def _initialize_alert_thresholds(self) -> dict[str, dict[str, float]]:
         """Initialize default alert thresholds for various metrics."""
         return {
             "memory_pressure": {"warning": 80.0, "error": 90.0, "critical": 95.0},
@@ -477,17 +477,16 @@ class CacheMonitor:
             elif current_value < thresholds.get("warning", 0):
                 level = AlertLevel.WARNING
                 threshold_value = thresholds["warning"]
-        else:
-            # For metrics where higher is worse (like memory pressure)
-            if current_value > thresholds.get("critical", 100):
-                level = AlertLevel.CRITICAL
-                threshold_value = thresholds["critical"]
-            elif current_value > thresholds.get("error", 100):
-                level = AlertLevel.ERROR
-                threshold_value = thresholds["error"]
-            elif current_value > thresholds.get("warning", 100):
-                level = AlertLevel.WARNING
-                threshold_value = thresholds["warning"]
+        # For metrics where higher is worse (like memory pressure)
+        elif current_value > thresholds.get("critical", 100):
+            level = AlertLevel.CRITICAL
+            threshold_value = thresholds["critical"]
+        elif current_value > thresholds.get("error", 100):
+            level = AlertLevel.ERROR
+            threshold_value = thresholds["error"]
+        elif current_value > thresholds.get("warning", 100):
+            level = AlertLevel.WARNING
+            threshold_value = thresholds["warning"]
 
         if level is not None:
             # Generate alert
@@ -509,7 +508,7 @@ class CacheMonitor:
 
     def _get_recommendations_for_metric(
         self, metric_name: str, value: float, level: AlertLevel
-    ) -> List[str]:
+    ) -> list[str]:
         """Get optimization recommendations for a specific metric alert."""
         recommendations = []
 
@@ -636,7 +635,7 @@ class CacheMonitor:
         """Register callback function for performance alerts."""
         self._alert_callbacks.append(callback)
 
-    def get_current_metrics(self) -> Dict[str, Any]:
+    def get_current_metrics(self) -> dict[str, Any]:
         """Get current metrics snapshot."""
         with self._lock:
             return {
@@ -650,12 +649,12 @@ class CacheMonitor:
                 for name, metric in self._metrics.items()
             }
 
-    def get_active_alerts(self) -> List[Dict[str, Any]]:
+    def get_active_alerts(self) -> list[dict[str, Any]]:
         """Get list of active alerts."""
         with self._lock:
             return [alert.to_dict() for alert in self._alerts]
 
-    def get_alert_history(self, hours: float = 24.0) -> List[Dict[str, Any]]:
+    def get_alert_history(self, hours: float = 24.0) -> list[dict[str, Any]]:
         """Get alert history for specified time period."""
         cutoff_time = time.time() - (hours * 3600)
 
@@ -668,7 +667,7 @@ class CacheMonitor:
 
     def get_metric_history(
         self, metric_name: str, hours: float = 2.0
-    ) -> List[Tuple[float, float]]:
+    ) -> list[tuple[float, float]]:
         """Get history for a specific metric."""
         if metric_name not in self._metrics:
             return []
@@ -683,7 +682,7 @@ class CacheMonitor:
                 if timestamp > cutoff_time
             ]
 
-    def get_performance_summary(self) -> Dict[str, Any]:
+    def get_performance_summary(self) -> dict[str, Any]:
         """Get comprehensive performance summary."""
         metrics = self.get_current_metrics()
         active_alerts = self.get_active_alerts()
@@ -728,7 +727,7 @@ class CacheMonitor:
         }
 
     def _calculate_overall_health(
-        self, metrics: Dict[str, Any], active_alerts: List[Dict[str, Any]]
+        self, metrics: dict[str, Any], active_alerts: list[dict[str, Any]]
     ) -> str:
         """Calculate overall system health score."""
         # Simple health calculation based on alerts and key metrics
@@ -742,18 +741,17 @@ class CacheMonitor:
 
         if critical_alerts > 0:
             return "critical"
-        elif error_alerts > 2:
+        if error_alerts > 2:
             return "poor"
-        elif error_alerts > 0 or warning_alerts > 5:
+        if error_alerts > 0 or warning_alerts > 5:
             return "fair"
-        elif warning_alerts > 0:
+        if warning_alerts > 0:
             return "good"
-        else:
-            return "excellent"
+        return "excellent"
 
     def _get_general_recommendations(
-        self, metrics: Dict[str, Any], active_alerts: List[Dict[str, Any]]
-    ) -> List[str]:
+        self, metrics: dict[str, Any], active_alerts: list[dict[str, Any]]
+    ) -> list[str]:
         """Get general optimization recommendations."""
         recommendations = []
 
@@ -808,8 +806,7 @@ class CacheMonitor:
 
         if format.lower() == "json":
             return json.dumps(data, indent=2)
-        else:
-            raise ValueError(f"Unsupported export format: {format}")
+        raise ValueError(f"Unsupported export format: {format}")
 
     def shutdown(self):
         """Shutdown cache monitor gracefully."""
@@ -829,7 +826,7 @@ class CacheMonitor:
 
 
 # Global cache monitor instance
-_global_cache_monitor: Optional[CacheMonitor] = None
+_global_cache_monitor: CacheMonitor | None = None
 
 
 def get_cache_monitor(

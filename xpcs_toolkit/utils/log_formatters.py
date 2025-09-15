@@ -46,7 +46,7 @@ class ColoredConsoleFormatter(logging.Formatter):
         "DIM": "\033[2m",  # Dim
     }
 
-    def __init__(self, use_colors: bool = None):
+    def __init__(self, use_colors: bool | None = None):
         super().__init__()
         # Auto-detect color support
         if use_colors is None:

@@ -16,7 +16,7 @@ from collections import defaultdict, deque
 from dataclasses import dataclass, field
 from enum import Enum
 from queue import Empty, PriorityQueue
-from typing import Any, Dict, Optional, Set
+from typing import Any
 
 import psutil
 from PySide6.QtCore import (
@@ -83,7 +83,7 @@ class TaskInfo:
     priority: int = 5  # Lower numbers = higher priority
     submission_time: float = field(default_factory=time.perf_counter)
     estimated_duration: float = 1.0  # Estimated execution time in seconds
-    resource_requirements: Dict[str, float] = field(default_factory=dict)
+    resource_requirements: dict[str, float] = field(default_factory=dict)
     retry_count: int = 0
     max_retries: int = 2
 
@@ -118,7 +118,7 @@ class SmartThreadPool(QThreadPool):
 
         # Task queuing and priority management
         self._priority_queue = PriorityQueue()
-        self._active_tasks: Set[QRunnable] = set()
+        self._active_tasks: set[QRunnable] = set()
         self._task_history: deque = deque(maxlen=1000)  # Keep recent task history
 
         # Performance monitoring
@@ -187,7 +187,7 @@ class SmartThreadPool(QThreadPool):
         task: QRunnable,
         priority: int = 5,
         estimated_duration: float = 1.0,
-        resource_requirements: Optional[Dict[str, float]] = None,
+        resource_requirements: dict[str, float] | None = None,
     ):
         """Start a task with priority and resource information."""
         with QMutexLocker(self._mutex):
@@ -266,7 +266,7 @@ class SmartThreadPool(QThreadPool):
         task_info: TaskInfo,
         execution_time: float,
         success: bool,
-        error: Exception = None,
+        error: Exception | None = None,
     ):
         """Handle task completion."""
         with QMutexLocker(self._mutex):
@@ -425,7 +425,7 @@ class SmartThreadPool(QThreadPool):
         """Get current pool metrics."""
         return self._metrics
 
-    def get_statistics(self) -> Dict[str, Any]:
+    def get_statistics(self) -> dict[str, Any]:
         """Get comprehensive pool statistics."""
         uptime = time.perf_counter() - (
             self._last_rebalance_time - self._rebalance_interval
@@ -507,7 +507,7 @@ class ThreadPoolManager(QObject):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self._pools: Dict[str, SmartThreadPool] = {}
+        self._pools: dict[str, SmartThreadPool] = {}
         self._load_balance_strategy = LoadBalanceStrategy.RESOURCE_AWARE
 
         # Create default pool
@@ -538,7 +538,7 @@ class ThreadPoolManager(QObject):
 
         return pool
 
-    def get_pool(self, pool_id: str) -> Optional[SmartThreadPool]:
+    def get_pool(self, pool_id: str) -> SmartThreadPool | None:
         """Get a thread pool by ID."""
         return self._pools.get(pool_id)
 
@@ -563,7 +563,7 @@ class ThreadPoolManager(QObject):
     def submit_task(
         self,
         task: QRunnable,
-        pool_id: Optional[str] = None,
+        pool_id: str | None = None,
         priority: int = 5,
         **kwargs,
     ) -> bool:
@@ -585,7 +585,7 @@ class ThreadPoolManager(QObject):
 
         return False
 
-    def _select_optimal_pool(self) -> Optional[SmartThreadPool]:
+    def _select_optimal_pool(self) -> SmartThreadPool | None:
         """Select the optimal pool based on load balancing strategy."""
         if not self._pools:
             return None
@@ -594,7 +594,7 @@ class ThreadPoolManager(QObject):
             # Simple round-robin (not implemented for brevity)
             return next(iter(self._pools.values()))
 
-        elif self._load_balance_strategy == LoadBalanceStrategy.LEAST_LOADED:
+        if self._load_balance_strategy == LoadBalanceStrategy.LEAST_LOADED:
             # Select pool with lowest load factor
             best_pool = min(
                 self._pools.values(),
@@ -602,7 +602,7 @@ class ThreadPoolManager(QObject):
             )
             return best_pool
 
-        elif self._load_balance_strategy == LoadBalanceStrategy.RESOURCE_AWARE:
+        if self._load_balance_strategy == LoadBalanceStrategy.RESOURCE_AWARE:
             # Select pool with best resource availability
             best_score = float("inf")
             best_pool = None
@@ -633,7 +633,6 @@ class ThreadPoolManager(QObject):
     def _on_pool_metrics_updated(self, metrics: ThreadPoolMetrics):
         """Handle pool metrics updates."""
         # Could implement global optimization logic here
-        pass
 
     def _on_pool_health_changed(self, pool_id: str, new_health: str):
         """Handle pool health changes."""
@@ -646,7 +645,7 @@ class ThreadPoolManager(QObject):
         stats = self.get_global_statistics()
         self.manager_stats_updated.emit(stats)
 
-    def get_global_statistics(self) -> Dict[str, Any]:
+    def get_global_statistics(self) -> dict[str, Any]:
         """Get global thread pool manager statistics."""
         total_pools = len(self._pools)
         total_threads = sum(pool.maxThreadCount() for pool in self._pools.values())
@@ -696,7 +695,7 @@ class ThreadPoolManager(QObject):
 
 
 # Global thread pool manager instance
-_global_thread_pool_manager: Optional[ThreadPoolManager] = None
+_global_thread_pool_manager: ThreadPoolManager | None = None
 
 
 def get_thread_pool_manager() -> ThreadPoolManager:

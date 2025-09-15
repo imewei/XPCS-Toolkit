@@ -12,7 +12,7 @@ import time
 from collections import defaultdict, deque
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 import numpy as np
 
@@ -59,8 +59,8 @@ class PredictionModel:
 
     pattern_type: UsagePattern
     confidence: float  # 0.0 to 1.0
-    next_files: List[str] = field(default_factory=list)
-    next_data_types: List[str] = field(default_factory=list)
+    next_files: list[str] = field(default_factory=list)
+    next_data_types: list[str] = field(default_factory=list)
     predicted_at: float = field(default_factory=time.time)
 
 
@@ -90,13 +90,13 @@ class AdaptiveMemoryManager:
 
         # Access tracking
         self._access_history: deque[AccessRecord] = deque(maxlen=1000)
-        self._file_sequences: Dict[str, List[str]] = {}  # file -> list of next files
-        self._data_type_patterns: Dict[
-            str, List[str]
+        self._file_sequences: dict[str, list[str]] = {}  # file -> list of next files
+        self._data_type_patterns: dict[
+            str, list[str]
         ] = {}  # file -> typical data types
 
         # Pattern recognition
-        self._current_pattern: Optional[PredictionModel] = None
+        self._current_pattern: PredictionModel | None = None
         self._pattern_confidence_threshold = 0.6
 
         # Cache references
@@ -108,7 +108,7 @@ class AdaptiveMemoryManager:
         self._lock = threading.RLock()
 
         # Background processing
-        self._analysis_thread: Optional[threading.Thread] = None
+        self._analysis_thread: threading.Thread | None = None
         self._stop_event = threading.Event()
 
         # Memory thresholds based on strategy
@@ -123,7 +123,7 @@ class AdaptiveMemoryManager:
 
         logger.info(f"AdaptiveMemoryManager initialized with {strategy} strategy")
 
-    def _calculate_memory_thresholds(self) -> Dict[str, float]:
+    def _calculate_memory_thresholds(self) -> dict[str, float]:
         """Calculate memory thresholds based on strategy."""
         if self.strategy == MemoryStrategy.CONSERVATIVE:
             return {
@@ -132,20 +132,20 @@ class AdaptiveMemoryManager:
                 "cache_limit_factor": 0.3,  # Use 30% of available for caching
                 "prefetch_limit": 0.80,  # Don't prefetch above 80%
             }
-        elif self.strategy == MemoryStrategy.BALANCED:
+        if self.strategy == MemoryStrategy.BALANCED:
             return {
                 "cleanup_trigger": 0.80,
                 "aggressive_cleanup": 0.90,
                 "cache_limit_factor": 0.5,
                 "prefetch_limit": 0.85,
             }
-        else:  # AGGRESSIVE
-            return {
-                "cleanup_trigger": 0.85,
-                "aggressive_cleanup": 0.95,
-                "cache_limit_factor": 0.7,
-                "prefetch_limit": 0.90,
-            }
+        # AGGRESSIVE
+        return {
+            "cleanup_trigger": 0.85,
+            "aggressive_cleanup": 0.95,
+            "cache_limit_factor": 0.7,
+            "prefetch_limit": 0.90,
+        }
 
     def _start_analysis_thread(self):
         """Start background thread for pattern analysis."""
@@ -256,8 +256,8 @@ class AdaptiveMemoryManager:
             )
 
     def _detect_pattern_type(
-        self, recent_accesses: List[AccessRecord]
-    ) -> Tuple[UsagePattern, float]:
+        self, recent_accesses: list[AccessRecord]
+    ) -> tuple[UsagePattern, float]:
         """Detect the type of usage pattern from recent accesses."""
         if len(recent_accesses) < 3:
             return UsagePattern.RANDOM, 0.0
@@ -281,20 +281,19 @@ class AdaptiveMemoryManager:
             # Single file intensive usage
             return UsagePattern.INTERACTIVE, 0.9
 
-        elif file_count < total_accesses * 0.3:
+        if file_count < total_accesses * 0.3:
             # Few unique files, many accesses - batch processing
             return UsagePattern.BATCH, 0.8
 
-        elif self._is_sequential_pattern(files):
+        if self._is_sequential_pattern(files):
             # Sequential file access pattern
             return UsagePattern.SEQUENTIAL, 0.85
 
-        else:
-            # Random access pattern
-            confidence = 0.7 if interval_std / avg_interval < 0.5 else 0.5
-            return UsagePattern.RANDOM, confidence
+        # Random access pattern
+        confidence = 0.7 if interval_std / avg_interval < 0.5 else 0.5
+        return UsagePattern.RANDOM, confidence
 
-    def _is_sequential_pattern(self, files: List[str]) -> bool:
+    def _is_sequential_pattern(self, files: list[str]) -> bool:
         """Check if files follow a sequential naming pattern."""
         if len(files) < 3:
             return False
@@ -330,8 +329,8 @@ class AdaptiveMemoryManager:
         return False
 
     def _predict_next_files(
-        self, recent_accesses: List[AccessRecord], pattern_type: UsagePattern
-    ) -> List[str]:
+        self, recent_accesses: list[AccessRecord], pattern_type: UsagePattern
+    ) -> list[str]:
         """Predict next files to be accessed based on pattern."""
         if not recent_accesses:
             return []
@@ -342,21 +341,21 @@ class AdaptiveMemoryManager:
             # Predict next files in sequence
             return self._predict_sequential_files(current_file, recent_accesses)
 
-        elif pattern_type == UsagePattern.BATCH:
+        if pattern_type == UsagePattern.BATCH:
             # Predict files commonly accessed together
             return self._predict_batch_files(recent_accesses)
 
-        elif pattern_type == UsagePattern.INTERACTIVE:
+        if pattern_type == UsagePattern.INTERACTIVE:
             # Same file likely to be accessed again with different data types
             return [current_file]
 
-        else:  # RANDOM
-            # Use frequency-based prediction
-            return self._predict_frequent_files(recent_accesses)
+        # RANDOM
+        # Use frequency-based prediction
+        return self._predict_frequent_files(recent_accesses)
 
     def _predict_sequential_files(
-        self, current_file: str, recent_accesses: List[AccessRecord]
-    ) -> List[str]:
+        self, current_file: str, recent_accesses: list[AccessRecord]
+    ) -> list[str]:
         """Predict next files in a sequential pattern."""
         try:
             import re
@@ -390,7 +389,7 @@ class AdaptiveMemoryManager:
             logger.debug(f"Failed to predict sequential files: {e}")
             return []
 
-    def _predict_batch_files(self, recent_accesses: List[AccessRecord]) -> List[str]:
+    def _predict_batch_files(self, recent_accesses: list[AccessRecord]) -> list[str]:
         """Predict files commonly accessed in batch."""
         file_cooccurrence = defaultdict(int)
         recent_files = [
@@ -412,7 +411,7 @@ class AdaptiveMemoryManager:
         )
         return [file_path for file_path, _ in sorted_files[: self.max_prefetch_items]]
 
-    def _predict_frequent_files(self, recent_accesses: List[AccessRecord]) -> List[str]:
+    def _predict_frequent_files(self, recent_accesses: list[AccessRecord]) -> list[str]:
         """Predict based on access frequency."""
         file_freq = defaultdict(int)
         for record in recent_accesses[-20:]:  # Last 20 accesses
@@ -423,8 +422,8 @@ class AdaptiveMemoryManager:
         return [file_path for file_path, _ in sorted_files[: self.max_prefetch_items]]
 
     def _predict_next_data_types(
-        self, recent_accesses: List[AccessRecord]
-    ) -> List[str]:
+        self, recent_accesses: list[AccessRecord]
+    ) -> list[str]:
         """Predict next data types to be accessed."""
         if not recent_accesses:
             return []
@@ -450,7 +449,7 @@ class AdaptiveMemoryManager:
         for data_type in recent_types:
             type_freq[data_type] += 1
 
-        for data_type, freq in sorted(
+        for data_type, _freq in sorted(
             type_freq.items(), key=lambda x: x[1], reverse=True
         ):
             if data_type not in predicted_types:
@@ -496,7 +495,7 @@ class AdaptiveMemoryManager:
         if prefetch_count > 0:
             logger.debug(f"Executed predictive prefetch for {prefetch_count} files")
 
-    def _prefetch_file_data(self, file_path: str, data_types: List[str]):
+    def _prefetch_file_data(self, file_path: str, data_types: list[str]):
         """Prefetch specific data types for a file."""
         # Use metadata cache for prefetching
         if "metadata" in data_types:
@@ -572,7 +571,7 @@ class AdaptiveMemoryManager:
                 ):
                     del self._file_sequences[file_path]
 
-    def get_memory_recommendations(self) -> Dict[str, Any]:
+    def get_memory_recommendations(self) -> dict[str, Any]:
         """Get memory management recommendations."""
         memory_info = SystemMemoryMonitor.get_memory_info()
         used_mb, available_mb, percent_used = memory_info
@@ -616,7 +615,7 @@ class AdaptiveMemoryManager:
 
         return recommendations
 
-    def get_performance_stats(self) -> Dict[str, Any]:
+    def get_performance_stats(self) -> dict[str, Any]:
         """Get performance statistics."""
         with self._lock:
             total_prefetch_attempts = self._prefetch_hits + self._prefetch_misses
@@ -671,7 +670,7 @@ class AdaptiveMemoryManager:
 
 
 # Global adaptive memory manager instance
-_global_memory_manager: Optional[AdaptiveMemoryManager] = None
+_global_memory_manager: AdaptiveMemoryManager | None = None
 
 
 def get_adaptive_memory_manager(

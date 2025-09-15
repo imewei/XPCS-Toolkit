@@ -17,7 +17,7 @@ import time
 from collections import deque
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 from PySide6.QtCore import QObject, QTimer, Signal
 
@@ -38,12 +38,12 @@ class SystemSnapshot:
     timestamp: float = field(default_factory=time.perf_counter)
 
     # Signal optimization metrics
-    signal_batching_stats: Dict[str, Any] = field(default_factory=dict)
-    connection_pool_stats: Dict[str, Any] = field(default_factory=dict)
-    attribute_cache_stats: Dict[str, Any] = field(default_factory=dict)
+    signal_batching_stats: dict[str, Any] = field(default_factory=dict)
+    connection_pool_stats: dict[str, Any] = field(default_factory=dict)
+    attribute_cache_stats: dict[str, Any] = field(default_factory=dict)
 
     # Thread pool metrics
-    thread_pool_stats: Dict[str, Any] = field(default_factory=dict)
+    thread_pool_stats: dict[str, Any] = field(default_factory=dict)
 
     # System resource metrics
     cpu_usage: float = 0.0
@@ -77,8 +77,8 @@ class PerformanceTrends:
 
     # Overall assessment
     overall_performance_score: float = 100.0  # 0-100 scale
-    bottlenecks_identified: List[str] = field(default_factory=list)
-    optimization_recommendations: List[str] = field(default_factory=list)
+    bottlenecks_identified: list[str] = field(default_factory=list)
+    optimization_recommendations: list[str] = field(default_factory=list)
 
 
 class PerformanceMonitor(QObject):
@@ -100,7 +100,7 @@ class PerformanceMonitor(QObject):
         self._snapshots: deque[SystemSnapshot] = deque(
             maxlen=1000
         )  # Keep last 1000 snapshots
-        self._worker_metrics: Dict[str, WorkerPerformanceMetrics] = {}
+        self._worker_metrics: dict[str, WorkerPerformanceMetrics] = {}
 
         # Alert thresholds
         self._alert_thresholds = {
@@ -283,7 +283,7 @@ class PerformanceMonitor(QObject):
         except Exception as e:
             logger.error(f"Error analyzing performance trends: {e}")
 
-    def _calculate_trends(self, snapshots: List[SystemSnapshot]) -> PerformanceTrends:
+    def _calculate_trends(self, snapshots: list[SystemSnapshot]) -> PerformanceTrends:
         """Calculate performance trends from snapshots."""
         trends = PerformanceTrends()
 
@@ -344,7 +344,7 @@ class PerformanceMonitor(QObject):
 
         return trends
 
-    def _calculate_trend_direction(self, values: List[float]) -> str:
+    def _calculate_trend_direction(self, values: list[float]) -> str:
         """Calculate trend direction from a series of values."""
         if len(values) < 3:
             return "stable"
@@ -361,14 +361,13 @@ class PerformanceMonitor(QObject):
         # Determine trend based on slope magnitude
         if abs(slope) < self._trend_threshold / len(values):
             return "stable"
-        elif slope > 0:
+        if slope > 0:
             return "improving"
-        else:
-            return "degrading"
+        return "degrading"
 
     def _detect_bottlenecks(
-        self, snapshots: List[SystemSnapshot]
-    ) -> List[Tuple[str, str]]:
+        self, snapshots: list[SystemSnapshot]
+    ) -> list[tuple[str, str]]:
         """Detect performance bottlenecks from recent snapshots."""
         bottlenecks = []
 
@@ -429,8 +428,8 @@ class PerformanceMonitor(QObject):
         return bottlenecks
 
     def _generate_recommendations(
-        self, trends: PerformanceTrends, snapshots: List[SystemSnapshot]
-    ) -> List[str]:
+        self, trends: PerformanceTrends, snapshots: list[SystemSnapshot]
+    ) -> list[str]:
         """Generate optimization recommendations based on trends and bottlenecks."""
         recommendations = []
 
@@ -481,7 +480,7 @@ class PerformanceMonitor(QObject):
         return recommendations
 
     def _calculate_performance_score(
-        self, trends: PerformanceTrends, snapshots: List[SystemSnapshot]
+        self, trends: PerformanceTrends, snapshots: list[SystemSnapshot]
     ) -> float:
         """Calculate overall performance score (0-100)."""
         if not snapshots:
@@ -537,11 +536,11 @@ class PerformanceMonitor(QObject):
         """Add worker performance metrics for analysis."""
         self._worker_metrics[worker_id] = metrics
 
-    def get_current_snapshot(self) -> Optional[SystemSnapshot]:
+    def get_current_snapshot(self) -> SystemSnapshot | None:
         """Get the most recent performance snapshot."""
         return self._snapshots[-1] if self._snapshots else None
 
-    def get_historical_snapshots(self, count: int = 100) -> List[SystemSnapshot]:
+    def get_historical_snapshots(self, count: int = 100) -> list[SystemSnapshot]:
         """Get recent historical snapshots."""
         return list(self._snapshots)[-count:]
 
@@ -580,7 +579,7 @@ class PerformanceMonitor(QObject):
             logger.error(f"Failed to export performance report: {e}")
             return False
 
-    def get_optimization_summary(self) -> Dict[str, Any]:
+    def get_optimization_summary(self) -> dict[str, Any]:
         """Get a summary of optimization effectiveness."""
         if not self._snapshots:
             return {}
@@ -637,7 +636,7 @@ class PerformanceMonitor(QObject):
 
 
 # Global performance monitor instance
-_global_performance_monitor: Optional[PerformanceMonitor] = None
+_global_performance_monitor: PerformanceMonitor | None = None
 
 
 def get_performance_monitor() -> PerformanceMonitor:

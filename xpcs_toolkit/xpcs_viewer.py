@@ -115,7 +115,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
     """
 
     def __init__(self, path=None, label_style=None):
-        super(XpcsViewer, self).__init__()
+        super().__init__()
         self.setupUi(self)
         self.home_dir = home_dir
         self.label_style = label_style
@@ -152,7 +152,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
             self.start_wd = os.path.expanduser("~")
 
         self.start_wd = os.path.abspath(self.start_wd)
-        logger.info("Start up directory is [{}]".format(self.start_wd))
+        logger.info(f"Start up directory is [{self.start_wd}]")
 
         self.pushButton_plot_saxs2d.clicked.connect(self.plot_saxs_2d)
         self.pushButton_plot_saxs1d.clicked.connect(self.plot_saxs_1d)
@@ -219,7 +219,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
                 json.dump(setting, f, indent=4)
 
         # the display size might too big for some laptops
-        with open(key_fname, "r") as f:
+        with open(key_fname) as f:
             config = json.load(f)
             if "window_size_h" in config:
                 new_size = (config["window_size_w"], config["window_size_h"])
@@ -231,8 +231,6 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         )
         if os.path.isdir(cache_dir):
             shutil.rmtree(cache_dir)
-
-        return
 
     def setup_async_connections(self):
         """Set up connections for async operations."""
@@ -302,7 +300,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         except Exception as e:
             logger.error(f"Error applying {plot_type} plot result: {e}")
             self.progress_manager.complete_operation(
-                operation_id, False, f"Plot error: {str(e)}"
+                operation_id, False, f"Plot error: {e!s}"
             )
 
         # Clean up
@@ -618,7 +616,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
     def update_plot_async(self, tab_name):
         """Asynchronous plot update with progress indication."""
         # Check if there's already an active operation for this plot type
-        for op_id, plot_type in self.active_plot_operations.items():
+        for _op_id, plot_type in self.active_plot_operations.items():
             if plot_type == tab_name:
                 logger.info(f"Async {tab_name} plot already in progress, skipping")
                 return
@@ -633,10 +631,9 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
             if self.plot_kwargs_record[tab_name] == kwargs:
                 logger.debug(f"No parameter changes for async {tab_name}, skipping")
                 return  # No change needed
-            else:
-                logger.debug(f"Async plot parameters changed for {tab_name}")
-                logger.debug(f"Old params: {self.plot_kwargs_record[tab_name]}")
-                logger.debug(f"New params: {kwargs}")
+            logger.debug(f"Async plot parameters changed for {tab_name}")
+            logger.debug(f"Old params: {self.plot_kwargs_record[tab_name]}")
+            logger.debug(f"New params: {kwargs}")
 
             self.plot_kwargs_record[tab_name] = kwargs
 
@@ -697,6 +694,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
             name="Settings", type="group", children=hdf_info_data
         )
         self.hdf_info.setParameters(hdf_params, showTop=True)
+        return None
 
     def saxs2d_mouseMoved(self, pos):
         if self.pg_saxs.view.sceneBoundingRect().contains(pos):
@@ -751,8 +749,8 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
 
         if dryrun:
             return kwargs
-        else:
-            self.vk.plot_saxs_2d(pg_hdl=self.pg_saxs, **kwargs)
+        self.vk.plot_saxs_2d(pg_hdl=self.pg_saxs, **kwargs)
+        return None
 
     def saxs2d_roi_add(self):
         sl_type_idx = self.cb_saxs2D_roi_type.currentIndex()
@@ -786,14 +784,14 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         }
         if kwargs["qmin"] >= kwargs["qmax"]:
             self.statusbar.showMessage("check qmin and qmax")
-            return
+            return None
 
         if dryrun:
             return kwargs
-        else:
-            self.vk.plot_saxs_1d(self.pg_saxs, self.mp_saxs, **kwargs)
-            # adjust the line behavior
-            self.switch_saxs1d_line()
+        self.vk.plot_saxs_1d(self.pg_saxs, self.mp_saxs, **kwargs)
+        # adjust the line behavior
+        self.switch_saxs1d_line()
+        return None
 
     def switch_saxs1d_line(self):
         lb_type = self.saxs1d_lb_type.currentIndex()
@@ -871,6 +869,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         if dryrun:
             return kwargs
         self.vk.plot_qmap(self.pg_qmap, **kwargs)
+        return None
 
     def plot_twotime(self, dryrun=False, highlight_xy=None):
         current_selection = self.comboBox_twotime_selection.currentIndex()
@@ -930,6 +929,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
                 # Always restore signal connections
                 self.comboBox_twotime_selection.blockSignals(False)
                 self.horizontalSlider_twotime_selection.blockSignals(False)
+        return None
 
     def show_dataset(self):
         rows = self.get_selected_rows()
@@ -946,8 +946,8 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         }
         if dryrun:
             return kwargs
-        else:
-            self.vk.plot_stability(self.mp_stab, **kwargs)
+        self.vk.plot_stability(self.mp_stab, **kwargs)
+        return None
 
     def plot_intensity_t(self, dryrun=False):
         kwargs = {
@@ -958,8 +958,8 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         }
         if dryrun:
             return kwargs
-        else:
-            self.vk.plot_intt(self.pg_intt, **kwargs)
+        self.vk.plot_intt(self.pg_intt, **kwargs)
+        return None
 
     def init_diffusion(self):
         self.vk.plot_tauq_pre(hdl=self.mp_tauq_pre.hdl)
@@ -972,7 +972,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
 
         if sum(fit_flag) == 0:
             self.statusbar.showMessage("nothing to fit, really?", 1000)
-            return
+            return None
 
         tauq = [self.tauq_qmin, self.tauq_qmax]
         q_range = [float(x.text()) for x in tauq]
@@ -987,12 +987,12 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         }
         if dryrun:
             return kwargs
-        else:
-            msg = self.vk.plot_tauq(hdl=self.mp_tauq.hdl, **kwargs)
-            self.mp_tauq.parent().repaint()
-            self.tauq_msg.clear()
-            self.tauq_msg.setData(msg)
-            self.tauq_msg.parent().repaint()
+        msg = self.vk.plot_tauq(hdl=self.mp_tauq.hdl, **kwargs)
+        self.mp_tauq.parent().repaint()
+        self.tauq_msg.clear()
+        self.tauq_msg.setData(msg)
+        self.tauq_msg.parent().repaint()
+        return None
 
     def select_bkgfile(self):
         path = self.work_dir.text()
@@ -1015,13 +1015,11 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         save_path = QtWidgets.QFileDialog.getExistingDirectory(self, "Open directory")
         self.avg_save_path.clear()
         self.avg_save_path.setText(save_path)
-        return
 
     def set_average_save_name(self):
         save_name = QtWidgets.QFileDialog.getSaveFileName(self, "Save as")
         self.avg_save_name.clear()
         self.avg_save_name.setText(os.path.basename(save_name[0]))
-        return
 
     def init_average(self):
         if len(self.vk.target) > 0:
@@ -1114,7 +1112,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         if worker.status == "finished":
             self.statusbar.showMessage("this job has finished", 1000)
             return
-        elif worker.status == "running":
+        if worker.status == "running":
             self.statusbar.showMessage("this job is running.", 1000)
             return
 
@@ -1151,7 +1149,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
 
     def init_g2(self, qd, tel):
         if qd is None or tel is None:
-            return None
+            return
 
         q_auto = self.g2_qauto.isChecked()
         t_auto = self.g2_tauto.isChecked()
@@ -1161,7 +1159,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         t_max = np.max([t[-1] for t in tel])
 
         def to_e(x):
-            return "%.2e" % x
+            return f"{x:.2e}"
 
         self.g2_bmin.setValue(t_min / 20)
         # self.g2_bmax.setText(to_e(t_max * 10))
@@ -1226,23 +1224,22 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         }
         if kwargs["show_fit"] and sum(kwargs["fit_flag"]) == 0:
             self.statusbar.showMessage("nothing to fit, really?", 1000)
-            return
+            return None
 
         if dryrun:
             return kwargs
-        else:
-            self.pushButton_4.setDisabled(True)
-            self.pushButton_4.setText("plotting")
-            try:
-                qd, tel = self.vk.plot_g2(handler=self.mp_g2, **kwargs)
-                self.init_g2(qd, tel)
-                if kwargs["show_fit"]:
-                    self.init_diffusion()
-            except Exception:
-                traceback.print_exc()
-            finally:
-                self.pushButton_4.setEnabled(True)
-                self.pushButton_4.setText("plot")
+        self.pushButton_4.setDisabled(True)
+        self.pushButton_4.setText("plotting")
+        try:
+            qd, tel = self.vk.plot_g2(handler=self.mp_g2, **kwargs)
+            self.init_g2(qd, tel)
+            if kwargs["show_fit"]:
+                self.init_diffusion()
+        except Exception:
+            traceback.print_exc()
+        finally:
+            self.pushButton_4.setEnabled(True)
+            self.pushButton_4.setText("plot")
 
     def export_g2(self):
         self.vk.export_g2()
@@ -1293,7 +1290,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
             folder = path
 
         if not os.path.isdir(folder):
-            self.statusbar.showMessage("{} is not a folder.".format(folder))
+            self.statusbar.showMessage(f"{folder} is not a folder.")
             folder = self.start_wd
 
         self.work_dir.setText(folder)
@@ -1477,7 +1474,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
                 keys[id2].setValue(vals[id1])
                 vals[id1], vals[id2] = vals[id2], vals[id1]
 
-        for n in range(0, 7):
+        for n in range(7):
             swap_min_max(2 * n, 2 * n + 1)
 
         vals = np.array(vals).reshape(len(keys) // 2, 2)

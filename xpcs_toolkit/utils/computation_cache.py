@@ -10,8 +10,9 @@ from __future__ import annotations
 import hashlib
 import threading
 import time
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any
 
 import numpy as np
 
@@ -31,10 +32,10 @@ class G2FitResult:
     q_val: np.ndarray
     q_range: str
     t_range: str
-    bounds: List
+    bounds: list
     fit_flag: str
-    fit_line: List
-    label: List
+    fit_line: list
+    label: list
     computation_time_ms: float
     cache_key: str
 
@@ -47,7 +48,7 @@ class SAXSResult:
     intensity: np.ndarray
     xlabel: str
     ylabel: str
-    processing_params: Dict
+    processing_params: dict
     computation_time_ms: float
     cache_key: str
 
@@ -76,7 +77,7 @@ class ComputationCache:
         self._lock = threading.RLock()
 
         # Track computation types and their keys
-        self._computation_keys: Dict[str, List[str]] = {
+        self._computation_keys: dict[str, list[str]] = {
             "g2_fitting": [],
             "saxs_analysis": [],
             "twotime_correlation": [],
@@ -102,10 +103,10 @@ class ComputationCache:
                 key_parts.append(array_key)
             elif isinstance(param_value, (list, tuple)):
                 key_parts.append(
-                    f"{param_name}:{str(sorted(param_value) if isinstance(param_value, list) else param_value)}"
+                    f"{param_name}:{sorted(param_value) if isinstance(param_value, list) else param_value!s}"
                 )
             elif isinstance(param_value, dict):
-                key_parts.append(f"{param_name}:{str(sorted(param_value.items()))}")
+                key_parts.append(f"{param_name}:{sorted(param_value.items())!s}")
             else:
                 key_parts.append(f"{param_name}:{param_value}")
 
@@ -135,10 +136,10 @@ class ComputationCache:
     def cache_g2_fitting(
         self,
         file_path: str,
-        q_range: Optional[Tuple[float, float]] = None,
-        t_range: Optional[Tuple[float, float]] = None,
-        bounds: Optional[List] = None,
-        fit_flag: Optional[List] = None,
+        q_range: tuple[float, float] | None = None,
+        t_range: tuple[float, float] | None = None,
+        bounds: list | None = None,
+        fit_flag: list | None = None,
         fit_func: str = "single",
     ) -> Callable:
         """
@@ -223,7 +224,7 @@ class ComputationCache:
 
         return decorator
 
-    def cache_saxs_analysis(self, file_path: str, processing_params: Dict) -> Callable:
+    def cache_saxs_analysis(self, file_path: str, processing_params: dict) -> Callable:
         """
         Cache decorator for SAXS analysis computations.
 
@@ -367,7 +368,7 @@ class ComputationCache:
 
         return decorator
 
-    def get_cached_g2_fitting(self, file_path: str, **params) -> Optional[G2FitResult]:
+    def get_cached_g2_fitting(self, file_path: str, **params) -> G2FitResult | None:
         """Get cached G2 fitting result if available."""
         cache_key = self._generate_parameter_key(
             "g2_fitting", file_path=file_path, **params
@@ -375,9 +376,7 @@ class ComputationCache:
         result, found = self._cache.get(cache_key)
         return result if found and isinstance(result, G2FitResult) else None
 
-    def get_cached_saxs_analysis(
-        self, file_path: str, **params
-    ) -> Optional[SAXSResult]:
+    def get_cached_saxs_analysis(self, file_path: str, **params) -> SAXSResult | None:
         """Get cached SAXS analysis result if available."""
         cache_key = self._generate_parameter_key(
             "saxs_analysis", file_path=file_path, **params
@@ -387,7 +386,7 @@ class ComputationCache:
 
     def get_cached_twotime_correlation(
         self, file_path: str, **params
-    ) -> Optional[TwoTimeResult]:
+    ) -> TwoTimeResult | None:
         """Get cached two-time correlation result if available."""
         cache_key = self._generate_parameter_key(
             "twotime_correlation", file_path=file_path, **params
@@ -421,7 +420,7 @@ class ComputationCache:
                 f"Invalidated {invalidated_count} cached computations for {file_path}"
             )
 
-    def get_computation_stats(self) -> Dict[str, Any]:
+    def get_computation_stats(self) -> dict[str, Any]:
         """Get statistics about cached computations."""
         with self._lock:
             stats = {
@@ -472,7 +471,7 @@ class ComputationCache:
 
         removed_count = 0
         with self._lock:
-            for computation_type, keys in self._computation_keys.items():
+            for _computation_type, keys in self._computation_keys.items():
                 keys_to_remove = []
 
                 for key in keys:
@@ -505,7 +504,7 @@ class ComputationCache:
 
 
 # Global computation cache instance
-_global_computation_cache: Optional[ComputationCache] = None
+_global_computation_cache: ComputationCache | None = None
 
 
 def get_computation_cache() -> ComputationCache:

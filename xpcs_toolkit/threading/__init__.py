@@ -21,18 +21,14 @@ from .async_workers_enhanced import ComputationWorker as EnhancedComputationWork
 from .async_workers_enhanced import DataLoadWorker as EnhancedDataLoadWorker
 from .async_workers_enhanced import (
     EnhancedThreadPool,
-)
-from .async_workers_enhanced import PlotWorker as EnhancedPlotWorker
-from .async_workers_enhanced import WorkerManager as EnhancedWorkerManager
-from .async_workers_enhanced import (
     WorkerPriority,
     WorkerResult,
-)
-from .async_workers_enhanced import WorkerSignals as EnhancedWorkerSignals
-from .async_workers_enhanced import (
     WorkerState,
     WorkerStats,
 )
+from .async_workers_enhanced import PlotWorker as EnhancedPlotWorker
+from .async_workers_enhanced import WorkerManager as EnhancedWorkerManager
+from .async_workers_enhanced import WorkerSignals as EnhancedWorkerSignals
 from .cleanup_optimized import (
     BackgroundCleanupManager,
     CleanupPriority,
@@ -110,97 +106,97 @@ from .signal_optimization import (
 )
 
 __all__ = [
-    # Original workers
-    "BaseAsyncWorker",
-    "PlotWorker",
-    "DataLoadWorker",
-    "ComputationWorker",
-    "WorkerManager",
-    "WorkerSignals",
-    # Enhanced workers
-    "EnhancedBaseAsyncWorker",
-    "EnhancedPlotWorker",
-    "EnhancedDataLoadWorker",
-    "EnhancedComputationWorker",
-    "EnhancedWorkerManager",
-    "EnhancedThreadPool",
-    "WorkerPriority",
-    "WorkerState",
-    "WorkerResult",
-    "WorkerStats",
-    "EnhancedWorkerSignals",
-    # Optimized threading system
-    "SignalOptimizer",
-    "SignalBatcher",
-    "ConnectionPool",
-    "WorkerAttributeCache",
-    "SignalPriority",
-    "get_signal_optimizer",
-    "initialize_signal_optimization",
-    "shutdown_signal_optimization",
-    # Enhanced thread pools
-    "SmartThreadPool",
-    "ThreadPoolManager",
-    "ThreadPoolMetrics",
-    "ThreadPoolHealth",
-    "LoadBalanceStrategy",
-    "get_thread_pool_manager",
-    "initialize_enhanced_threading",
-    "shutdown_enhanced_threading",
-    # Optimized workers
-    "OptimizedBaseWorker",
-    "OptimizedPlotWorker",
-    "OptimizedDataLoadWorker",
-    "OptimizedComputationWorker",
-    "WorkerPerformanceMetrics",
-    "create_optimized_worker",
-    "submit_optimized_worker",
-    # Performance monitoring
-    "PerformanceMonitor",
-    "SystemSnapshot",
-    "PerformanceTrends",
-    "get_performance_monitor",
-    "initialize_performance_monitoring",
-    "shutdown_performance_monitoring",
-    # Plot workers
-    "SaxsPlotWorker",
-    "G2PlotWorker",
-    "TwotimePlotWorker",
-    "IntensityPlotWorker",
-    "StabilityPlotWorker",
-    "QMapPlotWorker",
+    "AsyncDataPreloader",
+    "AsyncMethodMixin",
     # Async components
     "AsyncViewerKernel",
-    "AsyncDataPreloader",
-    # Progress management
-    "ProgressManager",
-    "ProgressDialog",
-    "ProgressIndicator",
-    # Main thread optimization
-    "MainThreadOptimizer",
-    "OperationContext",
-    # GUI integration
-    "ThreadingIntegrator",
-    "setup_enhanced_threading",
-    "make_async",
-    "AsyncMethodMixin",
-    "create_progress_callback",
-    "create_completion_callback",
-    "async_load_xpcs_files",
-    "async_generate_saxs_plot",
-    "async_generate_g2_plot",
-    # Optimized cleanup system
-    "ObjectRegistry",
     "BackgroundCleanupManager",
-    "SmartGarbageCollector",
+    # Original workers
+    "BaseAsyncWorker",
     "CleanupPriority",
     "CleanupTask",
-    "get_object_registry",
+    "ComputationWorker",
+    "ConnectionPool",
+    "DataLoadWorker",
+    # Enhanced workers
+    "EnhancedBaseAsyncWorker",
+    "EnhancedComputationWorker",
+    "EnhancedDataLoadWorker",
+    "EnhancedPlotWorker",
+    "EnhancedThreadPool",
+    "EnhancedWorkerManager",
+    "EnhancedWorkerSignals",
+    "G2PlotWorker",
+    "IntensityPlotWorker",
+    "LoadBalanceStrategy",
+    # Main thread optimization
+    "MainThreadOptimizer",
+    # Optimized cleanup system
+    "ObjectRegistry",
+    "OperationContext",
+    # Optimized workers
+    "OptimizedBaseWorker",
+    "OptimizedComputationWorker",
+    "OptimizedDataLoadWorker",
+    "OptimizedPlotWorker",
+    # Performance monitoring
+    "PerformanceMonitor",
+    "PerformanceTrends",
+    "PlotWorker",
+    "ProgressDialog",
+    "ProgressIndicator",
+    # Progress management
+    "ProgressManager",
+    "QMapPlotWorker",
+    # Plot workers
+    "SaxsPlotWorker",
+    "SignalBatcher",
+    # Optimized threading system
+    "SignalOptimizer",
+    "SignalPriority",
+    "SmartGarbageCollector",
+    # Enhanced thread pools
+    "SmartThreadPool",
+    "StabilityPlotWorker",
+    "SystemSnapshot",
+    "ThreadPoolHealth",
+    "ThreadPoolManager",
+    "ThreadPoolMetrics",
+    # GUI integration
+    "ThreadingIntegrator",
+    "TwotimePlotWorker",
+    "WorkerAttributeCache",
+    "WorkerManager",
+    "WorkerPerformanceMetrics",
+    "WorkerPriority",
+    "WorkerResult",
+    "WorkerSignals",
+    "WorkerState",
+    "WorkerStats",
+    "async_generate_g2_plot",
+    "async_generate_saxs_plot",
+    "async_load_xpcs_files",
+    "create_completion_callback",
+    "create_optimized_worker",
+    "create_progress_callback",
     "get_background_cleanup_manager",
+    "get_object_registry",
+    "get_performance_monitor",
+    "get_signal_optimizer",
     "get_smart_gc",
+    "get_thread_pool_manager",
+    "initialize_enhanced_threading",
+    "initialize_optimized_cleanup",
+    "initialize_performance_monitoring",
+    "initialize_signal_optimization",
+    "make_async",
     "register_for_cleanup",
     "schedule_type_cleanup",
-    "smart_gc_collect",
-    "initialize_optimized_cleanup",
+    "setup_enhanced_threading",
+    "shutdown_enhanced_threading",
     "shutdown_optimized_cleanup",
+    "shutdown_performance_monitoring",
+    "shutdown_signal_optimization",
+    "smart_gc_collect",
+    "submit_optimized_worker",
 ]

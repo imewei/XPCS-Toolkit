@@ -60,7 +60,7 @@ def clean_c2_for_visualization(c2, method="nan_to_num"):
             c2, nan=nan_replacement, posinf=pos_replacement, neginf=neg_replacement
         )
 
-    elif method == "interpolate":
+    if method == "interpolate":
         # Use interpolation for better continuity
         try:
             from scipy import ndimage
@@ -92,8 +92,7 @@ def clean_c2_for_visualization(c2, method="nan_to_num"):
         if np.any(finite_mask):
             valid_median = np.median(c2[finite_mask])
             return np.where(finite_mask, c2, valid_median)
-        else:
-            return np.zeros_like(c2)
+        return np.zeros_like(c2)
 
     # Fallback to original data if method not recognized
     logger.warning(f"Unknown cleaning method '{method}', returning original data")
@@ -174,7 +173,7 @@ def plot_twotime(
 
     c2_result = xfile.get_twotime_c2(selection=selection, correct_diag=correct_diag)
     if c2_result is None:
-        return None
+        return
 
     c2, delta_t = c2_result["c2_mat"], c2_result["delta_t"]
 

@@ -25,7 +25,7 @@ def create_xpcs_dataset(fname, **kwargs):
         logger.warning(
             f"Failed to load file {fname}: Missing required HDF5 dataset - {e}"
         )
-    except (OSError, IOError) as e:
+    except OSError as e:
         logger.warning(f"Failed to load file {fname}: File I/O error - {e}")
     except Exception as e:
         logger.warning(f"Failed to load file {fname}: {type(e).__name__} - {e}")
@@ -34,7 +34,7 @@ def create_xpcs_dataset(fname, **kwargs):
     return None
 
 
-class FileLocator(object):
+class FileLocator:
     def __init__(self, path):
         self.path = path
         self.source = ListDataModel()
@@ -57,8 +57,10 @@ class FileLocator(object):
         :param rows: a list of index to select; if None is given, then use
         :return: list of xpcs_file objects;
         """
-        if not rows:
+        if rows is None:
             selected = list(range(len(self.target)))
+        elif isinstance(rows, int):
+            selected = [rows]
         else:
             selected = rows
 
@@ -81,9 +83,7 @@ class FileLocator(object):
 
             if xf_obj.fit_summary is None and filter_fitted:
                 continue
-            if filter_atype is None:
-                ret.append(xf_obj)
-            elif filter_atype in xf_obj.atype:
+            if filter_atype is None or filter_atype in xf_obj.atype:
                 ret.append(xf_obj)
         return ret
 
@@ -159,7 +159,6 @@ class FileLocator(object):
             filter_words = val.split()  # Split search query by whitespace
             selected = [x for x in self.source if all(t in x for t in filter_words)]
         self.source_search.replace(selected)
-        return
 
     def build(self, path=None, filter_list=(".hdf", ".h5"), sort_method="Filename"):
         self.path = path

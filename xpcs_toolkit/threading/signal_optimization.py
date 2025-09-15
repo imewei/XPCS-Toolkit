@@ -15,9 +15,10 @@ import threading
 import time
 import weakref
 from collections import defaultdict
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any
 
 from PySide6.QtCore import QMutex, QMutexLocker, QObject, QTimer, Signal
 
@@ -41,13 +42,13 @@ class SignalBatch:
 
     signal_name: str
     signal_object: Signal
-    batched_args: List[Tuple]
+    batched_args: list[tuple]
     priority: SignalPriority = SignalPriority.NORMAL
     timestamp: float = field(default_factory=time.perf_counter)
     batch_size_limit: int = 50
     time_limit: float = 0.05  # 50ms max batching delay
 
-    def add_emission(self, args: Tuple) -> bool:
+    def add_emission(self, args: tuple) -> bool:
         """Add an emission to the batch. Returns True if batch should be flushed."""
         self.batched_args.append(args)
         current_time = time.perf_counter()
@@ -66,7 +67,7 @@ class ConnectionInfo:
     signal_object: Signal
     slot_func: Callable
     connection_type: Any  # Qt.ConnectionType
-    weak_ref: Optional[weakref.ReferenceType] = None
+    weak_ref: weakref.ReferenceType | None = None
     usage_count: int = 0
     last_used: float = field(default_factory=time.perf_counter)
     is_batched: bool = False
@@ -79,7 +80,7 @@ class SignalBatcher(QObject):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self._batches: Dict[str, SignalBatch] = {}
+        self._batches: dict[str, SignalBatch] = {}
         self._batch_timer = QTimer()
         self._batch_timer.timeout.connect(self._flush_all_batches)
         self._batch_timer.start(16)  # ~60 FPS batch flushing
@@ -121,7 +122,7 @@ class SignalBatcher(QObject):
         self,
         signal_name: str,
         signal_object: Signal,
-        args: Tuple,
+        args: tuple,
         priority: SignalPriority = SignalPriority.NORMAL,
     ):
         """Add a signal emission to the batch."""
@@ -195,7 +196,7 @@ class SignalBatcher(QObject):
         for batch_key in batch_keys:
             self._flush_batch(batch_key)
 
-    def get_statistics(self) -> Dict[str, Any]:
+    def get_statistics(self) -> dict[str, Any]:
         """Get batching statistics."""
         return {
             "total_batched_signals": self._total_batched_signals,
@@ -220,8 +221,8 @@ class ConnectionPool(QObject):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self._connections: Dict[str, ConnectionInfo] = {}
-        self._connection_cache: Dict[str, List[ConnectionInfo]] = defaultdict(list)
+        self._connections: dict[str, ConnectionInfo] = {}
+        self._connection_cache: dict[str, list[ConnectionInfo]] = defaultdict(list)
         self._cleanup_timer = QTimer()
         self._cleanup_timer.timeout.connect(self._cleanup_stale_connections)
         self._cleanup_timer.start(30000)  # Clean up every 30 seconds
@@ -320,10 +321,9 @@ class ConnectionPool(QObject):
         with QMutexLocker(self._mutex):
             for key, conn_info in self._connections.items():
                 # Check if the weak reference is still valid
-                if conn_info.weak_ref and conn_info.weak_ref() is None:
-                    stale_connections.append(key)
-                # Check if connection hasn't been used in a long time
-                elif current_time - conn_info.last_used > 300:  # 5 minutes
+                if (
+                    conn_info.weak_ref and conn_info.weak_ref() is None
+                ) or current_time - conn_info.last_used > 300:
                     stale_connections.append(key)
 
             # Remove stale connections
@@ -331,7 +331,7 @@ class ConnectionPool(QObject):
                 if key in self._connections:
                     del self._connections[key]
 
-    def get_statistics(self) -> Dict[str, Any]:
+    def get_statistics(self) -> dict[str, Any]:
         """Get connection pool statistics."""
         return {
             "total_connections": self._connection_count,
@@ -347,9 +347,9 @@ class WorkerAttributeCache:
     """
 
     def __init__(self, cache_size_limit: int = 1000):
-        self._cache: Dict[str, Dict[str, Any]] = {}
-        self._access_times: Dict[str, float] = {}
-        self._access_counts: Dict[str, int] = defaultdict(int)
+        self._cache: dict[str, dict[str, Any]] = {}
+        self._access_times: dict[str, float] = {}
+        self._access_counts: dict[str, int] = defaultdict(int)
         self._cache_size_limit = cache_size_limit
         self._mutex = threading.Lock()
 
@@ -362,7 +362,7 @@ class WorkerAttributeCache:
         return f"{id(worker_obj)}_{attr_name}"
 
     def get_cached_attribute(
-        self, worker_obj: Any, attr_name: str, compute_func: Optional[Callable] = None
+        self, worker_obj: Any, attr_name: str, compute_func: Callable | None = None
     ) -> Any:
         """Get cached attribute value or compute and cache it."""
         cache_key = self.get_cache_key(worker_obj, attr_name)
@@ -394,7 +394,7 @@ class WorkerAttributeCache:
 
             return value
 
-    def invalidate_cache(self, worker_obj: Any, attr_name: Optional[str] = None):
+    def invalidate_cache(self, worker_obj: Any, attr_name: str | None = None):
         """Invalidate cached attributes for a worker."""
         with self._mutex:
             if attr_name:
@@ -406,7 +406,7 @@ class WorkerAttributeCache:
                 # Invalidate all attributes for this worker
                 worker_id = id(worker_obj)
                 keys_to_remove = [
-                    key for key in self._cache.keys() if key.startswith(f"{worker_id}_")
+                    key for key in self._cache if key.startswith(f"{worker_id}_")
                 ]
                 for key in keys_to_remove:
                     self._cache.pop(key, None)
@@ -428,7 +428,7 @@ class WorkerAttributeCache:
             self._access_times.pop(key_to_evict, None)
             self._access_counts.pop(key_to_evict, None)
 
-    def get_statistics(self) -> Dict[str, Any]:
+    def get_statistics(self) -> dict[str, Any]:
         """Get cache statistics."""
         total_requests = self._hit_count + self._miss_count
         return {
@@ -458,7 +458,7 @@ class SignalOptimizer(QObject):
         self,
         signal_obj: Signal,
         signal_name: str,
-        args: Tuple,
+        args: tuple,
         priority: SignalPriority = SignalPriority.NORMAL,
     ):
         """Emit signal through optimization pipeline."""
@@ -510,7 +510,7 @@ class SignalOptimizer(QObject):
         )
 
     def get_cached_attribute(
-        self, worker_obj: Any, attr_name: str, compute_func: Optional[Callable] = None
+        self, worker_obj: Any, attr_name: str, compute_func: Callable | None = None
     ) -> Any:
         """Get cached worker attribute."""
         if not self._optimization_enabled:
@@ -520,11 +520,11 @@ class SignalOptimizer(QObject):
             worker_obj, attr_name, compute_func
         )
 
-    def invalidate_worker_cache(self, worker_obj: Any, attr_name: Optional[str] = None):
+    def invalidate_worker_cache(self, worker_obj: Any, attr_name: str | None = None):
         """Invalidate cached attributes for a worker."""
         self.attribute_cache.invalidate_cache(worker_obj, attr_name)
 
-    def get_comprehensive_statistics(self) -> Dict[str, Any]:
+    def get_comprehensive_statistics(self) -> dict[str, Any]:
         """Get comprehensive optimization statistics."""
         uptime = time.perf_counter() - self._start_time
 
@@ -543,7 +543,7 @@ class SignalOptimizer(QObject):
 
 
 # Global signal optimizer instance
-_global_signal_optimizer: Optional[SignalOptimizer] = None
+_global_signal_optimizer: SignalOptimizer | None = None
 
 
 def get_signal_optimizer() -> SignalOptimizer:
@@ -554,7 +554,7 @@ def get_signal_optimizer() -> SignalOptimizer:
     return _global_signal_optimizer
 
 
-def initialize_signal_optimization(parent: Optional[QObject] = None) -> SignalOptimizer:
+def initialize_signal_optimization(parent: QObject | None = None) -> SignalOptimizer:
     """Initialize the global signal optimization system."""
     global _global_signal_optimizer
     if _global_signal_optimizer is None:

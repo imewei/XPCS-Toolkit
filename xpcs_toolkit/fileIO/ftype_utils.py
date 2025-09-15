@@ -47,12 +47,11 @@ def get_ftype(fname: str):
         if isLegacyFile(fname):
             logger.info(f"File {fname} identified as legacy type")
             return "legacy"
-        elif isNeXusFile(fname):
+        if isNeXusFile(fname):
             logger.info(f"File {fname} identified as nexus type")
             return "nexus"
-        else:
-            logger.warning(f"Unknown file type for {fname}")
-            return False
+        logger.warning(f"Unknown file type for {fname}")
+        return False
     except Exception as e:
         logger.error(f"Error determining file type for {fname}: {e}")
         return False

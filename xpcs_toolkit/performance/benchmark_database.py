@@ -39,7 +39,7 @@ from contextlib import contextmanager
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -63,25 +63,25 @@ logger = get_logger(__name__)
 class PerformanceRecord:
     """Individual performance measurement record."""
 
-    id: Optional[int] = None
+    id: int | None = None
     timestamp: float = field(default_factory=time.time)
     test_name: str = ""
     metric_name: str = ""
     metric_value: float = 0.0
     metric_unit: str = ""
-    git_commit: Optional[str] = None
-    branch_name: Optional[str] = None
-    system_config: Dict[str, Any] = field(default_factory=dict)
-    test_config: Dict[str, Any] = field(default_factory=dict)
-    environment_info: Dict[str, Any] = field(default_factory=dict)
-    additional_metadata: Dict[str, Any] = field(default_factory=dict)
+    git_commit: str | None = None
+    branch_name: str | None = None
+    system_config: dict[str, Any] = field(default_factory=dict)
+    test_config: dict[str, Any] = field(default_factory=dict)
+    environment_info: dict[str, Any] = field(default_factory=dict)
+    additional_metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
 class SystemConfiguration:
     """System configuration for performance measurements."""
 
-    id: Optional[int] = None
+    id: int | None = None
     config_name: str = ""
     cpu_model: str = ""
     cpu_cores: int = 0
@@ -126,7 +126,7 @@ class BenchmarkSummary:
     max_value: float
     percentile_95: float
     percentile_99: float
-    trend_analysis: Optional[PerformanceTrend] = None
+    trend_analysis: PerformanceTrend | None = None
 
 
 # =============================================================================
@@ -137,7 +137,7 @@ class BenchmarkSummary:
 class BenchmarkDatabase:
     """Comprehensive benchmark database for performance tracking."""
 
-    def __init__(self, db_path: Optional[Union[str, Path]] = None):
+    def __init__(self, db_path: str | Path | None = None):
         """Initialize benchmark database."""
         self.db_path = Path(db_path) if db_path else Path("benchmark_performance.db")
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
@@ -294,9 +294,9 @@ class BenchmarkDatabase:
             # Insert new config
             cursor.execute(
                 """
-                INSERT INTO system_configurations 
+                INSERT INTO system_configurations
                 (config_name, cpu_model, cpu_cores, cpu_threads, memory_total_gb,
-                 python_version, os_platform, numpy_version, scipy_version, 
+                 python_version, os_platform, numpy_version, scipy_version,
                  config_hash, created_at)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
@@ -326,7 +326,7 @@ class BenchmarkDatabase:
 
             cursor.execute(
                 """
-                INSERT INTO performance_records 
+                INSERT INTO performance_records
                 (timestamp, test_name, metric_name, metric_value, metric_unit,
                  git_commit, branch_name, system_config_id, test_config_json,
                  environment_info_json, additional_metadata_json)
@@ -350,7 +350,7 @@ class BenchmarkDatabase:
             conn.commit()
             return cursor.lastrowid
 
-    def batch_store_records(self, records: List[PerformanceRecord]) -> List[int]:
+    def batch_store_records(self, records: list[PerformanceRecord]) -> list[int]:
         """Efficiently store multiple performance records."""
 
         record_ids = []
@@ -380,7 +380,7 @@ class BenchmarkDatabase:
             # Batch insert
             cursor.executemany(
                 """
-                INSERT INTO performance_records 
+                INSERT INTO performance_records
                 (timestamp, test_name, metric_name, metric_value, metric_unit,
                  git_commit, branch_name, system_config_id, test_config_json,
                  environment_info_json, additional_metadata_json)
@@ -400,14 +400,14 @@ class BenchmarkDatabase:
 
     def query_performance_records(
         self,
-        metric_name: Optional[str] = None,
-        test_name: Optional[str] = None,
-        start_time: Optional[float] = None,
-        end_time: Optional[float] = None,
-        git_commit: Optional[str] = None,
-        branch_name: Optional[str] = None,
-        limit: Optional[int] = None,
-    ) -> List[PerformanceRecord]:
+        metric_name: str | None = None,
+        test_name: str | None = None,
+        start_time: float | None = None,
+        end_time: float | None = None,
+        git_commit: str | None = None,
+        branch_name: str | None = None,
+        limit: int | None = None,
+    ) -> list[PerformanceRecord]:
         """Query performance records with flexible filtering."""
 
         with self._get_connection() as conn:
@@ -474,7 +474,7 @@ class BenchmarkDatabase:
 
     def analyze_performance_trends(
         self, metric_name: str, days_back: int = 30, min_data_points: int = 10
-    ) -> Optional[PerformanceTrend]:
+    ) -> PerformanceTrend | None:
         """Analyze performance trends for a specific metric."""
 
         # Check cache first
@@ -499,11 +499,11 @@ class BenchmarkDatabase:
         values = [r.metric_value for r in records]
 
         # Sort by timestamp
-        sorted_data = sorted(zip(timestamps, values))
-        timestamps, values = zip(*sorted_data)
+        sorted_data = sorted(zip(timestamps, values, strict=False))
+        timestamps, values = zip(*sorted_data, strict=False)
 
         # Perform linear regression
-        slope, intercept, r_value, p_value, std_err = stats.linregress(
+        slope, _intercept, r_value, p_value, std_err = stats.linregress(
             timestamps, values
         )
 
@@ -546,7 +546,7 @@ class BenchmarkDatabase:
 
     def _get_cached_trend_analysis(
         self, metric_name: str, days_back: int
-    ) -> Optional[PerformanceTrend]:
+    ) -> PerformanceTrend | None:
         """Get cached trend analysis if available and not expired."""
 
         with self._get_connection() as conn:
@@ -554,8 +554,8 @@ class BenchmarkDatabase:
 
             cursor.execute(
                 """
-                SELECT * FROM trend_analysis_cache 
-                WHERE metric_name = ? AND analysis_period_days = ? 
+                SELECT * FROM trend_analysis_cache
+                WHERE metric_name = ? AND analysis_period_days = ?
                 AND expires_at > ?
                 ORDER BY calculated_at DESC LIMIT 1
             """,
@@ -616,7 +616,7 @@ class BenchmarkDatabase:
         self,
         metric_name: str,
         time_period: str = "30d",
-        test_name: Optional[str] = None,
+        test_name: str | None = None,
     ) -> BenchmarkSummary:
         """Generate comprehensive benchmark summary."""
 
@@ -666,10 +666,10 @@ class BenchmarkDatabase:
     def create_performance_visualizations(
         self,
         metric_name: str,
-        output_dir: Union[str, Path],
+        output_dir: str | Path,
         days_back: int = 30,
-        test_name: Optional[str] = None,
-    ) -> Dict[str, str]:
+        test_name: str | None = None,
+    ) -> dict[str, str]:
         """Create performance visualization charts."""
 
         output_dir = Path(output_dir)
@@ -690,8 +690,8 @@ class BenchmarkDatabase:
         values = [r.metric_value for r in records]
 
         # Sort by timestamp
-        sorted_data = sorted(zip(timestamps, values))
-        timestamps, values = zip(*sorted_data)
+        sorted_data = sorted(zip(timestamps, values, strict=False))
+        timestamps, values = zip(*sorted_data, strict=False)
 
         created_files = {}
 
@@ -809,9 +809,9 @@ class BenchmarkDatabase:
 
     def export_data(
         self,
-        output_path: Union[str, Path],
+        output_path: str | Path,
         format: str = "json",
-        metric_name: Optional[str] = None,
+        metric_name: str | None = None,
         days_back: int = 30,
     ) -> str:
         """Export performance data in various formats."""
@@ -846,8 +846,8 @@ class BenchmarkDatabase:
 
     def generate_html_report(
         self,
-        output_path: Union[str, Path],
-        metrics: Optional[List[str]] = None,
+        output_path: str | Path,
+        metrics: list[str] | None = None,
         days_back: int = 30,
     ) -> str:
         """Generate comprehensive HTML performance report."""
@@ -885,7 +885,7 @@ class BenchmarkDatabase:
         logger.info(f"Generated HTML report: {output_path}")
         return str(output_path)
 
-    def _generate_html_content(self, report_data: Dict[str, Any]) -> str:
+    def _generate_html_content(self, report_data: dict[str, Any]) -> str:
         """Generate HTML content for performance report."""
 
         html = f"""
@@ -923,7 +923,7 @@ class BenchmarkDatabase:
             html += f"""
     <div class="metric">
         <div class="metric-name">{metric_name}</div>
-        
+
         <div class="stats">
             <div class="stat">
                 <div class="stat-label">Sample Count</div>
@@ -957,10 +957,10 @@ class BenchmarkDatabase:
                 html += f"""
         <div class="trend {trend_class}">
             <strong>Trend Analysis:</strong> {trend["trend_direction"].title()}<br>
-            <strong>Strength:</strong> {trend["trend_strength"]:.3f} | 
-            <strong>R²:</strong> {trend["r_squared"]:.3f} | 
+            <strong>Strength:</strong> {trend["trend_strength"]:.3f} |
+            <strong>R²:</strong> {trend["r_squared"]:.3f} |
             <strong>P-value:</strong> {trend["p_value"]:.6f}<br>
-            <strong>Data Points:</strong> {trend["data_points"]} | 
+            <strong>Data Points:</strong> {trend["data_points"]} |
             <strong>Time Span:</strong> {trend["time_span_days"]:.1f} days<br>
             <strong>30-day Projection:</strong> {trend["projected_change_30days"]:+.3f}
         </div>
@@ -998,8 +998,8 @@ class BenchmarkDatabase:
 
             # Delete orphaned system configurations
             cursor.execute("""
-                DELETE FROM system_configurations 
-                WHERE id NOT IN (SELECT DISTINCT system_config_id FROM performance_records 
+                DELETE FROM system_configurations
+                WHERE id NOT IN (SELECT DISTINCT system_config_id FROM performance_records
                                 WHERE system_config_id IS NOT NULL)
             """)
             configs_deleted = cursor.rowcount
@@ -1065,7 +1065,7 @@ def main():
 
     # Import data
     if args.import_data:
-        with open(args.import_data, "r") as f:
+        with open(args.import_data) as f:
             data = json.load(f)
 
         records = []
@@ -1074,71 +1074,51 @@ def main():
             records.append(record)
 
         db.batch_store_records(records)
-        print(f"Imported {len(records)} performance records")
         return
 
     # Export data
     if args.export_data:
-        output_file = db.export_data(
+        db.export_data(
             args.export_data,
             format=args.export_format,
             metric_name=args.metric,
             days_back=args.days_back,
         )
-        print(f"Exported data to {output_file}")
         return
 
     # Generate HTML report
     if args.generate_report:
         metrics = [args.metric] if args.metric else None
-        report_file = db.generate_html_report(
+        db.generate_html_report(
             args.generate_report, metrics=metrics, days_back=args.days_back
         )
-        print(f"Generated HTML report: {report_file}")
         return
 
     # Create visualizations
     if args.create_visualizations and args.metric:
-        viz_files = db.create_performance_visualizations(
+        db.create_performance_visualizations(
             args.metric, args.create_visualizations, days_back=args.days_back
         )
-        print(f"Created visualizations: {list(viz_files.values())}")
         return
 
     # Trend analysis
     if args.trend_analysis and args.metric:
         trend = db.analyze_performance_trends(args.metric, args.days_back)
         if trend:
-            print(f"Trend Analysis for {args.metric}:")
-            print(f"  Direction: {trend.trend_direction}")
-            print(f"  Strength: {trend.trend_strength:.3f}")
-            print(f"  R²: {trend.r_squared:.3f}")
-            print(f"  P-value: {trend.p_value:.6f}")
-            print(f"  Data Points: {trend.data_points}")
-            print(f"  30-day Projection: {trend.projected_change_30days:+.3f}")
+            pass
         else:
-            print("No trend data available")
+            pass
         return
 
     # Benchmark summary
     if args.summary and args.metric:
-        summary = db.generate_benchmark_summary(args.metric, f"{args.days_back}d")
-        print(f"Benchmark Summary for {args.metric}:")
-        print(f"  Sample Count: {summary.sample_count}")
-        print(f"  Mean: {summary.mean_value:.3f}")
-        print(f"  Median: {summary.median_value:.3f}")
-        print(f"  Std Dev: {summary.std_dev:.3f}")
-        print(f"  95th Percentile: {summary.percentile_95:.3f}")
-        print(f"  99th Percentile: {summary.percentile_99:.3f}")
+        db.generate_benchmark_summary(args.metric, f"{args.days_back}d")
         return
 
     # Cleanup
     if args.cleanup:
-        cleanup_result = db.cleanup_old_data(args.cleanup_days)
-        print(f"Cleanup complete: {cleanup_result}")
+        db.cleanup_old_data(args.cleanup_days)
         return
-
-    print("Use --help for usage information")
 
 
 if __name__ == "__main__":

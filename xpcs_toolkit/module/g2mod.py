@@ -113,8 +113,8 @@ def pg_plot(
     if y_auto:
         y_range = None
 
-    q, tel, g2, g2_err, labels = get_data(xf_list, q_range=q_range, t_range=t_range)
-    num_figs, num_lines = compute_geometry(g2, plot_type)
+    _q, tel, g2, g2_err, labels = get_data(xf_list, q_range=q_range, t_range=t_range)
+    num_figs, _num_lines = compute_geometry(g2, plot_type)
 
     num_data, num_qval = len(g2), g2[0].shape[1]
     # col and rows for the 2d layout
@@ -208,7 +208,6 @@ def pg_plot(
                         y_fit,
                         pen=pg.mkPen(color, width=2.5),
                     )
-    return
 
 
 def pg_plot_one_g2(ax, x, y, dy, color, label, symbol, symbol_size=5):

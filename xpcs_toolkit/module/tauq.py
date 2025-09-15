@@ -97,7 +97,6 @@ def plot(xf_list, hdl, q_range, offset, plot_type=3):
 
     hdl.draw()
     logger.info("Tau-q plot completed successfully")
-    return
 
 
 def plot_pre(xf_list, hdl):
@@ -117,7 +116,7 @@ def plot_pre(xf_list, hdl):
             ha="center",
             va="center",
             fontsize=12,
-            bbox=dict(boxstyle="round,pad=0.3", facecolor="lightblue", alpha=0.7),
+            bbox={"boxstyle": "round,pad=0.3", "facecolor": "lightblue", "alpha": 0.7},
         )
         ax.set_xlim(0, 1)
         ax.set_ylim(0, 1)

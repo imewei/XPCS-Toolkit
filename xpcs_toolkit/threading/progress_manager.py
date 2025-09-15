@@ -350,7 +350,11 @@ class ProgressManager(QObject):
         return operation_id
 
     def update_progress(
-        self, operation_id: str, current: int, total: int = None, status: str = ""
+        self,
+        operation_id: str,
+        current: int,
+        total: int | None = None,
+        status: str = "",
     ):
         """Update progress for an operation."""
         if operation_id not in self.active_operations:

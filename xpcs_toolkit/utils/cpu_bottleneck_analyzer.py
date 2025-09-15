@@ -12,7 +12,7 @@ import time
 from collections import Counter, defaultdict
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, List, NamedTuple, Optional, Tuple
+from typing import Any, NamedTuple
 
 import numpy as np
 
@@ -52,13 +52,13 @@ class BottleneckFinding:
     severity: BottleneckSeverity
     component: str
     description: str
-    metrics: Dict[str, float]
-    affected_workflows: List[str] = field(default_factory=list)
-    recommendations: List[str] = field(default_factory=list)
+    metrics: dict[str, float]
+    affected_workflows: list[str] = field(default_factory=list)
+    recommendations: list[str] = field(default_factory=list)
     confidence_score: float = 0.0
     frequency: int = 1
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         """Convert finding to dictionary representation."""
         return {
             "type": self.bottleneck_type.value,
@@ -102,8 +102,8 @@ class CPUBottleneckAnalyzer:
     """
 
     def __init__(self):
-        self.analysis_cache: Dict[str, List[BottleneckFinding]] = {}
-        self.pattern_cache: Dict[str, Dict] = {}
+        self.analysis_cache: dict[str, list[BottleneckFinding]] = {}
+        self.pattern_cache: dict[str, dict] = {}
 
         # Thresholds for bottleneck detection
         self.thresholds = {
@@ -118,8 +118,8 @@ class CPUBottleneckAnalyzer:
         logger.info("CPUBottleneckAnalyzer initialized")
 
     def analyze_workflow_profiles(
-        self, profiles: List[WorkflowProfile]
-    ) -> List[BottleneckFinding]:
+        self, profiles: list[WorkflowProfile]
+    ) -> list[BottleneckFinding]:
         """
         Analyze multiple workflow profiles to identify CPU bottlenecks.
 
@@ -163,8 +163,8 @@ class CPUBottleneckAnalyzer:
         }[severity]
 
     def _analyze_cpu_bound_operations(
-        self, profiles: List[WorkflowProfile]
-    ) -> List[BottleneckFinding]:
+        self, profiles: list[WorkflowProfile]
+    ) -> list[BottleneckFinding]:
         """Identify CPU-bound operations that could be optimized."""
         findings = []
 
@@ -225,8 +225,8 @@ class CPUBottleneckAnalyzer:
         return findings
 
     def _analyze_thread_contention(
-        self, profiles: List[WorkflowProfile]
-    ) -> List[BottleneckFinding]:
+        self, profiles: list[WorkflowProfile]
+    ) -> list[BottleneckFinding]:
         """Analyze thread contention issues."""
         findings = []
 
@@ -309,8 +309,8 @@ class CPUBottleneckAnalyzer:
         return findings
 
     def _analyze_memory_allocation_patterns(
-        self, profiles: List[WorkflowProfile]
-    ) -> List[BottleneckFinding]:
+        self, profiles: list[WorkflowProfile]
+    ) -> list[BottleneckFinding]:
         """Analyze memory allocation patterns that could cause CPU overhead."""
         findings = []
 
@@ -369,8 +369,8 @@ class CPUBottleneckAnalyzer:
         return findings
 
     def _analyze_algorithmic_inefficiency(
-        self, profiles: List[WorkflowProfile]
-    ) -> List[BottleneckFinding]:
+        self, profiles: list[WorkflowProfile]
+    ) -> list[BottleneckFinding]:
         """Detect algorithmic inefficiency patterns."""
         findings = []
 
@@ -397,7 +397,7 @@ class CPUBottleneckAnalyzer:
             if complexity_score > self.thresholds["algorithmic_complexity"]:
                 severity = self._classify_complexity_severity(complexity_score)
 
-                sizes, times = zip(*performance_data)
+                sizes, times = zip(*performance_data, strict=False)
 
                 metrics = {
                     "complexity_score": complexity_score,
@@ -433,8 +433,8 @@ class CPUBottleneckAnalyzer:
         return findings
 
     def _analyze_hot_paths(
-        self, profiles: List[WorkflowProfile]
-    ) -> List[BottleneckFinding]:
+        self, profiles: list[WorkflowProfile]
+    ) -> list[BottleneckFinding]:
         """Identify frequently executed code paths that consume significant CPU time."""
         findings = []
 
@@ -497,8 +497,8 @@ class CPUBottleneckAnalyzer:
         return findings
 
     def _analyze_synchronization_issues(
-        self, profiles: List[WorkflowProfile]
-    ) -> List[BottleneckFinding]:
+        self, profiles: list[WorkflowProfile]
+    ) -> list[BottleneckFinding]:
         """Detect synchronization-related performance issues."""
         findings = []
 
@@ -571,7 +571,7 @@ class CPUBottleneckAnalyzer:
 
         return findings
 
-    def _flatten_steps(self, steps: List[WorkflowStep]) -> List[WorkflowStep]:
+    def _flatten_steps(self, steps: list[WorkflowStep]) -> list[WorkflowStep]:
         """Flatten nested workflow steps into a single list."""
         flattened = []
         for step in steps:
@@ -614,7 +614,7 @@ class CPUBottleneckAnalyzer:
         return 0.0
 
     def _analyze_time_complexity(
-        self, performance_data: List[Tuple[float, float]]
+        self, performance_data: list[tuple[float, float]]
     ) -> float:
         """
         Analyze time complexity by fitting data to various complexity models.
@@ -623,7 +623,7 @@ class CPUBottleneckAnalyzer:
         if len(performance_data) < 3:
             return 0.0
 
-        sizes, times = zip(*performance_data)
+        sizes, times = zip(*performance_data, strict=False)
         sizes = np.array(sizes)
         times = np.array(times)
 
@@ -676,12 +676,11 @@ class CPUBottleneckAnalyzer:
         """Classify severity based on operation duration."""
         if duration > 30:
             return BottleneckSeverity.CRITICAL
-        elif duration > 10:
+        if duration > 10:
             return BottleneckSeverity.HIGH
-        elif duration > 5:
+        if duration > 5:
             return BottleneckSeverity.MEDIUM
-        else:
-            return BottleneckSeverity.LOW
+        return BottleneckSeverity.LOW
 
     def _classify_contention_severity(
         self, contention_ratio: float
@@ -689,23 +688,21 @@ class CPUBottleneckAnalyzer:
         """Classify severity based on thread contention ratio."""
         if contention_ratio > 0.9:
             return BottleneckSeverity.CRITICAL
-        elif contention_ratio > 0.8:
+        if contention_ratio > 0.8:
             return BottleneckSeverity.HIGH
-        elif contention_ratio > 0.7:
+        if contention_ratio > 0.7:
             return BottleneckSeverity.MEDIUM
-        else:
-            return BottleneckSeverity.LOW
+        return BottleneckSeverity.LOW
 
     def _classify_memory_severity(self, memory_mb: float) -> BottleneckSeverity:
         """Classify severity based on memory allocation."""
         if memory_mb > 2000:
             return BottleneckSeverity.CRITICAL
-        elif memory_mb > 1000:
+        if memory_mb > 1000:
             return BottleneckSeverity.HIGH
-        elif memory_mb > 500:
+        if memory_mb > 500:
             return BottleneckSeverity.MEDIUM
-        else:
-            return BottleneckSeverity.LOW
+        return BottleneckSeverity.LOW
 
     def _classify_complexity_severity(
         self, complexity_score: float
@@ -713,39 +710,36 @@ class CPUBottleneckAnalyzer:
         """Classify severity based on algorithmic complexity score."""
         if complexity_score > 30:
             return BottleneckSeverity.CRITICAL
-        elif complexity_score > 20:
+        if complexity_score > 20:
             return BottleneckSeverity.HIGH
-        elif complexity_score > 10:
+        if complexity_score > 10:
             return BottleneckSeverity.MEDIUM
-        else:
-            return BottleneckSeverity.LOW
+        return BottleneckSeverity.LOW
 
     def _classify_hotpath_severity(self, time_percentage: float) -> BottleneckSeverity:
         """Classify severity based on time percentage consumed."""
         if time_percentage > 0.5:  # 50%
             return BottleneckSeverity.CRITICAL
-        elif time_percentage > 0.3:  # 30%
+        if time_percentage > 0.3:  # 30%
             return BottleneckSeverity.HIGH
-        elif time_percentage > 0.2:  # 20%
+        if time_percentage > 0.2:  # 20%
             return BottleneckSeverity.MEDIUM
-        else:
-            return BottleneckSeverity.LOW
+        return BottleneckSeverity.LOW
 
     def _classify_sync_severity(self, duration: float, cv: float) -> BottleneckSeverity:
         """Classify severity based on synchronization metrics."""
         combined_score = duration * cv
         if combined_score > 5.0:
             return BottleneckSeverity.CRITICAL
-        elif combined_score > 2.0:
+        if combined_score > 2.0:
             return BottleneckSeverity.HIGH
-        elif combined_score > 1.0:
+        if combined_score > 1.0:
             return BottleneckSeverity.MEDIUM
-        else:
-            return BottleneckSeverity.LOW
+        return BottleneckSeverity.LOW
 
     def _generate_cpu_bound_recommendations(
         self, step_name: str, avg_duration: float, std_duration: float
-    ) -> List[str]:
+    ) -> list[str]:
         """Generate recommendations for CPU-bound operations."""
         recommendations = []
 
@@ -794,8 +788,8 @@ class CPUBottleneckAnalyzer:
         return recommendations
 
     def get_bottleneck_summary(
-        self, findings: List[BottleneckFinding]
-    ) -> Dict[str, Any]:
+        self, findings: list[BottleneckFinding]
+    ) -> dict[str, Any]:
         """Generate a summary of bottleneck findings."""
         if not findings:
             return {"total_findings": 0}
@@ -837,7 +831,7 @@ class CPUBottleneckAnalyzer:
             ),
         }
 
-    def export_findings_report(self, findings: List[BottleneckFinding], file_path: str):
+    def export_findings_report(self, findings: list[BottleneckFinding], file_path: str):
         """Export bottleneck findings to a detailed report file."""
         report_data = {
             "analysis_timestamp": time.time(),
@@ -873,8 +867,8 @@ def get_bottleneck_analyzer() -> CPUBottleneckAnalyzer:
 
 
 def analyze_recent_workflows(
-    count: int = 20, workflow_type: Optional[str] = None
-) -> List[BottleneckFinding]:
+    count: int = 20, workflow_type: str | None = None
+) -> list[BottleneckFinding]:
     """
     Analyze recent workflows for CPU bottlenecks.
 
@@ -889,7 +883,7 @@ def analyze_recent_workflows(
     return cpu_bottleneck_analyzer.analyze_workflow_profiles(profiles)
 
 
-def get_bottleneck_report() -> Dict[str, Any]:
+def get_bottleneck_report() -> dict[str, Any]:
     """Get a summary report of recent CPU bottlenecks."""
     findings = analyze_recent_workflows()
     return cpu_bottleneck_analyzer.get_bottleneck_summary(findings)
@@ -897,7 +891,7 @@ def get_bottleneck_report() -> Dict[str, Any]:
 
 def find_workflow_hotspots(
     workflow_type: str, count: int = 10
-) -> List[BottleneckFinding]:
+) -> list[BottleneckFinding]:
     """
     Find performance hotspots for a specific workflow type.
 
