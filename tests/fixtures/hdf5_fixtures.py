@@ -8,7 +8,6 @@ import os
 import shutil
 import tempfile
 from contextlib import contextmanager
-from typing import Dict, List, Optional
 
 import h5py
 import numpy as np
@@ -21,7 +20,7 @@ class XPCSTestFile:
 
     def __init__(
         self,
-        file_path: Optional[str] = None,
+        file_path: str | None = None,
         file_type: str = "minimal",
         cleanup: bool = True,
         **kwargs,
@@ -355,7 +354,7 @@ def create_realistic_hdf5(
 class HDF5TestGenerator:
     """Generator class for creating multiple related test files."""
 
-    def __init__(self, base_dir: Optional[str] = None):
+    def __init__(self, base_dir: str | None = None):
         """Initialize generator.
 
         Parameters:
@@ -386,7 +385,7 @@ class HDF5TestGenerator:
         file_type: str = "minimal",
         vary_parameters: bool = True,
         **kwargs,
-    ) -> List[str]:
+    ) -> list[str]:
         """Create series of related test files.
 
         Parameters:
@@ -436,7 +435,7 @@ class HDF5TestGenerator:
 
         return file_paths
 
-    def create_benchmark_files(self) -> Dict[str, str]:
+    def create_benchmark_files(self) -> dict[str, str]:
         """Create standard benchmark files for performance testing."""
         benchmark_files = {}
 

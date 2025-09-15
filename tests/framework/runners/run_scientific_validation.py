@@ -298,7 +298,7 @@ class ScientificValidationRunner:
 
         tau = np.logspace(-4, 0, 20)
         g2 = 1.0 + 0.5 * np.exp(-100 * tau)
-        is_valid, message = verify_g2_normalization(g2, tau)
+        is_valid, _message = verify_g2_normalization(g2, tau)
 
         print(f"G2 Normalization Test: {'PASS' if is_valid else 'FAIL'}")
 
@@ -496,11 +496,11 @@ def main():
         # Exit with appropriate code
         # Check if any validation failed
         validation_failed = False
-        for category, result in results.items():
+        for _category, result in results.items():
             if isinstance(result, dict):
-                if "success_rate" in result and result["success_rate"] < 1.0:
-                    validation_failed = True
-                elif "overall_success" in result and not result["overall_success"]:
+                if ("success_rate" in result and result["success_rate"] < 1.0) or (
+                    "overall_success" in result and not result["overall_success"]
+                ):
                     validation_failed = True
 
         if validation_failed:

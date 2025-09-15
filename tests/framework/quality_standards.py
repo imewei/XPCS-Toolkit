@@ -22,7 +22,6 @@ import json
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import Dict, List, Optional
 
 
 class QualityLevel(Enum):
@@ -58,7 +57,7 @@ class QualityIssue:
     issue_type: IssueType
     severity: str  # "error", "warning", "info"
     message: str
-    suggestion: Optional[str] = None
+    suggestion: str | None = None
     auto_fixable: bool = False
 
 
@@ -105,7 +104,7 @@ class TestQualityMetrics:
     quality_level: QualityLevel
 
     # Issues found
-    issues: List[QualityIssue]
+    issues: list[QualityIssue]
 
 
 class TestCodeAnalyzer(ast.NodeVisitor):
@@ -295,9 +294,7 @@ class TestCodeAnalyzer(ast.NodeVisitor):
         """Check if a call is an assertion."""
         name = self._get_call_name(node)
         return name and (
-            name.startswith("assert")
-            or name.startswith("self.assert")
-            or "assert_" in name
+            name.startswith(("assert", "self.assert")) or "assert_" in name
         )
 
     def _is_weak_assertion(self, node: ast.Call) -> bool:
@@ -351,11 +348,11 @@ class TestCodeAnalyzer(ast.NodeVisitor):
         # This is simplified - in practice would need more sophisticated detection
         return False
 
-    def _get_call_name(self, node: ast.Call) -> Optional[str]:
+    def _get_call_name(self, node: ast.Call) -> str | None:
         """Extract the name of a function call."""
         if isinstance(node.func, ast.Name):
             return node.func.id
-        elif isinstance(node.func, ast.Attribute):
+        if isinstance(node.func, ast.Attribute):
             return node.func.attr
         return None
 
@@ -365,7 +362,7 @@ class TestCodeAnalyzer(ast.NodeVisitor):
         issue_type: IssueType,
         severity: str,
         message: str,
-        suggestion: str = None,
+        suggestion: str | None = None,
     ):
         """Add a quality issue to the metrics."""
         issue = QualityIssue(
@@ -445,11 +442,11 @@ class TestCodeAnalyzer(ast.NodeVisitor):
 class TestQualityChecker:
     """Main class for test quality assessment and reporting."""
 
-    def __init__(self, test_directory: Path = None):
+    def __init__(self, test_directory: Path | None = None):
         self.test_dir = test_directory or Path(__file__).parent
-        self.metrics_by_file: Dict[Path, TestQualityMetrics] = {}
+        self.metrics_by_file: dict[Path, TestQualityMetrics] = {}
 
-    def check_all_tests(self) -> Dict[Path, TestQualityMetrics]:
+    def check_all_tests(self) -> dict[Path, TestQualityMetrics]:
         """Check quality of all test files in the test directory."""
         test_files = self._find_test_files()
 
@@ -462,7 +459,7 @@ class TestQualityChecker:
 
         return self.metrics_by_file
 
-    def _find_test_files(self) -> List[Path]:
+    def _find_test_files(self) -> list[Path]:
         """Find all Python test files in the test directory."""
         test_files = []
         for pattern in ["test_*.py", "*_test.py"]:
@@ -471,7 +468,7 @@ class TestQualityChecker:
 
     def _analyze_file(self, file_path: Path) -> TestQualityMetrics:
         """Analyze a single test file for quality metrics."""
-        with open(file_path, "r", encoding="utf-8") as f:
+        with open(file_path, encoding="utf-8") as f:
             content = f.read()
 
         # Parse AST
@@ -493,8 +490,7 @@ class TestQualityChecker:
         """Generate comprehensive quality report."""
         if output_format == "json":
             return self._generate_json_report()
-        else:
-            return self._generate_text_report()
+        return self._generate_text_report()
 
     def _generate_text_report(self) -> str:
         """Generate human-readable text report."""

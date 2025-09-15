@@ -14,7 +14,7 @@ import tempfile
 import time
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 
 @dataclass
@@ -24,7 +24,7 @@ class IntegrationTestResult:
     test_name: str
     passed: bool
     duration: float
-    error_message: Optional[str] = None
+    error_message: str | None = None
     platform_specific: bool = False
 
 
@@ -39,18 +39,18 @@ class PlatformTestResults:
     failed_tests: int
     skipped_tests: int
     total_duration: float
-    test_results: List[IntegrationTestResult]
-    environment_info: Dict[str, Any]
+    test_results: list[IntegrationTestResult]
+    environment_info: dict[str, Any]
 
 
 class TestSuiteIntegrationValidator:
     """Validator for test suite integration and cross-platform compatibility."""
 
-    def __init__(self, test_directory: Path = None):
+    def __init__(self, test_directory: Path | None = None):
         self.test_dir = test_directory or Path(__file__).parent
         self.project_root = self.test_dir.parent
 
-    def validate_complete_integration(self) -> Dict[str, Any]:
+    def validate_complete_integration(self) -> dict[str, Any]:
         """Run complete integration validation across all test categories."""
         print("🔍 Running Complete Test Suite Integration Validation...")
 
@@ -101,7 +101,7 @@ class TestSuiteIntegrationValidator:
         print("✅ Integration validation completed!")
         return validation_results
 
-    def validate_cross_platform_compatibility(self) -> Dict[str, Any]:
+    def validate_cross_platform_compatibility(self) -> dict[str, Any]:
         """Validate test compatibility across different platforms."""
         print("🌐 Running Cross-Platform Compatibility Validation...")
 
@@ -124,7 +124,7 @@ class TestSuiteIntegrationValidator:
         print("✅ Cross-platform validation completed!")
         return compatibility_results
 
-    def _test_category_integration(self, category_path: str) -> Dict[str, Any]:
+    def _test_category_integration(self, category_path: str) -> dict[str, Any]:
         """Test integration within a specific test category."""
         full_path = self.project_root / category_path
 
@@ -147,6 +147,7 @@ class TestSuiteIntegrationValidator:
                     "--tb=short",
                     "--maxfail=5",
                 ],
+                check=False,
                 capture_output=True,
                 text=True,
                 cwd=self.project_root,
@@ -182,7 +183,7 @@ class TestSuiteIntegrationValidator:
                 "issues": [f"Execution error: {e}"],
             }
 
-    def _test_cross_category_integration(self) -> Dict[str, Any]:
+    def _test_cross_category_integration(self) -> dict[str, Any]:
         """Test integration between different test categories."""
         integration_tests = [
             {
@@ -224,6 +225,7 @@ class TestSuiteIntegrationValidator:
 
                 result = subprocess.run(
                     cmd,
+                    check=False,
                     capture_output=True,
                     text=True,
                     cwd=self.project_root,
@@ -262,7 +264,7 @@ class TestSuiteIntegrationValidator:
 
         return results
 
-    def _test_fixture_compatibility(self) -> Dict[str, Any]:
+    def _test_fixture_compatibility(self) -> dict[str, Any]:
         """Test fixture compatibility across different test modules."""
         fixture_tests = [
             {
@@ -315,6 +317,7 @@ except Exception as e:
             try:
                 result = subprocess.run(
                     fixture_test["test_command"],
+                    check=False,
                     capture_output=True,
                     text=True,
                     cwd=self.project_root,
@@ -340,7 +343,7 @@ except Exception as e:
 
         return results
 
-    def _assess_performance_impact(self) -> Dict[str, Any]:
+    def _assess_performance_impact(self) -> dict[str, Any]:
         """Assess performance impact of running different test combinations."""
 
         results = {}
@@ -360,6 +363,7 @@ except Exception as e:
             try:
                 subprocess.run(
                     [sys.executable, "-m", "pytest", test_file, "-v", "-q"],
+                    check=False,
                     capture_output=True,
                     cwd=self.project_root,
                     timeout=60,
@@ -372,7 +376,8 @@ except Exception as e:
         start_time = time.time()
         try:
             subprocess.run(
-                [sys.executable, "-m", "pytest"] + test_files + ["-v", "-q"],
+                [sys.executable, "-m", "pytest", *test_files, "-v", "-q"],
+                check=False,
                 capture_output=True,
                 cwd=self.project_root,
                 timeout=180,
@@ -391,7 +396,7 @@ except Exception as e:
 
         return results
 
-    def _test_path_separators(self) -> Dict[str, Any]:
+    def _test_path_separators(self) -> dict[str, Any]:
         """Test path separator compatibility."""
         test_paths = [
             "tests/unit/core",
@@ -418,7 +423,7 @@ except Exception as e:
 
         return results
 
-    def _test_environment_variables(self) -> Dict[str, Any]:
+    def _test_environment_variables(self) -> dict[str, Any]:
         """Test environment variable handling."""
         test_env_vars = [
             "QT_QPA_PLATFORM",
@@ -466,7 +471,7 @@ except Exception as e:
 
         return results
 
-    def _test_file_system_compatibility(self) -> Dict[str, Any]:
+    def _test_file_system_compatibility(self) -> dict[str, Any]:
         """Test file system compatibility."""
         results = {
             "temporary_file_creation": False,
@@ -533,7 +538,7 @@ except Exception as e:
 
         return results
 
-    def _test_gui_platform_compatibility(self) -> Dict[str, Any]:
+    def _test_gui_platform_compatibility(self) -> dict[str, Any]:
         """Test GUI platform compatibility."""
         results = {
             "qt_available": False,
@@ -577,7 +582,7 @@ except Exception as e:
 
         return results
 
-    def _test_dependency_compatibility(self) -> Dict[str, Any]:
+    def _test_dependency_compatibility(self) -> dict[str, Any]:
         """Test dependency compatibility."""
         required_packages = [
             "numpy",
@@ -618,7 +623,7 @@ except Exception as e:
 
         return results
 
-    def _parse_pytest_output(self, output: str) -> Dict[str, Any]:
+    def _parse_pytest_output(self, output: str) -> dict[str, Any]:
         """Parse pytest output to extract test results."""
         lines = output.split("\n")
         results = {
@@ -658,7 +663,7 @@ except Exception as e:
         )
         return results
 
-    def _extract_category_issues(self, stderr: str) -> List[str]:
+    def _extract_category_issues(self, stderr: str) -> list[str]:
         """Extract issues from stderr output."""
         issues = []
         lines = stderr.split("\n")
@@ -672,8 +677,8 @@ except Exception as e:
         return issues[:10]  # Limit to first 10 issues
 
     def _identify_integration_issues(
-        self, validation_results: Dict[str, Any]
-    ) -> List[str]:
+        self, validation_results: dict[str, Any]
+    ) -> list[str]:
         """Identify integration issues from validation results."""
         issues = []
 
@@ -701,8 +706,8 @@ except Exception as e:
         return issues
 
     def _generate_platform_recommendations(
-        self, compatibility_results: Dict[str, Any]
-    ) -> List[str]:
+        self, compatibility_results: dict[str, Any]
+    ) -> list[str]:
         """Generate platform-specific recommendations."""
         recommendations = []
 

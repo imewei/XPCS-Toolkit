@@ -26,7 +26,7 @@ import time
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import numpy as np
 import psutil
@@ -70,8 +70,8 @@ class TestSuitePerformanceReport:
     total_duration: float
 
     # Performance statistics
-    fastest_test: Optional[TestPerformanceMetrics]
-    slowest_test: Optional[TestPerformanceMetrics]
+    fastest_test: TestPerformanceMetrics | None
+    slowest_test: TestPerformanceMetrics | None
     median_time: float
     p95_time: float
 
@@ -81,12 +81,12 @@ class TestSuitePerformanceReport:
     total_io_operations: int
 
     # Categories breakdown
-    category_performance: Dict[str, Dict[str, Any]]
+    category_performance: dict[str, dict[str, Any]]
 
     # Trends and regressions
     performance_trend: str  # "improving", "stable", "degrading"
-    regressions_detected: List[str]
-    optimizations_suggested: List[str]
+    regressions_detected: list[str]
+    optimizations_suggested: list[str]
 
 
 class TestExecutionMonitor:
@@ -120,7 +120,7 @@ class TestExecutionMonitor:
         self.monitor_thread.daemon = True
         self.monitor_thread.start()
 
-    def stop_monitoring(self) -> Dict[str, Any]:
+    def stop_monitoring(self) -> dict[str, Any]:
         """Stop monitoring and return collected metrics."""
         self.monitoring = False
 
@@ -161,8 +161,7 @@ class TestExecutionMonitor:
             try:
                 # Memory usage
                 memory = self.process.memory_info().rss
-                if memory > self.metrics["peak_memory"]:
-                    self.metrics["peak_memory"] = memory
+                self.metrics["peak_memory"] = max(self.metrics["peak_memory"], memory)
 
                 # CPU usage
                 cpu = self.process.cpu_percent()
@@ -247,7 +246,7 @@ class TestPerformanceDatabase:
 
     def get_test_history(
         self, test_name: str, days: int = 30
-    ) -> List[TestPerformanceMetrics]:
+    ) -> list[TestPerformanceMetrics]:
         """Get performance history for a specific test."""
         cutoff_date = (datetime.now() - timedelta(days=days)).isoformat()
 
@@ -286,8 +285,8 @@ class TestPerformanceDatabase:
             return results
 
     def get_slowest_tests(
-        self, category: str = None, limit: int = 10
-    ) -> List[Dict[str, Any]]:
+        self, category: str | None = None, limit: int = 10
+    ) -> list[dict[str, Any]]:
         """Get the slowest tests overall or by category."""
         query = """
             SELECT test_name, test_file, category, AVG(total_time) as avg_time,
@@ -326,7 +325,7 @@ class TestPerformanceOptimizer:
         self.db = db
         self.logger = logging.getLogger(__name__)
 
-    def analyze_performance_trends(self) -> Dict[str, Any]:
+    def analyze_performance_trends(self) -> dict[str, Any]:
         """Analyze performance trends across the test suite."""
         analysis = {
             "overall_trend": self._analyze_overall_trend(),
@@ -337,7 +336,7 @@ class TestPerformanceOptimizer:
 
         return analysis
 
-    def _analyze_overall_trend(self) -> Dict[str, Any]:
+    def _analyze_overall_trend(self) -> dict[str, Any]:
         """Analyze overall test suite performance trend."""
         with sqlite3.connect(self.db.db_path) as conn:
             # Get average performance over time (weekly buckets)
@@ -383,7 +382,7 @@ class TestPerformanceOptimizer:
                 "latest_avg_memory": memories[-1] if memories else 0,
             }
 
-    def _analyze_category_trends(self) -> Dict[str, Dict[str, Any]]:
+    def _analyze_category_trends(self) -> dict[str, dict[str, Any]]:
         """Analyze performance trends by test category."""
         categories = ["unit", "integration", "scientific", "performance", "gui"]
         category_trends = {}
@@ -415,7 +414,7 @@ class TestPerformanceOptimizer:
 
         return category_trends
 
-    def _detect_regressions(self) -> List[Dict[str, Any]]:
+    def _detect_regressions(self) -> list[dict[str, Any]]:
         """Detect performance regressions in individual tests."""
         regressions = []
 
@@ -454,7 +453,7 @@ class TestPerformanceOptimizer:
 
         return regressions
 
-    def _identify_optimization_opportunities(self) -> List[Dict[str, Any]]:
+    def _identify_optimization_opportunities(self) -> list[dict[str, Any]]:
         """Identify opportunities for test optimization."""
         opportunities = []
 
@@ -522,7 +521,7 @@ class TestPerformanceOptimizer:
 
         return opportunities
 
-    def generate_optimization_recommendations(self) -> List[str]:
+    def generate_optimization_recommendations(self) -> list[str]:
         """Generate specific optimization recommendations."""
         recommendations = []
 
@@ -569,7 +568,7 @@ class TestPerformanceOptimizer:
 class TestPerformanceMonitor:
     """Main performance monitoring and optimization system."""
 
-    def __init__(self, test_directory: Path = None):
+    def __init__(self, test_directory: Path | None = None):
         self.test_dir = test_directory or Path(__file__).parent
         self.project_root = self.test_dir.parent
 
@@ -595,7 +594,7 @@ class TestPerformanceMonitor:
         self.logger.setLevel(logging.INFO)
 
     def run_performance_profiling(
-        self, test_pattern: str = None
+        self, test_pattern: str | None = None
     ) -> TestSuitePerformanceReport:
         """Run comprehensive performance profiling of test suite."""
         self.logger.info("Starting test suite performance profiling...")
@@ -616,6 +615,7 @@ class TestPerformanceMonitor:
         try:
             result = subprocess.run(
                 cmd,
+                check=False,
                 capture_output=True,
                 text=True,
                 cwd=self.project_root,
@@ -651,7 +651,7 @@ class TestPerformanceMonitor:
 
     def _parse_test_performance(
         self, stdout: str, stderr: str
-    ) -> List[TestPerformanceMetrics]:
+    ) -> list[TestPerformanceMetrics]:
         """Parse test performance data from pytest output."""
         metrics = []
         lines = stdout.split("\n")
@@ -662,9 +662,9 @@ class TestPerformanceMonitor:
             if "slowest durations" in line:
                 in_durations = True
                 continue
-            elif in_durations and line.startswith("="):
+            if in_durations and line.startswith("="):
                 break
-            elif in_durations and "s call" in line:
+            if in_durations and "s call" in line:
                 # Parse line like: "0.12s call tests/unit/core/test_xpcs_file.py::TestMemoryMonitor::test_get_memory_usage"
                 try:
                     duration_str = line.split("s ")[0].strip()
@@ -718,9 +718,9 @@ class TestPerformanceMonitor:
 
     def _generate_performance_report(
         self,
-        test_metrics: List[TestPerformanceMetrics],
+        test_metrics: list[TestPerformanceMetrics],
         total_duration: float,
-        overall_metrics: Dict[str, Any],
+        overall_metrics: dict[str, Any],
     ) -> TestSuitePerformanceReport:
         """Generate comprehensive performance report."""
         if not test_metrics:

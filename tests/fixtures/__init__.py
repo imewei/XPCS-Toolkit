@@ -22,16 +22,16 @@ from .synthetic_data import (
 )
 
 __all__ = [
+    "HDF5TestGenerator",
     "SyntheticXPCSGenerator",
+    "XPCSTestFile",
+    "comprehensive_xpcs_file",
+    "create_comprehensive_hdf5",
+    "create_detector_geometry",
+    "create_minimal_hdf5",
+    "create_qmap_data",
     "create_synthetic_g2_data",
     "create_synthetic_saxs_data",
-    "create_detector_geometry",
-    "create_qmap_data",
-    "XPCSTestFile",
-    "create_minimal_hdf5",
-    "create_comprehensive_hdf5",
-    "HDF5TestGenerator",
     "minimal_xpcs_file",
-    "comprehensive_xpcs_file",
     "realistic_xpcs_file",
 ]

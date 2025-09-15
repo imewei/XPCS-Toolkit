@@ -20,8 +20,9 @@ import os
 import tempfile
 import time
 import warnings
+from collections.abc import Callable
 from pathlib import Path
-from typing import Any, Callable, Dict, Optional, Tuple
+from typing import Any
 from unittest.mock import Mock
 
 import h5py
@@ -159,11 +160,11 @@ class ScientificAssertions:
             if msg:
                 enhanced_msg = f"{msg}\n{enhanced_msg}"
 
-            raise AssertionError(f"{enhanced_msg}\n{str(e)}")
+            raise AssertionError(f"{enhanced_msg}\n{e!s}")
 
     @staticmethod
     def assert_correlation_properties(
-        tau: np.ndarray, g2: np.ndarray, g2_err: Optional[np.ndarray] = None
+        tau: np.ndarray, g2: np.ndarray, g2_err: np.ndarray | None = None
     ):
         """
         Assert that correlation function data satisfies physical constraints.
@@ -228,9 +229,14 @@ class ScientificAssertions:
 
         # Warn if fit is suspiciously good or bad
         if reduced_chi_squared < 0.1:
-            warnings.warn(f"Suspiciously good fit: χ²/dof = {reduced_chi_squared:.3f}")
+            warnings.warn(
+                f"Suspiciously good fit: χ²/dof = {reduced_chi_squared:.3f}",
+                stacklevel=2,
+            )
         elif reduced_chi_squared > 10.0:
-            warnings.warn(f"Poor fit quality: χ²/dof = {reduced_chi_squared:.3f}")
+            warnings.warn(
+                f"Poor fit quality: χ²/dof = {reduced_chi_squared:.3f}", stacklevel=2
+            )
 
 
 # ============================================================================
@@ -275,7 +281,7 @@ class MockFactory:
         return mock_file
 
     @staticmethod
-    def create_mock_hdf5_file(temp_dir: Path, structure: Dict[str, Any]) -> Path:
+    def create_mock_hdf5_file(temp_dir: Path, structure: dict[str, Any]) -> Path:
         """
         Create mock HDF5 file with specified structure.
 
@@ -294,7 +300,7 @@ class MockFactory:
         return hdf_path
 
     @staticmethod
-    def create_mock_detector_geometry() -> Dict[str, Any]:
+    def create_mock_detector_geometry() -> dict[str, Any]:
         """Create mock detector geometry parameters."""
         return {
             "pixel_size": 75e-6,  # 75 μm pixels
@@ -317,13 +323,13 @@ class TestDataGenerator:
 
     @staticmethod
     def generate_correlation_data(
-        tau_range: Tuple[float, float] = (1e-6, 1e2),
+        tau_range: tuple[float, float] = (1e-6, 1e2),
         n_points: int = 50,
         beta: float = 0.8,
         tau_c: float = 1e-3,
         noise_level: float = 0.02,
         seed: int = 42,
-    ) -> Dict[str, np.ndarray]:
+    ) -> dict[str, np.ndarray]:
         """
         Generate synthetic G2 correlation function data.
 
@@ -361,12 +367,12 @@ class TestDataGenerator:
 
     @staticmethod
     def generate_scattering_data(
-        q_range: Tuple[float, float] = (0.001, 0.1),
+        q_range: tuple[float, float] = (0.001, 0.1),
         n_points: int = 100,
         power_law: float = -2.5,
         background: float = 100,
         seed: int = 42,
-    ) -> Dict[str, np.ndarray]:
+    ) -> dict[str, np.ndarray]:
         """
         Generate synthetic SAXS scattering data.
 
@@ -490,7 +496,7 @@ class TestDebugger:
                 debug_info += f"Local Variables: {list(locals_dict.keys())}\n"
 
                 # Add to exception message
-                enhanced_msg = f"{str(e)}\n{debug_info}"
+                enhanced_msg = f"{e!s}\n{debug_info}"
                 raise type(e)(enhanced_msg) from e
 
         return wrapper
@@ -530,7 +536,7 @@ class TestDebugger:
 # ============================================================================
 
 
-def create_temp_hdf5(structure: Dict[str, Any], filename: str = "test.hdf") -> str:
+def create_temp_hdf5(structure: dict[str, Any], filename: str = "test.hdf") -> str:
     """
     Create temporary HDF5 file with specified structure.
 
@@ -566,7 +572,7 @@ def suppress_warnings(*warning_types):
 # ============================================================================
 
 
-def _create_hdf5_structure(parent_group: h5py.Group, structure: Dict[str, Any]):
+def _create_hdf5_structure(parent_group: h5py.Group, structure: dict[str, Any]):
     """Recursively create HDF5 structure from dictionary."""
     for key, value in structure.items():
         if isinstance(value, dict):
@@ -643,23 +649,23 @@ def test_{function_name}_raises_{exception_name}(self):
 
 # Export commonly used items
 __all__ = [
-    # Decorators
-    "scientific_test",
-    "performance_test",
-    "gui_test",
-    # Assertion helpers
-    "ScientificAssertions",
     # Mock factories
     "MockFactory",
-    # Data generators
-    "TestDataGenerator",
     # Performance utilities
     "PerformanceTimer",
+    # Assertion helpers
+    "ScientificAssertions",
+    # Data generators
+    "TestDataGenerator",
     # Debugging tools
     "TestDebugger",
-    # Fixture helpers
-    "create_temp_hdf5",
-    "suppress_warnings",
     # Templates
     "TestTemplate",
+    # Fixture helpers
+    "create_temp_hdf5",
+    "gui_test",
+    "performance_test",
+    # Decorators
+    "scientific_test",
+    "suppress_warnings",
 ]

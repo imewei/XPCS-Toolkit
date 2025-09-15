@@ -21,7 +21,7 @@ from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import numpy as np
 
@@ -56,9 +56,9 @@ class MaintenanceItem:
     priority: Priority
     description: str
     estimated_effort: str  # "1h", "2d", etc.
-    affected_files: List[str]
-    due_date: Optional[datetime] = None
-    assigned_to: Optional[str] = None
+    affected_files: list[str]
+    due_date: datetime | None = None
+    assigned_to: str | None = None
     created_date: datetime = None
     last_updated: datetime = None
     status: str = "pending"  # pending, in_progress, completed, deferred
@@ -108,15 +108,15 @@ class TestSuiteHealthMetrics:
 class TestSuiteMaintenanceManager:
     """Main class for test suite maintenance and evolution."""
 
-    def __init__(self, test_directory: Path = None):
+    def __init__(self, test_directory: Path | None = None):
         self.test_dir = test_directory or Path(__file__).parent
         self.project_root = self.test_dir.parent
         self.maintenance_file = self.test_dir / "maintenance_items.json"
         self.health_history_file = self.test_dir / "health_history.json"
         self.config_file = self.test_dir / "maintenance_config.json"
 
-        self.maintenance_items: List[MaintenanceItem] = []
-        self.health_metrics_history: List[TestSuiteHealthMetrics] = []
+        self.maintenance_items: list[MaintenanceItem] = []
+        self.health_metrics_history: list[TestSuiteHealthMetrics] = []
 
         self.logger = logging.getLogger(__name__)
         self._setup_logging()
@@ -258,7 +258,7 @@ class TestSuiteMaintenanceManager:
         utility_files = list(self.test_dir.rglob("*util*.py"))
 
         test_code_lines = sum(
-            len(open(f, "r").readlines()) for f in test_files if f.is_file()
+            len(open(f).readlines()) for f in test_files if f.is_file()
         )
 
         return TestSuiteHealthMetrics(
@@ -283,7 +283,7 @@ class TestSuiteMaintenanceManager:
             utility_function_count=len(utility_files),
         )
 
-    def _run_coverage_analysis(self) -> Dict[str, Any]:
+    def _run_coverage_analysis(self) -> dict[str, Any]:
         """Run test coverage analysis."""
         try:
             # Run pytest with coverage
@@ -296,6 +296,7 @@ class TestSuiteMaintenanceManager:
                     "--cov-report=json",
                     str(self.test_dir),
                 ],
+                check=False,
                 capture_output=True,
                 text=True,
                 cwd=self.project_root,
@@ -319,7 +320,7 @@ class TestSuiteMaintenanceManager:
 
         return {"line_coverage": 0, "branch_coverage": 0, "function_coverage": 0}
 
-    def _run_performance_analysis(self) -> Dict[str, Any]:
+    def _run_performance_analysis(self) -> dict[str, Any]:
         """Run test performance analysis."""
         try:
             # Run tests with timing information
@@ -332,6 +333,7 @@ class TestSuiteMaintenanceManager:
                     "-v",
                     str(self.test_dir),
                 ],
+                check=False,
                 capture_output=True,
                 text=True,
                 cwd=self.project_root,
@@ -364,7 +366,7 @@ class TestSuiteMaintenanceManager:
 
         return {"total_tests": 0, "slow_tests": 0, "average_time": 0, "total_time": 0}
 
-    def _run_quality_analysis(self) -> Dict[str, Any]:
+    def _run_quality_analysis(self) -> dict[str, Any]:
         """Run test quality analysis."""
         try:
             # Import quality checker
@@ -439,7 +441,7 @@ class TestSuiteMaintenanceManager:
 
     def _identify_maintenance_needs(
         self, metrics: TestSuiteHealthMetrics
-    ) -> List[MaintenanceItem]:
+    ) -> list[MaintenanceItem]:
         """Identify new maintenance items based on current metrics."""
         new_items = []
 

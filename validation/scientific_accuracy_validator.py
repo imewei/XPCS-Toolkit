@@ -18,13 +18,16 @@ Author: Integration and Validation Agent
 Created: 2025-09-11
 """
 
+import functools
 import json
+import operator
 import sys
 import time
 from abc import ABC, abstractmethod
+from collections.abc import Callable
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Tuple
+from typing import Any
 
 import numpy as np
 from scipy import stats
@@ -69,10 +72,10 @@ class ValidationReport:
     overall_accuracy_score: float
     tests_passed: int
     tests_failed: int
-    phase_results: Dict[str, List[AccuracyTestResult]]
-    numerical_precision_analysis: Dict[str, float]
-    reproducibility_analysis: Dict[str, float]
-    recommendations: List[str]
+    phase_results: dict[str, list[AccuracyTestResult]]
+    numerical_precision_analysis: dict[str, float]
+    reproducibility_analysis: dict[str, float]
+    recommendations: list[str]
 
 
 class ReferenceImplementations:
@@ -102,7 +105,7 @@ class ReferenceImplementations:
     @staticmethod
     def reference_saxs_1d_integration(
         image_2d: np.ndarray, q_map: np.ndarray, q_bins: np.ndarray
-    ) -> Tuple[np.ndarray, np.ndarray]:
+    ) -> tuple[np.ndarray, np.ndarray]:
         """Reference implementation for 1D SAXS integration"""
         q_centers = (q_bins[:-1] + q_bins[1:]) / 2
         intensity_1d = np.zeros(len(q_centers))
@@ -118,7 +121,7 @@ class ReferenceImplementations:
     @staticmethod
     def reference_exponential_fit(
         x: np.ndarray, y: np.ndarray
-    ) -> Tuple[np.ndarray, float]:
+    ) -> tuple[np.ndarray, float]:
         """Reference implementation for exponential fitting"""
 
         def exp_func(x, a, b, c):
@@ -138,7 +141,7 @@ class ReferenceImplementations:
         return np.fft.fft2(data)
 
     @staticmethod
-    def reference_statistics_calculation(data: np.ndarray) -> Dict[str, float]:
+    def reference_statistics_calculation(data: np.ndarray) -> dict[str, float]:
         """Reference statistical calculations"""
         return {
             "mean": float(np.mean(data)),
@@ -157,12 +160,11 @@ class AccuracyValidator(ABC):
 
     def __init__(self, tolerance: float = 1e-10):
         self.tolerance = tolerance
-        self.results: List[AccuracyTestResult] = []
+        self.results: list[AccuracyTestResult] = []
 
     @abstractmethod
-    def validate(self, test_data: Any) -> List[AccuracyTestResult]:
+    def validate(self, test_data: Any) -> list[AccuracyTestResult]:
         """Perform validation tests"""
-        pass
 
     def compare_values(
         self, reference: Any, computed: Any, test_name: str, phase: str
@@ -170,23 +172,22 @@ class AccuracyValidator(ABC):
         """Compare reference and computed values"""
         if isinstance(reference, np.ndarray) and isinstance(computed, np.ndarray):
             return self._compare_arrays(reference, computed, test_name, phase)
-        elif isinstance(reference, (int, float)) and isinstance(computed, (int, float)):
+        if isinstance(reference, (int, float)) and isinstance(computed, (int, float)):
             return self._compare_scalars(reference, computed, test_name, phase)
-        elif isinstance(reference, dict) and isinstance(computed, dict):
+        if isinstance(reference, dict) and isinstance(computed, dict):
             return self._compare_dictionaries(reference, computed, test_name, phase)
-        else:
-            return AccuracyTestResult(
-                test_name=test_name,
-                phase=phase,
-                passed=False,
-                numerical_error=float("inf"),
-                relative_error=float("inf"),
-                reference_value=reference,
-                computed_value=computed,
-                tolerance=self.tolerance,
-                notes="Unsupported comparison types",
-                timestamp=time.strftime("%Y-%m-%d %H:%M:%S"),
-            )
+        return AccuracyTestResult(
+            test_name=test_name,
+            phase=phase,
+            passed=False,
+            numerical_error=float("inf"),
+            relative_error=float("inf"),
+            reference_value=reference,
+            computed_value=computed,
+            tolerance=self.tolerance,
+            notes="Unsupported comparison types",
+            timestamp=time.strftime("%Y-%m-%d %H:%M:%S"),
+        )
 
     def _compare_arrays(
         self, reference: np.ndarray, computed: np.ndarray, test_name: str, phase: str
@@ -267,7 +268,7 @@ class AccuracyValidator(ABC):
         errors = []
         all_passed = True
 
-        for key in reference.keys():
+        for key in reference:
             if key in computed:
                 if isinstance(reference[key], (int, float)) and isinstance(
                     computed[key], (int, float)
@@ -308,7 +309,7 @@ class AccuracyValidator(ABC):
 class G2AccuracyValidator(AccuracyValidator):
     """Validator for G2 correlation calculations"""
 
-    def validate(self, test_data: Dict[str, Any]) -> List[AccuracyTestResult]:
+    def validate(self, test_data: dict[str, Any]) -> list[AccuracyTestResult]:
         """Validate G2 correlation accuracy"""
         results = []
 
@@ -378,7 +379,7 @@ class G2AccuracyValidator(AccuracyValidator):
 
     def _test_g2_edge_cases(
         self, intensity_data: np.ndarray
-    ) -> List[AccuracyTestResult]:
+    ) -> list[AccuracyTestResult]:
         """Test G2 calculation edge cases"""
         results = []
 
@@ -440,7 +441,7 @@ class G2AccuracyValidator(AccuracyValidator):
 class SAXSAccuracyValidator(AccuracyValidator):
     """Validator for SAXS processing accuracy"""
 
-    def validate(self, test_data: Dict[str, Any]) -> List[AccuracyTestResult]:
+    def validate(self, test_data: dict[str, Any]) -> list[AccuracyTestResult]:
         """Validate SAXS processing accuracy"""
         results = []
 
@@ -513,7 +514,7 @@ class SAXSAccuracyValidator(AccuracyValidator):
 class NumericalAccuracyValidator(AccuracyValidator):
     """Validator for general numerical accuracy"""
 
-    def validate(self, test_data: Dict[str, Any]) -> List[AccuracyTestResult]:
+    def validate(self, test_data: dict[str, Any]) -> list[AccuracyTestResult]:
         """Validate numerical operations accuracy"""
         results = []
 
@@ -525,7 +526,7 @@ class NumericalAccuracyValidator(AccuracyValidator):
 
         return results
 
-    def _test_fft_accuracy(self, data: np.ndarray) -> List[AccuracyTestResult]:
+    def _test_fft_accuracy(self, data: np.ndarray) -> list[AccuracyTestResult]:
         """Test FFT calculation accuracy"""
         results = []
 
@@ -553,7 +554,7 @@ class NumericalAccuracyValidator(AccuracyValidator):
 
         return results
 
-    def _test_statistics_accuracy(self, data: np.ndarray) -> List[AccuracyTestResult]:
+    def _test_statistics_accuracy(self, data: np.ndarray) -> list[AccuracyTestResult]:
         """Test statistical calculations accuracy"""
         results = []
 
@@ -597,7 +598,7 @@ class ReproducibilityValidator:
         results = []
 
         # Run computation multiple times
-        for i in range(self.num_runs):
+        for _i in range(self.num_runs):
             # Set random seed for reproducibility
             np.random.seed(42)
             result = computation_func(test_data)
@@ -662,9 +663,9 @@ class ScientificAccuracyValidationFramework:
         }
 
         self.reproducibility_validator = ReproducibilityValidator()
-        self.all_results: List[AccuracyTestResult] = []
+        self.all_results: list[AccuracyTestResult] = []
 
-    def generate_test_data(self) -> Dict[str, Any]:
+    def generate_test_data(self) -> dict[str, Any]:
         """Generate comprehensive test data for validation"""
         print("Generating scientific test data...")
 
@@ -860,8 +861,8 @@ class ScientificAccuracyValidationFramework:
         return report
 
     def _generate_recommendations(
-        self, phase_results: Dict[str, List[AccuracyTestResult]], overall_score: float
-    ) -> List[str]:
+        self, phase_results: dict[str, list[AccuracyTestResult]], overall_score: float
+    ) -> list[str]:
         """Generate recommendations based on validation results"""
         recommendations = []
 
@@ -886,7 +887,7 @@ class ScientificAccuracyValidationFramework:
         # Numerical precision recommendations
         finite_errors = [
             r.numerical_error
-            for r in sum(phase_results.values(), [])
+            for r in functools.reduce(operator.iadd, phase_results.values(), [])
             if np.isfinite(r.numerical_error)
         ]
         if finite_errors:

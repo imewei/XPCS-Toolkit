@@ -25,7 +25,7 @@ import time
 from dataclasses import asdict, dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
@@ -56,11 +56,11 @@ class ValidationSummary:
     accuracy_score: float
     integration_score: float
     stability_score: float
-    test_counts: Dict[str, int]
+    test_counts: dict[str, int]
     duration_seconds: float
-    recommendations: List[str]
-    critical_issues: List[str]
-    phase_status: Dict[str, str]
+    recommendations: list[str]
+    critical_issues: list[str]
+    phase_status: dict[str, str]
 
 
 @dataclass
@@ -68,14 +68,14 @@ class ComprehensiveValidationReport:
     """Complete validation report"""
 
     validation_timestamp: str
-    system_info: Dict[str, Any]
+    system_info: dict[str, Any]
     validation_summary: ValidationSummary
-    performance_results: Optional[Dict[str, Any]]
-    accuracy_results: Optional[Dict[str, Any]]
-    integration_results: Optional[Dict[str, Any]]
-    stability_results: Optional[Dict[str, Any]]
-    deployment_readiness: Dict[str, Any]
-    detailed_recommendations: Dict[str, List[str]]
+    performance_results: dict[str, Any] | None
+    accuracy_results: dict[str, Any] | None
+    integration_results: dict[str, Any] | None
+    stability_results: dict[str, Any] | None
+    deployment_readiness: dict[str, Any]
+    detailed_recommendations: dict[str, list[str]]
 
 
 class ValidationOrchestrator:
@@ -217,6 +217,7 @@ class ValidationOrchestrator:
             # Run tests with subprocess
             result = subprocess.run(
                 [sys.executable, str(test_file)],
+                check=False,
                 capture_output=True,
                 text=True,
                 timeout=300,
@@ -297,7 +298,7 @@ class ValidationOrchestrator:
             self.phase_validation_status["Phase6_Integration"] = "failed"
             return False
 
-    def calculate_overall_scores(self) -> Tuple[float, Dict[str, float]]:
+    def calculate_overall_scores(self) -> tuple[float, dict[str, float]]:
         """Calculate overall validation scores"""
         scores = {}
 
@@ -353,13 +354,13 @@ class ValidationOrchestrator:
             "stability": 0.20,
         }
 
-        overall_score = sum(scores[key] * weights[key] for key in scores.keys())
+        overall_score = sum(scores[key] * weights[key] for key in scores)
 
         return overall_score, scores
 
     def generate_recommendations(
-        self, overall_score: float, individual_scores: Dict[str, float]
-    ) -> Tuple[List[str], List[str]]:
+        self, overall_score: float, individual_scores: dict[str, float]
+    ) -> tuple[list[str], list[str]]:
         """Generate recommendations and identify critical issues"""
         recommendations = []
         critical_issues = []
@@ -473,8 +474,8 @@ class ValidationOrchestrator:
         return recommendations, critical_issues
 
     def assess_deployment_readiness(
-        self, overall_score: float, critical_issues: List[str]
-    ) -> Dict[str, Any]:
+        self, overall_score: float, critical_issues: list[str]
+    ) -> dict[str, Any]:
         """Assess readiness for production deployment"""
         readiness_assessment = {
             "ready_for_production": False,

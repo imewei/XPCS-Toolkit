@@ -17,7 +17,7 @@ import numpy as np
 REFERENCE_DATA_PATH = Path(__file__).parent
 
 
-def load_reference_data(category: str, dataset_name: str) -> Dict[str, Any]:
+def load_reference_data(category: str, dataset_name: str) -> dict[str, Any]:
     """
     Load reference data from the specified category and dataset
 
@@ -65,8 +65,8 @@ def save_reference_data(
     dataset_name: str,
     x_values: np.ndarray,
     y_values: np.ndarray,
-    y_errors: Optional[np.ndarray] = None,
-    metadata: Optional[Dict[str, Any]] = None,
+    y_errors: np.ndarray | None = None,
+    metadata: dict[str, Any] | None = None,
 ) -> None:
     """
     Save reference data to the specified category
@@ -111,7 +111,7 @@ def save_reference_data(
     print(f"Saved reference data: {output_path}")
 
 
-def list_available_datasets(category: str) -> List[str]:
+def list_available_datasets(category: str) -> list[str]:
     """
     List available datasets in a category
 
@@ -133,7 +133,7 @@ def list_available_datasets(category: str) -> List[str]:
     return sorted(datasets)
 
 
-def validate_reference_data(category: str, dataset_name: str) -> Tuple[bool, List[str]]:
+def validate_reference_data(category: str, dataset_name: str) -> tuple[bool, list[str]]:
     """
     Validate reference data integrity and completeness
 

@@ -6,7 +6,7 @@ detector geometries, and Q-space mappings.
 """
 
 from dataclasses import dataclass
-from typing import Any, Dict, Optional, Tuple
+from typing import Any
 
 import numpy as np
 
@@ -33,14 +33,14 @@ class SyntheticXPCSParameters:
 
     # Multi-exponential parameters (for complex systems)
     n_components: int = 1  # Number of exponential components
-    amplitudes: Optional[list] = None  # Component amplitudes
-    time_constants: Optional[list] = None  # Component time constants
+    amplitudes: list | None = None  # Component amplitudes
+    time_constants: list | None = None  # Component time constants
 
     # Detector geometry
-    detector_size: Tuple[int, int] = (1024, 1024)  # pixels
+    detector_size: tuple[int, int] = (1024, 1024)  # pixels
     pixel_size: float = 75e-6  # meters per pixel
     det_dist: float = 5.0  # sample-detector distance (meters)
-    beam_center: Tuple[float, float] = (512.0, 512.0)  # beam center (pixels)
+    beam_center: tuple[float, float] = (512.0, 512.0)  # beam center (pixels)
     X_energy: float = 8.0  # X-ray energy (keV)
 
     # Q-space parameters
@@ -59,7 +59,7 @@ class SyntheticXPCSParameters:
 class SyntheticXPCSGenerator:
     """Comprehensive generator for synthetic XPCS datasets."""
 
-    def __init__(self, params: Optional[SyntheticXPCSParameters] = None):
+    def __init__(self, params: SyntheticXPCSParameters | None = None):
         """Initialize generator with parameters."""
         self.params = params or SyntheticXPCSParameters()
         self._setup_random_state()
@@ -69,7 +69,7 @@ class SyntheticXPCSGenerator:
         np.random.seed(seed)
         self._rng = np.random.RandomState(seed)
 
-    def generate_correlation_function(self) -> Dict[str, np.ndarray]:
+    def generate_correlation_function(self) -> dict[str, np.ndarray]:
         """Generate synthetic G2 correlation function."""
         # Create time points
         if self.params.tau_spacing == "log":
@@ -101,7 +101,7 @@ class SyntheticXPCSGenerator:
                 self.params.tau_c * (10**i) for i in range(self.params.n_components)
             ]
 
-            for amp, tau_comp in zip(amplitudes, time_constants):
+            for amp, tau_comp in zip(amplitudes, time_constants, strict=False):
                 g2_clean += amp * np.exp(-tau / tau_comp)
 
         # Add noise
@@ -119,7 +119,7 @@ class SyntheticXPCSGenerator:
 
     def _add_noise(
         self, g2_clean: np.ndarray, tau: np.ndarray
-    ) -> Tuple[np.ndarray, np.ndarray]:
+    ) -> tuple[np.ndarray, np.ndarray]:
         """Add realistic noise to correlation function."""
         if self.params.noise_type == "gaussian":
             # Gaussian noise with intensity-dependent variance
@@ -163,7 +163,7 @@ class SyntheticXPCSGenerator:
 
         return g2_noisy, g2_err
 
-    def generate_scattering_data(self) -> Dict[str, np.ndarray]:
+    def generate_scattering_data(self) -> dict[str, np.ndarray]:
         """Generate synthetic SAXS scattering data."""
         q = np.linspace(self.params.q_min, self.params.q_max, 100)
 
@@ -198,7 +198,7 @@ class SyntheticXPCSGenerator:
             "intensity_clean": intensity,
         }
 
-    def generate_detector_geometry(self) -> Dict[str, Any]:
+    def generate_detector_geometry(self) -> dict[str, Any]:
         """Generate detector geometry parameters."""
         # Calculate wavelength from energy
         h = 4.135667696e-15  # Planck constant (eV⋅s)
@@ -217,7 +217,7 @@ class SyntheticXPCSGenerator:
             "bcy": self.params.beam_center[1],
         }
 
-    def generate_qmap_data(self) -> Dict[str, np.ndarray]:
+    def generate_qmap_data(self) -> dict[str, np.ndarray]:
         """Generate Q-space mapping data."""
         geom = self.generate_detector_geometry()
         ny, nx = geom["detector_size"]
@@ -278,7 +278,7 @@ class SyntheticXPCSGenerator:
             "map_units": [b"1/A", b"degree"],
         }
 
-    def generate_multitau_data(self, n_q_points: int = 5) -> Dict[str, np.ndarray]:
+    def generate_multitau_data(self, n_q_points: int = 5) -> dict[str, np.ndarray]:
         """Generate multi-tau correlation data for multiple Q points."""
         base_corr = self.generate_correlation_function()
 
@@ -286,7 +286,7 @@ class SyntheticXPCSGenerator:
         g2_matrix = []
         g2_err_matrix = []
 
-        for i in range(n_q_points):
+        for _i in range(n_q_points):
             # Vary correlation time and contrast slightly
             tau_c_var = base_corr["tau_c"] * (1 + 0.1 * self._rng.normal())
             beta_var = base_corr["beta"] * (1 + 0.05 * self._rng.normal())
@@ -311,7 +311,7 @@ class SyntheticXPCSGenerator:
             "start_time": 1000000000,
         }
 
-    def generate_twotime_data(self, n_time_points: int = 100) -> Dict[str, np.ndarray]:
+    def generate_twotime_data(self, n_time_points: int = 100) -> dict[str, np.ndarray]:
         """Generate two-time correlation data."""
         # Create time grid
         t_max = 10 * self.params.tau_c  # 10 correlation times
@@ -355,7 +355,7 @@ def create_synthetic_g2_data(
     tau_c: float = 1e-3,
     noise_level: float = 0.02,
     **kwargs,
-) -> Dict[str, np.ndarray]:
+) -> dict[str, np.ndarray]:
     """Create synthetic G2 correlation function data."""
     params = SyntheticXPCSParameters(
         tau_min=tau_min,
@@ -377,7 +377,7 @@ def create_synthetic_saxs_data(
     power_law_exponent: float = -2.5,
     background: float = 100.0,
     **kwargs,
-) -> Dict[str, np.ndarray]:
+) -> dict[str, np.ndarray]:
     """Create synthetic SAXS scattering data."""
     params = SyntheticXPCSParameters(
         q_min=q_min,
@@ -392,13 +392,13 @@ def create_synthetic_saxs_data(
 
 
 def create_detector_geometry(
-    detector_size: Tuple[int, int] = (1024, 1024),
+    detector_size: tuple[int, int] = (1024, 1024),
     pixel_size: float = 75e-6,
     det_dist: float = 5.0,
-    beam_center: Tuple[float, float] = (512.0, 512.0),
+    beam_center: tuple[float, float] = (512.0, 512.0),
     X_energy: float = 8.0,
     **kwargs,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Create detector geometry parameters."""
     params = SyntheticXPCSParameters(
         detector_size=detector_size,
@@ -413,13 +413,13 @@ def create_detector_geometry(
 
 
 def create_qmap_data(
-    detector_size: Tuple[int, int] = (1024, 1024),
+    detector_size: tuple[int, int] = (1024, 1024),
     q_min: float = 0.001,
     q_max: float = 0.1,
     n_q_bins: int = 50,
     n_phi_bins: int = 36,
     **kwargs,
-) -> Dict[str, np.ndarray]:
+) -> dict[str, np.ndarray]:
     """Create Q-space mapping data."""
     params = SyntheticXPCSParameters(
         detector_size=detector_size,

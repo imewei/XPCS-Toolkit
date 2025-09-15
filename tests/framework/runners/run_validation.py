@@ -36,7 +36,7 @@ import json
 import sys
 import time
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any
 
 import yaml
 
@@ -48,7 +48,7 @@ from test_suite_validation import TestSuiteValidator, print_validation_summary
 class ValidationRunner:
     """Enhanced runner for test suite validation with configuration support."""
 
-    def __init__(self, config_file: Optional[Path] = None):
+    def __init__(self, config_file: Path | None = None):
         """Initialize the validation runner with optional configuration."""
         self.config_file = (
             config_file or Path(__file__).parent / "validation_config.yaml"
@@ -56,11 +56,11 @@ class ValidationRunner:
         self.config = self._load_config()
         self.validator = TestSuiteValidator()
 
-    def _load_config(self) -> Dict[str, Any]:
+    def _load_config(self) -> dict[str, Any]:
         """Load configuration from YAML file."""
         if self.config_file.exists():
             try:
-                with open(self.config_file, "r", encoding="utf-8") as f:
+                with open(self.config_file, encoding="utf-8") as f:
                     return yaml.safe_load(f) or {}
             except Exception as e:
                 print(f"⚠️  Warning: Could not load config file {self.config_file}: {e}")
@@ -74,11 +74,11 @@ class ValidationRunner:
     def run_validation(
         self,
         output_format: str = "console",
-        output_file: Optional[Path] = None,
+        output_file: Path | None = None,
         verbose: bool = True,
         quiet: bool = False,
-        baseline: Optional[Path] = None,
-    ) -> Dict[str, Any]:
+        baseline: Path | None = None,
+    ) -> dict[str, Any]:
         """
         Run comprehensive validation with specified options.
 
@@ -148,14 +148,14 @@ class ValidationRunner:
             self.validator._config = self.config
         else:
             # Add config as attribute for validator to use
-            setattr(self.validator, "_config", self.config)
+            self.validator._config = self.config
 
     def _compare_with_baseline(
-        self, current_report: Dict, baseline_file: Path
-    ) -> Dict[str, Any]:
+        self, current_report: dict, baseline_file: Path
+    ) -> dict[str, Any]:
         """Compare current report with baseline report."""
         try:
-            with open(baseline_file, "r", encoding="utf-8") as f:
+            with open(baseline_file, encoding="utf-8") as f:
                 baseline_report = json.load(f)
 
             comparison = {
@@ -205,9 +205,9 @@ class ValidationRunner:
 
     def _output_results(
         self,
-        report: Dict[str, Any],
+        report: dict[str, Any],
         output_format: str,
-        output_file: Optional[Path],
+        output_file: Path | None,
         verbose: bool,
         quiet: bool,
     ):
@@ -244,7 +244,7 @@ class ValidationRunner:
                 print(f"❌ Error saving report: {e}")
                 raise
 
-    def _print_baseline_comparison(self, comparison: Dict[str, Any]):
+    def _print_baseline_comparison(self, comparison: dict[str, Any]):
         """Print baseline comparison summary."""
         if "error" in comparison:
             print(f"\n⚠️  Baseline Comparison Error: {comparison['error']}")
@@ -279,13 +279,13 @@ def create_argument_parser() -> argparse.ArgumentParser:
 Examples:
     # Basic validation with console output
     python run_validation.py
-    
+
     # Generate JSON report
     python run_validation.py --format json --output validation_results.json
-    
+
     # Run in CI mode with strict quality gates
     python run_validation.py --ci --fail-on-gates
-    
+
     # Compare with previous baseline
     python run_validation.py --baseline previous_validation.json
         """,

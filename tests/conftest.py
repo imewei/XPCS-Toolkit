@@ -10,8 +10,9 @@ import os
 import shutil
 import tempfile
 import warnings
+from collections.abc import Generator
 from pathlib import Path
-from typing import Any, Dict, Generator
+from typing import Any
 
 import h5py
 import numpy as np
@@ -108,7 +109,7 @@ def random_seed() -> int:
 
 
 @pytest.fixture(scope="function")
-def synthetic_correlation_data(random_seed) -> Dict[str, np.ndarray]:
+def synthetic_correlation_data(random_seed) -> dict[str, np.ndarray]:
     """Generate synthetic G2 correlation function data."""
     # Time points (logarithmic spacing)
     tau = np.logspace(-6, 2, 50)  # 1μs to 100s
@@ -134,7 +135,7 @@ def synthetic_correlation_data(random_seed) -> Dict[str, np.ndarray]:
 
 
 @pytest.fixture(scope="function")
-def synthetic_scattering_data(random_seed) -> Dict[str, np.ndarray]:
+def synthetic_scattering_data(random_seed) -> dict[str, np.ndarray]:
     """Generate synthetic SAXS scattering data."""
     # Q-space points
     q = np.linspace(0.001, 0.1, 100)  # Å⁻¹
@@ -153,7 +154,7 @@ def synthetic_scattering_data(random_seed) -> Dict[str, np.ndarray]:
 
 
 @pytest.fixture(scope="function")
-def detector_geometry() -> Dict[str, Any]:
+def detector_geometry() -> dict[str, Any]:
     """Standard detector geometry parameters."""
     return {
         "pixel_size": 75e-6,  # 75 μm pixels
@@ -167,7 +168,7 @@ def detector_geometry() -> Dict[str, Any]:
 
 
 @pytest.fixture(scope="function")
-def qmap_data(detector_geometry) -> Dict[str, np.ndarray]:
+def qmap_data(detector_geometry) -> dict[str, np.ndarray]:
     """Generate Q-space mapping data."""
     geom = detector_geometry
     ny, nx = geom["detector_size"]
@@ -497,12 +498,11 @@ def create_test_dataset():
         """Create test dataset of specified type."""
         if dataset_type == "minimal":
             return _create_minimal_dataset(**kwargs)
-        elif dataset_type == "realistic":
+        if dataset_type == "realistic":
             return _create_realistic_dataset(**kwargs)
-        elif dataset_type == "edge_case":
+        if dataset_type == "edge_case":
             return _create_edge_case_dataset(**kwargs)
-        else:
-            raise ValueError(f"Unknown dataset type: {dataset_type}")
+        raise ValueError(f"Unknown dataset type: {dataset_type}")
 
     return _create
 
