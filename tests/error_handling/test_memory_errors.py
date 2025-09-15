@@ -128,7 +128,7 @@ class TestMemoryLeakDetection:
     def test_connection_pool_memory_cleanup(self, error_temp_dir):
         """Test that connection pool properly cleans up memory."""
         pool = HDF5ConnectionPool(max_pool_size=5)
-        len(pool._connections)
+        len(pool._pool)
 
         # Create multiple temporary files
         test_files = []
@@ -149,13 +149,13 @@ class TestMemoryLeakDetection:
                 pass
 
         # Check that pool doesn't grow beyond max_size
-        assert len(pool._connections) <= 5
+        assert len(pool._pool) <= 5
 
         # Force cleanup
-        pool.cleanup()
+        pool.clear_pool()
 
         # Verify cleanup occurred
-        final_connections = len(pool._connections)
+        final_connections = len(pool._pool)
         assert final_connections == 0
 
     def test_weak_reference_cleanup(self, error_temp_dir):
@@ -170,6 +170,19 @@ class TestMemoryLeakDetection:
                 with h5py.File(file_path, "w") as f:
                     f.create_dataset("saxs_2d", data=np.random.rand(10, 100, 100))
                     f.attrs["analysis_type"] = "XPCS"
+                    # Add comprehensive XPCS structure
+                    f.create_dataset("/xpcs/multitau/normalized_g2", data=np.random.rand(5, 50))
+                    f.create_dataset("/xpcs/temporal_mean/scattering_1d", data=np.random.rand(100))
+                    f.create_dataset("/xpcs/temporal_mean/scattering_2d", data=np.random.rand(10, 100, 100))
+                    f.create_dataset("/entry/start_time", data="2023-01-01T00:00:00")
+                    f.create_dataset("/xpcs/multitau/config/avg_frame", data=1)
+                    f.create_dataset("/xpcs/multitau/delay_list", data=np.random.rand(50))
+                    f.create_dataset("/entry/instrument/detector_1/count_time", data=0.1)
+                    f.create_dataset("/xpcs/temporal_mean/scattering_1d_segments", data=np.random.rand(10, 100))
+                    f.create_dataset("/xpcs/multitau/normalized_g2_err", data=np.random.rand(5, 50))
+                    f.create_dataset("/xpcs/multitau/config/stride_frame", data=1)
+                    f.create_dataset("/entry/instrument/detector_1/frame_time", data=0.01)
+                    f.create_dataset("/xpcs/spatial_mean/intensity_vs_time", data=np.random.rand(1000))
                 test_files.append(file_path)
             except Exception:
                 # Skip files that can't be created
@@ -206,6 +219,19 @@ class TestMemoryLeakDetection:
             large_data = np.random.rand(1000, 1000)
             f.create_dataset("large_data", data=large_data)
             f.attrs["analysis_type"] = "XPCS"
+            # Add comprehensive XPCS structure
+            f.create_dataset("/xpcs/multitau/normalized_g2", data=np.random.rand(5, 50))
+            f.create_dataset("/xpcs/temporal_mean/scattering_1d", data=np.random.rand(100))
+            f.create_dataset("/xpcs/temporal_mean/scattering_2d", data=np.random.rand(10, 100, 100))
+            f.create_dataset("/entry/start_time", data="2023-01-01T00:00:00")
+            f.create_dataset("/xpcs/multitau/config/avg_frame", data=1)
+            f.create_dataset("/xpcs/multitau/delay_list", data=np.random.rand(50))
+            f.create_dataset("/entry/instrument/detector_1/count_time", data=0.1)
+            f.create_dataset("/xpcs/temporal_mean/scattering_1d_segments", data=np.random.rand(10, 100))
+            f.create_dataset("/xpcs/multitau/normalized_g2_err", data=np.random.rand(5, 50))
+            f.create_dataset("/xpcs/multitau/config/stride_frame", data=1)
+            f.create_dataset("/entry/instrument/detector_1/frame_time", data=0.01)
+            f.create_dataset("/xpcs/spatial_mean/intensity_vs_time", data=np.random.rand(1000))
 
         # Monitor memory before operation
         process = psutil.Process()
@@ -251,6 +277,19 @@ class TestMemoryPressureHandling:
                 f.create_dataset(f"dataset_{i}", data=data)
 
             f.attrs["analysis_type"] = "XPCS"
+            # Add comprehensive XPCS structure
+            f.create_dataset("/xpcs/multitau/normalized_g2", data=np.random.rand(5, 50))
+            f.create_dataset("/xpcs/temporal_mean/scattering_1d", data=np.random.rand(100))
+            f.create_dataset("/xpcs/temporal_mean/scattering_2d", data=np.random.rand(10, 100, 100))
+            f.create_dataset("/entry/start_time", data="2023-01-01T00:00:00")
+            f.create_dataset("/xpcs/multitau/config/avg_frame", data=1)
+            f.create_dataset("/xpcs/multitau/delay_list", data=np.random.rand(50))
+            f.create_dataset("/entry/instrument/detector_1/count_time", data=0.1)
+            f.create_dataset("/xpcs/temporal_mean/scattering_1d_segments", data=np.random.rand(10, 100))
+            f.create_dataset("/xpcs/multitau/normalized_g2_err", data=np.random.rand(5, 50))
+            f.create_dataset("/xpcs/multitau/config/stride_frame", data=1)
+            f.create_dataset("/entry/instrument/detector_1/frame_time", data=0.01)
+            f.create_dataset("/xpcs/spatial_mean/intensity_vs_time", data=np.random.rand(1000))
 
         try:
             xf = XpcsFile(lazy_file)
@@ -322,6 +361,19 @@ class TestMemoryPressureHandling:
             f.create_dataset("saxs_2d", data=data)
             f.create_dataset("g2", data=np.random.rand(50, 100))
             f.attrs["analysis_type"] = "XPCS"
+            # Add comprehensive XPCS structure
+            f.create_dataset("/xpcs/multitau/normalized_g2", data=np.random.rand(5, 50))
+            f.create_dataset("/xpcs/temporal_mean/scattering_1d", data=np.random.rand(100))
+            f.create_dataset("/xpcs/temporal_mean/scattering_2d", data=np.random.rand(10, 100, 100))
+            f.create_dataset("/entry/start_time", data="2023-01-01T00:00:00")
+            f.create_dataset("/xpcs/multitau/config/avg_frame", data=1)
+            f.create_dataset("/xpcs/multitau/delay_list", data=np.random.rand(50))
+            f.create_dataset("/entry/instrument/detector_1/count_time", data=0.1)
+            f.create_dataset("/xpcs/temporal_mean/scattering_1d_segments", data=np.random.rand(10, 100))
+            f.create_dataset("/xpcs/multitau/normalized_g2_err", data=np.random.rand(5, 50))
+            f.create_dataset("/xpcs/multitau/config/stride_frame", data=1)
+            f.create_dataset("/entry/instrument/detector_1/frame_time", data=0.01)
+            f.create_dataset("/xpcs/spatial_mean/intensity_vs_time", data=np.random.rand(1000))
 
         try:
             xf = XpcsFile(limited_file)
@@ -570,10 +622,10 @@ class TestMemoryErrorRecovery:
                     pool.get_connection(file_path)
 
             # Pool should remain functional for successful files
-            assert len(pool._connections) <= 3
+            assert len(pool._pool) <= 3
 
         # After memory pressure resolves, pool should work normally
-        pool.cleanup()
+        pool.clear_pool()
 
         # Test that pool can be used normally after recovery
         normal_conn = pool.get_connection(test_files[0])

@@ -64,6 +64,19 @@ def mock_hdf5_file(error_temp_dir):
         f.create_dataset("saxs_2d", data=np.random.rand(10, 100, 100))
         f.create_dataset("g2", data=np.random.rand(10, 50))
         f.attrs["analysis_type"] = "XPCS"
+        # Add comprehensive XPCS structure
+        f.create_dataset("/xpcs/multitau/normalized_g2", data=np.random.rand(5, 50))
+        f.create_dataset("/xpcs/temporal_mean/scattering_1d", data=np.random.rand(100))
+        f.create_dataset("/xpcs/temporal_mean/scattering_2d", data=np.random.rand(10, 100, 100))
+        f.create_dataset("/entry/start_time", data="2023-01-01T00:00:00")
+        f.create_dataset("/xpcs/multitau/config/avg_frame", data=1)
+        f.create_dataset("/xpcs/multitau/delay_list", data=np.random.rand(50))
+        f.create_dataset("/entry/instrument/detector_1/count_time", data=0.1)
+        f.create_dataset("/xpcs/temporal_mean/scattering_1d_segments", data=np.random.rand(10, 100))
+        f.create_dataset("/xpcs/multitau/normalized_g2_err", data=np.random.rand(5, 50))
+        f.create_dataset("/xpcs/multitau/config/stride_frame", data=1)
+        f.create_dataset("/entry/instrument/detector_1/frame_time", data=0.01)
+        f.create_dataset("/xpcs/spatial_mean/intensity_vs_time", data=np.random.rand(1000))
 
     return test_file
 

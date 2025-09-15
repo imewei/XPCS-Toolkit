@@ -72,8 +72,8 @@ def test_minimal_hdf5_fixture():
 
             # Check essential datasets
             assert "xpcs/qmap/dqmap" in f
-            assert "xpcs/multitau/g2" in f
-            assert "xpcs/multitau/tau" in f
+            assert "xpcs/multitau/normalized_g2" in f
+            assert "xpcs/multitau/delay_list" in f
 
 
 @pytest.mark.integration
@@ -89,7 +89,7 @@ def test_comprehensive_hdf5_fixture():
             assert "xpcs/stability" in f
 
             # Check data dimensions
-            g2_data = f["xpcs/multitau/g2"][:]
+            g2_data = f["xpcs/multitau/normalized_g2"][:]
             assert g2_data.shape[0] == 8  # n_q
             assert g2_data.shape[1] == 25  # n_tau
 

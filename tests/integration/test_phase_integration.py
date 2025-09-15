@@ -315,7 +315,7 @@ class Phase2IOIntegrationTests(unittest.TestCase):
             # (This is implementation-dependent, so we just check basic functionality)
 
         finally:
-            pool.cleanup()
+            pool.clear_pool()
 
     def test_optimized_io_vs_standard(self):
         """Compare optimized I/O performance with standard I/O"""

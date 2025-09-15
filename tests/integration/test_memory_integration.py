@@ -101,10 +101,20 @@ class TestMemoryManagementIntegration(unittest.TestCase):
     def _create_sized_file(self, hdf_path, config):
         """Create HDF5 file with specified dimensions."""
         with h5py.File(hdf_path, "w") as f:
-            # Basic structure
-            f.create_group("entry")
+            # Complete XPCS structure for proper recognition
+            entry = f.create_group("entry")
+            entry.create_dataset("start_time", data="2023-01-01T00:00:00")
+            f.attrs["analysis_type"] = "XPCS"
+
+            # Instrument configuration
+            instrument = entry.create_group("instrument")
+            detector_1 = instrument.create_group("detector_1")
+            detector_1.create_dataset("frame_time", data=0.001)
+            detector_1.create_dataset("count_time", data=0.001)
+
             xpcs = f.create_group("xpcs")
             multitau = xpcs.create_group("multitau")
+            temporal_mean = xpcs.create_group("temporal_mean")
             qmap = xpcs.create_group("qmap")
 
             n_q = config["n_q"]
@@ -116,30 +126,37 @@ class TestMemoryManagementIntegration(unittest.TestCase):
             g2_data = np.random.rand(n_q, n_tau) * 0.5 + 1.0
             g2_err = 0.02 * g2_data
 
-            multitau.create_dataset("g2", data=g2_data)
-            multitau.create_dataset("g2_err", data=g2_err)
-            multitau.create_dataset("tau", data=tau)
+            multitau.create_dataset("normalized_g2", data=g2_data)
+            multitau.create_dataset("normalized_g2_err", data=g2_err)
+            multitau.create_dataset("delay_list", data=tau)
+
+            # Configuration data required by XpcsFile
+            config_group = multitau.create_group("config")
+            config_group.create_dataset("avg_frame", data=1)
+            config_group.create_dataset("stride_frame", data=1)
 
             # Large SAXS arrays for memory testing
-            saxs_data = np.random.rand(1, n_saxs) * 1000
+            saxs_1d = np.random.rand(n_saxs) * 1000
+            saxs_2d = np.random.rand(256, 256) * 1000
             Iqp_data = np.random.rand(n_q, n_saxs) * 1000
 
-            multitau.create_dataset("saxs_1d", data=saxs_data)
-            multitau.create_dataset("Iqp", data=Iqp_data)
+            temporal_mean.create_dataset("scattering_1d", data=saxs_1d)
+            temporal_mean.create_dataset("scattering_2d", data=saxs_2d)
+            temporal_mean.create_dataset("scattering_1d_segments", data=Iqp_data)
 
-            # Q-map data
-            qmap.create_dataset("dqlist", data=np.linspace(0.001, 0.1, n_q))
-            qmap.create_dataset("sqlist", data=np.linspace(0.001, 0.1, n_q))
+            # Q-map data for proper recognition
+            qmap.create_dataset("dynamic_v_list_dim0", data=np.linspace(0.001, 0.1, n_q))
+            qmap.create_dataset("static_v_list_dim0", data=np.linspace(0.001, 0.1, n_q))
             qmap.create_dataset("dynamic_index_mapping", data=np.arange(n_q))
             qmap.create_dataset("static_index_mapping", data=np.arange(n_q))
+            qmap.create_dataset("dynamic_num_pts", data=n_q)
+            qmap.create_dataset("static_num_pts", data=n_q)
 
-            # Large time series for memory stress testing
+            # Spatial mean group for intensity vs time
+            spatial_mean = xpcs.create_group("spatial_mean")
             n_time = 5000 if config["name"] == "large" else 1000
-            time_data = np.linspace(0, 1000, n_time)
             intensity_data = 1000 + 50 * np.random.randn(n_time)
-            multitau.create_dataset(
-                "Int_t", data=np.vstack([time_data, intensity_data])
-            )
+            spatial_mean.create_dataset("intensity_vs_time", data=intensity_data)
 
     def test_memory_tracker_integration_with_file_loading(self):
         """Test MemoryTracker integration with file loading operations."""
@@ -159,7 +176,7 @@ class TestMemoryManagementIntegration(unittest.TestCase):
             # Access data to trigger loading
             g2_data = xf.g2
             tau_data = xf.tau
-            saxs_data = get(test_file, "/xpcs/multitau/saxs_1d")
+            saxs_data = get(test_file, "/xpcs/temporal_mean/scattering_1d")
 
             # Record memory after loading
             memory_after = tracker.get_current_usage()
@@ -239,9 +256,9 @@ class TestMemoryManagementIntegration(unittest.TestCase):
         # Access all data to maximize memory usage
         _ = xf.g2
         _ = xf.tau
-        _ = get(large_file, "/xpcs/multitau/saxs_1d")
-        _ = get(large_file, "/xpcs/multitau/Iqp")
-        _ = get(large_file, "/xpcs/multitau/Int_t")
+        _ = get(large_file, "/xpcs/temporal_mean/scattering_1d")
+        _ = get(large_file, "/xpcs/temporal_mean/scattering_1d_segments")
+        _ = get(large_file, "/xpcs/spatial_mean/intensity_vs_time")
 
         final_pressure = MemoryMonitor.get_memory_pressure()
 
@@ -412,7 +429,7 @@ class TestMemoryManagementIntegration(unittest.TestCase):
 
         # Access SAXS data
         memory_before_saxs = self._get_process_memory()
-        saxs_data = get(large_file, "/xpcs/multitau/saxs_1d")
+        saxs_data = get(large_file, "/xpcs/temporal_mean/scattering_1d")
         memory_after_saxs = self._get_process_memory()
 
         datasets_accessed.append(
@@ -466,8 +483,8 @@ class TestMemoryManagementIntegration(unittest.TestCase):
 
                 # Try to access large datasets
                 try:
-                    _ = get(kernel.raw_hdf_files[i], "/xpcs/multitau/Iqp")
-                    _ = get(kernel.raw_hdf_files[i], "/xpcs/multitau/Int_t")
+                    _ = get(kernel.raw_hdf_files[i], "/xpcs/temporal_mean/scattering_1d_segments")
+                    _ = get(kernel.raw_hdf_files[i], "/xpcs/spatial_mean/intensity_vs_time")
                 except Exception as e:
                     logger.debug(f"Could not access large dataset: {e}")
 

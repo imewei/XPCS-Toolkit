@@ -66,14 +66,14 @@ class TestFileIOErrors:
 
     def test_connection_pool_error_handling(self, corrupted_hdf5_file):
         """Test connection pool behavior with corrupted files."""
-        pool = HDF5ConnectionPool(max_size=5)
+        pool = HDF5ConnectionPool(max_pool_size=5)
 
         # Try to get connection to corrupted file
         with pytest.raises(Exception):
             pool.get_connection(corrupted_hdf5_file)
 
         # Verify pool remains healthy
-        assert len(pool._connections) == 0
+        assert len(pool._pool) == 0
         assert pool._stats.failed_health_checks >= 0
 
     def test_pooled_connection_health_check(self, error_temp_dir):
@@ -172,6 +172,19 @@ class TestXpcsFileErrors:
             f.create_dataset("g2", data=np.random.rand(10, 50))
             # Add required metadata
             f.attrs["analysis_type"] = "XPCS"
+            # Add comprehensive XPCS structure
+            f.create_dataset("/xpcs/multitau/normalized_g2", data=np.random.rand(5, 50))
+            f.create_dataset("/xpcs/temporal_mean/scattering_1d", data=np.random.rand(100))
+            f.create_dataset("/xpcs/temporal_mean/scattering_2d", data=np.random.rand(10, 100, 100))
+            f.create_dataset("/entry/start_time", data="2023-01-01T00:00:00")
+            f.create_dataset("/xpcs/multitau/config/avg_frame", data=1)
+            f.create_dataset("/xpcs/multitau/delay_list", data=np.random.rand(50))
+            f.create_dataset("/entry/instrument/detector_1/count_time", data=0.1)
+            f.create_dataset("/xpcs/temporal_mean/scattering_1d_segments", data=np.random.rand(10, 100))
+            f.create_dataset("/xpcs/multitau/normalized_g2_err", data=np.random.rand(5, 50))
+            f.create_dataset("/xpcs/multitau/config/stride_frame", data=1)
+            f.create_dataset("/entry/instrument/detector_1/frame_time", data=0.01)
+            f.create_dataset("/xpcs/spatial_mean/intensity_vs_time", data=np.random.rand(1000))
 
         # Create XpcsFile instance
         try:
@@ -199,6 +212,19 @@ class TestXpcsFileErrors:
             large_data = np.random.rand(1000, 1000)
             f.create_dataset("large_saxs_2d", data=large_data)
             f.attrs["analysis_type"] = "XPCS"
+            # Add comprehensive XPCS structure
+            f.create_dataset("/xpcs/multitau/normalized_g2", data=np.random.rand(5, 50))
+            f.create_dataset("/xpcs/temporal_mean/scattering_1d", data=np.random.rand(100))
+            f.create_dataset("/xpcs/temporal_mean/scattering_2d", data=np.random.rand(10, 100, 100))
+            f.create_dataset("/entry/start_time", data="2023-01-01T00:00:00")
+            f.create_dataset("/xpcs/multitau/config/avg_frame", data=1)
+            f.create_dataset("/xpcs/multitau/delay_list", data=np.random.rand(50))
+            f.create_dataset("/entry/instrument/detector_1/count_time", data=0.1)
+            f.create_dataset("/xpcs/temporal_mean/scattering_1d_segments", data=np.random.rand(10, 100))
+            f.create_dataset("/xpcs/multitau/normalized_g2_err", data=np.random.rand(5, 50))
+            f.create_dataset("/xpcs/multitau/config/stride_frame", data=1)
+            f.create_dataset("/entry/instrument/detector_1/frame_time", data=0.01)
+            f.create_dataset("/xpcs/spatial_mean/intensity_vs_time", data=np.random.rand(1000))
 
         # Test with memory pressure
         try:
@@ -326,8 +352,8 @@ class TestErrorRecoveryAndCleanup:
 
     def test_connection_pool_cleanup_after_errors(self, error_temp_dir):
         """Test that connection pool cleans up properly after errors."""
-        pool = HDF5ConnectionPool(max_size=5)
-        initial_stats = pool.get_stats()
+        pool = HDF5ConnectionPool(max_pool_size=5)
+        initial_stats = pool.stats.get_stats()
 
         # Try to create connections that will fail
         failing_files = [
@@ -339,8 +365,8 @@ class TestErrorRecoveryAndCleanup:
                 pool.get_connection(file_path)
 
         # Check that pool maintained integrity
-        final_stats = pool.get_stats()
-        assert len(pool._connections) == 0  # No successful connections
+        final_stats = pool.stats.get_stats()
+        assert len(pool._pool) == 0  # No successful connections
         assert (
             final_stats["failed_health_checks"] >= initial_stats["failed_health_checks"]
         )
@@ -356,7 +382,7 @@ class TestErrorRecoveryAndCleanup:
         assert connection.check_health()
 
         # Cleanup
-        pool.cleanup()
+        pool.clear_pool()
 
     def test_memory_cleanup_after_allocation_failure(self, memory_limited_environment):
         """Test memory cleanup after allocation failures."""
@@ -460,6 +486,19 @@ class TestStressTestingScenarios:
             f.create_dataset("saxs_2d", data=np.random.rand(10, 512, 512))
             f.create_dataset("g2", data=np.random.rand(10, 100))
             f.attrs["analysis_type"] = "XPCS"
+            # Add comprehensive XPCS structure
+            f.create_dataset("/xpcs/multitau/normalized_g2", data=np.random.rand(5, 50))
+            f.create_dataset("/xpcs/temporal_mean/scattering_1d", data=np.random.rand(100))
+            f.create_dataset("/xpcs/temporal_mean/scattering_2d", data=np.random.rand(10, 100, 100))
+            f.create_dataset("/entry/start_time", data="2023-01-01T00:00:00")
+            f.create_dataset("/xpcs/multitau/config/avg_frame", data=1)
+            f.create_dataset("/xpcs/multitau/delay_list", data=np.random.rand(50))
+            f.create_dataset("/entry/instrument/detector_1/count_time", data=0.1)
+            f.create_dataset("/xpcs/temporal_mean/scattering_1d_segments", data=np.random.rand(10, 100))
+            f.create_dataset("/xpcs/multitau/normalized_g2_err", data=np.random.rand(5, 50))
+            f.create_dataset("/xpcs/multitau/config/stride_frame", data=1)
+            f.create_dataset("/entry/instrument/detector_1/frame_time", data=0.01)
+            f.create_dataset("/xpcs/spatial_mean/intensity_vs_time", data=np.random.rand(1000))
 
         # Test access under memory pressure
         try:

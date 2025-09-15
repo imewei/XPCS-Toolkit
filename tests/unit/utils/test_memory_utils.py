@@ -8,6 +8,7 @@ import threading
 import time
 from unittest.mock import Mock, patch
 
+import psutil
 import pytest
 
 from xpcs_toolkit.utils.memory_utils import (

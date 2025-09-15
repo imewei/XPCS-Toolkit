@@ -301,9 +301,9 @@ class SyntheticXPCSGenerator:
             g2_err_matrix.append(g2_err)
 
         return {
-            "g2": np.array(g2_matrix),
-            "g2_err": np.array(g2_err_matrix),
-            "tau": base_corr["tau"],
+            "normalized_g2": np.array(g2_matrix),
+            "normalized_g2_err": np.array(g2_err_matrix),
+            "delay_list": base_corr["tau"],
             "stride_frame": 1,
             "avg_frame": 1,
             "t0": 0.001,
@@ -338,9 +338,11 @@ class SyntheticXPCSGenerator:
         g2_twotime = np.maximum(g2_twotime, 1.0)  # Ensure correlation inequality
 
         return {
-            "g2": g2_twotime,
+            "correlation_map": g2_twotime,
+            "normalized_g2": g2_twotime,
             "elapsed_time": time_points,
             "time_spacing": time_points[1] - time_points[0],
+            "delay_list": time_points,
         }
 
 

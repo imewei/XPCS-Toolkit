@@ -244,8 +244,8 @@ class TestConnectionStats:
         assert result["total_connections_reused"] == 1
         assert result["cache_hit_ratio"] == 0.5  # 1 hit, 1 miss
         assert result["health_check_failure_rate"] == 0.5  # 1 failure, 2 total
-        assert result["total_io_time_seconds"] == 0.3
-        assert result["average_io_time_ms"] == 150.0  # 0.3s / 2 ops * 1000
+        assert abs(result["total_io_time_seconds"] - 0.3) < 1e-10
+        assert abs(result["average_io_time_ms"] - 150.0) < 1e-10  # 0.3s / 2 ops * 1000
 
 
 class TestHDF5ConnectionPoolInit:
@@ -496,24 +496,32 @@ class TestGetFunction:
 class TestGetAnalysisType:
     """Test suite for get_analysis_type() function."""
 
-    @patch("xpcs_toolkit.fileIO.hdf_reader.get")
-    def test_get_analysis_type_success(self, mock_get):
+    @patch("xpcs_toolkit.fileIO.hdf_reader._connection_pool")
+    def test_get_analysis_type_success(self, mock_pool):
         """Test successful analysis type retrieval."""
-        mock_get.return_value = b"Multitau"
+        mock_connection = Mock()
+        mock_connection.__enter__ = Mock(return_value={
+            "/xpcs/multitau/normalized_g2": Mock(),
+            "/xpcs/twotime/correlation_map": Mock()
+        })
+        mock_connection.__exit__ = Mock(return_value=None)
+        mock_pool.get_connection.return_value = mock_connection
 
         result = get_analysis_type("/test/file.hdf")
 
-        assert result == "Multitau"
-        mock_get.assert_called_once_with("/test/file.hdf", "xpcs/analysis_type")
+        assert "Multitau" in result
+        assert "Twotime" in result
 
-    @patch("xpcs_toolkit.fileIO.hdf_reader.get")
-    def test_get_analysis_type_exception(self, mock_get):
+    @patch("xpcs_toolkit.fileIO.hdf_reader._connection_pool")
+    def test_get_analysis_type_exception(self, mock_pool):
         """Test analysis type retrieval with exception."""
-        mock_get.side_effect = KeyError("Dataset not found")
+        mock_connection = Mock()
+        mock_connection.__enter__ = Mock(return_value={})  # Empty file, no analysis type
+        mock_connection.__exit__ = Mock(return_value=None)
+        mock_pool.get_connection.return_value = mock_connection
 
-        result = get_analysis_type("/test/file.hdf")
-
-        assert result == "unknown"
+        with pytest.raises(ValueError, match="No analysis type found"):
+            get_analysis_type("/test/file.hdf")
 
 
 class TestBatchReadFields:

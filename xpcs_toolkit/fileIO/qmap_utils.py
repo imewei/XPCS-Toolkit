@@ -107,6 +107,20 @@ class QMap:
             if isinstance(info["map_units"][0], bytes):
                 info["map_units"] = [item.decode("utf-8") for item in info["map_units"]]
 
+            # Ensure beam center values are proper Python floats to avoid "invalid index to scalar variable" errors
+            # HDF5 can return various numpy scalar types that may not work correctly in arithmetic operations
+            if "bcx" in info:
+                info["bcx"] = float(info["bcx"])
+            if "bcy" in info:
+                info["bcy"] = float(info["bcy"])
+
+            # Ensure dynamic_num_pts and static_num_pts are properly formatted arrays
+            # They should be [n_dim0, n_dim1] but may be stored as scalars in some files
+            if "dynamic_num_pts" in info:
+                info["dynamic_num_pts"] = self._normalize_num_pts(info["dynamic_num_pts"], info.get("dplist", []))
+            if "static_num_pts" in info:
+                info["static_num_pts"] = self._normalize_num_pts(info["static_num_pts"], info.get("splist", []))
+
             self.__dict__.update(info)
             self.is_loaded = True
             return info
@@ -115,29 +129,63 @@ class QMap:
             logger.error(f"Failed to load qmap from {self.fname}: {e}")
             return self._create_default_qmap()
 
+    def _normalize_num_pts(self, num_pts, corresponding_list):
+        """
+        Normalize num_pts to be a 2-element array [n_dim0, n_dim1].
+
+        Args:
+            num_pts: Can be a scalar or array from HDF5
+            corresponding_list: The corresponding phi/angle list to infer second dimension
+
+        Returns:
+            np.ndarray: [n_dim0, n_dim1] format
+        """
+        # Convert to numpy array first
+        num_pts_array = np.asarray(num_pts)
+
+        if num_pts_array.ndim == 0:
+            # Scalar case: need to infer 2D structure
+            n_dim0 = int(num_pts_array)
+            n_dim1 = len(corresponding_list) if len(corresponding_list) > 0 else 1
+            return np.array([n_dim0, n_dim1])
+        elif num_pts_array.ndim == 1 and len(num_pts_array) >= 2:
+            # Already in correct format
+            return num_pts_array[:2]  # Take first 2 elements
+        elif num_pts_array.ndim == 1 and len(num_pts_array) == 1:
+            # 1-element array, treat as scalar
+            n_dim0 = int(num_pts_array[0])
+            n_dim1 = len(corresponding_list) if len(corresponding_list) > 0 else 1
+            return np.array([n_dim0, n_dim1])
+        else:
+            # Fallback: assume it's total number of bins
+            total_bins = int(num_pts_array.flat[0])
+            n_dim1 = len(corresponding_list) if len(corresponding_list) > 0 else 1
+            n_dim0 = total_bins // n_dim1 if n_dim1 > 0 else total_bins
+            return np.array([n_dim0, n_dim1])
+
     def _get_default_value(self, key):
         """Get default values for missing qmap keys."""
         defaults = {
-            "mask": np.ones((100, 100), dtype=np.int32),
-            "dqmap": np.ones((100, 100), dtype=np.int32),
-            "sqmap": np.ones((100, 100), dtype=np.int32),
+            "mask": np.ones((1024, 1024), dtype=np.int32),
+            "dqmap": np.ones((1024, 1024), dtype=np.int32),
+            "sqmap": np.ones((1024, 1024), dtype=np.int32),
             "dqlist": np.linspace(0.01, 0.1, 10),
             "sqlist": np.linspace(0.01, 0.1, 10),
             "dplist": np.linspace(0, 360, 36),
             "splist": np.linspace(0, 360, 36),
-            "bcx": 50.0,
-            "bcy": 50.0,
+            "bcx": 512.0,
+            "bcy": 512.0,
             "X_energy": 8.0,
             "pixel_size": 75e-6,
             "det_dist": 5.0,
-            "dynamic_num_pts": 10,
-            "static_num_pts": 10,
+            "dynamic_num_pts": np.array([10, 1]),
+            "static_num_pts": np.array([10, 1]),
             "static_index_mapping": np.arange(10),
             "dynamic_index_mapping": np.arange(10),
             "map_names": ["q", "phi"],
             "map_units": ["1/A", "degree"],
         }
-        return defaults.get(key, 0)
+        return defaults.get(key, np.array([0]))
 
     def _create_default_qmap(self):
         """Create a minimal default qmap when file doesn't have qmap data."""
@@ -167,6 +215,15 @@ class QMap:
             info[key] = self._get_default_value(key)
 
         info["k0"] = 2 * np.pi / (12.398 / info["X_energy"])
+
+        # Ensure beam center values are proper Python floats
+        info["bcx"] = float(info["bcx"])
+        info["bcy"] = float(info["bcy"])
+
+        # Ensure num_pts are in correct format
+        info["dynamic_num_pts"] = self._normalize_num_pts(info["dynamic_num_pts"], info.get("dplist", []))
+        info["static_num_pts"] = self._normalize_num_pts(info["static_num_pts"], info.get("splist", []))
+
         self.__dict__.update(info)
         self.is_loaded = True
         return info
@@ -174,8 +231,8 @@ class QMap:
     def _create_minimal_fallback(self):
         """Create absolute minimal qmap when everything fails."""
         self.mask = np.ones((10, 10), dtype=np.int32)
-        self.bcx = 5.0
-        self.bcy = 5.0
+        self.bcx = 5.0  # Small value for minimal 10x10 detector
+        self.bcy = 5.0  # Small value for minimal 10x10 detector
         self.pixel_size = 75e-6
         self.det_dist = 5.0
         self.X_energy = 8.0
@@ -192,8 +249,8 @@ class QMap:
         self.dplist = np.linspace(0, 360, 10)
         self.static_index_mapping = np.arange(10)
         self.dynamic_index_mapping = np.arange(10)
-        self.static_num_pts = 10
-        self.dynamic_num_pts = 10
+        self.static_num_pts = np.array([10, 1])
+        self.dynamic_num_pts = np.array([10, 1])
         self.dqmap = np.ones((10, 10), dtype=np.int32)
         self.sqmap = np.ones((10, 10), dtype=np.int32)
         self.map_names = ["q", "phi"]

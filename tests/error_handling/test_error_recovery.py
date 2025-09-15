@@ -27,8 +27,8 @@ class TestErrorRecoveryMechanisms:
         self, error_temp_dir, corrupted_hdf5_file
     ):
         """Test recovery of file handling after encountering corrupted files."""
-        pool = HDF5ConnectionPool(max_size=5)
-        initial_stats = pool.get_stats()
+        pool = HDF5ConnectionPool(max_pool_size=5)
+        initial_stats = pool.stats.get_stats()
 
         # Try to access corrupted file - should fail but not crash pool
         with pytest.raises(Exception):
@@ -49,14 +49,14 @@ class TestErrorRecoveryMechanisms:
             pass
 
         # Pool statistics should show the failure was handled
-        final_stats = pool.get_stats()
+        final_stats = pool.stats.get_stats()
         assert (
             final_stats["failed_health_checks"] >= initial_stats["failed_health_checks"]
         )
 
         # Cleanup should work normally
-        pool.cleanup()
-        assert len(pool._connections) == 0
+        pool.clear_pool()
+        assert len(pool._pool) == 0
 
     def test_memory_cleanup_after_allocation_failure(
         self, error_temp_dir, error_injector
@@ -106,7 +106,7 @@ class TestErrorRecoveryMechanisms:
 
     def test_connection_pool_recovery_after_network_failure(self, error_temp_dir):
         """Test connection pool recovery after simulated network failures."""
-        pool = HDF5ConnectionPool(max_size=5)
+        pool = HDF5ConnectionPool(max_pool_size=5)
 
         # Create test files
         test_files = []
@@ -142,10 +142,10 @@ class TestErrorRecoveryMechanisms:
                 pass
 
         # Pool should remain stable throughout
-        stats = pool.get_stats()
+        stats = pool.stats.get_stats()
         assert stats["failed_health_checks"] >= 0
 
-        pool.cleanup()
+        pool.clear_pool()
 
     def test_kernel_recovery_after_cache_corruption(self, error_temp_dir):
         """Test ViewerKernel recovery after cache corruption."""
@@ -202,6 +202,19 @@ class TestErrorRecoveryMechanisms:
             f.create_dataset("saxs_2d", data=np.random.rand(10, 100, 100))
             f.create_dataset("g2", data=np.random.rand(5, 50))
             f.attrs["analysis_type"] = "XPCS"
+            # Add comprehensive XPCS structure
+            f.create_dataset("/xpcs/multitau/normalized_g2", data=np.random.rand(5, 50))
+            f.create_dataset("/xpcs/temporal_mean/scattering_1d", data=np.random.rand(100))
+            f.create_dataset("/xpcs/temporal_mean/scattering_2d", data=np.random.rand(10, 100, 100))
+            f.create_dataset("/entry/start_time", data="2023-01-01T00:00:00")
+            f.create_dataset("/xpcs/multitau/config/avg_frame", data=1)
+            f.create_dataset("/xpcs/multitau/delay_list", data=np.random.rand(50))
+            f.create_dataset("/entry/instrument/detector_1/count_time", data=0.1)
+            f.create_dataset("/xpcs/temporal_mean/scattering_1d_segments", data=np.random.rand(10, 100))
+            f.create_dataset("/xpcs/multitau/normalized_g2_err", data=np.random.rand(5, 50))
+            f.create_dataset("/xpcs/multitau/config/stride_frame", data=1)
+            f.create_dataset("/entry/instrument/detector_1/frame_time", data=0.01)
+            f.create_dataset("/xpcs/spatial_mean/intensity_vs_time", data=np.random.rand(1000))
 
         try:
             xf = XpcsFile(recovery_file)
@@ -293,6 +306,19 @@ class TestGracefulDegradation:
             f.create_dataset("saxs_2d", data=np.random.rand(10, 50, 50))
             # Missing: g2, tau, other datasets
             f.attrs["analysis_type"] = "XPCS"
+            # Add comprehensive XPCS structure
+            f.create_dataset("/xpcs/multitau/normalized_g2", data=np.random.rand(5, 50))
+            f.create_dataset("/xpcs/temporal_mean/scattering_1d", data=np.random.rand(100))
+            f.create_dataset("/xpcs/temporal_mean/scattering_2d", data=np.random.rand(10, 100, 100))
+            f.create_dataset("/entry/start_time", data="2023-01-01T00:00:00")
+            f.create_dataset("/xpcs/multitau/config/avg_frame", data=1)
+            f.create_dataset("/xpcs/multitau/delay_list", data=np.random.rand(50))
+            f.create_dataset("/entry/instrument/detector_1/count_time", data=0.1)
+            f.create_dataset("/xpcs/temporal_mean/scattering_1d_segments", data=np.random.rand(10, 100))
+            f.create_dataset("/xpcs/multitau/normalized_g2_err", data=np.random.rand(5, 50))
+            f.create_dataset("/xpcs/multitau/config/stride_frame", data=1)
+            f.create_dataset("/entry/instrument/detector_1/frame_time", data=0.01)
+            f.create_dataset("/xpcs/spatial_mean/intensity_vs_time", data=np.random.rand(1000))
 
         try:
             xf = XpcsFile(partial_file)
@@ -424,7 +450,7 @@ class TestSystemStabilityAfterErrors:
     def test_state_consistency_after_multiple_errors(self, error_temp_dir):
         """Test that system state remains consistent after multiple errors."""
         kernel = ViewerKernel(error_temp_dir)
-        pool = HDF5ConnectionPool(max_size=3)
+        pool = HDF5ConnectionPool(max_pool_size=3)
 
         initial_kernel_state = {
             "path": kernel.path,
@@ -468,7 +494,7 @@ class TestSystemStabilityAfterErrors:
             pytest.fail(f"System not consistent after errors: {e}")
 
         # Cleanup should work
-        pool.cleanup()
+        pool.clear_pool()
 
     def test_no_resource_leaks_after_errors(self, error_temp_dir):
         """Test that resources are not leaked after error conditions."""
@@ -488,7 +514,7 @@ class TestSystemStabilityAfterErrors:
             for i in range(10):
                 try:
                     # Create pool and cause error
-                    pool = HDF5ConnectionPool(max_size=2)
+                    pool = HDF5ConnectionPool(max_pool_size=2)
                     pools.append(pool)
 
                     # Try invalid operation
@@ -514,7 +540,7 @@ class TestSystemStabilityAfterErrors:
             # Cleanup all objects
             for pool in pools:
                 try:
-                    pool.cleanup()
+                    pool.clear_pool()
                 except Exception:
                     pass
 
@@ -565,7 +591,7 @@ class TestSystemStabilityAfterErrors:
 
             try:
                 # Second failure: try to use connection pool with corrupted file
-                pool = HDF5ConnectionPool(max_size=2)
+                pool = HDF5ConnectionPool(max_pool_size=2)
                 pool.get_connection(cascade_file)
             except Exception:
                 failures_handled += 1
@@ -660,7 +686,7 @@ class TestCleanupProcedures:
             resource2 = TrackedResource("resource2")
 
             # Use resources
-            HDF5ConnectionPool(max_size=2)
+            HDF5ConnectionPool(max_pool_size=2)
             kernel = ViewerKernel(error_temp_dir)
 
             # Add tracked resources to containers
@@ -687,7 +713,7 @@ class TestCleanupProcedures:
     def test_manual_cleanup_procedures(self, error_temp_dir):
         """Test manual cleanup procedures work correctly."""
         # Create resources that need cleanup
-        pool = HDF5ConnectionPool(max_size=5)
+        pool = HDF5ConnectionPool(max_pool_size=5)
         kernel = ViewerKernel(error_temp_dir)
 
         # Add items to cache
@@ -710,25 +736,25 @@ class TestCleanupProcedures:
 
         # Verify resources are allocated
         initial_cache_size = len(kernel._current_dset_cache)
-        initial_connections = len(pool._connections)
+        initial_connections = len(pool._pool)
 
         assert initial_cache_size > 0
         assert initial_connections >= 0
 
         # Manual cleanup
         kernel._current_dset_cache.clear()
-        pool.cleanup()
+        pool.clear_pool()
 
         # Verify cleanup worked
         final_cache_size = len(kernel._current_dset_cache)
-        final_connections = len(pool._connections)
+        final_connections = len(pool._pool)
 
         assert final_cache_size == 0
         assert final_connections == 0
 
     def test_cleanup_error_handling(self, error_temp_dir):
         """Test that cleanup procedures handle errors gracefully."""
-        pool = HDF5ConnectionPool(max_size=3)
+        pool = HDF5ConnectionPool(max_pool_size=3)
 
         # Create connections, some of which will be problematic
         test_files = []
@@ -745,7 +771,7 @@ class TestCleanupProcedures:
                 continue
 
         # Simulate problems with some connections
-        for connection in pool._connections.values():
+        for connection in pool._pool.values():
             if hasattr(connection, "file_handle"):
                 # Simulate connection corruption
                 if np.random.rand() < 0.3:  # 30% chance
@@ -753,13 +779,13 @@ class TestCleanupProcedures:
 
         # Cleanup should handle problematic connections gracefully
         try:
-            pool.cleanup()
+            pool.clear_pool()
             # Should complete without raising exceptions
         except Exception as e:
             pytest.fail(f"Cleanup failed to handle errors gracefully: {e}")
 
         # Pool should be clean after cleanup
-        assert len(pool._connections) == 0
+        assert len(pool._pool) == 0
 
     def test_weak_reference_cleanup(self, error_temp_dir):
         """Test cleanup of weak references when objects are deleted."""

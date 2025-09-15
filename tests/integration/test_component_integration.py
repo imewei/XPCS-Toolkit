@@ -68,6 +68,9 @@ class TestXpcsFileViewerKernelIntegration(unittest.TestCase):
             entry = f.create_group("entry")
             entry.attrs["NX_class"] = "NXentry"
 
+            # Set analysis type
+            f.attrs["analysis_type"] = "XPCS"
+
             # Create XPCS group
             xpcs = f.create_group("xpcs")
 
@@ -84,10 +87,25 @@ class TestXpcsFileViewerKernelIntegration(unittest.TestCase):
             g2_err_data = 0.02 * g2_data
 
             multitau.create_dataset("g2", data=g2_data)
+            multitau.create_dataset("normalized_g2", data=g2_data)  # Required for analysis type detection
             multitau.create_dataset("g2_err", data=g2_err_data)
+            multitau.create_dataset("normalized_g2_err", data=g2_err_data)  # Required key
             multitau.create_dataset("tau", data=tau)
-            multitau.create_dataset("t0", data=0.001)
-            multitau.create_dataset("t1", data=0.001)
+            multitau.create_dataset("delay_list", data=tau)  # Alternative path
+
+            # Add required configuration
+            config = multitau.create_group("config")
+            config.create_dataset("stride_frame", data=1)
+            config.create_dataset("avg_frame", data=1)
+
+            # Add instrument configuration
+            instrument = entry.create_group("instrument")
+            detector_1 = instrument.create_group("detector_1")
+            detector_1.create_dataset("frame_time", data=0.001)
+            detector_1.create_dataset("count_time", data=0.001)
+
+            # Add start time
+            entry.create_dataset("start_time", data="2023-01-01T00:00:00")
 
             # Create qmap group
             qmap = xpcs.create_group("qmap")
@@ -101,6 +119,16 @@ class TestXpcsFileViewerKernelIntegration(unittest.TestCase):
             multitau.create_dataset("Iqp", data=np.random.rand(n_q, 100))
             multitau.create_dataset("Int_t", data=np.random.rand(2, 1000))
 
+            # Add temporal mean group
+            temporal_mean = xpcs.create_group("temporal_mean")
+            temporal_mean.create_dataset("scattering_1d", data=np.random.rand(100))
+            temporal_mean.create_dataset("scattering_2d", data=np.random.rand(256, 256))
+            temporal_mean.create_dataset("scattering_1d_segments", data=np.random.rand(n_q, 100))
+
+            # Add spatial mean group
+            spatial_mean = xpcs.create_group("spatial_mean")
+            spatial_mean.create_dataset("intensity_vs_time", data=np.random.rand(1000))
+
         return hdf_path
 
     def test_xpcs_file_loading_integration(self):
@@ -109,7 +137,7 @@ class TestXpcsFileViewerKernelIntegration(unittest.TestCase):
         kernel = ViewerKernel(self.temp_dir)
 
         # Build file list through kernel
-        kernel.build()
+        kernel.build(path=self.temp_dir)
         self.assertGreater(len(kernel.source), 0)
 
         # Add files to target list
@@ -336,6 +364,7 @@ class TestAnalysisModuleIntegration(unittest.TestCase):
         with h5py.File(hdf_path, "w") as f:
             # Basic structure
             f.create_group("entry")
+            f.attrs["analysis_type"] = "XPCS"
             xpcs = f.create_group("xpcs")
             multitau = xpcs.create_group("multitau")
             qmap = xpcs.create_group("qmap")
@@ -349,8 +378,15 @@ class TestAnalysisModuleIntegration(unittest.TestCase):
             )
 
             multitau.create_dataset("g2", data=g2_data)
+            multitau.create_dataset("normalized_g2", data=g2_data)  # Required for analysis type detection
             multitau.create_dataset("g2_err", data=0.02 * g2_data)
             multitau.create_dataset("tau", data=tau)
+            multitau.create_dataset("delay_list", data=tau)  # Alternative path
+
+            # Add required configuration
+            config = multitau.create_group("config")
+            config.create_dataset("stride_frame", data=1)
+            config.create_dataset("avg_frame", data=1)
 
             # SAXS 1D data
             q_saxs = np.linspace(0.001, 0.1, 100)
@@ -524,6 +560,7 @@ class TestCachingIntegration(unittest.TestCase):
         test_file = os.path.join(self.temp_dir, "cache_test.hdf")
 
         with h5py.File(test_file, "w") as f:
+            f.attrs["analysis_type"] = "XPCS"
             xpcs = f.create_group("xpcs")
             multitau = xpcs.create_group("multitau")
 
@@ -567,10 +604,13 @@ class TestCachingIntegration(unittest.TestCase):
             test_file = os.path.join(self.temp_dir, f"weak_ref_test_{i}.hdf")
 
             with h5py.File(test_file, "w") as f:
+                f.attrs["analysis_type"] = "XPCS"
                 xpcs = f.create_group("xpcs")
                 multitau = xpcs.create_group("multitau")
                 multitau.create_dataset("g2", data=np.random.rand(10, 50))
+                multitau.create_dataset("normalized_g2", data=np.random.rand(10, 50))  # Required for analysis type detection
                 multitau.create_dataset("tau", data=np.logspace(-6, 2, 50))
+                multitau.create_dataset("delay_list", data=np.logspace(-6, 2, 50))  # Alternative path
 
             test_files.append(test_file)
 

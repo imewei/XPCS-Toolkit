@@ -178,11 +178,11 @@ class TestMemoryExhaustion:
                         pass
 
                 # Pool should remain functional
-                stats = pool.get_stats()
+                stats = pool.stats.get_stats()
                 assert stats["total_connections_created"] >= 0
 
         finally:
-            pool.cleanup()
+            pool.clear_pool()
 
     def test_lazy_loading_memory_efficiency(
         self, error_temp_dir, memory_limited_environment
@@ -416,15 +416,15 @@ class TestFileHandleExhaustion:
                     continue
 
             # Pool should not exceed reasonable handle count
-            active_connections = len(pool._connections)
+            active_connections = len(pool._pool)
             assert active_connections <= 20
 
             # Pool should handle cleanup when limit is reached
-            stats = pool.get_stats()
+            stats = pool.stats.get_stats()
             assert stats["total_connections_evicted"] >= 0
 
         finally:
-            pool.cleanup()
+            pool.clear_pool()
 
     def test_concurrent_file_access_handle_limits(self, error_temp_dir):
         """Test concurrent file access under handle limits."""
@@ -532,6 +532,19 @@ class TestCPUResourceExhaustion:
             f.create_dataset("tau", data=tau)
 
             f.attrs["analysis_type"] = "XPCS"
+            # Add comprehensive XPCS structure
+            f.create_dataset("/xpcs/multitau/normalized_g2", data=np.random.rand(5, 50))
+            f.create_dataset("/xpcs/temporal_mean/scattering_1d", data=np.random.rand(100))
+            f.create_dataset("/xpcs/temporal_mean/scattering_2d", data=large_data)
+            f.create_dataset("/entry/start_time", data="2023-01-01T00:00:00")
+            f.create_dataset("/xpcs/multitau/config/avg_frame", data=1)
+            f.create_dataset("/xpcs/multitau/delay_list", data=np.random.rand(50))
+            f.create_dataset("/entry/instrument/detector_1/count_time", data=0.1)
+            f.create_dataset("/xpcs/temporal_mean/scattering_1d_segments", data=np.random.rand(10, 100))
+            f.create_dataset("/xpcs/multitau/normalized_g2_err", data=np.random.rand(5, 50))
+            f.create_dataset("/xpcs/multitau/config/stride_frame", data=1)
+            f.create_dataset("/entry/instrument/detector_1/frame_time", data=0.01)
+            f.create_dataset("/xpcs/spatial_mean/intensity_vs_time", data=np.random.rand(1000))
 
         try:
             xf = XpcsFile(cpu_file)
@@ -575,6 +588,19 @@ class TestCPUResourceExhaustion:
                     # Small datasets to avoid memory issues
                     f.create_dataset("saxs_2d", data=np.random.rand(10, 50, 50))
                     f.attrs["analysis_type"] = "XPCS"
+                    # Add comprehensive XPCS structure
+                    f.create_dataset("/xpcs/multitau/normalized_g2", data=np.random.rand(5, 50))
+                    f.create_dataset("/xpcs/temporal_mean/scattering_1d", data=np.random.rand(100))
+                    f.create_dataset("/xpcs/temporal_mean/scattering_2d", data=np.random.rand(10, 50, 50))
+                    f.create_dataset("/entry/start_time", data="2023-01-01T00:00:00")
+                    f.create_dataset("/xpcs/multitau/config/avg_frame", data=1)
+                    f.create_dataset("/xpcs/multitau/delay_list", data=np.random.rand(50))
+                    f.create_dataset("/entry/instrument/detector_1/count_time", data=0.1)
+                    f.create_dataset("/xpcs/temporal_mean/scattering_1d_segments", data=np.random.rand(10, 50))
+                    f.create_dataset("/xpcs/multitau/normalized_g2_err", data=np.random.rand(5, 50))
+                    f.create_dataset("/xpcs/multitau/config/stride_frame", data=1)
+                    f.create_dataset("/entry/instrument/detector_1/frame_time", data=0.01)
+                    f.create_dataset("/xpcs/spatial_mean/intensity_vs_time", data=np.random.rand(1000))
                 test_files.append(file_path)
             except Exception:
                 continue
@@ -793,23 +819,23 @@ class TestResourceRecoveryMechanisms:
                     break
 
             # Pool should limit connections
-            assert len(pool._connections) <= 5
+            assert len(pool._pool) <= 5
 
             # Force cleanup to simulate recovery
-            pool.cleanup()
+            pool.clear_pool()
 
             # Pool should recover and be usable again
             if test_files:
                 try:
                     recovery_conn = pool.get_connection(test_files[0])
-                    assert recovery_conn is not None or len(pool._connections) == 0
+                    assert recovery_conn is not None or len(pool._pool) == 0
 
                 except Exception:
                     # Recovery might fail if files are problematic
                     pass
 
         finally:
-            pool.cleanup()
+            pool.clear_pool()
 
     def test_memory_pressure_adaptive_behavior(
         self, error_temp_dir, memory_limited_environment
@@ -893,7 +919,7 @@ class TestResourceRecoveryMechanisms:
         finally:
             # Cleanup
             kernel._current_dset_cache.clear()
-            pool.cleanup()
+            pool.clear_pool()
 
         # Should have completed significant number of operations
         assert operations_count >= 50  # At least half the cycles

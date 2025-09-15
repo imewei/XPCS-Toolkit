@@ -74,7 +74,7 @@ class NumericalAccuracyValidator:
                     },
                     "large_dynamic_range": {
                         "tel": np.logspace(-12, 6, 150),
-                        "g2": np.logspace(-3, 3, (150, 30)) + 1.0,
+                        "g2": np.random.uniform(0.001, 1000, (150, 30)) + 1.0,
                         "g2_err": None,
                         "qd": np.logspace(-4, 0, 30),
                     },
@@ -133,13 +133,25 @@ class NumericalAccuracyValidator:
         """Calculate realistic error estimates for test data."""
         # G2 error estimates
         for case_name, case_data in self.test_cases["g2_data"].items():
-            if case_data["g2_err"] is None:
-                case_data["g2_err"] = 0.1 * np.sqrt(case_data["g2"])
+            if isinstance(case_data, dict) and "g2" in case_data:
+                if case_data.get("g2_err") is None:
+                    case_data["g2_err"] = 0.1 * np.sqrt(case_data["g2"])
+            elif case_name == "edge_cases" and isinstance(case_data, dict):
+                # Handle nested edge cases
+                for edge_name, edge_data in case_data.items():
+                    if edge_data.get("g2_err") is None and "g2" in edge_data:
+                        edge_data["g2_err"] = 0.1 * np.sqrt(edge_data["g2"])
 
         # SAXS error estimates
         for case_name, case_data in self.test_cases["saxs_data"].items():
-            if case_data["I_err"] is None:
-                case_data["I_err"] = 0.05 * np.sqrt(case_data["I"])
+            if isinstance(case_data, dict) and "I" in case_data:
+                if case_data.get("I_err") is None:
+                    case_data["I_err"] = 0.05 * np.sqrt(case_data["I"])
+            elif case_name == "edge_cases" and isinstance(case_data, dict):
+                # Handle nested edge cases
+                for edge_name, edge_data in case_data.items():
+                    if edge_data.get("I_err") is None and "I" in edge_data:
+                        edge_data["I_err"] = 0.05 * np.sqrt(edge_data["I"])
 
     def validate_c2_diagonal_correction(self) -> Dict[str, bool]:
         """Validate C2 diagonal correction accuracy."""
