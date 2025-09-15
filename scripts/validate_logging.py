@@ -26,7 +26,7 @@ import json
 import re
 import sys
 from pathlib import Path
-from typing import Any, Dict, List, Set
+from typing import Any
 
 
 # ANSI color codes for terminal output
@@ -81,8 +81,8 @@ class LoggingValidator:
         }
 
     def run_validation(
-        self, exclude_dirs: List[str] = None, fix_imports: bool = False
-    ) -> Dict[str, Any]:
+        self, exclude_dirs: list[str] | None = None, fix_imports: bool = False
+    ) -> dict[str, Any]:
         """Run complete validation of logging standards."""
         print(f"{Colors.BOLD}XPCS Toolkit Logging Standards Validation{Colors.RESET}")
         print(f"Scanning project: {self.project_root}")
@@ -106,7 +106,7 @@ class LoggingValidator:
 
         return self.results
 
-    def _get_python_files(self, exclude_dirs: List[str]) -> List[Path]:
+    def _get_python_files(self, exclude_dirs: list[str]) -> list[Path]:
         """Get all Python files in the project."""
         python_files = []
         exclude_set = set(self.exclude_patterns + exclude_dirs)
@@ -226,21 +226,20 @@ class LoggingValidator:
             def _has_logging_calls(self, node):
                 """Check if a node contains logging calls."""
                 for child in ast.walk(node):
-                    if isinstance(child, ast.Attribute):
-                        if (
-                            isinstance(child.value, ast.Name)
-                            and "logger" in child.value.id.lower()
-                            and child.attr
-                            in [
-                                "debug",
-                                "info",
-                                "warning",
-                                "error",
-                                "critical",
-                                "exception",
-                            ]
-                        ):
-                            return True
+                    if isinstance(child, ast.Attribute) and (
+                        isinstance(child.value, ast.Name)
+                        and "logger" in child.value.id.lower()
+                        and child.attr
+                        in [
+                            "debug",
+                            "info",
+                            "warning",
+                            "error",
+                            "critical",
+                            "exception",
+                        ]
+                    ):
+                        return True
                 return False
 
             def _is_allowed_print_context(self, line_no):
@@ -264,11 +263,7 @@ class LoggingValidator:
         for i, line in enumerate(lines, 1):
             # Skip comments and docstrings
             stripped_line = line.strip()
-            if (
-                stripped_line.startswith("#")
-                or stripped_line.startswith('"""')
-                or stripped_line.startswith("'''")
-            ):
+            if stripped_line.startswith(("#", '"""', "'''")):
                 continue
 
             # Look for print statements
@@ -287,7 +282,7 @@ class LoggingValidator:
                 )
 
     def _is_allowed_print_context(
-        self, file_path: Path, line_no: int, lines: List[str]
+        self, file_path: Path, line_no: int, lines: list[str]
     ) -> bool:
         """Check if print statement is in an allowed context."""
         # Allow in __main__ blocks
@@ -374,7 +369,7 @@ class LoggingValidator:
 
         print(f"{Colors.GREEN}Fixed imports in: {file_path}{Colors.RESET}")
 
-    def _find_import_insertion_point(self, lines: List[str]) -> int:
+    def _find_import_insertion_point(self, lines: list[str]) -> int:
         """Find the best place to insert logging imports."""
         last_import_index = -1
         in_docstring = False
@@ -395,10 +390,8 @@ class LoggingValidator:
                 continue
 
             # Found an import
-            if (
-                stripped.startswith("import ")
-                or stripped.startswith("from ")
-                and "import" in stripped
+            if stripped.startswith("import ") or (
+                stripped.startswith("from ") and "import" in stripped
             ):
                 last_import_index = i
             elif last_import_index >= 0:
@@ -432,8 +425,8 @@ class LoggingValidator:
                     )
 
     def _get_except_block_lines(
-        self, lines: List[str], except_line_index: int
-    ) -> List[str]:
+        self, lines: list[str], except_line_index: int
+    ) -> list[str]:
         """Get all lines in an except block."""
         block_lines = []
 
@@ -461,7 +454,7 @@ class LoggingValidator:
 
         return block_lines
 
-    def _check_logger_naming(self, file_path: Path, logger_names: Set[str]):
+    def _check_logger_naming(self, file_path: Path, logger_names: set[str]):
         """Check for proper logger naming conventions."""
         for name in logger_names:
             if name != "logger":
@@ -491,7 +484,7 @@ class LoggingValidator:
         )
 
         self.results["files_with_issues"] = len(
-            set(
+            {
                 issue["file"]
                 for issues in [
                     self.results["missing_imports"],
@@ -500,7 +493,7 @@ class LoggingValidator:
                     self.results["missing_exception_logging"],
                 ]
                 for issue in issues
-            )
+            }
         )
 
         self.results["summary"] = {
@@ -596,10 +589,9 @@ class LoggingValidator:
         """Generate a report in the specified format."""
         if format_type == "json":
             return json.dumps(self.results, indent=2)
-        elif format_type == "text":
+        if format_type == "text":
             return self._generate_text_report()
-        else:
-            raise ValueError(f"Unknown report format: {format_type}")
+        raise ValueError(f"Unknown report format: {format_type}")
 
     def _generate_text_report(self) -> str:
         """Generate a text-based report."""

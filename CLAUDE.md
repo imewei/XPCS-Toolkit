@@ -33,6 +33,16 @@ make coverage
 # Run tests on all Python versions
 make test-all
 
+# Test suite profiles (see docs/TESTING_STRATEGY.md for details)
+# Run core tests only (fast feedback)
+python -m pytest -m "unit or integration"
+
+# Run everything except stress tests (recommended for development)
+python -m pytest -m "not stress"
+
+# Run CI-safe tests (excludes flaky and system-dependent tests)
+python -m pytest -m "not (stress or system_dependent or flaky)"
+
 # Lint code
 make lint
 

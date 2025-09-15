@@ -2,10 +2,10 @@
 XPCS Toolkit
 ============
 
-**Enterprise-Grade Interactive X-ray Photon Correlation Spectroscopy Analysis Platform**
+**Interactive X-ray Photon Correlation Spectroscopy Analysis Tool**
 
-An advanced Python-based visualization and analysis tool for XPCS datasets with comprehensive performance optimizations,
-robust testing framework, and production-ready architecture. Forked and significantly enhanced from AdvancedPhotonSource/pyXpcsViewer.
+A Python-based visualization and analysis tool for XPCS datasets with performance optimizations,
+testing framework, and practical architecture. Forked from AdvancedPhotonSource/pyXpcsViewer.
 
 .. image:: https://img.shields.io/badge/python-3.12%2B-blue.svg
    :target: https://python.org
@@ -18,14 +18,14 @@ robust testing framework, and production-ready architecture. Forked and signific
 .. image:: https://img.shields.io/badge/code%20quality-A+-brightgreen.svg
    :alt: Code Quality
 
-**🚀 Key Features:**
+**Key Features:**
 
-* **25-40% Performance Improvement** through comprehensive optimizations
+* **25-40% Performance Improvement** through optimizations
 * **100+ Test Suite** with unit, integration, and scientific validation tests
-* **Advanced Memory Management** with intelligent caching and cleanup
-* **Production-Ready Architecture** with monitoring and health checks
-* **Comprehensive Documentation** with developer and user guides
-* **Security Hardened** with vulnerability scanning and fixes
+* **Memory Management** with caching and cleanup
+* **Monitoring** with health checks
+* **Documentation** with developer and user guides
+* **Security** with vulnerability scanning and fixes
 
 Citation
 --------
@@ -77,7 +77,7 @@ Quick Start
    .. code-block:: python
 
       from xpcs_toolkit.utils import setup_complete_optimization_ecosystem
-      setup_complete_optimization_ecosystem()  # 25-40% performance boost
+      setup_complete_optimization_ecosystem()  # 25-40% performance improvement
 
 Advanced Installation
 --------------------
@@ -118,29 +118,29 @@ Data Format Support
 Performance & Architecture
 --------------------------
 
-🚀 **Comprehensive Performance Optimizations**
+**Performance Optimizations**
 
 **Threading System** (15-20% improvement)
-* Enhanced thread pools with optimized worker management
+* Thread pools with worker management
 * Signal batching and queue optimization
 * Asynchronous GUI operations with progress monitoring
 
 **Memory Management** (20-25% improvement)
 * Multi-level caching system (L1/L2/L3 cache architecture)
-* Intelligent memory pressure detection and cleanup
+* Memory pressure detection and cleanup
 * LRU caching for frequently accessed data
 
 **I/O Optimizations** (25-30% improvement)
 * HDF5 connection pooling with health monitoring
 * Batch file operations and metadata caching
-* Optimized data loading with lazy evaluation
+* Data loading with lazy evaluation
 
 **Scientific Computing** (10-15% improvement)
 * Vectorized algorithms with NumPy optimization
 * Parallel processing for CPU-intensive operations
 * JIT compilation for performance-critical paths
 
-**Monitoring Ecosystem**
+**Monitoring**
 * Real-time performance dashboards
 * Bottleneck detection and alerting
 * Resource usage optimization recommendations
@@ -148,7 +148,7 @@ Performance & Architecture
 Testing & Quality Assurance
 ----------------------------
 
-📋 **Comprehensive Testing Framework** (102 test files, 49 test modules)
+**Testing Framework** (102 test files, 49 test modules)
 
 **Test Categories**
 * **Unit Tests**: Individual component testing
@@ -184,7 +184,7 @@ Testing & Quality Assurance
 Documentation & Guides
 ----------------------
 
-📚 **Comprehensive Documentation System** (16 documentation files)
+**Documentation System** (16 documentation files)
 
 **User Guides**
 * **📖 Documentation Index**: `docs/DOCUMENTATION_INDEX.md <docs/DOCUMENTATION_INDEX.md>`_ - Complete navigation guide
@@ -222,10 +222,10 @@ Development & Contributing
    make test       # Test suite
 
 **Code Quality Standards**
-* **Linting**: Comprehensive ruff configuration with 500+ automated fixes applied
+* **Linting**: ruff configuration with 500+ automated fixes applied
 * **Formatting**: Consistent code style across 110+ files
 * **Security**: All high-severity vulnerabilities resolved
-* **Documentation**: Extensive inline and external documentation
+* **Documentation**: Inline and external documentation
 
 **Project Structure**
 
@@ -244,23 +244,23 @@ Development & Contributing
    ├── scientific/        # Scientific accuracy validation
    ├── performance/       # Performance regression tests
    ├── end_to_end/        # Complete workflow testing
-   docs/                  # Comprehensive documentation system
+   docs/                  # Documentation system
    validation/            # Production validation frameworks
 
 Scientific Analysis Features
 ----------------------------
 
-🔬 **Advanced Analysis Capabilities**
+**Analysis Capabilities**
 
 **Multi-tau Correlation Analysis**
 * Single and double exponential fitting
 * Stretched exponential models
-* Advanced fitting algorithms with uncertainty quantification
+* Fitting algorithms with uncertainty quantification
 
 **Two-time Correlation**
 * Interactive q-vector selection
 * Parallel processing for large datasets
-* Advanced visualization with matplotlib integration
+* Visualization with matplotlib integration
 
 **SAXS Analysis**
 * 2D scattering pattern visualization
@@ -275,7 +275,7 @@ Scientific Analysis Features
 **Diffusion Analysis**
 * Brownian and sub-diffusive motion characterization
 * Temperature-dependent analysis
-* Advanced statistical modeling
+* Statistical modeling
 
 Gallery
 -------
@@ -325,23 +325,23 @@ Gallery
 9. **HDF5 Metadata Explorer**
 
    .. image:: docs/images/hdf_info.png
-      :alt: Comprehensive file structure and metadata viewer
+      :alt: File structure and metadata viewer
 
 Production Deployment
 ---------------------
 
-🏭 **Enterprise-Ready Deployment**
+**Deployment**
 
 **System Requirements**
 * **Python**: 3.12+ (3.13 supported)
 * **Memory**: 8GB+ recommended for large datasets
-* **Storage**: SSD recommended for optimal I/O performance
+* **Storage**: SSD recommended for better I/O performance
 * **CPU**: Multi-core processor for parallel operations
 
 **Performance Tuning**
 * Automatic optimization detection and configuration
 * Resource usage monitoring and alerting
-* Advanced caching strategies for large datasets
+* Caching strategies for large datasets
 
 **Monitoring & Maintenance**
 * Health check endpoints for system monitoring
@@ -361,11 +361,11 @@ License & Support
 **Community Support**
 * **Issues**: `GitHub Issues <https://github.com/imewei/XPCS-Toolkit/issues>`_
 * **Discussions**: GitHub Discussions for feature requests
-* **Documentation**: Comprehensive guides in `docs/` directory
+* **Documentation**: Guides in `docs/` directory
 
 **Professional Support**
-Contact the development team for enterprise support, custom integrations,
-and specialized training programs.
+Contact the development team for support, custom integrations,
+and training programs.
 
 **Contributing**
 We welcome contributions! See `CONTRIBUTING.rst <CONTRIBUTING.rst>`_ for
@@ -378,8 +378,8 @@ Acknowledgments
 * **Original Authors**: Advanced Photon Source team
 * **Scientific Community**: APS-8IDI beamline scientists and users
 * **Development Tools**: PySide6, PyQtGraph, NumPy, SciPy scientific ecosystem
-* **Testing Framework**: pytest, hypothesis, and comprehensive validation tools
+* **Testing Framework**: pytest, hypothesis, and validation tools
 
 ---
 
-**XPCS Toolkit** - *Enterprise-grade X-ray Photon Correlation Spectroscopy analysis platform*
+**XPCS Toolkit** - *X-ray Photon Correlation Spectroscopy analysis platform*

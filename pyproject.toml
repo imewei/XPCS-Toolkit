@@ -149,7 +149,12 @@ markers = [
     "end_to_end: Full workflow tests from file load to analysis",
     "memory: Memory usage and leak detection tests",
     "threading: Multithreading and async operation tests",
-    "logging: Logging system functionality tests"
+    "logging: Logging system functionality tests",
+    "stress: Resource exhaustion and extreme load tests",
+    "edge_cases: Boundary conditions and extreme input tests",
+    "system_dependent: Tests that depend on system resources or environment",
+    "flaky: Tests that may fail intermittently due to external factors",
+    "data_integrity: Tests that verify data accuracy and corruption handling"
 ]
 filterwarnings = [
     "ignore::UserWarning",
@@ -160,6 +165,12 @@ filterwarnings = [
     "ignore::UserWarning:matplotlib.*"
 ]
 timeout = 300
+
+# Test suite profiles
+# Run with: pytest -m "not stress" to skip stress tests
+# Run with: pytest -m "unit or integration" to run core tests only
+# Run with: pytest -m "stress" to run only stress tests
+# Run with: pytest -m "not (stress or system_dependent)" for CI environments
 timeout_method = "thread"
 
 # Coverage configuration
