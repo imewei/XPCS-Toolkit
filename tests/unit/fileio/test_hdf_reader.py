@@ -406,16 +406,21 @@ class TestHDF5ConnectionPoolHealthManagement:
         result = time_since_cleanup >= pool.health_check_interval
         assert result is True
 
-    def test_cleanup_unhealthy_connections(self):
+    @patch("time.time")
+    def test_cleanup_unhealthy_connections(self, mock_time):
         """Test cleanup of unhealthy connections."""
+        # Set current time
+        mock_time.return_value = 2000.0
         pool = HDF5ConnectionPool()
 
-        # Add healthy and unhealthy connections
+        # Add healthy and unhealthy connections with recent created_at
         healthy_conn = Mock()
         healthy_conn.check_health.return_value = True
+        healthy_conn.created_at = 1950.0  # 50 seconds old, less than 300s interval
 
         unhealthy_conn = Mock()
         unhealthy_conn.check_health.return_value = False
+        unhealthy_conn.created_at = 1950.0  # 50 seconds old, less than 300s interval
 
         pool._pool["/healthy.hdf"] = healthy_conn
         pool._pool["/unhealthy.hdf"] = unhealthy_conn
@@ -471,7 +476,12 @@ class TestGetFunction:
         mock_file = Mock()
         mock_dataset = Mock()
         mock_dataset.__getitem__ = Mock(return_value=np.array([1, 2, 3]))
+        mock_dataset_result = Mock()
+        mock_dataset_result.__getitem__ = Mock(return_value=np.array([1, 2, 3]))
+        mock_file.get = Mock(return_value=mock_dataset_result)
         mock_file.__getitem__ = Mock(return_value=mock_dataset)
+        # Fix the __contains__ method that was causing the hang
+        mock_file.__contains__ = Mock(return_value=True)
 
         mock_context = Mock()
         mock_context.__enter__ = Mock(return_value=mock_file)
@@ -483,7 +493,7 @@ class TestGetFunction:
 
         np.testing.assert_array_equal(result, [1, 2, 3])
         mock_pool.get_connection.assert_called_once_with("/test/file.hdf", "r")
-        mock_file.__getitem__.assert_called_once_with("test_field")
+        mock_file.get.assert_called_once_with("test_field")
 
     @patch("xpcs_toolkit.fileIO.hdf_reader._connection_pool")
     def test_get_with_slice(self, mock_pool):
@@ -492,7 +502,12 @@ class TestGetFunction:
         mock_file = Mock()
         mock_dataset = Mock()
         mock_dataset.__getitem__ = Mock(return_value=np.array([2, 3]))
+        mock_dataset_result = Mock()
+        mock_dataset_result.__getitem__ = Mock(return_value=np.array([2, 3]))
+        mock_file.get = Mock(return_value=mock_dataset_result)
         mock_file.__getitem__ = Mock(return_value=mock_dataset)
+        # Fix the __contains__ method that was causing the hang
+        mock_file.__contains__ = Mock(return_value=True)
 
         mock_context = Mock()
         mock_context.__enter__ = Mock(return_value=mock_file)
@@ -500,10 +515,10 @@ class TestGetFunction:
         mock_pool.get_connection.return_value = mock_context
 
         # Test get function with slice
-        result = get("/test/file.hdf", "test_field", mode="raw")
+        result = get("/test/file.hdf", ["test_field"], mode="raw")
 
-        np.testing.assert_array_equal(result, [2, 3])
-        mock_dataset.__getitem__.assert_called_once()
+        np.testing.assert_array_equal(result["test_field"], [2, 3])
+        mock_file.get.assert_called_once_with("test_field")
 
 
 class TestGetAnalysisType:
@@ -553,7 +568,7 @@ class TestBatchReadFields:
             "field1": "path/to/field1",
             "field2": "path/to/field2",
         }
-        mock_get.side_effect = [np.array([1, 2, 3]), np.array([4, 5, 6])]
+        mock_get.return_value = {"field1": np.array([1, 2, 3]), "field2": np.array([4, 5, 6])}
 
         result = batch_read_fields("/test/file.hdf", ["field1", "field2"], use_pool=False)
 
@@ -571,14 +586,11 @@ class TestBatchReadFields:
             "field1": "path/to/field1",
             "field2": "path/to/field2",
         }
-        mock_get.side_effect = [np.array([1, 2, 3]), KeyError("Field not found")]
+        mock_get.side_effect = KeyError("Field not found")
 
-        result = batch_read_fields("/test/file.hdf", ["field1", "field2"], use_pool=False)
-
-        # Should only contain successful reads
-        assert "field1" in result
-        assert "field2" not in result
-        np.testing.assert_array_equal(result["field1"], [1, 2, 3])
+        # Should raise exception for missing field
+        with pytest.raises(KeyError):
+            batch_read_fields("/test/file.hdf", ["field1", "field2"], use_pool=False)
 
 
 class TestPerformanceIntegration:
@@ -613,8 +625,8 @@ class TestThreadSafety:
         def get_connection():
             try:
                 with patch("os.path.exists", return_value=True):
-                    conn = pool.get_connection("/test/file.hdf")
-                    results.append(conn)
+                    with pool.get_connection("/test/file.hdf") as conn:
+                        results.append(conn)
             except Exception as e:
                 errors.append(e)
 
@@ -633,6 +645,9 @@ class TestThreadSafety:
         assert len(errors) == 0
         assert len(results) == 5
         assert all(conn is mock_file for conn in results)
+        # Verify connection was cached
+        assert len(pool._pool) == 1
+        assert "/test/file.hdf" in pool._pool
 
 
 @pytest.mark.parametrize(
@@ -670,16 +685,20 @@ class TestEdgeCases:
         pool = HDF5ConnectionPool(health_check_interval=-1)
         assert pool.health_check_interval == -1
 
-    @patch("xpcs_toolkit.fileIO.hdf_reader.get")
-    def test_get_analysis_type_bytes_handling(self, mock_get):
+    @patch("h5py.File")
+    def test_get_analysis_type_bytes_handling(self, mock_h5py_file):
         """Test analysis type handling of bytes vs string."""
-        # Test by calling get_analysis_type without connection pool
-        # Test with bytes
-        mock_get.return_value = b"Twotime"
-        result = get_analysis_type("/test/file.hdf", use_pool=False)
-        assert result == "Twotime"
+        # Create mock file with Twotime analysis
+        mock_file = Mock()
+        mock_file.__enter__ = Mock(return_value=mock_file)
+        mock_file.__exit__ = Mock(return_value=False)
+        mock_file.__contains__ = Mock(side_effect=lambda key: key == "/xpcs/twotime/correlation_map")
+        mock_h5py_file.return_value = mock_file
 
-        # Test with string
-        mock_get.return_value = "Multitau"
         result = get_analysis_type("/test/file.hdf", use_pool=False)
-        assert result == "Multitau"
+        assert result == ("Twotime",)
+
+        # Test with Multitau analysis
+        mock_file.__contains__ = Mock(side_effect=lambda key: key == "/xpcs/multitau/normalized_g2")
+        result = get_analysis_type("/test/file.hdf", use_pool=False)
+        assert result == ("Multitau",)

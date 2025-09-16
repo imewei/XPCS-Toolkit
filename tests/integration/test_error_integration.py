@@ -61,7 +61,13 @@ class TestErrorHandlingIntegration(unittest.TestCase):
         # File 1: Corrupted G2 data
         corrupted_g2_file = os.path.join(self.temp_dir, "corrupted_g2.hdf")
         with h5py.File(corrupted_g2_file, "w") as f:
-            f.create_group("entry")
+            f.attrs["analysis_type"] = "XPCS"
+            entry = f.create_group("entry")
+            entry.create_dataset("start_time", data="2023-01-01T00:00:00")
+            instrument = entry.create_group("instrument")
+            detector = instrument.create_group("detector_1")
+            detector.create_dataset("count_time", data=0.1)
+            detector.create_dataset("frame_time", data=0.01)
             xpcs = f.create_group("xpcs")
             multitau = xpcs.create_group("multitau")
             qmap = xpcs.create_group("qmap")
@@ -79,7 +85,25 @@ class TestErrorHandlingIntegration(unittest.TestCase):
 
             multitau.create_dataset("g2", data=g2_data)
             multitau.create_dataset("g2_err", data=0.1 * np.abs(g2_data))
+            multitau.create_dataset("normalized_g2", data=g2_data)  # Required field
+            multitau.create_dataset("normalized_g2_err", data=0.1 * np.abs(g2_data))  # Required field
             multitau.create_dataset("tau", data=tau_data)
+            multitau.create_dataset("delay_list", data=tau_data)  # Required field
+
+            # Add configuration
+            config = multitau.create_group("config")
+            config.create_dataset("stride_frame", data=1)
+            config.create_dataset("avg_frame", data=1)
+
+            # Add temporal_mean data
+            temporal_mean = xpcs.create_group("temporal_mean")
+            temporal_mean.create_dataset("scattering_1d", data=np.random.rand(50))
+            temporal_mean.create_dataset("scattering_1d_segments", data=np.random.rand(5, 50))
+            temporal_mean.create_dataset("scattering_2d", data=np.random.rand(10, 100, 100))
+
+            # Add spatial_mean data
+            spatial_mean = xpcs.create_group("spatial_mean")
+            spatial_mean.create_dataset("intensity_vs_time", data=np.random.rand(2000))
 
             # Valid qmap
             qmap.create_dataset("dqlist", data=np.linspace(0.001, 0.1, 20))

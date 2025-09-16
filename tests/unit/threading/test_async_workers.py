@@ -33,13 +33,13 @@ class TestWorkerPriority:
 
     def test_priority_enum_comparison(self):
         """Test WorkerPriority enum comparison operations."""
-        assert WorkerPriority.LOW < WorkerPriority.NORMAL
-        assert WorkerPriority.NORMAL < WorkerPriority.HIGH
-        assert WorkerPriority.HIGH < WorkerPriority.CRITICAL
+        assert WorkerPriority.LOW.value < WorkerPriority.NORMAL.value
+        assert WorkerPriority.NORMAL.value < WorkerPriority.HIGH.value
+        assert WorkerPriority.HIGH.value < WorkerPriority.CRITICAL.value
 
-        assert WorkerPriority.CRITICAL > WorkerPriority.HIGH
-        assert WorkerPriority.HIGH > WorkerPriority.NORMAL
-        assert WorkerPriority.NORMAL > WorkerPriority.LOW
+        assert WorkerPriority.CRITICAL.value > WorkerPriority.HIGH.value
+        assert WorkerPriority.HIGH.value > WorkerPriority.NORMAL.value
+        assert WorkerPriority.NORMAL.value > WorkerPriority.LOW.value
 
     def test_priority_enum_ordering(self):
         """Test WorkerPriority enum can be used for sorting."""

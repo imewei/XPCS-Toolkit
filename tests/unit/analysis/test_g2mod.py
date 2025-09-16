@@ -59,7 +59,7 @@ class TestGetData:
         """Test successful data retrieval."""
         # Create mock XF objects
         mock_xf1 = Mock()
-        mock_xf1.atype = "Multitau"
+        mock_xf1.atype = ("Multitau",)
         mock_xf1.get_g2_data.return_value = (
             np.array([0.01, 0.02]),  # q
             np.array([0.001, 0.01]),  # tel
@@ -69,7 +69,7 @@ class TestGetData:
         )
 
         mock_xf2 = Mock()
-        mock_xf2.atype = "Multitau"
+        mock_xf2.atype = ("Multitau",)
         mock_xf2.get_g2_data.return_value = (
             np.array([0.01, 0.02]),
             np.array([0.001, 0.01]),
@@ -99,10 +99,10 @@ class TestGetData:
         """Test data retrieval with files that don't have correlation analysis."""
         # Create mock XF objects without correlation analysis
         mock_xf1 = Mock()
-        mock_xf1.atype = "SAXS"  # No correlation analysis
+        mock_xf1.atype = ("SAXS",)  # No correlation analysis
 
         mock_xf2 = Mock()
-        mock_xf2.atype = "Unknown"  # No correlation analysis
+        mock_xf2.atype = ("Unknown",)  # No correlation analysis
 
         xf_list = [mock_xf1, mock_xf2]
 
@@ -114,10 +114,10 @@ class TestGetData:
     def test_get_data_mixed_analysis_types(self):
         """Test data retrieval with mixed analysis types."""
         mock_xf1 = Mock()
-        mock_xf1.atype = "Multitau"
+        mock_xf1.atype = ("Multitau",)
 
         mock_xf2 = Mock()
-        mock_xf2.atype = "SAXS"  # No correlation
+        mock_xf2.atype = ("SAXS",)  # No correlation
 
         xf_list = [mock_xf1, mock_xf2]
 
@@ -129,7 +129,7 @@ class TestGetData:
     def test_get_data_twotime_analysis(self):
         """Test data retrieval with Twotime analysis type."""
         mock_xf = Mock()
-        mock_xf.atype = "Twotime"
+        mock_xf.atype = ("Twotime",)
         mock_xf.get_g2_data.return_value = (
             np.array([0.01]),
             np.array([0.001]),
@@ -148,7 +148,7 @@ class TestGetData:
     def test_get_data_with_none_ranges(self):
         """Test data retrieval with None ranges."""
         mock_xf = Mock()
-        mock_xf.atype = "Multitau"
+        mock_xf.atype = ("Multitau",)
         mock_xf.get_g2_data.return_value = (
             np.array([0.01]),
             np.array([0.001]),
@@ -267,7 +267,7 @@ class TestPgPlotFunction:
         # Create minimal mocks
         mock_hdl = Mock()
         mock_xf = Mock()
-        mock_xf.atype = "Multitau"
+        mock_xf.atype = ("Multitau",)
         xf_list = [mock_xf]
 
         # Test that function can be called without raising exceptions
@@ -360,7 +360,7 @@ class TestDataProcessingHelpers:
         """Test that get_data pre-allocates lists for memory efficiency."""
         # This tests the implementation detail of pre-allocation
         mock_xf1 = Mock()
-        mock_xf1.atype = "Multitau"
+        mock_xf1.atype = ("Multitau",)
         mock_xf1.get_g2_data.return_value = (
             np.array([0.01]),
             np.array([0.001]),
@@ -370,7 +370,7 @@ class TestDataProcessingHelpers:
         )
 
         mock_xf2 = Mock()
-        mock_xf2.atype = "Multitau"
+        mock_xf2.atype = ("Multitau",)
         mock_xf2.get_g2_data.return_value = (
             np.array([0.01]),
             np.array([0.001]),
@@ -397,7 +397,7 @@ class TestErrorHandling:
     def test_get_data_with_exception_in_xf(self):
         """Test get_data behavior when XF object raises exception."""
         mock_xf = Mock()
-        mock_xf.atype = "Multitau"
+        mock_xf.atype = ("Multitau",)
         mock_xf.get_g2_data.side_effect = Exception("Data access error")
 
         xf_list = [mock_xf]
@@ -488,7 +488,7 @@ class TestPerformanceCharacteristics:
         xf_list = []
         for i in range(50):  # 50 files
             mock_xf = Mock()
-            mock_xf.atype = "Multitau"
+            mock_xf.atype = ("Multitau",)
             mock_xf.get_g2_data.return_value = (
                 np.array([0.01]),
                 np.array([0.001]),

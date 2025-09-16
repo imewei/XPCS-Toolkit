@@ -149,6 +149,11 @@ class MetadataCache:
 
     def _start_prefetch_worker(self):
         """Start background prefetch worker thread."""
+        # Skip starting background threads in test mode
+        if os.environ.get("XPCS_TEST_MODE", "").lower() in ("1", "true"):
+            logger.debug("Skipping prefetch thread start in test mode")
+            return
+
         self._prefetch_thread = threading.Thread(
             target=self._prefetch_worker, daemon=True
         )

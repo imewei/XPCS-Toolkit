@@ -265,6 +265,7 @@ class HDF5ConnectionPool:
 
         self._last_health_check = current_time
         unhealthy_connections = []
+        aged_connections = []
 
         logger.debug(f"Performing health check on {len(self._pool)} connections")
 
@@ -272,9 +273,15 @@ class HDF5ConnectionPool:
             is_healthy = connection.check_health()
             self.stats.record_health_check(is_healthy)
 
+            # Check if connection is too old (older than health check interval)
+            connection_age = current_time - connection.created_at
+            is_aged = connection_age > self.health_check_interval
+
             if not is_healthy:
                 unhealthy_connections.append(fname)
                 self._unhealthy_files.add(fname)
+            elif is_aged:
+                aged_connections.append(fname)
 
         # Remove unhealthy connections
         for fname in unhealthy_connections:
@@ -283,9 +290,18 @@ class HDF5ConnectionPool:
                 del self._pool[fname]
                 logger.info(f"Removed unhealthy connection: {fname}")
 
-        if unhealthy_connections:
+        # Remove aged connections
+        for fname in aged_connections:
+            if fname in self._pool:
+                connection_age = current_time - self._pool[fname].created_at
+                self._pool[fname].close()
+                del self._pool[fname]
+                logger.info(f"Removed aged connection: {fname} (age: {connection_age:.1f}s)")
+
+        total_removed = len(unhealthy_connections) + len(aged_connections)
+        if total_removed:
             logger.info(
-                f"Health check completed: removed {len(unhealthy_connections)} unhealthy connections"
+                f"Health check completed: removed {len(unhealthy_connections)} unhealthy and {len(aged_connections)} aged connections"
             )
 
     @contextmanager

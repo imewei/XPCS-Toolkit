@@ -35,8 +35,10 @@ except ImportError:
 # Only import XPCS GUI components if PySide6 is available
 if GUI_AVAILABLE:
     try:
-        from xpcs_toolkit.plothandler.plot_handler import PlotHandler
-        from xpcs_toolkit.threading.worker import Worker
+        # Import available plot handlers instead of non-existent PlotHandler
+        from xpcs_toolkit.plothandler import ImageViewDev, PlotWidgetDev
+        # Import available worker class from async_workers
+        from xpcs_toolkit.threading.async_workers import BaseAsyncWorker
 
         from xpcs_toolkit.viewer_kernel import ViewerKernel
         from xpcs_toolkit.xpcs_viewer import XpcsViewer
@@ -577,10 +579,8 @@ class TestPlotHandlerErrors:
     def test_plot_handler_with_invalid_data(self, qapp, mock_hdf5_file):
         """Test plot handler with invalid data."""
         try:
-            from xpcs_toolkit.plothandler.plot_handler import PlotHandler
-
-            # Create plot handler
-            plot_handler = PlotHandler()
+            # Use ImageViewDev as a representative plot handler
+            plot_handler = ImageViewDev()
 
             # Test with various invalid data
             invalid_data_sets = [
@@ -593,15 +593,15 @@ class TestPlotHandlerErrors:
 
             for invalid_data in invalid_data_sets:
                 try:
-                    # Should handle invalid data gracefully
-                    if hasattr(plot_handler, "plot_data"):
-                        plot_handler.plot_data(invalid_data)
+                    # Test with setImage method which is available in ImageViewDev
+                    if invalid_data is not None and hasattr(invalid_data, "shape") and len(getattr(invalid_data, "shape", [])) > 0:
+                        plot_handler.setImage(invalid_data)
                 except (ValueError, TypeError, AttributeError):
                     # Expected for invalid data
                     pass
 
         except ImportError:
-            pytest.skip("PlotHandler not available")
+            pytest.skip("ImageViewDev not available")
 
     def test_plot_update_errors(self, qapp):
         """Test plot update error handling."""

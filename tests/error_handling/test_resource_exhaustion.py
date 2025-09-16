@@ -777,12 +777,13 @@ class TestNetworkResourceExhaustion:
 
     def test_concurrent_network_requests(self, resource_exhaustion):
         """Test handling of concurrent network request failures."""
+        # Import at module level to ensure proper patching
+        import urllib.request
+
         with resource_exhaustion.simulate_network_failure():
             # Multiple concurrent requests should all fail gracefully
             def make_request():
                 try:
-                    import urllib.request
-
                     urllib.request.urlopen("http://example.com", timeout=0.5)
                     return "success"
                 except Exception as e:
@@ -890,7 +891,21 @@ class TestResourceRecoveryMechanisms:
     ):
         """Test adaptive behavior under sustained memory pressure."""
         with memory_limited_environment:
+            # Clear any cached memory data to ensure fresh reads
+            from xpcs_toolkit.utils.memory_utils import get_cached_memory_monitor
+            monitor = get_cached_memory_monitor()
+            with monitor._lock:
+                monitor._cached_status = None  # Force fresh read
+
             kernel = ViewerKernel(error_temp_dir)
+
+            # Wait briefly for cache to update with mock data
+            import time
+            time.sleep(0.1)
+
+            # Force a fresh memory status check
+            with monitor._lock:
+                monitor._cached_status = None
 
             # System should adapt to memory pressure
             is_high_pressure = MemoryMonitor.is_memory_pressure_high(threshold=0.8)

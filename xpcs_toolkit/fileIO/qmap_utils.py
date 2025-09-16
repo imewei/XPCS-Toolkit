@@ -1,4 +1,5 @@
 # Standard library imports
+import warnings
 
 # Third-party imports
 import numpy as np
@@ -101,7 +102,11 @@ class QMap:
                         info[key] = self._get_default_value(key)
 
             # Post-process data after reading all at once
-            info["k0"] = 2 * np.pi / (12.398 / info["X_energy"])
+            # Handle division by zero for X_energy
+            if info["X_energy"] != 0:
+                info["k0"] = 2 * np.pi / (12.398 / info["X_energy"])
+            else:
+                info["k0"] = 0.0  # or np.nan if preferred for invalid energy
             if isinstance(info["map_names"][0], bytes):
                 info["map_names"] = [item.decode("utf-8") for item in info["map_names"]]
             if isinstance(info["map_units"][0], bytes):
@@ -324,7 +329,14 @@ class QMap:
             for i in range(num_samples):
                 full_data[i, self.static_index_mapping] = compressed_data[i]
             full_data = full_data.reshape(shape)
-            avg = np.nanmean(full_data, axis=2)
+
+            # Handle empty slice warning by avoiding the problematic call when data is all NaN
+            with warnings.catch_warnings():
+                warnings.filterwarnings("ignore", category=RuntimeWarning, message=".*Mean of empty slice.*")
+                warnings.filterwarnings("ignore", message="Mean of empty slice")
+                # Also use numpy error state suppression as backup
+                with np.errstate(all='ignore'):
+                    avg = np.nanmean(full_data, axis=2)
 
         if mode == "saxs_1d":
             if num_samples != 1:

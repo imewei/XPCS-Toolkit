@@ -398,6 +398,11 @@ class TestGracefulDegradation:
         with memory_limited_environment:
             kernel = ViewerKernel(error_temp_dir)
 
+            # Clear any cached memory status to force fresh read
+            from xpcs_toolkit.utils.memory_utils import get_cached_memory_monitor
+            monitor = get_cached_memory_monitor()
+            monitor._cached_status = None  # Force cache miss
+
             # System should detect memory pressure
             is_high_pressure = MemoryMonitor.is_memory_pressure_high(threshold=0.8)
             assert is_high_pressure
@@ -613,10 +618,10 @@ class TestSystemStabilityAfterErrors:
         with h5py.File(cascade_file, "w") as f:
             f.create_dataset("data", data=np.random.rand(100, 100))
 
-        # Start cascade with file corruption
+        # Start cascade with file corruption - corrupt the HDF5 signature
         with open(cascade_file, "r+b") as f:
-            f.seek(50)
-            f.write(b"CORRUPTED")  # Corrupt the file
+            f.seek(0)  # Corrupt the HDF5 file signature at the beginning
+            f.write(b"CORRUPTED_HDF5_FILE_SIGNATURE")  # This will definitely make h5py fail
 
         failures_handled = 0
 
@@ -630,7 +635,8 @@ class TestSystemStabilityAfterErrors:
             try:
                 # Second failure: try to use connection pool with corrupted file
                 pool = HDF5ConnectionPool(max_pool_size=2)
-                pool.get_connection(cascade_file)
+                with pool.get_connection(cascade_file) as conn:
+                    pass  # This will trigger the actual file opening
             except Exception:
                 failures_handled += 1
 
@@ -754,9 +760,11 @@ class TestCleanupProcedures:
         pool = HDF5ConnectionPool(max_pool_size=5)
         kernel = ViewerKernel(error_temp_dir)
 
-        # Add items to cache
+        # Add items to cache - use actual XpcsFile objects that can be weakly referenced
         for i in range(10):
-            kernel._current_dset_cache[f"item_{i}"] = np.random.rand(100, 100)
+            # Create a temporary mock XpcsFile object that can be weakly referenced
+            mock_xfile = type('MockXpcsFile', (), {'fname': f'item_{i}.h5', 'data': np.random.rand(100, 100)})()
+            kernel._current_dset_cache[f"item_{i}"] = mock_xfile
 
         # Create connections
         test_files = []

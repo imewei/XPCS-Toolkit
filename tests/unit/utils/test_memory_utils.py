@@ -303,8 +303,10 @@ class TestCachedMemoryMonitorStats:
         expected_stats = {
             "cache_hits": 10,
             "cache_misses": 3,
-            "hit_ratio": 10 / 13,  # 10 hits out of 13 total
-            "total_requests": 13,
+            "hit_rate": 10 / 13,  # 10 hits out of 13 total
+            "ttl_seconds": 5.0,
+            "cleanup_threshold": 0.85,
+            "cleanup_stop_threshold": 0.75,
         }
 
         assert stats == expected_stats
@@ -316,8 +318,10 @@ class TestCachedMemoryMonitorStats:
         expected_stats = {
             "cache_hits": 0,
             "cache_misses": 0,
-            "hit_ratio": 0.0,
-            "total_requests": 0,
+            "hit_rate": 0.0,
+            "ttl_seconds": 5.0,
+            "cleanup_threshold": 0.85,
+            "cleanup_stop_threshold": 0.75,
         }
 
         assert stats == expected_stats

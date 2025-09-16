@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import gzip
 import hashlib
+import os
 import pickle
 import tempfile
 import threading
@@ -360,6 +361,11 @@ class MultiLevelCache:
 
     def _start_cleanup_thread(self):
         """Start background cleanup thread."""
+        # Skip starting background threads in test mode
+        if os.environ.get("XPCS_TEST_MODE", "").lower() in ("1", "true"):
+            logger.debug("Skipping cleanup thread start in test mode")
+            return
+
         self._cleanup_thread = threading.Thread(
             target=self._cleanup_worker, daemon=True
         )

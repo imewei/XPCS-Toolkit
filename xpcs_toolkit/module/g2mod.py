@@ -128,7 +128,12 @@ def pg_plot(
     hdl.clear()
     # a bug in pyqtgraph; the log scale in x-axis doesn't apply
     if t_range:
-        t0_range = np.log10(t_range)
+        # Handle log10 of zero or negative values
+        with np.errstate(divide='ignore', invalid='ignore'):
+            # Only take log10 of positive values
+            t_range_positive = np.asarray(t_range)
+            t_range_positive = np.where(t_range_positive > 0, t_range_positive, np.finfo(float).eps)
+            t0_range = np.log10(t_range_positive)
     axes = []
     for n in range(num_figs):
         i_col = n % col

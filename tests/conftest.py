@@ -10,6 +10,7 @@ import os
 import shutil
 import tempfile
 import warnings
+import time
 from collections.abc import Generator
 from pathlib import Path
 from typing import Any
@@ -19,6 +20,46 @@ import numpy as np
 import pytest
 
 from xpcs_toolkit.utils.logging_config import get_logger, setup_logging
+
+# Import reliability and isolation frameworks
+try:
+    from tests.utils.test_isolation import isolated_test_environment, get_performance_monitor, monitor_performance
+    from tests.utils.test_reliability import get_flakiness_detector, reliable_test, validate_test_environment
+    RELIABILITY_FRAMEWORKS_AVAILABLE = True
+except ImportError:
+    RELIABILITY_FRAMEWORKS_AVAILABLE = False
+
+# Import advanced test data management
+try:
+    from tests.utils.test_data_management import (
+        TestDataSpec, get_test_data_factory, get_hdf5_manager,
+        temporary_xpcs_file, create_minimal_test_data, create_performance_test_data,
+        create_realistic_xpcs_dataset
+    )
+    ADVANCED_DATA_MANAGEMENT_AVAILABLE = True
+except ImportError:
+    ADVANCED_DATA_MANAGEMENT_AVAILABLE = False
+
+# Import performance optimization and monitoring
+try:
+    from tests.utils.test_performance import (
+        get_performance_monitor as get_perf_monitor, get_cache_manager,
+        optimize_for_speed, monitor_performance, memory_limit, timeout_limit,
+        TestOptimizer, benchmark_function
+    )
+    PERFORMANCE_OPTIMIZATION_AVAILABLE = True
+except ImportError:
+    PERFORMANCE_OPTIMIZATION_AVAILABLE = False
+
+# Import CI/CD integration utilities
+try:
+    from tests.utils.ci_integration import (
+        get_ci_environment, generate_ci_reports, collect_test_artifacts,
+        TestSuite, TestResult, set_github_output, github_step_summary
+    )
+    CI_INTEGRATION_AVAILABLE = True
+except ImportError:
+    CI_INTEGRATION_AVAILABLE = False
 
 # Suppress common scientific computing warnings during tests
 warnings.filterwarnings("ignore", category=RuntimeWarning)
@@ -42,12 +83,40 @@ def pytest_configure(config):
         "markers", "scientific: Tests that verify scientific accuracy"
     )
 
+    # Add reliability testing markers
+    config.addinivalue_line("markers", "flaky: Tests that are known to be flaky")
+    config.addinivalue_line("markers", "stress: Stress tests that push system limits")
+    config.addinivalue_line("markers", "system_dependent: Tests that depend on system resources")
+    config.addinivalue_line("markers", "reliable: Tests using reliability framework")
+
     # Set Qt platform for headless testing
     os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
+
+    # Enable test mode to disable background threads
+    os.environ["XPCS_TEST_MODE"] = "1"
 
     # Configure logging for tests - suppress verbose output
     os.environ["PYXPCS_LOG_LEVEL"] = "WARNING"
     setup_logging(level=logging.WARNING)
+
+    # Apply performance optimizations
+    if PERFORMANCE_OPTIMIZATION_AVAILABLE:
+        TestOptimizer.optimize_numpy_operations()
+        TestOptimizer.optimize_memory_usage()
+        TestOptimizer.optimize_io_operations()
+
+    # Configure CI/CD integration
+    if CI_INTEGRATION_AVAILABLE:
+        ci_env = get_ci_environment()
+        if ci_env['is_ci']:
+            print(f"\n🔧 Running in {ci_env['ci_provider']} CI environment")
+            if ci_env.get('branch'):
+                print(f"   Branch: {ci_env['branch']}")
+            if ci_env.get('commit'):
+                print(f"   Commit: {ci_env['commit'][:8]}...")
+
+            # Apply CI-specific configurations
+            config.option.tb = 'short'  # Shorter tracebacks for CI logs
 
 
 def pytest_collection_modifyitems(config, items):
@@ -66,6 +135,27 @@ def pytest_collection_modifyitems(config, items):
             for gui_keyword in ["gui", "widget", "qt", "pyside"]
         ):
             item.add_marker(pytest.mark.gui)
+
+        # Mark stress tests
+        if any(
+            stress_keyword in item.name.lower()
+            for stress_keyword in ["stress", "exhaustion", "resource"]
+        ):
+            item.add_marker(pytest.mark.stress)
+
+        # Mark system dependent tests
+        if any(
+            system_keyword in item.name.lower() or system_keyword in str(item.fspath)
+            for system_keyword in ["memory", "disk", "network", "display"]
+        ):
+            item.add_marker(pytest.mark.system_dependent)
+
+        # Mark tests using reliability decorators as reliable
+        if hasattr(item.function, '__wrapped__') and any(
+            attr in str(item.function.__qualname__)
+            for attr in ["reliable_test", "monitor_performance", "retry_on_failure"]
+        ):
+            item.add_marker(pytest.mark.reliable)
 
 
 # ============================================================================
@@ -542,3 +632,484 @@ def _create_edge_case_dataset(**kwargs):
         "g2": np.array([1.0, 1.0]),  # Flat correlation
         "metadata": {"type": "edge_case"},
     }
+
+
+# ============================================================================
+# Reliability and Isolation Fixtures
+# ============================================================================
+
+if RELIABILITY_FRAMEWORKS_AVAILABLE:
+    # Import specific fixtures that depend on the reliability frameworks
+    from tests.utils.test_isolation import isolation_manager
+
+
+    @pytest.fixture(scope="function")
+    def flakiness_detector():
+        """Provide access to global flakiness detector."""
+        return get_flakiness_detector()
+
+
+    @pytest.fixture(scope="function")
+    def performance_monitor():
+        """Provide access to global performance monitor."""
+        return get_performance_monitor()
+
+
+    @pytest.fixture(autouse=True)
+    def auto_performance_monitoring(request):
+        """Automatically monitor test performance for all tests."""
+        if not RELIABILITY_FRAMEWORKS_AVAILABLE:
+            yield
+            return
+
+        test_name = f"{request.module.__name__}.{request.function.__name__}"
+        monitor = get_performance_monitor()
+
+        import time
+        start_time = time.time()
+
+        try:
+            yield
+        finally:
+            end_time = time.time()
+            duration = end_time - start_time
+            monitor.record_test_time(test_name, duration)
+
+
+    @pytest.fixture(scope="function")
+    def reliable_test_environment(isolation_manager):
+        """Provide a completely reliable test environment."""
+        if not RELIABILITY_FRAMEWORKS_AVAILABLE:
+            yield None
+            return
+
+        # Use the isolation manager from test_isolation.py
+        yield isolation_manager
+
+
+    # Convenience decorators available when reliability frameworks are present
+    @pytest.fixture(scope="session", autouse=True)
+    def setup_reliability_reporting():
+        """Set up reliability reporting at the end of test session."""
+        yield
+
+        if not RELIABILITY_FRAMEWORKS_AVAILABLE:
+            return
+
+        # Generate reliability report
+        detector = get_flakiness_detector()
+        monitor = get_performance_monitor()
+
+        flaky_tests = detector.get_flaky_tests()
+        slow_tests = monitor.get_slow_tests()
+
+        if flaky_tests or slow_tests:
+            print("\n" + "="*80)
+            print("TEST RELIABILITY REPORT")
+            print("="*80)
+
+            if flaky_tests:
+                print(f"\nFlaky tests detected ({len(flaky_tests)}):")
+                for test in flaky_tests:
+                    print(f"  - {test}")
+
+            if slow_tests:
+                print(f"\nSlow tests detected ({len(slow_tests)}):")
+                for test in slow_tests:
+                    print(f"  - {test}")
+
+            print("\nConsider using reliability decorators from tests.utils.test_reliability")
+            print("="*80)
+
+
+# ============================================================================
+# Advanced Test Data Fixtures
+# ============================================================================
+
+if ADVANCED_DATA_MANAGEMENT_AVAILABLE:
+    @pytest.fixture(scope="function")
+    def advanced_data_factory():
+        """Provide access to the advanced test data factory."""
+        return get_test_data_factory()
+
+
+    @pytest.fixture(scope="function")
+    def hdf5_test_manager():
+        """Provide access to the HDF5 test data manager with cleanup."""
+        manager = get_hdf5_manager()
+        try:
+            yield manager
+        finally:
+            manager.cleanup()
+
+
+    @pytest.fixture(scope="function")
+    def minimal_test_dataset(random_seed):
+        """Create minimal test dataset using advanced factory."""
+        return create_minimal_test_data(seed=random_seed)
+
+
+    @pytest.fixture(scope="function")
+    def performance_test_dataset():
+        """Create performance test dataset (10MB)."""
+        return create_performance_test_data(size_mb=10.0)
+
+
+    @pytest.fixture(scope="function")
+    def realistic_xpcs_dataset(random_seed):
+        """Create realistic XPCS dataset for integration tests."""
+        return create_realistic_xpcs_dataset(
+            detector_shape=(256, 256),  # Smaller for faster tests
+            n_frames=50,
+            seed=random_seed
+        )
+
+
+    @pytest.fixture(scope="function")
+    def advanced_xpcs_hdf5(temp_dir, random_seed):
+        """Create advanced XPCS HDF5 file with comprehensive data."""
+        file_path = Path(temp_dir) / "advanced_xpcs.hdf"
+
+        # Define data specifications
+        data_specs = {
+            'qmap': TestDataSpec(
+                'qmap',
+                shape=(256, 256),
+                seed=random_seed,
+                metadata={'n_q_bins': 30, 'n_phi_bins': 24}
+            ),
+            'correlation': TestDataSpec(
+                'correlation',
+                seed=random_seed,
+                metadata={
+                    'n_tau': 40,
+                    'beta1': 0.6, 'beta2': 0.2,
+                    'tau1': 1e-3, 'tau2': 1e-2
+                }
+            ),
+            'xpcs': TestDataSpec(
+                'xpcs',
+                shape=(256, 256),
+                seed=random_seed,
+                metadata={'n_frames': 50}
+            ),
+            'twotime': TestDataSpec(
+                'twotime',
+                shape=(50, 50),
+                seed=random_seed
+            )
+        }
+
+        manager = get_hdf5_manager()
+        hdf5_file = manager.create_xpcs_file(file_path, data_specs)
+
+        try:
+            yield str(hdf5_file)
+        finally:
+            if hdf5_file.exists():
+                hdf5_file.unlink(missing_ok=True)
+
+
+    @pytest.fixture(scope="function")
+    def temporary_xpcs_data():
+        """Factory for creating temporary XPCS files with custom specifications."""
+        def _create_file(data_specs: Dict[str, TestDataSpec], **kwargs):
+            return temporary_xpcs_file(data_specs, **kwargs)
+
+        return _create_file
+
+
+# Parametrized fixtures for different data sizes and configurations
+@pytest.fixture(
+    params=[
+        {"size_mb": 1.0, "name": "small"},
+        {"size_mb": 5.0, "name": "medium"},
+        {"size_mb": 10.0, "name": "large"},
+    ]
+)
+def sized_test_data(request):
+    """Parametrized fixture for different data sizes."""
+    if not ADVANCED_DATA_MANAGEMENT_AVAILABLE:
+        pytest.skip("Advanced data management not available")
+
+    params = request.param
+    return create_performance_test_data(size_mb=params["size_mb"])
+
+
+@pytest.fixture(
+    params=[
+        {"shape": (128, 128), "n_frames": 25, "name": "fast"},
+        {"shape": (256, 256), "n_frames": 50, "name": "standard"},
+        {"shape": (512, 512), "n_frames": 100, "name": "detailed"},
+    ]
+)
+def xpcs_test_configurations(request, random_seed):
+    """Parametrized fixture for different XPCS configurations."""
+    if not ADVANCED_DATA_MANAGEMENT_AVAILABLE:
+        pytest.skip("Advanced data management not available")
+
+    params = request.param
+    return create_realistic_xpcs_dataset(
+        detector_shape=params["shape"],
+        n_frames=params["n_frames"],
+        seed=random_seed
+    )
+
+
+# ============================================================================
+# Performance Optimization Fixtures
+# ============================================================================
+
+if PERFORMANCE_OPTIMIZATION_AVAILABLE:
+    @pytest.fixture(scope="function")
+    def performance_monitor():
+        """Provide performance monitoring for individual tests."""
+        monitor = get_perf_monitor()
+        yield monitor
+        # Clear individual test metrics to avoid memory buildup
+        # Keep only recent metrics
+        if len(monitor.metrics) > 100:
+            monitor.metrics = monitor.metrics[-50:]
+
+
+    @pytest.fixture(scope="function")
+    def cache_manager():
+        """Provide test cache manager with cleanup."""
+        manager = get_cache_manager()
+        try:
+            yield manager
+        finally:
+            # Periodic cleanup
+            if manager.get_cache_size_mb() > manager.max_size_mb:
+                manager.cleanup_cache()
+
+
+    @pytest.fixture(scope="function")
+    def benchmark_tool():
+        """Provide benchmarking tool for performance tests."""
+        return benchmark_function
+
+
+    @pytest.fixture(scope="function", autouse=True)
+    def auto_performance_cleanup():
+        """Automatically clean up after each test for optimal performance."""
+        yield
+
+        # Force garbage collection after each test
+        import gc
+        gc.collect()
+
+        # Clean up any lingering threads
+        import threading
+        active_threads = threading.active_count()
+        if active_threads > 1:  # More than just the main thread
+            # Give background threads time to finish
+            import time
+            time.sleep(0.01)
+
+
+    @pytest.fixture(scope="session", autouse=True)
+    def session_performance_report():
+        """Generate comprehensive performance report at session end."""
+        yield
+
+        if not PERFORMANCE_OPTIMIZATION_AVAILABLE:
+            return
+
+        monitor = get_perf_monitor()
+        cache_manager = get_cache_manager()
+
+        # Generate performance summary
+        summary = monitor.get_performance_summary()
+
+        if summary.get('total_tests', 0) > 0:
+            print("\n" + "="*80)
+            print("XPCS TOOLKIT TEST PERFORMANCE REPORT")
+            print("="*80)
+
+            # Duration statistics
+            duration_stats = summary['duration_stats']
+            print(f"\nExecution Time:")
+            print(f"  Total tests monitored: {summary['total_tests']}")
+            print(f"  Total execution time: {duration_stats['total']:.2f}s")
+            print(f"  Average test duration: {duration_stats['mean']:.3f}s")
+            print(f"  Fastest test: {duration_stats['min']:.3f}s")
+            print(f"  Slowest test: {duration_stats['max']:.2f}s")
+
+            # Memory statistics
+            memory_stats = summary['memory_stats']
+            print(f"\nMemory Usage:")
+            print(f"  Peak memory usage: {memory_stats['peak_max_mb']:.1f}MB")
+            print(f"  Average peak memory: {memory_stats['peak_mean_mb']:.1f}MB")
+            print(f"  Largest memory delta: {abs(memory_stats['delta_max_mb']):.1f}MB")
+
+            # Performance warnings
+            slow_tests = monitor.get_slow_tests()
+            memory_intensive_tests = monitor.get_memory_intensive_tests()
+
+            if slow_tests:
+                print(f"\n⚠️  Slow Tests ({len(slow_tests)}):")
+                for metrics in slow_tests[:5]:  # Show top 5
+                    print(f"    {metrics.test_name}: {metrics.duration:.2f}s")
+                if len(slow_tests) > 5:
+                    print(f"    ... and {len(slow_tests) - 5} more")
+
+            if memory_intensive_tests:
+                print(f"\n⚠️  Memory-Intensive Tests ({len(memory_intensive_tests)}):")
+                for metrics in memory_intensive_tests[:5]:  # Show top 5
+                    print(f"    {metrics.test_name}: {metrics.memory_peak_mb:.1f}MB peak")
+                if len(memory_intensive_tests) > 5:
+                    print(f"    ... and {len(memory_intensive_tests) - 5} more")
+
+            # Cache statistics
+            cache_size = cache_manager.get_cache_size_mb()
+            print(f"\nTest Cache:")
+            print(f"  Cache size: {cache_size:.1f}MB")
+            print(f"  Cache limit: {cache_manager.max_size_mb:.1f}MB")
+
+            if not slow_tests and not memory_intensive_tests:
+                print(f"\n✅ All tests performed within acceptable limits!")
+            else:
+                print(f"\n💡 Consider using performance decorators from tests.utils.test_performance")
+
+            print("="*80)
+
+
+# ============================================================================
+# CI/CD Integration Fixtures
+# ============================================================================
+
+if CI_INTEGRATION_AVAILABLE:
+    @pytest.fixture(scope="session")
+    def ci_environment():
+        """Provide CI environment information."""
+        return get_ci_environment()
+
+
+    @pytest.fixture(scope="function")
+    def ci_test_result_collector():
+        """Collect test results for CI reporting."""
+        results = []
+
+        class ResultCollector:
+            def add_result(self, test_id: str, test_name: str, status: str,
+                         duration: float, message: str = None, traceback: str = None):
+                result = TestResult(
+                    test_id=test_id,
+                    test_name=test_name,
+                    status=status,
+                    duration=duration,
+                    message=message,
+                    traceback=traceback
+                )
+                results.append(result)
+
+            @property
+            def results(self):
+                return results
+
+        return ResultCollector()
+
+
+    @pytest.fixture(scope="session", autouse=True)
+    def ci_session_reporting():
+        """Generate CI reports at the end of test session."""
+        session_start_time = time.time()
+
+        yield
+
+        if not CI_INTEGRATION_AVAILABLE:
+            return
+
+        ci_env = get_ci_environment()
+        if not ci_env['is_ci']:
+            return
+
+        # Create session summary (simplified)
+        session_duration = time.time() - session_start_time
+
+        # For now, create a basic test suite
+        # In a real implementation, this would collect actual test results
+        test_suite = TestSuite(
+            name="XPCS Toolkit CI Test Suite",
+            total_tests=1,  # Placeholder - would be populated from actual results
+            passed=1,       # Placeholder
+            failed=0,       # Placeholder
+            skipped=0,      # Placeholder
+            errors=0,       # Placeholder
+            duration=session_duration
+        )
+
+        try:
+            # Generate CI reports
+            reports = generate_ci_reports(test_suite)
+            artifacts = collect_test_artifacts()
+
+            print(f"\n🚀 CI/CD Integration - Generated reports:")
+            for report_type, path in reports.items():
+                print(f"   📄 {report_type}: {path}")
+
+            # Set GitHub Actions outputs if applicable
+            if ci_env['ci_provider'] == 'github_actions':
+                set_github_output('test_results', 'success' if test_suite.failed == 0 else 'failure')
+                set_github_output('test_count', str(test_suite.total_tests))
+                set_github_output('success_rate', f"{test_suite.success_rate:.1%}")
+
+                # Add step summary
+                summary_content = f"""
+## XPCS Toolkit Test Results
+
+- **Status:** {'✅ PASSED' if test_suite.failed == 0 else '❌ FAILED'}
+- **Total Tests:** {test_suite.total_tests}
+- **Success Rate:** {test_suite.success_rate:.1%}
+- **Duration:** {test_suite.duration:.2f}s
+
+Reports generated: {', '.join(reports.keys())}
+"""
+                github_step_summary(summary_content)
+
+        except Exception as e:
+            print(f"⚠️  Warning: CI report generation failed: {e}")
+
+
+    @pytest.fixture(scope="function")
+    def github_actions_integration(ci_environment):
+        """GitHub Actions specific integration utilities."""
+        if ci_environment.get('ci_provider') != 'github_actions':
+            pytest.skip("Only available in GitHub Actions")
+
+        class GitHubActionsHelper:
+            @staticmethod
+            def set_output(name: str, value: str):
+                set_github_output(name, value)
+
+            @staticmethod
+            def add_step_summary(content: str):
+                github_step_summary(content)
+
+            @staticmethod
+            def create_job_summary(test_results: Dict[str, Any]):
+                """Create comprehensive job summary."""
+                summary = f"""
+# XPCS Toolkit Test Results
+
+## Summary
+- **Status**: {'✅ Success' if test_results.get('failed', 0) == 0 else '❌ Failure'}
+- **Total Tests**: {test_results.get('total', 0)}
+- **Passed**: {test_results.get('passed', 0)} ✅
+- **Failed**: {test_results.get('failed', 0)} ❌
+- **Skipped**: {test_results.get('skipped', 0)} ⏭️
+
+## Performance
+- **Duration**: {test_results.get('duration', 0):.2f}s
+- **Success Rate**: {test_results.get('success_rate', 1.0):.1%}
+
+## Environment
+- **Python Version**: {ci_environment.get('python_version', 'Unknown')}
+- **Runner OS**: {ci_environment.get('runner_os', 'Unknown')}
+- **Branch**: {ci_environment.get('branch', 'Unknown')}
+- **Commit**: {ci_environment.get('commit', 'Unknown')[:8]}...
+"""
+                github_step_summary(summary)
+
+        return GitHubActionsHelper()

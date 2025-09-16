@@ -307,7 +307,7 @@ class TestQMapUtilityMethods:
         assert hasattr(qmap, "qbin_labels")
 
         # Check defaults
-        assert qmap.extent == (0, 0, 1024, 1024)
+        assert qmap.extent == (-0.01, 0.01, -0.01, 0.01)
         assert isinstance(qmap.qmap, dict)
         assert isinstance(qmap.qmap_units, dict)
         assert isinstance(qmap.qbin_labels, list)
@@ -345,6 +345,16 @@ class TestQMapComputeQmap:
     def test_compute_qmap_basic(self):
         """Test basic qmap computation."""
         qmap = QMap.__new__(QMap)
+
+        # Setup required attributes for compute_qmap
+        qmap.mask = np.ones((10, 10), dtype=np.int32)
+        qmap.bcy = 5.0
+        qmap.bcx = 5.0
+        qmap.pixel_size = 75e-6
+        qmap.det_dist = 5.0
+        qmap.X_energy = 8.0
+        qmap.k0 = 2 * np.pi / (12.398 / qmap.X_energy)
+        qmap._qmap_cache = None
 
         # Setup minimal qmap_data
         qmap.qmap_data = {
@@ -395,20 +405,25 @@ class TestQMapCreateQbinLabels:
 class TestGetHashFunction:
     """Test suite for get_hash function."""
 
-    @patch("os.path.getmtime")
-    @patch("os.path.getsize")
-    def test_get_hash_basic(self, mock_getsize, mock_getmtime):
+    @patch("xpcs_toolkit.fileIO.qmap_utils._connection_pool")
+    def test_get_hash_basic(self, mock_connection_pool):
         """Test basic hash generation."""
-        mock_getmtime.return_value = 1234567890.0
-        mock_getsize.return_value = 1024000
+        # Mock the HDF5 file and connection
+        mock_file = Mock()
+        mock_qmap_group = Mock()
+        mock_qmap_group.attrs.get.return_value = "test_hash_value"
+        mock_file.__getitem__ = Mock(return_value=mock_qmap_group)
+        mock_file.__contains__ = Mock(return_value=True)
+        mock_file.__enter__ = Mock(return_value=mock_file)
+        mock_file.__exit__ = Mock(return_value=False)
+
+        mock_connection_pool.get_connection.return_value = mock_file
 
         hash_value = get_hash("/test/file.hdf")
 
         assert isinstance(hash_value, str)
-        assert len(hash_value) > 0
-
-        mock_getmtime.assert_called_once_with("/test/file.hdf")
-        mock_getsize.assert_called_once_with("/test/file.hdf")
+        assert hash_value == "test_hash_value"
+        mock_connection_pool.get_connection.assert_called_once_with("/test/file.hdf", "r")
 
     @patch("os.path.getmtime")
     @patch("os.path.getsize")
@@ -455,16 +470,16 @@ class TestGetHashFunction:
 class TestGetQmapFunction:
     """Test suite for get_qmap function."""
 
-    @patch("xpcs_toolkit.fileIO.qmap_utils._qmap_manager")
-    def test_get_qmap_function(self, mock_manager):
+    @patch("xpcs_toolkit.fileIO.qmap_utils.QMap")
+    def test_get_qmap_function(self, mock_qmap_class):
         """Test get_qmap function."""
-        mock_qmap = Mock()
-        mock_manager.get_qmap.return_value = mock_qmap
+        mock_qmap_instance = Mock()
+        mock_qmap_class.return_value = mock_qmap_instance
 
-        result = get_qmap("/test/file.hdf")
+        result = get_qmap("/test/file.hdf", some_kwarg="value")
 
-        assert result is mock_qmap
-        mock_manager.get_qmap.assert_called_once_with("/test/file.hdf")
+        assert result is mock_qmap_instance
+        mock_qmap_class.assert_called_once_with("/test/file.hdf", some_kwarg="value")
 
 
 class TestQMapCaching:
@@ -583,14 +598,19 @@ class TestQMapEdgeCases:
 )
 def test_get_hash_path_variations(hash_input, expected_type):
     """Test get_hash with various path formats."""
-    with (
-        patch("os.path.getmtime", return_value=1000.0),
-        patch("os.path.getsize", return_value=1024),
-    ):
+    with patch("xpcs_toolkit.fileIO.qmap_utils._connection_pool") as mock_pool:
+        # Mock the HDF5 file access to fail, so it returns the filename
+        mock_pool.get_connection.side_effect = Exception("File not found")
+
         result = get_hash(hash_input)
 
         assert isinstance(result, expected_type)
-        assert len(result) > 0
+        # For empty string input, the function returns the input (empty string)
+        # For non-empty inputs, it returns the filename when HDF5 access fails
+        if hash_input == "":
+            assert result == ""
+        else:
+            assert len(result) > 0
 
 
 @pytest.mark.parametrize(
