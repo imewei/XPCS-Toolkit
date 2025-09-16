@@ -104,6 +104,8 @@ def pg_plot(
     marker_size=5,
     label_size=4,
     fit_func="single",
+    robust_fitting=False,
+    enable_diagnostics=False,
     **kwargs,
 ):
     if q_auto:
@@ -149,9 +151,19 @@ def pg_plot(
         # default base line to be 1.0; used for non-fitting or fit error cases
         baseline_offset = np.ones(num_qval)
         if show_fit:
-            fit_summary = xf_list[m].fit_g2(
-                q_range, t_range, bounds, fit_flag, fit_func
-            )
+            if robust_fitting:
+                # Use robust fitting with diagnostics
+                fit_summary = xf_list[m].fit_g2_robust(
+                    q_range, t_range, bounds, fit_flag, fit_func,
+                    enable_diagnostics=enable_diagnostics,
+                    **kwargs
+                )
+            else:
+                # Use traditional fitting
+                fit_summary = xf_list[m].fit_g2(
+                    q_range, t_range, bounds, fit_flag, fit_func
+                )
+
             if fit_summary is not None and subtract_baseline:
                 # make sure the fitting is successful
                 if fit_summary["fit_line"][n].get("success", False):

@@ -23,7 +23,10 @@ from .fileIO.hdf_reader import (
     read_metadata_to_dict,
 )
 from .fileIO.qmap_utils import get_qmap
-from .helper.fitting import fit_with_fixed
+from .helper.fitting import (
+    fit_with_fixed, ComprehensiveDiffusionAnalyzer, robust_curve_fit,
+    OptimizedXPCSFittingEngine, XPCSPerformanceOptimizer
+)
 from .module.twotime_utils import get_c2_stream, get_single_c2_from_hdf
 from .utils.logging_config import get_logger
 from .utils.memory_utils import MemoryTracker, get_cached_memory_monitor
@@ -1155,16 +1158,22 @@ class XpcsFile:
         return result
 
     def fit_g2(
-        self, q_range=None, t_range=None, bounds=None, fit_flag=None, fit_func="single"
+        self, q_range=None, t_range=None, bounds=None, fit_flag=None, fit_func="single",
+        robust_fitting=False, diagnostic_level="standard", bootstrap_samples=None
     ):
         """
         Optimized g2 fitting with caching and improved parameter initialization.
+        Enhanced with robust fitting capabilities for improved reliability.
+
         :param q_range: a tuple of q lower bound and upper bound
         :param t_range: a tuple of t lower bound and upper bound
         :param bounds: bounds for fitting;
         :param fit_flag: tuple of bools; True to fit and False to float
         :param fit_func: ["single" | "double"]: to fit with single exponential
             or double exponential function
+        :param robust_fitting: bool, whether to use robust fitting methods
+        :param diagnostic_level: str, level of diagnostics ('basic', 'standard', 'comprehensive')
+        :param bootstrap_samples: int, number of bootstrap samples for uncertainty estimation
         :return: dictionary with the fitting result;
         """
         # Monitor memory usage during fitting
@@ -1232,10 +1241,18 @@ class XpcsFile:
         else:
             fit_x = self._computation_cache[t_range_key]
 
-        # Perform the fitting
-        fit_line, fit_val = fit_with_fixed(
-            func, t_el, g2, sigma, bounds, fit_flag, fit_x, p0=p0
-        )
+        # Perform the fitting - use robust fitting if requested
+        if robust_fitting:
+            # Use comprehensive robust fitting for enhanced reliability
+            fit_line, fit_val = self._perform_robust_g2_fitting(
+                func, t_el, g2, sigma, bounds, fit_flag, fit_x, p0,
+                diagnostic_level, bootstrap_samples
+            )
+        else:
+            # Standard fitting for backward compatibility
+            fit_line, fit_val = fit_with_fixed(
+                func, t_el, g2, sigma, bounds, fit_flag, fit_x, p0=p0
+            )
 
         # Create optimized fit summary
         self.fit_summary = {
@@ -1262,6 +1279,281 @@ class XpcsFile:
             logger.debug(f"G2 fitting completed: {memory_used:.1f}MB memory used")
 
         return self.fit_summary
+
+    def _perform_robust_g2_fitting(self, func, t_el, g2, sigma, bounds, fit_flag,
+                                  fit_x, p0, diagnostic_level="standard",
+                                  bootstrap_samples=None):
+        """
+        Perform robust G2 fitting with comprehensive diagnostics and uncertainty estimation.
+
+        This method integrates the robust fitting framework with the existing XPCS workflow
+        while maintaining backward compatibility and leveraging performance optimizations.
+        """
+        from functools import partial
+
+        # Initialize robust analyzer with appropriate settings for XPCS data
+        analyzer = ComprehensiveDiffusionAnalyzer(
+            diagnostic_level=diagnostic_level,
+            n_jobs=min(4, multiprocessing.cpu_count())  # Conservative parallelization
+        )
+
+        # Prepare fitting results containers
+        fit_line = np.zeros((g2.shape[1], len(fit_x)))
+        fit_val = []
+
+        # Process each q-value with robust fitting
+        for q_idx in range(g2.shape[1]):
+            try:
+                # Extract data for this q-value
+                g2_col = g2[:, q_idx]
+                sigma_col = sigma[:, q_idx]
+
+                # Skip if insufficient data
+                valid_mask = np.isfinite(g2_col) & np.isfinite(sigma_col) & (sigma_col > 0)
+                if np.sum(valid_mask) < 3:  # Need at least 3 points for fitting
+                    # Use standard fitting as fallback
+                    fit_line[q_idx, :], fit_params = self._fallback_standard_fit(
+                        func, t_el, g2_col, sigma_col, bounds, fit_flag, fit_x, p0
+                    )
+                    fit_val.append(fit_params)
+                    continue
+
+                # Apply mask to clean data
+                t_clean = t_el[valid_mask]
+                g2_clean = g2_col[valid_mask]
+                sigma_clean = sigma_col[valid_mask]
+
+                # Create partial function for this parameter set
+                if len(p0) == 4:  # Single exponential
+                    fit_func_partial = lambda x, *params: func(x, params, fit_flag)
+                else:  # Double exponential
+                    fit_func_partial = lambda x, *params: func(x, params, fit_flag)
+
+                # Determine initial parameters for robust fitting
+                robust_p0 = p0.copy()
+                robust_bounds = ([bounds[0][i] for i in range(len(p0))],
+                               [bounds[1][i] for i in range(len(p0))])
+
+                # Perform robust curve fitting
+                try:
+                    popt, pcov, diagnostics = analyzer.robust_optimizer.robust_curve_fit_with_diagnostics(
+                        fit_func_partial, t_clean, g2_clean,
+                        p0=robust_p0, bounds=robust_bounds, sigma=sigma_clean,
+                        bootstrap_samples=bootstrap_samples or 0
+                    )
+
+                    # Evaluate fitted function over fit_x range
+                    fit_line[q_idx, :] = fit_func_partial(fit_x, *popt)
+
+                    # Store results with enhanced diagnostics
+                    fit_result = {
+                        'params': popt,
+                        'param_errors': np.sqrt(np.diag(pcov)) if pcov is not None else np.zeros_like(popt),
+                        'covariance': pcov,
+                        'diagnostics': diagnostics,
+                        'robust_fit': True,
+                        'q_index': q_idx
+                    }
+                    fit_val.append(fit_result)
+
+                except Exception as e:
+                    logger.warning(f"Robust fitting failed for q-index {q_idx}, using fallback: {e}")
+                    # Fallback to standard fitting
+                    fit_line[q_idx, :], fit_params = self._fallback_standard_fit(
+                        func, t_el, g2_col, sigma_col, bounds, fit_flag, fit_x, p0
+                    )
+                    fit_val.append(fit_params)
+
+            except Exception as e:
+                logger.error(f"Critical error in robust fitting for q-index {q_idx}: {e}")
+                # Emergency fallback
+                fit_line[q_idx, :] = np.ones_like(fit_x)
+                fit_val.append({'params': p0, 'error': str(e), 'robust_fit': False})
+
+        return fit_line, fit_val
+
+    def _fallback_standard_fit(self, func, t_el, g2_col, sigma_col, bounds, fit_flag, fit_x, p0):
+        """
+        Fallback to standard fitting when robust fitting is not applicable.
+        Maintains full backward compatibility.
+        """
+        try:
+            # Use the original fit_with_fixed function
+            g2_single = g2_col.reshape(-1, 1)
+            sigma_single = sigma_col.reshape(-1, 1)
+
+            fit_line_single, fit_val_single = fit_with_fixed(
+                func, t_el, g2_single, sigma_single, bounds, fit_flag, fit_x, p0=p0
+            )
+
+            return fit_line_single[:, 0], fit_val_single[0] if fit_val_single else {'params': p0, 'robust_fit': False}
+
+        except Exception as e:
+            logger.warning(f"Standard fitting fallback also failed: {e}")
+            return np.ones_like(fit_x), {'params': p0, 'error': str(e), 'robust_fit': False}
+
+    def fit_g2_robust(self, q_range=None, t_range=None, bounds=None, fit_flag=None,
+                     fit_func="single", diagnostic_level="standard", bootstrap_samples=500,
+                     enable_caching=True):
+        """
+        Dedicated robust G2 fitting method with comprehensive diagnostics.
+
+        This method provides a high-level interface for robust fitting that scientists
+        can use when they need enhanced reliability and detailed uncertainty analysis.
+
+        :param q_range: a tuple of q lower bound and upper bound
+        :param t_range: a tuple of t lower bound and upper bound
+        :param bounds: bounds for fitting
+        :param fit_flag: tuple of bools; True to fit and False to float
+        :param fit_func: ["single" | "double"]: fitting function type
+        :param diagnostic_level: ['basic', 'standard', 'comprehensive'] diagnostics detail
+        :param bootstrap_samples: number of bootstrap samples for uncertainty estimation
+        :param enable_caching: whether to cache results for performance
+        :return: dictionary with enhanced fitting results and diagnostics
+        """
+        return self.fit_g2(
+            q_range=q_range, t_range=t_range, bounds=bounds, fit_flag=fit_flag,
+            fit_func=fit_func, robust_fitting=True, diagnostic_level=diagnostic_level,
+            bootstrap_samples=bootstrap_samples
+        )
+
+    def fit_g2_high_performance(self, q_range=None, t_range=None, bounds=None,
+                               fit_flag=None, fit_func="single", bootstrap_samples=500,
+                               diagnostic_level="standard", max_memory_mb=2048):
+        """
+        High-performance G2 fitting optimized for large XPCS datasets.
+
+        This method uses advanced performance optimizations including adaptive memory
+        management, intelligent parallelization, and chunked processing for datasets
+        that exceed memory constraints.
+
+        :param q_range: a tuple of q lower bound and upper bound
+        :param t_range: a tuple of t lower bound and upper bound
+        :param bounds: bounds for fitting
+        :param fit_flag: tuple of bools; True to fit and False to float
+        :param fit_func: ["single" | "double"]: fitting function type
+        :param bootstrap_samples: number of bootstrap samples for uncertainty estimation
+        :param diagnostic_level: ['basic', 'standard', 'comprehensive'] diagnostics detail
+        :param max_memory_mb: maximum memory usage threshold in MB
+        :return: dictionary with comprehensive performance-optimized results
+        """
+        # Initialize performance optimizer
+        performance_optimizer = XPCSPerformanceOptimizer(
+            max_memory_mb=max_memory_mb,
+            cache_size=1000
+        )
+
+        # Initialize high-performance fitting engine
+        fitting_engine = OptimizedXPCSFittingEngine(performance_optimizer)
+
+        # Get G2 data using optimized retrieval
+        q_val, t_el, g2, sigma, label = self.get_g2_data(qrange=q_range, trange=t_range)
+
+        # Perform high-performance fitting
+        results = fitting_engine.fit_g2_optimized(
+            tau=t_el,
+            g2_data=g2,
+            g2_errors=sigma,
+            q_values=q_val,
+            fit_func=fit_func,
+            bounds=bounds,
+            bootstrap_samples=bootstrap_samples,
+            enable_diagnostics=(diagnostic_level != "basic")
+        )
+
+        # Convert results to XPCS format for compatibility
+        fit_summary = self._convert_optimized_results_to_xpcs_format(
+            results, q_val, t_el, fit_func, bounds, fit_flag, label, q_range, t_range
+        )
+
+        # Cache the high-performance results
+        cache_key = self._generate_cache_key(
+            "fit_g2_hp", q_range, t_range, bounds, fit_flag, fit_func, bootstrap_samples
+        )
+        fit_cache_key = f"hp_fit_summary_{cache_key}"
+        self._computation_cache[fit_cache_key] = fit_summary
+
+        # Store as primary fit summary
+        self.fit_summary = fit_summary
+
+        return fit_summary
+
+    def _convert_optimized_results_to_xpcs_format(self, results, q_val, t_el, fit_func,
+                                                 bounds, fit_flag, label, q_range, t_range):
+        """
+        Convert high-performance fitting results to standard XPCS format.
+
+        Maintains backward compatibility while preserving enhanced diagnostic information.
+        """
+        # Extract fit results
+        fit_results = results['fit_results']
+        n_q = len(q_val)
+
+        # Create fit_line and fit_val in expected format
+        fit_x = np.logspace(np.log10(np.min(t_el)) - 0.5, np.log10(np.max(t_el)) + 0.5, 128)
+        fit_line = np.zeros((n_q, len(fit_x)))
+        fit_val = []
+
+        # Process results for each q-value
+        for i, fit_result in enumerate(fit_results[:n_q]):  # Ensure we don't exceed n_q
+            if fit_result['status'] == 'success' and fit_result['params'] is not None:
+                # Reconstruct fitted curve
+                params = fit_result['params']
+                try:
+                    if fit_func == "single" and len(params) >= 4:
+                        from .helper.fitting import single_exp_all
+                        fit_line[i, :] = single_exp_all(fit_x, params, fit_flag or [True]*4)
+                    elif fit_func == "double" and len(params) >= 7:
+                        from .helper.fitting import double_exp_all
+                        fit_line[i, :] = double_exp_all(fit_x, params, fit_flag or [True]*7)
+                    else:
+                        fit_line[i, :] = np.ones_like(fit_x)  # Fallback
+                except Exception:
+                    fit_line[i, :] = np.ones_like(fit_x)  # Fallback
+
+                # Create enhanced fit value dictionary
+                fit_val_entry = {
+                    'params': params,
+                    'param_errors': fit_result.get('param_errors'),
+                    'covariance': fit_result.get('covariance'),
+                    'robust_fit': fit_result.get('robust_fit', False),
+                    'diagnostics': fit_result.get('diagnostics', {}),
+                    'q_index': i,
+                    'status': 'success'
+                }
+            else:
+                # Failed fit
+                fit_line[i, :] = np.ones_like(fit_x)
+                fit_val_entry = {
+                    'params': None,
+                    'error': fit_result.get('error', 'Unknown error'),
+                    'status': 'failed',
+                    'q_index': i
+                }
+
+            fit_val.append(fit_val_entry)
+
+        # Create comprehensive fit summary with performance metrics
+        fit_summary = {
+            "fit_func": fit_func,
+            "fit_val": fit_val,
+            "t_el": t_el,
+            "q_val": q_val,
+            "q_range": str(q_range),
+            "t_range": str(t_range),
+            "bounds": bounds,
+            "fit_flag": str(fit_flag),
+            "fit_line": fit_line,
+            "label": label,
+            # Enhanced performance and diagnostic information
+            "performance_info": results.get('performance_info', {}),
+            "timing": results.get('timing', {}),
+            "optimization_summary": results.get('optimization_summary', {}),
+            "high_performance_fit": True,
+            "fit_x": fit_x
+        }
+
+        return fit_summary
 
     @staticmethod
     def correct_g2_err(g2_err=None, threshold=1e-6):
