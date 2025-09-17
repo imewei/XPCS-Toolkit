@@ -291,13 +291,20 @@ class ViewerKernel(FileLocator):
                 hdl.setImage(xf_list[0].sqmap)
 
     def plot_tauq_pre(self, hdl=None, rows=None):
-        xf_list = self.get_xf_list(rows=rows, filter_atype="Multitau")
+        # Support both Multitau and Twotime files for diffusion analysis
+        xf_list = self.get_xf_list(rows=rows)
+        # Filter for files that support G2 analysis (same as G2 plotting)
+        g2_compatible_list = []
+        for xf in xf_list:
+            if any(atype in xf.atype for atype in ["Multitau", "Twotime"]):
+                g2_compatible_list.append(xf)
+        xf_list = g2_compatible_list
         short_list = [xf for xf in xf_list if xf.fit_summary is not None]
 
         if len(short_list) == 0:
             logger.warning(
                 f"No files with G2 fitting results found for diffusion analysis. "
-                f"Found {len(xf_list)} Multitau files but none have been fitted."
+                f"Found {len(xf_list)} G2-compatible files but none have been fitted."
             )
             # Clear the plot and show a message
             if hdl is not None:
@@ -319,7 +326,7 @@ class ViewerKernel(FileLocator):
                 ax.set_xlim(0, 1)
                 ax.set_ylim(0, 1)
                 ax.axis("off")
-                hdl.tight_layout()
+                hdl.fig.tight_layout()
         else:
             logger.info(
                 f"Found {len(short_list)} files with G2 fitting results for diffusion analysis"

@@ -3,9 +3,12 @@ import pyqtgraph as pg
 from pyqtgraph import GraphicsLayoutWidget, ImageView, QtCore, QtGui
 
 from xpcs_toolkit.utils.logging_config import get_logger
+from .qt_signal_fixes import qt_connection_context, configure_pyqtgraph_for_qt_compatibility
 
 logger = get_logger(__name__)
 
+# Configure PyQtGraph for Qt compatibility to reduce connection warnings
+configure_pyqtgraph_for_qt_compatibility()
 
 pg.setConfigOptions(imageAxisOrder="row-major")
 
@@ -13,13 +16,15 @@ pg.setConfigOptions(imageAxisOrder="row-major")
 class ImageViewPlotItem(ImageView):
     # ImageView only supports x/y tics when view is a PlotItem
     def __init__(self, *args, **kwargs) -> None:
-        plot_item = pg.PlotItem()
-        super().__init__(*args, view=plot_item, **kwargs)
+        with qt_connection_context():
+            plot_item = pg.PlotItem()
+            super().__init__(*args, view=plot_item, **kwargs)
 
 
 class ImageViewDev(ImageView):
     def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
+        with qt_connection_context():
+            super().__init__(*args, **kwargs)
         self.roi_record = {}
         self.roi_idx = 0
         logger.debug("ImageViewDev initialized")

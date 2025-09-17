@@ -357,14 +357,21 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
             plot_params = result["plot_params"]
 
             # Get the file list (need to recreate from viewer kernel)
+            # Support both Multitau and Twotime files for G2 plotting
             rows = plot_params.get("rows", [])
-            xf_list = self.vk.get_xf_list(rows=rows, filter_atype="Multitau")
+            xf_list = self.vk.get_xf_list(rows=rows)
 
-            if xf_list:
+            # Filter for files that support G2 plotting (Multitau or Twotime)
+            g2_compatible_files = []
+            for xf in xf_list:
+                if any(atype in xf.atype for atype in ["Multitau", "Twotime"]):
+                    g2_compatible_files.append(xf)
+
+            if g2_compatible_files:
                 # Use the existing g2mod.pg_plot function
                 g2mod.pg_plot(
                     self.mp_g2,  # Plot handler
-                    xf_list,
+                    g2_compatible_files,
                     plot_params.get("q_range"),
                     plot_params.get("t_range"),
                     plot_params.get("y_range"),
@@ -376,7 +383,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
                 )
                 logger.info("G2 plot applied successfully")
             else:
-                logger.warning("No Multitau files available for G2 plotting")
+                logger.warning("No files with G2 data (Multitau or Twotime) available for plotting")
 
         except Exception as e:
             logger.error(f"Failed to apply G2 result: {e}")
@@ -565,6 +572,21 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         if tab_name == "average":
             return
 
+        # Check if files are selected before attempting to plot
+        # Some tabs like diffusion should always update to show proper empty state
+        tabs_requiring_files = [
+            "saxs_2d", "saxs_1d", "stability", "intensity_t", "g2", "twotime", "qmap"
+        ]
+        if ((not self.vk.target or len(self.vk.target) == 0)
+            and tab_name in tabs_requiring_files):
+            logger.debug(
+                f"No files selected for {tab_name} plotting, "
+                f"clearing plot and skipping update"
+            )
+            # Clear the plot to show empty state
+            self._clear_plot_for_tab(tab_name)
+            return
+
         # Check if we should use async plotting
         use_async = self.async_vk is not None and tab_name in [
             "saxs_2d",
@@ -612,6 +634,30 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
             logger.error(f"update selection in [{tab_name}] failed")
             logger.error(e)
             traceback.print_exc()
+
+    def _clear_plot_for_tab(self, tab_name):
+        """Clear plot display for specified tab when no files are selected."""
+        try:
+            plot_handlers = {
+                "saxs_2d": self.pg_saxs,
+                "saxs_1d": self.mp_saxs1d if hasattr(self, 'mp_saxs1d') else None,
+                "stability": self.mp_stab if hasattr(self, 'mp_stab') else None,
+                "intensity_t": self.pg_intt,
+                "g2": self.mp_g2 if hasattr(self, 'mp_g2') else None,
+                "twotime": self.mp_2t_hdls,
+                "qmap": self.pg_qmap
+            }
+
+            handler = plot_handlers.get(tab_name)
+            if handler:
+                if hasattr(handler, 'clear'):
+                    handler.clear()
+                elif hasattr(handler, 'setImage'):
+                    # For ImageView widgets, set empty image
+                    handler.setImage(np.zeros((10, 10)))
+                logger.debug(f"Cleared plot for {tab_name}")
+        except Exception as e:
+            logger.warning(f"Failed to clear plot for {tab_name}: {e}")
 
     def update_plot_async(self, tab_name):
         """Asynchronous plot update with progress indication."""
@@ -1220,6 +1266,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
             "marker_size": self.g2_marker_size.value(),
             "subtract_baseline": self.g2_sub_baseline.isChecked(),
             "fit_func": fit_func,
+            "robust_fitting": fit_func == "robust",
             # 'label_size': self.sb_g2_label_size.value(),
         }
         if kwargs["show_fit"] and sum(kwargs["fit_flag"]) == 0:
@@ -1446,7 +1493,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         return vals
 
     def check_g2_fitting_number(self):
-        fit_func = ["single", "double"][self.g2_fitting_function.currentIndex()]
+        fit_func = ["single", "double", "robust"][self.g2_fitting_function.currentIndex()]
         keys = (
             self.g2_amin,
             self.g2_amax,
@@ -1491,7 +1538,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         )
         fit_flag = [x.isChecked() for x in fit_keys]
 
-        if fit_func == "single":
+        if fit_func == "single" or fit_func == "robust":
             fit_flag = fit_flag[0:4]
             bounds = bounds[:, 0:4]
         bounds = bounds.tolist()
@@ -1522,6 +1569,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
             "g2 fitting with Single Exp:  y = a·exp[-2(x/b)^c]+d",
             "g2 fitting with Double Exp:  y = a·[f·exp[-(x/b)^c +"
             + "(1-f)·exp[-(x/b2)^c2]^2+d",
+            "g2 Robust Fitting: Single Exp with enhanced optimization"
         ]
         self.groupBox_2.setTitle(title[idx])
 
@@ -1531,14 +1579,14 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
             [self.g2_fmin, self.g2_fmax, self.g2_ffit],
         ]
 
-        # change from double to single
-        if idx == 0:
+        # change to single or robust (both use single exp parameters)
+        if idx == 0 or idx == 2:  # single or robust
             for n in range(3):
                 pvs[n][0].setDisabled(True)
                 pvs[n][1].setDisabled(True)
                 pvs[n][2].setDisabled(True)
-        # change from single to double
-        else:
+        # change to double
+        elif idx == 1:  # double
             for n in range(3):
                 pvs[n][2].setEnabled(True)
                 pvs[n][1].setEnabled(True)

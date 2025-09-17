@@ -941,27 +941,105 @@ class XpcsFile:
             raise ValueError(
                 f"Analysis type {self.atype} not supported for G2 plotting. Supported types: {supported_types}"
             )
-        # Check if required attributes exist
-        required_attrs = ["g2", "g2_err", "t_el", "qmap"]
-        missing_attrs = [attr for attr in required_attrs if not hasattr(self, attr)]
+
+        # Handle different analysis types - Multitau vs Twotime
+        has_multitau = "Multitau" in self.atype
+        has_twotime = "Twotime" in self.atype
+
+        # For Multitau analysis, we need g2, g2_err, t_el
+        # For Twotime analysis, we can use c2_g2 and compute from c2_delay
+        required_attrs = ["qmap"]
+        missing_attrs = []
+
+        if has_multitau:
+            # Check Multitau-specific attributes
+            multitau_attrs = ["g2", "g2_err"]
+            missing_multitau = [attr for attr in multitau_attrs if not hasattr(self, attr)]
+
+            # Special handling for t_el - compute it if missing but tau and t0/g2_t0 are available
+            if not hasattr(self, "t_el"):
+                if hasattr(self, "tau"):
+                    # Try g2_t0 first (preferred), then fall back to t0
+                    if hasattr(self, "g2_t0"):
+                        logger.info("Computing t_el from tau and g2_t0 for G2 plotting")
+                        self.t_el = self.tau * self.g2_t0
+                    elif hasattr(self, "t0"):
+                        logger.info("Computing t_el from tau and t0 for G2 plotting")
+                        self.t_el = self.tau * self.t0
+                    else:
+                        missing_multitau.append("t_el")
+                        logger.warning(f"Cannot compute t_el: tau available, but neither g2_t0 nor t0 available")
+                else:
+                    missing_multitau.append("t_el")
+                    logger.warning(f"Cannot compute t_el: tau not available")
+
+            if missing_multitau and not has_twotime:
+                missing_attrs.extend(missing_multitau)
+
+        if has_twotime and not (has_multitau and not missing_attrs):
+            # Check Twotime-specific attributes as fallback
+            twotime_attrs = ["c2_g2"]
+            missing_twotime = [attr for attr in twotime_attrs if not hasattr(self, attr)]
+
+            if missing_twotime:
+                missing_attrs.extend(missing_twotime)
+                logger.error(f"Neither Multitau nor Twotime data available for G2 plotting")
+
+        # Check common required attributes
+        if not hasattr(self, "qmap"):
+            missing_attrs.append("qmap")
+
         if missing_attrs:
+            # Provide detailed diagnostic information
+            available_attrs = [attr for attr in dir(self) if not attr.startswith('_')]
+            data_attrs = [attr for attr in available_attrs if not callable(getattr(self, attr))]
+            logger.error(f"Available data attributes: {sorted(data_attrs)}")
             raise AttributeError(
                 f"Missing required attributes for G2 plotting: {missing_attrs}"
             )
 
         # qrange can be None
         qindex_selected, qvalues = self.qmap.get_qbin_in_qrange(qrange, zero_based=True)
-        g2 = self.g2[:, qindex_selected]
-        g2_err = self.g2_err[:, qindex_selected]
         labels = [self.qmap.get_qbin_label(qbin + 1) for qbin in qindex_selected]
 
-        if trange is not None:
-            t_roi = (self.t_el >= trange[0]) * (self.t_el <= trange[1])
+        # Extract data based on analysis type
+        if has_multitau and hasattr(self, 'g2') and hasattr(self, 'g2_err'):
+            # Use Multitau data
+            g2 = self.g2[:, qindex_selected]
+            g2_err = self.g2_err[:, qindex_selected]
+            t_el = self.t_el
+            logger.info("Using Multitau G2 data for plotting")
+        elif has_twotime and hasattr(self, 'c2_g2'):
+            # Use Twotime data as fallback
+            logger.info("Using Twotime G2 data for plotting")
+            g2 = self.c2_g2[:, qindex_selected]
+
+            # For twotime, we might not have error data - create placeholder
+            if hasattr(self, 'c2_g2_err'):
+                g2_err = self.c2_g2_err[:, qindex_selected]
+            else:
+                logger.warning("No Twotime G2 error data available - using zeros")
+                g2_err = np.zeros_like(g2)
+
+            # For twotime delay, we need to compute t_el from available delay data
+            if hasattr(self, 'c2_delay'):
+                t_el = self.c2_delay
+            elif hasattr(self, 'c2_t0'):
+                # Fallback - create delay array assuming regular spacing
+                logger.warning("No c2_delay available - creating delay array from c2_t0")
+                t_el = np.arange(g2.shape[0]) * self.c2_t0
+            else:
+                logger.error("Cannot determine time delays for Twotime data")
+                raise AttributeError("Missing delay information for Twotime G2 plotting")
+        else:
+            raise AttributeError("No valid G2 data found for plotting")
+
+        # Apply time range filtering if specified
+        if trange is not None and len(t_el) > 0:
+            t_roi = (t_el >= trange[0]) * (t_el <= trange[1])
             g2 = g2[t_roi]
             g2_err = g2_err[t_roi]
-            t_el = self.t_el[t_roi]
-        else:
-            t_el = self.t_el
+            t_el = t_el[t_roi]
 
         return qvalues, t_el, g2, g2_err, labels
 

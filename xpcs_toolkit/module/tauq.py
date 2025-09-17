@@ -121,7 +121,7 @@ def plot_pre(xf_list, hdl):
         ax.set_xlim(0, 1)
         ax.set_ylim(0, 1)
         ax.axis("off")
-        hdl.tight_layout()
+        hdl.fig.tight_layout()
         return
 
     ax = hdl.subplots(2, 2, sharex=True).flatten()

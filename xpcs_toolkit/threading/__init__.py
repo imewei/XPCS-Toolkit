@@ -93,6 +93,13 @@ from .plot_workers import (
 )
 from .progress_manager import ProgressDialog, ProgressIndicator, ProgressManager
 
+# Qt-compliant thread management and safety
+from .qt_compliant_thread_manager import (
+    QtCompliantThreadManager,
+    get_qt_compliant_thread_manager,
+)
+from .enhanced_worker_safety import SafeWorkerBase
+
 # Optimized threading system with performance enhancements
 from .signal_optimization import (
     ConnectionPool,
@@ -103,6 +110,10 @@ from .signal_optimization import (
     get_signal_optimizer,
     initialize_signal_optimization,
     shutdown_signal_optimization,
+)
+from .thread_pool_integration_validator import (
+    ThreadPoolIntegrationValidator,
+    get_thread_pool_validator,
 )
 
 __all__ = [
@@ -148,7 +159,10 @@ __all__ = [
     # Progress management
     "ProgressManager",
     "QMapPlotWorker",
+    # Qt-compliant thread management
+    "QtCompliantThreadManager",
     # Plot workers
+    "SafeWorkerBase",
     "SaxsPlotWorker",
     "SignalBatcher",
     # Optimized threading system
@@ -160,6 +174,7 @@ __all__ = [
     "StabilityPlotWorker",
     "SystemSnapshot",
     "ThreadPoolHealth",
+    "ThreadPoolIntegrationValidator",
     "ThreadPoolManager",
     "ThreadPoolMetrics",
     # GUI integration
@@ -182,9 +197,11 @@ __all__ = [
     "get_background_cleanup_manager",
     "get_object_registry",
     "get_performance_monitor",
+    "get_qt_compliant_thread_manager",
     "get_signal_optimizer",
     "get_smart_gc",
     "get_thread_pool_manager",
+    "get_thread_pool_validator",
     "initialize_enhanced_threading",
     "initialize_optimized_cleanup",
     "initialize_performance_monitoring",

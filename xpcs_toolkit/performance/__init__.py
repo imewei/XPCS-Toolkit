@@ -1,33 +1,100 @@
 """
-XPCS Toolkit Performance Testing Framework
+XPCS Toolkit Performance Package.
 
-This module provides comprehensive performance testing, benchmarking, and regression
-detection capabilities for the XPCS Toolkit.
-
-Components:
-- CPU Performance Test Suite: Comprehensive CPU and threading performance tests
-- Benchmark Database: Historical performance data storage and analysis
-- Regression Detector: Statistical regression detection and CI/CD integration
-- Multi-Core Test Automation: Multi-core scaling performance validation
+This package provides comprehensive performance optimization and analysis
+capabilities for the Qt compliance system.
 """
 
-from .benchmark_database import (
-    BenchmarkDatabase,
-    PerformanceRecord,
-    SystemConfiguration,
+from .qt_performance_profiler import (
+    QtPerformanceProfiler,
+    ProfilerConfiguration,
+    ProfilerType,
+    ProfilingScope,
+    PerformanceProfile,
+    FilteringPerformanceAnalysis,
+    get_qt_performance_profiler,
+    profile_qt_performance
 )
-from .cpu_performance_test_suite import CPUPerformanceTestSuite, CPUTestConfig
-from .multicore_test_automation import MultiCoreTestAutomation, MultiCoreTestConfig
-from .regression_detector import RegressionAnalysisConfig, RegressionDetector
+
+from .qt_optimization_engine import (
+    QtOptimizationEngine,
+    OptimizationConfiguration,
+    OptimizationType,
+    OptimizationLevel,
+    OptimizationResult,
+    SmartCache,
+    OptimizedQtMessageFilter,
+    ObjectPool,
+    MemoryOptimizer,
+    ThreadingOptimizer,
+    get_qt_optimization_engine,
+    cached_qt_operation,
+    optimized_qt_operations
+)
+
+from .qt_benchmark_suite import (
+    QtComplianceBenchmarkSuite,
+    BenchmarkConfiguration,
+    BenchmarkType,
+    BenchmarkScope,
+    BenchmarkMetrics,
+    BenchmarkResult,
+    run_qt_compliance_benchmarks
+)
+
+from .qt_scalability_tester import (
+    QtScalabilityTester,
+    ScalabilityConfiguration,
+    ScalabilityDimension,
+    LoadPattern,
+    ScalabilityMetrics,
+    ScalabilityTestResult,
+    get_qt_scalability_tester,
+    run_qt_scalability_tests
+)
 
 __all__ = [
-    "BenchmarkDatabase",
-    "CPUPerformanceTestSuite",
-    "CPUTestConfig",
-    "MultiCoreTestAutomation",
-    "MultiCoreTestConfig",
-    "PerformanceRecord",
-    "RegressionAnalysisConfig",
-    "RegressionDetector",
-    "SystemConfiguration",
+    # Performance profiling
+    "QtPerformanceProfiler",
+    "ProfilerConfiguration",
+    "ProfilerType",
+    "ProfilingScope",
+    "PerformanceProfile",
+    "FilteringPerformanceAnalysis",
+    "get_qt_performance_profiler",
+    "profile_qt_performance",
+
+    # Optimization engine
+    "QtOptimizationEngine",
+    "OptimizationConfiguration",
+    "OptimizationType",
+    "OptimizationLevel",
+    "OptimizationResult",
+    "SmartCache",
+    "OptimizedQtMessageFilter",
+    "ObjectPool",
+    "MemoryOptimizer",
+    "ThreadingOptimizer",
+    "get_qt_optimization_engine",
+    "cached_qt_operation",
+    "optimized_qt_operations",
+
+    # Benchmarking
+    "QtComplianceBenchmarkSuite",
+    "BenchmarkConfiguration",
+    "BenchmarkType",
+    "BenchmarkScope",
+    "BenchmarkMetrics",
+    "BenchmarkResult",
+    "run_qt_compliance_benchmarks",
+
+    # Scalability testing
+    "QtScalabilityTester",
+    "ScalabilityConfiguration",
+    "ScalabilityDimension",
+    "LoadPattern",
+    "ScalabilityMetrics",
+    "ScalabilityTestResult",
+    "get_qt_scalability_tester",
+    "run_qt_scalability_tests"
 ]

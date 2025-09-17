@@ -17,6 +17,7 @@ from typing import Dict, List, Optional, Tuple, Any
 from dataclasses import dataclass
 import threading
 import weakref
+import numpy as np
 
 
 @dataclass
@@ -213,6 +214,40 @@ class MemoryAssertions:
             assert variance_percent <= max_variance_percent, (
                 f"Memory variance {variance_percent:.1f}% exceeds limit {max_variance_percent}%"
             )
+
+
+class MemoryTestUtils:
+    """High-level utility class for memory testing operations."""
+
+    @staticmethod
+    def create_enhanced_tracker() -> EnhancedMemoryTracker:
+        """Create an enhanced memory tracker for testing."""
+        return EnhancedMemoryTracker()
+
+    @staticmethod
+    def assert_memory_reasonable(tracker: EnhancedMemoryTracker,
+                               start_label: str,
+                               end_label: str,
+                               max_increase_mb: float = 100.0) -> None:
+        """Assert memory increase is reasonable."""
+        MemoryAssertions.assert_memory_increase_reasonable(
+            tracker, start_label, end_label, max_increase_mb
+        )
+
+    @staticmethod
+    def assert_cleanup_effective(tracker: EnhancedMemoryTracker,
+                               before_label: str,
+                               after_label: str,
+                               min_reduction_percent: float = 10.0) -> None:
+        """Assert memory cleanup is effective."""
+        MemoryAssertions.assert_memory_cleanup_effective(
+            tracker, before_label, after_label, min_reduction_percent
+        )
+
+    @staticmethod
+    def get_test_context(enable_tracemalloc: bool = True):
+        """Get memory test context manager."""
+        return memory_test_context(enable_tracemalloc)
 
 
 def create_test_data_with_tracking(size_mb: float = 10.0) -> Tuple[np.ndarray, EnhancedMemoryTracker]:

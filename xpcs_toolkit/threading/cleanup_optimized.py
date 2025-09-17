@@ -17,7 +17,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, TypeVar
 
-from PySide6.QtCore import QObject, QTimer, Signal
+from PySide6.QtCore import QObject, QTimer, Signal, Slot
 
 from ..utils.logging_config import get_logger
 
@@ -283,10 +283,10 @@ class BackgroundCleanupManager(QObject):
         self._tasks_failed = 0
         self._total_cleanup_time = 0.0
 
-        # Timer for periodic cleanup
-        self._cleanup_timer = QTimer()
-        self._cleanup_timer.timeout.connect(self._process_cleanup_batch)
-        self._cleanup_timer.setSingleShot(False)
+        # Timer for periodic cleanup - defer creation to avoid threading violations
+        self._cleanup_timer = None
+        self._timer_interval_ms = 1000
+        self._timer_initialized = False
 
         logger.debug(f"BackgroundCleanupManager initialized with {max_workers} workers")
 
@@ -297,15 +297,88 @@ class BackgroundCleanupManager(QObject):
                 max_workers=self._max_workers, thread_name_prefix="cleanup"
             )
 
-        if not self._cleanup_timer.isActive():
+        self._timer_interval_ms = interval_ms
+        self._ensure_timer_initialized()
+
+        if self._cleanup_timer and not self._cleanup_timer.isActive():
             self._cleanup_timer.start(interval_ms)
             logger.info(f"Background cleanup started with {interval_ms}ms interval")
+
+    def _ensure_timer_initialized(self) -> None:
+        """Ensure timer is initialized in a Qt-compliant way."""
+        if self._timer_initialized:
+            return
+
+        try:
+            from PySide6.QtWidgets import QApplication
+            from PySide6.QtCore import QThread
+
+            # Check if we're in a Qt-compatible context
+            current_thread = QThread.currentThread()
+            app = QApplication.instance()
+
+            if app is None:
+                logger.warning("No QApplication available - deferring timer creation")
+                return
+
+            app_thread = app.thread()
+
+            # Only create timer if we're in main thread or a proper QThread
+            if current_thread == app_thread or isinstance(current_thread, QThread):
+                self._cleanup_timer = QTimer()
+                self._cleanup_timer.timeout.connect(self._process_cleanup_batch)
+                self._cleanup_timer.setSingleShot(False)
+                self._timer_initialized = True
+                logger.debug("Cleanup timer initialized in Qt-compliant context")
+            else:
+                # Schedule timer creation in main thread using Qt's meta-object system
+                logger.debug(f"Deferring timer creation - current thread: {type(current_thread)}")
+                self._schedule_timer_creation()
+
+        except Exception as e:
+            logger.warning(f"Failed to initialize cleanup timer: {e}")
+
+    def _schedule_timer_creation(self) -> None:
+        """Schedule timer creation in the main thread using Qt's meta-object system."""
+        try:
+            from PySide6.QtCore import QMetaObject, Qt
+
+            # Use Qt's meta-object system to invoke timer creation in main thread
+            QMetaObject.invokeMethod(
+                self,
+                "_create_timer_in_main_thread",
+                Qt.ConnectionType.QueuedConnection
+            )
+        except Exception as e:
+            logger.warning(f"Failed to schedule timer creation: {e}")
+
+    @Slot()
+    def _create_timer_in_main_thread(self) -> None:
+        """Create timer in main thread (called via Qt meta-object system)."""
+        if self._timer_initialized:
+            return
+
+        try:
+            self._cleanup_timer = QTimer()
+            self._cleanup_timer.timeout.connect(self._process_cleanup_batch)
+            self._cleanup_timer.setSingleShot(False)
+            self._timer_initialized = True
+
+            # Start timer if start() was already called
+            if self._timer_interval_ms > 0:
+                self._cleanup_timer.start(self._timer_interval_ms)
+                logger.info(f"Background cleanup started with {self._timer_interval_ms}ms interval")
+
+            logger.debug("Cleanup timer created in main thread")
+
+        except Exception as e:
+            logger.error(f"Failed to create timer in main thread: {e}")
 
     def stop(self) -> None:
         """Stop the background cleanup manager."""
         self._shutdown_requested = True
 
-        if self._cleanup_timer.isActive():
+        if self._cleanup_timer and self._cleanup_timer.isActive():
             self._cleanup_timer.stop()
 
         if self._executor is not None:
