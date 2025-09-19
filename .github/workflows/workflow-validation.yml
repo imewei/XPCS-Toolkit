@@ -71,11 +71,14 @@ jobs:
         if grep -r "actions/checkout@v[1-3]" .github/workflows/; then
           echo "⚠️ Found outdated checkout actions - consider upgrading to v4"
         fi
-        if grep -r "actions/setup-python@v[1-4]" .github/workflows/; then
-          echo "⚠️ Found outdated setup-python actions - consider upgrading to v5"
+        if grep -r "actions/setup-python@v[1-3]" .github/workflows/; then
+          echo "⚠️ Found outdated setup-python actions - consider upgrading to v4"
         fi
-        if grep -r "actions/cache@v[1-3]" .github/workflows/; then
-          echo "⚠️ Found outdated cache actions - consider upgrading to v4"
+        if grep -r "actions/cache@v[1-2]" .github/workflows/; then
+          echo "⚠️ Found outdated cache actions - consider upgrading to v3"
+        fi
+        if grep -r "actions/upload-artifact@v[1-2]" .github/workflows/; then
+          echo "⚠️ Found outdated upload-artifact actions - consider upgrading to v3"
         fi
 
     - name: Security check for workflows

@@ -92,11 +92,11 @@ jobs:
     - name: Install build dependencies
       run: |
         python -m pip install --upgrade pip wheel
-        pip install build[uv] twine setuptools_scm
+        pip install build twine setuptools_scm
 
     - name: Build package
       run: |
-        python -m build --installer uv
+        python -m build
 
     - name: Validate package
       run: |
@@ -219,7 +219,7 @@ jobs:
         fi
 
     - name: Create GitHub Release
-      uses: softprops/action-gh-release@v2
+      uses: softprops/action-gh-release@v1
       with:
         tag_name: ${{ needs.validate.outputs.version }}
         name: "XPCS Toolkit ${{ needs.validate.outputs.version }}"

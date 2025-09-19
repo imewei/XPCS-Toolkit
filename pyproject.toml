@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=75.0.0", "setuptools_scm[toml]>=8.1.0"]
+requires = ["setuptools>=75.6.0", "setuptools_scm[toml]>=8.2.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -32,18 +32,18 @@ license = {text = "MIT"}
 keywords = ["XPCS", "X-ray", "photon correlation spectroscopy", "synchrotron", "visualization", "science"]
 
 dependencies = [
-    "pyside6>=6.8.0",
-    "numpy>=2.1.0",
-    "scipy>=1.14.0",
-    "h5py>=3.12.0",
-    "matplotlib>=3.9.0",
-    "pyqtgraph>=0.13.7",
-    "pandas>=2.2.0",
-    "scikit-learn>=1.5.0",
-    "joblib>=1.4.0",
-    "tqdm>=4.66.0",
-    "psutil>=6.1.0",
-    "hdf5plugin>=4.4.0"
+    "pyside6>=6.8.1",
+    "numpy>=2.2.0",
+    "scipy>=1.15.0",
+    "h5py>=3.12.1",
+    "matplotlib>=3.9.3",
+    "pyqtgraph>=0.13.8",
+    "pandas>=2.2.3",
+    "scikit-learn>=1.6.0",
+    "joblib>=1.4.2",
+    "tqdm>=4.67.1",
+    "psutil>=6.1.1",
+    "hdf5plugin>=4.5.0"
 ]
 
 [project.scripts]
@@ -53,28 +53,28 @@ run_viewer = "xpcs_toolkit.cli:main"
 
 [project.optional-dependencies]
 dev = [
-    "coverage[toml]>=7.6.0",
-    "pytest>=8.3.0",
+    "coverage[toml]>=7.6.9",
+    "pytest>=8.3.4",
     "pytest-cov>=6.0.0",
-    "pytest-xdist[psutil]>=3.6.0",
+    "pytest-xdist[psutil]>=3.6.1",
     "pytest-benchmark>=4.0.0",
     "pytest-mock>=3.14.0",
-    "pytest-timeout>=2.3.0",
+    "pytest-timeout>=2.3.1",
     "pytest-sugar>=1.0.0",
-    "pytest-html>=4.1.0",
+    "pytest-html>=4.1.1",
     "pytest-qt>=4.4.0",
-    "hypothesis>=6.112.0",
+    "hypothesis>=6.115.6",
     "mypy>=1.13.0",
-    "ruff>=0.7.0",
-    "bandit[toml]>=1.7.0",
-    "pre-commit>=4.0.0"
+    "ruff>=0.8.4",
+    "bandit[toml]>=1.8.0",
+    "pre-commit>=4.0.1"
 ]
 docs = [
-    "sphinx>=8.1.0",
-    "sphinx-rtd-theme>=3.0.0",
+    "sphinx>=8.1.3",
+    "sphinx-rtd-theme>=3.0.2",
     "myst-parser>=4.0.0",
-    "sphinx-autodoc-typehints>=2.4.0",
-    "sphinx-copybutton>=0.5.0"
+    "sphinx-autodoc-typehints>=2.4.4",
+    "sphinx-copybutton>=0.5.2"
 ]
 validation = [
     "memory-profiler>=0.61.0",
