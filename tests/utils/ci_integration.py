@@ -564,3 +564,37 @@ def github_step_summary(content: str) -> None:
             with open(github_step_summary, 'a') as f:
                 f.write(content)
                 f.write('\n')
+
+
+def cleanup_ci_artifacts() -> None:
+    """Clean up CI artifact directories if they are empty."""
+    import shutil
+
+    # Directories to clean up
+    artifact_dirs = [
+        Path.cwd() / 'test-artifacts',
+        Path.cwd() / 'test-reports'
+    ]
+
+    for artifact_dir in artifact_dirs:
+        if artifact_dir.exists() and artifact_dir.is_dir():
+            try:
+                # Check if directory is empty (only contains . and ..)
+                if not any(artifact_dir.iterdir()):
+                    shutil.rmtree(artifact_dir)
+            except (OSError, PermissionError):
+                # Ignore errors during cleanup
+                pass
+
+
+# Pytest fixtures for automatic cleanup
+import pytest
+
+@pytest.fixture(scope="session", autouse=True)
+def ci_cleanup():
+    """Automatic cleanup fixture for CI artifacts."""
+    # Ensure cleanup happens even if tests fail
+    try:
+        yield
+    finally:
+        cleanup_ci_artifacts()

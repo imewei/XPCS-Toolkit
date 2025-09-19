@@ -1,8 +1,8 @@
 """
 Utilities package for XPCS Toolkit.
 
-This package contains utility modules for performance profiling,
-optimization helpers, logging infrastructure, and other support functions.
+This package contains essential utility modules for logging infrastructure
+and other core support functions.
 """
 
 from .log_formatters import (
@@ -25,44 +25,6 @@ from .logging_config import (
     setup_logging,
 )
 
-# Essential performance utilities
-try:
-    from .performance_profiler import (
-        PerformanceProfiler,
-        global_profiler,
-        profile_algorithm,
-        profile_block,
-    )
-
-    _profiler_available = True
-except ImportError:
-    _profiler_available = False
-
-# Core memory management
-try:
-    from .memory_utils import (
-        MemoryOptimizer,
-        MemoryTracker,
-        SystemMemoryMonitor,
-    )
-
-    _memory_available = True
-except ImportError:
-    _memory_available = False
-
-# Essential caching functionality
-try:
-    from .advanced_cache import (
-        CacheLevel,
-        MultiLevelCache,
-        cache_computation,
-        get_global_cache,
-    )
-
-    _caching_available = True
-except ImportError:
-    _caching_available = False
-
 # Define essential exports
 __all__ = [
     "ColoredConsoleFormatter",
@@ -81,39 +43,9 @@ __all__ = [
     "setup_logging",
 ]
 
-# Add optional exports based on availability
-if _profiler_available:
-    __all__.extend(
-        [
-            "PerformanceProfiler",
-            "global_profiler",
-            "profile_algorithm",
-            "profile_block",
-        ]
-    )
-
-if _memory_available:
-    __all__.extend(
-        [
-            "MemoryOptimizer",
-            "MemoryTracker",
-            "SystemMemoryMonitor",
-        ]
-    )
-
-if _caching_available:
-    __all__.extend(
-        [
-            "CacheLevel",
-            "MultiLevelCache",
-            "cache_computation",
-            "get_global_cache",
-        ]
-    )
-
 
 # Convenience function for basic setup
-def setup_basic_utilities(log_level="INFO", enable_profiling=False):
+def setup_basic_utilities(log_level="INFO"):
     """
     Setup basic XPCS Toolkit utilities.
 
@@ -121,8 +53,6 @@ def setup_basic_utilities(log_level="INFO", enable_profiling=False):
     ----------
     log_level : str
         Logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
-    enable_profiling : bool
-        Whether to enable performance profiling
 
     Returns
     -------
@@ -138,14 +68,7 @@ def setup_basic_utilities(log_level="INFO", enable_profiling=False):
 
     utilities = {
         "logger": logger,
-        "profiler_available": _profiler_available,
-        "memory_available": _memory_available,
-        "caching_available": _caching_available,
     }
-
-    if enable_profiling and _profiler_available:
-        utilities["profiler"] = global_profiler
-        logger.info("Performance profiling enabled")
 
     return utilities
 

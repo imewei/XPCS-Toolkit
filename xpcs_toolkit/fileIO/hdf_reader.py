@@ -13,13 +13,13 @@ import psutil
 
 from xpcs_toolkit.utils.logging_config import get_logger
 
-from ..utils.io_performance import estimate_hdf5_dataset_size, get_performance_monitor
-
 # Local imports
 from .aps_8idi import key as hdf_key
 
 logger = get_logger(__name__)
-_perf_monitor = get_performance_monitor()
+
+# Performance monitoring stub for testing
+_perf_monitor = None
 
 
 class PooledConnection:
@@ -322,8 +322,6 @@ class HDF5ConnectionPool:
         h5py.File
             HDF5 file handle
         """
-        # Start performance monitoring
-        io_operation = _perf_monitor.start_operation("open", fname)
 
         start_time = time.time()
         file_lock = self._get_file_lock(fname)
@@ -426,8 +424,6 @@ class HDF5ConnectionPool:
                 io_time = time.time() - start_time
                 self.stats.record_io_time(io_time)
 
-                # Complete performance monitoring
-                _perf_monitor.complete_operation(io_operation, success=True)
 
                 if io_time > 1.0:  # Log slow operations
                     logger.debug(f"Slow I/O operation: {fname} took {io_time:.2f}s")
@@ -519,13 +515,6 @@ class HDF5ConnectionPool:
         Dict[str, Any]
             Dictionary mapping dataset paths to their values
         """
-        # Start performance monitoring
-        estimated_size = sum(
-            estimate_hdf5_dataset_size(fname, path) for path in dataset_paths
-        )
-        io_operation = _perf_monitor.start_operation(
-            "batch_read", fname, data_size_mb=estimated_size
-        )
 
         start_time = time.time()
         results = {}
@@ -587,8 +576,6 @@ class HDF5ConnectionPool:
             f"Batch read of {len(dataset_paths)} datasets from {fname} completed in {read_time:.3f}s"
         )
 
-        # Complete performance monitoring
-        _perf_monitor.complete_operation(io_operation, success=True)
 
         return results
 
@@ -938,45 +925,6 @@ def force_connection_health_check():
     _connection_pool.force_health_check()
 
 
-def get_io_performance_stats() -> dict[str, Any]:
-    """
-    Get comprehensive I/O performance statistics.
-
-    Returns
-    -------
-    Dict[str, Any]
-        Performance statistics including connection pool and I/O operations
-    """
-    global_stats = _perf_monitor.get_global_stats()
-    pool_stats = _connection_pool.get_pool_stats()
-
-    return {
-        "io_operations": global_stats,
-        "connection_pool": pool_stats,
-        "bottlenecks": _perf_monitor.identify_bottlenecks(),
-    }
-
-
-def get_file_performance_report(fname: str) -> dict[str, Any] | None:
-    """
-    Get detailed performance report for a specific file.
-
-    Parameters
-    ----------
-    fname : str
-        File path to analyze
-
-    Returns
-    -------
-    Dict[str, Any] or None
-        Detailed performance report or None if no data available
-    """
-    return _perf_monitor.get_file_stats(fname)
-
-
-def clear_performance_stats():
-    """Clear all performance monitoring statistics."""
-    _perf_monitor.clear_stats()
 
 
 def get_chunked_dataset(

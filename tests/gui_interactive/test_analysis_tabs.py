@@ -37,11 +37,14 @@ class TestSAXS2DTab:
 
     @pytest.mark.gui
     def test_saxs_2d_image_display(
-        self, gui_main_window, qtbot, mock_xpcs_file, gui_test_helpers
+        self, gui_main_window, qtbot, mock_xpcs_file, mock_viewer_kernel, gui_test_helpers
     ):
         """Test SAXS 2D image display functionality."""
         window = gui_main_window
         tab_widget = window.findChild(QtWidgets.QTabWidget)
+
+        # Initialize the viewer kernel (it's None by default when path=None)
+        window.vk = mock_viewer_kernel
 
         # Switch to SAXS 2D tab
         gui_test_helpers.click_tab(qtbot, tab_widget, 0)
@@ -58,10 +61,13 @@ class TestSAXS2DTab:
                 qtbot.wait(100)
 
     @pytest.mark.gui
-    def test_saxs_2d_colorbar_controls(self, gui_main_window, qtbot, gui_test_helpers):
+    def test_saxs_2d_colorbar_controls(self, gui_main_window, qtbot, mock_viewer_kernel, gui_test_helpers):
         """Test SAXS 2D colorbar and scaling controls."""
         window = gui_main_window
         tab_widget = window.findChild(QtWidgets.QTabWidget)
+
+        # Initialize the viewer kernel (it's None by default when path=None)
+        window.vk = mock_viewer_kernel
 
         gui_test_helpers.click_tab(qtbot, tab_widget, 0)
         current_widget = tab_widget.currentWidget()
@@ -82,10 +88,13 @@ class TestSAXS1DTab:
     """Test suite for SAXS 1D analysis tab."""
 
     @pytest.mark.gui
-    def test_saxs_1d_tab_initialization(self, gui_main_window, qtbot, gui_test_helpers):
+    def test_saxs_1d_tab_initialization(self, gui_main_window, qtbot, mock_viewer_kernel, gui_test_helpers):
         """Test SAXS 1D tab initializes with proper components."""
         window = gui_main_window
         tab_widget = window.findChild(QtWidgets.QTabWidget)
+
+        # Initialize the viewer kernel (it's None by default when path=None)
+        window.vk = mock_viewer_kernel
 
         # Switch to SAXS 1D tab (index 1)
         gui_test_helpers.click_tab(qtbot, tab_widget, 1)
@@ -98,10 +107,13 @@ class TestSAXS1DTab:
         assert len(plot_widgets) > 0
 
     @pytest.mark.gui
-    def test_saxs_1d_plot_controls(self, gui_main_window, qtbot, gui_test_helpers):
+    def test_saxs_1d_plot_controls(self, gui_main_window, qtbot, mock_viewer_kernel, gui_test_helpers):
         """Test SAXS 1D plot scaling and axis controls."""
         window = gui_main_window
         tab_widget = window.findChild(QtWidgets.QTabWidget)
+
+        # Initialize the viewer kernel (it's None by default when path=None)
+        window.vk = mock_viewer_kernel
 
         gui_test_helpers.click_tab(qtbot, tab_widget, 1)
         current_widget = tab_widget.currentWidget()
@@ -121,10 +133,13 @@ class TestG2AnalysisTab:
     """Test suite for G2 correlation analysis tab."""
 
     @pytest.mark.gui
-    def test_g2_tab_initialization(self, gui_main_window, qtbot, gui_test_helpers):
+    def test_g2_tab_initialization(self, gui_main_window, qtbot, mock_viewer_kernel, gui_test_helpers):
         """Test G2 analysis tab initializes with proper components."""
         window = gui_main_window
         tab_widget = window.findChild(QtWidgets.QTabWidget)
+
+        # Initialize the viewer kernel (it's None by default when path=None)
+        window.vk = mock_viewer_kernel
 
         # Switch to G2 tab (index 4 based on tab_mapping)
         gui_test_helpers.click_tab(qtbot, tab_widget, 4)
@@ -138,11 +153,14 @@ class TestG2AnalysisTab:
 
     @pytest.mark.gui
     def test_g2_fitting_controls(
-        self, gui_main_window, qtbot, gui_test_helpers, mock_xpcs_file
+        self, gui_main_window, qtbot, mock_viewer_kernel, gui_test_helpers, mock_xpcs_file
     ):
         """Test G2 fitting parameter controls."""
         window = gui_main_window
         tab_widget = window.findChild(QtWidgets.QTabWidget)
+
+        # Initialize the viewer kernel (it's None by default when path=None)
+        window.vk = mock_viewer_kernel
 
         gui_test_helpers.click_tab(qtbot, tab_widget, 4)
         current_widget = tab_widget.currentWidget()
@@ -171,10 +189,13 @@ class TestG2AnalysisTab:
                 assert spin_box.value() == new_value
 
     @pytest.mark.gui
-    def test_g2_fit_execution(self, gui_main_window, qtbot, gui_test_helpers):
+    def test_g2_fit_execution(self, gui_main_window, qtbot, mock_viewer_kernel, gui_test_helpers):
         """Test G2 fitting execution via button clicks."""
         window = gui_main_window
         tab_widget = window.findChild(QtWidgets.QTabWidget)
+
+        # Initialize the viewer kernel (it's None by default when path=None)
+        window.vk = mock_viewer_kernel
 
         gui_test_helpers.click_tab(qtbot, tab_widget, 4)
         current_widget = tab_widget.currentWidget()
@@ -189,11 +210,9 @@ class TestG2AnalysisTab:
                 break
 
         if fit_button and fit_button.isEnabled():
-            # Mock the fitting process to avoid actual computation
-            with patch("xpcs_toolkit.module.g2mod.fit_g2") as mock_fit:
-                mock_fit.return_value = {"success": True, "params": [1.0, 100.0, 1.0]}
-                qtbot.mouseClick(fit_button, QtCore.Qt.MouseButton.LeftButton)
-                qtbot.wait(100)
+            # Click the fit button - the actual fitting is mocked elsewhere
+            qtbot.mouseClick(fit_button, QtCore.Qt.MouseButton.LeftButton)
+            qtbot.wait(100)
 
 
 class TestDiffusionTab:
@@ -201,11 +220,14 @@ class TestDiffusionTab:
 
     @pytest.mark.gui
     def test_diffusion_tab_initialization(
-        self, gui_main_window, qtbot, gui_test_helpers
+        self, gui_main_window, qtbot, mock_viewer_kernel, gui_test_helpers
     ):
         """Test diffusion tab initializes properly."""
         window = gui_main_window
         tab_widget = window.findChild(QtWidgets.QTabWidget)
+
+        # Initialize the viewer kernel (it's None by default when path=None)
+        window.vk = mock_viewer_kernel
 
         # Switch to diffusion tab (index 5)
         gui_test_helpers.click_tab(qtbot, tab_widget, 5)
@@ -222,10 +244,13 @@ class TestTwoTimeTab:
     """Test suite for two-time correlation analysis tab."""
 
     @pytest.mark.gui
-    def test_twotime_tab_initialization(self, gui_main_window, qtbot, gui_test_helpers):
+    def test_twotime_tab_initialization(self, gui_main_window, qtbot, mock_viewer_kernel, gui_test_helpers):
         """Test two-time correlation tab initializes properly."""
         window = gui_main_window
         tab_widget = window.findChild(QtWidgets.QTabWidget)
+
+        # Initialize the viewer kernel (it's None by default when path=None)
+        window.vk = mock_viewer_kernel
 
         # Switch to two-time tab (index 6)
         gui_test_helpers.click_tab(qtbot, tab_widget, 6)
@@ -238,10 +263,13 @@ class TestTwoTimeTab:
         assert len(widgets) > 0
 
     @pytest.mark.gui
-    def test_twotime_parameters(self, gui_main_window, qtbot, gui_test_helpers):
+    def test_twotime_parameters(self, gui_main_window, qtbot, mock_viewer_kernel, gui_test_helpers):
         """Test two-time correlation parameter controls."""
         window = gui_main_window
         tab_widget = window.findChild(QtWidgets.QTabWidget)
+
+        # Initialize the viewer kernel (it's None by default when path=None)
+        window.vk = mock_viewer_kernel
 
         gui_test_helpers.click_tab(qtbot, tab_widget, 6)
         current_widget = tab_widget.currentWidget()
@@ -263,11 +291,14 @@ class TestStabilityTab:
 
     @pytest.mark.gui
     def test_stability_tab_initialization(
-        self, gui_main_window, qtbot, gui_test_helpers
+        self, gui_main_window, qtbot, mock_viewer_kernel, gui_test_helpers
     ):
         """Test stability analysis tab initializes properly."""
         window = gui_main_window
         tab_widget = window.findChild(QtWidgets.QTabWidget)
+
+        # Initialize the viewer kernel (it's None by default when path=None)
+        window.vk = mock_viewer_kernel
 
         # Switch to stability tab (index 2)
         gui_test_helpers.click_tab(qtbot, tab_widget, 2)
@@ -281,11 +312,14 @@ class TestStabilityTab:
 
     @pytest.mark.gui
     def test_stability_plot_updates(
-        self, gui_main_window, qtbot, gui_test_helpers, mock_xpcs_file
+        self, gui_main_window, qtbot, mock_viewer_kernel, gui_test_helpers, mock_xpcs_file
     ):
         """Test stability plot updates with mock data."""
         window = gui_main_window
         tab_widget = window.findChild(QtWidgets.QTabWidget)
+
+        # Initialize the viewer kernel (it's None by default when path=None)
+        window.vk = mock_viewer_kernel
 
         gui_test_helpers.click_tab(qtbot, tab_widget, 2)
 
@@ -306,11 +340,14 @@ class TestIntensityTimeTab:
 
     @pytest.mark.gui
     def test_intensity_time_initialization(
-        self, gui_main_window, qtbot, gui_test_helpers
+        self, gui_main_window, qtbot, mock_viewer_kernel, gui_test_helpers
     ):
         """Test intensity-time tab initializes properly."""
         window = gui_main_window
         tab_widget = window.findChild(QtWidgets.QTabWidget)
+
+        # Initialize the viewer kernel (it's None by default when path=None)
+        window.vk = mock_viewer_kernel
 
         # Switch to intensity-time tab (index 3)
         gui_test_helpers.click_tab(qtbot, tab_widget, 3)
@@ -327,10 +364,13 @@ class TestQMapTab:
     """Test suite for Q-map analysis tab."""
 
     @pytest.mark.gui
-    def test_qmap_tab_initialization(self, gui_main_window, qtbot, gui_test_helpers):
+    def test_qmap_tab_initialization(self, gui_main_window, qtbot, mock_viewer_kernel, gui_test_helpers):
         """Test Q-map tab initializes properly."""
         window = gui_main_window
         tab_widget = window.findChild(QtWidgets.QTabWidget)
+
+        # Initialize the viewer kernel (it's None by default when path=None)
+        window.vk = mock_viewer_kernel
 
         # Switch to Q-map tab (index 7)
         if tab_widget.count() > 7:
@@ -348,9 +388,12 @@ class TestAverageTab:
     """Test suite for averaging functionality tab."""
 
     @pytest.mark.gui
-    def test_average_tab_initialization(self, gui_main_window, qtbot, gui_test_helpers):
+    def test_average_tab_initialization(self, gui_main_window, qtbot, mock_viewer_kernel, gui_test_helpers):
         """Test averaging tab initializes properly."""
         window = gui_main_window
+
+        # Initialize the viewer kernel (it's None by default when path=None)
+        window.vk = mock_viewer_kernel
         tab_widget = window.findChild(QtWidgets.QTabWidget)
 
         # Switch to average tab (index 8)
@@ -370,11 +413,14 @@ class TestMetadataTab:
 
     @pytest.mark.gui
     def test_metadata_tab_initialization(
-        self, gui_main_window, qtbot, gui_test_helpers
+        self, gui_main_window, qtbot, mock_viewer_kernel, gui_test_helpers
     ):
         """Test metadata tab initializes properly."""
         window = gui_main_window
         tab_widget = window.findChild(QtWidgets.QTabWidget)
+
+        # Initialize the viewer kernel (it's None by default when path=None)
+        window.vk = mock_viewer_kernel
 
         # Switch to metadata tab (index 9)
         if tab_widget.count() > 9:
@@ -389,11 +435,14 @@ class TestMetadataTab:
 
     @pytest.mark.gui
     def test_metadata_display(
-        self, gui_main_window, qtbot, gui_test_helpers, mock_xpcs_file
+        self, gui_main_window, qtbot, mock_viewer_kernel, gui_test_helpers, mock_xpcs_file
     ):
         """Test metadata display functionality."""
         window = gui_main_window
         tab_widget = window.findChild(QtWidgets.QTabWidget)
+
+        # Initialize the viewer kernel (it's None by default when path=None)
+        window.vk = mock_viewer_kernel
 
         if tab_widget.count() > 9:
             gui_test_helpers.click_tab(qtbot, tab_widget, 9)
@@ -429,11 +478,14 @@ class TestTabIntegration:
 
     @pytest.mark.gui
     def test_tab_data_consistency(
-        self, gui_main_window, qtbot, gui_test_helpers, mock_xpcs_file
+        self, gui_main_window, qtbot, mock_viewer_kernel, gui_test_helpers, mock_xpcs_file
     ):
         """Test that data remains consistent across tab switches."""
         window = gui_main_window
         tab_widget = window.findChild(QtWidgets.QTabWidget)
+
+        # Initialize the viewer kernel (it's None by default when path=None)
+        window.vk = mock_viewer_kernel
 
         # Set up mock data
         with patch.object(window.vk, "current_file", mock_xpcs_file):
@@ -453,10 +505,13 @@ class TestTabIntegration:
                     assert current_widget is not None
 
     @pytest.mark.gui
-    def test_tab_state_preservation(self, gui_main_window, qtbot, gui_test_helpers):
+    def test_tab_state_preservation(self, gui_main_window, qtbot, mock_viewer_kernel, gui_test_helpers):
         """Test that tab states are preserved during navigation."""
         window = gui_main_window
         tab_widget = window.findChild(QtWidgets.QTabWidget)
+
+        # Initialize the viewer kernel (it's None by default when path=None)
+        window.vk = mock_viewer_kernel
 
         if tab_widget.count() > 2:
             # Go to first tab and modify a control

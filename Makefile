@@ -107,9 +107,12 @@ clean-cache: ## remove Python and tool cache files
 
 clean-test: ## remove test, coverage and benchmark artifacts
 	rm -rf .tox/ .coverage htmlcov/ .benchmark/ .benchmarks/ .hypothesis/
-	rm -f test_switching.log coverage.json
+	rm -rf test-artifacts/ test-reports/
+	rm -f test_switching.log coverage.json coverage.xml
 	find . -name '*.log' -path './tests/*' -delete || true
-	rm -f test_*.log test_*.xml || true
+	find . -name 'test_*.log' -delete || true
+	find . -name 'test_*.xml' -delete || true
+	rm -f *.xml || true
 
 # =============================================================================
 # Code Quality and Formatting
@@ -139,14 +142,35 @@ quality-check: lint test-ci ## comprehensive quality check for CI/CD
 # =============================================================================
 
 # Default test target
-test: test-unit ## run basic unit tests (default test target)
+test: test-fast ## run fast tests (default test target)
+
+# Optimized test execution profiles
+test-fast: ## run fast tests only (unit tests, < 1 second)
+	$(PYTHON) -m pytest -m "unit and not slow" $(PYTEST_OPTS)
+
+test-core: ## run core functionality tests (fast + essential integration)
+	$(PYTHON) -m pytest -m "unit or (integration and not slow)" $(PYTEST_OPTS)
 
 # Core test categories
-test-unit: ## run core unit and integration tests
-	$(PYTHON) -m pytest $(TESTS_DIR)/unit/test_package_basics.py $(TESTS_DIR)/logging/unit/ $(PYTEST_OPTS)
+test-unit: ## run all unit tests
+	$(PYTHON) -m pytest -m "unit" $(PYTEST_OPTS)
 
 test-integration: ## run integration tests for key components
-	$(PYTHON) -m pytest $(TESTS_DIR)/integration/ $(PYTEST_OPTS)
+	$(PYTHON) -m pytest -m "integration" $(PYTEST_OPTS)
+
+# Analysis-specific test profiles
+test-analysis: ## run all analysis tests (G2, SAXS, two-time)
+	$(PYTHON) -m pytest $(TESTS_DIR)/analysis/ $(PYTEST_OPTS)
+
+test-g2: ## run G2 correlation analysis tests only
+	$(PYTHON) -m pytest -m "g2_analysis" $(PYTEST_OPTS)
+
+test-qt: ## run Qt validation tests only
+	$(PYTHON) -m pytest $(TESTS_DIR)/qt_validation/ $(PYTEST_OPTS)
+
+# Development workflow profiles
+test-dev: ## run developer-friendly test suite (fast + critical)
+	$(PYTHON) -m pytest -m "unit or (integration and not slow and not flaky)" $(PYTEST_OPTS) --maxfail=5
 
 test-logging: ## run comprehensive logging system tests
 	$(PYTHON) -m pytest $(TESTS_DIR)/logging/ $(PYTEST_OPTS)

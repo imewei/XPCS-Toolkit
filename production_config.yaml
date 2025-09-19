@@ -1,34 +1,23 @@
 # XPCS Toolkit Production Configuration
-# This configuration file contains optimized settings for production deployment
+# This configuration file contains basic settings for production deployment
 
-# Performance Settings
+# Basic Performance Settings
 performance:
-  # Memory management settings
-  memory:
-    max_memory_usage_mb: 8192  # 8GB maximum memory usage
-    memory_pressure_threshold: 0.85  # 85% memory pressure threshold
-    cleanup_interval_seconds: 300  # Cleanup every 5 minutes
-    enable_memory_monitoring: true
-    
-  # I/O optimization settings
+  # I/O settings
   io:
     hdf_connection_pool_size: 10  # Connection pool size
     read_buffer_size_mb: 64  # HDF5 read buffer size
-    enable_parallel_io: true
     max_concurrent_files: 8
-    
+
   # Computation settings
   computation:
-    enable_vectorization: true
     max_parallel_workers: 8  # Number of CPU cores to use
     fft_implementation: "numpy"  # Options: "numpy", "scipy"
-    enable_computation_cache: true
-    
+
   # Threading settings
   threading:
     max_thread_pool_size: 16
     background_worker_timeout: 300  # 5 minutes timeout
-    enable_async_processing: true
 
 # GUI Settings
 gui:
@@ -53,13 +42,6 @@ logging:
   log_file: "xpcs_toolkit.log"
   max_log_file_size_mb: 100
   backup_count: 5
-  
-  # Performance logging
-  enable_performance_logging: true
-  performance_log_level: "DEBUG"
-  
-  # GUI logging
-  enable_gui_logging: false  # Reduce GUI logging in production
 
 # Data Processing Settings
 data:
@@ -72,41 +54,18 @@ data:
   enable_parallel_analysis: true
   max_roi_count: 50
   
-  # Caching settings
-  enable_data_caching: true
-  cache_size_mb: 2048  # 2GB cache size
-  cache_ttl_seconds: 3600  # 1 hour cache TTL
-
 # Error Handling
 error_handling:
-  enable_crash_reporting: false  # Disable in production for privacy
   enable_error_recovery: true
   max_retry_attempts: 3
   retry_delay_seconds: 1
-  
-  # Recovery settings
-  enable_auto_recovery: true
-  recovery_checkpoint_interval: 600  # 10 minutes
 
 # Security Settings
 security:
   # File access restrictions
   allowed_file_extensions: [".h5", ".hdf5", ".nexus"]
   max_file_size_gb: 10  # Maximum file size
-  
+
   # Path restrictions
   restrict_file_access: false  # Set to true in restricted environments
   allowed_directories: []  # List of allowed directories if restrictions enabled
-
-# Optimization Settings
-optimization:
-  # Enable all major optimizations achieved in development
-  enable_memory_optimizations: true
-  enable_io_optimizations: true
-  enable_vectorization_optimizations: true
-  enable_threading_optimizations: true
-  enable_caching_optimizations: true
-  
-  # Validation settings
-  validate_optimizations: true
-  performance_baseline_file: "performance_baseline.json"

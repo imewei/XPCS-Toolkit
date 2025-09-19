@@ -23,21 +23,16 @@ from ..utils.logging_config import get_logger
 logger = get_logger(__name__)
 
 
-class WorkerPriority(Enum):
-    """Priority levels for worker operations."""
-
-    LOW = 1
-    NORMAL = 2
-    HIGH = 3
-    CRITICAL = 4
 
 
 class WorkerState(Enum):
     """Worker execution states."""
 
+    IDLE = "idle"
     PENDING = "pending"
     RUNNING = "running"
     COMPLETED = "completed"
+    ERROR = "error"
     FAILED = "failed"
     CANCELLED = "cancelled"
 
@@ -46,24 +41,28 @@ class WorkerState(Enum):
 class WorkerResult:
     """Container for worker execution results."""
 
-    worker_id: str
-    result: Any
+    success: bool
+    data: Any
+    error: str
     execution_time: float
-    memory_usage: float
-    success: bool = True
-    error_message: str = ""
+
+    # Optional fields for backward compatibility
+    worker_id: str = ""
+    memory_usage: float = 0.0
 
 
 @dataclass
 class WorkerStats:
     """Statistics for worker execution monitoring."""
 
-    total_workers: int = 0
+    total_jobs: int
+    completed_jobs: int
+    failed_jobs: int
+    average_execution_time: float
+
+    # Additional fields for enhanced monitoring
     active_workers: int = 0
-    completed_workers: int = 0
-    failed_workers: int = 0
     cancelled_workers: int = 0
-    avg_execution_time: float = 0.0
     total_memory_usage: float = 0.0
 
 

@@ -1,0 +1,162 @@
+name: Workflow Validation
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/**'
+  workflow_dispatch:
+    inputs:
+      check_all:
+        description: 'Validate all workflows'
+        required: false
+        default: true
+        type: boolean
+
+jobs:
+  validate-workflows:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Validate GitHub Actions workflows
+      run: |
+        echo "🔍 Validating workflow syntax..."
+
+        # Check if actionlint is available, install if not
+        if ! command -v actionlint &> /dev/null; then
+          echo "Installing actionlint..."
+          # Download and install actionlint
+          curl -sL https://github.com/rhymond/actionlint/releases/latest/download/actionlint_linux_amd64.tar.gz | tar xz -C /tmp
+          sudo mv /tmp/actionlint /usr/local/bin/
+        fi
+
+        # Validate all workflow files
+        echo "📋 Found workflow files:"
+        find .github/workflows -name "*.yml" -o -name "*.yaml" | sort
+
+        echo ""
+        echo "✅ Running actionlint validation:"
+        actionlint .github/workflows/*.yml
+
+    - name: Check workflow best practices
+      run: |
+        echo "🔍 Checking workflow best practices..."
+
+        # Check for required elements
+        echo "Checking for required workflow elements..."
+
+        # Check for timeouts
+        missing_timeouts=$(grep -L "timeout-minutes" .github/workflows/*.yml || true)
+        if [ ! -z "$missing_timeouts" ]; then
+          echo "⚠️ Workflows missing timeout-minutes:"
+          echo "$missing_timeouts"
+        else
+          echo "✅ All workflows have timeout configuration"
+        fi
+
+        # Check for concurrency control
+        missing_concurrency=$(grep -L "concurrency:" .github/workflows/*.yml || true)
+        if [ ! -z "$missing_concurrency" ]; then
+          echo "⚠️ Workflows missing concurrency control:"
+          echo "$missing_concurrency"
+        else
+          echo "✅ All workflows have concurrency control"
+        fi
+
+        # Check for latest action versions
+        echo ""
+        echo "🔍 Checking for outdated actions..."
+        if grep -r "actions/checkout@v[1-3]" .github/workflows/; then
+          echo "⚠️ Found outdated checkout actions - consider upgrading to v4"
+        fi
+        if grep -r "actions/setup-python@v[1-4]" .github/workflows/; then
+          echo "⚠️ Found outdated setup-python actions - consider upgrading to v5"
+        fi
+        if grep -r "actions/cache@v[1-3]" .github/workflows/; then
+          echo "⚠️ Found outdated cache actions - consider upgrading to v4"
+        fi
+
+    - name: Security check for workflows
+      run: |
+        echo "🔒 Checking workflow security..."
+
+        # Check for potential security issues
+        echo "Checking for security best practices..."
+
+        # Check for pinned action versions
+        unpinned_actions=$(grep -r "uses:.*@main\|uses:.*@master" .github/workflows/ || true)
+        if [ ! -z "$unpinned_actions" ]; then
+          echo "⚠️ Found unpinned actions (using @main/@master):"
+          echo "$unpinned_actions"
+          echo "Consider pinning to specific versions for security"
+        fi
+
+        # Check for secrets in workflow files
+        potential_secrets=$(grep -ri "password\|token\|key\|secret" .github/workflows/ | grep -v "secrets\." || true)
+        if [ ! -z "$potential_secrets" ]; then
+          echo "⚠️ Potential hardcoded secrets found:"
+          echo "$potential_secrets"
+        fi
+
+        # Check for third-party actions without version pins
+        third_party_actions=$(grep -r "uses: [^actions/]" .github/workflows/ | grep -v "@v\|@[0-9]" || true)
+        if [ ! -z "$third_party_actions" ]; then
+          echo "⚠️ Third-party actions without version pins:"
+          echo "$third_party_actions"
+        fi
+
+        echo "✅ Security check completed"
+
+  test-syntax:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Test modified workflows
+      run: |
+        echo "🧪 Testing syntax of modified workflows..."
+
+        # Get list of changed workflow files
+        changed_files=$(git diff --name-only ${{ github.event.pull_request.base.sha }}..${{ github.sha }} | grep "^\.github/workflows/" || true)
+
+        if [ -z "$changed_files" ]; then
+          echo "No workflow files changed"
+          exit 0
+        fi
+
+        echo "Changed workflow files:"
+        echo "$changed_files"
+
+        # Validate each changed file
+        for file in $changed_files; do
+          if [ -f "$file" ]; then
+            echo "Validating $file..."
+            # Basic YAML syntax check
+            python -c "import yaml; yaml.safe_load(open('$file', 'r'))"
+            echo "✅ $file has valid YAML syntax"
+          fi
+        done
+
+  summary:
+    runs-on: ubuntu-latest
+    needs: [validate-workflows, test-syntax]
+    if: always()
+
+    steps:
+    - name: Validation Summary
+      run: |
+        echo "📊 Workflow Validation Summary"
+        echo "=============================="
+        echo "🔍 Syntax Check: ${{ needs.validate-workflows.result }}"
+        echo "🧪 Modified Files: ${{ needs.test-syntax.result || 'skipped' }}"
+
+        if [ "${{ needs.validate-workflows.result }}" = "failure" ]; then
+          echo "❌ Workflow validation failed"
+          exit 1
+        else
+          echo "✅ All workflow validations passed"
+        fi

@@ -62,7 +62,7 @@ XPCS Toolkit Qt Compliance System
 **Components**:
 
 ##### Qt Thread Management (`xpcs_toolkit/threading/qt_compliant_thread_manager.py`)
-```python
+```
 QtCompliantThreadManager
 ├── QtThreadSafetyValidator
 │   ├── Main thread validation
@@ -85,7 +85,7 @@ QtCompliantThreadManager
 - **Resource Cleanup**: Automatic cleanup of Qt resources and threads
 
 ##### Signal/Slot Safety (`xpcs_toolkit/plothandler/qt_signal_fixes.py`)
-```python
+```
 Qt Signal/Slot Safety Framework
 ├── QtConnectionFixer
 │   ├── Signal connection validation
@@ -108,7 +108,7 @@ Qt Signal/Slot Safety Framework
 - **Warning Suppression**: Contextual suppression of PyQtGraph-related Qt warnings
 
 ##### Timer Compliance (`xpcs_toolkit/threading/cleanup_optimized.py`)
-```python
+```
 Timer Compliance System
 ├── BackgroundCleanupManager
 │   ├── Deferred timer creation
@@ -137,7 +137,7 @@ Timer Compliance System
 **Components**:
 
 ##### Enhanced Worker Safety (`xpcs_toolkit/threading/enhanced_worker_safety.py`)
-```python
+```
 Enhanced Worker Safety System
 ├── SafeWorkerBase
 │   ├── Automatic error recovery
@@ -168,7 +168,7 @@ Enhanced Worker Safety System
 **Components**:
 
 ##### Thread Pool Integration (`xpcs_toolkit/threading/thread_pool_integration_validator.py`)
-```python
+```
 Thread Pool Health System
 ├── ThreadPoolIntegrationValidator
 │   ├── Health metrics calculation

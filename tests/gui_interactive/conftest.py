@@ -11,6 +11,25 @@ from unittest.mock import Mock, patch
 import h5py
 import numpy as np
 import pytest
+try:
+    import h5py
+    H5PY_AVAILABLE = True
+except ImportError:
+    H5PY_AVAILABLE = False
+    # Mock h5py for basic testing
+    class MockH5pyFile:
+        def __init__(self, *args, **kwargs): pass
+        def __enter__(self): return self
+        def __exit__(self, *args): pass
+        def create_dataset(self, *args, **kwargs): pass
+        def create_group(self, *args, **kwargs): return self
+        def __getitem__(self, key): return self
+        def __setitem__(self, key, value): pass
+
+    class MockH5py:
+        File = MockH5pyFile
+
+    h5py = MockH5py()
 from PySide6 import QtCore, QtGui, QtWidgets
 
 # Import pytest-qt for GUI testing
@@ -146,7 +165,7 @@ def mock_xpcs_file(mock_hdf5_file):
 
         # Mock common methods
         mock_file.load_saxs_2d = Mock(return_value=np.random.poisson(100, (516, 516)))
-        mock_file.load_qmap = Mock(return_value=np.linspace(0.001, 0.1, (516, 516)))
+        mock_file.load_qmap = Mock(return_value={"dqmap": np.full((516, 516), 0.05)})
         mock_file.get_g2 = Mock(
             return_value=(
                 np.logspace(-6, 2, 50),
@@ -166,11 +185,14 @@ def mock_viewer_kernel(mock_xpcs_file):
         mock_kernel.flist = [mock_xpcs_file]
         mock_kernel.current_file = mock_xpcs_file
         mock_kernel.path = str(Path(mock_xpcs_file.fname).parent)
+        mock_kernel.target = [mock_xpcs_file]  # Add target attribute for GUI tests
+        mock_kernel.source = []  # Add source attribute for GUI tests
 
         # Mock common methods
         mock_kernel.update_file_list = Mock()
         mock_kernel.load_file = Mock()
         mock_kernel.set_current_file = Mock()
+        mock_kernel.build = Mock()  # Add build method to prevent FileNotFoundError
 
         return mock_kernel
 

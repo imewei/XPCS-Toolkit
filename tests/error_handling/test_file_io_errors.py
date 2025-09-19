@@ -10,6 +10,25 @@ from unittest.mock import Mock, patch
 import h5py
 import numpy as np
 import pytest
+try:
+    import h5py
+    H5PY_AVAILABLE = True
+except ImportError:
+    H5PY_AVAILABLE = False
+    # Mock h5py for basic testing
+    class MockH5pyFile:
+        def __init__(self, *args, **kwargs): pass
+        def __enter__(self): return self
+        def __exit__(self, *args): pass
+        def create_dataset(self, *args, **kwargs): pass
+        def create_group(self, *args, **kwargs): return self
+        def __getitem__(self, key): return self
+        def __setitem__(self, key, value): pass
+
+    class MockH5py:
+        File = MockH5pyFile
+
+    h5py = MockH5py()
 
 from xpcs_toolkit.file_locator import FileLocator
 from xpcs_toolkit.fileIO import hdf_reader

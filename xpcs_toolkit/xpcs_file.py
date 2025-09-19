@@ -23,76 +23,89 @@ from .fileIO.hdf_reader import (
     read_metadata_to_dict,
 )
 from .fileIO.qmap_utils import get_qmap
-from .helper.fitting import (
-    fit_with_fixed, ComprehensiveDiffusionAnalyzer, robust_curve_fit,
-    OptimizedXPCSFittingEngine, XPCSPerformanceOptimizer
-)
+from .helper.fitting import fit_with_fixed, robust_curve_fit
 from .module.twotime_utils import get_c2_stream, get_single_c2_from_hdf
 from .utils.logging_config import get_logger
-from .utils.memory_utils import MemoryTracker, get_cached_memory_monitor
+import psutil
 
 logger = get_logger(__name__)
 
 
+class MemoryStatus:
+    """Container for memory status information."""
+    def __init__(self, percent_used: float):
+        self.percent_used = percent_used
+
+
 class MemoryMonitor:
-    """
-    Memory monitoring utilities with caching optimization.
+    """Simple memory monitoring utilities using psutil."""
 
-    This class provides a drop-in replacement for the original MemoryMonitor
-    but uses the cached memory monitoring system to reduce overhead from frequent
-    psutil calls.
-    """
-
-    @staticmethod
-    def get_memory_usage() -> tuple[float, float]:
-        """
-        Get current memory usage in MB using cached monitor.
+    def get_memory_info(self) -> tuple[float, float, float]:
+        """Get current memory usage information.
 
         Returns
         -------
-        tuple
-            (used_memory_mb, available_memory_mb)
+        tuple[float, float, float]
+            (used_mb, available_mb, pressure_ratio)
         """
+        memory = psutil.virtual_memory()
+        used_mb = (memory.total - memory.available) / 1024 / 1024
+        available_mb = memory.available / 1024 / 1024
+        pressure_ratio = memory.percent / 100.0
+        return used_mb, available_mb, pressure_ratio
+
+    def get_memory_status(self) -> MemoryStatus:
+        """Get memory status object.
+
+        Returns
+        -------
+        MemoryStatus
+            Object containing percent_used attribute
+        """
+        memory = psutil.virtual_memory()
+        return MemoryStatus(memory.percent / 100.0)
+
+    def is_memory_pressure_high(self, threshold: float = 0.85) -> bool:
+        """Check if memory pressure is above threshold.
+
+        Parameters
+        ----------
+        threshold : float, optional
+            Memory pressure threshold (0-1), by default 0.85
+
+        Returns
+        -------
+        bool
+            True if memory pressure exceeds threshold
+        """
+        memory = psutil.virtual_memory()
+        return (memory.percent / 100.0) > threshold
+
+    @staticmethod
+    def get_memory_usage() -> tuple[float, float]:
+        """Get current memory usage in MB (static method for backward compatibility)."""
         monitor = get_cached_memory_monitor()
         used_mb, available_mb, _ = monitor.get_memory_info()
         return used_mb, available_mb
 
     @staticmethod
     def get_memory_pressure() -> float:
-        """
-        Calculate memory pressure as a percentage (0-1) using cached monitor.
-
-        Returns
-        -------
-        float
-            Memory pressure ratio (0 = low pressure, 1 = high pressure)
-        """
+        """Calculate memory pressure as a percentage (0-1) (static method for backward compatibility)."""
         monitor = get_cached_memory_monitor()
         status = monitor.get_memory_status()
         return status.percent_used
 
     @staticmethod
     def is_memory_pressure_high(threshold: float = 0.85) -> bool:
-        """
-        Check if memory pressure is above threshold using cached monitor.
-
-        Parameters
-        ----------
-        threshold : float
-            Memory pressure threshold (default 0.85 = 85%)
-
-        Returns
-        -------
-        bool
-            True if memory pressure is high
-        """
-        monitor = get_cached_memory_monitor()
-        return monitor.is_memory_pressure_high(threshold)
+        """Check if memory pressure is above threshold (static method for backward compatibility)."""
+        # Use psutil directly to avoid recursion
+        import psutil
+        memory = psutil.virtual_memory()
+        return (memory.percent / 100.0) > threshold
 
     @staticmethod
     def estimate_array_memory(shape: tuple, dtype: np.dtype) -> float:
-        """
-        Estimate memory usage of a numpy array in MB.
+        """Estimate memory usage of a numpy array in MB.
 
         Parameters
         ----------
@@ -110,6 +123,24 @@ class MemoryMonitor:
         bytes_per_element = np.dtype(dtype).itemsize
         total_bytes = elements * bytes_per_element
         return total_bytes / (1024 * 1024)
+
+
+# Global memory monitor instance
+_memory_monitor = None
+
+
+def get_cached_memory_monitor() -> MemoryMonitor:
+    """Get or create a cached memory monitor instance.
+
+    Returns
+    -------
+    MemoryMonitor
+        Singleton memory monitor instance
+    """
+    global _memory_monitor
+    if _memory_monitor is None:
+        _memory_monitor = MemoryMonitor()
+    return _memory_monitor
 
 
 class CacheItem:
@@ -1369,11 +1400,7 @@ class XpcsFile:
         """
         from functools import partial
 
-        # Initialize robust analyzer with appropriate settings for XPCS data
-        analyzer = ComprehensiveDiffusionAnalyzer(
-            diagnostic_level=diagnostic_level,
-            n_jobs=min(4, multiprocessing.cpu_count())  # Conservative parallelization
-        )
+        # Use simplified fitting approach
 
         # Prepare fitting results containers
         fit_line = np.zeros((g2.shape[1], len(fit_x)))
@@ -1516,28 +1543,23 @@ class XpcsFile:
         :return: dictionary with comprehensive performance-optimized results
         """
         # Initialize performance optimizer
-        performance_optimizer = XPCSPerformanceOptimizer(
-            max_memory_mb=max_memory_mb,
-            cache_size=1000
-        )
-
-        # Initialize high-performance fitting engine
-        fitting_engine = OptimizedXPCSFittingEngine(performance_optimizer)
-
-        # Get G2 data using optimized retrieval
+        # Get G2 data
         q_val, t_el, g2, sigma, label = self.get_g2_data(qrange=q_range, trange=t_range)
 
-        # Perform high-performance fitting
-        results = fitting_engine.fit_g2_optimized(
-            tau=t_el,
-            g2_data=g2,
-            g2_errors=sigma,
-            q_values=q_val,
-            fit_func=fit_func,
-            bounds=bounds,
-            bootstrap_samples=bootstrap_samples,
-            enable_diagnostics=(diagnostic_level != "basic")
+        # Perform direct fitting using existing methods
+        fit_line, fit_val = fit_with_fixed(
+            fit_func, t_el, g2, sigma, bounds, fit_flag, fit_x
         )
+
+        # Create results structure
+        results = {
+            'fit_line': fit_line,
+            'fit_params': fit_val,
+            'q_values': q_val,
+            'tau': t_el,
+            'g2_data': g2,
+            'g2_errors': sigma
+        }
 
         # Convert results to XPCS format for compatibility
         fit_summary = self._convert_optimized_results_to_xpcs_format(

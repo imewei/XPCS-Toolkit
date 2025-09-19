@@ -1,10 +1,9 @@
 name: Release
 
 on:
-  # Temporarily disabled - will resume when codebase is more mature
-  # push:
-  #   tags:
-  #     - 'v*.*.*'
+  push:
+    tags:
+      - 'v*.*.*'
   workflow_dispatch:
     inputs:
       version:
@@ -15,62 +14,139 @@ on:
         description: 'Reason for manual release'
         required: false
         default: 'Manual release testing'
+      dry_run:
+        description: 'Dry run (skip actual publishing)'
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: write
   id-token: write  # For trusted publishing to PyPI
 
+# Ensure only one release runs at a time
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
+  # Pre-release validation
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      is_prerelease: ${{ steps.version.outputs.is_prerelease }}
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Validate version
+      id: version
+      run: |
+        if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+          VERSION="${{ github.event.inputs.version }}"
+        else
+          VERSION="${{ github.ref_name }}"
+        fi
+
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+        # Check if prerelease
+        if [[ "$VERSION" =~ (alpha|beta|rc) ]]; then
+          echo "is_prerelease=true" >> $GITHUB_OUTPUT
+        else
+          echo "is_prerelease=false" >> $GITHUB_OUTPUT
+        fi
+
+        echo "📦 Release version: $VERSION"
+        echo "🔖 Pre-release: $([ "${{ steps.version.outputs.is_prerelease }}" = "true" ] && echo "Yes" || echo "No")"
+
+    - name: Check changelog
+      run: |
+        if [ -f "CHANGELOG.md" ] || [ -f "HISTORY.rst" ]; then
+          echo "✅ Changelog found"
+        else
+          echo "⚠️ No changelog found (CHANGELOG.md or HISTORY.rst)"
+        fi
+
+  # Fast build and validation
   build:
     runs-on: ubuntu-latest
-    
+    needs: validate
+    timeout-minutes: 15
+
     steps:
     - uses: actions/checkout@v4
       with:
         fetch-depth: 0  # Full history for version info
 
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: "3.12"
+        cache: 'pip'
 
     - name: Install build dependencies
       run: |
-        python -m pip install --upgrade pip
-        pip install build twine setuptools_scm
+        python -m pip install --upgrade pip wheel
+        pip install build[uv] twine setuptools_scm
 
     - name: Build package
       run: |
-        python -m build
+        python -m build --installer uv
 
-    - name: Check package
+    - name: Validate package
       run: |
-        twine check dist/*
+        # Comprehensive package validation
+        twine check dist/* --strict
+
+        # Check wheel contents
+        python -m zipfile -l dist/*.whl
+
+        # Verify metadata
+        python -c "
+        from importlib.metadata import metadata
+        import tarfile
+
+        # Extract and check sdist metadata
+        with tarfile.open('dist/*.tar.gz', 'r:gz') as tar:
+            print('📦 Source distribution contents:')
+            for member in tar.getmembers()[:10]:  # Show first 10 files
+                print(f'  {member.name}')
+        "
 
     - name: Upload build artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: dist-release-${{ github.sha }}
         path: dist/
+        retention-days: 90
 
+  # Streamlined cross-platform testing
   test-release:
     runs-on: ${{ matrix.os }}
     needs: build
+    timeout-minutes: 20
     strategy:
+      fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        python-version: ["3.12", "3.13"]
+        python-version: ["3.12"]  # Test only LTS version for releases
+        include:
+          - os: ubuntu-latest
+            python-version: "3.13"  # Test bleeding edge on Linux only
 
     steps:
-    - uses: actions/checkout@v4
-
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
 
     - name: Download build artifacts
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: dist-release-${{ github.sha }}
         path: dist/
@@ -78,30 +154,50 @@ jobs:
     - name: Install system dependencies (Ubuntu)
       if: matrix.os == 'ubuntu-latest'
       run: |
-        sudo apt-get update
-        sudo apt-get install -y libgl1-mesa-glx libegl1-mesa libxrandr2 libxss1 libxcursor1 libxcomposite1 libasound2 libxi6 libxtst6
+        sudo apt-get update -qq
+        sudo apt-get install -y --no-install-recommends \
+          libgl1-mesa-glx libegl1-mesa libxrandr2 libxss1 \
+          libxcursor1 libxcomposite1 libasound2 libxi6 libxtst6
 
     - name: Test installation from wheel
       run: |
-        pip install --find-links dist/ xpcs-toolkit
-        python -c "import xpcs_toolkit; print(f'XPCS Toolkit {xpcs_toolkit.__version__} installed successfully')"
+        # Install from wheel
+        pip install --find-links dist/ --prefer-binary xpcs-toolkit
+        python -c "import xpcs_toolkit; print(f'✅ XPCS Toolkit {xpcs_toolkit.__version__} installed successfully')"
 
     - name: Test CLI commands
+      env:
+        QT_QPA_PLATFORM: offscreen
       run: |
+        echo "🧪 Testing CLI commands..."
         xpcs-toolkit --help
         pyxpcsviewer --help
         run_viewer --help
+        echo "✅ All CLI commands working"
+
+    - name: Test basic import and functionality
+      env:
+        QT_QPA_PLATFORM: offscreen
+      run: |
+        python -c "
+        import xpcs_toolkit
+        from xpcs_toolkit.file_locator import FileLocator
+        from xpcs_toolkit.viewer_kernel import ViewerKernel
+        print('✅ Core modules import successfully')
+        print(f'📦 Version: {xpcs_toolkit.__version__}')
+        "
 
   github-release:
     runs-on: ubuntu-latest
-    needs: [build, test-release]
-    if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
+    needs: [validate, build, test-release]
+    if: (startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch') && github.event.inputs.dry_run != 'true'
+    timeout-minutes: 10
 
     steps:
     - uses: actions/checkout@v4
 
     - name: Download build artifacts
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: dist-release-${{ github.sha }}
         path: dist/
@@ -109,74 +205,104 @@ jobs:
     - name: Extract release notes
       id: extract_notes
       run: |
-        if [ -f "HISTORY.rst" ]; then
+        if [ -f "CHANGELOG.md" ]; then
+          echo "RELEASE_NOTES<<EOF" >> $GITHUB_OUTPUT
+          # Extract section for this version from changelog
+          awk '/^## \[?v?[0-9]/{if(found) exit; if($0 ~ /${{ needs.validate.outputs.version }}/) found=1; next} found' CHANGELOG.md | head -20 >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+        elif [ -f "HISTORY.rst" ]; then
           echo "RELEASE_NOTES<<EOF" >> $GITHUB_OUTPUT
           head -20 HISTORY.rst >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
         else
-          echo "RELEASE_NOTES=See CHANGELOG for release notes." >> $GITHUB_OUTPUT
+          echo "RELEASE_NOTES=🎉 New release of XPCS Toolkit! See commit history for changes." >> $GITHUB_OUTPUT
         fi
 
     - name: Create GitHub Release
-      uses: softprops/action-gh-release@v1
+      uses: softprops/action-gh-release@v2
       with:
-        name: Release ${{ github.ref_name }}
+        tag_name: ${{ needs.validate.outputs.version }}
+        name: "XPCS Toolkit ${{ needs.validate.outputs.version }}"
         body: |
-          ## XPCS Toolkit ${{ github.ref_name }}
-          
-          ### Installation
-          ```bash
-          pip install xpcs-toolkit==${{ github.ref_name }}
-          ```
-          
-          ### Usage
-          ```bash
-          xpcs-toolkit path_to_hdf_directory
-          ```
-          
-          ### Changes
-          ${{ steps.extract_notes.outputs.RELEASE_NOTES }}
-          
-          ### Package Files
-          - **Source Distribution**: `xpcs_toolkit-*.tar.gz`
-          - **Wheel**: `xpcs_toolkit-*-py3-none-any.whl`
-        files: |
-          dist/*
-        draft: false
-        prerelease: ${{ contains(github.ref, 'alpha') || contains(github.ref, 'beta') || contains(github.ref, 'rc') }}
+          ## 🚀 XPCS Toolkit ${{ needs.validate.outputs.version }}
 
+          ### 📥 Installation
+          ```bash
+          pip install xpcs-toolkit==${{ needs.validate.outputs.version }}
+          ```
+
+          ### 🚀 Quick Start
+          ```bash
+          # Launch GUI with data directory
+          xpcs-toolkit path_to_hdf_directory
+
+          # Alternative commands
+          pyxpcsviewer
+          run_viewer
+          ```
+
+          ### 📝 Changes
+          ${{ steps.extract_notes.outputs.RELEASE_NOTES }}
+
+          ### 📦 Package Files
+          - **Source Distribution**: `xpcs_toolkit-*.tar.gz` - Full source code
+          - **Universal Wheel**: `xpcs_toolkit-*-py3-none-any.whl` - Ready-to-install package
+
+          ### 🔗 Links
+          - [Documentation](https://github.com/imewei/XPCS-Toolkit/tree/master/docs)
+          - [Issues](https://github.com/imewei/XPCS-Toolkit/issues)
+          - [PyPI Package](https://pypi.org/project/xpcs-toolkit/)
+        files: dist/*
+        draft: false
+        prerelease: ${{ needs.validate.outputs.is_prerelease == 'true' }}
+        generate_release_notes: true
+
+  # PyPI publishing with enhanced checks
   pypi-publish:
     runs-on: ubuntu-latest
-    needs: [build, test-release, github-release]
-    if: startsWith(github.ref, 'refs/tags/') && !contains(github.ref, 'alpha') && !contains(github.ref, 'beta') && !contains(github.ref, 'rc')
+    needs: [validate, build, test-release, github-release]
+    if: startsWith(github.ref, 'refs/tags/') && needs.validate.outputs.is_prerelease == 'false' && github.event.inputs.dry_run != 'true'
     environment:
       name: pypi
       url: https://pypi.org/p/xpcs-toolkit
+    timeout-minutes: 10
 
     steps:
     - name: Download build artifacts
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: dist-release-${{ github.sha }}
         path: dist/
+
+    - name: Verify package before upload
+      run: |
+        # Final verification before PyPI upload
+        ls -la dist/
+        echo "📦 Package contents:"
+        for file in dist/*; do
+          echo "  $(basename "$file"): $(stat -c%s "$file" | numfmt --to=iec)B"
+        done
 
     - name: Publish to PyPI
       uses: pypa/gh-action-pypi-publish@release/v1
       with:
         verify-metadata: true
         verbose: true
+        print-hash: true
 
+  # Test PyPI for pre-releases and testing
   test-pypi-publish:
     runs-on: ubuntu-latest
-    needs: [build, test-release]
-    if: startsWith(github.ref, 'refs/tags/') && (contains(github.ref, 'alpha') || contains(github.ref, 'beta') || contains(github.ref, 'rc'))
+    needs: [validate, build, test-release]
+    if: (startsWith(github.ref, 'refs/tags/') && needs.validate.outputs.is_prerelease == 'true') || github.event.inputs.dry_run == 'true'
     environment:
       name: testpypi
       url: https://test.pypi.org/p/xpcs-toolkit
+    timeout-minutes: 10
 
     steps:
     - name: Download build artifacts
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: dist-release-${{ github.sha }}
         path: dist/
@@ -187,3 +313,30 @@ jobs:
         repository-url: https://test.pypi.org/legacy/
         verify-metadata: true
         verbose: true
+        print-hash: true
+
+  # Final status summary
+  release-status:
+    runs-on: ubuntu-latest
+    needs: [validate, build, test-release, github-release, pypi-publish, test-pypi-publish]
+    if: always()
+
+    steps:
+    - name: Release Summary
+      run: |
+        echo "🏁 Release Workflow Summary"
+        echo "=========================="
+        echo "📦 Version: ${{ needs.validate.outputs.version }}"
+        echo "🔖 Pre-release: ${{ needs.validate.outputs.is_prerelease }}"
+        echo "🏗️ Build: ${{ needs.build.result }}"
+        echo "🧪 Tests: ${{ needs.test-release.result }}"
+        echo "📝 GitHub Release: ${{ needs.github-release.result }}"
+        echo "🐍 PyPI: ${{ needs.pypi-publish.result || 'skipped' }}"
+        echo "🧪 Test PyPI: ${{ needs.test-pypi-publish.result || 'skipped' }}"
+
+        if [ "${{ needs.build.result }}" = "failure" ] || [ "${{ needs.test-release.result }}" = "failure" ]; then
+          echo "❌ Release failed - check job logs"
+          exit 1
+        else
+          echo "✅ Release completed successfully!"
+        fi

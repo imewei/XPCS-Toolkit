@@ -737,19 +737,19 @@ def test_memory_efficiency(large_dataset):
 
 #### Scientific Rigor Review
 - [ ] **Numerical comparisons use explicit tolerances**
-  ```python
-  # Good
-  np.testing.assert_allclose(actual, expected, rtol=1e-7, atol=1e-14)
+```python
+# Good
+np.testing.assert_allclose(actual, expected, rtol=1e-7, atol=1e-14)
 
-  # Bad
-  assert actual == expected
-  ```
+# Bad
+assert actual == expected
+```
 
 - [ ] **Physical constraints are validated**
-  ```python
-  # Validate correlation function properties
-  ScientificAssertions.assert_correlation_properties(tau, g2)
-  ```
+```python
+# Validate correlation function properties
+ScientificAssertions.assert_correlation_properties(tau, g2)
+```
 
 - [ ] **Edge cases are tested**
   - Empty inputs

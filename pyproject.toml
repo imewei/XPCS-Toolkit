@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=61.0", "setuptools_scm"]
+requires = ["setuptools>=75.0.0", "setuptools_scm[toml]>=8.1.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -32,18 +32,18 @@ license = {text = "MIT"}
 keywords = ["XPCS", "X-ray", "photon correlation spectroscopy", "synchrotron", "visualization", "science"]
 
 dependencies = [
-    "pyside6",
-    "numpy",
-    "scipy",
-    "h5py",
-    "matplotlib",
-    "pyqtgraph",
-    "pandas",
-    "scikit-learn",
-    "joblib",
-    "tqdm",
-    "psutil",
-    "hdf5plugin"
+    "pyside6>=6.8.0",
+    "numpy>=2.1.0",
+    "scipy>=1.14.0",
+    "h5py>=3.12.0",
+    "matplotlib>=3.9.0",
+    "pyqtgraph>=0.13.7",
+    "pandas>=2.2.0",
+    "scikit-learn>=1.5.0",
+    "joblib>=1.4.0",
+    "tqdm>=4.66.0",
+    "psutil>=6.1.0",
+    "hdf5plugin>=4.4.0"
 ]
 
 [project.scripts]
@@ -53,36 +53,38 @@ run_viewer = "xpcs_toolkit.cli:main"
 
 [project.optional-dependencies]
 dev = [
-    "coverage",
-    "pytest",
-    "pytest-cov",
-    "pytest-xdist",
-    "pytest-benchmark",
-    "pytest-mock",
-    "pytest-timeout",
-    "pytest-sugar",
-    "pytest-html",
-    "pytest-qt",
-    "hypothesis",
-    "mypy",
-    "ruff",
-    "bandit[toml]",
-    "pre-commit"
+    "coverage[toml]>=7.6.0",
+    "pytest>=8.3.0",
+    "pytest-cov>=6.0.0",
+    "pytest-xdist[psutil]>=3.6.0",
+    "pytest-benchmark>=4.0.0",
+    "pytest-mock>=3.14.0",
+    "pytest-timeout>=2.3.0",
+    "pytest-sugar>=1.0.0",
+    "pytest-html>=4.1.0",
+    "pytest-qt>=4.4.0",
+    "hypothesis>=6.112.0",
+    "mypy>=1.13.0",
+    "ruff>=0.7.0",
+    "bandit[toml]>=1.7.0",
+    "pre-commit>=4.0.0"
 ]
 docs = [
-    "sphinx",
-    "sphinx-rtd-theme",
-    "myst-parser"
+    "sphinx>=8.1.0",
+    "sphinx-rtd-theme>=3.0.0",
+    "myst-parser>=4.0.0",
+    "sphinx-autodoc-typehints>=2.4.0",
+    "sphinx-copybutton>=0.5.0"
 ]
 validation = [
-    "memory-profiler",
-    "line-profiler",
-    "py-spy"
+    "memory-profiler>=0.61.0",
+    "line-profiler>=4.1.0",
+    "py-spy>=0.3.0"
 ]
 performance = [
-    "pytest-benchmark",
-    "memory-profiler",
-    "pympler"
+    "pytest-benchmark>=4.0.0",
+    "memory-profiler>=0.61.0",
+    "pympler>=0.9.0"
 ]
 
 [project.urls]
@@ -154,7 +156,17 @@ markers = [
     "edge_cases: Boundary conditions and extreme input tests",
     "system_dependent: Tests that depend on system resources or environment",
     "flaky: Tests that may fail intermittently due to external factors",
-    "data_integrity: Tests that verify data accuracy and corruption handling"
+    "data_integrity: Tests that verify data accuracy and corruption handling",
+    "regression: Regression tests for previously fixed bugs",
+    "compatibility: Cross-platform and version compatibility tests",
+    "validation: Scientific validation against known results",
+    "smoke: Quick smoke tests for basic functionality",
+    "critical: Critical path tests that must always pass",
+    "requires_data: Tests that require external test data files",
+    "requires_display: Tests that require a graphical display",
+    "numerical: Tests that verify numerical computation accuracy",
+    "file_io: Tests for file input/output operations",
+    "plotting: Tests for visualization and plotting functionality"
 ]
 filterwarnings = [
     "ignore::UserWarning",
@@ -166,12 +178,32 @@ filterwarnings = [
 ]
 timeout = 300
 
-# Test suite profiles
-# Run with: pytest -m "not stress" to skip stress tests
-# Run with: pytest -m "unit or integration" to run core tests only
-# Run with: pytest -m "stress" to run only stress tests
-# Run with: pytest -m "not (stress or system_dependent)" for CI environments
+# Test suite profiles and execution strategies
+# Development profiles:
+# pytest -m "smoke" - Quick smoke tests (< 30 seconds)
+# pytest -m "unit or integration" - Core tests for development (fast feedback)
+# pytest -m "critical" - Must-pass tests for any commit
+# pytest -m "scientific and not slow" - Fast scientific validation
+#
+# CI/CD profiles:
+# pytest -m "not (stress or flaky or system_dependent)" - Stable CI tests
+# pytest -m "performance" - Performance regression tests
+# pytest -m "compatibility" - Cross-platform compatibility tests
+#
+# Comprehensive profiles:
+# pytest -m "not stress" - All tests except stress tests
+# pytest - All tests including stress tests
 timeout_method = "thread"
+
+# Test execution groups for better organization
+# Usage: pytest -m "smoke or (unit and not slow)"
+# Available group expressions:
+# fast: -m "smoke or (unit and not slow)"
+# core: -m "(unit or integration) and not slow"
+# scientific: -m "scientific or numerical or validation"
+# ci_stable: -m "not (stress or flaky or system_dependent or requires_display)"
+# performance: -m "performance and not stress"
+# full_validation: -m "not stress"
 
 # Coverage configuration
 [tool.coverage.run]
@@ -185,29 +217,69 @@ omit = [
     "xpcs_toolkit/icons_rc.py",  # Generated resource file
     "*/validation/*",  # Validation scripts
     "*/scripts/*",  # Utility scripts
+    "xpcs_toolkit/cli.py",  # CLI entry point (minimal logic)
+    "xpcs_toolkit/viewer_ui.py",  # Auto-generated UI code
+    "xpcs_toolkit/ui/resources/*",  # Resource files
 ]
 branch = true
 parallel = true
+context = "test"
+dynamic_context = "test_function"
+concurrency = ["thread", "multiprocessing"]
+
+# Module-specific coverage targets
+# Critical scientific modules: 95% minimum
+# Core modules: 85% minimum
+# Supporting modules: 75% minimum
+# GUI modules: 50% minimum (hard to test)
 
 [tool.coverage.report]
 exclude_lines = [
     "pragma: no cover",
     "def __repr__",
+    "def __str__",
     "if self.debug:",
     "if settings.DEBUG",
     "raise AssertionError",
     "raise NotImplementedError",
+    "raise ValueError\\(.*not implemented.*\\)",
     "if 0:",
+    "if False:",
     "if __name__ == .__main__.:",
     "class .*\\bProtocol\\):",
     "@(abc\\.)?abstractmethod",
     "@overload",
     "except ImportError:",
-    "if TYPE_CHECKING:"
+    "except ModuleNotFoundError:",
+    "if TYPE_CHECKING:",
+    "# pragma: no cover",
+    "# coverage: ignore",
+    "pass  # pragma: no cover",
+    "\\.\\.\\.",  # Ellipsis for abstract methods
+    "# Qt event loops - hard to test",
+    "# GUI initialization - platform specific",
+    "app\\.exec\\(\\)",
+    "app\\.exec_\\(\\)",
+    "QApplication\\.exec\\(\\)",
+    "sys\\.exit\\(",
+    "# Platform-specific code",
+    "if platform\\.system\\(\\)",
+    "# Error handling - defensive programming",
+    "except Exception as.*:",
+    "# Cleanup handlers",
+    "try:.*finally:",
 ]
 precision = 2
 show_missing = true
 skip_covered = false
+sort = "Cover"
+exclude_also = [
+    "def __repr__",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+    "class .*\\bProtocol\\):",
+    "@(abc\\.)?abstractmethod",
+]
 
 [tool.coverage.html]
 directory = "htmlcov"

@@ -639,13 +639,13 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         """Clear plot display for specified tab when no files are selected."""
         try:
             plot_handlers = {
-                "saxs_2d": self.pg_saxs,
+                "saxs_2d": self.pg_saxs if hasattr(self, 'pg_saxs') else None,
                 "saxs_1d": self.mp_saxs1d if hasattr(self, 'mp_saxs1d') else None,
                 "stability": self.mp_stab if hasattr(self, 'mp_stab') else None,
-                "intensity_t": self.pg_intt,
+                "intensity_t": self.pg_intt if hasattr(self, 'pg_intt') else None,
                 "g2": self.mp_g2 if hasattr(self, 'mp_g2') else None,
-                "twotime": self.mp_2t_hdls,
-                "qmap": self.pg_qmap
+                "twotime": self.mp_2t_hdls if hasattr(self, 'mp_2t_hdls') else None,
+                "qmap": self.pg_qmap if hasattr(self, 'pg_qmap') else None
             }
 
             handler = plot_handlers.get(tab_name)
@@ -654,8 +654,11 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
                     handler.clear()
                 elif hasattr(handler, 'setImage'):
                     # For ImageView widgets, set empty image
-                    handler.setImage(np.zeros((10, 10)))
+                    empty_image = np.zeros((50, 50))
+                    handler.setImage(empty_image)
                 logger.debug(f"Cleared plot for {tab_name}")
+                # Show status message to user for guidance
+                self.statusbar.showMessage(f"No files selected for {tab_name.replace('_', ' ').title()} - please select files from source list and click 'Add Target'", 5000)
         except Exception as e:
             logger.warning(f"Failed to clear plot for {tab_name}: {e}")
 
@@ -734,7 +737,17 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         if dryrun:
             return kwargs
 
-        msg = self.vk.get_xf_list(**kwargs)[0].get_hdf_info()
+        xf_list = self.vk.get_xf_list(**kwargs)
+        if not xf_list:
+            logger.warning("No files available for metadata display")
+            # Clear the metadata display
+            empty_params = Parameter.create(
+                name="Settings", type="group", children=[]
+            )
+            self.hdf_info.setParameters(empty_params, showTop=True)
+            return None
+
+        msg = xf_list[0].get_hdf_info()
         hdf_info_data = create_param_tree(msg)
         hdf_params = Parameter.create(
             name="Settings", type="group", children=hdf_info_data
@@ -1355,6 +1368,10 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         self.avg_job_table.setModel(self.vk.avg_worker)
         self.source_model = self.vk.source
         self.update_box(self.vk.source, mode="source")
+
+        # Trigger plot update to show proper empty states since no files are auto-added
+        self.update_plot()
+
 
     def update_box(self, file_list, mode="source"):
         if file_list is None:

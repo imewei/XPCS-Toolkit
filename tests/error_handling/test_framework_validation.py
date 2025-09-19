@@ -7,9 +7,17 @@ is working correctly and can be used for comprehensive error testing.
 import os
 from unittest.mock import patch
 
-import h5py
 import numpy as np
 import pytest
+
+try:
+    import h5py
+    H5PY_AVAILABLE = True
+except ImportError:
+    H5PY_AVAILABLE = False
+    from tests.utils.h5py_mocks import MockH5py
+
+    h5py = MockH5py()
 
 # Test basic functionality of our error handling fixtures
 

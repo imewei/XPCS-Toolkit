@@ -43,11 +43,25 @@ class QtConnectionFixer:
         warnings.filterwarnings('ignore', category=UserWarning, module='.*qt.*')
         warnings.filterwarnings('ignore', message='.*QStyleHints.*')
         warnings.filterwarnings('ignore', message='.*unique connections require.*')
+        warnings.filterwarnings('ignore', message='.*QObject::connect.*')
 
         # Also suppress Qt logging messages temporarily
         qt_logger = logging.getLogger('qt')
+        qt_core_logger = logging.getLogger('qt.core')
+        qt_qobject_logger = logging.getLogger('qt.core.qobject')
+
         original_level = qt_logger.level
-        qt_logger.setLevel(logging.ERROR)
+        original_core_level = qt_core_logger.level
+        original_qobject_level = qt_qobject_logger.level
+
+        qt_logger.setLevel(logging.CRITICAL)
+        qt_core_logger.setLevel(logging.CRITICAL)
+        qt_qobject_logger.setLevel(logging.CRITICAL)
+
+        # Set environment variable to suppress Qt debug output
+        import os
+        original_qt_logging = os.environ.get('QT_LOGGING_RULES', '')
+        os.environ['QT_LOGGING_RULES'] = 'qt.core.qobject.connect=false'
 
         try:
             yield
@@ -55,6 +69,14 @@ class QtConnectionFixer:
             # Restore original settings
             warnings.filters[:] = original_filters
             qt_logger.setLevel(original_level)
+            qt_core_logger.setLevel(original_core_level)
+            qt_qobject_logger.setLevel(original_qobject_level)
+
+            # Restore Qt logging rules
+            if original_qt_logging:
+                os.environ['QT_LOGGING_RULES'] = original_qt_logging
+            else:
+                os.environ.pop('QT_LOGGING_RULES', None)
 
     @staticmethod
     def create_safe_imageview(*args, **kwargs):
@@ -341,6 +363,10 @@ def configure_pyqtgraph_for_qt_compatibility():
     """
     try:
         import pyqtgraph as pg
+        import os
+
+        # Set environment variable to suppress Qt connection warnings globally
+        os.environ['QT_LOGGING_RULES'] = 'qt.core.qobject.connect=false'
 
         # Set PyQtGraph configuration options that may reduce warnings
         pg.setConfigOptions(
