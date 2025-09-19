@@ -61,12 +61,15 @@ jobs:
     - name: Install minimal dependencies
       run: |
         python -m pip install --upgrade pip wheel
-        pip install -e .[dev] --no-deps --prefer-binary
-        pip install numpy scipy matplotlib pyside6 h5py pyqtgraph --prefer-binary
+        # Install only absolutely essential packages for smoke tests
+        pip install pytest pytest-mock ruff --prefer-binary
+        pip install -e . --no-deps
 
     - name: Run smoke tests
       run: |
-        pytest -m "smoke" --tb=short --disable-warnings -q
+        # Ultra-fast smoke tests with minimal overhead
+        pytest -m "smoke" --tb=line --disable-warnings -q \
+          --maxfail=1 --no-header --no-summary
 
   # Main test matrix
   test:
@@ -108,6 +111,20 @@ jobs:
           libxcursor1 libxcomposite1 libasound2 libxi6 libxtst6 \
           xvfb
 
+    - name: Cache build dependencies
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cache/pip
+          ~/.cache/pre-commit
+          ~/.cache/mypy
+          .mypy_cache
+          .ruff_cache
+        key: ${{ runner.os }}-build-${{ matrix.python-version }}-${{ hashFiles('**/pyproject.toml', '.pre-commit-config.yaml') }}
+        restore-keys: |
+          ${{ runner.os }}-build-${{ matrix.python-version }}-
+          ${{ runner.os }}-build-
+
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip wheel setuptools
@@ -117,7 +134,10 @@ jobs:
       uses: actions/cache@v4
       with:
         path: ~/.cache/xpcs-toolkit
-        key: ${{ runner.os }}-test-data-v1
+        key: ${{ runner.os }}-test-data-v2-${{ hashFiles('tests/**/*.py') }}
+        restore-keys: |
+          ${{ runner.os }}-test-data-v2-
+          ${{ runner.os }}-test-data-
 
     - name: Lint with ruff (fast)
       if: matrix.python-version == '3.12' && matrix.os == 'ubuntu-latest'
@@ -153,23 +173,27 @@ jobs:
           sleep 2
         fi
 
-        # Run tests based on level
+        # Run tests based on level with optimized settings
         case "${{ steps.test-level.outputs.level }}" in
           "smoke")
-            pytest -m "smoke" --tb=short -q
+            pytest -m "smoke" --tb=short -q --maxfail=3 \
+              --disable-warnings --no-cov
             ;;
           "core")
             pytest -m "(unit or integration) and not slow" \
               --cov=xpcs_toolkit --cov-report=xml --cov-report=term-missing \
-              --tb=short -x
+              --tb=short -x --maxfail=5 \
+              -n auto --dist=worksteal
             ;;
           "performance")
-            pytest -m "performance and not stress" --benchmark-only
+            pytest -m "performance and not stress" --benchmark-only \
+              --benchmark-warmup=on --benchmark-warmup-iterations=2
             ;;
           *)
             pytest -m "not (stress or system_dependent)" \
               --cov=xpcs_toolkit --cov-report=xml --cov-report=term-missing \
-              --tb=short --durations=10 -n auto
+              --tb=short --durations=10 --maxfail=10 \
+              -n auto --dist=worksteal --cov-fail-under=80
             ;;
         esac
 
@@ -185,9 +209,31 @@ jobs:
     - name: Test package installation
       if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.12'
       run: |
-        # Quick installation test
+        # Quick installation test with error handling
         pip install -e . --force-reinstall --no-deps
-        python -c "import xpcs_toolkit; print(f'XPCS Toolkit {xpcs_toolkit.__version__} imported successfully')"
+        python -c "
+        try:
+            import xpcs_toolkit
+            print(f'✅ XPCS Toolkit {xpcs_toolkit.__version__} imported successfully')
+            # Test basic functionality
+            from xpcs_toolkit.file_locator import FileLocator
+            print('✅ Core modules accessible')
+        except ImportError as e:
+            print(f'❌ Import failed: {e}')
+            exit(1)
+        except Exception as e:
+            print(f'⚠️  Basic test failed: {e}')
+            exit(1)
+        "
+
+    - name: Generate test summary
+      if: always()
+      run: |
+        echo "## 📊 Test Summary for ${{ matrix.os }} Python ${{ matrix.python-version }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **OS**: ${{ matrix.os }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Python**: ${{ matrix.python-version }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Test Level**: ${{ steps.test-level.outputs.level }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Status**: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
 
   # Fast parallel build job
   build:
@@ -214,11 +260,25 @@ jobs:
 
     - name: Build package
       run: |
-        python -m build
+        # Build with optimized settings
+        python -m build --wheel --sdist
 
     - name: Check package metadata
       run: |
+        # Comprehensive package validation
         twine check dist/* --strict
+
+        # Verify package contents
+        echo "📦 Package contents:"
+        ls -la dist/
+
+        # Test wheel installation in clean environment
+        python -m venv test_env
+        source test_env/bin/activate
+        pip install dist/*.whl
+        python -c "import xpcs_toolkit; print('✅ Wheel installs correctly')"
+        deactivate
+        rm -rf test_env
 
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
@@ -315,16 +375,29 @@ jobs:
     steps:
     - name: Check workflow status
       run: |
+        echo "## 🎯 CI/CD Pipeline Status Report" >> $GITHUB_STEP_SUMMARY
+        echo "| Job | Status | Duration |" >> $GITHUB_STEP_SUMMARY
+        echo "|-----|--------|----------|" >> $GITHUB_STEP_SUMMARY
+        echo "| 🚀 Smoke Tests | ${{ needs.smoke-test.result }} | Fast feedback |" >> $GITHUB_STEP_SUMMARY
+        echo "| 🧪 Main Tests | ${{ needs.test.result }} | Cross-platform |" >> $GITHUB_STEP_SUMMARY
+        echo "| 📦 Build | ${{ needs.build.result }} | Package validation |" >> $GITHUB_STEP_SUMMARY
+        echo "| 🔒 Security | ${{ needs.security.result }} | Vulnerability scan |" >> $GITHUB_STEP_SUMMARY
+
+        # Check critical paths
         if [ "${{ needs.smoke-test.result }}" = "failure" ]; then
           echo "❌ Smoke tests failed - blocking merge"
+          echo "::error::Smoke tests failed - critical path blocked"
           exit 1
         elif [ "${{ needs.test.result }}" = "failure" ]; then
           echo "❌ Main tests failed - blocking merge"
+          echo "::error::Main test suite failed - merge blocked"
           exit 1
         elif [ "${{ needs.build.result }}" = "failure" ]; then
           echo "❌ Build failed - blocking merge"
+          echo "::error::Package build failed - merge blocked"
           exit 1
         else
-          echo "✅ All critical checks passed"
-          echo "🔍 Security: ${{ needs.security.result }}"
+          echo "✅ All critical checks passed - ready for merge"
+          echo "🔍 Security scan: ${{ needs.security.result }}"
+          echo "::notice::CI/CD pipeline completed successfully"
         fi
