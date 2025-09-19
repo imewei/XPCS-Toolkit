@@ -20,17 +20,32 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
+    - name: Cache actionlint
+      uses: actions/cache@v4
+      with:
+        path: ~/.local/bin/actionlint
+        key: actionlint-${{ runner.os }}-latest
+        restore-keys: |
+          actionlint-${{ runner.os }}-
+
+    - name: Install actionlint
+      run: |
+        echo "🔍 Installing actionlint..."
+
+        # Check if actionlint is already cached
+        if [ -f ~/.local/bin/actionlint ]; then
+          echo "✅ Using cached actionlint"
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+        else
+          echo "📥 Downloading actionlint..."
+          mkdir -p ~/.local/bin
+          curl -sL https://github.com/rhymond/actionlint/releases/latest/download/actionlint_linux_amd64.tar.gz | tar xz -C ~/.local/bin
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+        fi
+
     - name: Validate GitHub Actions workflows
       run: |
         echo "🔍 Validating workflow syntax..."
-
-        # Check if actionlint is available, install if not
-        if ! command -v actionlint &> /dev/null; then
-          echo "Installing actionlint..."
-          # Download and install actionlint
-          curl -sL https://github.com/rhymond/actionlint/releases/latest/download/actionlint_linux_amd64.tar.gz | tar xz -C /tmp
-          sudo mv /tmp/actionlint /usr/local/bin/
-        fi
 
         # Validate all workflow files
         echo "📋 Found workflow files:"
