@@ -143,7 +143,7 @@ jobs:
         path: _site
 
     - name: Link Checker
-      uses: lycheeverse/lychee-action@v1
+      uses: lycheeverse/lychee-action@v2
       with:
         args: --verbose --no-progress '_site/**/*.html' --base _site --exclude-mail
         fail: false
@@ -171,7 +171,7 @@ jobs:
 
     steps:
     - name: Setup Pages
-      uses: actions/configure-pages@v3
+      uses: actions/configure-pages@v4
 
     - name: Download built docs
       uses: actions/download-artifact@v4
@@ -180,13 +180,13 @@ jobs:
         path: _site
 
     - name: Upload to GitHub Pages
-      uses: actions/upload-pages-artifact@v3
+      uses: actions/upload-pages-artifact@v4
       with:
         path: _site
 
     - name: Deploy to GitHub Pages
       id: deployment
-      uses: actions/deploy-pages@v2
+      uses: actions/deploy-pages@v4
 
   # Status summary
   docs-status:
