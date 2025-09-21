@@ -5,6 +5,8 @@ Core fitting functions for G2 correlation analysis without over-engineering.
 """
 import logging
 import warnings
+from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor, as_completed
+from functools import partial
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import numpy as np
@@ -141,6 +143,174 @@ def fit_with_fixed(base_func, x, y, sigma, bounds, fit_flag, fit_x, p0=None, **k
     for n in range(y.shape[1]):
         fit_line[n] = base_func(fit_x, *fit_val[n, 0, :])
 
+    return fit_line, fit_val
+
+
+def _fit_single_qvalue(args):
+    """
+    Worker function for parallel fitting of a single q-value.
+
+    Parameters
+    ----------
+    args : tuple
+        (column_index, x_data, y_column, sigma_column, wrapper_func, p0, bounds_fit)
+
+    Returns
+    -------
+    tuple
+        (column_index, popt, errors, success)
+    """
+    col_idx, x, y_col, sigma_col, wrapper_func, p0, bounds_fit = args
+
+    try:
+        # Perform curve fitting for this q-value
+        popt, pcov = curve_fit(
+            wrapper_func,
+            x,
+            y_col,
+            sigma=sigma_col,
+            p0=p0,
+            bounds=(bounds_fit[0], bounds_fit[1]),
+            method='trf',
+            max_nfev=5000
+        )
+
+        # Calculate parameter errors
+        pcov_diag = np.diag(pcov)
+        errors = np.sqrt(np.abs(pcov_diag))  # Use abs to handle negative values
+
+        # Handle problematic errors
+        if np.any(~np.isfinite(errors)):
+            errors = np.where(np.isfinite(errors), errors, np.abs(popt) * 0.1)
+
+        return col_idx, popt, errors, True
+
+    except Exception as e:
+        logger.warning(f"Fitting failed for q-value {col_idx}: {e}")
+        return col_idx, None, None, False
+
+
+def fit_with_fixed_parallel(base_func, x, y, sigma, bounds, fit_flag, fit_x, p0=None,
+                           max_workers=None, use_threads=True, **kwargs):
+    """
+    Parallel version of fit_with_fixed for processing multiple q-values simultaneously.
+
+    Parameters
+    ----------
+    base_func : callable
+        Function to fit
+    x : array
+        Input data (tau values)
+    y : array
+        G2 correlation data (tau x q_values)
+    sigma : array
+        Error bars
+    bounds : tuple
+        (lower_bounds, upper_bounds)
+    fit_flag : array
+        Boolean array indicating which parameters to fit
+    fit_x : array
+        X values for output curve
+    p0 : array, optional
+        Initial parameter values
+    max_workers : int, optional
+        Maximum number of workers for parallel processing
+    use_threads : bool, optional
+        Whether to use threads (True) or processes (False)
+
+    Returns
+    -------
+    tuple
+        (fit_line, fit_params)
+    """
+    if not isinstance(fit_flag, np.ndarray):
+        fit_flag = np.array(fit_flag)
+
+    fix_flag = np.logical_not(fit_flag)
+
+    if not isinstance(bounds, np.ndarray):
+        bounds = np.array(bounds)
+
+    num_args = len(fit_flag)
+    num_qvals = y.shape[1]
+
+    # Process boundaries for fitting parameters only
+    bounds_fit = bounds[:, fit_flag]
+
+    # Initial guess for fitting parameters
+    if p0 is None:
+        p0 = np.mean(bounds_fit, axis=0)
+    else:
+        p0 = np.array(p0)[fit_flag]
+
+    fit_val = np.zeros((num_qvals, 2, num_args))
+
+    # Create wrapper function for fixed parameters
+    def wrapper_func(x_data, *fit_params):
+        full_params = np.zeros(num_args)
+        full_params[fit_flag] = fit_params
+        full_params[fix_flag] = bounds[1, fix_flag]  # Use upper bound as fixed value
+        return base_func(x_data, *full_params)
+
+    # Prepare arguments for parallel processing
+    fit_args = []
+    for n in range(num_qvals):
+        sigma_col = sigma[:, n] if sigma.ndim > 1 else sigma
+        fit_args.append((n, x, y[:, n], sigma_col, wrapper_func, p0, bounds_fit))
+
+    # Determine number of workers
+    if max_workers is None:
+        import os
+        max_workers = min(num_qvals, os.cpu_count() or 1)
+
+    logger.info(f"Starting parallel G2 fitting for {num_qvals} q-values using {max_workers} workers")
+
+    # Execute parallel fitting
+    executor_class = ThreadPoolExecutor if use_threads else ProcessPoolExecutor
+
+    with executor_class(max_workers=max_workers) as executor:
+        # Submit all fitting tasks
+        future_to_col = {executor.submit(_fit_single_qvalue, args): args[0]
+                        for args in fit_args}
+
+        # Collect results as they complete
+        completed_fits = 0
+        for future in as_completed(future_to_col):
+            col_idx, popt, errors, success = future.result()
+            completed_fits += 1
+
+            if success:
+                # Store successful fit results
+                fit_val[col_idx, 0, fit_flag] = popt
+                fit_val[col_idx, 1, fit_flag] = errors
+                fit_val[col_idx, 0, fix_flag] = bounds[1, fix_flag]
+                fit_val[col_idx, 1, fix_flag] = 0
+            else:
+                # Use bounds mean as fallback for failed fits
+                fit_val[col_idx, 0, :] = np.mean(bounds, axis=0)
+                fit_val[col_idx, 1, :] = 0
+
+            # Progress reporting
+            if completed_fits % max(1, num_qvals // 10) == 0:
+                progress = (completed_fits / num_qvals) * 100
+                logger.debug(f"Parallel fitting progress: {progress:.1f}% ({completed_fits}/{num_qvals})")
+
+    # Generate fit lines in parallel as well
+    logger.debug(f"Generating fit lines for {num_qvals} q-values")
+
+    def generate_fit_line(n):
+        return n, base_func(fit_x, *fit_val[n, 0, :])
+
+    fit_line = np.zeros((num_qvals, len(fit_x)))
+
+    with executor_class(max_workers=max_workers) as executor:
+        line_futures = {executor.submit(generate_fit_line, n): n for n in range(num_qvals)}
+
+        for future in as_completed(line_futures):
+            n, line_data = future.result()
+            fit_line[n] = line_data
+
+    logger.info(f"Parallel G2 fitting completed for {num_qvals} q-values")
     return fit_line, fit_val
 
 
