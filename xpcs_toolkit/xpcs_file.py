@@ -27,6 +27,14 @@ from .fileIO.qmap_utils import get_qmap
 from .helper.fitting import fit_with_fixed, fit_with_fixed_parallel, fit_with_fixed_sequential, robust_curve_fit
 from .module.twotime_utils import get_c2_stream, get_single_c2_from_hdf
 from .utils.logging_config import get_logger
+from .utils.exceptions import (
+    XPCSFileError,
+    XPCSDataError,
+    XPCSComputationError,
+    XPCSMemoryError,
+    convert_exception,
+    handle_exceptions,
+)
 from .utils.memory_manager import (
     get_memory_manager, CacheType, MemoryPressure,
     cache_computation, get_computation, cache_array, get_array,
@@ -734,12 +742,34 @@ class XpcsFile:
                 use_aliases=True
             )
 
-        except Exception as enhanced_error:
-            logger.warning(f"Enhanced HDF5 reader failed for metadata loading, falling back to standard method: {enhanced_error}")
-            # Fallback to standard batch reading
+        except (ImportError, ModuleNotFoundError, AttributeError) as e:
+            # Expected - enhanced reader not available, use fallback
+            logger.debug(f"Enhanced HDF5 reader not available, using standard method: {e}")
             ret = batch_read_fields(
                 self.fname, fields, "alias", ftype="nexus", use_pool=True
             )
+        except (OSError, IOError, PermissionError) as e:
+            # File access issues - convert to XPCSFileError
+            raise XPCSFileError(
+                f"Failed to read metadata from HDF5 file: {e}",
+                file_path=self.fname
+            ).add_recovery_suggestion("Check file permissions and disk space") from e
+        except Exception as enhanced_error:
+            # Unexpected enhanced reader errors - log and fallback
+            xpcs_error = convert_exception(enhanced_error, "Enhanced HDF5 reader failed for metadata loading")
+            logger.warning(f"Enhanced reader error: {xpcs_error}, falling back to standard method")
+            try:
+                ret = batch_read_fields(
+                    self.fname, fields, "alias", ftype="nexus", use_pool=True
+                )
+            except Exception as fallback_error:
+                # Both methods failed - this is critical
+                raise XPCSFileError(
+                    f"Both enhanced and standard HDF5 readers failed",
+                    file_path=self.fname
+                ).add_context("enhanced_error", str(enhanced_error)
+                ).add_context("fallback_error", str(fallback_error)
+                ).add_recovery_suggestion("Verify HDF5 file integrity") from fallback_error
 
         if "Twotime" in self.atype:
             stride_frame = ret.pop("c2_stride_frame")
