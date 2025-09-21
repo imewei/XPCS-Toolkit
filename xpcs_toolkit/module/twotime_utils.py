@@ -235,11 +235,6 @@ def process_c2_batch(
     return results
 
 
-def correct_diagonal_c2(c2_mat):
-    """Legacy diagonal correction function - kept for compatibility"""
-    return correct_diagonal_c2_vectorized(c2_mat)
-
-
 def correct_diagonal_c2_vectorized(c2_mat):
     """
     Vectorized diagonal correction for C2 matrices.

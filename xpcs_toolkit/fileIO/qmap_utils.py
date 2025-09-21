@@ -12,6 +12,10 @@ from .hdf_reader import _connection_pool
 
 logger = get_logger(__name__)
 
+# Detector and beam constants
+DEFAULT_DETECTOR_SIZE = 1024
+DEFAULT_BEAM_CENTER = DEFAULT_DETECTOR_SIZE // 2  # 512
+
 
 class QMapManager:
     def __init__(self):
@@ -174,15 +178,15 @@ class QMap:
     def _get_default_value(self, key):
         """Get default values for missing qmap keys."""
         defaults = {
-            "mask": np.ones((1024, 1024), dtype=np.int32),
-            "dqmap": np.ones((1024, 1024), dtype=np.int32),
-            "sqmap": np.ones((1024, 1024), dtype=np.int32),
+            "mask": np.ones((DEFAULT_DETECTOR_SIZE, DEFAULT_DETECTOR_SIZE), dtype=np.int32),
+            "dqmap": np.ones((DEFAULT_DETECTOR_SIZE, DEFAULT_DETECTOR_SIZE), dtype=np.int32),
+            "sqmap": np.ones((DEFAULT_DETECTOR_SIZE, DEFAULT_DETECTOR_SIZE), dtype=np.int32),
             "dqlist": np.linspace(0.01, 0.1, 10),
             "sqlist": np.linspace(0.01, 0.1, 10),
             "dplist": np.linspace(0, 360, 36),
             "splist": np.linspace(0, 360, 36),
-            "bcx": 512.0,
-            "bcy": 512.0,
+            "bcx": float(DEFAULT_BEAM_CENTER),
+            "bcy": float(DEFAULT_BEAM_CENTER),
             "X_energy": 8.0,
             "pixel_size": 75e-6,
             "det_dist": 5.0,
