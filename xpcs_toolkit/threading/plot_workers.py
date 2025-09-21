@@ -13,7 +13,7 @@ import numpy as np
 
 from ..utils.logging_config import get_logger
 from .async_workers import BaseAsyncWorker
-from .base_plot_worker import BasePlotWorker, StandardPlotProgressSteps
+from .base_plot_worker import BasePlotWorker
 
 logger = get_logger(__name__)
 

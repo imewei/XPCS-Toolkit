@@ -12,10 +12,8 @@ from xpcs_toolkit.utils.logging_config import (
     setup_exception_logging,
 )
 from xpcs_toolkit.utils.exceptions import (
-    XPCSBaseError,
     XPCSConfigurationError,
     XPCSGUIError,
-    handle_exceptions,
     convert_exception,
 )
 
@@ -126,15 +124,21 @@ def signal_handler(signum, frame):
 
 
 def main():
-    from xpcs_toolkit import __version__
-    from xpcs_toolkit.xpcs_viewer import main_gui
+    # Defer heavy imports until after argument parsing for faster startup
+    def _get_version():
+        from xpcs_toolkit import __version__
+        return __version__
+
+    def _start_gui(path, label_style):
+        from xpcs_toolkit.xpcs_viewer import main_gui
+        return main_gui(path, label_style)
 
     argparser = argparse.ArgumentParser(
         description="XPCS Toolkit: a GUI tool for XPCS data analysis"
     )
 
     argparser.add_argument(
-        "--version", action="version", version=f"xpcs-toolkit: {__version__}"
+        "--version", action="version", version=f"xpcs-toolkit: {_get_version()}"
     )
 
     argparser.add_argument(
@@ -198,7 +202,7 @@ def main():
         logger.debug(f"Using positional path: {args.path}")
 
     try:
-        exit_code = main_gui(args.path, args.label_style)
+        exit_code = _start_gui(args.path, args.label_style)
         logger.info(f"XPCS Toolkit GUI exited with code: {exit_code}")
         safe_shutdown()
         sys.exit(exit_code)

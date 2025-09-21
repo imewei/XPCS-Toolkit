@@ -12,13 +12,13 @@ from abc import ABC, abstractmethod
 from collections import deque
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Set, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Set, Tuple
 
 import numpy as np
 import h5py
 
 from .logging_config import get_logger
-from .memory_manager import get_memory_manager, CacheType, MemoryPressure
+from .memory_manager import get_memory_manager, MemoryPressure
 
 logger = get_logger(__name__)
 

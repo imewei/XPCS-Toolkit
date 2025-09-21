@@ -6,18 +6,16 @@ reliability enhancements including caching, fail-fast mechanisms, and detailed
 error context for better debugging and recovery.
 """
 
-import functools
 import logging
 import time
-from typing import Optional, Dict, Any, Tuple, List, Union
+from typing import Optional, Dict, Any, Tuple, List
 import numpy as np
 
-from .exceptions import XPCSValidationError, XPCSDataError, convert_exception
+from .exceptions import XPCSValidationError, convert_exception
 from .reliability import (
     validate_input,
     ValidationLevel,
     get_validation_cache,
-    _validation_cache,
     ValidationResult,
 )
 

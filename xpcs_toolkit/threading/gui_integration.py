@@ -8,10 +8,8 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from functools import wraps
-from typing import Any
 
 from PySide6 import QtWidgets
-from PySide6.QtCore import QObject
 
 from ..utils.logging_config import get_logger
 from .async_workers import WorkerManager

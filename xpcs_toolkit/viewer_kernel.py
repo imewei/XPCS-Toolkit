@@ -9,15 +9,52 @@ import pyqtgraph as pg
 # Local imports
 from .file_locator import FileLocator
 from .helper.listmodel import TableDataModel
-from .module import g2mod, intt, saxs1d, saxs2d, stability, tauq, twotime
-from .module.average_toolbox import AverageToolbox
 from .utils.logging_config import get_logger
 from .xpcs_file import MemoryMonitor, XpcsFile
+
+# Lazy-loaded modules cache
+_module_cache = {}
+
+def _get_module(module_name):
+    """Lazy load analysis modules to improve startup time"""
+    if module_name not in _module_cache:
+        if module_name == 'g2mod':
+            from .module import g2mod
+            _module_cache[module_name] = g2mod
+        elif module_name == 'intt':
+            from .module import intt
+            _module_cache[module_name] = intt
+        elif module_name == 'saxs1d':
+            from .module import saxs1d
+            _module_cache[module_name] = saxs1d
+        elif module_name == 'saxs2d':
+            from .module import saxs2d
+            _module_cache[module_name] = saxs2d
+        elif module_name == 'stability':
+            from .module import stability
+            _module_cache[module_name] = stability
+        elif module_name == 'tauq':
+            from .module import tauq
+            _module_cache[module_name] = tauq
+        elif module_name == 'twotime':
+            from .module import twotime
+            _module_cache[module_name] = twotime
+        elif module_name == 'average_toolbox':
+            from .module.average_toolbox import AverageToolbox
+            _module_cache[module_name] = AverageToolbox
+        else:
+            raise ImportError(f"Unknown module: {module_name}")
+    return _module_cache[module_name]
 
 logger = get_logger(__name__)
 
 
 class ViewerKernel(FileLocator):
+    """ViewerKernel with lazy-loaded analysis modules for improved startup performance"""
+
+    def get_module(self, module_name):
+        """Public interface to lazy load analysis modules"""
+        return _get_module(module_name)
     """
     Backend kernel for XPCS data processing and analysis coordination.
 
@@ -65,7 +102,7 @@ class ViewerKernel(FileLocator):
         self.meta = None
         self.reset_meta()
         self.path = path
-        self.avg_tb = AverageToolbox(path)
+        self.avg_tb = _get_module('average_toolbox')(path)
         self.avg_worker = TableDataModel()
         self.avg_jid = 0
         self.avg_worker_active = {}
@@ -345,7 +382,7 @@ class ViewerKernel(FileLocator):
             )
             if hdl is not None:
                 logger.debug("Calling tauq.plot_pre with files")
-                tauq.plot_pre(short_list, hdl)
+                _get_module('tauq').plot_pre(short_list, hdl)
                 logger.debug("tauq.plot_pre completed")
             else:
                 logger.warning("hdl is None, cannot call tauq.plot_pre")
@@ -376,7 +413,7 @@ class ViewerKernel(FileLocator):
                 result[x.label] = x.get_fitting_info(mode="tauq_fitting")
 
         if len(result) > 0:
-            tauq.plot(
+            _get_module('tauq').plot(
                 xf_list, hdl=hdl, q_range=q_range, offset=offset, plot_type=plot_type
             )
 
@@ -413,7 +450,7 @@ class ViewerKernel(FileLocator):
         """
         xf_list = self.get_xf_list(rows)[0:1]
         if xf_list:
-            saxs2d.plot(xf_list[0], *args, **kwargs)
+            _get_module('saxs2d').plot(xf_list[0], *args, **kwargs)
 
     def add_roi(self, hdl, **kwargs):
         logger.debug(f"ViewerKernel: add_roi called with kwargs: {kwargs}")
@@ -555,7 +592,7 @@ class ViewerKernel(FileLocator):
             # Always get qbin labels for ComboBox population, even for cached datasets
             new_qbin_labels = current_dset.get_twotime_qbin_labels()
 
-        twotime.plot_twotime(current_dset, hdl, **kwargs)
+        _get_module('twotime').plot_twotime(current_dset, hdl, **kwargs)
         logger.debug(f"Returning new_qbin_labels: {new_qbin_labels}")
         return new_qbin_labels
 
@@ -609,7 +646,7 @@ class ViewerKernel(FileLocator):
         with configurable sampling rates and analysis windows.
         """
         xf_list = self.get_xf_list(rows=rows)
-        intt.plot(xf_list, pg_hdl, **kwargs)
+        _get_module('intt').plot(xf_list, pg_hdl, **kwargs)
 
     def plot_stability(self, mp_hdl, rows=None, **kwargs):
         """
@@ -634,13 +671,13 @@ class ViewerKernel(FileLocator):
         sample behavior during data collection.
         """
         xf_obj = self.get_xf_list(rows)[0]
-        stability.plot(xf_obj, mp_hdl, **kwargs)
+        _get_module('stability').plot(xf_obj, mp_hdl, **kwargs)
 
     def submit_job(self, *args, **kwargs):
         if len(self.target) <= 0:
             logger.error("no average target is selected")
             return
-        worker = AverageToolbox(self.path, flist=self.target, jid=self.avg_jid)
+        worker = _get_module('average_toolbox')(self.path, flist=self.target, jid=self.avg_jid)
         worker.setup(*args, **kwargs)
         self.avg_worker.append(worker)
         logger.info("create average job, ID = %s", worker.jid)
@@ -746,13 +783,20 @@ class ViewerKernel(FileLocator):
         import os
         import numpy as np
 
+        logger.info(f"G2 export kernel: Starting export to folder {folder} with rows {rows}")
         xf_list = self.get_xf_list(rows=rows, filter_atype="Multitau")
+        logger.info(f"G2 export kernel: Found {len(xf_list)} Multitau files for export")
 
         if not xf_list:
+            logger.error("G2 export kernel: No files with G2 data found")
             raise ValueError("No files with G2 data found")
+
+        successful_exports = 0
+        total_files = len(xf_list)
 
         for xf in xf_list:
             # Export raw G2 data
+            logger.info(f"G2 export kernel: Processing file {xf.label} (atype: {getattr(xf, 'atype', 'unknown')})")
             try:
                 q_val, t_el, g2, g2_err, labels = xf.get_g2_data()
 
@@ -772,6 +816,7 @@ class ViewerKernel(FileLocator):
 
                 data_matrix = np.column_stack(data_array)
                 np.savetxt(g2_filename, data_matrix, header=header, delimiter='\t')
+                logger.info(f"G2 export kernel: Saved G2 data file: {g2_filename}")
 
                 # Export fitting results if available
                 if xf.fit_summary is not None:
@@ -808,6 +853,7 @@ class ViewerKernel(FileLocator):
                                     else:
                                         f.write("N/A\tN/A\t")
                                 f.write("\n")
+                    logger.info(f"G2 export kernel: Saved fitting results file: {fit_filename}")
 
                     # Export fitted curves if available
                     if 'fit_line' in xf.fit_summary and 'fit_x' in xf.fit_summary:
@@ -831,10 +877,133 @@ class ViewerKernel(FileLocator):
 
                         curve_matrix = np.column_stack(curve_data)
                         np.savetxt(curve_filename, curve_matrix, header=header, delimiter='\t')
+                        logger.info(f"G2 export kernel: Saved fitted curves file: {curve_filename}")
 
-            except Exception as e:
-                logger.warning(f"Failed to export G2 data for {xf.label}: {e}")
+                successful_exports += 1
+                logger.info(f"Successfully exported G2 data for {xf.label}")
+
+            except ValueError as e:
+                # Handle specific data validation errors (like invalid Q indices)
+                logger.error(f"Data validation error for {xf.label}: {e}")
                 continue
+            except (OSError, PermissionError) as e:
+                # Handle file system errors
+                logger.error(f"File system error exporting {xf.label}: {e}")
+                raise  # Re-raise file system errors as they affect the entire export
+            except Exception as e:
+                # Handle unexpected errors with more detail
+                logger.error(f"Unexpected error exporting G2 data for {xf.label}: {type(e).__name__}: {e}")
+                import traceback
+                logger.debug(f"Full traceback for {xf.label}: {traceback.format_exc()}")
+                continue
+
+        # Export summary
+        if successful_exports == total_files:
+            logger.info(f"G2 export completed successfully: {successful_exports}/{total_files} files exported")
+        elif successful_exports > 0:
+            logger.warning(f"G2 export partially completed: {successful_exports}/{total_files} files exported successfully")
+        else:
+            raise ValueError(f"G2 export failed: 0/{total_files} files exported successfully")
+
+    def export_diffusion(self, folder, rows=None):
+        """
+        Export tau-q power law fitting results to text files.
+
+        Parameters
+        ----------
+        folder : str
+            Directory path where files will be saved
+        rows : list, optional
+            Selected row indices. If None, uses all files.
+        """
+        import os
+        import time
+
+        xf_list = self.get_xf_list(rows=rows, filter_atype="Multitau", filter_fitted=True)
+
+        if not xf_list:
+            raise ValueError("No files with tau-q fitting results found")
+
+        # Filter files that actually have tau-q fitting data
+        valid_xf_list = []
+        for xf in xf_list:
+            if xf.fit_summary and "tauq_fit_val" in xf.fit_summary:
+                valid_xf_list.append(xf)
+
+        if not valid_xf_list:
+            raise ValueError("No files with tau-q power law fitting results found. Please perform diffusion analysis first.")
+
+        successful_exports = 0
+        total_files = len(valid_xf_list)
+
+        # Export individual file results
+        for xf in valid_xf_list:
+            try:
+                filename = os.path.join(folder, f"{xf.label}_diffusion_fitting.txt")
+
+                tauq_data = xf.fit_summary["tauq_fit_val"]  # Shape: (2, 2) - [[a_val, b_val], [a_err, b_err]]
+
+                with open(filename, 'w') as f:
+                    f.write(f"# Power Law Fitting Results for {xf.label}\n")
+                    f.write(f"# Model: tau = a * q^b\n")
+                    f.write(f"# File: {xf.fname}\n")
+                    f.write(f"# Q-range: {xf.fit_summary.get('tauq_q_range', 'N/A')}\n")
+                    f.write(f"# Bounds: {xf.fit_summary.get('tauq_bounds', 'N/A')}\n")
+                    f.write(f"# Fit flags: {xf.fit_summary.get('tauq_fit_flag', 'N/A')}\n\n")
+
+                    f.write("parameter\tvalue\terror\n")
+                    f.write(f"a\t{tauq_data[0, 0]:.6e}\t{tauq_data[1, 0]:.6e}\n")
+                    f.write(f"b\t{tauq_data[0, 1]:.6f}\t{tauq_data[1, 1]:.6f}\n")
+
+                successful_exports += 1
+                logger.info(f"Successfully exported diffusion fitting results for {xf.label}")
+
+            except (OSError, PermissionError) as e:
+                logger.error(f"File system error exporting diffusion data for {xf.label}: {e}")
+                raise  # Re-raise file system errors as they affect the entire export
+            except Exception as e:
+                logger.error(f"Unexpected error exporting diffusion data for {xf.label}: {type(e).__name__}: {e}")
+                import traceback
+                logger.debug(f"Full traceback for {xf.label}: {traceback.format_exc()}")
+                continue
+
+        # Export summary table
+        try:
+            summary_filename = os.path.join(folder, "diffusion_summary.txt")
+
+            with open(summary_filename, 'w') as f:
+                f.write("# Power Law Fitting Summary\n")
+                f.write("# Model: tau = a * q^b\n")
+                f.write(f"# Export date: {time.strftime('%Y-%m-%d %H:%M:%S')}\n")
+                f.write(f"# Total files: {total_files}\n\n")
+
+                f.write("file_label\ta_value\ta_error\tb_value\tb_error\tfile_name\n")
+
+                # Debug: Check what data is available for each file
+                logger.info(f"Creating summary table for {len(valid_xf_list)} files")
+                for xf in valid_xf_list:
+                    logger.debug(f"File {xf.label}: fit_summary keys = {list(xf.fit_summary.keys()) if xf.fit_summary else 'None'}")
+
+                    if xf.fit_summary and "tauq_fit_val" in xf.fit_summary:
+                        tauq_data = xf.fit_summary["tauq_fit_val"]
+                        f.write(f"{xf.label}\t{tauq_data[0, 0]:.6e}\t{tauq_data[1, 0]:.6e}\t{tauq_data[0, 1]:.6f}\t{tauq_data[1, 1]:.6f}\t{xf.fname}\n")
+                        logger.info(f"Added summary data for {xf.label}")
+                    else:
+                        logger.warning(f"No tauq_fit_val found for {xf.label} - fit_summary: {xf.fit_summary is not None}")
+
+            logger.info(f"Summary table exported to {summary_filename}")
+
+        except Exception as e:
+            logger.warning(f"Failed to create summary table: {e}")
+            # Don't fail the entire export if summary fails
+
+        # Export summary
+        if successful_exports == total_files:
+            logger.info(f"Diffusion export completed successfully: {successful_exports}/{total_files} files exported")
+        elif successful_exports > 0:
+            logger.warning(f"Diffusion export partially completed: {successful_exports}/{total_files} files exported successfully")
+        else:
+            raise ValueError(f"Diffusion export failed: 0/{total_files} files exported successfully")
 
 
 if __name__ == "__main__":

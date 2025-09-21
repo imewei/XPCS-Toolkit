@@ -8,17 +8,13 @@
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
 
-from PySide6.QtCore import (QCoreApplication, QDate, QDateTime, QLocale,
-    QMetaObject, QObject, QPoint, QRect,
-    QSize, QTime, QUrl, Qt)
-from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
-    QFont, QFontDatabase, QGradient, QIcon,
-    QImage, QKeySequence, QLinearGradient, QPainter,
-    QPalette, QPixmap, QRadialGradient, QTransform)
-from PySide6.QtWidgets import (QAbstractItemView, QAbstractScrollArea, QApplication, QCheckBox,
+from PySide6.QtCore import (QCoreApplication, QMetaObject, QRect,
+    QSize, Qt)
+from PySide6.QtGui import (QIcon)
+from PySide6.QtWidgets import (QAbstractItemView, QAbstractScrollArea, QCheckBox,
     QComboBox, QDoubleSpinBox, QGridLayout, QGroupBox,
-    QHBoxLayout, QHeaderView, QLabel, QLineEdit,
-    QListView, QMainWindow, QPushButton, QScrollArea,
+    QHBoxLayout, QLabel, QLineEdit,
+    QListView, QPushButton, QScrollArea,
     QSizePolicy, QSlider, QSpinBox, QSplitter,
     QStatusBar, QTabWidget, QTableView, QVBoxLayout,
     QWidget)
@@ -26,7 +22,6 @@ from PySide6.QtWidgets import (QAbstractItemView, QAbstractScrollArea, QApplicat
 from .plothandler import (ImageViewDev, ImageViewPlotItem, MplCanvasBarV, PlotWidgetDev)
 from pyqtgraph import (DataTreeWidget, GraphicsLayoutWidget, ImageView, PlotWidget)
 from pyqtgraph.parametertree import ParameterTree
-from . import icons_rc
 
 class Ui_mainWindow(object):
     def setupUi(self, mainWindow):
@@ -1134,6 +1129,7 @@ class Ui_mainWindow(object):
         self.g2_fitting_function = QComboBox(self.groupBox_2)
         self.g2_fitting_function.addItem("")
         self.g2_fitting_function.addItem("")
+        self.g2_fitting_function.addItem("")
         self.g2_fitting_function.setObjectName(u"g2_fitting_function")
 
         self.gridLayout_12.addWidget(self.g2_fitting_function, 0, 5, 1, 5)
@@ -1437,6 +1433,12 @@ class Ui_mainWindow(object):
 
         self.gridLayout_38.addWidget(self.pushButton_8, 1, 0, 1, 1)
 
+        self.btn_export_diffusion = QPushButton(self.groupBox_5)
+        self.btn_export_diffusion.setObjectName(u"btn_export_diffusion")
+        self.btn_export_diffusion.setMinimumSize(QSize(120, 40))
+
+        self.gridLayout_38.addWidget(self.btn_export_diffusion, 2, 0, 1, 1)
+
 
         self.gridLayout_39.addLayout(self.gridLayout_38, 0, 0, 1, 1)
 
@@ -1500,6 +1502,7 @@ class Ui_mainWindow(object):
 
         self.twotime_correct_diag = QCheckBox(self.groupBox_11)
         self.twotime_correct_diag.setObjectName(u"twotime_correct_diag")
+        self.twotime_correct_diag.setChecked(True)
 
         self.gridLayout_2.addWidget(self.twotime_correct_diag, 1, 9, 1, 1)
 
@@ -1570,6 +1573,7 @@ class Ui_mainWindow(object):
 
         self.checkBox_twotime_autolevel = QCheckBox(self.groupBox_11)
         self.checkBox_twotime_autolevel.setObjectName(u"checkBox_twotime_autolevel")
+        self.checkBox_twotime_autolevel.setChecked(True)
 
         self.gridLayout_2.addWidget(self.checkBox_twotime_autolevel, 1, 5, 1, 1)
 
@@ -2219,6 +2223,7 @@ class Ui_mainWindow(object):
         self.g2_ffit.setText(QCoreApplication.translate("mainWindow", u"fit", None))
         self.g2_fitting_function.setItemText(0, QCoreApplication.translate("mainWindow", u"Single Exponential", None))
         self.g2_fitting_function.setItemText(1, QCoreApplication.translate("mainWindow", u"Double Exponential", None))
+        self.g2_fitting_function.setItemText(2, QCoreApplication.translate("mainWindow", u"Robust", None))
 
         self.label_67.setText(QCoreApplication.translate("mainWindow", u"f", None))
         self.label_45.setText(QCoreApplication.translate("mainWindow", u"contrast:", None))
@@ -2264,6 +2269,10 @@ class Ui_mainWindow(object):
         self.tauq_qmin.setPlaceholderText(QCoreApplication.translate("mainWindow", u"min", None))
         self.label_43.setText(QCoreApplication.translate("mainWindow", u"q (\u00c5\u207b\u00b9)", None))
         self.pushButton_8.setText(QCoreApplication.translate("mainWindow", u"fit plot", None))
+        self.btn_export_diffusion.setText(QCoreApplication.translate("mainWindow", u"export", None))
+#if QT_CONFIG(tooltip)
+        self.btn_export_diffusion.setToolTip(QCoreApplication.translate("mainWindow", u"Export power law fitting results to text files", None))
+#endif // QT_CONFIG(tooltip)
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_7), QCoreApplication.translate("mainWindow", u"Diffusion", None))
         self.groupBox_11.setTitle(QCoreApplication.translate("mainWindow", u"Twotime Visualization Setting", None))
         self.label_28.setText(QCoreApplication.translate("mainWindow", u"twotime_cmap:", None))

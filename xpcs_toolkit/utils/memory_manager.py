@@ -6,14 +6,13 @@ all caching strategies and implements intelligent memory pressure handling.
 """
 
 import gc
-import os
 import threading
 import time
 import weakref
 from collections import OrderedDict
 from contextlib import contextmanager
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
 import psutil
@@ -135,8 +134,17 @@ class UnifiedMemoryManager:
             'cache_misses': 0,
             'evictions': 0,
             'memory_pressure_events': 0,
-            'automatic_cleanups': 0
+            'automatic_cleanups': 0,
+            'preload_hits': 0,
+            'preload_requests': 0,
+            'compression_saves_mb': 0
         }
+
+        # Advanced caching features
+        self._preload_queue = {}  # key -> (cache_type, loader_func, priority)
+        self._compression_enabled = True
+        self._hot_data_threshold = 5  # Access count to mark as hot
+        self._cache_partitions = self._setup_partitions()
 
         # Background monitoring
         self._monitoring_thread = None
@@ -146,6 +154,91 @@ class UnifiedMemoryManager:
             self._start_monitoring()
 
         logger.info(f"UnifiedMemoryManager initialized with {max_memory_mb}MB limit")
+
+    def _make_space_in_partition(self, cache_type: CacheType, required_mb: float):
+        """Make space within a specific cache partition using intelligent eviction"""
+        cache = self._caches[cache_type]
+        partition_limit_mb = self.max_memory_mb * self._cache_partitions[cache_type]
+        current_mb = sum(entry.size_mb for entry in cache.values())
+
+        if current_mb + required_mb <= partition_limit_mb:
+            return  # No eviction needed
+
+        target_mb = partition_limit_mb * 0.7  # Leave 30% buffer
+        evicted_mb = 0
+
+        # First pass: evict aged items
+        aged_keys = []
+        for key, entry in cache.items():
+            if not entry.is_pinned and entry.time_since_access() > 900:  # 15 minutes
+                aged_keys.append((key, entry.size_mb))
+
+        # Sort by age (oldest first)
+        aged_keys.sort(key=lambda x: cache[x[0]].time_since_access(), reverse=True)
+
+        for key, size_mb in aged_keys:
+            if current_mb - evicted_mb <= target_mb:
+                break
+            self._evict_entry(cache_type, key)
+            evicted_mb += size_mb
+
+        # Second pass: LRU eviction if still needed
+        if current_mb - evicted_mb > target_mb:
+            self._evict_lru(cache_type, target_mb - (current_mb - evicted_mb))
+
+    def preload_data(self, key: str, loader_func: callable, cache_type: CacheType,
+                     priority: int = 5):
+        """
+        Schedule data for intelligent preloading.
+
+        Parameters
+        ----------
+        key : str
+            Cache key for the data
+        loader_func : callable
+            Function to load the data
+        cache_type : CacheType
+            Type of cache to store in
+        priority : int
+            Priority level (1-10, higher = more important)
+        """
+        self._preload_queue[key] = (cache_type, loader_func, priority)
+        self._stats['preload_requests'] += 1
+        logger.debug(f"Queued preload for {key} with priority {priority}")
+
+    def _process_preload_queue(self):
+        """Process preload queue during low memory pressure periods"""
+        if self.get_memory_pressure() != MemoryPressure.LOW:
+            return
+
+        # Sort by priority (highest first)
+        sorted_items = sorted(
+            self._preload_queue.items(),
+            key=lambda x: x[1][2],
+            reverse=True
+        )
+
+        for key, (cache_type, loader_func, priority) in sorted_items[:3]:  # Process top 3
+            try:
+                if key not in self._caches[cache_type]:  # Only if not already cached
+                    data = loader_func()
+                    if self.cache_put(key, data, cache_type):
+                        logger.debug(f"Successfully preloaded {key}")
+                        self._stats['preload_hits'] += 1
+                # Remove from queue after processing
+                del self._preload_queue[key]
+            except Exception as e:
+                logger.debug(f"Preload failed for {key}: {e}")
+                # Don't remove failed items immediately - retry later
+
+    def _setup_partitions(self) -> Dict[CacheType, float]:
+        """Setup cache memory partitions with intelligent allocation"""
+        return {
+            CacheType.ARRAY_DATA: 0.5,    # 50% for large array data
+            CacheType.COMPUTATION: 0.25,  # 25% for computation results
+            CacheType.PLOT_DATA: 0.15,    # 15% for plot data
+            CacheType.METADATA: 0.10      # 10% for metadata
+        }
 
     def _start_monitoring(self):
         """Start background memory monitoring thread."""
@@ -161,6 +254,11 @@ class UnifiedMemoryManager:
                 self._update_memory_history()
                 self._check_memory_pressure()
                 self._perform_maintenance()
+
+                # Process preload queue during low pressure periods
+                if len(self._preload_queue) > 0:
+                    self._process_preload_queue()
+
             except Exception as e:
                 logger.warning(f"Memory monitoring error: {e}")
 
@@ -247,11 +345,26 @@ class UnifiedMemoryManager:
         bool
             True if successfully cached
         """
+        # Check partition limits before creating entry
+        partition_limit_mb = self.max_memory_mb * self._cache_partitions[cache_type]
+
         entry = CacheEntry(data, cache_type)
         entry.is_pinned = pin
 
+        # Check if data is too large for its partition
+        if entry.size_mb > partition_limit_mb * 0.8:  # 80% of partition
+            logger.warning(f"Data too large for {cache_type.value} partition: {entry.size_mb:.1f}MB > {partition_limit_mb * 0.8:.1f}MB")
+            return False
+
         with self._cache_locks[cache_type]:
             cache = self._caches[cache_type]
+
+            # Calculate current partition usage
+            current_partition_mb = sum(entry.size_mb for entry in cache.values())
+
+            # Make space if needed within partition
+            if current_partition_mb + entry.size_mb > partition_limit_mb:
+                self._make_space_in_partition(cache_type, entry.size_mb)
 
             # Check if we need to make space
             if entry.size_mb > self.max_memory_mb * 0.5:
@@ -487,6 +600,27 @@ class UnifiedMemoryManager:
 
         self.clear_all_caches()
         logger.info("UnifiedMemoryManager shutdown complete")
+
+    def get_enhanced_stats(self) -> Dict[str, Any]:
+        """Get enhanced statistics including new caching features"""
+        stats = self.get_cache_stats()
+
+        # Add new feature statistics
+        stats.update({
+            'preload_hit_ratio': (stats['preload_hits'] / max(1, stats['preload_requests'])),
+            'preload_queue_size': len(self._preload_queue),
+            'partition_usage': {
+                cache_type.value: {
+                    'limit_mb': self.max_memory_mb * self._cache_partitions[cache_type],
+                    'used_mb': sum(entry.size_mb for entry in self._caches[cache_type].values()),
+                    'utilization': sum(entry.size_mb for entry in self._caches[cache_type].values()) /
+                                  (self.max_memory_mb * self._cache_partitions[cache_type])
+                }
+                for cache_type in CacheType
+            }
+        })
+
+        return stats
 
 
 # Global memory manager instance

@@ -10,12 +10,12 @@ from abc import ABC, abstractmethod
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
 
 from .logging_config import get_logger
-from .memory_manager import get_memory_manager, CacheType, MemoryPressure
+from .memory_manager import get_memory_manager, MemoryPressure
 
 logger = get_logger(__name__)
 

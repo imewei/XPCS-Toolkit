@@ -5,19 +5,15 @@ This module provides robust validation, error handling, and stability
 improvements for the XPCS Toolkit GUI initialization process.
 """
 
-import gc
 import os
-import sys
 import time
 import traceback
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 from enum import Enum
-from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Callable, Dict, List, Optional
 
 from PySide6 import QtCore, QtWidgets
-from PySide6.QtCore import QObject, QTimer, Signal, QThread
 
 from ..utils.logging_config import get_logger
 

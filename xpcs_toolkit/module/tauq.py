@@ -3,7 +3,6 @@ import numpy as np
 from xpcs_toolkit.utils.logging_config import get_logger
 from xpcs_toolkit.utils.validation import (
     validate_xf_fit_summary,
-    validate_xf_has_fit_summary,
     get_file_label_safe,
     validate_array_compatibility
 )
@@ -40,6 +39,9 @@ def plot(xf_list, hdl, q_range, offset, plot_type=3):
 
         s = scale_factors[n]
         x = fit_summary["q_val"]
+        # Ensure x is a numpy array (convert from list if necessary)
+        if not hasattr(x, 'shape'):
+            x = np.array(x)
         y = fit_summary["fit_val"][:, 0, 1]
         e = fit_summary["fit_val"][:, 1, 1]
 
@@ -164,6 +166,10 @@ def plot_pre(xf_list, hdl):
 
             x = fit_summary["q_val"]
             fit_val = fit_summary["fit_val"]
+
+            # Ensure x is a numpy array (convert from list if necessary)
+            if not hasattr(x, 'shape'):
+                x = np.array(x)
 
             # Validate array dimensions before plotting
             if len(x.shape) > 1:

@@ -5,10 +5,9 @@ This module provides memory-efficient streaming processing for large XPCS datase
 particularly for operations like logarithmic transformations of SAXS data.
 """
 
-import time
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Any, Callable, Dict, Generator, Optional, Tuple, Union
+from typing import Optional, Tuple
 
 import numpy as np
 

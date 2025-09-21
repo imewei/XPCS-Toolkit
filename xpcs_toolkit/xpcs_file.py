@@ -12,6 +12,7 @@ from typing import Any
 
 # Third-party imports
 import numpy as np
+import psutil
 import pyqtgraph as pg
 
 # Local imports
@@ -24,21 +25,15 @@ from .fileIO.hdf_reader import (
     read_metadata_to_dict,
 )
 from .fileIO.qmap_utils import get_qmap
-from .helper.fitting import fit_with_fixed, fit_with_fixed_parallel, fit_with_fixed_sequential, robust_curve_fit
+from .helper.fitting import fit_with_fixed, fit_with_fixed_parallel, fit_with_fixed_sequential
 from .module.twotime_utils import get_c2_stream, get_single_c2_from_hdf
 from .utils.logging_config import get_logger
 from .utils.exceptions import (
     XPCSFileError,
-    XPCSDataError,
-    XPCSComputationError,
-    XPCSMemoryError,
     convert_exception,
-    handle_exceptions,
 )
 from .utils.memory_manager import (
-    get_memory_manager, CacheType, MemoryPressure,
-    cache_computation, get_computation, cache_array, get_array,
-    memory_pressure_monitor
+    get_memory_manager, CacheType, MemoryPressure
 )
 from .utils.memory_predictor import (
     get_memory_predictor, predict_operation_memory, record_operation_memory
@@ -47,17 +42,15 @@ from .utils.lazy_loader import (
     get_lazy_loader, register_lazy_hdf5, LazyHDF5Array
 )
 from .utils.streaming_processor import (
-    process_saxs_log_streaming, AdaptiveChunkSizer, MemoryEfficientIterator
+    process_saxs_log_streaming, AdaptiveChunkSizer
 )
 from .utils.vectorized_roi import (
     PieROICalculator, RingROICalculator, ParallelROIProcessor,
-    ROIParameters, ROIType, ROIResult
+    ROIParameters, ROIType
 )
 from .fileIO.hdf_reader_enhanced import (
-    get_enhanced_hdf5_reader, read_hdf5_optimized, read_multiple_hdf5_optimized,
-    AccessPattern
+    get_enhanced_hdf5_reader
 )
-import psutil
 
 logger = get_logger(__name__)
 
@@ -1321,21 +1314,62 @@ class XpcsFile:
         # Extract data based on analysis type
         if has_multitau and hasattr(self, 'g2') and hasattr(self, 'g2_err'):
             # Use Multitau data
-            g2 = self.g2[:, qindex_selected]
-            g2_err = self.g2_err[:, qindex_selected]
+            # Validate qindex_selected bounds before array access
+            max_q_index = min(self.g2.shape[1], self.g2_err.shape[1]) - 1
+            valid_qindex = [idx for idx in qindex_selected if 0 <= idx <= max_q_index]
+            invalid_qindex = [idx for idx in qindex_selected if idx not in valid_qindex]
+
+            if invalid_qindex:
+                logger.warning(f"Filtering out invalid Q indices {invalid_qindex} (max valid: {max_q_index}) for file {self.label}")
+
+            if not valid_qindex:
+                raise ValueError(f"No valid Q indices found in qindex_selected {qindex_selected} for file {self.label}")
+
+            # Use validated indices for array access
+            g2 = self.g2[:, valid_qindex]
+            g2_err = self.g2_err[:, valid_qindex]
             t_el = self.t_el
-            logger.info("Using Multitau G2 data for plotting")
+
+            # Update corresponding qvalues and labels to match filtered indices
+            qvalues = [qvalues[i] for i, idx in enumerate(qindex_selected) if idx in valid_qindex]
+            labels = [labels[i] for i, idx in enumerate(qindex_selected) if idx in valid_qindex]
+
+            logger.info(f"Using Multitau G2 data for plotting ({len(valid_qindex)} valid Q indices)")
         elif has_twotime and hasattr(self, 'c2_g2'):
             # Use Twotime data as fallback
             logger.info("Using Twotime G2 data for plotting")
-            g2 = self.c2_g2[:, qindex_selected]
+
+            # Validate qindex_selected bounds for twotime data
+            max_q_index_c2 = self.c2_g2.shape[1] - 1
+            valid_qindex = [idx for idx in qindex_selected if 0 <= idx <= max_q_index_c2]
+            invalid_qindex = [idx for idx in qindex_selected if idx not in valid_qindex]
+
+            if invalid_qindex:
+                logger.warning(f"Filtering out invalid Q indices {invalid_qindex} (max valid: {max_q_index_c2}) for twotime file {self.label}")
+
+            if not valid_qindex:
+                raise ValueError(f"No valid Q indices found in qindex_selected {qindex_selected} for twotime file {self.label}")
+
+            g2 = self.c2_g2[:, valid_qindex]
 
             # For twotime, we might not have error data - create placeholder
             if hasattr(self, 'c2_g2_err'):
-                g2_err = self.c2_g2_err[:, qindex_selected]
+                # Validate error array bounds too
+                max_q_index_err = self.c2_g2_err.shape[1] - 1
+                valid_qindex_err = [idx for idx in valid_qindex if idx <= max_q_index_err]
+                if len(valid_qindex_err) != len(valid_qindex):
+                    logger.warning(f"Error array has different size, using available indices for {self.label}")
+                    valid_qindex = valid_qindex_err
+                    g2 = self.c2_g2[:, valid_qindex]
+
+                g2_err = self.c2_g2_err[:, valid_qindex]
             else:
                 logger.warning("No Twotime G2 error data available - using zeros")
                 g2_err = np.zeros_like(g2)
+
+            # Update corresponding qvalues and labels to match filtered indices
+            qvalues = [qvalues[i] for i, idx in enumerate(qindex_selected) if idx in valid_qindex]
+            labels = [labels[i] for i, idx in enumerate(qindex_selected) if idx in valid_qindex]
 
             # For twotime delay, we need to compute t_el from available delay data
             if hasattr(self, 'c2_delay'):
@@ -1737,7 +1771,7 @@ class XpcsFile:
             "fit_func": fit_func,
             "fit_val": fit_val,
             "t_el": t_el,
-            "q_val": q_val,
+            "q_val": np.asarray(q_val),  # Ensure q_val is always a numpy array
             "q_range": str(q_range),
             "t_range": str(t_range),
             "bounds": bounds,
@@ -2036,7 +2070,7 @@ class XpcsFile:
             "fit_func": fit_func,
             "fit_val": fit_val,
             "t_el": t_el,
-            "q_val": q_val,
+            "q_val": np.asarray(q_val),  # Ensure q_val is always a numpy array
             "q_range": str(q_range),
             "t_range": str(t_range),
             "bounds": bounds,
@@ -2102,6 +2136,14 @@ class XpcsFile:
         try:
             x = self.fit_summary["q_val"]
             fit_val = self.fit_summary["fit_val"]
+
+            # Ensure x is a numpy array (convert from list if necessary)
+            if not hasattr(x, 'shape'):
+                x = np.array(x)
+
+            # Ensure fit_val is a numpy array (convert from list if necessary)
+            if not hasattr(fit_val, 'shape'):
+                fit_val = np.array(fit_val)
 
             # Validate array dimensions and ensure compatibility
             if len(x.shape) > 1:

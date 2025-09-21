@@ -8,9 +8,9 @@ that occur with PyQtGraph components, particularly QStyleHints warnings.
 import logging
 import warnings
 from contextlib import contextmanager
-from typing import Any, Callable, Optional
+from typing import Callable, Optional
 
-from PySide6 import QtCore, QtWidgets
+from PySide6 import QtWidgets
 from PySide6.QtCore import QObject, Signal, QMetaObject, Qt
 
 from ..utils.logging_config import get_logger

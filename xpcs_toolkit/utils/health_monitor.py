@@ -13,15 +13,12 @@ import threading
 import time
 import weakref
 from collections import defaultdict, deque
-from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Set, Tuple, Union
-from pathlib import Path
+from typing import Any, Callable, Dict, List, Optional, Set
 
 import numpy as np
 
-from .exceptions import XPCSBaseError, XPCSMemoryError, XPCSCriticalError, convert_exception
 from .logging_config import get_logger
 
 logger = get_logger(__name__)

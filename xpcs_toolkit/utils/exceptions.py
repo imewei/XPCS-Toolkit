@@ -10,7 +10,6 @@ This module provides a comprehensive exception hierarchy that enables:
 """
 
 from typing import Any, Dict, Optional, List, Union
-import traceback
 from pathlib import Path
 
 

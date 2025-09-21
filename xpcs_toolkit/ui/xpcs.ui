@@ -1761,7 +1761,7 @@
                   <string>do fitting</string>
                  </property>
                  <property name="checked">
-                  <bool>false</bool>
+                  <bool>true</bool>
                  </property>
                 </widget>
                </item>
@@ -2490,6 +2490,22 @@
                 </property>
                </widget>
               </item>
+              <item row="2" column="0">
+               <widget class="QPushButton" name="btn_export_diffusion">
+                <property name="minimumSize">
+                 <size>
+                  <width>120</width>
+                  <height>40</height>
+                 </size>
+                </property>
+                <property name="text">
+                 <string>export</string>
+                </property>
+                <property name="toolTip">
+                 <string>Export power law fitting results to text files</string>
+                </property>
+               </widget>
+              </item>
              </layout>
             </item>
             <item row="0" column="1">
@@ -2597,6 +2613,9 @@
              <widget class="QCheckBox" name="twotime_correct_diag">
               <property name="text">
                <string>correct-diag</string>
+              </property>
+              <property name="checked">
+               <bool>true</bool>
               </property>
              </widget>
             </item>
@@ -2742,6 +2761,9 @@
              <widget class="QCheckBox" name="checkBox_twotime_autolevel">
               <property name="text">
                <string>autolevel</string>
+              </property>
+              <property name="checked">
+               <bool>true</bool>
               </property>
              </widget>
             </item>

@@ -8,18 +8,14 @@ without blocking critical operations.
 
 import threading
 import time
-import weakref
-from collections import defaultdict, namedtuple
-from concurrent.futures import ThreadPoolExecutor
+from collections import namedtuple
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Set, Tuple, Union, WeakSet
+from typing import Any, Dict, List, Optional, Set, Tuple, WeakSet
 import hashlib
-import gc
 
 import numpy as np
 
-from .exceptions import XPCSBaseError, XPCSCriticalError, convert_exception
 from .logging_config import get_logger
 
 logger = get_logger(__name__)

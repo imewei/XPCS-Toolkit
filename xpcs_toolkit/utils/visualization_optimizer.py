@@ -7,13 +7,11 @@ matplotlib performance improvements, and intelligent plot handler selection.
 """
 
 import time
-from abc import ABC, abstractmethod
 from contextlib import contextmanager
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, Optional, Tuple
 
 import numpy as np
-import psutil
 
 try:
     import pyqtgraph as pg
@@ -31,7 +29,14 @@ except ImportError:
 
 from .logging_config import get_logger
 from .memory_manager import get_memory_manager, MemoryPressure
-from .memory_predictor import predict_operation_memory
+
+# Lazy import threading to avoid circular dependencies
+def _get_threading_manager():
+    try:
+        from ..threading.unified_threading import get_unified_threading_manager
+        return get_unified_threading_manager()
+    except ImportError:
+        return None
 
 logger = get_logger(__name__)
 
@@ -513,3 +518,261 @@ def optimize_plot_performance(plot_widget, data: np.ndarray, plot_type: str,
             return optimizer.optimize_matplotlib_plot(figure, axes, data, plot_type)
 
     return {}
+
+
+class AdvancedGUIRenderer:
+    """
+    Advanced GUI rendering optimization with frame rate control and adaptive quality.
+
+    This class provides sophisticated rendering optimizations including:
+    - Adaptive frame rate limiting
+    - Dynamic quality scaling based on performance
+    - Intelligent update batching
+    - GPU acceleration when available
+    """
+
+    def __init__(self, target_fps: int = 60, quality_auto_adjust: bool = True):
+        self.target_fps = target_fps
+        self.frame_time_target = 1.0 / target_fps
+        self.quality_auto_adjust = quality_auto_adjust
+
+        # Performance tracking
+        self._frame_times = []
+        self._last_frame_time = time.time()
+        self._performance_samples = 50
+
+        # Quality settings
+        self._current_quality = 1.0  # 1.0 = full quality, 0.5 = half quality, etc.
+        self._min_quality = 0.3
+        self._max_quality = 1.0
+
+        # Update batching
+        self._pending_updates = {}
+        self._batch_timer = None
+        self._batch_interval_ms = 16  # ~60 FPS
+
+        self.memory_manager = get_memory_manager()
+        self.threading_manager = _get_threading_manager()
+
+        logger.info(f"AdvancedGUIRenderer initialized: {target_fps}FPS target")
+
+    @contextmanager
+    def optimized_rendering_context(self):
+        """Context manager for optimized rendering operations."""
+        start_time = time.time()
+
+        try:
+            # Apply pre-rendering optimizations
+            original_settings = self._apply_rendering_optimizations()
+            yield
+
+        finally:
+            # Restore settings and update performance metrics
+            self._restore_rendering_settings(original_settings)
+            self._update_performance_metrics(start_time)
+
+    def _apply_rendering_optimizations(self) -> Dict[str, Any]:
+        """Apply rendering optimizations and return original settings."""
+        original_settings = {}
+
+        if PYQTGRAPH_AVAILABLE:
+            # Store original PyQtGraph settings
+            original_settings['pyqtgraph'] = {
+                'antialias': pg.getConfigOption('antialias'),
+                'useOpenGL': pg.getConfigOption('useOpenGL'),
+                'enableExperimental': pg.getConfigOption('enableExperimental')
+            }
+
+            # Apply performance optimizations based on current quality
+            quality_factor = self._current_quality
+
+            pg.setConfigOptions(
+                antialias=quality_factor > 0.7,  # Disable AA below 70% quality
+                useOpenGL=True,  # Always use OpenGL for better performance
+                enableExperimental=True,  # Enable performance features
+            )
+
+            # Reduce update frequency for complex scenes
+            if quality_factor < 0.6:
+                pg.setConfigOption('crashWarning', False)
+
+        return original_settings
+
+    def _restore_rendering_settings(self, original_settings: Dict[str, Any]):
+        """Restore original rendering settings."""
+        if PYQTGRAPH_AVAILABLE and 'pyqtgraph' in original_settings:
+            pg.setConfigOptions(**original_settings['pyqtgraph'])
+
+    def _update_performance_metrics(self, start_time: float):
+        """Update frame time metrics for adaptive quality."""
+        frame_time = time.time() - start_time
+        self._frame_times.append(frame_time)
+
+        # Keep only recent samples
+        if len(self._frame_times) > self._performance_samples:
+            self._frame_times.pop(0)
+
+        # Adaptive quality adjustment
+        if self.quality_auto_adjust and len(self._frame_times) >= 10:
+            avg_frame_time = sum(self._frame_times[-10:]) / 10
+            self._adjust_quality_based_on_performance(avg_frame_time)
+
+    def _adjust_quality_based_on_performance(self, avg_frame_time: float):
+        """Adjust rendering quality based on performance metrics."""
+        if avg_frame_time > self.frame_time_target * 1.5:
+            # Performance is poor, reduce quality
+            new_quality = max(self._min_quality, self._current_quality * 0.9)
+            if new_quality != self._current_quality:
+                self._current_quality = new_quality
+                logger.debug(f"Reduced rendering quality to {new_quality:.2f} due to performance")
+
+        elif avg_frame_time < self.frame_time_target * 0.8:
+            # Performance is good, can increase quality
+            new_quality = min(self._max_quality, self._current_quality * 1.05)
+            if new_quality != self._current_quality:
+                self._current_quality = new_quality
+                logger.debug(f"Increased rendering quality to {new_quality:.2f}")
+
+    def batch_widget_update(self, widget_id: str, update_func: callable, *args, **kwargs):
+        """
+        Batch widget updates to reduce rendering overhead.
+
+        Parameters
+        ----------
+        widget_id : str
+            Unique identifier for the widget
+        update_func : callable
+            Function to perform the update
+        *args, **kwargs
+            Arguments for the update function
+        """
+        self._pending_updates[widget_id] = (update_func, args, kwargs)
+
+        # Start batch timer if not already running
+        if self._batch_timer is None and self.threading_manager:
+            from ..threading.unified_threading import TaskPriority, TaskType
+
+            def process_batched_updates():
+                if self._pending_updates:
+                    # Process all pending updates
+                    updates_to_process = dict(self._pending_updates)
+                    self._pending_updates.clear()
+
+                    for widget_id, (func, args, kwargs) in updates_to_process.items():
+                        try:
+                            func(*args, **kwargs)
+                        except Exception as e:
+                            logger.warning(f"Batched update failed for {widget_id}: {e}")
+
+                self._batch_timer = None
+
+            # Schedule batched update processing
+            self.threading_manager.submit_task(
+                f"batch_update_{time.time()}",
+                process_batched_updates,
+                TaskPriority.HIGH,
+                TaskType.GUI_UPDATE
+            )
+
+    def optimize_large_dataset_display(self, data: np.ndarray, max_points: int = 10000) -> np.ndarray:
+        """
+        Optimize display of large datasets through intelligent downsampling.
+
+        Parameters
+        ----------
+        data : np.ndarray
+            Input data array
+        max_points : int
+            Maximum number of points to display
+
+        Returns
+        -------
+        np.ndarray
+            Optimized data for display
+        """
+        if data.size <= max_points:
+            return data
+
+        # Apply different strategies based on data dimensionality
+        if len(data.shape) == 1:
+            # 1D data: use peak-preserving downsampling
+            downsample_factor = max(1, data.size // max_points)
+            return self._peak_preserving_downsample(data, downsample_factor)
+
+        elif len(data.shape) == 2:
+            # 2D data: use area-based downsampling
+            total_pixels = data.shape[0] * data.shape[1]
+            if total_pixels > max_points:
+                reduction_factor = np.sqrt(total_pixels / max_points)
+                new_height = int(data.shape[0] / reduction_factor)
+                new_width = int(data.shape[1] / reduction_factor)
+
+                try:
+                    from scipy import ndimage
+                    zoom_y = new_height / data.shape[0]
+                    zoom_x = new_width / data.shape[1]
+                    return ndimage.zoom(data, (zoom_y, zoom_x), order=1)
+                except ImportError:
+                    # Fallback to simple slicing
+                    step_y = max(1, data.shape[0] // new_height)
+                    step_x = max(1, data.shape[1] // new_width)
+                    return data[::step_y, ::step_x]
+
+        return data
+
+    def _peak_preserving_downsample(self, data: np.ndarray, factor: int) -> np.ndarray:
+        """Downsample 1D data while preserving peaks."""
+        if factor <= 1:
+            return data
+
+        # Reshape data into chunks and find min/max for each
+        n_complete_chunks = len(data) // factor
+        reshaped = data[:n_complete_chunks * factor].reshape(-1, factor)
+
+        # For each chunk, keep both min and max to preserve features
+        mins = np.min(reshaped, axis=1)
+        maxs = np.max(reshaped, axis=1)
+
+        # Interleave mins and maxs, then flatten
+        result = np.column_stack((mins, maxs)).flatten()
+
+        # Add remaining data points if any
+        remaining = data[n_complete_chunks * factor:]
+        if len(remaining) > 0:
+            result = np.concatenate([result, remaining])
+
+        return result
+
+    def get_rendering_stats(self) -> Dict[str, Any]:
+        """Get comprehensive rendering performance statistics."""
+        stats = {
+            'target_fps': self.target_fps,
+            'current_quality': self._current_quality,
+            'frame_count': len(self._frame_times),
+            'pending_updates': len(self._pending_updates)
+        }
+
+        if self._frame_times:
+            avg_frame_time = sum(self._frame_times) / len(self._frame_times)
+            current_fps = 1.0 / max(0.001, avg_frame_time)  # Avoid division by zero
+
+            stats.update({
+                'avg_frame_time_ms': avg_frame_time * 1000,
+                'current_fps': current_fps,
+                'frame_time_target_ms': self.frame_time_target * 1000,
+                'performance_ratio': self.frame_time_target / avg_frame_time
+            })
+
+        return stats
+
+
+# Global instance
+_advanced_gui_renderer = None
+
+
+def get_advanced_gui_renderer() -> AdvancedGUIRenderer:
+    """Get global advanced GUI renderer instance."""
+    global _advanced_gui_renderer
+    if _advanced_gui_renderer is None:
+        _advanced_gui_renderer = AdvancedGUIRenderer()
+    return _advanced_gui_renderer

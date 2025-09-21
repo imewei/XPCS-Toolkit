@@ -5,11 +5,10 @@ background threads, worker processes, and system resources.
 """
 
 import gc
-import logging
 import threading
 import time
 from enum import Enum
-from typing import List, Optional, Dict, Any, Callable
+from typing import List, Optional, Dict, Any
 
 from xpcs_toolkit.utils.logging_config import get_logger
 

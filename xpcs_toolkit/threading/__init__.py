@@ -34,6 +34,14 @@ from .plot_workers import (
     TwotimePlotWorker,
 )
 from .progress_manager import ProgressDialog, ProgressIndicator, ProgressManager
+from .unified_threading import (
+    TaskPriority,
+    TaskType,
+    UnifiedTask,
+    UnifiedThreadingManager,
+    get_unified_threading_manager,
+    shutdown_unified_threading,
+)
 
 __all__ = [
     # Async components
@@ -67,4 +75,11 @@ __all__ = [
     "ProgressDialog",
     "ProgressIndicator",
     "ProgressManager",
+    # Unified threading
+    "TaskPriority",
+    "TaskType",
+    "UnifiedTask",
+    "UnifiedThreadingManager",
+    "get_unified_threading_manager",
+    "shutdown_unified_threading",
 ]

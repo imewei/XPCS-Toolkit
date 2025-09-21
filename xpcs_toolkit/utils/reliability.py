@@ -12,22 +12,16 @@ import functools
 import hashlib
 import time
 import threading
-import weakref
-from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Set, Tuple, Union
-from pathlib import Path
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 
 from .exceptions import (
     XPCSBaseError,
-    XPCSDataError,
-    XPCSFileError,
     XPCSValidationError,
-    XPCSMemoryError,
     convert_exception,
 )
 from .logging_config import get_logger

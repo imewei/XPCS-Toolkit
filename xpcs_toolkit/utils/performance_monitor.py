@@ -13,7 +13,7 @@ from contextlib import contextmanager
 from dataclasses import dataclass, asdict, field
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union, Callable
+from typing import Any, Dict, List, Optional, Callable
 from functools import wraps
 
 import numpy as np

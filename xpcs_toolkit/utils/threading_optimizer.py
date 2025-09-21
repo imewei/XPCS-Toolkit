@@ -7,17 +7,14 @@ bottlenecks in GUI responsiveness, worker coordination, and resource management.
 
 import time
 import threading
-import weakref
-from concurrent.futures import ThreadPoolExecutor, as_completed
-from contextlib import contextmanager
-from dataclasses import dataclass, field
+from concurrent.futures import ThreadPoolExecutor
+from dataclasses import dataclass
 from enum import Enum
-from queue import Queue, PriorityQueue, Empty
-from typing import Any, Callable, Dict, List, Optional, Set, Tuple
+from queue import PriorityQueue, Empty
+from typing import Any, Callable, Dict, List, Optional, Set
 from threading import Lock, Event
 
 import psutil
-from PySide6.QtCore import QObject, QThread, QTimer, Signal, QMutex
 
 from .logging_config import get_logger
 from .memory_manager import get_memory_manager, MemoryPressure

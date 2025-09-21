@@ -4,10 +4,7 @@ Simplified XPCS fitting utilities.
 Core fitting functions for G2 correlation analysis without over-engineering.
 """
 import logging
-import warnings
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor, as_completed
-from functools import partial
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 from scipy.optimize import curve_fit

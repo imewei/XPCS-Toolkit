@@ -139,6 +139,9 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         self.async_vk = None  # Will be initialized when vk is ready
         self.data_preloader = None
 
+        # Track initialization state for performance optimization
+        self._startup_complete = False
+
         # Track active async operations
         self.active_plot_operations = {}  # operation_id -> plot_type
 
@@ -198,6 +201,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         self.btn_down.clicked.connect(lambda: self.reorder_target("down"))
 
         self.btn_export_saxs1d.clicked.connect(self.saxs1d_export)
+        self.btn_export_diffusion.clicked.connect(self.export_diffusion)
 
         self.comboBox_qmap_target.currentIndexChanged.connect(self.update_plot)
         self.update_g2_fitting_function()
@@ -1429,12 +1433,101 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
 
         try:
             rows = self.get_selected_rows()
+            logger.info(f"G2 export: Selected rows: {rows}")
+
+            # Check if there are any files in the target list at all
+            all_available_files = self.vk.get_xf_list()
+            logger.info(f"G2 export: Total files available in target list: {len(all_available_files)}")
+
+            if not rows:
+                if not all_available_files:
+                    self.statusbar.showMessage("No files loaded. Please add XPCS files to the target list first.", 5000)
+                    logger.warning("G2 export: No files in target list. User needs to load XPCS files first.")
+                else:
+                    # Show helpful message about file selection
+                    multitau_available = self.vk.get_xf_list(filter_atype="Multitau")
+                    if multitau_available:
+                        self.statusbar.showMessage(f"Please select files for export. {len(multitau_available)} Multitau files available in target list.", 5000)
+                        logger.warning(f"G2 export: No files selected. {len(multitau_available)} Multitau files available for export.")
+                    else:
+                        self.statusbar.showMessage(f"No Multitau files found. G2 export requires Multitau analysis files.", 5000)
+                        logger.warning(f"G2 export: No Multitau files available. Found {len(all_available_files)} files but none are Multitau type.")
+                return
+
+            # Additional diagnostics
+            all_files = self.vk.get_xf_list(rows=rows)
+            multitau_files = self.vk.get_xf_list(rows=rows, filter_atype="Multitau")
+            logger.info(f"G2 export: Total files from selection: {len(all_files)}")
+            logger.info(f"G2 export: Multitau files from selection: {len(multitau_files)}")
+            for i, xf in enumerate(all_files):
+                logger.info(f"G2 export: File {i}: {xf.label} - atype: {getattr(xf, 'atype', 'unknown')}")
+
+            # Check if selected files include any Multitau files
+            if not multitau_files:
+                # Check if there are any Multitau files available but not selected
+                all_multitau_available = self.vk.get_xf_list(filter_atype="Multitau")
+                if all_multitau_available:
+                    self.statusbar.showMessage(f"Selected files are not Multitau type. Please select from {len(all_multitau_available)} available Multitau files.", 5000)
+                    logger.warning(f"G2 export: Selected {len(all_files)} files but none are Multitau. {len(all_multitau_available)} Multitau files available.")
+                else:
+                    self.statusbar.showMessage("No Multitau files available for G2 export.", 5000)
+                    logger.warning("G2 export: No Multitau files available in entire target list.")
+                return
+
             self.vk.export_g2(folder, rows)
-            self.statusbar.showMessage(f"G2 data exported to {folder}", 3000)
+            self.statusbar.showMessage(f"G2 data exported to {folder}", 5000)
+        except ValueError as e:
+            # Handle data validation errors with specific guidance
+            if "No files with G2 data found" in str(e):
+                self.statusbar.showMessage("No files with G2 correlation data found. Please select multitau analysis files.", 5000)
+            elif "No valid Q indices" in str(e):
+                self.statusbar.showMessage("Export failed: Q-range selection resulted in invalid indices. Try adjusting Q-range.", 5000)
+            else:
+                self.statusbar.showMessage(f"Data validation error: {e}", 5000)
+            logger.error(f"G2 export validation error: {e}")
+        except (OSError, PermissionError) as e:
+            # Handle file system errors
+            self.statusbar.showMessage(f"File system error: Cannot write to {folder}. Check permissions.", 5000)
+            logger.error(f"G2 export file system error: {e}")
         except Exception as e:
-            self.statusbar.showMessage(f"Export failed: {e}", 3000)
-            import traceback
-            traceback.print_exc()
+            # Handle unexpected errors
+            self.statusbar.showMessage(f"Export failed with unexpected error: {type(e).__name__}: {e}", 5000)
+            logger.error(f"G2 export unexpected error: {e}", exc_info=True)
+
+    def export_diffusion(self):
+        """Export power law fitting results from diffusion analysis."""
+        folder = QtWidgets.QFileDialog.getExistingDirectory(
+            self, caption="Select folder to export diffusion fitting results"
+        )
+
+        if folder in [None, ""]:
+            return
+
+        try:
+            rows = self.get_selected_rows()
+            if not rows:
+                self.statusbar.showMessage("No files selected for export", 3000)
+                return
+
+            self.vk.export_diffusion(folder, rows)
+            self.statusbar.showMessage(f"Diffusion fitting results exported to {folder}", 5000)
+        except ValueError as e:
+            # Handle data validation errors with specific guidance
+            if "No files with tau-q fitting results found" in str(e):
+                self.statusbar.showMessage("No files with tau-q fitting results found. Please select multitau analysis files.", 5000)
+            elif "No files with tau-q power law fitting results found" in str(e):
+                self.statusbar.showMessage("No diffusion analysis results found. Please perform diffusion analysis first in the Diffusion tab.", 5000)
+            else:
+                self.statusbar.showMessage(f"Data validation error: {e}", 5000)
+            logger.error(f"Diffusion export validation error: {e}")
+        except (OSError, PermissionError) as e:
+            # Handle file system errors
+            self.statusbar.showMessage(f"File system error: Cannot write to {folder}. Check permissions.", 5000)
+            logger.error(f"Diffusion export file system error: {e}")
+        except Exception as e:
+            # Handle unexpected errors
+            self.statusbar.showMessage(f"Export failed with unexpected error: {type(e).__name__}: {e}", 5000)
+            logger.error(f"Diffusion export unexpected error: {e}", exc_info=True)
 
     def reload_source(self):
         self.pushButton_11.setText("loading")
