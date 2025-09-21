@@ -517,7 +517,7 @@ class ViewerKernel(FileLocator):
         xf_list = self.get_xf_list()
         if xf_list:
             roi_list = pg_hdl.get_roi_list()
-            saxs1d.pg_plot(
+            self.get_module('saxs1d').pg_plot(
                 xf_list,
                 mp_hdl,
                 bkg_file=self.meta["saxs1d_bkg_xf"],
