@@ -355,8 +355,6 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
             return
 
         # Apply the processed G2 data to the plot widget
-        from .module import g2mod
-
         try:
             # Extract data from worker result
             result["q"]
@@ -378,17 +376,17 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
                     g2_compatible_files.append(xf)
 
             if g2_compatible_files:
-                # Use the existing g2mod.pg_plot function
-                g2mod.pg_plot(
+                # Use the viewer kernel method with lazy loading
+                self.vk.plot_g2(
                     self.mp_g2,  # Plot handler
-                    g2_compatible_files,
                     plot_params.get("q_range"),
                     plot_params.get("t_range"),
                     plot_params.get("y_range"),
+                    rows=self.get_selected_rows(),
                     **{
                         k: v
                         for k, v in plot_params.items()
-                        if k not in ["q_range", "t_range", "y_range"]
+                        if k not in ["q_range", "t_range", "y_range", "rows"]
                     },
                 )
                 logger.info("G2 plot applied successfully")
@@ -417,10 +415,8 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         c2_result = result["c2_result"]
         new_qbin_labels = result["new_qbin_labels"]
 
-        # Update the two-time plots using existing twotime module
-        from .module import twotime
-
-        twotime.plot_twotime_g2(self.mp_2t_hdls, c2_result)
+        # Update the two-time plots using lazy loading
+        self.vk.get_module('twotime').plot_twotime_g2(self.mp_2t_hdls, c2_result)
 
         if new_qbin_labels:
             logger.debug(
@@ -478,9 +474,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
             return
 
         try:
-            # Use the existing intensity module to plot
-            from .module import intt
-
+            # Use the lazy-loaded intensity module to plot
             logger.debug(
                 f"Result keys: {result.keys() if isinstance(result, dict) else 'Not a dict'}"
             )
@@ -493,8 +487,10 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
             logger.debug(f"Got {len(xf_list)} files for intensity plot")
 
             if xf_list:
-                # Use the existing intt.plot function
-                intt.plot(xf_list, self.pg_intt, **plot_params)
+                # Use the viewer kernel method with lazy loading
+                # Filter out 'rows' from plot_params to avoid duplicate parameter
+                filtered_params = {k: v for k, v in plot_params.items() if k != "rows"}
+                self.vk.plot_intt(self.pg_intt, rows=self.get_selected_rows(), **filtered_params)
                 logger.info("Intensity plot applied successfully")
             else:
                 logger.warning("No files available for intensity plotting")
@@ -519,14 +515,14 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
             return
 
         try:
-            # Use the existing stability module to plot
-            from .module import stability
-
+            # Use the lazy-loaded stability module via viewer kernel
             xf_obj = result["xf_obj"]
             plot_params = result["plot_params"]
 
-            # Use the existing stability.plot function
-            stability.plot(xf_obj, self.mp_stab, **plot_params)
+            # Use the viewer kernel method with lazy loading
+            # Filter out 'rows' from plot_params to avoid duplicate parameter
+            filtered_params = {k: v for k, v in plot_params.items() if k != "rows"}
+            self.vk.plot_stability(self.mp_stab, rows=self.get_selected_rows(), **filtered_params)
             logger.info("Stability plot applied successfully")
 
         except Exception as e:

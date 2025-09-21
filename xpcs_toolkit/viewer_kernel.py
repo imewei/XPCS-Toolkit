@@ -310,8 +310,9 @@ class ViewerKernel(FileLocator):
         """
         xf_list = self.get_xf_list(rows=rows, filter_atype="Multitau")
         if xf_list:
-            g2mod.pg_plot(handler, xf_list, q_range, t_range, y_range, **kwargs)
-            q, tel, *_unused = g2mod.get_data(xf_list)
+            g2_module = self.get_module('g2mod')
+            g2_module.pg_plot(handler, xf_list, q_range, t_range, y_range, **kwargs)
+            q, tel, *_unused = g2_module.get_data(xf_list)
             return q, tel
         return None, None
 
