@@ -1009,7 +1009,7 @@ class Ui_mainWindow(object):
         self.g2_show_fit.setObjectName(u"g2_show_fit")
         sizePolicy9.setHeightForWidth(self.g2_show_fit.sizePolicy().hasHeightForWidth())
         self.g2_show_fit.setSizePolicy(sizePolicy9)
-        self.g2_show_fit.setChecked(False)
+        self.g2_show_fit.setChecked(True)
 
         self.gridLayout_19.addWidget(self.g2_show_fit, 2, 2, 1, 3)
 
@@ -1132,7 +1132,6 @@ class Ui_mainWindow(object):
         self.gridLayout_12.addWidget(self.g2_ffit, 3, 9, 1, 1)
 
         self.g2_fitting_function = QComboBox(self.groupBox_2)
-        self.g2_fitting_function.addItem("")
         self.g2_fitting_function.addItem("")
         self.g2_fitting_function.addItem("")
         self.g2_fitting_function.setObjectName(u"g2_fitting_function")
@@ -2220,7 +2219,6 @@ class Ui_mainWindow(object):
         self.g2_ffit.setText(QCoreApplication.translate("mainWindow", u"fit", None))
         self.g2_fitting_function.setItemText(0, QCoreApplication.translate("mainWindow", u"Single Exponential", None))
         self.g2_fitting_function.setItemText(1, QCoreApplication.translate("mainWindow", u"Double Exponential", None))
-        self.g2_fitting_function.setItemText(2, QCoreApplication.translate("mainWindow", u"Robust", None))
 
         self.label_67.setText(QCoreApplication.translate("mainWindow", u"f", None))
         self.label_45.setText(QCoreApplication.translate("mainWindow", u"contrast:", None))

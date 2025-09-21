@@ -120,6 +120,9 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         self.home_dir = home_dir
         self.label_style = label_style
 
+        # Maximize the window at startup
+        self.showMaximized()
+
         self.tabWidget.setCurrentIndex(0)  # show scattering 2d
         self.plot_kwargs_record = {}
         for _, v in tab_mapping.items():
@@ -158,6 +161,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         self.pushButton_plot_saxs1d.clicked.connect(self.plot_saxs_1d)
         self.pushButton_plot_stability.clicked.connect(self.plot_stability)
         self.pushButton_plot_intt.clicked.connect(self.plot_intensity_t)
+        self.pushButton_8.clicked.connect(self.plot_diffusion)  # Diffusion "fit plot" button
         # self.saxs1d_lb_type.currentIndexChanged.connect(self.switch_saxs1d_line)
 
         self.tabWidget.currentChanged.connect(self.update_plot)
@@ -175,7 +179,8 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         self.btn_avg_jobinfo.clicked.connect(self.show_avg_jobinfo)
         self.avg_job_table.clicked.connect(self.update_avg_info)
         self.show_g2_fit_summary.clicked.connect(self.show_g2_fit_summary_func)
-        self.btn_g2_refit.clicked.connect(self.plot_g2)
+        self.btn_g2_export.clicked.connect(self.export_g2)
+        self.btn_g2_refit.clicked.connect(self.refit_g2)
         self.saxs2d_autolevel.stateChanged.connect(self.update_saxs2d_level)
         self.btn_deselect.clicked.connect(self.clear_target_selection)
         self.list_view_target.doubleClicked.connect(self.show_dataset)
@@ -588,10 +593,10 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
             return
 
         # Check if we should use async plotting
+        # Note: twotime removed from async list to fix automatic plotting issues
         use_async = self.async_vk is not None and tab_name in [
             "saxs_2d",
             "g2",
-            "twotime",
             "intensity_t",
             "stability",
             "qmap",
@@ -1021,37 +1026,86 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         return None
 
     def init_diffusion(self):
-        self.vk.plot_tauq_pre(hdl=self.mp_tauq_pre.hdl)
+        logger.info("init_diffusion called - updating left window (mp_tauq_pre)")
+        rows = self.get_selected_rows()
+        logger.info(f"Selected rows for pre-plot: {rows}")
+
+        # Debug mp_tauq_pre widget state
+        logger.info(f"mp_tauq_pre visible: {self.mp_tauq_pre.isVisible()}, size: {self.mp_tauq_pre.size()}")
+        logger.info(f"mp_tauq_pre canvas: {self.mp_tauq_pre.hdl}")
+
+        self.vk.plot_tauq_pre(hdl=self.mp_tauq_pre.hdl, rows=rows)
+
+        logger.info("init_diffusion completed")
 
     def plot_diffusion(self, dryrun=False):
-        keys = [self.tauq_amin, self.tauq_bmin, self.tauq_amax, self.tauq_bmax]
-        bounds = np.array([float(x.text()) for x in keys]).reshape(2, 2)
+        logger.info("plot_diffusion method called")
 
-        fit_flag = [self.tauq_afit.isChecked(), self.tauq_bfit.isChecked()]
+        try:
+            keys = [self.tauq_amin, self.tauq_bmin, self.tauq_amax, self.tauq_bmax]
+            bounds = np.array([float(x.text()) for x in keys]).reshape(2, 2)
 
-        if sum(fit_flag) == 0:
-            self.statusbar.showMessage("nothing to fit, really?", 1000)
+            fit_flag = [self.tauq_afit.isChecked(), self.tauq_bfit.isChecked()]
+
+            if sum(fit_flag) == 0:
+                logger.warning("No fit flags selected")
+                self.statusbar.showMessage("nothing to fit, really?", 1000)
+                return None
+
+            tauq = [self.tauq_qmin, self.tauq_qmax]
+            q_range = [float(x.text()) for x in tauq]
+
+            kwargs = {
+                "bounds": bounds.tolist(),
+                "fit_flag": fit_flag,
+                "offset": self.sb_tauq_offset.value(),
+                "rows": self.get_selected_rows(),
+                "q_range": q_range,
+                "plot_type": self.cb_tauq_type.currentIndex(),
+            }
+
+            if dryrun:
+                return kwargs
+
+            # CRITICAL FIX: Force fresh G2 fitting first, then tau-q fitting
+            # This ensures tau-q gets fresh G2 results as input
+            rows = self.get_selected_rows()
+            xf_list = self.vk.get_xf_list(rows)
+
+            # Force fresh G2 fitting for all files to ensure fresh input data
+            for xf in xf_list:
+                if hasattr(xf, 'fit_summary') and xf.fit_summary is not None:
+                    # Get current G2 parameters from UI
+                    g2_bounds, g2_fit_flag, g2_fit_func = self.check_g2_fitting_number()
+                    g2_params = self.check_g2_number()
+                    g2_q_range = (g2_params[0], g2_params[1])
+                    g2_t_range = (g2_params[2], g2_params[3])
+
+                    # Force fresh G2 fitting to provide fresh input for tau-q
+                    logger.info(f"Forcing fresh G2 fitting for {xf.label} before tau-q analysis")
+                    xf.fit_g2(g2_q_range, g2_t_range, g2_bounds, g2_fit_flag, g2_fit_func, force_refit=True)
+
+            # Now force fresh tau-q fitting with the fresh G2 results
+            kwargs["force_refit"] = True
+            msg = self.vk.plot_tauq(hdl=self.mp_tauq.hdl, **kwargs)
+
+            # Update BOTH display areas: right panel AND left panel
+            self.tauq_msg.clear()
+            self.tauq_msg.setData(msg)
+            self.tauq_msg.parent().repaint()
+
+            # ALSO update left panel parameter plots with fresh data
+            logger.info("Updating diffusion parameter plots with fresh results")
+            self.init_diffusion()
+
+            logger.info("plot_diffusion completed successfully")
             return None
 
-        tauq = [self.tauq_qmin, self.tauq_qmax]
-        q_range = [float(x.text()) for x in tauq]
-
-        kwargs = {
-            "bounds": bounds.tolist(),
-            "fit_flag": fit_flag,
-            "offset": self.sb_tauq_offset.value(),
-            "rows": self.get_selected_rows(),
-            "q_range": q_range,
-            "plot_type": self.cb_tauq_type.currentIndex(),
-        }
-        if dryrun:
-            return kwargs
-        msg = self.vk.plot_tauq(hdl=self.mp_tauq.hdl, **kwargs)
-        self.mp_tauq.parent().repaint()
-        self.tauq_msg.clear()
-        self.tauq_msg.setData(msg)
-        self.tauq_msg.parent().repaint()
-        return None
+        except Exception as e:
+            logger.error(f"Error in plot_diffusion: {e}")
+            import traceback
+            traceback.print_exc()
+            return None
 
     def select_bkgfile(self):
         path = self.work_dir.text()
@@ -1279,7 +1333,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
             "marker_size": self.g2_marker_size.value(),
             "subtract_baseline": self.g2_sub_baseline.isChecked(),
             "fit_func": fit_func,
-            "robust_fitting": fit_func == "robust",
+            "robust_fitting": True,  # Always use robust sequential fitting for better reliability
             # 'label_size': self.sb_g2_label_size.value(),
         }
         if kwargs["show_fit"] and sum(kwargs["fit_flag"]) == 0:
@@ -1301,8 +1355,75 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
             self.pushButton_4.setEnabled(True)
             self.pushButton_4.setText("plot")
 
+    def refit_g2(self):
+        """
+        Refit G2 correlation functions with force_refit=True to bypass cache.
+
+        This method forces a complete refitting of G2 data, ensuring that
+        parameter values are updated even if fitting parameters haven't changed.
+        """
+        logger.info("Refit G2 button clicked - forcing new fit calculation")
+
+        p = self.check_g2_number()
+        bounds, fit_flag, fit_func = self.check_g2_fitting_number()
+
+        kwargs = {
+            "num_col": self.sb_g2_column.value(),
+            "offset": self.sb_g2_offset.value(),
+            "show_fit": self.g2_show_fit.isChecked(),
+            "show_label": self.g2_show_label.isChecked(),
+            "plot_type": self.g2_plot_type.currentText(),
+            "q_range": (p[0], p[1]),
+            "t_range": (p[2], p[3]),
+            "y_range": (p[4], p[5]),
+            "y_auto": self.g2_yauto.isChecked(),
+            "q_auto": self.g2_qauto.isChecked(),
+            "t_auto": self.g2_tauto.isChecked(),
+            "rows": self.get_selected_rows(),
+            "bounds": bounds,
+            "fit_flag": fit_flag,
+            "marker_size": self.g2_marker_size.value(),
+            "subtract_baseline": self.g2_sub_baseline.isChecked(),
+            "fit_func": fit_func,
+            "robust_fitting": True,
+            "force_refit": True,  # KEY: Force refitting to bypass cache
+        }
+
+        if kwargs["show_fit"] and sum(kwargs["fit_flag"]) == 0:
+            self.statusbar.showMessage("nothing to fit, really?", 1000)
+            return None
+
+        self.btn_g2_refit.setDisabled(True)
+        self.btn_g2_refit.setText("refitting")
+        try:
+            qd, tel = self.vk.plot_g2(handler=self.mp_g2, **kwargs)
+            self.init_g2(qd, tel)
+            if kwargs["show_fit"]:
+                self.init_diffusion()
+            self.statusbar.showMessage("G2 refitting completed successfully", 2000)
+        except Exception:
+            traceback.print_exc()
+            self.statusbar.showMessage("G2 refitting failed", 2000)
+        finally:
+            self.btn_g2_refit.setEnabled(True)
+            self.btn_g2_refit.setText("refit")
+
     def export_g2(self):
-        self.vk.export_g2()
+        folder = QtWidgets.QFileDialog.getExistingDirectory(
+            self, caption="select a folder to export G2 data and fitting results"
+        )
+
+        if folder in [None, ""]:
+            return
+
+        try:
+            rows = self.get_selected_rows()
+            self.vk.export_g2(folder, rows)
+            self.statusbar.showMessage(f"G2 data exported to {folder}", 3000)
+        except Exception as e:
+            self.statusbar.showMessage(f"Export failed: {e}", 3000)
+            import traceback
+            traceback.print_exc()
 
     def reload_source(self):
         self.pushButton_11.setText("loading")
@@ -1510,7 +1631,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         return vals
 
     def check_g2_fitting_number(self):
-        fit_func = ["single", "double", "robust"][self.g2_fitting_function.currentIndex()]
+        fit_func = ["single", "double"][self.g2_fitting_function.currentIndex()]
         keys = (
             self.g2_amin,
             self.g2_amax,
@@ -1585,8 +1706,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         title = [
             "g2 fitting with Single Exp:  y = a·exp[-2(x/b)^c]+d",
             "g2 fitting with Double Exp:  y = a·[f·exp[-(x/b)^c +"
-            + "(1-f)·exp[-(x/b2)^c2]^2+d",
-            "g2 Robust Fitting: Single Exp with enhanced optimization"
+            + "(1-f)·exp[-(x/b2)^c2]^2+d"
         ]
         self.groupBox_2.setTitle(title[idx])
 
@@ -1596,8 +1716,8 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
             [self.g2_fmin, self.g2_fmax, self.g2_ffit],
         ]
 
-        # change to single or robust (both use single exp parameters)
-        if idx == 0 or idx == 2:  # single or robust
+        # change to single
+        if idx == 0:  # single
             for n in range(3):
                 pvs[n][0].setDisabled(True)
                 pvs[n][1].setDisabled(True)

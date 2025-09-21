@@ -292,14 +292,21 @@ class ViewerKernel(FileLocator):
 
     def plot_tauq_pre(self, hdl=None, rows=None):
         # Support both Multitau and Twotime files for diffusion analysis
+        logger.debug(f"plot_tauq_pre called with hdl={hdl is not None}, rows={rows}")
+
         xf_list = self.get_xf_list(rows=rows)
+        logger.debug(f"Got {len(xf_list)} files from get_xf_list")
+
         # Filter for files that support G2 analysis (same as G2 plotting)
         g2_compatible_list = []
         for xf in xf_list:
             if any(atype in xf.atype for atype in ["Multitau", "Twotime"]):
                 g2_compatible_list.append(xf)
         xf_list = g2_compatible_list
+        logger.debug(f"Filtered to {len(xf_list)} G2-compatible files")
+
         short_list = [xf for xf in xf_list if xf.fit_summary is not None]
+        logger.debug(f"Found {len(short_list)} files with fit_summary")
 
         if len(short_list) == 0:
             logger.warning(
@@ -308,6 +315,7 @@ class ViewerKernel(FileLocator):
             )
             # Clear the plot and show a message
             if hdl is not None:
+                logger.debug("Clearing plot and showing empty message")
                 hdl.clear()
                 ax = hdl.subplots(1, 1)
                 ax.text(
@@ -327,11 +335,20 @@ class ViewerKernel(FileLocator):
                 ax.set_ylim(0, 1)
                 ax.axis("off")
                 hdl.fig.tight_layout()
+                hdl.draw()  # Add missing draw call
+                logger.debug("Empty message plot drawn")
+            else:
+                logger.warning("hdl is None, cannot display empty message")
         else:
             logger.info(
                 f"Found {len(short_list)} files with G2 fitting results for diffusion analysis"
             )
-            tauq.plot_pre(short_list, hdl)
+            if hdl is not None:
+                logger.debug("Calling tauq.plot_pre with files")
+                tauq.plot_pre(short_list, hdl)
+                logger.debug("tauq.plot_pre completed")
+            else:
+                logger.warning("hdl is None, cannot call tauq.plot_pre")
 
     def plot_tauq(
         self,
@@ -342,7 +359,9 @@ class ViewerKernel(FileLocator):
         fit_flag=None,
         offset=None,
         q_range=None,
+        force_refit=False,
     ):
+        logger.debug(f"plot_tauq called with hdl={hdl is not None}, bounds={bounds}, rows={rows}, plot_type={plot_type}, fit_flag={fit_flag}, offset={offset}, q_range={q_range}")
         if rows is None:
             rows = []
         xf_list = self.get_xf_list(
@@ -353,7 +372,7 @@ class ViewerKernel(FileLocator):
             if x.fit_summary is None:
                 logger.info("g2 fitting is not available for %s", x.fname)
             else:
-                x.fit_tauq(q_range, bounds, fit_flag)
+                x.fit_tauq(q_range, bounds, fit_flag, force_refit=force_refit)
                 result[x.label] = x.get_fitting_info(mode="tauq_fitting")
 
         if len(result) > 0:
@@ -665,8 +684,109 @@ class ViewerKernel(FileLocator):
             "memory_pressure": MemoryMonitor.get_memory_pressure(),
         }
 
-    def export_g2(self):
-        pass
+    def export_g2(self, folder, rows=None):
+        """
+        Export G2 correlation data and fitting results to text files.
+
+        Parameters
+        ----------
+        folder : str
+            Directory path where files will be saved
+        rows : list, optional
+            Selected row indices. If None, uses all files.
+        """
+        import os
+        import numpy as np
+
+        xf_list = self.get_xf_list(rows=rows, filter_atype="Multitau")
+
+        if not xf_list:
+            raise ValueError("No files with G2 data found")
+
+        for xf in xf_list:
+            # Export raw G2 data
+            try:
+                q_val, t_el, g2, g2_err, labels = xf.get_g2_data()
+
+                # Save G2 correlation data
+                g2_filename = os.path.join(folder, f"{xf.label}_g2_data.txt")
+
+                # Create header
+                header = "tau(s)"
+                for i, q in enumerate(q_val):
+                    header += f"\tG2_q{i:03d}(q={q:.6f})\tG2_err_q{i:03d}"
+
+                # Prepare data array
+                data_array = [t_el]
+                for i in range(len(q_val)):
+                    data_array.append(g2[:, i])
+                    data_array.append(g2_err[:, i])
+
+                data_matrix = np.column_stack(data_array)
+                np.savetxt(g2_filename, data_matrix, header=header, delimiter='\t')
+
+                # Export fitting results if available
+                if xf.fit_summary is not None:
+                    fit_filename = os.path.join(folder, f"{xf.label}_g2_fitting.txt")
+
+                    with open(fit_filename, 'w') as f:
+                        f.write(f"# G2 Fitting Results for {xf.label}\n")
+                        f.write(f"# Fitting function: {xf.fit_summary['fit_func']}\n")
+                        f.write(f"# Q-range: {xf.fit_summary['q_range']}\n")
+                        f.write(f"# Time-range: {xf.fit_summary['t_range']}\n")
+                        f.write(f"# Bounds: {xf.fit_summary['bounds']}\n")
+                        f.write(f"# Fit flags: {xf.fit_summary['fit_flag']}\n\n")
+
+                        # Parameter names
+                        if xf.fit_summary["fit_func"] == "single":
+                            param_names = ["a", "b", "c", "d"]
+                        else:
+                            param_names = ["a", "b", "c", "d", "b2", "c2", "f"]
+
+                        # Write header for fitting parameters
+                        f.write("q_value\t")
+                        for param in param_names:
+                            f.write(f"{param}\t{param}_error\t")
+                        f.write("\n")
+
+                        # Write fitting parameters
+                        fit_val = xf.fit_summary['fit_val']
+                        for i, q in enumerate(q_val):
+                            if i < fit_val.shape[0]:
+                                f.write(f"{q:.6f}\t")
+                                for j in range(len(param_names)):
+                                    if j < fit_val.shape[2]:
+                                        f.write(f"{fit_val[i, 0, j]:.6e}\t{fit_val[i, 1, j]:.6e}\t")
+                                    else:
+                                        f.write("N/A\tN/A\t")
+                                f.write("\n")
+
+                    # Export fitted curves if available
+                    if 'fit_line' in xf.fit_summary and 'fit_x' in xf.fit_summary:
+                        curve_filename = os.path.join(folder, f"{xf.label}_g2_fitted_curves.txt")
+
+                        fit_x = xf.fit_summary['fit_x']
+                        fit_line = xf.fit_summary['fit_line']
+
+                        # Create header for fitted curves
+                        header = "tau(s)"
+                        for i, q in enumerate(q_val):
+                            header += f"\tG2_fit_q{i:03d}(q={q:.6f})"
+
+                        # Prepare fitted curve data
+                        curve_data = [fit_x]
+                        for i in range(len(q_val)):
+                            if i < fit_line.shape[0]:
+                                curve_data.append(fit_line[i, :])
+                            else:
+                                curve_data.append(np.ones_like(fit_x))
+
+                        curve_matrix = np.column_stack(curve_data)
+                        np.savetxt(curve_filename, curve_matrix, header=header, delimiter='\t')
+
+            except Exception as e:
+                logger.warning(f"Failed to export G2 data for {xf.label}: {e}")
+                continue
 
 
 if __name__ == "__main__":

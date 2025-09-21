@@ -1,6 +1,12 @@
 import numpy as np
 
 from xpcs_toolkit.utils.logging_config import get_logger
+from xpcs_toolkit.utils.validation import (
+    validate_xf_fit_summary,
+    validate_xf_has_fit_summary,
+    get_file_label_safe,
+    validate_array_compatibility
+)
 
 logger = get_logger(__name__)
 
@@ -24,25 +30,31 @@ def plot(xf_list, hdl, q_range, offset, plot_type=3):
     color_cycle = [colors[n % len(colors)] for n in range(num_files)]
     shape_cycle = [shapes[n % len(shapes)] for n in range(num_files)]
 
-    for n, xf in enumerate(xf_list):
-        # Extract data with error checking
-        if "fit_summary" not in xf.__dict__ or xf.fit_summary is None:
-            logger.debug(
-                f"Skipping file {getattr(xf, 'label', 'unknown')} - no fit_summary"
-            )
-            continue
+    plot_count = 0
 
-        fit_summary = xf.fit_summary
-        if "q_val" not in fit_summary or "fit_val" not in fit_summary:
-            logger.debug(
-                f"Skipping file {getattr(xf, 'label', 'unknown')} - missing q_val or fit_val"
-            )
+    for n, xf in enumerate(xf_list):
+        # Extract data with error checking using validation utility
+        is_valid, fit_summary, error_msg = validate_xf_fit_summary(xf)
+        if not is_valid:
             continue
 
         s = scale_factors[n]
         x = fit_summary["q_val"]
         y = fit_summary["fit_val"][:, 0, 1]
         e = fit_summary["fit_val"][:, 1, 1]
+
+        # Ensure all arrays have the same length to avoid boolean index mismatch
+        file_label = get_file_label_safe(xf)
+        is_compatible, min_length, warning_msg = validate_array_compatibility(
+            x, y, e, file_label=file_label
+        )
+        if not is_compatible:
+            continue
+
+        # Trim arrays to minimum length if needed
+        x = x[:min_length]
+        y = y[:min_length]
+        e = e[:min_length]
 
         # Vectorized filtering of failed fittings
         valid_idx = e > 0
@@ -74,11 +86,12 @@ def plot(xf_list, hdl, q_range, offset, plot_type=3):
             color=color,
             mfc="white",
         )
+        plot_count += 1
 
         # Plot fit line if available
         if fit_summary.get("tauq_success", False):
             tauq_fit_line = fit_summary.get("tauq_fit_line")
-            if tauq_fit_line and "fit_x" in tauq_fit_line and "fit_y" in tauq_fit_line:
+            if isinstance(tauq_fit_line, dict) and "fit_x" in tauq_fit_line and "fit_y" in tauq_fit_line:
                 fit_x = tauq_fit_line["fit_x"]
                 fit_y = tauq_fit_line["fit_y"]
                 ax.plot(fit_x, fit_y / s, color=color)
@@ -96,7 +109,7 @@ def plot(xf_list, hdl, q_range, offset, plot_type=3):
     ax.set_yscale(yscale)
 
     hdl.draw()
-    logger.info("Tau-q plot completed successfully")
+    logger.info(f"Tau-q plot completed successfully - {plot_count} plots drawn")
 
 
 def plot_pre(xf_list, hdl):
@@ -107,7 +120,7 @@ def plot_pre(xf_list, hdl):
 
     # Handle empty file list case
     if len(xf_list) == 0:
-        logger.warning("No files provided for tau-q pre-plot")
+        logger.warning("No files provided for tau-q pre-plot - showing instruction message")
         ax = hdl.subplots(1, 1)
         ax.text(
             0.5,
@@ -122,8 +135,11 @@ def plot_pre(xf_list, hdl):
         ax.set_ylim(0, 1)
         ax.axis("off")
         hdl.fig.tight_layout()
+        hdl.draw()
+        logger.info("Displayed instruction message for missing G2 fitting results")
         return
 
+    logger.info(f"Creating 2x2 subplot layout for {len(xf_list)} files")
     ax = hdl.subplots(2, 2, sharex=True).flatten()
     titles = ["contrast", "tau (s)", "stretch", "baseline"]
 
@@ -134,21 +150,13 @@ def plot_pre(xf_list, hdl):
     # Track bounds for final setup
     global_bounds = None
     x_range = None
+    processed_files = 0
 
     for idx, xf in enumerate(xf_list):
         try:
-            # Skip if no fit summary
-            if not hasattr(xf, "fit_summary") or xf.fit_summary is None:
-                logger.debug(
-                    f"Skipping file {getattr(xf, 'label', 'unknown')} - no fit_summary"
-                )
-                continue
-
-            fit_summary = xf.fit_summary
-            if "q_val" not in fit_summary or "fit_val" not in fit_summary:
-                logger.debug(
-                    f"Skipping file {getattr(xf, 'label', 'unknown')} - missing q_val or fit_val"
-                )
+            # Validate file using validation utility
+            is_valid, fit_summary, error_msg = validate_xf_fit_summary(xf)
+            if not is_valid:
                 continue
 
             color = color_cycle[idx]
@@ -207,6 +215,8 @@ def plot_pre(xf_list, hdl):
                 global_bounds = fit_summary["bounds"]
                 x_range = (np.min(x), np.max(x))
 
+            processed_files += 1
+
         except Exception as e:
             logger.error(f"Error plotting file {getattr(xf, 'label', 'unknown')}: {e}")
             continue
@@ -240,6 +250,9 @@ def plot_pre(xf_list, hdl):
             if n == 3:
                 ax[n].legend()
 
+    logger.info(f"Pre-plot final setup: processed {processed_files} files successfully")
+    logger.info(f"Global bounds available: {global_bounds is not None}")
+
     hdl.draw()
-    logger.info("Tau-q pre-plot completed successfully")
+    logger.info(f"Tau-q pre-plot completed successfully - processed {processed_files}/{len(xf_list)} files")
     return

@@ -23,7 +23,7 @@ from .fileIO.hdf_reader import (
     read_metadata_to_dict,
 )
 from .fileIO.qmap_utils import get_qmap
-from .helper.fitting import fit_with_fixed, robust_curve_fit
+from .helper.fitting import fit_with_fixed, fit_with_fixed_sequential, robust_curve_fit
 from .module.twotime_utils import get_c2_stream, get_single_c2_from_hdf
 from .utils.logging_config import get_logger
 import psutil
@@ -1251,7 +1251,16 @@ class XpcsFile:
             for n in range(val.shape[0]):
                 temp = []
                 for m in range(len(prefix)):
-                    temp.append(f"{prefix[m]} = {val[n, 0, m]:f} ± {val[n, 1, m]:f}")
+                    value = val[n, 0, m]
+                    error = val[n, 1, m]
+
+                    # Handle infinite or NaN error values gracefully
+                    if np.isfinite(error) and error > 0:
+                        temp.append(f"{prefix[m]} = {value:f} ± {error:f}")
+                    elif np.isnan(error):
+                        temp.append(f"{prefix[m]} = {value:f} ± NaN")
+                    else:  # infinite, negative, or zero error
+                        temp.append(f"{prefix[m]} = {value:f} ± --")
                 msg.append(", ".join(temp))
             result["fit_val"] = np.array(msg)
 
@@ -1260,7 +1269,28 @@ class XpcsFile:
                 result = "tauq fitting is not available"
             else:
                 v = self.fit_summary["tauq_fit_val"]
-                result = f"a = {v[0, 0]:e} ± {v[1, 0]:e}; b = {v[0, 1]:f} ± {v[1, 1]:f}"
+
+                # Handle infinite or NaN error values gracefully for tauq fitting
+                a_val, a_err = v[0, 0], v[1, 0]
+                b_val, b_err = v[0, 1], v[1, 1]
+
+                # Format 'a' parameter
+                if np.isfinite(a_err) and a_err > 0:
+                    a_str = f"a = {a_val:e} ± {a_err:e}"
+                elif np.isnan(a_err):
+                    a_str = f"a = {a_val:e} ± NaN"
+                else:
+                    a_str = f"a = {a_val:e} ± --"
+
+                # Format 'b' parameter
+                if np.isfinite(b_err) and b_err > 0:
+                    b_str = f"b = {b_val:f} ± {b_err:f}"
+                elif np.isnan(b_err):
+                    b_str = f"b = {b_val:f} ± NaN"
+                else:
+                    b_str = f"b = {b_val:f} ± --"
+
+                result = f"{a_str}; {b_str}"
         else:
             raise ValueError("mode not supported.")
 
@@ -1268,7 +1298,8 @@ class XpcsFile:
 
     def fit_g2(
         self, q_range=None, t_range=None, bounds=None, fit_flag=None, fit_func="single",
-        robust_fitting=False, diagnostic_level="standard", bootstrap_samples=None
+        robust_fitting=False, diagnostic_level="standard", bootstrap_samples=None,
+        force_refit=False
     ):
         """
         Optimized g2 fitting with caching and improved parameter initialization.
@@ -1283,6 +1314,7 @@ class XpcsFile:
         :param robust_fitting: bool, whether to use robust fitting methods
         :param diagnostic_level: str, level of diagnostics ('basic', 'standard', 'comprehensive')
         :param bootstrap_samples: int, number of bootstrap samples for uncertainty estimation
+        :param force_refit: bool, whether to bypass cache and force new fitting
         :return: dictionary with the fitting result;
         """
         # Monitor memory usage during fitting
@@ -1300,9 +1332,9 @@ class XpcsFile:
             "fit_g2", q_range, t_range, bounds, fit_flag, fit_func
         )
 
-        # Check if fitting result is already cached
+        # Check if fitting result is already cached (unless force_refit is True)
         fit_cache_key = f"fit_summary_{cache_key}"
-        if fit_cache_key in self._computation_cache:
+        if not force_refit and fit_cache_key in self._computation_cache:
             self.fit_summary = self._computation_cache[fit_cache_key]
             return self.fit_summary
 
@@ -1374,6 +1406,7 @@ class XpcsFile:
             "bounds": bounds,
             "fit_flag": str(fit_flag),
             "fit_line": fit_line,
+            "fit_x": fit_x,  # Include the x-values used for fitting
             "label": label,
         }
 
@@ -1393,89 +1426,30 @@ class XpcsFile:
                                   fit_x, p0, diagnostic_level="standard",
                                   bootstrap_samples=None):
         """
-        Perform robust G2 fitting with comprehensive diagnostics and uncertainty estimation.
+        Perform robust G2 fitting using sequential method approach.
 
-        This method integrates the robust fitting framework with the existing XPCS workflow
-        while maintaining backward compatibility and leveraging performance optimizations.
+        Uses the enhanced fitting sequence: robust → least squares → differential evolution
+        for improved reliability and convergence.
         """
-        from functools import partial
+        logger.info(f"Starting sequential G2 fitting with {g2.shape[1]} q-values")
 
-        # Use simplified fitting approach
+        # Use the new sequential fitting approach
+        try:
+            fit_line, fit_val, fit_methods = fit_with_fixed_sequential(
+                func, t_el, g2, sigma, bounds, fit_flag, fit_x, p0=p0
+            )
 
-        # Prepare fitting results containers
-        fit_line = np.zeros((g2.shape[1], len(fit_x)))
-        fit_val = []
+            # Keep fit_val as numpy array for backward compatibility with get_fitting_info
+            # fit_val is already in the correct format (n_q, 2, n_params)
+            logger.info("Sequential G2 fitting completed successfully")
+            return fit_line, fit_val
 
-        # Process each q-value with robust fitting
-        for q_idx in range(g2.shape[1]):
-            try:
-                # Extract data for this q-value
-                g2_col = g2[:, q_idx]
-                sigma_col = sigma[:, q_idx]
-
-                # Skip if insufficient data
-                valid_mask = np.isfinite(g2_col) & np.isfinite(sigma_col) & (sigma_col > 0)
-                if np.sum(valid_mask) < 3:  # Need at least 3 points for fitting
-                    # Use standard fitting as fallback
-                    fit_line[q_idx, :], fit_params = self._fallback_standard_fit(
-                        func, t_el, g2_col, sigma_col, bounds, fit_flag, fit_x, p0
-                    )
-                    fit_val.append(fit_params)
-                    continue
-
-                # Apply mask to clean data
-                t_clean = t_el[valid_mask]
-                g2_clean = g2_col[valid_mask]
-                sigma_clean = sigma_col[valid_mask]
-
-                # Create partial function for this parameter set
-                if len(p0) == 4:  # Single exponential
-                    fit_func_partial = lambda x, *params: func(x, params, fit_flag)
-                else:  # Double exponential
-                    fit_func_partial = lambda x, *params: func(x, params, fit_flag)
-
-                # Determine initial parameters for robust fitting
-                robust_p0 = p0.copy()
-                robust_bounds = ([bounds[0][i] for i in range(len(p0))],
-                               [bounds[1][i] for i in range(len(p0))])
-
-                # Perform robust curve fitting
-                try:
-                    popt, pcov, diagnostics = analyzer.robust_optimizer.robust_curve_fit_with_diagnostics(
-                        fit_func_partial, t_clean, g2_clean,
-                        p0=robust_p0, bounds=robust_bounds, sigma=sigma_clean,
-                        bootstrap_samples=bootstrap_samples or 0
-                    )
-
-                    # Evaluate fitted function over fit_x range
-                    fit_line[q_idx, :] = fit_func_partial(fit_x, *popt)
-
-                    # Store results with enhanced diagnostics
-                    fit_result = {
-                        'params': popt,
-                        'param_errors': np.sqrt(np.diag(pcov)) if pcov is not None else np.zeros_like(popt),
-                        'covariance': pcov,
-                        'diagnostics': diagnostics,
-                        'robust_fit': True,
-                        'q_index': q_idx
-                    }
-                    fit_val.append(fit_result)
-
-                except Exception as e:
-                    logger.warning(f"Robust fitting failed for q-index {q_idx}, using fallback: {e}")
-                    # Fallback to standard fitting
-                    fit_line[q_idx, :], fit_params = self._fallback_standard_fit(
-                        func, t_el, g2_col, sigma_col, bounds, fit_flag, fit_x, p0
-                    )
-                    fit_val.append(fit_params)
-
-            except Exception as e:
-                logger.error(f"Critical error in robust fitting for q-index {q_idx}: {e}")
-                # Emergency fallback
-                fit_line[q_idx, :] = np.ones_like(fit_x)
-                fit_val.append({'params': p0, 'error': str(e), 'robust_fit': False})
-
-        return fit_line, fit_val
+        except Exception as e:
+            logger.error(f"Sequential fitting failed: {e}")
+            # Fallback to original method
+            logger.info("Falling back to standard fitting")
+            fallback_fit_line, fallback_fit_val = fit_with_fixed(func, t_el, g2, sigma, bounds, fit_flag, fit_x, p0=p0)
+            return fallback_fit_line, fallback_fit_val
 
     def _fallback_standard_fit(self, func, t_el, g2_col, sigma_col, bounds, fit_flag, fit_x, p0):
         """
@@ -1499,7 +1473,7 @@ class XpcsFile:
 
     def fit_g2_robust(self, q_range=None, t_range=None, bounds=None, fit_flag=None,
                      fit_func="single", diagnostic_level="standard", bootstrap_samples=500,
-                     enable_caching=True):
+                     enable_caching=True, enable_diagnostics=None, force_refit=False, **kwargs):
         """
         Dedicated robust G2 fitting method with comprehensive diagnostics.
 
@@ -1516,10 +1490,14 @@ class XpcsFile:
         :param enable_caching: whether to cache results for performance
         :return: dictionary with enhanced fitting results and diagnostics
         """
+        # Map enable_diagnostics to diagnostic_level for compatibility
+        if enable_diagnostics is not None:
+            diagnostic_level = "comprehensive" if enable_diagnostics else "basic"
+
         return self.fit_g2(
             q_range=q_range, t_range=t_range, bounds=bounds, fit_flag=fit_flag,
             fit_func=fit_func, robust_fitting=True, diagnostic_level=diagnostic_level,
-            bootstrap_samples=bootstrap_samples
+            bootstrap_samples=bootstrap_samples, force_refit=force_refit
         )
 
     def fit_g2_high_performance(self, q_range=None, t_range=None, bounds=None,
@@ -1682,7 +1660,7 @@ class XpcsFile:
 
         return g2_err_mod
 
-    def fit_tauq(self, q_range, bounds, fit_flag):
+    def fit_tauq(self, q_range, bounds, fit_flag, force_refit=False):
         """
         Optimized tau-q fitting with improved data filtering and caching.
         """
@@ -1693,8 +1671,8 @@ class XpcsFile:
         cache_key = self._generate_cache_key("fit_tauq", q_range, bounds, fit_flag)
         tauq_cache_key = f"tauq_fit_{cache_key}"
 
-        # Check if tauq fitting result is already cached
-        if tauq_cache_key in self._computation_cache:
+        # Check if tauq fitting result is already cached (unless force_refit is True)
+        if not force_refit and tauq_cache_key in self._computation_cache:
             cached_result = self._computation_cache[tauq_cache_key]
             self.fit_summary.update(cached_result)
             return self.fit_summary
@@ -1771,9 +1749,34 @@ class XpcsFile:
             slope = np.polyfit(log_x, log_y, 1)[0] if len(log_x) > 1 else -2.0
             intercept = np.mean(log_y) - slope * np.mean(log_x)
 
-            p0 = [10**intercept, slope]
+            # Calculate initial guess and constrain to bounds
+            p0_a = 10**intercept
+            p0_b = slope
+
+            # Constrain initial guess to be within bounds
+            if bounds is not None and len(bounds) >= 2:
+                # bounds structure: [[a_min, b_min], [a_max, b_max]]
+                a_min, b_min = bounds[0]
+                a_max, b_max = bounds[1]
+
+                # Clamp p0_a to bounds
+                p0_a = np.clip(p0_a, a_min, a_max)
+                # Clamp p0_b to bounds
+                p0_b = np.clip(p0_b, b_min, b_max)
+
+                logger.debug(f"Initial guess constrained: a={p0_a:.6e} (bounds: {a_min:.6e}-{a_max:.6e}), b={p0_b:.3f} (bounds: {b_min:.3f}-{b_max:.3f})")
+
+            p0 = [p0_a, p0_b]
         else:
-            p0 = [1.0e-7, -2.0]  # fallback for insufficient data
+            # Fallback initial guess - ensure it's within bounds if provided
+            p0_a, p0_b = 1.0e-7, -2.0
+            if bounds is not None and len(bounds) >= 2:
+                a_min, b_min = bounds[0]
+                a_max, b_max = bounds[1]
+                p0_a = np.clip(p0_a, a_min, a_max)
+                p0_b = np.clip(p0_b, b_min, b_max)
+                logger.debug(f"Fallback initial guess constrained: a={p0_a:.6e}, b={p0_b:.3f}")
+            p0 = [p0_a, p0_b]
 
         # Cache fit_x calculation
         x_range_key = f"tauq_fit_x_{np.min(x_valid):.6e}_{np.max(x_valid):.6e}"
@@ -1797,13 +1800,23 @@ class XpcsFile:
         )
 
         # Store tauq fitting results
+        # Check if fitting was successful by validating the results
+        fitting_success = (
+            fit_line is not None and
+            fit_val is not None and
+            fit_line.shape[0] > 0 and
+            fit_val.shape[0] > 0 and
+            np.all(np.isfinite(fit_line[0])) and
+            np.all(np.isfinite(fit_val[0, 0, :]))
+        )
+
         tauq_result = {
-            "tauq_success": fit_line[0]["success"],
+            "tauq_success": fitting_success,
             "tauq_q": x_valid,
             "tauq_tau": y_valid,
             "tauq_tau_err": sigma_valid,
-            "tauq_fit_line": fit_line[0],
-            "tauq_fit_val": fit_val[0],
+            "tauq_fit_line": fit_line[0] if fitting_success else np.ones_like(fit_x),
+            "tauq_fit_val": fit_val[0] if fitting_success else np.zeros((2, len(fit_flag))),
         }
 
         # Cache the result

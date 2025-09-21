@@ -13,11 +13,12 @@ import numpy as np
 
 from ..utils.logging_config import get_logger
 from .async_workers import BaseAsyncWorker
+from .base_plot_worker import BasePlotWorker, StandardPlotProgressSteps
 
 logger = get_logger(__name__)
 
 
-class SaxsPlotWorker(BaseAsyncWorker):
+class SaxsPlotWorker(BasePlotWorker):
     """
     Worker for SAXS 2D plotting operations.
     Handles data loading, processing, and plot generation.
@@ -30,34 +31,35 @@ class SaxsPlotWorker(BaseAsyncWorker):
         plot_kwargs: dict,
         worker_id: str | None = None,
     ):
-        super().__init__(worker_id or "saxs_plot_worker")
-        self.viewer_kernel = viewer_kernel
-        self.plot_handler = plot_handler
-        self.plot_kwargs = plot_kwargs
+        super().__init__(
+            viewer_kernel=viewer_kernel,
+            plot_handler=plot_handler,
+            plot_kwargs=plot_kwargs,
+            worker_id=worker_id or "saxs_plot_worker",
+            worker_type="saxs_2d"
+        )
 
     def do_work(self) -> dict[str, Any]:
         """Execute SAXS 2D plotting with progress reporting."""
         self.emit_status("Loading SAXS data...")
-        self.emit_progress(1, 4, "Getting file list")
+        self.emit_step_progress(1, 4, "Getting file list")
 
-        # Get the file list
-        rows = self.plot_kwargs.get("rows", [])
-        xf_list = self.viewer_kernel.get_xf_list(rows)[0:1]
+        # Get the file list using base class method
+        rows = self.get_plot_parameter("rows", [])
+        xf_list = self.get_file_list(rows)[0:1]
 
-        if not xf_list:
-            # Return a message instead of raising an exception
-            return {
-                "message": "No files selected. Please add files to the target list first.",
-                "type": "info",
-            }
+        if not self.validate_file_list(xf_list, min_files=1):
+            return self.create_error_result(
+                "No files selected. Please add files to the target list first."
+            )
 
         self.check_cancelled()
-        self.emit_progress(2, 4, "Processing SAXS data")
+        self.emit_step_progress(2, 4, "Processing SAXS data")
 
-        # Process the SAXS data
+        # Process the SAXS data using base class utilities
         xf = xf_list[0]
-        plot_type = self.plot_kwargs.get("plot_type", "log")
-        rotate = self.plot_kwargs.get("rotate", False)
+        plot_type = self.get_plot_parameter("plot_type", "log")
+        rotate = self.get_plot_parameter("rotate", False)
 
         # Get the image data
         if hasattr(xf, "saxs_2d"):

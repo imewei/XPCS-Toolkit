@@ -151,23 +151,33 @@ def pg_plot(
         # default base line to be 1.0; used for non-fitting or fit error cases
         baseline_offset = np.ones(num_qval)
         if show_fit:
+            # Extract force_refit parameter from kwargs
+            force_refit = kwargs.get('force_refit', False)
+
             if robust_fitting:
                 # Use robust fitting with diagnostics
                 fit_summary = xf_list[m].fit_g2_robust(
                     q_range, t_range, bounds, fit_flag, fit_func,
                     enable_diagnostics=enable_diagnostics,
-                    **kwargs
+                    force_refit=force_refit,
+                    **{k: v for k, v in kwargs.items() if k != 'force_refit'}
                 )
             else:
                 # Use traditional fitting
                 fit_summary = xf_list[m].fit_g2(
-                    q_range, t_range, bounds, fit_flag, fit_func
+                    q_range, t_range, bounds, fit_flag, fit_func,
+                    force_refit=force_refit
                 )
 
             if fit_summary is not None and subtract_baseline:
-                # make sure the fitting is successful
-                if fit_summary["fit_line"][n].get("success", False):
-                    baseline_offset = fit_summary["fit_val"][:, 0, 3]
+                # Check if fitting was successful by validating fit_val
+                if fit_summary["fit_val"] is not None and len(fit_summary["fit_val"]) > 0:
+                    # Extract baseline parameter (parameter index 3 for single exponential)
+                    try:
+                        baseline_offset = fit_summary["fit_val"][:, 0, 3]
+                    except (IndexError, TypeError):
+                        # Fallback to default baseline if shape doesn't match
+                        baseline_offset = np.ones(num_qval)
 
         for n in range(num_qval):
             color = colors[rows[m] % len(colors)]
@@ -216,15 +226,69 @@ def pg_plot(
                 ax.setRange(xRange=t0_range)
 
             if show_fit and fit_summary is not None:
-                if fit_summary["fit_line"][n].get("success", False):
-                    y_fit = fit_summary["fit_line"][n]["fit_y"] + m * offset
+                # Check if we have valid fit_line data for this q-index
+                if (fit_summary["fit_line"] is not None and
+                    n < fit_summary["fit_line"].shape[0] and
+                    fit_summary.get("fit_x") is not None):
+                    # Get fitted y-values from the numpy array
+                    y_fit = fit_summary["fit_line"][n] + m * offset
                     # normalize baseline
                     y_fit = y_fit - baseline_offset[n] + 1.0
+                    # Use the correct x-values that were used for fitting
+                    fit_x = fit_summary["fit_x"]
                     ax.plot(
-                        fit_summary["fit_line"][n]["fit_x"],
+                        fit_x,
                         y_fit,
                         pen=pg.mkPen(color, width=2.5),
                     )
+
+                    # Add fitted parameter text annotation
+                    if fit_summary.get("fit_val") is not None and n < fit_summary["fit_val"].shape[0]:
+                        fit_val = fit_summary["fit_val"][n]  # [2, n_params] - values and errors
+
+                        # Format parameters based on fit function
+                        if fit_func == "single":
+                            param_names = ["τ", "bkg", "cts", "d"]
+                        else:  # double exponential
+                            param_names = ["τ1", "bkg", "cts1", "τ2", "cts2"]
+
+                        # Create parameter text
+                        param_text_lines = []
+                        for p_idx in range(min(len(param_names), fit_val.shape[1])):
+                            value = fit_val[0, p_idx]  # fitted value
+                            error = fit_val[1, p_idx]  # error estimate
+
+                            # Format error gracefully
+                            if np.isfinite(error) and error > 0:
+                                if param_names[p_idx] == "τ" or param_names[p_idx] == "τ1":
+                                    param_text_lines.append(f"{param_names[p_idx]} = {value:.3e} ± {error:.2e}")
+                                else:
+                                    param_text_lines.append(f"{param_names[p_idx]} = {value:.3f} ± {error:.3f}")
+                            else:
+                                if param_names[p_idx] == "τ" or param_names[p_idx] == "τ1":
+                                    param_text_lines.append(f"{param_names[p_idx]} = {value:.3e} ± --")
+                                else:
+                                    param_text_lines.append(f"{param_names[p_idx]} = {value:.3f} ± --")
+
+                        param_text = "\n".join(param_text_lines)
+
+                        # Add text item to plot
+                        text_item = pg.TextItem(param_text, anchor=(0, 1), color=color)
+
+                        # Position text in data coordinates (top-left of visible area)
+                        viewbox = ax.getViewBox()
+                        if viewbox is not None:
+                            # Get current view range
+                            [[xmin, xmax], [ymin, ymax]] = viewbox.viewRange()
+                            # Position at 5% from left edge, 95% from bottom (top area)
+                            text_x = xmin + 0.05 * (xmax - xmin)
+                            text_y = ymin + 0.95 * (ymax - ymin)
+                            text_item.setPos(text_x, text_y)
+                        else:
+                            # Fallback position
+                            text_item.setPos(-5, 1.5)
+
+                        ax.addItem(text_item)
 
 
 def pg_plot_one_g2(ax, x, y, dy, color, label, symbol, symbol_size=5):
