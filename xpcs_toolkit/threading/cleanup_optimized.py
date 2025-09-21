@@ -73,37 +73,13 @@ class ObjectRegistry:
 _object_registry = None
 
 
-class WorkerManager:
-    """Manages worker threads and their lifecycle."""
-
-    def __init__(self):
-        self.active_workers: List[threading.Thread] = []
-        self.shutdown_event = threading.Event()
-        self._lock = threading.Lock()
-
-    def register_worker(self, worker: threading.Thread):
-        """Register a worker thread for management."""
-        with self._lock:
-            self.active_workers.append(worker)
-
-    def unregister_worker(self, worker: threading.Thread):
-        """Unregister a worker thread."""
-        with self._lock:
-            if worker in self.active_workers:
-                self.active_workers.remove(worker)
-
-    def shutdown_all(self, timeout: float = 5.0):
-        """Shutdown all managed workers."""
-        logger.debug(f"Shutting down {len(self.active_workers)} workers")
-        self.shutdown_event.set()
-
-        with self._lock:
-            for worker in self.active_workers[:]:  # Copy list to avoid modification during iteration
-                if worker.is_alive():
-                    worker.join(timeout=timeout)
-                self.active_workers.remove(worker)
-
-        logger.debug("All workers shutdown complete")
+def shutdown_threads(threads: List[threading.Thread], timeout: float = 5.0):
+    """Utility function to shutdown a list of threads."""
+    logger.debug(f"Shutting down {len(threads)} threads")
+    for thread in threads:
+        if thread.is_alive():
+            thread.join(timeout=timeout)
+    logger.debug("Thread shutdown complete")
 
 
 class CleanupScheduler:
@@ -177,7 +153,8 @@ class OptimizedCleanupSystem:
     """Main cleanup system coordinating all cleanup operations."""
 
     def __init__(self):
-        self.worker_manager = WorkerManager()
+        self.active_threads: List[threading.Thread] = []
+        self.threads_lock = threading.Lock()
         self.cleanup_scheduler = CleanupScheduler()
         self.garbage_collector = SmartGarbageCollector()
         self.is_initialized = True
@@ -190,8 +167,10 @@ class OptimizedCleanupSystem:
         # Execute any pending cleanup tasks
         self.cleanup_scheduler.execute_pending_cleanup()
 
-        # Shutdown all worker threads
-        self.worker_manager.shutdown_all(timeout)
+        # Shutdown all active threads
+        with self.threads_lock:
+            shutdown_threads(self.active_threads[:], timeout)
+            self.active_threads.clear()
 
         # Perform final garbage collection
         self.garbage_collector.collect()
@@ -213,12 +192,14 @@ def get_cleanup_system() -> OptimizedCleanupSystem:
 
 
 def shutdown_worker_managers():
-    """Shutdown all worker managers."""
+    """Shutdown all active threads in the cleanup system."""
     try:
         cleanup_system = get_cleanup_system()
-        cleanup_system.worker_manager.shutdown_all()
+        with cleanup_system.threads_lock:
+            shutdown_threads(cleanup_system.active_threads[:])
+            cleanup_system.active_threads.clear()
     except Exception as e:
-        logger.error(f"Error shutting down worker managers: {e}")
+        logger.error(f"Error shutting down threads: {e}")
 
 
 def schedule_cleanup(task_name: str, cleanup_func, delay: float = 0.0):
