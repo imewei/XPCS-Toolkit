@@ -19,6 +19,12 @@ from PySide6 import QtCore, QtWidgets
 from PySide6.QtWidgets import QHBoxLayout, QVBoxLayout, QWidget
 
 from xpcs_toolkit.utils.logging_config import get_logger
+from .plot_constants import (
+    MATPLOTLIB_COLORS_HEX as colors,
+    MATPLOTLIB_MARKERS as markers,
+    PYQTGRAPH_MARKERS as pg_markers,
+    get_color_marker
+)
 
 logger = get_logger(__name__)
 
@@ -28,31 +34,6 @@ logger = get_logger(__name__)
 # matplotlib.rcParams['legend.numpoints'] = 1
 
 # matplotlib.pyplot.style.use(['science', 'no-latex'])
-
-# https://matplotlib.org/stable/api/markers_api.html
-markers = ["o", "v", "^", ">", "<", "s", "p", "h", "*", "+", "d", "x"]
-pg_markers = ["o", "t", "t1", "t2", "t3", "s", "p", "h", "star", "+", "d", "x"]
-colors = (
-    "#1f77b4",
-    "#ff7f0e",
-    "#2ca02c",
-    "#d62728",
-    "#9467bd",
-    "#8c564b",
-    "#e377c2",
-    "#7f7f7f",
-    "#bcbd22",
-    "#17becf",
-)
-
-
-def get_color_marker(n, backend="matplotlib"):
-    if backend == "matplotlib":
-        mk = markers[n % len(markers)]
-    elif backend == "pyqtgraph":
-        mk = pg_markers[n % len(pg_markers)]
-    cl = colors[n % len(colors)]
-    return (cl, mk)
 
 
 class NavigationToolbarSimple(NavigationToolbar2QT):

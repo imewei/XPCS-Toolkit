@@ -6,11 +6,9 @@ from xpcs_toolkit.utils.validation import (
     get_file_label_safe,
     validate_array_compatibility
 )
+from xpcs_toolkit.plothandler.plot_constants import BASIC_COLORS as colors, EXTENDED_MARKERS as shapes
 
 logger = get_logger(__name__)
-
-colors = ("b", "r", "g", "c", "m", "y", "k")
-shapes = ("o", "v", "^", "<", ">", "8", "s", "p", "P", "*")
 
 
 def plot(xf_list, hdl, q_range, offset, plot_type=3):

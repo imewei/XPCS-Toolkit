@@ -4,28 +4,11 @@ import pyqtgraph as pg
 
 # Local imports
 from xpcs_toolkit.utils.logging_config import get_logger
+from xpcs_toolkit.plothandler.plot_constants import MATPLOTLIB_COLORS_RGB as colors
 
 pg.setConfigOption("foreground", pg.mkColor(80, 80, 80))
 # pg.setConfigOption("background", 'w')
 logger = get_logger(__name__)
-
-# colors converted from
-# https://matplotlib.org/stable/tutorials/colors/colors.html
-# colors = ('#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd',
-#           '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf')
-
-colors = (
-    (31, 119, 180),
-    (255, 127, 14),
-    (44, 160, 44),
-    (214, 39, 40),
-    (148, 103, 189),
-    (140, 86, 75),
-    (227, 119, 194),
-    (127, 127, 127),
-    (188, 189, 34),
-    (23, 190, 207),
-)
 
 
 # https://www.geeksforgeeks.org/pyqtgraph-symbols/
