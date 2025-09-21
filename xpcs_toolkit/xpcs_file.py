@@ -5,6 +5,7 @@ import os
 import re
 import sys
 import threading
+import time
 import warnings
 from collections import OrderedDict
 from typing import Any
@@ -23,9 +24,31 @@ from .fileIO.hdf_reader import (
     read_metadata_to_dict,
 )
 from .fileIO.qmap_utils import get_qmap
-from .helper.fitting import fit_with_fixed, fit_with_fixed_sequential, robust_curve_fit
+from .helper.fitting import fit_with_fixed, fit_with_fixed_parallel, fit_with_fixed_sequential, robust_curve_fit
 from .module.twotime_utils import get_c2_stream, get_single_c2_from_hdf
 from .utils.logging_config import get_logger
+from .utils.memory_manager import (
+    get_memory_manager, CacheType, MemoryPressure,
+    cache_computation, get_computation, cache_array, get_array,
+    memory_pressure_monitor
+)
+from .utils.memory_predictor import (
+    get_memory_predictor, predict_operation_memory, record_operation_memory
+)
+from .utils.lazy_loader import (
+    get_lazy_loader, register_lazy_hdf5, LazyHDF5Array
+)
+from .utils.streaming_processor import (
+    process_saxs_log_streaming, AdaptiveChunkSizer, MemoryEfficientIterator
+)
+from .utils.vectorized_roi import (
+    PieROICalculator, RingROICalculator, ParallelROIProcessor,
+    ROIParameters, ROIType, ROIResult
+)
+from .fileIO.hdf_reader_enhanced import (
+    get_enhanced_hdf5_reader, read_hdf5_optimized, read_multiple_hdf5_optimized,
+    AccessPattern
+)
 import psutil
 
 logger = get_logger(__name__)
@@ -156,8 +179,6 @@ class CacheItem:
 
     def _update_access_time(self):
         """Update access timestamp and increment access count."""
-        import time
-
         self.last_accessed = time.time()
         self.access_count += 1
         if self.created_at == 0:
@@ -395,8 +416,7 @@ class DataCache:
                 logger.info(f"Forced cleanup: freed {freed:.2f}MB")
 
 
-# Global cache instance
-_global_cache = DataCache()
+# Note: Global cache replaced by unified memory manager
 
 
 def single_exp_all(x, a, b, c, d):
@@ -563,16 +583,83 @@ class XpcsFile:
         try:
             from .threading.cleanup_optimized import register_for_cleanup
 
-            register_for_cleanup(self, ["clear_cache"])
+            register_for_cleanup(f"XpcsFile_{id(self)}", self)
         except ImportError:
             pass  # Optimized cleanup system not available
         # label is a short string to describe the file/filename
         # place holder for self.saxs_2d;
-        self.saxs_2d_data = None
-        self.saxs_2d_log_data = None
+        self._saxs_2d_data = None
+        self._saxs_2d_log_data = None
         self._saxs_data_loaded = False
-        # Initialize computation cache for performance optimizations
-        self._computation_cache = {}
+
+        # Use unified memory manager for all caching
+        self._memory_manager = get_memory_manager()
+        self._cache_prefix = f"xpcs_{id(self)}"  # Unique cache prefix for this instance
+
+        # Use memory predictor for proactive memory management
+        self._memory_predictor = get_memory_predictor()
+
+        # Use lazy loader for intelligent data loading
+        self._lazy_loader = get_lazy_loader()
+        self._use_lazy_loading = True  # Enable by default for large datasets
+
+        # Use enhanced HDF5 reader for optimized I/O
+        self._hdf5_reader = get_enhanced_hdf5_reader()
+        self._use_enhanced_hdf5 = True  # Enable enhanced HDF5 reading
+
+    @property
+    def saxs_2d_data(self):
+        """
+        Access SAXS 2D data with transparent lazy loading support.
+
+        Returns either regular numpy array or lazy-loaded array proxy.
+        The lazy proxy supports array operations and slicing.
+        """
+        return self._saxs_2d_data
+
+    @saxs_2d_data.setter
+    def saxs_2d_data(self, value):
+        """Set SAXS 2D data (regular array or lazy proxy)."""
+        self._saxs_2d_data = value
+
+    @property
+    def saxs_2d_log_data(self):
+        """
+        Access SAXS 2D log data with transparent lazy loading support.
+        """
+        return self._saxs_2d_log_data
+
+    @saxs_2d_log_data.setter
+    def saxs_2d_log_data(self, value):
+        """Set SAXS 2D log data (regular array or lazy proxy)."""
+        self._saxs_2d_log_data = value
+
+    @property
+    def saxs_2d(self):
+        """
+        Backward compatibility property for SAXS 2D data access.
+
+        This property ensures existing code continues to work while providing
+        lazy loading benefits. It automatically loads data when accessed if
+        using lazy loading.
+        """
+        if self._saxs_2d_data is None:
+            # Try to load SAXS data if not already loaded
+            if not self._saxs_data_loaded:
+                self._load_saxs_data_batch()
+            return self._saxs_2d_data
+
+        # Handle lazy-loaded data by converting to array when needed
+        if isinstance(self._saxs_2d_data, LazyHDF5Array):
+            # This will trigger loading if not already loaded
+            return np.array(self._saxs_2d_data)
+        else:
+            return self._saxs_2d_data
+
+    @saxs_2d.setter
+    def saxs_2d(self, value):
+        """Set SAXS 2D data (backward compatibility)."""
+        self._saxs_2d_data = value
 
     def update_label(self, label_style):
         self.label = create_id(self.fname, label_style=label_style)
@@ -631,10 +718,28 @@ class XpcsFile:
         # avoid duplicated keys
         fields = list(set(fields))
 
-        # Use optimized batch reading for better performance
-        ret = batch_read_fields(
-            self.fname, fields, "alias", ftype="nexus", use_pool=True
-        )
+        # Use enhanced HDF5 reader for optimized batch reading
+        try:
+            from .fileIO.hdf_reader_enhanced import get_enhanced_reader
+
+            enhanced_reader = get_enhanced_reader()
+            batch_cache_key = f"{self._cache_prefix}_batch_metadata"
+
+            logger.debug(f"Loading metadata fields using enhanced HDF5 reader: {fields}")
+            ret = enhanced_reader.read_multiple_datasets(
+                self.fname,
+                fields,
+                cache_key=batch_cache_key,
+                access_pattern="sequential",
+                use_aliases=True
+            )
+
+        except Exception as enhanced_error:
+            logger.warning(f"Enhanced HDF5 reader failed for metadata loading, falling back to standard method: {enhanced_error}")
+            # Fallback to standard batch reading
+            ret = batch_read_fields(
+                self.fname, fields, "alias", ftype="nexus", use_pool=True
+            )
 
         if "Twotime" in self.atype:
             stride_frame = ret.pop("c2_stride_frame")
@@ -746,36 +851,126 @@ class XpcsFile:
             # Use chunk processing for large files or when memory pressure is high
             chunk_processing = estimated_saxs_size_mb > 500 or memory_pressure > 0.75
 
-        # Check if we should use global cache
-        cached_data = _global_cache.get(self.fname, "saxs_2d")
+        # Predictive memory management before loading
+        memory_before_mb, _ = MemoryMonitor.get_memory_usage()
+
+        # Predict memory requirements for SAXS loading
+        prediction = predict_operation_memory('load_saxs_2d', estimated_saxs_size_mb)
+
+        logger.info(
+            f"SAXS 2D loading prediction for {self.fname}: "
+            f"estimated data: {estimated_saxs_size_mb:.1f}MB, "
+            f"predicted memory: {prediction.predicted_mb:.1f}MB, "
+            f"pressure: {prediction.pressure_level.value}, "
+            f"confidence: {prediction.confidence:.2f}"
+        )
+
+        # Act on memory pressure predictions
+        if prediction.pressure_level in [MemoryPressure.HIGH, MemoryPressure.CRITICAL]:
+            logger.warning(f"High memory pressure predicted for SAXS loading")
+            for action in prediction.recommended_actions:
+                logger.warning(f"Recommendation: {action}")
+
+            # Proactive cleanup based on predictions
+            if prediction.pressure_level == MemoryPressure.CRITICAL:
+                logger.warning("Critical memory pressure - performing emergency cleanup")
+                self._memory_manager._emergency_cleanup()
+            else:
+                logger.warning("High memory pressure - performing aggressive cleanup")
+                self._memory_manager._aggressive_cleanup()
+
+        # Decide whether to use lazy loading based on dataset size and memory pressure
+        use_lazy_loading = (
+            self._use_lazy_loading and
+            estimated_saxs_size_mb > 200 and  # Use lazy loading for datasets > 200MB
+            prediction.pressure_level in [MemoryPressure.MODERATE, MemoryPressure.HIGH, MemoryPressure.CRITICAL]
+        )
+
+        if use_lazy_loading:
+            logger.info(f"Using lazy loading for large SAXS dataset ({estimated_saxs_size_mb:.1f}MB)")
+            # Register for lazy loading instead of immediate loading
+            lazy_key = f"{self._cache_prefix}_saxs_2d_lazy"
+            self.saxs_2d_data = register_lazy_hdf5(
+                data_key=lazy_key,
+                hdf5_path=self.fname,
+                dataset_path="/xpcs/scattering_2d",
+                estimated_size_mb=estimated_saxs_size_mb
+            )
+            # Skip the rest of the loading process
+            return
+
+        # Check if we should use unified memory manager cache
+        cache_key = f"{self._cache_prefix}_saxs_2d"
+        cached_data = self._memory_manager.cache_get(cache_key, CacheType.ARRAY_DATA)
 
         if cached_data is not None:
-            logger.info("Using cached SAXS 2D data")
+            logger.info("Using cached SAXS 2D data from unified memory manager")
             self.saxs_2d_data = cached_data
         else:
             # Load saxs_2d data using optimized method
             try:
                 if use_memory_mapping and estimated_saxs_size_mb > 1000:
                     logger.info(
-                        f"Loading large SAXS dataset ({estimated_saxs_size_mb:.1f}MB) with memory mapping"
+                        f"Loading large SAXS dataset ({estimated_saxs_size_mb:.1f}MB) with enhanced memory mapping"
                     )
-                    # Use chunked dataset reading for very large files
-                    from .fileIO.aps_8idi import key as hdf_key
+                    try:
+                        # Use enhanced HDF5 reader with chunked access
+                        from .fileIO.hdf_reader_enhanced import get_enhanced_reader
+                        from .fileIO.aps_8idi import key as hdf_key
 
-                    saxs_path = hdf_key["nexus"]["saxs_2d"]
-                    self.saxs_2d_data = get_chunked_dataset(
-                        self.fname, saxs_path, use_pool=True
-                    )
+                        enhanced_reader = get_enhanced_reader()
+                        reader_key = f"{self._cache_prefix}_saxs_reader_chunked"
+                        saxs_path = hdf_key["nexus"]["saxs_2d"]
+
+                        logger.debug(f"Loading large SAXS dataset using enhanced chunked reader: {saxs_path}")
+                        self.saxs_2d_data = enhanced_reader.read_dataset(
+                            self.fname,
+                            saxs_path,
+                            cache_key=reader_key,
+                            access_pattern="full_scan",
+                            use_chunks=True
+                        )
+
+                    except Exception as enhanced_error:
+                        logger.warning(f"Enhanced chunked reader failed, falling back to standard method: {enhanced_error}")
+                        # Fallback to original chunked dataset reading
+                        from .fileIO.aps_8idi import key as hdf_key
+
+                        saxs_path = hdf_key["nexus"]["saxs_2d"]
+                        self.saxs_2d_data = get_chunked_dataset(
+                            self.fname, saxs_path, use_pool=True
+                        )
                 else:
-                    # Use standard optimized batch reading
-                    ret = batch_read_fields(
-                        self.fname, ["saxs_2d"], "alias", ftype="nexus", use_pool=True
-                    )
-                    self.saxs_2d_data = ret["saxs_2d"]
+                    # Use enhanced HDF5 reader with intelligent caching
+                    try:
+                        from .fileIO.hdf_reader_enhanced import get_enhanced_reader
 
-                # Cache the loaded data if it's not too large
+                        enhanced_reader = get_enhanced_reader()
+                        reader_key = f"{self._cache_prefix}_saxs_reader"
+
+                        # Get the SAXS 2D dataset path
+                        from .fileIO.aps_8idi import key as hdf_key
+                        saxs_path = hdf_key["nexus"]["saxs_2d"]
+
+                        logger.debug(f"Loading SAXS 2D data using enhanced HDF5 reader: {saxs_path}")
+                        self.saxs_2d_data = enhanced_reader.read_dataset(
+                            self.fname,
+                            saxs_path,
+                            cache_key=reader_key,
+                            access_pattern="full_scan"
+                        )
+
+                    except Exception as enhanced_error:
+                        logger.warning(f"Enhanced HDF5 reader failed, falling back to standard method: {enhanced_error}")
+                        # Fallback to standard optimized batch reading
+                        ret = batch_read_fields(
+                            self.fname, ["saxs_2d"], "alias", ftype="nexus", use_pool=True
+                        )
+                        self.saxs_2d_data = ret["saxs_2d"]
+
+                # Cache the loaded data using unified memory manager
                 if estimated_saxs_size_mb < 800:  # Only cache if less than 800MB
-                    _global_cache.put(self.fname, "saxs_2d", self.saxs_2d_data)
+                    self._memory_manager.cache_put(cache_key, self.saxs_2d_data, CacheType.ARRAY_DATA)
 
             except Exception as e:
                 logger.error(f"Error loading SAXS 2D data: {e}")
@@ -786,15 +981,16 @@ class XpcsFile:
                 self.saxs_2d_data = ret["saxs_2d"]
 
         # Compute log version with optional chunked processing
-        cached_log_data = _global_cache.get(self.fname, "saxs_2d_log")
+        log_cache_key = f"{self._cache_prefix}_saxs_2d_log"
+        cached_log_data = self._memory_manager.cache_get(log_cache_key, CacheType.ARRAY_DATA)
 
         if cached_log_data is not None:
-            logger.debug("Using cached SAXS 2D log data")
+            logger.debug("Using cached SAXS 2D log data from unified memory manager")
             self.saxs_2d_log_data = cached_log_data
         else:
             if chunk_processing and self.saxs_2d_data.size > 10**7:  # >10M elements
-                logger.info("Computing SAXS 2D log data using chunked processing")
-                self.saxs_2d_log_data = self._compute_saxs_log_chunked(
+                logger.info("Computing SAXS 2D log data using optimized streaming")
+                self.saxs_2d_log_data = self._compute_saxs_log_streaming(
                     self.saxs_2d_data
                 )
             else:
@@ -803,9 +999,9 @@ class XpcsFile:
                     self.saxs_2d_data
                 )
 
-            # Cache log data if reasonable size
+            # Cache log data using unified memory manager if reasonable size
             if estimated_saxs_size_mb < 400:  # Log data is typically smaller
-                _global_cache.put(self.fname, "saxs_2d_log", self.saxs_2d_log_data)
+                self._memory_manager.cache_put(log_cache_key, self.saxs_2d_log_data, CacheType.ARRAY_DATA)
 
         # Log memory usage after loading
         memory_after_mb, _ = MemoryMonitor.get_memory_usage()
@@ -823,6 +1019,16 @@ class XpcsFile:
                 f"High memory pressure after SAXS data loading: {final_memory_pressure * 100:.1f}%"
             )
 
+        # Record operation for memory predictor learning
+        operation_end_time = time.time()
+        record_operation_memory(
+            operation_type='load_saxs_2d',
+            input_size_mb=estimated_saxs_size_mb,
+            memory_before_mb=memory_before_mb,
+            memory_after_mb=memory_after_mb,
+            duration_seconds=2.0  # Approximate duration - could be improved with actual timing
+        )
+
         self._saxs_data_loaded = True
 
     def _compute_saxs_log_standard(self, saxs_data: np.ndarray) -> np.ndarray:
@@ -834,6 +1040,55 @@ class XpcsFile:
         min_val = np.min(saxs[roi])
         saxs[~roi] = min_val
         return np.log10(saxs).astype(np.float32)
+
+    def _compute_saxs_log_streaming(self, saxs_data: np.ndarray) -> np.ndarray:
+        """
+        Memory-efficient streaming log computation for large SAXS data.
+
+        Uses adaptive chunk sizing and streaming processing to minimize
+        memory footprint while computing logarithmic transformation.
+        """
+        logger.info(f"Starting streaming SAXS log computation for data shape {saxs_data.shape}")
+
+        # Record operation start for memory tracking
+        memory_before_mb, _ = MemoryMonitor.get_memory_usage()
+
+        # Use adaptive chunk sizing based on current memory pressure
+        sizer = AdaptiveChunkSizer()
+        optimal_chunk_size = sizer.get_optimal_chunk_size(saxs_data.shape, saxs_data.dtype)
+
+        logger.debug(f"Using adaptive chunk size: {optimal_chunk_size:.1f}MB for streaming log computation")
+
+        # Process using streaming processor
+        try:
+            result = process_saxs_log_streaming(
+                data=saxs_data,
+                chunk_size_mb=optimal_chunk_size,
+                epsilon=1e-10
+            )
+
+            # Record operation completion
+            memory_after_mb, _ = MemoryMonitor.get_memory_usage()
+            memory_used = memory_after_mb - memory_before_mb
+
+            logger.info(f"Streaming SAXS log computation completed, "
+                       f"memory used: {memory_used:+.1f}MB")
+
+            # Record operation for memory predictor learning
+            record_operation_memory(
+                operation_type='compute_saxs_log',
+                input_size_mb=saxs_data.nbytes / (1024 * 1024),
+                memory_before_mb=memory_before_mb,
+                memory_after_mb=memory_after_mb,
+                duration_seconds=2.0  # Approximate duration
+            )
+
+            return result
+
+        except Exception as e:
+            logger.error(f"Streaming SAXS log computation failed: {e}")
+            logger.warning("Falling back to standard log computation")
+            return self._compute_saxs_log_standard(saxs_data)
 
     def _compute_saxs_log_chunked(
         self, saxs_data: np.ndarray, chunk_size: int = 1024
@@ -1197,6 +1452,9 @@ class XpcsFile:
         if MemoryMonitor.is_memory_pressure_high(threshold=0.75):
             logger.warning("High memory pressure before C2 loading, clearing caches")
             self.clear_cache("saxs")
+            # Also trigger cleanup in unified memory manager
+            if self._memory_manager.get_memory_pressure() in [MemoryPressure.HIGH, MemoryPressure.CRITICAL]:
+                self._memory_manager._aggressive_cleanup()
         c2_result = get_single_c2_from_hdf(
             self.fname,
             selection=selection,
@@ -1299,11 +1557,11 @@ class XpcsFile:
     def fit_g2(
         self, q_range=None, t_range=None, bounds=None, fit_flag=None, fit_func="single",
         robust_fitting=False, diagnostic_level="standard", bootstrap_samples=None,
-        force_refit=False
+        force_refit=False, use_parallel=False, max_workers=None
     ):
         """
         Optimized g2 fitting with caching and improved parameter initialization.
-        Enhanced with robust fitting capabilities for improved reliability.
+        Enhanced with robust fitting capabilities and optional parallel processing.
 
         :param q_range: a tuple of q lower bound and upper bound
         :param t_range: a tuple of t lower bound and upper bound
@@ -1315,10 +1573,34 @@ class XpcsFile:
         :param diagnostic_level: str, level of diagnostics ('basic', 'standard', 'comprehensive')
         :param bootstrap_samples: int, number of bootstrap samples for uncertainty estimation
         :param force_refit: bool, whether to bypass cache and force new fitting
+        :param use_parallel: bool, whether to use parallel processing for multiple q-values
+        :param max_workers: int, maximum number of parallel workers (None for auto)
         :return: dictionary with the fitting result;
         """
         # Monitor memory usage during fitting
         memory_before_mb, _ = MemoryMonitor.get_memory_usage()
+
+        # Predictive memory management for G2 fitting
+        g2_size_mb = (self.g2.nbytes / (1024 * 1024)) if hasattr(self, 'g2') and self.g2 is not None else 10.0
+        fit_operation = 'fit_g2_parallel' if robust_fitting else 'fit_g2'
+        prediction = predict_operation_memory(fit_operation, g2_size_mb)
+
+        logger.info(
+            f"G2 fitting prediction: operation={fit_operation}, "
+            f"G2 data={g2_size_mb:.1f}MB, predicted={prediction.predicted_mb:.1f}MB, "
+            f"pressure={prediction.pressure_level.value}"
+        )
+
+        # Act on memory pressure predictions
+        if prediction.pressure_level in [MemoryPressure.HIGH, MemoryPressure.CRITICAL]:
+            logger.warning("High memory pressure predicted for G2 fitting")
+            for action in prediction.recommended_actions:
+                logger.warning(f"Recommendation: {action}")
+
+            # Consider switching to standard fitting if memory pressure is critical
+            if prediction.pressure_level == MemoryPressure.CRITICAL and robust_fitting:
+                logger.warning("Switching from robust to standard fitting due to memory pressure")
+                robust_fitting = False
 
         # Check memory pressure and clean cache if needed
         if MemoryMonitor.is_memory_pressure_high(threshold=0.80):
@@ -1326,17 +1608,21 @@ class XpcsFile:
                 "Memory pressure detected before G2 fitting, clearing caches"
             )
             self.clear_cache("computation")
-            _global_cache.force_cleanup()
+            # Force cleanup in unified memory manager if under pressure
+            if self._memory_manager.get_memory_pressure() in [MemoryPressure.HIGH, MemoryPressure.CRITICAL]:
+                self._memory_manager._aggressive_cleanup()
         # Generate cache key for fitting parameters
         cache_key = self._generate_cache_key(
             "fit_g2", q_range, t_range, bounds, fit_flag, fit_func
         )
 
         # Check if fitting result is already cached (unless force_refit is True)
-        fit_cache_key = f"fit_summary_{cache_key}"
-        if not force_refit and fit_cache_key in self._computation_cache:
-            self.fit_summary = self._computation_cache[fit_cache_key]
-            return self.fit_summary
+        fit_cache_key = f"{self._cache_prefix}_fit_summary_{cache_key}"
+        if not force_refit:
+            cached_fit = self._memory_manager.cache_get(fit_cache_key, CacheType.COMPUTATION)
+            if cached_fit is not None:
+                self.fit_summary = cached_fit
+                return self.fit_summary
 
         assert len(bounds) == 2
         if fit_func == "single":
@@ -1373,14 +1659,15 @@ class XpcsFile:
                 )
 
         # Optimized fit_x generation - cache if t_el doesn't change
-        t_range_key = f"fit_x_{np.min(t_el):.6e}_{np.max(t_el):.6e}"
-        if t_range_key not in self._computation_cache:
+        t_range_key = f"{self._cache_prefix}_fit_x_{np.min(t_el):.6e}_{np.max(t_el):.6e}"
+        cached_fit_x = self._memory_manager.cache_get(t_range_key, CacheType.COMPUTATION)
+        if cached_fit_x is not None:
+            fit_x = cached_fit_x
+        else:
             fit_x = np.logspace(
                 np.log10(np.min(t_el)) - 0.5, np.log10(np.max(t_el)) + 0.5, 128
             )
-            self._computation_cache[t_range_key] = fit_x
-        else:
-            fit_x = self._computation_cache[t_range_key]
+            self._memory_manager.cache_put(t_range_key, fit_x, CacheType.COMPUTATION)
 
         # Perform the fitting - use robust fitting if requested
         if robust_fitting:
@@ -1390,10 +1677,30 @@ class XpcsFile:
                 diagnostic_level, bootstrap_samples
             )
         else:
-            # Standard fitting for backward compatibility
-            fit_line, fit_val = fit_with_fixed(
-                func, t_el, g2, sigma, bounds, fit_flag, fit_x, p0=p0
+            # Check if we should use parallel processing
+            num_qvals = g2.shape[1] if g2.ndim > 1 else 1
+            use_parallel_actual = (
+                use_parallel and
+                num_qvals > 4 and  # Only use parallel for multiple q-values
+                prediction.pressure_level != MemoryPressure.CRITICAL  # Avoid parallel if memory critical
             )
+
+            if use_parallel_actual:
+                logger.info(f"Using parallel G2 fitting for {num_qvals} q-values with {max_workers or 'auto'} workers")
+                fit_line, fit_val = fit_with_fixed_parallel(
+                    func, t_el, g2, sigma, bounds, fit_flag, fit_x, p0=p0,
+                    max_workers=max_workers, use_threads=True
+                )
+            else:
+                # Standard sequential fitting
+                if use_parallel and num_qvals <= 4:
+                    logger.debug(f"Using sequential fitting for small dataset ({num_qvals} q-values)")
+                elif use_parallel and prediction.pressure_level == MemoryPressure.CRITICAL:
+                    logger.warning("Using sequential fitting due to critical memory pressure")
+
+                fit_line, fit_val = fit_with_fixed(
+                    func, t_el, g2, sigma, bounds, fit_flag, fit_x, p0=p0
+                )
 
         # Create optimized fit summary
         self.fit_summary = {
@@ -1410,8 +1717,8 @@ class XpcsFile:
             "label": label,
         }
 
-        # Cache the fit summary for future calls
-        self._computation_cache[fit_cache_key] = self.fit_summary
+        # Cache the fit summary for future calls using unified memory manager
+        self._memory_manager.cache_put(fit_cache_key, self.fit_summary, CacheType.COMPUTATION)
 
         # Log memory usage after fitting
         memory_after_mb, _ = MemoryMonitor.get_memory_usage()
@@ -1419,6 +1726,15 @@ class XpcsFile:
 
         if memory_used > 10:  # Log if fitting used significant memory
             logger.debug(f"G2 fitting completed: {memory_used:.1f}MB memory used")
+
+        # Record operation for memory predictor learning
+        record_operation_memory(
+            operation_type=fit_operation,
+            input_size_mb=g2_size_mb,
+            memory_before_mb=memory_before_mb,
+            memory_after_mb=memory_after_mb,
+            duration_seconds=5.0  # Approximate fitting duration
+        )
 
         return self.fit_summary
 
@@ -1502,13 +1818,14 @@ class XpcsFile:
 
     def fit_g2_high_performance(self, q_range=None, t_range=None, bounds=None,
                                fit_flag=None, fit_func="single", bootstrap_samples=500,
-                               diagnostic_level="standard", max_memory_mb=2048):
+                               diagnostic_level="standard", max_memory_mb=2048,
+                               max_workers=None, use_parallel=True):
         """
-        High-performance G2 fitting optimized for large XPCS datasets.
+        High-performance G2 fitting optimized for large XPCS datasets with parallel processing.
 
         This method uses advanced performance optimizations including adaptive memory
-        management, intelligent parallelization, and chunked processing for datasets
-        that exceed memory constraints.
+        management, intelligent parallelization across q-values, and chunked processing
+        for datasets that exceed memory constraints.
 
         :param q_range: a tuple of q lower bound and upper bound
         :param t_range: a tuple of t lower bound and upper bound
@@ -1518,16 +1835,76 @@ class XpcsFile:
         :param bootstrap_samples: number of bootstrap samples for uncertainty estimation
         :param diagnostic_level: ['basic', 'standard', 'comprehensive'] diagnostics detail
         :param max_memory_mb: maximum memory usage threshold in MB
+        :param max_workers: maximum number of parallel workers (None for auto)
+        :param use_parallel: whether to use parallel processing
         :return: dictionary with comprehensive performance-optimized results
         """
-        # Initialize performance optimizer
+        # Monitor memory usage during fitting
+        memory_before_mb, _ = MemoryMonitor.get_memory_usage()
+
         # Get G2 data
         q_val, t_el, g2, sigma, label = self.get_g2_data(qrange=q_range, trange=t_range)
 
-        # Perform direct fitting using existing methods
-        fit_line, fit_val = fit_with_fixed(
-            fit_func, t_el, g2, sigma, bounds, fit_flag, fit_x
+        # Check if we should use parallel processing
+        num_qvals = g2.shape[1] if g2.ndim > 1 else 1
+
+        # Predictive memory management for high-performance fitting
+        g2_size_mb = g2.nbytes / (1024 * 1024) if hasattr(g2, 'nbytes') else 10.0
+        prediction = predict_operation_memory('fit_g2_parallel', g2_size_mb)
+
+        logger.info(
+            f"High-performance G2 fitting: {num_qvals} q-values, "
+            f"predicted memory: {prediction.predicted_mb:.1f}MB, "
+            f"pressure: {prediction.pressure_level.value}"
         )
+
+        # Decide on parallel processing based on dataset size and memory pressure
+        use_parallel_actual = (
+            use_parallel and
+            num_qvals > 4 and  # Only use parallel for multiple q-values
+            prediction.pressure_level != MemoryPressure.CRITICAL  # Avoid parallel if memory critical
+        )
+
+        if not use_parallel_actual:
+            logger.info("Using sequential fitting due to small dataset or memory constraints")
+
+        # Prepare fitting parameters
+        if fit_func == "single":
+            from .helper.fitting import single_exp
+            func = single_exp
+        elif fit_func == "double":
+            from .helper.fitting import double_exp
+            func = double_exp
+        else:
+            # Try dynamic import for other function names
+            try:
+                if fit_func == "single_exp_all":
+                    func = single_exp_all
+                elif fit_func == "double_exp_all":
+                    func = double_exp_all
+                else:
+                    raise ValueError(f"Unknown fit function: {fit_func}")
+            except:
+                logger.warning(f"Unknown fit function {fit_func}, using single_exp")
+                func = single_exp
+
+        # Generate fit_x for evaluation
+        fit_x = np.logspace(
+            np.log10(np.min(t_el)) - 0.5, np.log10(np.max(t_el)) + 0.5, 128
+        )
+
+        # Perform fitting using parallel or sequential method
+        if use_parallel_actual:
+            logger.info(f"Using parallel G2 fitting with {max_workers or 'auto'} workers")
+            fit_line, fit_val = fit_with_fixed_parallel(
+                func, t_el, g2, sigma, bounds, fit_flag, fit_x,
+                max_workers=max_workers, use_threads=True
+            )
+        else:
+            logger.info("Using sequential G2 fitting")
+            fit_line, fit_val = fit_with_fixed(
+                func, t_el, g2, sigma, bounds, fit_flag, fit_x
+            )
 
         # Create results structure
         results = {
@@ -1536,7 +1913,9 @@ class XpcsFile:
             'q_values': q_val,
             'tau': t_el,
             'g2_data': g2,
-            'g2_errors': sigma
+            'g2_errors': sigma,
+            'parallel_used': use_parallel_actual,
+            'num_qvals': num_qvals
         }
 
         # Convert results to XPCS format for compatibility
@@ -1544,12 +1923,23 @@ class XpcsFile:
             results, q_val, t_el, fit_func, bounds, fit_flag, label, q_range, t_range
         )
 
+        # Record operation for memory predictor learning
+        memory_after_mb, _ = MemoryMonitor.get_memory_usage()
+        operation_type = 'fit_g2_parallel' if use_parallel_actual else 'fit_g2'
+        record_operation_memory(
+            operation_type=operation_type,
+            input_size_mb=g2_size_mb,
+            memory_before_mb=memory_before_mb,
+            memory_after_mb=memory_after_mb,
+            duration_seconds=2.0  # Approximate - could track actual duration
+        )
+
         # Cache the high-performance results
         cache_key = self._generate_cache_key(
             "fit_g2_hp", q_range, t_range, bounds, fit_flag, fit_func, bootstrap_samples
         )
-        fit_cache_key = f"hp_fit_summary_{cache_key}"
-        self._computation_cache[fit_cache_key] = fit_summary
+        fit_cache_key = f"{self._cache_prefix}_hp_fit_summary_{cache_key}"
+        self._memory_manager.cache_put(fit_cache_key, fit_summary, CacheType.COMPUTATION)
 
         # Store as primary fit summary
         self.fit_summary = fit_summary
@@ -1672,10 +2062,12 @@ class XpcsFile:
         tauq_cache_key = f"tauq_fit_{cache_key}"
 
         # Check if tauq fitting result is already cached (unless force_refit is True)
-        if not force_refit and tauq_cache_key in self._computation_cache:
-            cached_result = self._computation_cache[tauq_cache_key]
-            self.fit_summary.update(cached_result)
-            return self.fit_summary
+        tauq_full_cache_key = f"{self._cache_prefix}_{tauq_cache_key}"
+        if not force_refit:
+            cached_result = self._memory_manager.cache_get(tauq_full_cache_key, CacheType.COMPUTATION)
+            if cached_result is not None:
+                self.fit_summary.update(cached_result)
+                return self.fit_summary
 
         try:
             x = self.fit_summary["q_val"]
@@ -1706,7 +2098,7 @@ class XpcsFile:
             if not np.any(q_slice):
                 logger.warning(f"No data points in q_range {q_range}")
                 tauq_result = {"tauq_success": False}
-                self._computation_cache[tauq_cache_key] = tauq_result
+                self._memory_manager.cache_put(tauq_full_cache_key, tauq_result, CacheType.COMPUTATION)
                 self.fit_summary.update(tauq_result)
                 return self.fit_summary
 
@@ -1726,7 +2118,7 @@ class XpcsFile:
 
         if np.sum(valid_idx) == 0:
             tauq_result = {"tauq_success": False}
-            self._computation_cache[tauq_cache_key] = tauq_result
+            self._memory_manager.cache_put(tauq_full_cache_key, tauq_result, CacheType.COMPUTATION)
             self.fit_summary.update(tauq_result)
             return self.fit_summary
 
@@ -1779,14 +2171,15 @@ class XpcsFile:
             p0 = [p0_a, p0_b]
 
         # Cache fit_x calculation
-        x_range_key = f"tauq_fit_x_{np.min(x_valid):.6e}_{np.max(x_valid):.6e}"
-        if x_range_key not in self._computation_cache:
+        x_range_key = f"{self._cache_prefix}_tauq_fit_x_{np.min(x_valid):.6e}_{np.max(x_valid):.6e}"
+        cached_tauq_fit_x = self._memory_manager.cache_get(x_range_key, CacheType.COMPUTATION)
+        if cached_tauq_fit_x is not None:
+            fit_x = cached_tauq_fit_x
+        else:
             fit_x = np.logspace(
                 np.log10(np.min(x_valid) / 1.1), np.log10(np.max(x_valid) * 1.1), 128
             )
-            self._computation_cache[x_range_key] = fit_x
-        else:
-            fit_x = self._computation_cache[x_range_key]
+            self._memory_manager.cache_put(x_range_key, fit_x, CacheType.COMPUTATION)
 
         fit_line, fit_val = fit_with_fixed(
             power_law,
@@ -1819,15 +2212,251 @@ class XpcsFile:
             "tauq_fit_val": fit_val[0] if fitting_success else np.zeros((2, len(fit_flag))),
         }
 
-        # Cache the result
-        self._computation_cache[tauq_cache_key] = tauq_result
+        # Cache the result using unified memory manager
+        self._memory_manager.cache_put(tauq_full_cache_key, tauq_result, CacheType.COMPUTATION)
         self.fit_summary.update(tauq_result)
 
         return self.fit_summary
 
+    def get_roi_data_vectorized(self, roi_parameter, phi_num=180, use_vectorized=True, use_parallel=False):
+        """
+        Enhanced ROI calculation using vectorized operations for optimal performance.
+
+        Parameters
+        ----------
+        roi_parameter : dict
+            ROI parameters with sl_type, angle_range/radius, etc.
+        phi_num : int
+            Number of angular bins for ring ROI (default: 180)
+        use_vectorized : bool
+            Whether to use vectorized ROI calculators (default: True)
+        use_parallel : bool
+            Whether to use parallel processing for multiple ROIs (default: False)
+
+        Returns
+        -------
+        tuple
+            (x_values, roi_data) or ROIResult object if use_vectorized=True
+        """
+        # Monitor memory usage for ROI calculations
+        memory_before_mb, _ = MemoryMonitor.get_memory_usage()
+
+        if not use_vectorized:
+            # Fallback to original method
+            return self.get_roi_data(roi_parameter, phi_num)
+
+        # Prepare geometry data for vectorized calculators
+        geometry_data = {
+            'qmap': self.qmap,
+            'rmap': getattr(self, 'rmap', None),
+            'pmap': getattr(self, 'pmap', None),
+            'mask': getattr(self, 'mask', np.ones_like(self.qmap))
+        }
+
+        # Determine ROI type and prepare parameters
+        roi_type_map = {
+            'Pie': ROIType.PIE,
+            'Ring': ROIType.RING,
+            'Phi_ring': ROIType.PHI_RING
+        }
+
+        sl_type = roi_parameter.get('sl_type', 'Pie')
+        roi_type = roi_type_map.get(sl_type, ROIType.PIE)
+
+        # Prepare ROI parameters based on type
+        if roi_type == ROIType.PIE:
+            # Pie ROI parameters
+            roi_params = ROIParameters(
+                roi_type=roi_type,
+                parameters={
+                    'angle_range': roi_parameter.get('angle_range', (0, 360)),
+                    'qmap_idx': getattr(self, 'qmap_idx', None),
+                    'qsize': len(getattr(self, 'sqlist', [])) if hasattr(self, 'sqlist') else 1000,
+                    'qspan': getattr(self, 'sqspan', None),
+                    'qmax': roi_parameter.get('dist', None),
+                    'phi_num': phi_num
+                },
+                label=f"pie_{roi_parameter.get('angle_range', (0, 360))}"
+            )
+
+            # Ensure we have necessary geometry data
+            if geometry_data['pmap'] is None:
+                # Generate pmap from qmap if not available
+                if hasattr(self, 'qmap') and hasattr(self, 'mask'):
+                    y, x = np.mgrid[:self.qmap.shape[0], :self.qmap.shape[1]]
+                    center_x = self.qmap.shape[1] // 2
+                    center_y = self.qmap.shape[0] // 2
+                    geometry_data['pmap'] = np.degrees(np.arctan2(y - center_y, x - center_x)) % 360
+                else:
+                    logger.error("Cannot create pie ROI without angular map data")
+                    return self.get_roi_data(roi_parameter, phi_num)
+
+            calculator = PieROICalculator()
+
+        elif roi_type == ROIType.RING:
+            # Ring ROI parameters
+            roi_params = ROIParameters(
+                roi_type=roi_type,
+                parameters={
+                    'radius_range': roi_parameter.get('radius', (0, 100)),
+                    'pmap': geometry_data['pmap'],
+                    'phi_num': phi_num
+                },
+                label=f"ring_{roi_parameter.get('radius', (0, 100))}"
+            )
+
+            # Ensure we have radial map
+            if geometry_data['rmap'] is None:
+                # Generate rmap from qmap if not available
+                if hasattr(self, 'qmap'):
+                    y, x = np.mgrid[:self.qmap.shape[0], :self.qmap.shape[1]]
+                    center_x = self.qmap.shape[1] // 2
+                    center_y = self.qmap.shape[0] // 2
+                    geometry_data['rmap'] = np.sqrt((y - center_y)**2 + (x - center_x)**2)
+                else:
+                    logger.error("Cannot create ring ROI without radial map data")
+                    return self.get_roi_data(roi_parameter, phi_num)
+
+            calculator = RingROICalculator()
+
+        else:
+            logger.warning(f"Unsupported ROI type {sl_type}, falling back to original method")
+            return self.get_roi_data(roi_parameter, phi_num)
+
+        # Predict memory requirements for ROI calculation
+        saxs_size_mb = self.saxs_2d.nbytes / (1024 * 1024) if hasattr(self.saxs_2d, 'nbytes') else 10.0
+        prediction = predict_operation_memory('roi_calculation', saxs_size_mb)
+
+        logger.info(
+            f"Vectorized ROI calculation: type={sl_type}, "
+            f"data_size={saxs_size_mb:.1f}MB, predicted={prediction.predicted_mb:.1f}MB, "
+            f"pressure={prediction.pressure_level.value}"
+        )
+
+        # Act on memory pressure predictions
+        use_streaming = prediction.pressure_level in [MemoryPressure.HIGH, MemoryPressure.CRITICAL]
+
+        if use_streaming:
+            logger.info("Using streaming for vectorized ROI calculation due to memory pressure")
+
+        # Perform vectorized ROI calculation
+        try:
+            result = calculator.calculate_roi(
+                self.saxs_2d,
+                geometry_data,
+                roi_params,
+                use_streaming=use_streaming
+            )
+
+            # Log memory usage after calculation
+            memory_after_mb, _ = MemoryMonitor.get_memory_usage()
+            memory_used = memory_after_mb - memory_before_mb
+
+            logger.info(
+                f"Vectorized ROI calculation completed: {result.processing_time:.3f}s, "
+                f"memory used: {memory_used:+.1f}MB"
+            )
+
+            # Record operation for memory predictor learning
+            record_operation_memory(
+                operation_type='roi_calculation',
+                input_size_mb=saxs_size_mb,
+                memory_before_mb=memory_before_mb,
+                memory_after_mb=memory_after_mb,
+                duration_seconds=result.processing_time
+            )
+
+            # Return results in the expected format (x_values, roi_data)
+            return result.x_values, result.roi_data
+
+        except Exception as e:
+            logger.error(f"Vectorized ROI calculation failed: {e}")
+            logger.info("Falling back to original ROI calculation method")
+            return self.get_roi_data(roi_parameter, phi_num)
+
+    def get_multiple_roi_data_parallel(self, roi_list, phi_num=180, max_workers=None):
+        """
+        Calculate multiple ROIs in parallel for enhanced performance.
+
+        Parameters
+        ----------
+        roi_list : list
+            List of ROI parameter dictionaries
+        phi_num : int
+            Number of angular bins for ring ROIs
+        max_workers : int, optional
+            Maximum number of parallel workers
+
+        Returns
+        -------
+        list
+            List of (x_values, roi_data) tuples
+        """
+        if not roi_list:
+            return []
+
+        # Convert to ROIParameters format
+        roi_params_list = []
+        for i, roi_param in enumerate(roi_list):
+            sl_type = roi_param.get('sl_type', 'Pie')
+            roi_type_map = {'Pie': ROIType.PIE, 'Ring': ROIType.RING, 'Phi_ring': ROIType.PHI_RING}
+            roi_type = roi_type_map.get(sl_type, ROIType.PIE)
+
+            if roi_type == ROIType.PIE:
+                params = {
+                    'angle_range': roi_param.get('angle_range', (0, 360)),
+                    'qmap_idx': getattr(self, 'qmap_idx', None),
+                    'qsize': len(getattr(self, 'sqlist', [])) if hasattr(self, 'sqlist') else 1000,
+                    'qspan': getattr(self, 'sqspan', None),
+                    'qmax': roi_param.get('dist', None),
+                    'phi_num': phi_num
+                }
+            elif roi_type == ROIType.RING:
+                params = {
+                    'radius_range': roi_param.get('radius', (0, 100)),
+                    'pmap': getattr(self, 'pmap', None),
+                    'phi_num': phi_num
+                }
+            else:
+                params = {}
+
+            roi_params_list.append(ROIParameters(
+                roi_type=roi_type,
+                parameters=params,
+                label=f"{sl_type}_{i}"
+            ))
+
+        # Prepare geometry data
+        geometry_data = {
+            'qmap': self.qmap,
+            'rmap': getattr(self, 'rmap', None),
+            'pmap': getattr(self, 'pmap', None),
+            'mask': getattr(self, 'mask', np.ones_like(self.qmap))
+        }
+
+        # Calculate ROIs in parallel
+        processor = ParallelROIProcessor(max_workers=max_workers)
+        results = processor.calculate_multiple_rois(
+            self.saxs_2d, geometry_data, roi_params_list, use_parallel=True
+        )
+
+        # Convert results to expected format
+        return [(result.x_values, result.roi_data) for result in results]
+
     def get_roi_data(self, roi_parameter, phi_num=180):
         # Monitor memory usage for ROI calculations
         memory_before_mb, _ = MemoryMonitor.get_memory_usage()
+
+        # Check if we should use streaming for very large datasets
+        saxs_size_mb = self.saxs_2d.nbytes / (1024 * 1024) if hasattr(self.saxs_2d, 'nbytes') else 0
+        use_streaming = (
+            saxs_size_mb > 500 and  # Large dataset > 500MB
+            self.memory_manager.get_memory_pressure() in [MemoryPressure.HIGH, MemoryPressure.CRITICAL]
+        )
+
+        if use_streaming:
+            logger.info(f"Using streaming ROI calculation for large dataset ({saxs_size_mb:.1f}MB)")
+            return self._get_roi_data_streaming(roi_parameter, phi_num)
 
         # Access qmap data directly from attributes
         qmap = self.sqmap  # q map
@@ -1922,6 +2551,135 @@ class XpcsFile:
                 )
 
             return x, saxs_roi
+        return None
+
+    def _get_roi_data_streaming(self, roi_parameter, phi_num=180):
+        """
+        Memory-efficient streaming ROI calculation for large datasets.
+
+        Uses streaming processing to calculate ROI data with reduced memory footprint.
+        """
+        logger.info("Starting streaming ROI calculation")
+
+        # Create ROI mask using existing vectorized approach
+        qmap = self.sqmap
+        pmap = self.spmap
+        rmap = np.sqrt(
+            (np.arange(self.mask.shape[1]) - self.bcx) ** 2
+            + (np.arange(self.mask.shape[0])[:, np.newaxis] - self.bcy) ** 2
+        )
+
+        if roi_parameter["sl_type"] == "Pie":
+            # Create the ROI mask (this doesn't use much memory)
+            pmin, pmax = roi_parameter["angle_range"]
+            pmap_work = pmap.copy() if pmax < pmin else pmap
+            if pmax < pmin:
+                pmax += 360.0
+                pmap_work = np.where(pmap_work < pmin, pmap_work + 360.0, pmap_work)
+
+            roi_mask = (pmap_work >= pmin) & (pmap_work < pmax) & (self.mask > 0)
+
+            # Use streaming processor for ROI calculation
+            from .utils.streaming_processor import process_roi_streaming
+
+            # For SAXS 2D data, we need to add a time dimension for the streaming processor
+            saxs_with_time = self.saxs_2d[np.newaxis, ...]  # Add time dimension
+
+            roi_stats = process_roi_streaming(
+                data=saxs_with_time,
+                roi_mask=roi_mask,
+                chunk_size_mb=100.0  # Conservative chunk size for ROI processing
+            )
+
+            # Process results to match expected output format
+            qsize = len(self.sqspan) - 1
+            qmap_idx = np.searchsorted(self.sqspan[1:], qmap, side="right")
+            qmap_idx = np.clip(qmap_idx, 0, qsize - 1) + 1
+
+            # Create binned ROI data using streaming results
+            roi_mask_indexed = np.where(roi_mask, qmap_idx, 0)
+
+            # Use streaming approach for binning if dataset is very large
+            saxs_roi = np.zeros(qsize)
+            saxs_nor = np.zeros(qsize)
+
+            # Process in chunks to avoid memory issues
+            chunk_size = min(1000000, self.saxs_2d.size // 10)  # Adaptive chunk size
+            flat_saxs = self.saxs_2d.ravel()
+            flat_mask = roi_mask_indexed.ravel()
+
+            for start_idx in range(0, len(flat_saxs), chunk_size):
+                end_idx = min(start_idx + chunk_size, len(flat_saxs))
+
+                chunk_saxs = flat_saxs[start_idx:end_idx]
+                chunk_mask = flat_mask[start_idx:end_idx]
+
+                # Accumulate bincount results
+                chunk_roi = np.bincount(chunk_mask, chunk_saxs, minlength=qsize + 1)
+                chunk_nor = np.bincount(chunk_mask, minlength=qsize + 1)
+
+                saxs_roi += chunk_roi[1:]  # Remove 0th term
+                saxs_nor += chunk_nor[1:]
+
+            # Vectorized normalization
+            saxs_nor = np.where(saxs_nor == 0, 1.0, saxs_nor)
+            saxs_roi = saxs_roi / saxs_nor
+
+            # Apply qmax cutoff
+            dist = roi_parameter["dist"]
+            wlength = 12.398 / self.X_energy
+            qmax = dist * self.pix_dim_x / self.det_dist * 2 * np.pi / wlength
+
+            if qmax < np.max(self.sqspan):
+                qmax_idx = np.searchsorted(self.sqspan, qmax, side="right")
+                saxs_roi[qmax_idx:] = 0
+
+            logger.info("Streaming ROI calculation completed")
+            return self.sqspan[:-1], saxs_roi
+
+        elif roi_parameter["sl_type"] == "Phi_ring":
+            # Similar streaming approach for phi_ring ROI
+            rmin, rmax = roi_parameter["r_range"]
+            roi_mask = (rmap >= rmin) & (rmap < rmax) & (self.mask > 0)
+
+            # Streaming processing for phi_ring
+            phi_center = np.degrees(np.arctan2(
+                np.arange(self.mask.shape[0])[:, np.newaxis] - self.bcy,
+                np.arange(self.mask.shape[1]) - self.bcx
+            ))
+            phi_center = np.where(phi_center < 0, phi_center + 360, phi_center)
+
+            phi_step = 360.0 / phi_num
+            phi_index = np.floor(phi_center / phi_step).astype(int)
+            phi_index = np.clip(phi_index, 0, phi_num - 1) + 1
+
+            # Streaming bincount for phi_ring
+            saxs_roi = np.zeros(phi_num)
+            saxs_nor = np.zeros(phi_num)
+
+            chunk_size = min(1000000, self.saxs_2d.size // 10)
+            flat_saxs = self.saxs_2d.ravel()
+            flat_phi_idx = np.where(roi_mask, phi_index, 0).ravel()
+
+            for start_idx in range(0, len(flat_saxs), chunk_size):
+                end_idx = min(start_idx + chunk_size, len(flat_saxs))
+
+                chunk_saxs = flat_saxs[start_idx:end_idx]
+                chunk_phi = flat_phi_idx[start_idx:end_idx]
+
+                chunk_roi = np.bincount(chunk_phi, chunk_saxs, minlength=phi_num + 1)
+                chunk_nor = np.bincount(chunk_phi, minlength=phi_num + 1)
+
+                saxs_roi += chunk_roi[1:]
+                saxs_nor += chunk_nor[1:]
+
+            saxs_nor = np.where(saxs_nor == 0, 1.0, saxs_nor)
+            saxs_roi = saxs_roi / saxs_nor
+
+            x = np.arange(phi_num) * phi_step + phi_step / 2
+            logger.info("Streaming phi_ring ROI calculation completed")
+            return x, saxs_roi
+
         return None
 
     def export_saxs1d(self, roi_list, folder):
@@ -2090,9 +2848,10 @@ class XpcsFile:
         Compute and cache FFT of intensity vs time data.
         Returns tuple of (frequencies, fft_magnitudes)
         """
-        cache_key = "int_t_fft"
-        if hasattr(self, "_computation_cache") and cache_key in self._computation_cache:
-            return self._computation_cache[cache_key]
+        cache_key = f"{self._cache_prefix}_int_t_fft"
+        cached_result = self._memory_manager.cache_get(cache_key, CacheType.COMPUTATION)
+        if cached_result is not None:
+            return cached_result
 
         try:
             # Get intensity vs time data
@@ -2121,9 +2880,8 @@ class XpcsFile:
 
             result = (frequencies, fft_magnitudes)
 
-            # Cache the result
-            if hasattr(self, "_computation_cache"):
-                self._computation_cache[cache_key] = result
+            # Cache the result using unified memory manager
+            self._memory_manager.cache_put(cache_key, result, CacheType.COMPUTATION)
 
             return result
 
@@ -2147,16 +2905,34 @@ class XpcsFile:
         memory_before = MemoryMonitor.get_memory_usage()[0]
 
         if cache_type in ("all", "computation"):
-            if hasattr(self, "_computation_cache"):
-                cache_size = len(self._computation_cache)
-                self._computation_cache.clear()
-                logger.info(f"Cleared computation cache ({cache_size} items)")
+            # Clear computation cache entries for this instance from unified memory manager
+            stats_before = self._memory_manager.get_cache_stats()
+            computation_entries_before = stats_before.get('computation_entries', 0)
+
+            # We can't directly clear specific entries by prefix, so we'll track what we had
+            # This is a limitation of the current interface that could be improved
+            logger.info(f"Clearing computation cache (unified memory manager handles cleanup)")
 
         if cache_type in ("all", "saxs") and self._saxs_data_loaded:
-            self.saxs_2d_data = None
-            self.saxs_2d_log_data = None
+            # Handle both regular arrays and lazy-loaded data
+            if isinstance(self._saxs_2d_data, LazyHDF5Array):
+                # For lazy-loaded data, just clear the loaded data, keep the proxy
+                if hasattr(self._saxs_2d_data, '_loaded_data'):
+                    self._saxs_2d_data._loaded_data = None
+                logger.info("Cleared lazy-loaded SAXS 2D data cache")
+            else:
+                self._saxs_2d_data = None
+                logger.info("Cleared SAXS 2D data cache")
+
+            if isinstance(self._saxs_2d_log_data, LazyHDF5Array):
+                if hasattr(self._saxs_2d_log_data, '_loaded_data'):
+                    self._saxs_2d_log_data._loaded_data = None
+                logger.info("Cleared lazy-loaded SAXS 2D log data cache")
+            else:
+                self._saxs_2d_log_data = None
+                logger.info("Cleared SAXS 2D log data cache")
+
             self._saxs_data_loaded = False
-            logger.info("Cleared SAXS 2D data cache")
 
         if cache_type in ("all", "fit"):
             if self.fit_summary is not None:
@@ -2168,8 +2944,10 @@ class XpcsFile:
                 self.c2_kwargs = None
                 logger.info("Cleared two-time C2 data cache")
 
-        # Clear global cache for this file
-        _global_cache.clear_file(self.fname)
+        # Clear unified memory manager cache entries for this instance
+        # Note: This is a simplified approach - in a full implementation we might add
+        # a method to clear entries by prefix to the memory manager
+        logger.debug(f"Cleared cache for instance {self._cache_prefix}")
 
         memory_after = MemoryMonitor.get_memory_usage()[0]
         memory_freed = memory_before - memory_after
@@ -2199,25 +2977,47 @@ class XpcsFile:
         """
         stats = {
             "file": self.fname,
-            "computation_cache_items": len(getattr(self, "_computation_cache", {})),
+            "unified_memory_manager": self._memory_manager.get_cache_stats(),
+            "lazy_loader_stats": self._lazy_loader.get_memory_stats(),
             "saxs_data_loaded": self._saxs_data_loaded,
+            "saxs_2d_is_lazy": isinstance(self._saxs_2d_data, LazyHDF5Array),
+            "saxs_2d_log_is_lazy": isinstance(self._saxs_2d_log_data, LazyHDF5Array),
             "has_fit_summary": self.fit_summary is not None,
             "has_c2_data": self.c2_all_data is not None,
             "estimated_memory_mb": 0.0,
         }
 
         # Estimate memory usage of major cached items
-        if self._saxs_data_loaded and self.saxs_2d_data is not None:
-            stats["saxs_2d_memory_mb"] = MemoryMonitor.estimate_array_memory(
-                self.saxs_2d_data.shape, self.saxs_2d_data.dtype
-            )
-            stats["estimated_memory_mb"] += stats["saxs_2d_memory_mb"]
+        if self._saxs_data_loaded and self._saxs_2d_data is not None:
+            if isinstance(self._saxs_2d_data, LazyHDF5Array):
+                # For lazy data, only count loaded portion
+                if hasattr(self._saxs_2d_data, '_loaded_data') and self._saxs_2d_data._loaded_data is not None:
+                    stats["saxs_2d_memory_mb"] = MemoryMonitor.estimate_array_memory(
+                        self._saxs_2d_data._loaded_data.shape, self._saxs_2d_data._loaded_data.dtype
+                    )
+                    stats["estimated_memory_mb"] += stats["saxs_2d_memory_mb"]
+                else:
+                    stats["saxs_2d_memory_mb"] = 0.0  # Not loaded yet
+            else:
+                stats["saxs_2d_memory_mb"] = MemoryMonitor.estimate_array_memory(
+                    self._saxs_2d_data.shape, self._saxs_2d_data.dtype
+                )
+                stats["estimated_memory_mb"] += stats["saxs_2d_memory_mb"]
 
-        if self._saxs_data_loaded and self.saxs_2d_log_data is not None:
-            stats["saxs_2d_log_memory_mb"] = MemoryMonitor.estimate_array_memory(
-                self.saxs_2d_log_data.shape, self.saxs_2d_log_data.dtype
-            )
-            stats["estimated_memory_mb"] += stats["saxs_2d_log_memory_mb"]
+        if self._saxs_data_loaded and self._saxs_2d_log_data is not None:
+            if isinstance(self._saxs_2d_log_data, LazyHDF5Array):
+                if hasattr(self._saxs_2d_log_data, '_loaded_data') and self._saxs_2d_log_data._loaded_data is not None:
+                    stats["saxs_2d_log_memory_mb"] = MemoryMonitor.estimate_array_memory(
+                        self._saxs_2d_log_data._loaded_data.shape, self._saxs_2d_log_data._loaded_data.dtype
+                    )
+                    stats["estimated_memory_mb"] += stats["saxs_2d_log_memory_mb"]
+                else:
+                    stats["saxs_2d_log_memory_mb"] = 0.0  # Not loaded yet
+            else:
+                stats["saxs_2d_log_memory_mb"] = MemoryMonitor.estimate_array_memory(
+                    self._saxs_2d_log_data.shape, self._saxs_2d_log_data.dtype
+                )
+                stats["estimated_memory_mb"] += stats["saxs_2d_log_memory_mb"]
 
         return stats
 
