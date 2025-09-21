@@ -51,11 +51,16 @@ class ImageViewDev(ImageView):
 
         self.remove_rois()
         self.reset_limits()
-        # incase the signal isn't connected to anything.
+        # Safely disconnect signal if it has connections
         try:
-            self.scene.sigMouseMoved.disconnect()
-        except RuntimeError:
-            # Signal already disconnected
+            if hasattr(self, 'scene') and self.scene is not None:
+                if hasattr(self.scene, 'sigMouseMoved'):
+                    # Check if signal has any connections before disconnecting
+                    signal = self.scene.sigMouseMoved
+                    if hasattr(signal, 'receivers') and signal.receivers(signal) > 0:
+                        signal.disconnect()
+        except (RuntimeError, TypeError, AttributeError):
+            # Signal already disconnected or doesn't exist
             pass
 
     def add_roi(

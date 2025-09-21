@@ -498,7 +498,7 @@ class WorkerManager(QObject):
         try:
             from .cleanup_optimized import register_for_cleanup
 
-            register_for_cleanup(self, ["shutdown"])
+            register_for_cleanup(f"WorkerManager_{id(self)}", self)
         except ImportError:
             pass  # Optimized cleanup system not available
 

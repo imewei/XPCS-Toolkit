@@ -51,6 +51,24 @@ class ObjectRegistry:
         with self._lock:
             self.objects.clear()
 
+    def get_objects_by_type(self, obj_type: str) -> List[Any]:
+        """Get all registered objects of a specific type.
+
+        Args:
+            obj_type: Type name to filter by (e.g., 'XpcsFile', 'WorkerManager')
+
+        Returns:
+            List of objects matching the specified type
+        """
+        with self._lock:
+            matching_objects = []
+            for key, obj in self.objects.items():
+                # Check if the key contains the type name or if the object's class name matches
+                if (obj_type in key or
+                    (hasattr(obj, '__class__') and obj.__class__.__name__ == obj_type)):
+                    matching_objects.append(obj)
+            return matching_objects
+
 
 # Global object registry
 _object_registry = None
@@ -274,11 +292,50 @@ def initialize_optimized_cleanup():
         return None
 
 
-def schedule_type_cleanup(obj_type: str, cleanup_func: Callable, delay: float = 0.0):
-    """Schedule cleanup for objects of a specific type."""
+def schedule_type_cleanup(obj_type: str, priority_or_func, delay: float = 0.0):
+    """Schedule cleanup for objects of a specific type.
+
+    Args:
+        obj_type: Type of object to clean up
+        priority_or_func: Either a CleanupPriority enum value or a callable cleanup function
+        delay: Delay before executing cleanup
+    """
     try:
         cleanup_system = get_cleanup_system()
         task_name = f"type_cleanup_{obj_type}"
+
+        # Handle both priority-based and function-based cleanup
+        if isinstance(priority_or_func, CleanupPriority):
+            # Create a priority-based cleanup function
+            def priority_cleanup():
+                """Priority-based cleanup function."""
+                # Perform garbage collection based on priority
+                if priority_or_func == CleanupPriority.CRITICAL:
+                    # Force immediate garbage collection
+                    import gc
+                    collected = gc.collect()
+                    logger.debug(f"Critical cleanup for {obj_type}: freed {collected} objects")
+                elif priority_or_func == CleanupPriority.HIGH:
+                    # Trigger smart garbage collection
+                    cleanup_system.garbage_collector.collect()
+                    logger.debug(f"High priority cleanup for {obj_type} completed")
+                elif priority_or_func == CleanupPriority.MEDIUM:
+                    # Schedule garbage collection if needed
+                    if cleanup_system.garbage_collector.should_collect():
+                        cleanup_system.garbage_collector.collect()
+                    logger.debug(f"Medium priority cleanup for {obj_type} completed")
+                else:  # LOW priority
+                    # Just log the cleanup attempt
+                    logger.debug(f"Low priority cleanup for {obj_type} scheduled")
+
+            cleanup_func = priority_cleanup
+        elif callable(priority_or_func):
+            # It's a callable function
+            cleanup_func = priority_or_func
+        else:
+            # Invalid parameter type
+            raise TypeError(f"priority_or_func must be CleanupPriority enum or callable, got {type(priority_or_func)}")
+
         cleanup_system.cleanup_scheduler.schedule_cleanup(task_name, cleanup_func, delay)
         logger.debug(f"Scheduled type cleanup for: {obj_type}")
     except Exception as e:
