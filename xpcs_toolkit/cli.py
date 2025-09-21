@@ -11,6 +11,13 @@ from xpcs_toolkit.utils.logging_config import (
     set_log_level,
     setup_exception_logging,
 )
+from xpcs_toolkit.utils.exceptions import (
+    XPCSBaseError,
+    XPCSConfigurationError,
+    XPCSGUIError,
+    handle_exceptions,
+    convert_exception,
+)
 
 logger = get_logger(__name__)
 
@@ -43,20 +50,26 @@ def safe_shutdown():
             manager.shutdown()
 
         logger.debug(f"Shutdown {len(worker_managers)} WorkerManager instances")
+    except (ImportError, AttributeError, RuntimeError) as e:
+        # Expected errors during shutdown - module not available or already cleaned up
+        logger.debug(f"Worker manager shutdown issue (expected): {e}")
     except Exception as e:
-        logger.debug(
-            f"Error shutting down worker managers: {e}"
-        )  # Log but continue shutdown
+        # Unexpected errors - convert and log but continue shutdown
+        xpcs_error = convert_exception(e, "Unexpected error during worker manager shutdown")
+        logger.warning(f"Unexpected shutdown error: {xpcs_error}")  # Log but continue shutdown
 
     # 2. Clear HDF5 connection pool
     try:
         from xpcs_toolkit.fileIO.hdf_reader import _connection_pool
 
         _connection_pool.clear_pool(from_destructor=True)
+    except (ImportError, AttributeError) as e:
+        # Expected - HDF5 module not available or already cleaned up
+        logger.debug(f"HDF5 cleanup issue (expected): {e}")
     except Exception as e:
-        logger.debug(
-            f"Error clearing HDF5 connection pool: {e}"
-        )  # Log but continue shutdown
+        # Unexpected HDF5 cleanup errors
+        xpcs_error = convert_exception(e, "Unexpected error clearing HDF5 connection pool")
+        logger.warning(f"HDF5 cleanup error: {xpcs_error}")  # Log but continue shutdown
 
     # 3. Schedule XpcsFile cache clearing in background (non-blocking)
     try:
@@ -69,8 +82,13 @@ def safe_shutdown():
         schedule_type_cleanup("XpcsFile", CleanupPriority.HIGH)
 
         logger.debug("Scheduled background cleanup for XpcsFile objects")
+    except (ImportError, AttributeError, TypeError) as e:
+        # Expected - cleanup module not available or configuration issues
+        logger.debug(f"Cleanup scheduling issue (expected): {e}")
     except Exception as e:
-        logger.debug(f"Error scheduling cleanup: {e}")  # Log but continue shutdown
+        # Unexpected cleanup scheduling errors
+        xpcs_error = convert_exception(e, "Unexpected error scheduling cleanup")
+        logger.warning(f"Cleanup scheduling error: {xpcs_error}")  # Log but continue shutdown
 
     # 4. Smart garbage collection (non-blocking)
     try:
@@ -78,20 +96,26 @@ def safe_shutdown():
 
         smart_gc_collect("shutdown")
         logger.info("Safe shutdown sequence completed")
+    except (ImportError, AttributeError, MemoryError) as e:
+        # Expected - GC module issues or memory pressure during shutdown
+        logger.debug(f"Garbage collection issue (expected): {e}")
     except Exception as e:
-        logger.debug(
-            f"Error during smart garbage collection: {e}"
-        )  # Log but continue shutdown
+        # Unexpected garbage collection errors
+        xpcs_error = convert_exception(e, "Unexpected error during garbage collection")
+        logger.warning(f"Garbage collection error: {xpcs_error}")  # Log but continue shutdown
 
     # 5. Shutdown cleanup system
     try:
         from xpcs_toolkit.threading.cleanup_optimized import shutdown_optimized_cleanup
 
         shutdown_optimized_cleanup()
+    except (ImportError, AttributeError, RuntimeError) as e:
+        # Expected - cleanup system not available or already shut down
+        logger.debug(f"Cleanup system shutdown issue (expected): {e}")
     except Exception as e:
-        logger.debug(
-            f"Error during cleanup system shutdown: {e}"
-        )  # Log but continue shutdown
+        # Unexpected cleanup system errors
+        xpcs_error = convert_exception(e, "Unexpected error during cleanup system shutdown")
+        logger.warning(f"Cleanup system error: {xpcs_error}")  # Log but continue shutdown
 
 
 def signal_handler(signum, frame):
@@ -158,8 +182,13 @@ def main():
 
         initialize_optimized_cleanup()
         logger.info("Optimized cleanup system initialized")
+    except (ImportError, ModuleNotFoundError) as e:
+        # Expected - cleanup optimization module not available
+        logger.info("Optimized cleanup system not available, using standard cleanup")
     except Exception as e:
-        logger.warning(f"Failed to initialize optimized cleanup system: {e}")
+        # Unexpected initialization errors
+        xpcs_error = convert_exception(e, "Failed to initialize optimized cleanup system")
+        logger.warning(f"Cleanup initialization error: {xpcs_error}")
 
     logger.info("XPCS Toolkit CLI started")
     logger.debug(f"Arguments: path='{args.path}', label_style='{args.label_style}'")
@@ -177,8 +206,29 @@ def main():
         logger.info("Interrupted by user")
         safe_shutdown()
         sys.exit(0)
+    except (ImportError, ModuleNotFoundError) as e:
+        # Missing dependencies - provide helpful error message
+        logger.error(f"Missing required dependencies for GUI: {e}")
+        logger.error("Please ensure all required packages are installed: pip install -e .")
+        safe_shutdown()
+        sys.exit(2)  # Different exit code for dependency issues
+    except XPCSConfigurationError as e:
+        # Configuration issues - user can fix
+        logger.error(f"Configuration error: {e}")
+        if e.recovery_suggestions:
+            for suggestion in e.recovery_suggestions:
+                logger.error(f"  - {suggestion}")
+        safe_shutdown()
+        sys.exit(3)  # Different exit code for config issues
+    except XPCSGUIError as e:
+        # GUI-specific errors
+        logger.error(f"GUI initialization failed: {e}")
+        safe_shutdown()
+        sys.exit(4)  # Different exit code for GUI issues
     except Exception as e:
-        logger.error(f"Failed to start GUI: {e}", exc_info=True)
+        # Unexpected critical errors - convert and provide context
+        xpcs_error = convert_exception(e, "Critical error starting XPCS Toolkit")
+        logger.error(f"Critical startup failure: {xpcs_error}", exc_info=True)
         safe_shutdown()
         sys.exit(1)
 
