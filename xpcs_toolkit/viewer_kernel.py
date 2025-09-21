@@ -416,17 +416,65 @@ class ViewerKernel(FileLocator):
             saxs2d.plot(xf_list[0], *args, **kwargs)
 
     def add_roi(self, hdl, **kwargs):
-        xf_list = self.get_xf_list()
-        cen = (xf_list[0].bcx, xf_list[0].bcy)
-        if kwargs["sl_type"] == "Pie":
-            hdl.add_roi(cen=cen, radius=100, **kwargs)
-        elif kwargs["sl_type"] == "Circle":
-            radius_v = min(xf_list[0].mask.shape[0] - cen[1], cen[1])
-            radius_h = min(xf_list[0].mask.shape[1] - cen[0], cen[0])
-            radius = min(radius_h, radius_v) * 0.8
+        logger.debug(f"ViewerKernel: add_roi called with kwargs: {kwargs}")
 
-            hdl.add_roi(cen=cen, radius=radius, label="RingA", **kwargs)
-            hdl.add_roi(cen=cen, radius=0.8 * radius, label="RingB", **kwargs)
+        xf_list = self.get_xf_list()
+        logger.debug(f"ViewerKernel: get_xf_list returned {len(xf_list) if xf_list else 0} files")
+
+        if not xf_list:
+            logger.warning("Cannot add ROI: No XPCS files loaded or selected. Please add files to the target list first.")
+            return None
+
+        try:
+            cen = (xf_list[0].bcx, xf_list[0].bcy)
+            logger.debug(f"ViewerKernel: beam center coordinates: {cen}")
+        except (AttributeError, IndexError) as e:
+            logger.error(f"Cannot get beam center coordinates: {e}")
+            return None
+
+        sl_type = kwargs["sl_type"]
+        logger.debug(f"ViewerKernel: creating ROI of type '{sl_type}'")
+
+        if sl_type == "Pie":
+            result = hdl.add_roi(cen=cen, radius=100, **kwargs)
+            logger.debug(f"ViewerKernel: Pie ROI creation result: {result}")
+            return result
+        elif sl_type == "Q-Wedge":
+            # Q-Wedge ROI for Q-space analysis (wedge-shaped)
+            logger.debug(f"ViewerKernel: creating Q-Wedge ROI at center {cen} with radius 100")
+            result = hdl.add_roi(cen=cen, radius=100, **kwargs)
+            logger.debug(f"ViewerKernel: Q-Wedge ROI creation result: {result}")
+            return result
+        elif sl_type == "Circle":
+            try:
+                radius_v = min(xf_list[0].mask.shape[0] - cen[1], cen[1])
+                radius_h = min(xf_list[0].mask.shape[1] - cen[0], cen[0])
+                radius = min(radius_h, radius_v) * 0.8
+
+                result1 = hdl.add_roi(cen=cen, radius=radius, label="RingA", **kwargs)
+                result2 = hdl.add_roi(cen=cen, radius=0.8 * radius, label="RingB", **kwargs)
+                logger.debug(f"ViewerKernel: Circle ROI creation results: {result1}, {result2}")
+                return result1  # Return first ring result
+            except (AttributeError, IndexError) as e:
+                logger.error(f"Cannot create Circle ROI: mask data not available - {e}")
+                return None
+        elif sl_type == "Phi-Ring":
+            # Phi-Ring ROI for angular analysis (ring-shaped)
+            try:
+                radius_v = min(xf_list[0].mask.shape[0] - cen[1], cen[1])
+                radius_h = min(xf_list[0].mask.shape[1] - cen[0], cen[0])
+                radius = min(radius_h, radius_v) * 0.8
+
+                result1 = hdl.add_roi(cen=cen, radius=radius, label="RingA", **kwargs)
+                result2 = hdl.add_roi(cen=cen, radius=0.8 * radius, label="RingB", **kwargs)
+                logger.debug(f"ViewerKernel: Phi-Ring ROI creation results: {result1}, {result2}")
+                return result1  # Return first ring result
+            except (AttributeError, IndexError) as e:
+                logger.error(f"Cannot create Phi-Ring ROI: mask data not available - {e}")
+                return None
+        else:
+            logger.error(f"ViewerKernel: Unknown ROI type '{sl_type}'")
+            return None
 
     def plot_saxs_1d(self, pg_hdl, mp_hdl, **kwargs):
         xf_list = self.get_xf_list()

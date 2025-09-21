@@ -181,6 +181,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         self.show_g2_fit_summary.clicked.connect(self.show_g2_fit_summary_func)
         self.btn_g2_export.clicked.connect(self.export_g2)
         self.btn_g2_refit.clicked.connect(self.refit_g2)
+        self.pushButton_6.clicked.connect(self.saxs2d_roi_add)  # ROI Add button
         self.saxs2d_autolevel.stateChanged.connect(self.update_saxs2d_level)
         self.btn_deselect.clicked.connect(self.clear_target_selection)
         self.list_view_target.doubleClicked.connect(self.show_dataset)
@@ -821,12 +822,22 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         color = ("g", "y", "b", "r", "c", "m", "k", "w")[
             self.cb_saxs2D_roi_color.currentIndex()
         ]
+
+        # Map UI ROI types correctly: Q-Wedge (0), Phi-Ring (1)
+        roi_types = ("Q-Wedge", "Phi-Ring")
+
         kwargs = {
-            "sl_type": ("Pie", "Circle")[sl_type_idx],
+            "sl_type": roi_types[sl_type_idx],
             "width": self.sb_saxs2D_roi_width.value(),
             "color": color,
         }
-        self.vk.add_roi(self.pg_saxs, **kwargs)
+
+        logger.debug(f"GUI: Attempting to add ROI with kwargs: {kwargs}")
+        result = self.vk.add_roi(self.pg_saxs, **kwargs)
+        if result is None:
+            logger.warning(f"GUI: ROI addition failed for type '{kwargs['sl_type']}'")
+        else:
+            logger.debug(f"GUI: ROI addition succeeded, returned: {result}")
 
     def plot_saxs_1d(self, dryrun=False):
         kwargs = {
@@ -1534,10 +1545,132 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         self.list_view_source.clearSelection()
         self.update_box(self.vk.target, mode="target")
 
+        # Update tab availability based on file formats
+        self.update_tab_availability()
+
         if tab_name == "average":
             self.init_average()
         else:
             self.update_plot()
+
+    def update_tab_availability(self):
+        """
+        Update tab availability based on the file formats in the target list.
+
+        Disables incompatible tabs to prevent application freezing:
+        - Multitau format: Disables "Two Time" tab
+        - Twotime format: Disables "g2" and "Diffusion" tabs
+        - Mixed formats: Enables all tabs with warning
+        """
+        if not self.vk.target or len(self.vk.target) == 0:
+            # No files selected, enable all tabs
+            self._enable_all_tabs()
+            self.statusbar.showMessage("No files selected - all tabs available", 3000)
+            return
+
+        # Analyze file formats in target list
+        file_formats = set()
+        multitau_count = 0
+        twotime_count = 0
+
+        try:
+            # Get XpcsFile objects to check their analysis types
+            xf_list = self.vk.get_xf_list()
+            if not xf_list:
+                self._enable_all_tabs()
+                return
+
+            for xf in xf_list:
+                if hasattr(xf, 'atype') and xf.atype:
+                    for atype in xf.atype:
+                        file_formats.add(atype)
+                        if atype == "Multitau":
+                            multitau_count += 1
+                        elif atype == "Twotime":
+                            twotime_count += 1
+
+            logger.debug(f"File format analysis: {file_formats}, Multitau: {multitau_count}, Twotime: {twotime_count}")
+
+            # Determine tab availability based on formats
+            if len(file_formats) == 0:
+                # No recognized formats, enable all tabs
+                self._enable_all_tabs()
+                self.statusbar.showMessage("Warning: File format not recognized - proceed with caution", 5000)
+
+            elif len(file_formats) == 1:
+                # Single format detected
+                format_type = list(file_formats)[0]
+                if format_type == "Multitau":
+                    self._configure_for_multitau()
+                    self.statusbar.showMessage(f"Multitau format detected - Two Time tab disabled ({multitau_count} files)", 5000)
+                elif format_type == "Twotime":
+                    self._configure_for_twotime()
+                    self.statusbar.showMessage(f"Twotime format detected - G2 and Diffusion tabs disabled ({twotime_count} files)", 5000)
+                else:
+                    self._enable_all_tabs()
+
+            else:
+                # Mixed formats detected
+                self._enable_all_tabs()
+                self.statusbar.showMessage(
+                    f"Warning: Mixed formats detected (Multitau: {multitau_count}, Twotime: {twotime_count}) - use tabs carefully",
+                    8000
+                )
+
+        except Exception as e:
+            logger.error(f"Error analyzing file formats for tab management: {e}")
+            self._enable_all_tabs()
+            self.statusbar.showMessage("Error analyzing file formats - all tabs enabled", 5000)
+
+    def _enable_all_tabs(self):
+        """Enable all tabs."""
+        for tab_index in range(self.tabWidget.count()):
+            self.tabWidget.setTabEnabled(tab_index, True)
+        self._clear_tab_tooltips()  # Clear tooltips when all tabs are enabled
+        logger.debug("All tabs enabled")
+
+    def _configure_for_multitau(self):
+        """Configure tabs for multitau format: disable Two Time tab."""
+        self._enable_all_tabs()  # First enable all
+        self._clear_tab_tooltips()  # Clear any existing tooltips
+
+        # Disable Two Time tab (index 6)
+        twotime_tab_index = 6
+        self.tabWidget.setTabEnabled(twotime_tab_index, False)
+        self.tabWidget.setTabToolTip(twotime_tab_index, "Two Time analysis not available for multitau format files")
+
+        # If user is currently on Two Time tab, switch to G2 tab
+        if self.tabWidget.currentIndex() == twotime_tab_index:
+            self.tabWidget.setCurrentIndex(4)  # Switch to G2 tab
+            logger.info("Switched from Two Time to G2 tab (multitau format)")
+
+        logger.debug("Configured tabs for multitau format: Two Time tab disabled")
+
+    def _configure_for_twotime(self):
+        """Configure tabs for twotime format: disable G2 and Diffusion tabs."""
+        self._enable_all_tabs()  # First enable all
+        self._clear_tab_tooltips()  # Clear any existing tooltips
+
+        # Disable G2 tab (index 4) and Diffusion tab (index 5)
+        g2_tab_index = 4
+        diffusion_tab_index = 5
+        self.tabWidget.setTabEnabled(g2_tab_index, False)
+        self.tabWidget.setTabEnabled(diffusion_tab_index, False)
+        self.tabWidget.setTabToolTip(g2_tab_index, "G2 analysis not available for twotime format files")
+        self.tabWidget.setTabToolTip(diffusion_tab_index, "Diffusion analysis not available for twotime format files")
+
+        # If user is currently on disabled tab, switch to Two Time tab
+        current_tab = self.tabWidget.currentIndex()
+        if current_tab in [g2_tab_index, diffusion_tab_index]:
+            self.tabWidget.setCurrentIndex(6)  # Switch to Two Time tab
+            logger.info("Switched from disabled tab to Two Time tab (twotime format)")
+
+        logger.debug("Configured tabs for twotime format: G2 and Diffusion tabs disabled")
+
+    def _clear_tab_tooltips(self):
+        """Clear all tab tooltips."""
+        for tab_index in range(self.tabWidget.count()):
+            self.tabWidget.setTabToolTip(tab_index, "")
 
     def reorder_target(self, direction="up"):
         rows = self.get_selected_rows()
@@ -1559,6 +1692,9 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         # the list will out of bounds
         self.clear_target_selection()
 
+        # Update tab availability after removing files
+        self.update_tab_availability()
+
         # if all files are removed; then go to state 1
         if self.vk.target in [[], None] or len(self.vk.target) == 0:
             self.reset_gui()
@@ -1576,6 +1712,9 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         ]:
             x.clear()
         self.le_bkg_fname.clear()
+
+        # Enable all tabs when no files are loaded
+        self._enable_all_tabs()
 
     def apply_filter_to_source(self):
         min_length = 1
