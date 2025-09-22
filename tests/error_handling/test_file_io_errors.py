@@ -10,20 +10,36 @@ from unittest.mock import Mock, patch
 import h5py
 import numpy as np
 import pytest
+
 try:
     import h5py
+
     H5PY_AVAILABLE = True
 except ImportError:
     H5PY_AVAILABLE = False
+
     # Mock h5py for basic testing
     class MockH5pyFile:
-        def __init__(self, *args, **kwargs): pass
-        def __enter__(self): return self
-        def __exit__(self, *args): pass
-        def create_dataset(self, *args, **kwargs): pass
-        def create_group(self, *args, **kwargs): return self
-        def __getitem__(self, key): return self
-        def __setitem__(self, key, value): pass
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            pass
+
+        def create_dataset(self, *args, **kwargs):
+            pass
+
+        def create_group(self, *args, **kwargs):
+            return self
+
+        def __getitem__(self, key):
+            return self
+
+        def __setitem__(self, key, value):
+            pass
 
     class MockH5py:
         File = MockH5pyFile
@@ -382,7 +398,9 @@ class TestResourceExhaustionErrors:
 
         # Try to open more files than the limit allows
         with file_handle_exhausted_environment.limit_file_handles(max_handles=5):
-            with pytest.raises(OSError, match="Too many open files|Resource temporarily unavailable"):
+            with pytest.raises(
+                OSError, match="Too many open files|Resource temporarily unavailable"
+            ):
                 handles = []
                 for file_path in test_files:
                     handles.append(open(file_path, "rb"))
@@ -403,7 +421,7 @@ class TestResourceExhaustionErrors:
             # If file creation succeeded, clean it up
             if os.path.exists(large_file):
                 os.remove(large_file)
-        except (OSError, IOError, MemoryError):
+        except (OSError, MemoryError):
             # Expected when disk space or memory is exhausted
             pass
 
@@ -469,7 +487,8 @@ class TestErrorRecoveryAndCleanup:
         final_stats = pool.stats.get_stats()
         assert len(pool._pool) == 0  # No successful connections
         assert (
-            final_stats["health_check_failure_rate"] >= initial_stats["health_check_failure_rate"]
+            final_stats["health_check_failure_rate"]
+            >= initial_stats["health_check_failure_rate"]
         )
 
         # Pool should still work for valid files
@@ -481,7 +500,7 @@ class TestErrorRecoveryAndCleanup:
         with pool.get_connection(valid_file) as file_handle:
             assert file_handle is not None
             # Verify the file handle is valid by accessing a property
-            assert hasattr(file_handle, 'filename')
+            assert hasattr(file_handle, "filename")
             assert file_handle.filename == valid_file
 
         # Cleanup
@@ -502,7 +521,9 @@ class TestErrorRecoveryAndCleanup:
         assert isinstance(is_high_pressure, bool)
 
         # Test with a very low threshold to ensure we can detect "high" pressure
-        is_high_pressure_low_threshold = MemoryMonitor.is_memory_pressure_high(threshold=0.01)
+        is_high_pressure_low_threshold = MemoryMonitor.is_memory_pressure_high(
+            threshold=0.01
+        )
         assert isinstance(is_high_pressure_low_threshold, bool)
         # With a 1% threshold, most systems should have "high" pressure
         assert is_high_pressure_low_threshold is True

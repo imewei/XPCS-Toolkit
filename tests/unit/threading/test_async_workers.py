@@ -4,16 +4,14 @@ This module provides comprehensive unit tests for async workers,
 covering progress management and thread coordination.
 """
 
-from unittest.mock import Mock
-
 import pytest
 
 from xpcs_toolkit.threading.async_workers import (
+    BaseAsyncWorker,
     WorkerResult,
     WorkerSignals,
     WorkerState,
     WorkerStats,
-    BaseAsyncWorker,
 )
 
 # Skip PySide6-dependent tests if not available
@@ -47,10 +45,7 @@ class TestWorkerResult:
     def test_worker_result_creation(self):
         """Test WorkerResult can be created with valid parameters."""
         result = WorkerResult(
-            success=True,
-            data={"key": "value"},
-            error=None,
-            execution_time=1.5
+            success=True, data={"key": "value"}, error=None, execution_time=1.5
         )
 
         assert result.success is True
@@ -62,10 +57,7 @@ class TestWorkerResult:
         """Test WorkerResult for error cases."""
         error_msg = "Test error"
         result = WorkerResult(
-            success=False,
-            data=None,
-            error=error_msg,
-            execution_time=0.1
+            success=False, data=None, error=error_msg, execution_time=0.1
         )
 
         assert result.success is False
@@ -80,10 +72,7 @@ class TestWorkerStats:
     def test_worker_stats_creation(self):
         """Test WorkerStats can be created with valid parameters."""
         stats = WorkerStats(
-            total_jobs=10,
-            completed_jobs=8,
-            failed_jobs=1,
-            average_execution_time=2.5
+            total_jobs=10, completed_jobs=8, failed_jobs=1, average_execution_time=2.5
         )
 
         assert stats.total_jobs == 10
@@ -94,14 +83,11 @@ class TestWorkerStats:
     def test_worker_stats_completion_rate(self):
         """Test WorkerStats completion rate calculation."""
         stats = WorkerStats(
-            total_jobs=100,
-            completed_jobs=90,
-            failed_jobs=5,
-            average_execution_time=1.0
+            total_jobs=100, completed_jobs=90, failed_jobs=5, average_execution_time=1.0
         )
 
         # Test completion rate calculation if method exists
-        if hasattr(stats, 'completion_rate'):
+        if hasattr(stats, "completion_rate"):
             expected_rate = 90 / 100
             assert stats.completion_rate() == expected_rate
 
@@ -119,12 +105,12 @@ class TestWorkerSignals:
         signals = WorkerSignals()
 
         # Check for common signal attributes (these may vary based on implementation)
-        expected_signals = ['progress', 'finished', 'error', 'result']
+        expected_signals = ["progress", "finished", "error", "result"]
         for signal_name in expected_signals:
             if hasattr(signals, signal_name):
                 signal_attr = getattr(signals, signal_name)
                 # Basic check that it's a signal-like object
-                assert hasattr(signal_attr, 'connect') or hasattr(signal_attr, 'emit')
+                assert hasattr(signal_attr, "connect") or hasattr(signal_attr, "emit")
 
 
 class TestBaseAsyncWorker:
@@ -140,7 +126,7 @@ class TestBaseAsyncWorker:
         worker = BaseAsyncWorker()
 
         # Check for QRunnable interface
-        assert hasattr(worker, 'run')
+        assert hasattr(worker, "run")
         assert callable(worker.run)
 
     def test_base_worker_state_management(self):
@@ -148,7 +134,7 @@ class TestBaseAsyncWorker:
         worker = BaseAsyncWorker()
 
         # Check if worker has state management
-        if hasattr(worker, 'state'):
+        if hasattr(worker, "state"):
             # Initial state should be appropriate
             assert worker.state in [WorkerState.IDLE, WorkerState.RUNNING]
 
@@ -161,10 +147,7 @@ class TestWorkerIntegration:
         """Test integration between WorkerResult and WorkerSignals."""
         signals = WorkerSignals()
         result = WorkerResult(
-            success=True,
-            data={"test": "data"},
-            error=None,
-            execution_time=0.5
+            success=True, data={"test": "data"}, error=None, execution_time=0.5
         )
 
         # Test that result can be used with signals
@@ -174,10 +157,7 @@ class TestWorkerIntegration:
     def test_worker_stats_and_state_integration(self):
         """Test integration between WorkerStats and WorkerState."""
         stats = WorkerStats(
-            total_jobs=5,
-            completed_jobs=3,
-            failed_jobs=1,
-            average_execution_time=1.2
+            total_jobs=5, completed_jobs=3, failed_jobs=1, average_execution_time=1.2
         )
 
         # Test that stats work with state enum

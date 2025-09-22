@@ -6,12 +6,9 @@ specifically focusing on QTimer usage and signal/slot connection issues.
 
 import contextlib
 import functools
-import inspect
 import threading
 import time
 import warnings
-from typing import Any, Callable, Dict, List, Optional, Set, Tuple
-from unittest.mock import patch
 
 from PySide6 import QtCore, QtWidgets
 from PySide6.QtCore import QObject, QThread, QTimer, Signal
@@ -45,7 +42,11 @@ class ThreadingViolationDetector:
         def monitored_timer_start(timer_self, *args, **kwargs):
             # Check if timer is being started in appropriate thread
             current_thread = QThread.currentThread()
-            app_thread = QtWidgets.QApplication.instance().thread() if QtWidgets.QApplication.instance() else None
+            app_thread = (
+                QtWidgets.QApplication.instance().thread()
+                if QtWidgets.QApplication.instance()
+                else None
+            )
 
             violation_detected = False
             violation_message = ""
@@ -53,22 +54,32 @@ class ThreadingViolationDetector:
             if app_thread is None:
                 violation_detected = True
                 violation_message = "QTimer started without QApplication"
-            elif current_thread != app_thread and not isinstance(current_thread, QThread):
+            elif current_thread != app_thread and not isinstance(
+                current_thread, QThread
+            ):
                 violation_detected = True
-                violation_message = f"QTimer started in non-Qt thread: {type(current_thread)}"
+                violation_message = (
+                    f"QTimer started in non-Qt thread: {type(current_thread)}"
+                )
 
             if violation_detected:
-                self.violations.append({
-                    'type': 'timer_threading_violation',
-                    'message': violation_message,
-                    'timer_object': timer_self,
-                    'thread': current_thread,
-                    'stack_trace': self._get_stack_trace(),
-                    'timestamp': time.time()
-                })
+                self.violations.append(
+                    {
+                        "type": "timer_threading_violation",
+                        "message": violation_message,
+                        "timer_object": timer_self,
+                        "thread": current_thread,
+                        "stack_trace": self._get_stack_trace(),
+                        "timestamp": time.time(),
+                    }
+                )
 
                 # Optionally prevent the violation
-                warnings.warn(f"Qt Threading Violation: {violation_message}", UserWarning)
+                warnings.warn(
+                    f"Qt Threading Violation: {violation_message}",
+                    UserWarning,
+                    stacklevel=2,
+                )
 
             return self.original_timer_start(timer_self, *args, **kwargs)
 
@@ -104,6 +115,7 @@ class ThreadingViolationDetector:
     def _get_stack_trace(self):
         """Get current stack trace for violation context."""
         import traceback
+
         return traceback.format_stack()
 
     def get_violations(self):
@@ -116,26 +128,26 @@ class ThreadingViolationDetector:
 
     def has_timer_violations(self):
         """Check if any timer violations were detected."""
-        return any(v['type'] == 'timer_threading_violation' for v in self.violations)
+        return any(v["type"] == "timer_threading_violation" for v in self.violations)
 
     def get_violation_summary(self):
         """Get summary of detected violations."""
         summary = {
-            'total_violations': len(self.violations),
-            'timer_violations': 0,
-            'other_violations': 0,
-            'threads_involved': set()
+            "total_violations": len(self.violations),
+            "timer_violations": 0,
+            "other_violations": 0,
+            "threads_involved": set(),
         }
 
         for violation in self.violations:
-            if violation['type'] == 'timer_threading_violation':
-                summary['timer_violations'] += 1
+            if violation["type"] == "timer_threading_violation":
+                summary["timer_violations"] += 1
             else:
-                summary['other_violations'] += 1
+                summary["other_violations"] += 1
 
-            summary['threads_involved'].add(str(violation['thread']))
+            summary["threads_involved"].add(str(violation["thread"]))
 
-        summary['threads_involved'] = list(summary['threads_involved'])
+        summary["threads_involved"] = list(summary["threads_involved"])
         return summary
 
 
@@ -179,7 +191,7 @@ class QtThreadSafetyValidator:
             issues.append("Timer has no parent - potential memory leak")
 
         # Check timer interval
-        if hasattr(timer_obj, 'interval') and timer_obj.interval() <= 0:
+        if hasattr(timer_obj, "interval") and timer_obj.interval() <= 0:
             issues.append("Timer interval is zero or negative")
 
         return is_safe, issues
@@ -201,7 +213,7 @@ class QtThreadSafetyValidator:
         is_valid = True
 
         # Check if signal has connect method
-        if not hasattr(signal, 'connect'):
+        if not hasattr(signal, "connect"):
             issues.append("Signal object missing connect method")
             is_valid = False
 
@@ -216,11 +228,11 @@ class QtThreadSafetyValidator:
             is_valid = False
 
         # Check for bound method issues
-        if hasattr(slot, '__self__'):
+        if hasattr(slot, "__self__"):
             slot_object = slot.__self__
             if isinstance(slot_object, QObject):
                 # Check if slot object is in same thread as signal object
-                if hasattr(signal, 'parent') and signal.parent():
+                if hasattr(signal, "parent") and signal.parent():
                     signal_thread = signal.parent().thread()
                     slot_thread = slot_object.thread()
                     if signal_thread != slot_thread:
@@ -249,10 +261,10 @@ class QtThreadSafetyValidator:
         is_main_thread = current_thread == main_thread
 
         thread_info = {
-            'current_thread': str(current_thread),
-            'main_thread': str(main_thread),
-            'is_main_thread': is_main_thread,
-            'operation': operation_name
+            "current_thread": str(current_thread),
+            "main_thread": str(main_thread),
+            "is_main_thread": is_main_thread,
+            "operation": operation_name,
         }
 
         return is_main_thread, thread_info
@@ -264,9 +276,12 @@ class ThreadSafeQtDecorator:
     @staticmethod
     def require_main_thread(func):
         """Decorator to ensure function runs in main Qt thread."""
+
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
-            is_main_thread, thread_info = QtThreadSafetyValidator.validate_gui_thread_access(func.__name__)
+            is_main_thread, thread_info = (
+                QtThreadSafetyValidator.validate_gui_thread_access(func.__name__)
+            )
 
             if not is_main_thread:
                 raise RuntimeError(
@@ -275,30 +290,37 @@ class ThreadSafeQtDecorator:
                 )
 
             return func(*args, **kwargs)
+
         return wrapper
 
     @staticmethod
     def validate_timer_creation(func):
         """Decorator to validate QTimer creation."""
+
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
             result = func(*args, **kwargs)
 
             # If function returns a QTimer, validate it
             if isinstance(result, QTimer):
-                is_safe, issues = QtThreadSafetyValidator.validate_timer_usage(result, func.__name__)
+                is_safe, issues = QtThreadSafetyValidator.validate_timer_usage(
+                    result, func.__name__
+                )
                 if not is_safe:
                     warnings.warn(
                         f"Timer creation issues in {func.__name__}: {', '.join(issues)}",
-                        UserWarning
+                        UserWarning,
+                        stacklevel=2,
                     )
 
             return result
+
         return wrapper
 
     @staticmethod
     def monitor_threading_violations(func):
         """Decorator to monitor function for threading violations."""
+
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
             detector = ThreadingViolationDetector()
@@ -313,7 +335,8 @@ class ThreadSafeQtDecorator:
                     warnings.warn(
                         f"Threading violations detected in {func.__name__}: "
                         f"{violation_summary['total_violations']} violations",
-                        UserWarning
+                        UserWarning,
+                        stacklevel=2,
                     )
 
                 return result
@@ -352,10 +375,10 @@ class BackgroundThreadTester:
         thread.join()
 
         result = {
-            'test_name': 'timer_in_background_thread',
-            'violation_detected': violation_detected,
-            'error_message': error_message,
-            'expected_result': 'should_fail'
+            "test_name": "timer_in_background_thread",
+            "violation_detected": violation_detected,
+            "error_message": error_message,
+            "expected_result": "should_fail",
         }
 
         self.test_results.append(result)
@@ -363,6 +386,7 @@ class BackgroundThreadTester:
 
     def test_proper_qthread_timer(self):
         """Test timer creation in proper QThread (should succeed)."""
+
         class TimerWorker(QThread):
             timer_created = Signal()
             timer_worked = Signal()
@@ -396,11 +420,11 @@ class BackgroundThreadTester:
         worker.wait(1000)  # Wait up to 1 second
 
         result = {
-            'test_name': 'proper_qthread_timer',
-            'timer_created': timer_created,
-            'timer_worked': timer_worked,
-            'success': timer_created and timer_worked,
-            'expected_result': 'should_succeed'
+            "test_name": "proper_qthread_timer",
+            "timer_created": timer_created,
+            "timer_worked": timer_worked,
+            "success": timer_created and timer_worked,
+            "expected_result": "should_succeed",
         }
 
         self.test_results.append(result)
@@ -408,6 +432,7 @@ class BackgroundThreadTester:
 
     def test_signal_connection_threading(self):
         """Test signal/slot connections across threads."""
+
         class SignalObject(QObject):
             test_signal = Signal(str)
 
@@ -436,11 +461,11 @@ class BackgroundThreadTester:
             QtWidgets.QApplication.instance().processEvents()
 
         result = {
-            'test_name': 'signal_connection_threading',
-            'connection_valid': connection_valid,
-            'validation_issues': issues,
-            'message_received': len(slot_obj.received_messages) > 0,
-            'expected_result': 'should_succeed'
+            "test_name": "signal_connection_threading",
+            "connection_valid": connection_valid,
+            "validation_issues": issues,
+            "message_received": len(slot_obj.received_messages) > 0,
+            "expected_result": "should_succeed",
         }
 
         self.test_results.append(result)
@@ -451,7 +476,7 @@ class BackgroundThreadTester:
         tests = [
             self.test_timer_in_background_thread,
             self.test_proper_qthread_timer,
-            self.test_signal_connection_threading
+            self.test_signal_connection_threading,
         ]
 
         results = []
@@ -460,39 +485,39 @@ class BackgroundThreadTester:
                 result = test()
                 results.append(result)
             except Exception as e:
-                results.append({
-                    'test_name': test.__name__,
-                    'error': str(e),
-                    'success': False
-                })
+                results.append(
+                    {"test_name": test.__name__, "error": str(e), "success": False}
+                )
 
         return results
 
     def get_compliance_report(self):
         """Generate compliance report from test results."""
         total_tests = len(self.test_results)
-        passed_tests = sum(1 for r in self.test_results if r.get('success', False))
+        passed_tests = sum(1 for r in self.test_results if r.get("success", False))
         failed_tests = total_tests - passed_tests
 
         report = {
-            'total_tests': total_tests,
-            'passed': passed_tests,
-            'failed': failed_tests,
-            'compliance_score': (passed_tests / total_tests) * 100 if total_tests > 0 else 0,
-            'test_details': self.test_results,
-            'recommendations': []
+            "total_tests": total_tests,
+            "passed": passed_tests,
+            "failed": failed_tests,
+            "compliance_score": (passed_tests / total_tests) * 100
+            if total_tests > 0
+            else 0,
+            "test_details": self.test_results,
+            "recommendations": [],
         }
 
         # Generate recommendations based on failures
         for result in self.test_results:
-            if not result.get('success', True):
-                test_name = result['test_name']
-                if 'timer' in test_name and 'background' in test_name:
-                    report['recommendations'].append(
+            if not result.get("success", True):
+                test_name = result["test_name"]
+                if "timer" in test_name and "background" in test_name:
+                    report["recommendations"].append(
                         "Use QThread instead of threading.Thread for Qt timer operations"
                     )
-                elif 'signal' in test_name:
-                    report['recommendations'].append(
+                elif "signal" in test_name:
+                    report["recommendations"].append(
                         "Ensure signal/slot connections use proper Qt5+ syntax"
                     )
 
@@ -514,12 +539,15 @@ def create_thread_safe_timer(parent=None, interval=1000, single_shot=False):
     """
     try:
         # Validate thread context
-        is_main_thread, thread_info = QtThreadSafetyValidator.validate_gui_thread_access("timer_creation")
+        is_main_thread, thread_info = (
+            QtThreadSafetyValidator.validate_gui_thread_access("timer_creation")
+        )
 
         if not is_main_thread:
             warnings.warn(
                 f"Creating timer in non-main thread: {thread_info['current_thread']}",
-                UserWarning
+                UserWarning,
+                stacklevel=2,
             )
 
         timer = QTimer(parent)
@@ -527,19 +555,27 @@ def create_thread_safe_timer(parent=None, interval=1000, single_shot=False):
         timer.setSingleShot(single_shot)
 
         # Validate the created timer
-        is_safe, issues = QtThreadSafetyValidator.validate_timer_usage(timer, "create_thread_safe_timer")
+        is_safe, issues = QtThreadSafetyValidator.validate_timer_usage(
+            timer, "create_thread_safe_timer"
+        )
 
         if not is_safe:
-            warnings.warn(f"Timer creation issues: {', '.join(issues)}", UserWarning)
+            warnings.warn(
+                f"Timer creation issues: {', '.join(issues)}", UserWarning, stacklevel=2
+            )
 
         return timer
 
     except Exception as e:
-        warnings.warn(f"Failed to create thread-safe timer: {e}", UserWarning)
+        warnings.warn(
+            f"Failed to create thread-safe timer: {e}", UserWarning, stacklevel=2
+        )
         return None
 
 
-def safe_signal_connect(signal, slot, connection_type=QtCore.Qt.ConnectionType.AutoConnection):
+def safe_signal_connect(
+    signal, slot, connection_type=QtCore.Qt.ConnectionType.AutoConnection
+):
     """
     Safely connect signal to slot with validation.
 
@@ -553,10 +589,16 @@ def safe_signal_connect(signal, slot, connection_type=QtCore.Qt.ConnectionType.A
     """
     try:
         # Validate connection
-        is_valid, issues = QtThreadSafetyValidator.validate_signal_connection(signal, slot)
+        is_valid, issues = QtThreadSafetyValidator.validate_signal_connection(
+            signal, slot
+        )
 
         if not is_valid:
-            warnings.warn(f"Signal connection issues: {', '.join(issues)}", UserWarning)
+            warnings.warn(
+                f"Signal connection issues: {', '.join(issues)}",
+                UserWarning,
+                stacklevel=2,
+            )
             return False
 
         # Perform connection
@@ -564,7 +606,7 @@ def safe_signal_connect(signal, slot, connection_type=QtCore.Qt.ConnectionType.A
         return True
 
     except Exception as e:
-        warnings.warn(f"Failed to connect signal: {e}", UserWarning)
+        warnings.warn(f"Failed to connect signal: {e}", UserWarning, stacklevel=2)
         return False
 
 

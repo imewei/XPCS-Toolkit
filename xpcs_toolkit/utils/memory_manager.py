@@ -12,7 +12,7 @@ import weakref
 from collections import OrderedDict
 from contextlib import contextmanager
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 import numpy as np
 import psutil
@@ -24,24 +24,26 @@ logger = get_logger(__name__)
 
 class CacheType(Enum):
     """Types of cached data for different management strategies."""
+
     COMPUTATION = "computation"  # Fitting results, FFT data, etc.
-    ARRAY_DATA = "array_data"    # SAXS 2D, log data, etc.
-    METADATA = "metadata"        # File headers, qmaps, etc.
-    PLOT_DATA = "plot_data"      # Plot configurations, curves, etc.
+    ARRAY_DATA = "array_data"  # SAXS 2D, log data, etc.
+    METADATA = "metadata"  # File headers, qmaps, etc.
+    PLOT_DATA = "plot_data"  # Plot configurations, curves, etc.
 
 
 class MemoryPressure(Enum):
     """Memory pressure levels for adaptive management."""
-    LOW = "low"           # < 60% memory usage
-    MODERATE = "moderate" # 60-75% memory usage
-    HIGH = "high"         # 75-85% memory usage
-    CRITICAL = "critical" # > 85% memory usage
+
+    LOW = "low"  # < 60% memory usage
+    MODERATE = "moderate"  # 60-75% memory usage
+    HIGH = "high"  # 75-85% memory usage
+    CRITICAL = "critical"  # > 85% memory usage
 
 
 class CacheEntry:
     """Enhanced cache entry with comprehensive metadata."""
 
-    def __init__(self, data: Any, cache_type: CacheType, size_mb: float = None):
+    def __init__(self, data: Any, cache_type: CacheType, size_mb: float | None = None):
         self.data = data
         self.cache_type = cache_type
         self.size_mb = size_mb or self._estimate_size_mb(data)
@@ -56,13 +58,13 @@ class CacheEntry:
         """Estimate memory usage of cached data."""
         if isinstance(data, np.ndarray):
             return data.nbytes / (1024 * 1024)
-        elif hasattr(data, '__sizeof__'):
+        if hasattr(data, "__sizeof__"):
             return data.__sizeof__() / (1024 * 1024)
-        else:
-            import sys
-            return sys.getsizeof(data) / (1024 * 1024)
+        import sys
 
-    def touch(self):
+        return sys.getsizeof(data) / (1024 * 1024)
+
+    def touch(self) -> None:
         """Update access metadata."""
         current_time = time.time()
         self.access_count += 1
@@ -72,8 +74,9 @@ class CacheEntry:
         if time_delta > 0:
             recent_frequency = 1.0 / time_delta
             alpha = 0.3  # Smoothing factor
-            self.access_frequency = (alpha * recent_frequency +
-                                   (1 - alpha) * self.access_frequency)
+            self.access_frequency = (
+                alpha * recent_frequency + (1 - alpha) * self.access_frequency
+            )
 
         self.last_accessed = current_time
 
@@ -98,50 +101,54 @@ class UnifiedMemoryManager:
     - Automatic memory optimization
     """
 
-    def __init__(self,
-                 max_memory_mb: float = 2048,
-                 pressure_thresholds: Dict[str, float] = None,
-                 enable_monitoring: bool = True):
-
+    def __init__(
+        self,
+        max_memory_mb: float = 2048,
+        pressure_thresholds: dict[str, float] | None = None,
+        enable_monitoring: bool = True,
+    ):
         self.max_memory_mb = max_memory_mb
         self.pressure_thresholds = pressure_thresholds or {
-            'low': 0.6, 'moderate': 0.75, 'high': 0.85, 'critical': 0.95
+            "low": 0.6,
+            "moderate": 0.75,
+            "high": 0.85,
+            "critical": 0.95,
         }
         self.enable_monitoring = enable_monitoring
 
         # Cache storage with type separation
-        self._caches: Dict[CacheType, OrderedDict] = {
+        self._caches: dict[CacheType, OrderedDict[str, CacheEntry]] = {
             cache_type: OrderedDict() for cache_type in CacheType
         }
 
         # Memory tracking
         self._current_memory_mb = 0.0
         self._peak_memory_mb = 0.0
-        self._memory_history: List[Tuple[float, float]] = []  # (timestamp, memory_mb)
+        self._memory_history: list[tuple[float, float]] = []  # (timestamp, memory_mb)
 
         # Thread safety
-        self._cache_locks = {
-            cache_type: threading.RLock() for cache_type in CacheType
-        }
+        self._cache_locks = {cache_type: threading.RLock() for cache_type in CacheType}
         self._global_lock = threading.RLock()
 
         # Weak references for automatic cleanup
-        self._object_registry = weakref.WeakSet()
+        self._object_registry: weakref.WeakSet[Any] = weakref.WeakSet()
 
         # Monitoring and statistics
         self._stats = {
-            'cache_hits': 0,
-            'cache_misses': 0,
-            'evictions': 0,
-            'memory_pressure_events': 0,
-            'automatic_cleanups': 0,
-            'preload_hits': 0,
-            'preload_requests': 0,
-            'compression_saves_mb': 0
+            "cache_hits": 0,
+            "cache_misses": 0,
+            "evictions": 0,
+            "memory_pressure_events": 0,
+            "automatic_cleanups": 0,
+            "preload_hits": 0,
+            "preload_requests": 0,
+            "compression_saves_mb": 0,
         }
 
         # Advanced caching features
-        self._preload_queue = {}  # key -> (cache_type, loader_func, priority)
+        self._preload_queue: dict[
+            str, tuple[CacheType, Any, float]
+        ] = {}  # key -> (cache_type, loader_func, priority)
         self._compression_enabled = True
         self._hot_data_threshold = 5  # Access count to mark as hot
         self._cache_partitions = self._setup_partitions()
@@ -155,7 +162,9 @@ class UnifiedMemoryManager:
 
         logger.info(f"UnifiedMemoryManager initialized with {max_memory_mb}MB limit")
 
-    def _make_space_in_partition(self, cache_type: CacheType, required_mb: float):
+    def _make_space_in_partition(
+        self, cache_type: CacheType, required_mb: float
+    ) -> None:
         """Make space within a specific cache partition using intelligent eviction"""
         cache = self._caches[cache_type]
         partition_limit_mb = self.max_memory_mb * self._cache_partitions[cache_type]
@@ -186,8 +195,9 @@ class UnifiedMemoryManager:
         if current_mb - evicted_mb > target_mb:
             self._evict_lru(cache_type, target_mb - (current_mb - evicted_mb))
 
-    def preload_data(self, key: str, loader_func: callable, cache_type: CacheType,
-                     priority: int = 5):
+    def preload_data(
+        self, key: str, loader_func: callable, cache_type: CacheType, priority: int = 5
+    ):
         """
         Schedule data for intelligent preloading.
 
@@ -203,7 +213,7 @@ class UnifiedMemoryManager:
             Priority level (1-10, higher = more important)
         """
         self._preload_queue[key] = (cache_type, loader_func, priority)
-        self._stats['preload_requests'] += 1
+        self._stats["preload_requests"] += 1
         logger.debug(f"Queued preload for {key} with priority {priority}")
 
     def _process_preload_queue(self):
@@ -213,31 +223,31 @@ class UnifiedMemoryManager:
 
         # Sort by priority (highest first)
         sorted_items = sorted(
-            self._preload_queue.items(),
-            key=lambda x: x[1][2],
-            reverse=True
+            self._preload_queue.items(), key=lambda x: x[1][2], reverse=True
         )
 
-        for key, (cache_type, loader_func, priority) in sorted_items[:3]:  # Process top 3
+        for key, (cache_type, loader_func, _priority) in sorted_items[
+            :3
+        ]:  # Process top 3
             try:
                 if key not in self._caches[cache_type]:  # Only if not already cached
                     data = loader_func()
                     if self.cache_put(key, data, cache_type):
                         logger.debug(f"Successfully preloaded {key}")
-                        self._stats['preload_hits'] += 1
+                        self._stats["preload_hits"] += 1
                 # Remove from queue after processing
                 del self._preload_queue[key]
             except Exception as e:
                 logger.debug(f"Preload failed for {key}: {e}")
                 # Don't remove failed items immediately - retry later
 
-    def _setup_partitions(self) -> Dict[CacheType, float]:
+    def _setup_partitions(self) -> dict[CacheType, float]:
         """Setup cache memory partitions with intelligent allocation"""
         return {
-            CacheType.ARRAY_DATA: 0.5,    # 50% for large array data
+            CacheType.ARRAY_DATA: 0.5,  # 50% for large array data
             CacheType.COMPUTATION: 0.25,  # 25% for computation results
-            CacheType.PLOT_DATA: 0.15,    # 15% for plot data
-            CacheType.METADATA: 0.10      # 10% for metadata
+            CacheType.PLOT_DATA: 0.15,  # 15% for plot data
+            CacheType.METADATA: 0.10,  # 10% for metadata
         }
 
     def _start_monitoring(self):
@@ -281,7 +291,7 @@ class UnifiedMemoryManager:
         pressure = self.get_memory_pressure()
 
         if pressure in [MemoryPressure.HIGH, MemoryPressure.CRITICAL]:
-            self._stats['memory_pressure_events'] += 1
+            self._stats["memory_pressure_events"] += 1
             logger.warning(f"Memory pressure detected: {pressure.value}")
 
             # Trigger appropriate cleanup based on pressure level
@@ -294,7 +304,7 @@ class UnifiedMemoryManager:
         """Perform routine cache maintenance."""
         with self._global_lock:
             # Update cache generation for aging-based eviction
-            current_time = time.time()
+            time.time()
 
             for cache_type in CacheType:
                 with self._cache_locks[cache_type]:
@@ -315,17 +325,17 @@ class UnifiedMemoryManager:
         system_memory = psutil.virtual_memory()
         pressure_ratio = system_memory.percent / 100.0
 
-        if pressure_ratio >= self.pressure_thresholds['critical']:
+        if pressure_ratio >= self.pressure_thresholds["critical"]:
             return MemoryPressure.CRITICAL
-        elif pressure_ratio >= self.pressure_thresholds['high']:
+        if pressure_ratio >= self.pressure_thresholds["high"]:
             return MemoryPressure.HIGH
-        elif pressure_ratio >= self.pressure_thresholds['moderate']:
+        if pressure_ratio >= self.pressure_thresholds["moderate"]:
             return MemoryPressure.MODERATE
-        else:
-            return MemoryPressure.LOW
+        return MemoryPressure.LOW
 
-    def cache_put(self, key: str, data: Any, cache_type: CacheType,
-                  pin: bool = False) -> bool:
+    def cache_put(
+        self, key: str, data: Any, cache_type: CacheType, pin: bool = False
+    ) -> bool:
         """
         Store data in the appropriate cache with intelligent eviction.
 
@@ -353,7 +363,9 @@ class UnifiedMemoryManager:
 
         # Check if data is too large for its partition
         if entry.size_mb > partition_limit_mb * 0.8:  # 80% of partition
-            logger.warning(f"Data too large for {cache_type.value} partition: {entry.size_mb:.1f}MB > {partition_limit_mb * 0.8:.1f}MB")
+            logger.warning(
+                f"Data too large for {cache_type.value} partition: {entry.size_mb:.1f}MB > {partition_limit_mb * 0.8:.1f}MB"
+            )
             return False
 
         with self._cache_locks[cache_type]:
@@ -387,13 +399,14 @@ class UnifiedMemoryManager:
             self._current_memory_mb += entry.size_mb
 
             # Update peak memory
-            if self._current_memory_mb > self._peak_memory_mb:
-                self._peak_memory_mb = self._current_memory_mb
+            self._peak_memory_mb = max(self._peak_memory_mb, self._current_memory_mb)
 
-            logger.debug(f"Cached {key} ({entry.size_mb:.1f}MB, type: {cache_type.value})")
+            logger.debug(
+                f"Cached {key} ({entry.size_mb:.1f}MB, type: {cache_type.value})"
+            )
             return True
 
-    def cache_get(self, key: str, cache_type: CacheType) -> Optional[Any]:
+    def cache_get(self, key: str, cache_type: CacheType) -> Any | None:
         """
         Retrieve data from cache.
 
@@ -419,11 +432,11 @@ class UnifiedMemoryManager:
                 # Move to end (LRU)
                 cache.move_to_end(key)
 
-                self._stats['cache_hits'] += 1
+                self._stats["cache_hits"] += 1
                 logger.debug(f"Cache hit for {key}")
                 return entry.data
 
-            self._stats['cache_misses'] += 1
+            self._stats["cache_misses"] += 1
             logger.debug(f"Cache miss for {key}")
             return None
 
@@ -436,13 +449,18 @@ class UnifiedMemoryManager:
 
         # Strategy 2: Evict from less critical cache types
         if freed_mb < required_mb:
-            eviction_order = [CacheType.PLOT_DATA, CacheType.COMPUTATION,
-                            CacheType.METADATA, CacheType.ARRAY_DATA]
+            eviction_order = [
+                CacheType.PLOT_DATA,
+                CacheType.COMPUTATION,
+                CacheType.METADATA,
+                CacheType.ARRAY_DATA,
+            ]
 
             for other_type in eviction_order:
                 if other_type != cache_type and freed_mb < required_mb:
-                    freed_mb += self._evict_lru(other_type,
-                                              (required_mb - freed_mb) * 1.2)
+                    freed_mb += self._evict_lru(
+                        other_type, (required_mb - freed_mb) * 1.2
+                    )
 
         # Strategy 3: Age-based eviction
         if freed_mb < required_mb:
@@ -458,10 +476,7 @@ class UnifiedMemoryManager:
             cache = self._caches[cache_type]
 
             # Sort by last access time (oldest first)
-            sorted_items = sorted(
-                cache.items(),
-                key=lambda x: x[1].last_accessed
-            )
+            sorted_items = sorted(cache.items(), key=lambda x: x[1].last_accessed)
 
             keys_to_remove = []
             for key, entry in sorted_items:
@@ -489,8 +504,10 @@ class UnifiedMemoryManager:
 
                 aged_keys = []
                 for key, entry in cache.items():
-                    if (current_time - entry.created_at > max_age_seconds and
-                        not entry.is_pinned):
+                    if (
+                        current_time - entry.created_at > max_age_seconds
+                        and not entry.is_pinned
+                    ):
                         aged_keys.append(key)
 
                 for key in aged_keys:
@@ -509,7 +526,7 @@ class UnifiedMemoryManager:
                 entry = cache[key]
                 self._current_memory_mb -= entry.size_mb
                 del cache[key]
-                self._stats['evictions'] += 1
+                self._stats["evictions"] += 1
 
                 logger.debug(f"Evicted {key} ({entry.size_mb:.1f}MB)")
 
@@ -526,7 +543,7 @@ class UnifiedMemoryManager:
         # Force garbage collection
         gc.collect()
 
-        self._stats['automatic_cleanups'] += 1
+        self._stats["automatic_cleanups"] += 1
 
     def _emergency_cleanup(self):
         """Emergency cleanup under critical memory pressure."""
@@ -543,7 +560,7 @@ class UnifiedMemoryManager:
         for _ in range(3):
             gc.collect()
 
-        self._stats['automatic_cleanups'] += 1
+        self._stats["automatic_cleanups"] += 1
 
     def clear_cache_type(self, cache_type: CacheType):
         """Clear all entries from specified cache type."""
@@ -565,21 +582,25 @@ class UnifiedMemoryManager:
 
         logger.info("Cleared all caches")
 
-    def get_cache_stats(self) -> Dict[str, Any]:
+    def get_cache_stats(self) -> dict[str, Any]:
         """Get comprehensive cache statistics."""
         with self._global_lock:
             stats = self._stats.copy()
 
             # Add current state
-            stats.update({
-                'current_memory_mb': self._current_memory_mb,
-                'peak_memory_mb': self._peak_memory_mb,
-                'max_memory_mb': self.max_memory_mb,
-                'memory_utilization': self._current_memory_mb / self.max_memory_mb,
-                'cache_efficiency': (stats['cache_hits'] /
-                                   max(1, stats['cache_hits'] + stats['cache_misses'])),
-                'memory_pressure': self.get_memory_pressure().value
-            })
+            stats.update(
+                {
+                    "current_memory_mb": self._current_memory_mb,
+                    "peak_memory_mb": self._peak_memory_mb,
+                    "max_memory_mb": self.max_memory_mb,
+                    "memory_utilization": self._current_memory_mb / self.max_memory_mb,
+                    "cache_efficiency": (
+                        stats["cache_hits"]
+                        / max(1, stats["cache_hits"] + stats["cache_misses"])
+                    ),
+                    "memory_pressure": self.get_memory_pressure().value,
+                }
+            )
 
             # Add per-type statistics
             for cache_type in CacheType:
@@ -587,8 +608,8 @@ class UnifiedMemoryManager:
                     cache = self._caches[cache_type]
                     type_memory = sum(entry.size_mb for entry in cache.values())
 
-                    stats[f'{cache_type.value}_entries'] = len(cache)
-                    stats[f'{cache_type.value}_memory_mb'] = type_memory
+                    stats[f"{cache_type.value}_entries"] = len(cache)
+                    stats[f"{cache_type.value}_memory_mb"] = type_memory
 
             return stats
 
@@ -601,30 +622,39 @@ class UnifiedMemoryManager:
         self.clear_all_caches()
         logger.info("UnifiedMemoryManager shutdown complete")
 
-    def get_enhanced_stats(self) -> Dict[str, Any]:
+    def get_enhanced_stats(self) -> dict[str, Any]:
         """Get enhanced statistics including new caching features"""
         stats = self.get_cache_stats()
 
         # Add new feature statistics
-        stats.update({
-            'preload_hit_ratio': (stats['preload_hits'] / max(1, stats['preload_requests'])),
-            'preload_queue_size': len(self._preload_queue),
-            'partition_usage': {
-                cache_type.value: {
-                    'limit_mb': self.max_memory_mb * self._cache_partitions[cache_type],
-                    'used_mb': sum(entry.size_mb for entry in self._caches[cache_type].values()),
-                    'utilization': sum(entry.size_mb for entry in self._caches[cache_type].values()) /
-                                  (self.max_memory_mb * self._cache_partitions[cache_type])
-                }
-                for cache_type in CacheType
+        stats.update(
+            {
+                "preload_hit_ratio": (
+                    stats["preload_hits"] / max(1, stats["preload_requests"])
+                ),
+                "preload_queue_size": len(self._preload_queue),
+                "partition_usage": {
+                    cache_type.value: {
+                        "limit_mb": self.max_memory_mb
+                        * self._cache_partitions[cache_type],
+                        "used_mb": sum(
+                            entry.size_mb for entry in self._caches[cache_type].values()
+                        ),
+                        "utilization": sum(
+                            entry.size_mb for entry in self._caches[cache_type].values()
+                        )
+                        / (self.max_memory_mb * self._cache_partitions[cache_type]),
+                    }
+                    for cache_type in CacheType
+                },
             }
-        })
+        )
 
         return stats
 
 
 # Global memory manager instance
-_global_memory_manager: Optional[UnifiedMemoryManager] = None
+_global_memory_manager: UnifiedMemoryManager | None = None
 
 
 def get_memory_manager() -> UnifiedMemoryManager:
@@ -649,7 +679,7 @@ def cache_computation(key: str, data: Any) -> bool:
     return get_memory_manager().cache_put(key, data, CacheType.COMPUTATION)
 
 
-def get_computation(key: str) -> Optional[Any]:
+def get_computation(key: str) -> Any | None:
     """Get cached computation result."""
     return get_memory_manager().cache_get(key, CacheType.COMPUTATION)
 
@@ -659,7 +689,7 @@ def cache_array(key: str, array: np.ndarray) -> bool:
     return get_memory_manager().cache_put(key, array, CacheType.ARRAY_DATA)
 
 
-def get_array(key: str) -> Optional[np.ndarray]:
+def get_array(key: str) -> np.ndarray | None:
     """Get cached array data."""
     return get_memory_manager().cache_get(key, CacheType.ARRAY_DATA)
 
@@ -678,7 +708,9 @@ def memory_pressure_monitor():
         final_memory = manager._current_memory_mb
 
         if final_pressure != initial_pressure:
-            logger.info(f"Memory pressure changed: {initial_pressure.value} -> {final_pressure.value}")
+            logger.info(
+                f"Memory pressure changed: {initial_pressure.value} -> {final_pressure.value}"
+            )
 
         memory_delta = final_memory - initial_memory
         if abs(memory_delta) > 50:  # 50MB threshold

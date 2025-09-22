@@ -178,9 +178,15 @@ class QMap:
     def _get_default_value(self, key):
         """Get default values for missing qmap keys."""
         defaults = {
-            "mask": np.ones((DEFAULT_DETECTOR_SIZE, DEFAULT_DETECTOR_SIZE), dtype=np.int32),
-            "dqmap": np.ones((DEFAULT_DETECTOR_SIZE, DEFAULT_DETECTOR_SIZE), dtype=np.int32),
-            "sqmap": np.ones((DEFAULT_DETECTOR_SIZE, DEFAULT_DETECTOR_SIZE), dtype=np.int32),
+            "mask": np.ones(
+                (DEFAULT_DETECTOR_SIZE, DEFAULT_DETECTOR_SIZE), dtype=np.int32
+            ),
+            "dqmap": np.ones(
+                (DEFAULT_DETECTOR_SIZE, DEFAULT_DETECTOR_SIZE), dtype=np.int32
+            ),
+            "sqmap": np.ones(
+                (DEFAULT_DETECTOR_SIZE, DEFAULT_DETECTOR_SIZE), dtype=np.int32
+            ),
             "dqlist": np.linspace(0.01, 0.1, 10),
             "sqlist": np.linspace(0.01, 0.1, 10),
             "dplist": np.linspace(0, 360, 36),
@@ -336,10 +342,12 @@ class QMap:
 
             # Handle empty slice warning by avoiding the problematic call when data is all NaN
             with warnings.catch_warnings():
-                warnings.filterwarnings("ignore", category=RuntimeWarning, message=".*Mean of empty slice.*")
+                warnings.filterwarnings(
+                    "ignore", category=RuntimeWarning, message=".*Mean of empty slice.*"
+                )
                 warnings.filterwarnings("ignore", message="Mean of empty slice")
                 # Also use numpy error state suppression as backup
-                with np.errstate(all='ignore'):
+                with np.errstate(all="ignore"):
                     avg = np.nanmean(full_data, axis=2)
 
         if mode == "saxs_1d":
@@ -417,7 +425,7 @@ class QMap:
         :return:
         """
         # Check cache first
-        if hasattr(self, '_extent_cache') and self._extent_cache is not None:
+        if hasattr(self, "_extent_cache") and self._extent_cache is not None:
             return self._extent_cache
 
         shape = self.mask.shape

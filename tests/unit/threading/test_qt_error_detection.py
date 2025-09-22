@@ -7,19 +7,15 @@ This module provides comprehensive testing for Qt-related errors including:
 - Background thread compliance
 """
 
-import contextlib
 import io
-import logging
-import os
 import re
 import sys
 import threading
 import time
-from unittest.mock import patch, MagicMock
 
 import pytest
 from PySide6 import QtCore, QtWidgets
-from PySide6.QtCore import QTimer, QThread, Signal, QObject
+from PySide6.QtCore import QObject, QThread, QTimer, Signal
 
 # Test utilities
 from tests.utils.memory_testing_utils import MemoryTestUtils
@@ -35,7 +31,7 @@ class QtErrorCapture:
             r"qt\.core\.qobject\.connect: QObject::connect.*unique connections require.*",
             r"QWidget: Cannot create a QWidget without QApplication",
             r"QPixmap: It is not safe to use pixmaps outside the GUI thread",
-            r"QTimer: QTimer can only be used with threads started with QThread"
+            r"QTimer: QTimer can only be used with threads started with QThread",
         ]
         self.original_message_handler = None
 
@@ -46,12 +42,14 @@ class QtErrorCapture:
     def _qt_message_handler(self, msg_type, context, msg):
         """Qt message handler to capture Qt warnings and errors."""
         # Store the message
-        self.captured_errors.append({
-            'type': msg_type,
-            'message': msg,
-            'timestamp': time.time(),
-            'context': context
-        })
+        self.captured_errors.append(
+            {
+                "type": msg_type,
+                "message": msg,
+                "timestamp": time.time(),
+                "context": context,
+            }
+        )
 
         # Also call original handler if it exists
         if self.original_message_handler:
@@ -65,7 +63,9 @@ class QtErrorCapture:
 
         def __enter__(self):
             # Install Qt message handler
-            self.parent.original_message_handler = QtCore.qInstallMessageHandler(self.parent._qt_message_handler)
+            self.parent.original_message_handler = QtCore.qInstallMessageHandler(
+                self.parent._qt_message_handler
+            )
 
             # Also capture stderr as fallback
             self.original_stderr = sys.stderr
@@ -82,23 +82,22 @@ class QtErrorCapture:
             captured_output = self.captured_stderr.getvalue()
 
             # Analyze captured stderr output for Qt errors (fallback)
-            for line in captured_output.split('\n'):
+            for line in captured_output.split("\n"):
                 for pattern in self.parent.qt_warning_patterns:
                     if re.search(pattern, line):
-                        self.parent.captured_errors.append({
-                            'pattern': pattern,
-                            'message': line.strip(),
-                            'timestamp': time.time()
-                        })
+                        self.parent.captured_errors.append(
+                            {
+                                "pattern": pattern,
+                                "message": line.strip(),
+                                "timestamp": time.time(),
+                            }
+                        )
 
     def has_timer_errors(self):
         """Check if any timer-related errors were captured."""
-        timer_patterns = [
-            r"QObject::startTimer",
-            r"QTimer.*QThread"
-        ]
+        timer_patterns = [r"QObject::startTimer", r"QTimer.*QThread"]
         return any(
-            any(re.search(pattern, error['message']) for pattern in timer_patterns)
+            any(re.search(pattern, error["message"]) for pattern in timer_patterns)
             for error in self.captured_errors
         )
 
@@ -106,29 +105,35 @@ class QtErrorCapture:
         """Check if any signal/slot connection errors were captured."""
         connection_patterns = [
             r"QObject::connect.*unique connections",
-            r"QStyleHints.*QStyleHints"
+            r"QStyleHints.*QStyleHints",
         ]
         return any(
-            any(re.search(pattern, error['message']) for pattern in connection_patterns)
+            any(re.search(pattern, error["message"]) for pattern in connection_patterns)
             for error in self.captured_errors
         )
 
     def get_error_summary(self):
         """Get summary of all captured errors."""
         summary = {
-            'total_errors': len(self.captured_errors),
-            'timer_errors': 0,
-            'connection_errors': 0,
-            'other_errors': 0
+            "total_errors": len(self.captured_errors),
+            "timer_errors": 0,
+            "connection_errors": 0,
+            "other_errors": 0,
         }
 
         for error in self.captured_errors:
-            if 'timer' in error['message'].lower() or 'qtimer' in error['message'].lower():
-                summary['timer_errors'] += 1
-            elif 'connect' in error['message'].lower() or 'stylehints' in error['message'].lower():
-                summary['connection_errors'] += 1
+            if (
+                "timer" in error["message"].lower()
+                or "qtimer" in error["message"].lower()
+            ):
+                summary["timer_errors"] += 1
+            elif (
+                "connect" in error["message"].lower()
+                or "stylehints" in error["message"].lower()
+            ):
+                summary["connection_errors"] += 1
             else:
-                summary['other_errors'] += 1
+                summary["other_errors"] += 1
 
         return summary
 
@@ -139,7 +144,9 @@ class QtThreadingValidator:
     @staticmethod
     def is_main_thread():
         """Check if running in main Qt thread."""
-        return QtCore.QThread.currentThread() == QtWidgets.QApplication.instance().thread()
+        return (
+            QtCore.QThread.currentThread() == QtWidgets.QApplication.instance().thread()
+        )
 
     @staticmethod
     def validate_timer_creation(timer_obj):
@@ -153,24 +160,21 @@ class QtThreadingValidator:
         # Timer should be in main thread or a QThread-started thread
         if current_thread == app_thread:
             return True, "Timer created in main thread"
-        elif isinstance(current_thread, QThread):
+        if isinstance(current_thread, QThread):
             return True, "Timer created in QThread-started thread"
-        else:
-            return False, f"Timer created in invalid thread: {type(current_thread)}"
+        return False, f"Timer created in invalid thread: {type(current_thread)}"
 
     @staticmethod
     def validate_signal_connection(signal, slot):
         """Validate signal/slot connection syntax."""
         try:
             # Test connection without actually connecting
-            if hasattr(signal, 'connect'):
+            if hasattr(signal, "connect"):
                 # Check if slot is callable or bound method
                 if callable(slot):
                     return True, "Valid signal/slot connection"
-                else:
-                    return False, "Slot is not callable"
-            else:
-                return False, "Signal object doesn't have connect method"
+                return False, "Slot is not callable"
+            return False, "Signal object doesn't have connect method"
         except Exception as e:
             return False, f"Connection validation failed: {e}"
 
@@ -249,6 +253,7 @@ class BackgroundCleanupTester:
 
     def test_proper_cleanup_thread(self):
         """Test proper Qt thread-based cleanup."""
+
         class CleanupWorker(QThread):
             cleanup_completed = Signal()
             error_occurred = Signal(str)
@@ -341,7 +346,9 @@ class TestQtErrorDetection:
         is_main = qt_threading_validator.is_main_thread()
         assert isinstance(is_main, bool)
 
-    def test_timer_validation_in_main_thread(self, qt_threading_validator, mock_qt_environment):
+    def test_timer_validation_in_main_thread(
+        self, qt_threading_validator, mock_qt_environment
+    ):
         """Test timer validation in main thread."""
         timer = QTimer()
         is_valid, message = qt_threading_validator.validate_timer_creation(timer)
@@ -350,6 +357,7 @@ class TestQtErrorDetection:
 
     def test_signal_connection_validation(self, qt_threading_validator):
         """Test signal/slot connection validation."""
+
         class TestObject(QObject):
             test_signal = Signal(str)
 
@@ -379,7 +387,9 @@ class TestQtTimerThreadingErrors:
         # Should not have timer errors in main thread
         assert not qt_error_capture.has_timer_errors()
 
-    def test_timer_threading_violation_detection(self, background_cleanup_tester, qt_error_capture):
+    def test_timer_threading_violation_detection(
+        self, background_cleanup_tester, qt_error_capture
+    ):
         """Test detection of timer threading violations."""
         with qt_error_capture.capture_qt_warnings():
             # This should trigger timer threading error
@@ -407,6 +417,7 @@ class TestQtConnectionErrors:
             # Create widgets that might trigger QStyleHints warnings
             try:
                 import pyqtgraph as pg
+
                 # Creating multiple ImageView instances often triggers QStyleHints warnings
                 for _ in range(3):
                     img_view = pg.ImageView()
@@ -419,7 +430,7 @@ class TestQtConnectionErrors:
 
         # Check if any connection errors were captured
         errors = qt_error_capture.captured_errors
-        connection_errors = [e for e in errors if 'connect' in e['message'].lower()]
+        connection_errors = [e for e in errors if "connect" in e["message"].lower()]
 
         # This test documents the current state - it may capture errors
         # The important thing is that we can detect them
@@ -427,6 +438,7 @@ class TestQtConnectionErrors:
 
     def test_proper_signal_connection_syntax(self, qt_error_capture):
         """Test proper Qt5+ signal/slot connection syntax."""
+
         class TestWidget(QtWidgets.QWidget):
             test_signal = Signal(str)
 
@@ -446,8 +458,11 @@ class TestQtConnectionErrors:
             widget.deleteLater()
 
         # Should not generate connection errors with proper syntax
-        connection_errors = [e for e in qt_error_capture.captured_errors
-                           if 'connect' in e['message'].lower()]
+        connection_errors = [
+            e
+            for e in qt_error_capture.captured_errors
+            if "connect" in e["message"].lower()
+        ]
 
         # Proper connections should not generate warnings
         assert len(connection_errors) == 0
@@ -464,11 +479,16 @@ class TestQtGuiInitialization:
             assert app is not None
 
         # Should not have application creation errors
-        app_errors = [e for e in qt_error_capture.captured_errors
-                     if 'qapplication' in e['message'].lower()]
+        app_errors = [
+            e
+            for e in qt_error_capture.captured_errors
+            if "qapplication" in e["message"].lower()
+        ]
         assert len(app_errors) == 0
 
-    def test_widget_creation_in_proper_context(self, qt_error_capture, mock_qt_environment):
+    def test_widget_creation_in_proper_context(
+        self, qt_error_capture, mock_qt_environment
+    ):
         """Test widget creation in proper Qt context."""
         with qt_error_capture.capture_qt_warnings():
             widget = QtWidgets.QWidget()
@@ -478,8 +498,11 @@ class TestQtGuiInitialization:
             widget.deleteLater()
 
         # Should not have widget creation errors in proper context
-        widget_errors = [e for e in qt_error_capture.captured_errors
-                        if 'qwidget' in e['message'].lower()]
+        widget_errors = [
+            e
+            for e in qt_error_capture.captured_errors
+            if "qwidget" in e["message"].lower()
+        ]
         assert len(widget_errors) == 0
 
 
@@ -490,7 +513,7 @@ class TestErrorRegressionFramework:
         """Establish baseline for Qt error detection."""
         with qt_error_capture.capture_qt_warnings():
             # Simulate minimal XPCS viewer initialization
-            app = QtWidgets.QApplication.instance()
+            QtWidgets.QApplication.instance()
             main_window = QtWidgets.QMainWindow()
             main_window.show()
             QtWidgets.QApplication.processEvents()
@@ -502,31 +525,29 @@ class TestErrorRegressionFramework:
         print(f"Baseline Qt errors detected: {summary}")
 
         # The goal is to reduce these errors to zero
-        assert isinstance(summary['total_errors'], int)
-        assert summary['total_errors'] >= 0
+        assert isinstance(summary["total_errors"], int)
+        assert summary["total_errors"] >= 0
 
     def test_error_pattern_recognition(self, qt_error_capture):
         """Test recognition of specific error patterns."""
         test_messages = [
             "QObject::startTimer: Timers can only be used with threads started with QThread",
             "qt.core.qobject.connect: QObject::connect(QStyleHints, QStyleHints): unique connections require a pointer to member function of a QObject subclass",
-            "Some other Qt warning"
+            "Some other Qt warning",
         ]
 
         # Manually add test messages to verify pattern matching
         for msg in test_messages:
-            qt_error_capture.captured_errors.append({
-                'pattern': 'test',
-                'message': msg,
-                'timestamp': time.time()
-            })
+            qt_error_capture.captured_errors.append(
+                {"pattern": "test", "message": msg, "timestamp": time.time()}
+            )
 
         assert qt_error_capture.has_timer_errors()
         assert qt_error_capture.has_connection_errors()
 
         summary = qt_error_capture.get_error_summary()
-        assert summary['timer_errors'] >= 1
-        assert summary['connection_errors'] >= 1
+        assert summary["timer_errors"] >= 1
+        assert summary["connection_errors"] >= 1
 
 
 @pytest.mark.slow
@@ -555,7 +576,9 @@ class TestIntegratedQtErrorScenarios:
         # Document error state for improvement tracking
         assert isinstance(summary, dict)
 
-    def test_background_cleanup_integration(self, qt_error_capture, background_cleanup_tester):
+    def test_background_cleanup_integration(
+        self, qt_error_capture, background_cleanup_tester
+    ):
         """Test background cleanup integration with error detection."""
         with qt_error_capture.capture_qt_warnings():
             # Test both proper and improper cleanup patterns
@@ -563,7 +586,10 @@ class TestIntegratedQtErrorScenarios:
             background_cleanup_tester.test_proper_cleanup_thread()
 
         # Should capture threading violations
-        assert qt_error_capture.has_timer_errors() or len(background_cleanup_tester.cleanup_errors) > 0
+        assert (
+            qt_error_capture.has_timer_errors()
+            or len(background_cleanup_tester.cleanup_errors) > 0
+        )
 
 
 # Performance and memory tests

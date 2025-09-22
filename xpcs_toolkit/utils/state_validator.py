@@ -6,14 +6,14 @@ weak references, and lock-free data structures to ensure object consistency
 without blocking critical operations.
 """
 
+import hashlib
 import threading
 import time
 from collections import namedtuple
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any
 from weakref import WeakSet
-import hashlib
 
 import numpy as np
 
@@ -24,14 +24,16 @@ logger = get_logger(__name__)
 
 class StateValidationLevel(Enum):
     """State validation strictness levels."""
-    MINIMAL = "minimal"      # Only critical invariants
-    STANDARD = "standard"    # Balanced validation
-    STRICT = "strict"        # Comprehensive validation
-    PARANOID = "paranoid"    # All possible checks
+
+    MINIMAL = "minimal"  # Only critical invariants
+    STANDARD = "standard"  # Balanced validation
+    STRICT = "strict"  # Comprehensive validation
+    PARANOID = "paranoid"  # All possible checks
 
 
 class StateTransition(Enum):
     """Valid state transitions for tracked objects."""
+
     INITIALIZING = "initializing"
     READY = "ready"
     PROCESSING = "processing"
@@ -43,18 +45,19 @@ class StateTransition(Enum):
 @dataclass
 class StateSnapshot:
     """Immutable snapshot of object state for consistency checking."""
+
     object_id: int
     state: StateTransition
     checksum: str
     timestamp: float
-    critical_attributes: Dict[str, Any] = field(default_factory=dict)
+    critical_attributes: dict[str, Any] = field(default_factory=dict)
 
     def __post_init__(self):
         if not self.timestamp:
             self.timestamp = time.time()
 
 
-StateRecord = namedtuple('StateRecord', ['snapshot', 'version', 'last_validated'])
+StateRecord = namedtuple("StateRecord", ["snapshot", "version", "last_validated"])
 
 
 class AtomicCounter:
@@ -89,14 +92,16 @@ class LockFreeStateValidator:
     Uses copy-on-write semantics for state snapshots and atomic version counters.
     """
 
-    def __init__(self, validation_level: StateValidationLevel = StateValidationLevel.STANDARD):
+    def __init__(
+        self, validation_level: StateValidationLevel = StateValidationLevel.STANDARD
+    ):
         self.validation_level = validation_level
 
         # Use weak references to avoid memory leaks
         self._tracked_objects: WeakSet[Any] = WeakSet()
 
         # Lock-free state storage using atomic versioning
-        self._state_records: Dict[int, StateRecord] = {}
+        self._state_records: dict[int, StateRecord] = {}
         self._version_counter = AtomicCounter()
 
         # State transition rules
@@ -109,43 +114,42 @@ class LockFreeStateValidator:
 
         # Background validation
         self._validation_active = False
-        self._validation_thread: Optional[threading.Thread] = None
+        self._validation_thread: threading.Thread | None = None
         self._validation_interval = 60.0  # 1 minute
 
-    def _init_transition_rules(self) -> Dict[StateTransition, Set[StateTransition]]:
+    def _init_transition_rules(self) -> dict[StateTransition, set[StateTransition]]:
         """Initialize valid state transition rules."""
         return {
             StateTransition.INITIALIZING: {
                 StateTransition.READY,
                 StateTransition.INVALID,
-                StateTransition.DESTROYED
+                StateTransition.DESTROYED,
             },
             StateTransition.READY: {
                 StateTransition.PROCESSING,
                 StateTransition.CACHED,
                 StateTransition.INVALID,
-                StateTransition.DESTROYED
+                StateTransition.DESTROYED,
             },
             StateTransition.PROCESSING: {
                 StateTransition.READY,
                 StateTransition.CACHED,
                 StateTransition.INVALID,
-                StateTransition.DESTROYED
+                StateTransition.DESTROYED,
             },
             StateTransition.CACHED: {
                 StateTransition.READY,
                 StateTransition.PROCESSING,
                 StateTransition.INVALID,
-                StateTransition.DESTROYED
+                StateTransition.DESTROYED,
             },
-            StateTransition.INVALID: {
-                StateTransition.READY,
-                StateTransition.DESTROYED
-            },
-            StateTransition.DESTROYED: set()  # Terminal state
+            StateTransition.INVALID: {StateTransition.READY, StateTransition.DESTROYED},
+            StateTransition.DESTROYED: set(),  # Terminal state
         }
 
-    def register_object(self, obj: Any, initial_state: StateTransition = StateTransition.INITIALIZING) -> None:
+    def register_object(
+        self, obj: Any, initial_state: StateTransition = StateTransition.INITIALIZING
+    ) -> None:
         """Register object for state tracking using weak references."""
         try:
             # Use weak reference to avoid circular references
@@ -157,18 +161,20 @@ class LockFreeStateValidator:
 
             # Store state record (atomic operation)
             self._state_records[id(obj)] = StateRecord(
-                snapshot=snapshot,
-                version=version,
-                last_validated=time.time()
+                snapshot=snapshot, version=version, last_validated=time.time()
             )
 
-            logger.debug(f"Registered object {id(obj)} for state tracking in state {initial_state.value}")
+            logger.debug(
+                f"Registered object {id(obj)} for state tracking in state {initial_state.value}"
+            )
 
         except Exception as e:
             # Don't let registration failures break the application
             logger.debug(f"Failed to register object for state tracking: {e}")
 
-    def update_object_state(self, obj: Any, new_state: StateTransition, **critical_attributes) -> bool:
+    def update_object_state(
+        self, obj: Any, new_state: StateTransition, **critical_attributes
+    ) -> bool:
         """Update object state with validation (lock-free)."""
         obj_id = id(obj)
         current_time = time.time()
@@ -183,29 +189,38 @@ class LockFreeStateValidator:
             # Validate transition
             current_state = current_record.snapshot.state
             if new_state not in self._valid_transitions.get(current_state, set()):
-                logger.warning(f"Invalid state transition for object {obj_id}: {current_state.value} -> {new_state.value}")
+                logger.warning(
+                    f"Invalid state transition for object {obj_id}: {current_state.value} -> {new_state.value}"
+                )
                 self._inconsistency_count.increment()
                 return False
 
             # Create new snapshot
-            new_snapshot = self._create_state_snapshot(obj, new_state, critical_attributes)
+            new_snapshot = self._create_state_snapshot(
+                obj, new_state, critical_attributes
+            )
             new_version = self._version_counter.increment()
 
             # Atomic update using copy-on-write
             self._state_records[obj_id] = StateRecord(
-                snapshot=new_snapshot,
-                version=new_version,
-                last_validated=current_time
+                snapshot=new_snapshot, version=new_version, last_validated=current_time
             )
 
-            logger.debug(f"Updated object {obj_id} state: {current_state.value} -> {new_state.value}")
+            logger.debug(
+                f"Updated object {obj_id} state: {current_state.value} -> {new_state.value}"
+            )
             return True
 
         except Exception as e:
             logger.debug(f"Error updating object state: {e}")
             return False
 
-    def _create_state_snapshot(self, obj: Any, state: StateTransition, critical_attributes: Dict[str, Any] = None) -> StateSnapshot:
+    def _create_state_snapshot(
+        self,
+        obj: Any,
+        state: StateTransition,
+        critical_attributes: dict[str, Any] | None = None,
+    ) -> StateSnapshot:
         """Create immutable state snapshot for consistency checking."""
         if critical_attributes is None:
             critical_attributes = {}
@@ -222,60 +237,74 @@ class LockFreeStateValidator:
             state=state,
             checksum=checksum,
             timestamp=time.time(),
-            critical_attributes=extracted_attributes
+            critical_attributes=extracted_attributes,
         )
 
-    def _extract_critical_attributes(self, obj: Any) -> Dict[str, Any]:
+    def _extract_critical_attributes(self, obj: Any) -> dict[str, Any]:
         """Extract critical attributes based on object type."""
         attributes = {}
 
         try:
             # Common XPCS object attributes
-            if hasattr(obj, 'fname'):
-                attributes['filename'] = str(obj.fname)
+            if hasattr(obj, "fname"):
+                attributes["filename"] = str(obj.fname)
 
-            if hasattr(obj, 'atype'):
-                attributes['analysis_type'] = str(obj.atype)
+            if hasattr(obj, "atype"):
+                attributes["analysis_type"] = str(obj.atype)
 
-            if hasattr(obj, 'qmap') and obj.qmap is not None:
+            if hasattr(obj, "qmap") and obj.qmap is not None:
                 # Hash qmap for consistency without storing large arrays
-                if hasattr(obj.qmap, 'q_values') and hasattr(obj.qmap.q_values, 'shape'):
-                    attributes['qmap_shape'] = obj.qmap.q_values.shape
-                    attributes['qmap_checksum'] = hashlib.md5(
-                        str(obj.qmap.q_values.data if hasattr(obj.qmap.q_values, 'data') else obj.qmap.q_values).encode()
+                if hasattr(obj.qmap, "q_values") and hasattr(
+                    obj.qmap.q_values, "shape"
+                ):
+                    attributes["qmap_shape"] = obj.qmap.q_values.shape
+                    attributes["qmap_checksum"] = hashlib.md5(
+                        str(
+                            obj.qmap.q_values.data
+                            if hasattr(obj.qmap.q_values, "data")
+                            else obj.qmap.q_values
+                        ).encode()
                     ).hexdigest()[:8]
 
             # Data integrity checks
-            if hasattr(obj, 'saxs_2d_data') and obj.saxs_2d_data is not None:
+            if hasattr(obj, "saxs_2d_data") and obj.saxs_2d_data is not None:
                 data = obj.saxs_2d_data
-                if hasattr(data, 'shape'):
-                    attributes['saxs_shape'] = data.shape
+                if hasattr(data, "shape"):
+                    attributes["saxs_shape"] = data.shape
                     # Quick checksum for large arrays
-                    if hasattr(data, 'size') and data.size > 0:
-                        sample_indices = np.linspace(0, data.size - 1, min(100, data.size), dtype=int)
-                        sample_data = data.flat[sample_indices] if hasattr(data, 'flat') else [0]
-                        attributes['saxs_checksum'] = hashlib.md5(str(sample_data).encode()).hexdigest()[:8]
+                    if hasattr(data, "size") and data.size > 0:
+                        sample_indices = np.linspace(
+                            0, data.size - 1, min(100, data.size), dtype=int
+                        )
+                        sample_data = (
+                            data.flat[sample_indices] if hasattr(data, "flat") else [0]
+                        )
+                        attributes["saxs_checksum"] = hashlib.md5(
+                            str(sample_data).encode()
+                        ).hexdigest()[:8]
 
-            if hasattr(obj, 'fit_summary') and obj.fit_summary is not None:
-                attributes['has_fit_summary'] = True
+            if hasattr(obj, "fit_summary") and obj.fit_summary is not None:
+                attributes["has_fit_summary"] = True
                 if isinstance(obj.fit_summary, dict):
-                    attributes['fit_keys'] = sorted(obj.fit_summary.keys())
+                    attributes["fit_keys"] = sorted(obj.fit_summary.keys())
 
         except Exception as e:
             # Don't let attribute extraction failures break validation
             logger.debug(f"Error extracting critical attributes: {e}")
-            attributes['extraction_error'] = str(e)
+            attributes["extraction_error"] = str(e)
 
         return attributes
 
-    def _calculate_state_checksum(self, obj: Any, state: StateTransition, attributes: Dict[str, Any]) -> str:
+    def _calculate_state_checksum(
+        self, obj: Any, state: StateTransition, attributes: dict[str, Any]
+    ) -> str:
         """Calculate checksum for state consistency verification."""
         try:
             # Create deterministic checksum from object state
             checksum_data = {
-                'object_type': type(obj).__name__,
-                'state': state.value,
-                'attributes': attributes
+                "object_type": type(obj).__name__,
+                "state": state.value,
+                "attributes": attributes,
             }
 
             checksum_string = str(sorted(checksum_data.items()))
@@ -285,7 +314,7 @@ class LockFreeStateValidator:
             logger.debug(f"Error calculating state checksum: {e}")
             return "error"
 
-    def validate_object_consistency(self, obj: Any) -> Tuple[bool, List[str]]:
+    def validate_object_consistency(self, obj: Any) -> tuple[bool, list[str]]:
         """Validate object consistency against stored state (lock-free)."""
         obj_id = id(obj)
         validation_start = time.time()
@@ -303,42 +332,63 @@ class LockFreeStateValidator:
 
             # Create current snapshot for comparison
             current_attributes = self._extract_critical_attributes(obj)
-            current_checksum = self._calculate_state_checksum(obj, stored_snapshot.state, current_attributes)
+            current_checksum = self._calculate_state_checksum(
+                obj, stored_snapshot.state, current_attributes
+            )
 
             # Check for inconsistencies based on validation level
-            if self.validation_level in [StateValidationLevel.STRICT, StateValidationLevel.PARANOID]:
+            if self.validation_level in [
+                StateValidationLevel.STRICT,
+                StateValidationLevel.PARANOID,
+            ]:
                 # Comprehensive validation
 
                 # Checksum comparison
                 if current_checksum != stored_snapshot.checksum:
-                    issues.append(f"State checksum mismatch: {current_checksum} != {stored_snapshot.checksum}")
+                    issues.append(
+                        f"State checksum mismatch: {current_checksum} != {stored_snapshot.checksum}"
+                    )
 
                 # Attribute comparison
                 for key, stored_value in stored_snapshot.critical_attributes.items():
                     current_value = current_attributes.get(key)
                     if current_value != stored_value:
-                        issues.append(f"Attribute '{key}' changed: {stored_value} -> {current_value}")
+                        issues.append(
+                            f"Attribute '{key}' changed: {stored_value} -> {current_value}"
+                        )
 
                 # Type consistency
-                if hasattr(obj, '__class__'):
-                    expected_type = stored_snapshot.critical_attributes.get('object_type')
+                if hasattr(obj, "__class__"):
+                    expected_type = stored_snapshot.critical_attributes.get(
+                        "object_type"
+                    )
                     if expected_type and obj.__class__.__name__ != expected_type:
-                        issues.append(f"Object type changed: {expected_type} -> {obj.__class__.__name__}")
+                        issues.append(
+                            f"Object type changed: {expected_type} -> {obj.__class__.__name__}"
+                        )
 
             elif self.validation_level == StateValidationLevel.STANDARD:
                 # Balanced validation - only check critical inconsistencies
 
                 # Check for major structural changes
-                stored_shape = stored_snapshot.critical_attributes.get('saxs_shape')
-                current_shape = current_attributes.get('saxs_shape')
+                stored_shape = stored_snapshot.critical_attributes.get("saxs_shape")
+                current_shape = current_attributes.get("saxs_shape")
                 if stored_shape and current_shape and stored_shape != current_shape:
-                    issues.append(f"SAXS data shape changed: {stored_shape} -> {current_shape}")
+                    issues.append(
+                        f"SAXS data shape changed: {stored_shape} -> {current_shape}"
+                    )
 
                 # Check for filename changes (shouldn't happen)
-                stored_filename = stored_snapshot.critical_attributes.get('filename')
-                current_filename = current_attributes.get('filename')
-                if stored_filename and current_filename and stored_filename != current_filename:
-                    issues.append(f"Filename changed: {stored_filename} -> {current_filename}")
+                stored_filename = stored_snapshot.critical_attributes.get("filename")
+                current_filename = current_attributes.get("filename")
+                if (
+                    stored_filename
+                    and current_filename
+                    and stored_filename != current_filename
+                ):
+                    issues.append(
+                        f"Filename changed: {stored_filename} -> {current_filename}"
+                    )
 
             # Record inconsistencies
             if issues:
@@ -349,7 +399,9 @@ class LockFreeStateValidator:
             validation_time = time.time() - validation_start
             self._performance_history.append(validation_time)
             if len(self._performance_history) > 1000:
-                self._performance_history = self._performance_history[-500:]  # Keep recent history
+                self._performance_history = self._performance_history[
+                    -500:
+                ]  # Keep recent history
 
             return len(issues) == 0, issues
 
@@ -357,15 +409,15 @@ class LockFreeStateValidator:
             logger.debug(f"Error during consistency validation: {e}")
             return False, [f"Validation error: {e}"]
 
-    def validate_all_objects(self) -> Dict[str, Any]:
+    def validate_all_objects(self) -> dict[str, Any]:
         """Validate consistency of all tracked objects."""
         start_time = time.time()
         results = {
-            'total_objects': 0,
-            'valid_objects': 0,
-            'invalid_objects': 0,
-            'issues': [],
-            'validation_time': 0.0
+            "total_objects": 0,
+            "valid_objects": 0,
+            "invalid_objects": 0,
+            "issues": [],
+            "validation_time": 0.0,
         }
 
         # Clean up dead weak references first
@@ -373,20 +425,22 @@ class LockFreeStateValidator:
 
         for obj in live_objects:
             try:
-                results['total_objects'] += 1
+                results["total_objects"] += 1
                 is_valid, issues = self.validate_object_consistency(obj)
 
                 if is_valid:
-                    results['valid_objects'] += 1
+                    results["valid_objects"] += 1
                 else:
-                    results['invalid_objects'] += 1
-                    results['issues'].extend([f"Object {id(obj)}: {issue}" for issue in issues])
+                    results["invalid_objects"] += 1
+                    results["issues"].extend(
+                        [f"Object {id(obj)}: {issue}" for issue in issues]
+                    )
 
             except Exception as e:
-                results['invalid_objects'] += 1
-                results['issues'].append(f"Object {id(obj)}: Validation error: {e}")
+                results["invalid_objects"] += 1
+                results["issues"].append(f"Object {id(obj)}: Validation error: {e}")
 
-        results['validation_time'] = time.time() - start_time
+        results["validation_time"] = time.time() - start_time
         return results
 
     def start_background_validation(self, interval: float = 60.0) -> None:
@@ -400,7 +454,7 @@ class LockFreeStateValidator:
         self._validation_thread = threading.Thread(
             target=self._background_validation_loop,
             name="XPCS-StateValidator",
-            daemon=True
+            daemon=True,
         )
         self._validation_thread.start()
         logger.info(f"Background state validation started (interval: {interval}s)")
@@ -428,14 +482,14 @@ class LockFreeStateValidator:
                 results = self.validate_all_objects()
 
                 # Log summary if issues found
-                if results['invalid_objects'] > 0:
+                if results["invalid_objects"] > 0:
                     logger.warning(
                         f"State validation found {results['invalid_objects']} inconsistent objects "
                         f"out of {results['total_objects']} total"
                     )
 
                     # Log first few issues for debugging
-                    for issue in results['issues'][:5]:  # Limit to avoid log spam
+                    for issue in results["issues"][:5]:  # Limit to avoid log spam
                         logger.debug(f"State inconsistency: {issue}")
 
                 # Sleep for remaining interval
@@ -450,31 +504,37 @@ class LockFreeStateValidator:
 
         logger.debug("Background state validation loop ended")
 
-    def get_statistics(self) -> Dict[str, Any]:
+    def get_statistics(self) -> dict[str, Any]:
         """Get state validation statistics."""
         total_validations = self._validation_count.get()
         total_inconsistencies = self._inconsistency_count.get()
 
         stats = {
-            'tracked_objects': len([obj for obj in self._tracked_objects if obj is not None]),
-            'total_validations': total_validations,
-            'total_inconsistencies': total_inconsistencies,
-            'consistency_rate': (total_validations - total_inconsistencies) / max(total_validations, 1) * 100,
-            'validation_level': self.validation_level.value,
-            'background_validation_active': self._validation_active
+            "tracked_objects": len(
+                [obj for obj in self._tracked_objects if obj is not None]
+            ),
+            "total_validations": total_validations,
+            "total_inconsistencies": total_inconsistencies,
+            "consistency_rate": (total_validations - total_inconsistencies)
+            / max(total_validations, 1)
+            * 100,
+            "validation_level": self.validation_level.value,
+            "background_validation_active": self._validation_active,
         }
 
         # Performance statistics
         if self._performance_history:
-            stats['average_validation_time_ms'] = np.mean(self._performance_history) * 1000
-            stats['max_validation_time_ms'] = np.max(self._performance_history) * 1000
-            stats['validation_overhead_estimate'] = "< 0.1% CPU"
+            stats["average_validation_time_ms"] = (
+                np.mean(self._performance_history) * 1000
+            )
+            stats["max_validation_time_ms"] = np.max(self._performance_history) * 1000
+            stats["validation_overhead_estimate"] = "< 0.1% CPU"
 
         return stats
 
     def cleanup_destroyed_objects(self) -> int:
         """Clean up state records for destroyed objects."""
-        initial_count = len(self._state_records)
+        len(self._state_records)
         live_object_ids = {id(obj) for obj in self._tracked_objects if obj is not None}
 
         # Remove records for destroyed objects
@@ -490,11 +550,13 @@ class LockFreeStateValidator:
 
 
 # Global state validator instance
-_state_validator: Optional[LockFreeStateValidator] = None
+_state_validator: LockFreeStateValidator | None = None
 _validator_lock = threading.Lock()
 
 
-def get_state_validator(level: StateValidationLevel = StateValidationLevel.STANDARD) -> LockFreeStateValidator:
+def get_state_validator(
+    level: StateValidationLevel = StateValidationLevel.STANDARD,
+) -> LockFreeStateValidator:
     """Get or create the global state validator instance."""
     global _state_validator
     if _state_validator is None:
@@ -504,25 +566,31 @@ def get_state_validator(level: StateValidationLevel = StateValidationLevel.STAND
     return _state_validator
 
 
-def track_object_state(obj: Any, initial_state: StateTransition = StateTransition.INITIALIZING) -> None:
+def track_object_state(
+    obj: Any, initial_state: StateTransition = StateTransition.INITIALIZING
+) -> None:
     """Register object for state consistency tracking."""
     validator = get_state_validator()
     validator.register_object(obj, initial_state)
 
 
-def update_object_state(obj: Any, new_state: StateTransition, **critical_attributes) -> bool:
+def update_object_state(
+    obj: Any, new_state: StateTransition, **critical_attributes
+) -> bool:
     """Update tracked object state."""
     validator = get_state_validator()
     return validator.update_object_state(obj, new_state, **critical_attributes)
 
 
-def validate_object_state(obj: Any) -> Tuple[bool, List[str]]:
+def validate_object_state(obj: Any) -> tuple[bool, list[str]]:
     """Validate object state consistency."""
     validator = get_state_validator()
     return validator.validate_object_consistency(obj)
 
 
-def start_state_monitoring(interval: float = 60.0, level: StateValidationLevel = StateValidationLevel.STANDARD) -> None:
+def start_state_monitoring(
+    interval: float = 60.0, level: StateValidationLevel = StateValidationLevel.STANDARD
+) -> None:
     """Start background state consistency monitoring."""
     validator = get_state_validator(level)
     validator.start_background_validation(interval)
@@ -535,7 +603,7 @@ def stop_state_monitoring() -> None:
         _state_validator.stop_background_validation()
 
 
-def get_state_statistics() -> Dict[str, Any]:
+def get_state_statistics() -> dict[str, Any]:
     """Get state validation statistics."""
     validator = get_state_validator()
     return validator.get_statistics()
@@ -544,6 +612,7 @@ def get_state_statistics() -> Dict[str, Any]:
 # Decorator for automatic state tracking
 def track_state(initial_state: StateTransition = StateTransition.INITIALIZING):
     """Decorator to automatically track object state."""
+
     def decorator(cls):
         original_init = cls.__init__
 
@@ -571,7 +640,9 @@ class state_validation_context:
         # Validate initial state
         self.initial_valid, self.initial_issues = validate_object_state(self.obj)
         if not self.initial_valid:
-            logger.warning(f"Object entered context with state issues: {'; '.join(self.initial_issues)}")
+            logger.warning(
+                f"Object entered context with state issues: {'; '.join(self.initial_issues)}"
+            )
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
@@ -584,6 +655,8 @@ class state_validation_context:
         # Validate final state
         final_valid, final_issues = validate_object_state(self.obj)
         if not final_valid:
-            logger.warning(f"Object exited context with state issues: {'; '.join(final_issues)}")
+            logger.warning(
+                f"Object exited context with state issues: {'; '.join(final_issues)}"
+            )
 
         return False  # Don't suppress exceptions

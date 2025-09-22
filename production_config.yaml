@@ -24,12 +24,12 @@ gui:
   # Qt application settings
   qt_warnings_suppressed: true
   theme: "default"  # Options: "default", "dark", "light"
-  
+
   # Plot settings
   default_plot_backend: "pyqtgraph"  # Options: "pyqtgraph", "matplotlib"
   max_plot_points: 10000  # Maximum points per plot
   enable_real_time_updates: true
-  
+
   # Data display settings
   max_displayed_files: 100
   lazy_loading: true
@@ -48,12 +48,12 @@ data:
   # File format settings
   default_format: "nexus"  # Options: "nexus", "legacy"
   enable_format_validation: true
-  
+
   # Analysis settings
   default_analysis_type: "multitau"  # Options: "multitau", "twotime"
   enable_parallel_analysis: true
   max_roi_count: 50
-  
+
 # Error Handling
 error_handling:
   enable_error_recovery: true

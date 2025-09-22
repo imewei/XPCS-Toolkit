@@ -10,20 +10,16 @@ This module provides zero-overhead reliability mechanisms including:
 
 import functools
 import hashlib
-import time
 import threading
-from contextlib import contextmanager
+import time
+from collections.abc import Callable
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any, Union
 
 import numpy as np
 
-from .exceptions import (
-    XPCSBaseError,
-    XPCSValidationError,
-    convert_exception,
-)
+from .exceptions import XPCSBaseError, XPCSValidationError, convert_exception
 from .logging_config import get_logger
 
 logger = get_logger(__name__)
@@ -31,18 +27,20 @@ logger = get_logger(__name__)
 
 class ValidationLevel(Enum):
     """Validation strictness levels for performance tuning."""
-    MINIMAL = "minimal"      # Only critical checks, maximum performance
-    STANDARD = "standard"    # Balanced checks, good performance
-    STRICT = "strict"        # Comprehensive checks, moderate performance
-    PARANOID = "paranoid"    # All possible checks, thorough validation
+
+    MINIMAL = "minimal"  # Only critical checks, maximum performance
+    STANDARD = "standard"  # Balanced checks, good performance
+    STRICT = "strict"  # Comprehensive checks, moderate performance
+    PARANOID = "paranoid"  # All possible checks, thorough validation
 
 
 @dataclass
 class ValidationResult:
     """Result of validation operation with caching support."""
+
     is_valid: bool
-    error_message: Optional[str] = None
-    warnings: List[str] = None
+    error_message: str | None = None
+    warnings: list[str] = None
     validation_time: float = 0.0
     cached: bool = False
 
@@ -55,24 +53,24 @@ class ValidationCache:
     """Thread-safe cache for validation results with TTL support."""
 
     def __init__(self, max_size: int = 1000, default_ttl: float = 300.0):
-        self._cache: Dict[str, Tuple[ValidationResult, float]] = {}
+        self._cache: dict[str, tuple[ValidationResult, float]] = {}
         self._lock = threading.RLock()
         self._max_size = max_size
         self._default_ttl = default_ttl
-        self._access_times: Dict[str, float] = {}
+        self._access_times: dict[str, float] = {}
 
     def _generate_key(self, func_name: str, args: tuple, kwargs: dict) -> str:
         """Generate cache key from function call signature."""
         # Create deterministic key from arguments
         key_data = {
-            'function': func_name,
-            'args': str(args),
-            'kwargs': str(sorted(kwargs.items()))
+            "function": func_name,
+            "args": str(args),
+            "kwargs": str(sorted(kwargs.items())),
         }
         key_string = str(key_data)
         return hashlib.md5(key_string.encode()).hexdigest()
 
-    def get(self, key: str) -> Optional[ValidationResult]:
+    def get(self, key: str) -> ValidationResult | None:
         """Get cached validation result if still valid."""
         with self._lock:
             if key not in self._cache:
@@ -136,7 +134,7 @@ def validate_input(
     check_values: bool = True,
     level: ValidationLevel = ValidationLevel.STANDARD,
     cache_results: bool = True,
-    fast_fail: bool = True
+    fast_fail: bool = True,
 ):
     """
     Zero-overhead input validation decorator with intelligent caching.
@@ -156,6 +154,7 @@ def validate_input(
             # Function implementation
             pass
     """
+
     def decorator(func: Callable) -> Callable:
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
@@ -180,6 +179,7 @@ def validate_input(
             try:
                 # Get function signature for parameter validation
                 import inspect
+
                 sig = inspect.signature(func)
                 bound_args = sig.bind(*args, **kwargs)
                 bound_args.apply_defaults()
@@ -189,35 +189,53 @@ def validate_input(
 
                     # Type checking
                     if check_types and param_info.annotation != inspect.Parameter.empty:
-                        if not _validate_type(param_value, param_info.annotation, param_name):
+                        if not _validate_type(
+                            param_value, param_info.annotation, param_name
+                        ):
                             error_msg = f"Parameter '{param_name}' type mismatch"
                             if fast_fail:
-                                raise XPCSValidationError(error_msg, field=param_name, value=param_value)
+                                raise XPCSValidationError(
+                                    error_msg, field=param_name, value=param_value
+                                )
                             validation_errors.append(error_msg)
 
                     # Range checking for numerical values
-                    if check_ranges and isinstance(param_value, (int, float, np.number)):
+                    if check_ranges and isinstance(
+                        param_value, (int, float, np.number)
+                    ):
                         if not _validate_range(param_value, param_name):
                             error_msg = f"Parameter '{param_name}' outside valid range"
                             if fast_fail:
-                                raise XPCSValidationError(error_msg, field=param_name, value=param_value)
+                                raise XPCSValidationError(
+                                    error_msg, field=param_name, value=param_value
+                                )
                             validation_errors.append(error_msg)
 
                     # Array validation
                     if check_shapes and isinstance(param_value, np.ndarray):
-                        shape_errors, shape_warnings = _validate_array(param_value, param_name, level)
+                        shape_errors, shape_warnings = _validate_array(
+                            param_value, param_name, level
+                        )
                         if shape_errors:
                             if fast_fail:
-                                raise XPCSValidationError(shape_errors[0], field=param_name, value=param_value.shape)
+                                raise XPCSValidationError(
+                                    shape_errors[0],
+                                    field=param_name,
+                                    value=param_value.shape,
+                                )
                             validation_errors.extend(shape_errors)
                         validation_warnings.extend(shape_warnings)
 
                     # Value checking
                     if check_values:
-                        value_errors, value_warnings = _validate_values(param_value, param_name, level)
+                        value_errors, value_warnings = _validate_values(
+                            param_value, param_name, level
+                        )
                         if value_errors:
                             if fast_fail:
-                                raise XPCSValidationError(value_errors[0], field=param_name, value=param_value)
+                                raise XPCSValidationError(
+                                    value_errors[0], field=param_name, value=param_value
+                                )
                             validation_errors.extend(value_errors)
                         validation_warnings.extend(value_warnings)
 
@@ -227,9 +245,11 @@ def validate_input(
 
                 result = ValidationResult(
                     is_valid=is_valid,
-                    error_message="; ".join(validation_errors) if validation_errors else None,
+                    error_message="; ".join(validation_errors)
+                    if validation_errors
+                    else None,
                     warnings=validation_warnings,
-                    validation_time=validation_time
+                    validation_time=validation_time,
                 )
 
                 # Cache result if enabled
@@ -249,12 +269,14 @@ def validate_input(
             except Exception as e:
                 if isinstance(e, XPCSValidationError):
                     raise
-                else:
-                    # Convert unexpected validation errors
-                    xpcs_error = convert_exception(e, f"Validation failed for {func.__name__}")
-                    raise xpcs_error
+                # Convert unexpected validation errors
+                xpcs_error = convert_exception(
+                    e, f"Validation failed for {func.__name__}"
+                )
+                raise xpcs_error
 
         return wrapper
+
     return decorator
 
 
@@ -262,36 +284,37 @@ def _validate_type(value: Any, expected_type: type, param_name: str) -> bool:
     """Validate parameter type with support for complex types."""
     try:
         # Handle Union types and generic types
-        if hasattr(expected_type, '__origin__'):
+        if hasattr(expected_type, "__origin__"):
             if expected_type.__origin__ is Union:
                 return any(isinstance(value, t) for t in expected_type.__args__)
             # Handle other generic types as needed
             return isinstance(value, expected_type.__origin__)
-        else:
-            return isinstance(value, expected_type)
+        return isinstance(value, expected_type)
     except Exception:
         # If type checking fails, assume it's valid to avoid breaking functionality
         return True
 
 
-def _validate_range(value: Union[int, float, np.number], param_name: str) -> bool:
+def _validate_range(value: int | float | np.number, param_name: str) -> bool:
     """Validate numerical ranges with domain-specific checks."""
     # Check for NaN and infinity
     if np.isnan(value) or np.isinf(value):
         return False
 
     # Domain-specific range checks
-    if 'threshold' in param_name.lower() or 'alpha' in param_name.lower():
+    if "threshold" in param_name.lower() or "alpha" in param_name.lower():
         return 0.0 <= value <= 1.0
-    elif 'q_' in param_name.lower() or param_name.lower().endswith('_q'):
+    if "q_" in param_name.lower() or param_name.lower().endswith("_q"):
         return value > 0.0  # Q-values should be positive
-    elif 'time' in param_name.lower() or 't_' in param_name.lower():
+    if "time" in param_name.lower() or "t_" in param_name.lower():
         return value >= 0.0  # Time values should be non-negative
 
     return True  # Default: accept all finite values
 
 
-def _validate_array(array: np.ndarray, param_name: str, level: ValidationLevel) -> Tuple[List[str], List[str]]:
+def _validate_array(
+    array: np.ndarray, param_name: str, level: ValidationLevel
+) -> tuple[list[str], list[str]]:
     """Validate numpy array properties."""
     errors = []
     warnings = []
@@ -312,17 +335,23 @@ def _validate_array(array: np.ndarray, param_name: str, level: ValidationLevel) 
         warnings.append(f"Object array '{param_name}' may cause performance issues")
 
     # Domain-specific shape validation
-    if 'saxs' in param_name.lower():
+    if "saxs" in param_name.lower():
         if array.ndim not in [2, 3]:
-            errors.append(f"SAXS data '{param_name}' should be 2D or 3D, got {array.ndim}D")
-    elif 'g2' in param_name.lower() or 'correlation' in param_name.lower():
+            errors.append(
+                f"SAXS data '{param_name}' should be 2D or 3D, got {array.ndim}D"
+            )
+    elif "g2" in param_name.lower() or "correlation" in param_name.lower():
         if array.ndim != 2:
-            errors.append(f"Correlation data '{param_name}' should be 2D, got {array.ndim}D")
+            errors.append(
+                f"Correlation data '{param_name}' should be 2D, got {array.ndim}D"
+            )
 
     return errors, warnings
 
 
-def _validate_values(value: Any, param_name: str, level: ValidationLevel) -> Tuple[List[str], List[str]]:
+def _validate_values(
+    value: Any, param_name: str, level: ValidationLevel
+) -> tuple[list[str], list[str]]:
     """Validate data values for scientific correctness."""
     errors = []
     warnings = []
@@ -344,11 +373,14 @@ def _validate_values(value: Any, param_name: str, level: ValidationLevel) -> Tup
                 min_val, max_val = np.min(value), np.max(value)
                 value_range = max_val - min_val
 
-                if value_range == 0 and level in [ValidationLevel.STRICT, ValidationLevel.PARANOID]:
+                if value_range == 0 and level in [
+                    ValidationLevel.STRICT,
+                    ValidationLevel.PARANOID,
+                ]:
                     warnings.append(f"Array '{param_name}' has zero variance")
 
                 # Domain-specific value checks
-                if 'intensity' in param_name.lower() or 'saxs' in param_name.lower():
+                if "intensity" in param_name.lower() or "saxs" in param_name.lower():
                     if min_val < 0:
                         warnings.append(f"Negative intensity values in '{param_name}'")
 
@@ -365,11 +397,13 @@ class SmartFallbackManager:
     """Manager for smart fallback strategies with pre-computed paths."""
 
     def __init__(self):
-        self._fallback_strategies: Dict[str, List[Callable]] = {}
-        self._performance_history: Dict[str, List[float]] = {}
+        self._fallback_strategies: dict[str, list[Callable]] = {}
+        self._performance_history: dict[str, list[float]] = {}
         self._lock = threading.RLock()
 
-    def register_fallback_chain(self, operation_name: str, strategies: List[Callable]) -> None:
+    def register_fallback_chain(
+        self, operation_name: str, strategies: list[Callable]
+    ) -> None:
         """Register a chain of fallback strategies for an operation."""
         with self._lock:
             self._fallback_strategies[operation_name] = strategies
@@ -379,14 +413,18 @@ class SmartFallbackManager:
         """Execute operation with automatic fallback on failure."""
         strategies = self._fallback_strategies.get(operation_name, [])
         if not strategies:
-            raise XPCSBaseError(f"No fallback strategies registered for '{operation_name}'")
+            raise XPCSBaseError(
+                f"No fallback strategies registered for '{operation_name}'"
+            )
 
         last_exception = None
         performance_start = time.time()
 
         for i, strategy in enumerate(strategies):
             try:
-                logger.debug(f"Attempting {operation_name} strategy {i+1}/{len(strategies)}: {strategy.__name__}")
+                logger.debug(
+                    f"Attempting {operation_name} strategy {i + 1}/{len(strategies)}: {strategy.__name__}"
+                )
                 result = strategy(*args, **kwargs)
 
                 # Record successful performance
@@ -395,26 +433,30 @@ class SmartFallbackManager:
                     self._performance_history[operation_name].append(execution_time)
                     # Keep only recent history
                     if len(self._performance_history[operation_name]) > 100:
-                        self._performance_history[operation_name] = self._performance_history[operation_name][-50:]
+                        self._performance_history[operation_name] = (
+                            self._performance_history[operation_name][-50:]
+                        )
 
-                logger.debug(f"Successfully executed {operation_name} with strategy {i+1}")
+                logger.debug(
+                    f"Successfully executed {operation_name} with strategy {i + 1}"
+                )
                 return result
 
             except Exception as e:
-                logger.debug(f"Strategy {i+1} failed for {operation_name}: {e}")
+                logger.debug(f"Strategy {i + 1} failed for {operation_name}: {e}")
                 last_exception = e
                 continue
 
         # All strategies failed
         if last_exception:
             raise convert_exception(
-                last_exception,
-                f"All fallback strategies failed for '{operation_name}'"
+                last_exception, f"All fallback strategies failed for '{operation_name}'"
             )
-        else:
-            raise XPCSBaseError(f"All strategies failed for '{operation_name}' with no exceptions")
+        raise XPCSBaseError(
+            f"All strategies failed for '{operation_name}' with no exceptions"
+        )
 
-    def get_performance_stats(self, operation_name: str) -> Dict[str, float]:
+    def get_performance_stats(self, operation_name: str) -> dict[str, float]:
         """Get performance statistics for an operation."""
         with self._lock:
             history = self._performance_history.get(operation_name, [])
@@ -422,11 +464,11 @@ class SmartFallbackManager:
                 return {}
 
             return {
-                'mean_time': np.mean(history),
-                'std_time': np.std(history),
-                'min_time': np.min(history),
-                'max_time': np.max(history),
-                'success_count': len(history)
+                "mean_time": np.mean(history),
+                "std_time": np.std(history),
+                "min_time": np.min(history),
+                "max_time": np.max(history),
+                "success_count": len(history),
             }
 
 
@@ -434,7 +476,7 @@ class SmartFallbackManager:
 _fallback_manager = SmartFallbackManager()
 
 
-def with_fallback(operation_name: str, strategies: List[Callable] = None):
+def with_fallback(operation_name: str, strategies: list[Callable] | None = None):
     """
     Decorator for automatic fallback execution with pre-computed strategies.
 
@@ -448,31 +490,47 @@ def with_fallback(operation_name: str, strategies: List[Callable] = None):
             # Primary implementation - automatically falls back if it fails
             pass
     """
+
     def decorator(func: Callable) -> Callable:
         # Register strategies if provided
         if strategies:
-            _fallback_manager.register_fallback_chain(operation_name, [func] + strategies)
+            _fallback_manager.register_fallback_chain(
+                operation_name, [func, *strategies]
+            )
         else:
             # Use just the function itself
             _fallback_manager.register_fallback_chain(operation_name, [func])
 
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
-            return _fallback_manager.execute_with_fallback(operation_name, *args, **kwargs)
+            return _fallback_manager.execute_with_fallback(
+                operation_name, *args, **kwargs
+            )
 
         return wrapper
+
     return decorator
 
 
 class ReliabilityContext:
     """Context manager for enhanced reliability with retries and exponential backoff."""
 
-    def __init__(self, max_retries: int = 3, retry_delay: float = 0.1,
-                 exponential_backoff: bool = True, acceptable_exceptions: Tuple[type, ...] = None):
+    def __init__(
+        self,
+        max_retries: int = 3,
+        retry_delay: float = 0.1,
+        exponential_backoff: bool = True,
+        acceptable_exceptions: tuple[type, ...] | None = None,
+    ):
         self.max_retries = max_retries
         self.retry_delay = retry_delay
         self.exponential_backoff = exponential_backoff
-        self.acceptable_exceptions = acceptable_exceptions or (OSError, IOError, TimeoutError, ConnectionError)
+        self.acceptable_exceptions = acceptable_exceptions or (
+            OSError,
+            IOError,
+            TimeoutError,
+            ConnectionError,
+        )
         self.retry_count = 0
 
     def __enter__(self):
@@ -492,19 +550,23 @@ class ReliabilityContext:
                 else:
                     delay = self.retry_delay
 
-                logger.debug(f"Retry {self.retry_count}/{self.max_retries} after {delay:.2f}s delay: {exc_val}")
+                logger.debug(
+                    f"Retry {self.retry_count}/{self.max_retries} after {delay:.2f}s delay: {exc_val}"
+                )
                 time.sleep(delay)
                 return True  # Suppress the exception to allow retry
-            else:
-                # Max retries exceeded, let exception propagate
-                return False
-        else:
-            # Non-retryable exception - let it propagate
+            # Max retries exceeded, let exception propagate
             return False
+        # Non-retryable exception - let it propagate
+        return False
 
 
-def reliability_context(max_retries: int = 3, retry_delay: float = 0.1,
-                       exponential_backoff: bool = True, acceptable_exceptions: Tuple[type, ...] = None):
+def reliability_context(
+    max_retries: int = 3,
+    retry_delay: float = 0.1,
+    exponential_backoff: bool = True,
+    acceptable_exceptions: tuple[type, ...] | None = None,
+):
     """
     Context manager for enhanced reliability with retries and exponential backoff.
 
@@ -526,7 +588,9 @@ def reliability_context(max_retries: int = 3, retry_delay: float = 0.1,
                 if attempt > max_retries:
                     raise
     """
-    return ReliabilityContext(max_retries, retry_delay, exponential_backoff, acceptable_exceptions)
+    return ReliabilityContext(
+        max_retries, retry_delay, exponential_backoff, acceptable_exceptions
+    )
 
 
 def get_validation_cache() -> ValidationCache:
@@ -550,7 +614,7 @@ class ReliabilityProfiler:
     """Lightweight profiler for reliability overhead measurement."""
 
     def __init__(self):
-        self._stats: Dict[str, List[float]] = {}
+        self._stats: dict[str, list[float]] = {}
         self._lock = threading.RLock()
 
     def record_overhead(self, operation: str, overhead_time: float) -> None:
@@ -563,7 +627,7 @@ class ReliabilityProfiler:
             if len(self._stats[operation]) > 1000:
                 self._stats[operation] = self._stats[operation][-500:]
 
-    def get_overhead_stats(self, operation: str = None) -> Dict[str, Any]:
+    def get_overhead_stats(self, operation: str | None = None) -> dict[str, Any]:
         """Get overhead statistics for operations."""
         with self._lock:
             if operation:
@@ -571,12 +635,11 @@ class ReliabilityProfiler:
                 if not times:
                     return {}
                 return {
-                    'mean_overhead_ms': np.mean(times) * 1000,
-                    'max_overhead_ms': np.max(times) * 1000,
-                    'total_calls': len(times)
+                    "mean_overhead_ms": np.mean(times) * 1000,
+                    "max_overhead_ms": np.max(times) * 1000,
+                    "total_calls": len(times),
                 }
-            else:
-                return {op: self.get_overhead_stats(op) for op in self._stats.keys()}
+            return {op: self.get_overhead_stats(op) for op in self._stats}
 
 
 # Global profiler instance

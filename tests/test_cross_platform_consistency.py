@@ -7,29 +7,28 @@ produce consistent results across different platforms, architectures, and
 Python/NumPy versions, which is critical for scientific reproducibility.
 """
 
-import numpy as np
-import numpy.testing as npt
-import unittest
-import warnings
-import sys
-import os
-import json
 import hashlib
-import tempfile
-from typing import Dict, List, Any, Optional, Tuple, Union
-from pathlib import Path
-from dataclasses import dataclass, field
+import json
 import platform
-import math
+import sys
+import tempfile
+import unittest
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any
+
+import numpy as np
 
 try:
-    from scipy import stats, optimize, linalg, special
+    from scipy import linalg, optimize, special, stats
+
     SCIPY_AVAILABLE = True
 except ImportError:
     SCIPY_AVAILABLE = False
 
 try:
     import h5py
+
     H5PY_AVAILABLE = True
 except ImportError:
     H5PY_AVAILABLE = False
@@ -38,25 +37,27 @@ except ImportError:
 @dataclass
 class PlatformTestResult:
     """Result of a cross-platform consistency test."""
+
     test_name: str
     platform_signature: str
     computed_hash: str
-    reference_hash: Optional[str]
+    reference_hash: str | None
     is_consistent: bool
     numerical_result: Any
-    platform_info: Dict[str, str]
-    test_parameters: Dict[str, Any]
-    error_details: Optional[str] = None
+    platform_info: dict[str, str]
+    test_parameters: dict[str, Any]
+    error_details: str | None = None
 
 
 @dataclass
 class ReferenceResult:
     """Reference result for cross-platform comparison."""
+
     test_name: str
-    parameters: Dict[str, Any]
+    parameters: dict[str, Any]
     result_hash: str
     numerical_result: Any
-    platform_info: Dict[str, str]
+    platform_info: dict[str, str]
     numpy_version: str
     python_version: str
 
@@ -69,34 +70,35 @@ class CrossPlatformValidator:
         self.tolerance = tolerance
         self.hash_precision = hash_precision
         self.platform_info = {
-            'system': platform.system(),
-            'machine': platform.machine(),
-            'processor': platform.processor(),
-            'platform': platform.platform(),
-            'python_version': platform.python_version(),
-            'python_implementation': platform.python_implementation(),
-            'numpy_version': np.__version__,
-            'architecture': platform.architecture()[0]
+            "system": platform.system(),
+            "machine": platform.machine(),
+            "processor": platform.processor(),
+            "platform": platform.platform(),
+            "python_version": platform.python_version(),
+            "python_implementation": platform.python_implementation(),
+            "numpy_version": np.__version__,
+            "architecture": platform.architecture()[0],
         }
 
         # Add scipy version if available
         if SCIPY_AVAILABLE:
             import scipy
-            self.platform_info['scipy_version'] = scipy.__version__
+
+            self.platform_info["scipy_version"] = scipy.__version__
 
         self.platform_signature = self._generate_platform_signature()
-        self.test_results: List[PlatformTestResult] = []
-        self.reference_results: Dict[str, ReferenceResult] = {}
+        self.test_results: list[PlatformTestResult] = []
+        self.reference_results: dict[str, ReferenceResult] = {}
 
     def _generate_platform_signature(self) -> str:
         """Generate a unique signature for the current platform."""
         key_info = [
-            self.platform_info['system'],
-            self.platform_info['machine'],
-            self.platform_info['architecture'],
-            self.platform_info['python_implementation']
+            self.platform_info["system"],
+            self.platform_info["machine"],
+            self.platform_info["architecture"],
+            self.platform_info["python_implementation"],
         ]
-        signature = '_'.join(key_info).replace(' ', '_').lower()
+        signature = "_".join(key_info).replace(" ", "_").lower()
         return signature
 
     def _compute_result_hash(self, result: Any) -> str:
@@ -105,20 +107,19 @@ class CrossPlatformValidator:
             # Round to specified precision to handle floating point differences
             rounded = np.around(result, decimals=self.hash_precision)
             return hashlib.md5(rounded.tobytes()).hexdigest()
-        elif isinstance(result, (list, tuple)):
+        if isinstance(result, (list, tuple)):
             # Convert to numpy array and hash
             arr = np.array(result)
             rounded = np.around(arr, decimals=self.hash_precision)
             return hashlib.md5(rounded.tobytes()).hexdigest()
-        elif isinstance(result, (float, int)):
+        if isinstance(result, (float, int)):
             # Round single values
             rounded = round(float(result), self.hash_precision)
             return hashlib.md5(str(rounded).encode()).hexdigest()
-        else:
-            # Fallback to string representation
-            return hashlib.md5(str(result).encode()).hexdigest()
+        # Fallback to string representation
+        return hashlib.md5(str(result).encode()).hexdigest()
 
-    def test_basic_mathematical_operations(self) -> List[PlatformTestResult]:
+    def test_basic_mathematical_operations(self) -> list[PlatformTestResult]:
         """Test basic mathematical operations for cross-platform consistency."""
         results = []
 
@@ -142,8 +143,8 @@ class CrossPlatformValidator:
             test_parameters={
                 "seed": 42,
                 "matrix_size": (10, 10),
-                "operation": "matrix_multiplication"
-            }
+                "operation": "matrix_multiplication",
+            },
         )
         results.append(test_result)
 
@@ -163,8 +164,8 @@ class CrossPlatformValidator:
             test_parameters={
                 "seed": 42,
                 "matrix_size": (10, 10),
-                "operation": "eigenvalue_decomposition"
-            }
+                "operation": "eigenvalue_decomposition",
+            },
         )
         results.append(test_result)
 
@@ -182,17 +183,13 @@ class CrossPlatformValidator:
             is_consistent=True,
             numerical_result=fft_magnitude,
             platform_info=self.platform_info,
-            test_parameters={
-                "seed": 42,
-                "signal_length": 256,
-                "operation": "fft"
-            }
+            test_parameters={"seed": 42, "signal_length": 256, "operation": "fft"},
         )
         results.append(test_result)
 
         return results
 
-    def test_statistical_functions(self) -> List[PlatformTestResult]:
+    def test_statistical_functions(self) -> list[PlatformTestResult]:
         """Test statistical functions for consistency."""
         results = []
 
@@ -211,8 +208,8 @@ class CrossPlatformValidator:
             test_parameters={
                 "seed": 12345,
                 "sample_size": 1000,
-                "distribution": "normal"
-            }
+                "distribution": "normal",
+            },
         )
         results.append(test_result)
 
@@ -233,8 +230,8 @@ class CrossPlatformValidator:
             platform_info=self.platform_info,
             test_parameters={
                 "sample_size": 1000,
-                "moments": ["mean", "std", "skewness"]
-            }
+                "moments": ["mean", "std", "skewness"],
+            },
         )
         results.append(test_result)
 
@@ -242,7 +239,7 @@ class CrossPlatformValidator:
         np.random.seed(54321)
         signal1 = np.random.randn(500)
         signal2 = np.random.randn(500)
-        correlation = np.correlate(signal1, signal2, mode='full')
+        correlation = np.correlate(signal1, signal2, mode="full")
 
         test_result = PlatformTestResult(
             test_name="cross_correlation",
@@ -252,17 +249,13 @@ class CrossPlatformValidator:
             is_consistent=True,
             numerical_result=correlation,
             platform_info=self.platform_info,
-            test_parameters={
-                "seed": 54321,
-                "signal_length": 500,
-                "mode": "full"
-            }
+            test_parameters={"seed": 54321, "signal_length": 500, "mode": "full"},
         )
         results.append(test_result)
 
         return results
 
-    def test_transcendental_functions(self) -> List[PlatformTestResult]:
+    def test_transcendental_functions(self) -> list[PlatformTestResult]:
         """Test transcendental functions for consistency."""
         results = []
 
@@ -285,8 +278,8 @@ class CrossPlatformValidator:
             test_parameters={
                 "domain": "[-π, π]",
                 "points": 100,
-                "functions": ["sin", "cos", "tan"]
-            }
+                "functions": ["sin", "cos", "tan"],
+            },
         )
         results.append(test_result)
 
@@ -309,8 +302,8 @@ class CrossPlatformValidator:
             test_parameters={
                 "domain": "logspace(-2, 2)",
                 "points": 100,
-                "functions": ["exp", "log", "log10"]
-            }
+                "functions": ["exp", "log", "log10"],
+            },
         )
         results.append(test_result)
 
@@ -329,16 +322,13 @@ class CrossPlatformValidator:
                 is_consistent=True,
                 numerical_result=special_results,
                 platform_info=self.platform_info,
-                test_parameters={
-                    "functions": ["gamma", "bessel_j0"],
-                    "points": 50
-                }
+                test_parameters={"functions": ["gamma", "bessel_j0"], "points": 50},
             )
             results.append(test_result)
 
         return results
 
-    def test_xpcs_specific_operations(self) -> List[PlatformTestResult]:
+    def test_xpcs_specific_operations(self) -> list[PlatformTestResult]:
         """Test XPCS-specific numerical operations."""
         results = []
 
@@ -374,8 +364,8 @@ class CrossPlatformValidator:
                 "seed": 98765,
                 "intensity_points": 1000,
                 "scale": 10.0,
-                "lags": lags
-            }
+                "lags": lags,
+            },
         )
         results.append(test_result)
 
@@ -391,7 +381,9 @@ class CrossPlatformValidator:
                 return a * np.exp(-b * x) + c
 
             try:
-                popt, _ = optimize.curve_fit(exp_func, x_data, y_data, p0=[2.0, 0.5, 0.1])
+                popt, _ = optimize.curve_fit(
+                    exp_func, x_data, y_data, p0=[2.0, 0.5, 0.1]
+                )
                 fitting_result = popt
             except:
                 fitting_result = np.array([2.0, 0.5, 0.1])  # Fallback
@@ -408,15 +400,15 @@ class CrossPlatformValidator:
                     "seed": 11111,
                     "function": "exponential_decay",
                     "data_points": 50,
-                    "noise_level": 0.05
-                }
+                    "noise_level": 0.05,
+                },
             )
             results.append(test_result)
 
         # Test 3: Structure factor calculation
         q_values = np.linspace(0.01, 1.0, 100)
         # Simple Lorentzian structure factor
-        structure_factor = 1.0 / (1.0 + (q_values * 0.1)**2)
+        structure_factor = 1.0 / (1.0 + (q_values * 0.1) ** 2)
 
         test_result = PlatformTestResult(
             test_name="structure_factor_calculation",
@@ -430,14 +422,14 @@ class CrossPlatformValidator:
                 "q_range": "[0.01, 1.0]",
                 "points": 100,
                 "model": "lorentzian",
-                "correlation_length": 0.1
-            }
+                "correlation_length": 0.1,
+            },
         )
         results.append(test_result)
 
         return results
 
-    def run_comprehensive_platform_tests(self) -> List[PlatformTestResult]:
+    def run_comprehensive_platform_tests(self) -> list[PlatformTestResult]:
         """Run all cross-platform consistency tests."""
         all_results = []
 
@@ -453,50 +445,50 @@ class CrossPlatformValidator:
     def save_reference_results(self, filepath: str) -> None:
         """Save current results as reference for future comparisons."""
         reference_data = {
-            'platform_info': self.platform_info,
-            'platform_signature': self.platform_signature,
-            'hash_precision': self.hash_precision,
-            'tolerance': self.tolerance,
-            'results': {}
+            "platform_info": self.platform_info,
+            "platform_signature": self.platform_signature,
+            "hash_precision": self.hash_precision,
+            "tolerance": self.tolerance,
+            "results": {},
         }
 
         if not self.test_results:
             self.run_comprehensive_platform_tests()
 
         for result in self.test_results:
-            reference_data['results'][result.test_name] = {
-                'parameters': result.test_parameters,
-                'result_hash': result.computed_hash,
-                'platform_info': result.platform_info,
-                'numpy_version': self.platform_info['numpy_version'],
-                'python_version': self.platform_info['python_version']
+            reference_data["results"][result.test_name] = {
+                "parameters": result.test_parameters,
+                "result_hash": result.computed_hash,
+                "platform_info": result.platform_info,
+                "numpy_version": self.platform_info["numpy_version"],
+                "python_version": self.platform_info["python_version"],
             }
 
-        with open(filepath, 'w') as f:
+        with open(filepath, "w") as f:
             json.dump(reference_data, f, indent=2)
 
     def load_reference_results(self, filepath: str) -> bool:
         """Load reference results for comparison."""
         try:
-            with open(filepath, 'r') as f:
+            with open(filepath) as f:
                 reference_data = json.load(f)
 
             self.reference_results = {}
-            for test_name, data in reference_data['results'].items():
+            for test_name, data in reference_data["results"].items():
                 self.reference_results[test_name] = ReferenceResult(
                     test_name=test_name,
-                    parameters=data['parameters'],
-                    result_hash=data['result_hash'],
+                    parameters=data["parameters"],
+                    result_hash=data["result_hash"],
                     numerical_result=None,  # Not stored in reference
-                    platform_info=data['platform_info'],
-                    numpy_version=data['numpy_version'],
-                    python_version=data['python_version']
+                    platform_info=data["platform_info"],
+                    numpy_version=data["numpy_version"],
+                    python_version=data["python_version"],
                 )
             return True
         except (FileNotFoundError, json.JSONDecodeError, KeyError):
             return False
 
-    def compare_with_reference(self) -> List[PlatformTestResult]:
+    def compare_with_reference(self) -> list[PlatformTestResult]:
         """Compare current results with reference results."""
         if not self.test_results:
             self.run_comprehensive_platform_tests()
@@ -505,7 +497,7 @@ class CrossPlatformValidator:
             if result.test_name in self.reference_results:
                 ref_result = self.reference_results[result.test_name]
                 result.reference_hash = ref_result.result_hash
-                result.is_consistent = (result.computed_hash == ref_result.result_hash)
+                result.is_consistent = result.computed_hash == ref_result.result_hash
 
                 if not result.is_consistent:
                     result.error_details = (
@@ -524,41 +516,44 @@ class CrossPlatformValidator:
         report = ["Cross-Platform Numerical Consistency Report", "=" * 70, ""]
 
         # Platform information
-        report.extend([
-            "CURRENT PLATFORM:",
-            f"  System: {self.platform_info['system']} ({self.platform_info['machine']})",
-            f"  Architecture: {self.platform_info['architecture']}",
-            f"  Python: {self.platform_info['python_version']} ({self.platform_info['python_implementation']})",
-            f"  NumPy: {self.platform_info['numpy_version']}",
-        ])
+        report.extend(
+            [
+                "CURRENT PLATFORM:",
+                f"  System: {self.platform_info['system']} ({self.platform_info['machine']})",
+                f"  Architecture: {self.platform_info['architecture']}",
+                f"  Python: {self.platform_info['python_version']} ({self.platform_info['python_implementation']})",
+                f"  NumPy: {self.platform_info['numpy_version']}",
+            ]
+        )
 
         if SCIPY_AVAILABLE:
             report.append(f"  SciPy: {self.platform_info['scipy_version']}")
 
-        report.extend([
-            f"  Platform Signature: {self.platform_signature}",
-            ""
-        ])
+        report.extend([f"  Platform Signature: {self.platform_signature}", ""])
 
         # Test summary
         total_tests = len(self.test_results)
         consistent_tests = sum(1 for r in self.test_results if r.is_consistent)
         inconsistent_tests = total_tests - consistent_tests
 
-        report.extend([
-            "CONSISTENCY TEST SUMMARY:",
-            f"  Total Tests: {total_tests}",
-            f"  Consistent: {consistent_tests}",
-            f"  Inconsistent: {inconsistent_tests}",
-            f"  Consistency Rate: {consistent_tests/total_tests*100:.1f}%",
-            f"  Hash Precision: {self.hash_precision} decimal places",
-            ""
-        ])
+        report.extend(
+            [
+                "CONSISTENCY TEST SUMMARY:",
+                f"  Total Tests: {total_tests}",
+                f"  Consistent: {consistent_tests}",
+                f"  Inconsistent: {inconsistent_tests}",
+                f"  Consistency Rate: {consistent_tests / total_tests * 100:.1f}%",
+                f"  Hash Precision: {self.hash_precision} decimal places",
+                "",
+            ]
+        )
 
         # Group results by category
         categories = {}
         for result in self.test_results:
-            category = result.test_name.split('_')[0] if '_' in result.test_name else 'general'
+            category = (
+                result.test_name.split("_")[0] if "_" in result.test_name else "general"
+            )
             if category not in categories:
                 categories[category] = []
             categories[category].append(result)
@@ -574,7 +569,9 @@ class CrossPlatformValidator:
                 report.append(f"    Computed Hash: {result.computed_hash[:12]}...")
 
                 if result.reference_hash:
-                    report.append(f"    Reference Hash: {result.reference_hash[:12]}...")
+                    report.append(
+                        f"    Reference Hash: {result.reference_hash[:12]}..."
+                    )
                 else:
                     report.append("    Reference Hash: Not available")
 
@@ -584,39 +581,51 @@ class CrossPlatformValidator:
                 report.append("")
 
             category_consistent = sum(1 for r in results if r.is_consistent)
-            report.append(f"  Category Consistency: {category_consistent}/{len(results)} "
-                         f"({category_consistent/len(results)*100:.1f}%)")
+            report.append(
+                f"  Category Consistency: {category_consistent}/{len(results)} "
+                f"({category_consistent / len(results) * 100:.1f}%)"
+            )
             report.append("")
 
         # Overall assessment
         has_reference = any(r.reference_hash for r in self.test_results)
 
         if not has_reference:
-            report.extend([
-                "📝 REFERENCE BASELINE ESTABLISHED",
-                "   Current results can serve as reference for future platforms.",
-                "   Use save_reference_results() to save baseline for comparisons."
-            ])
+            report.extend(
+                [
+                    "📝 REFERENCE BASELINE ESTABLISHED",
+                    "   Current results can serve as reference for future platforms.",
+                    "   Use save_reference_results() to save baseline for comparisons.",
+                ]
+            )
         elif consistent_tests == total_tests:
-            report.extend([
-                "🎉 PERFECT CROSS-PLATFORM CONSISTENCY!",
-                "   All numerical results match reference platform exactly."
-            ])
+            report.extend(
+                [
+                    "🎉 PERFECT CROSS-PLATFORM CONSISTENCY!",
+                    "   All numerical results match reference platform exactly.",
+                ]
+            )
         elif consistent_tests / total_tests >= 0.95:
-            report.extend([
-                "✅ EXCELLENT: >95% consistency with reference platform.",
-                "   Minor differences may be due to different library versions."
-            ])
+            report.extend(
+                [
+                    "✅ EXCELLENT: >95% consistency with reference platform.",
+                    "   Minor differences may be due to different library versions.",
+                ]
+            )
         elif consistent_tests / total_tests >= 0.80:
-            report.extend([
-                "⚠️  GOOD: 80-95% consistency with reference platform.",
-                "   Some platform-specific differences detected."
-            ])
+            report.extend(
+                [
+                    "⚠️  GOOD: 80-95% consistency with reference platform.",
+                    "   Some platform-specific differences detected.",
+                ]
+            )
         else:
-            report.extend([
-                "🚨 ATTENTION: <80% consistency with reference platform.",
-                "   Significant platform differences require investigation."
-            ])
+            report.extend(
+                [
+                    "🚨 ATTENTION: <80% consistency with reference platform.",
+                    "   Significant platform differences require investigation.",
+                ]
+            )
 
         return "\n".join(report)
 
@@ -626,31 +635,35 @@ class CrossPlatformValidator:
             self.run_comprehensive_platform_tests()
 
         export_data = {
-            'platform_info': self.platform_info,
-            'platform_signature': self.platform_signature,
-            'test_configuration': {
-                'tolerance': self.tolerance,
-                'hash_precision': self.hash_precision
+            "platform_info": self.platform_info,
+            "platform_signature": self.platform_signature,
+            "test_configuration": {
+                "tolerance": self.tolerance,
+                "hash_precision": self.hash_precision,
             },
-            'results': [
+            "results": [
                 {
-                    'test_name': r.test_name,
-                    'computed_hash': r.computed_hash,
-                    'reference_hash': r.reference_hash,
-                    'is_consistent': r.is_consistent,
-                    'test_parameters': r.test_parameters,
-                    'error_details': r.error_details
+                    "test_name": r.test_name,
+                    "computed_hash": r.computed_hash,
+                    "reference_hash": r.reference_hash,
+                    "is_consistent": r.is_consistent,
+                    "test_parameters": r.test_parameters,
+                    "error_details": r.error_details,
                 }
                 for r in self.test_results
             ],
-            'summary': {
-                'total_tests': len(self.test_results),
-                'consistent_tests': sum(1 for r in self.test_results if r.is_consistent),
-                'consistency_rate': sum(1 for r in self.test_results if r.is_consistent) / len(self.test_results) * 100
-            }
+            "summary": {
+                "total_tests": len(self.test_results),
+                "consistent_tests": sum(
+                    1 for r in self.test_results if r.is_consistent
+                ),
+                "consistency_rate": sum(1 for r in self.test_results if r.is_consistent)
+                / len(self.test_results)
+                * 100,
+            },
         }
 
-        with open(filepath, 'w') as f:
+        with open(filepath, "w") as f:
             json.dump(export_data, f, indent=2)
 
 
@@ -664,7 +677,7 @@ class TestCrossPlatformConsistency(unittest.TestCase):
         """Test validator initialization."""
         self.assertIsInstance(self.validator.tolerance, float)
         self.assertIsInstance(self.validator.platform_info, dict)
-        self.assertIn('system', self.validator.platform_info)
+        self.assertIn("system", self.validator.platform_info)
 
     def test_platform_signature_generation(self):
         """Test platform signature generation."""
@@ -721,7 +734,9 @@ class TestCrossPlatformConsistency(unittest.TestCase):
         self.validator.run_comprehensive_platform_tests()
 
         # Save reference results
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as tmp_file:
+        with tempfile.NamedTemporaryFile(
+            mode="w", suffix=".json", delete=False
+        ) as tmp_file:
             self.validator.save_reference_results(tmp_file.name)
 
             # Load reference results
@@ -743,16 +758,18 @@ class TestCrossPlatformConsistency(unittest.TestCase):
         """Test JSON export functionality."""
         self.validator.run_comprehensive_platform_tests()
 
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as tmp_file:
+        with tempfile.NamedTemporaryFile(
+            mode="w", suffix=".json", delete=False
+        ) as tmp_file:
             self.validator.export_platform_results(tmp_file.name)
 
             # Verify file was created and contains valid JSON
-            with open(tmp_file.name, 'r') as f:
+            with open(tmp_file.name) as f:
                 data = json.load(f)
 
-            self.assertIn('platform_info', data)
-            self.assertIn('results', data)
-            self.assertIn('summary', data)
+            self.assertIn("platform_info", data)
+            self.assertIn("results", data)
+            self.assertIn("summary", data)
 
             Path(tmp_file.name).unlink()  # Clean up
 
@@ -761,21 +778,37 @@ if __name__ == "__main__":
     """Command-line interface for cross-platform consistency validation."""
     import argparse
 
-    parser = argparse.ArgumentParser(description='XPCS Cross-Platform Consistency Validation')
-    parser.add_argument('--tolerance', type=float, default=1e-12,
-                       help='Numerical tolerance for comparisons')
-    parser.add_argument('--precision', type=int, default=6,
-                       help='Hash precision (decimal places)')
-    parser.add_argument('--save-reference', type=str, metavar='FILE',
-                       help='Save current results as reference baseline')
-    parser.add_argument('--compare-reference', type=str, metavar='FILE',
-                       help='Compare with reference results file')
-    parser.add_argument('--report', action='store_true',
-                       help='Generate detailed consistency report')
-    parser.add_argument('--export', type=str, metavar='FILE',
-                       help='Export results to JSON file')
-    parser.add_argument('--unittest', action='store_true',
-                       help='Run unit tests')
+    parser = argparse.ArgumentParser(
+        description="XPCS Cross-Platform Consistency Validation"
+    )
+    parser.add_argument(
+        "--tolerance",
+        type=float,
+        default=1e-12,
+        help="Numerical tolerance for comparisons",
+    )
+    parser.add_argument(
+        "--precision", type=int, default=6, help="Hash precision (decimal places)"
+    )
+    parser.add_argument(
+        "--save-reference",
+        type=str,
+        metavar="FILE",
+        help="Save current results as reference baseline",
+    )
+    parser.add_argument(
+        "--compare-reference",
+        type=str,
+        metavar="FILE",
+        help="Compare with reference results file",
+    )
+    parser.add_argument(
+        "--report", action="store_true", help="Generate detailed consistency report"
+    )
+    parser.add_argument(
+        "--export", type=str, metavar="FILE", help="Export results to JSON file"
+    )
+    parser.add_argument("--unittest", action="store_true", help="Run unit tests")
 
     args = parser.parse_args()
 
@@ -783,8 +816,7 @@ if __name__ == "__main__":
         unittest.main(argv=[sys.argv[0]], exit=False)
     else:
         validator = CrossPlatformValidator(
-            tolerance=args.tolerance,
-            hash_precision=args.precision
+            tolerance=args.tolerance, hash_precision=args.precision
         )
 
         # Run tests
@@ -818,8 +850,8 @@ if __name__ == "__main__":
             total_tests = len(results)
             consistent_tests = sum(1 for r in results if r.is_consistent)
 
-            print(f"\nCross-Platform Consistency Summary:")
+            print("\nCross-Platform Consistency Summary:")
             print(f"  Platform: {validator.platform_signature}")
             print(f"  Total Tests: {total_tests}")
             print(f"  Consistent: {consistent_tests}")
-            print(f"  Consistency Rate: {consistent_tests/total_tests*100:.1f}%")
+            print(f"  Consistency Rate: {consistent_tests / total_tests * 100:.1f}%")

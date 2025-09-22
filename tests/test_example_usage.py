@@ -7,36 +7,45 @@ by the modernized test infrastructure.
 import h5py
 import numpy as np
 import pytest
+
 try:
     import h5py
+
     H5PY_AVAILABLE = True
 except ImportError:
     H5PY_AVAILABLE = False
+
     # Mock h5py for basic testing
     class MockH5pyFile:
-        def __init__(self, *args, **kwargs): pass
-        def __enter__(self): return self
-        def __exit__(self, *args): pass
-        def create_dataset(self, *args, **kwargs): pass
-        def create_group(self, *args, **kwargs): return self
-        def __getitem__(self, key): return self
-        def __setitem__(self, key, value): pass
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            pass
+
+        def create_dataset(self, *args, **kwargs):
+            pass
+
+        def create_group(self, *args, **kwargs):
+            return self
+
+        def __getitem__(self, key):
+            return self
+
+        def __setitem__(self, key, value):
+            pass
 
     class MockH5py:
         File = MockH5pyFile
 
     h5py = MockH5py()
 
-from tests.fixtures import (
-    comprehensive_xpcs_hdf5,
-    synthetic_correlation_data,
-    synthetic_scattering_data,
-    minimal_xpcs_hdf5,
-)
 from tests.fixtures.synthetic_data import (
     create_synthetic_g2_data,
     create_synthetic_saxs_data,
-    SyntheticXPCSGenerator,
 )
 
 
@@ -55,7 +64,9 @@ def test_synthetic_g2_data_generation(synthetic_correlation_data):
     assert len(data["tau"]) == 50  # Default fixture size
     assert len(data["g2"]) == 50
     assert np.all(data["tau"] > 0)
-    assert np.mean(data["g2"]) >= 1.0  # Average should be >= 1 (noise may cause individual points < 1)
+    assert (
+        np.mean(data["g2"]) >= 1.0
+    )  # Average should be >= 1 (noise may cause individual points < 1)
 
     # Check monotonicity
     assert np.all(np.diff(data["tau"]) > 0)

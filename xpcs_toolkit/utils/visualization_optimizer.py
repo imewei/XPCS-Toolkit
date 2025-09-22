@@ -6,43 +6,42 @@ that were identified during comprehensive analysis, including PyQtGraph optimiza
 matplotlib performance improvements, and intelligent plot handler selection.
 """
 
+import importlib.util
 import time
 from contextlib import contextmanager
 from enum import Enum
-from typing import Any, Dict, Optional, Tuple
+from typing import Any
 
 import numpy as np
 
-try:
+# Check PyQtGraph availability
+PYQTGRAPH_AVAILABLE = importlib.util.find_spec("pyqtgraph") is not None
+if PYQTGRAPH_AVAILABLE:
     import pyqtgraph as pg
-    from pyqtgraph import ImageView, PlotWidget
-    PYQTGRAPH_AVAILABLE = True
-except ImportError:
-    PYQTGRAPH_AVAILABLE = False
 
-try:
-    import matplotlib.pyplot as plt
-    from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg
-    MATPLOTLIB_AVAILABLE = True
-except ImportError:
-    MATPLOTLIB_AVAILABLE = False
+# Check Matplotlib availability
+MATPLOTLIB_AVAILABLE = importlib.util.find_spec("matplotlib") is not None
 
 from .logging_config import get_logger
-from .memory_manager import get_memory_manager, MemoryPressure
+from .memory_manager import MemoryPressure, get_memory_manager
+
 
 # Lazy import threading to avoid circular dependencies
 def _get_threading_manager():
     try:
         from ..threading.unified_threading import get_unified_threading_manager
+
         return get_unified_threading_manager()
     except ImportError:
         return None
+
 
 logger = get_logger(__name__)
 
 
 class PlotBackend(Enum):
     """Available plotting backends."""
+
     PYQTGRAPH = "pyqtgraph"
     MATPLOTLIB = "matplotlib"
     AUTO = "auto"
@@ -50,9 +49,10 @@ class PlotBackend(Enum):
 
 class PlotComplexity(Enum):
     """Plot complexity levels for optimization decisions."""
-    SIMPLE = "simple"          # Single image/plot
-    MODERATE = "moderate"      # Multiple series, ROIs
-    COMPLEX = "complex"        # Many series, complex interactions
+
+    SIMPLE = "simple"  # Single image/plot
+    MODERATE = "moderate"  # Multiple series, ROIs
+    COMPLEX = "complex"  # Many series, complex interactions
     VERY_COMPLEX = "very_complex"  # Real-time updates, large datasets
 
 
@@ -65,10 +65,10 @@ def optimized_pyqtgraph_context():
 
     # Store original settings
     original_settings = {
-        'useOpenGL': pg.getConfigOption('useOpenGL'),
-        'enableExperimental': pg.getConfigOption('enableExperimental'),
-        'crashWarning': pg.getConfigOption('crashWarning'),
-        'imageAxisOrder': pg.getConfigOption('imageAxisOrder')
+        "useOpenGL": pg.getConfigOption("useOpenGL"),
+        "enableExperimental": pg.getConfigOption("enableExperimental"),
+        "crashWarning": pg.getConfigOption("crashWarning"),
+        "imageAxisOrder": pg.getConfigOption("imageAxisOrder"),
     }
 
     try:
@@ -77,8 +77,8 @@ def optimized_pyqtgraph_context():
             useOpenGL=True,  # Enable OpenGL acceleration
             enableExperimental=True,  # Enable performance features
             crashWarning=False,  # Reduce warning overhead
-            imageAxisOrder='row-major',  # Optimize for NumPy
-            antialias=False  # Disable antialiasing for large datasets
+            imageAxisOrder="row-major",  # Optimize for NumPy
+            antialias=False,  # Disable antialiasing for large datasets
         )
 
         logger.debug("Applied optimized PyQtGraph settings")
@@ -93,12 +93,13 @@ def optimized_pyqtgraph_context():
 class ImageDisplayOptimizer:
     """Optimizes large image display performance."""
 
-    def __init__(self, max_display_size: Tuple[int, int] = (2048, 2048)):
+    def __init__(self, max_display_size: tuple[int, int] = (2048, 2048)):
         self.max_display_size = max_display_size
         self.memory_manager = get_memory_manager()
 
-    def optimize_image_for_display(self, image: np.ndarray,
-                                  target_size: Optional[Tuple[int, int]] = None) -> np.ndarray:
+    def optimize_image_for_display(
+        self, image: np.ndarray, target_size: tuple[int, int] | None = None
+    ) -> np.ndarray:
         """
         Optimize image for display performance.
 
@@ -106,7 +107,7 @@ class ImageDisplayOptimizer:
         ----------
         image : np.ndarray
             Input image array
-        target_size : Tuple[int, int], optional
+        target_size : tuple[int, int], optional
             Target display size (height, width)
 
         Returns
@@ -135,7 +136,9 @@ class ImageDisplayOptimizer:
             return image
 
         # Apply intelligent downsampling
-        logger.info(f"Downsampling image from {image.shape} by factor {downsample_factor:.1f}")
+        logger.info(
+            f"Downsampling image from {image.shape} by factor {downsample_factor:.1f}"
+        )
 
         # Use area-based downsampling for better quality
         new_height = int(height / downsample_factor)
@@ -146,7 +149,9 @@ class ImageDisplayOptimizer:
             downsampled = self._downsample_2d(image, (new_height, new_width))
         elif len(image.shape) == 3:
             # 3D image (e.g., time series)
-            downsampled = np.zeros((image.shape[0], new_height, new_width), dtype=image.dtype)
+            downsampled = np.zeros(
+                (image.shape[0], new_height, new_width), dtype=image.dtype
+            )
             for t in range(image.shape[0]):
                 downsampled[t] = self._downsample_2d(image[t], (new_height, new_width))
         else:
@@ -158,7 +163,9 @@ class ImageDisplayOptimizer:
 
         return downsampled
 
-    def _downsample_2d(self, image: np.ndarray, target_shape: Tuple[int, int]) -> np.ndarray:
+    def _downsample_2d(
+        self, image: np.ndarray, target_shape: tuple[int, int]
+    ) -> np.ndarray:
         """Downsample 2D image using area averaging."""
         from scipy import ndimage
 
@@ -182,8 +189,9 @@ class PlotPerformanceOptimizer:
         self.memory_manager = get_memory_manager()
         self.image_optimizer = ImageDisplayOptimizer()
 
-    def select_optimal_backend(self, plot_type: str, data_size_mb: float,
-                              complexity: PlotComplexity) -> PlotBackend:
+    def select_optimal_backend(
+        self, plot_type: str, data_size_mb: float, complexity: PlotComplexity
+    ) -> PlotBackend:
         """
         Select optimal plotting backend based on data characteristics.
 
@@ -204,31 +212,32 @@ class PlotPerformanceOptimizer:
         memory_pressure = self.memory_manager.get_memory_pressure()
 
         # Decision matrix based on plot characteristics
-        if plot_type in ['image', 'saxs_2d']:
-            if data_size_mb > 50 or memory_pressure in [MemoryPressure.HIGH, MemoryPressure.CRITICAL]:
+        if plot_type in ["image", "saxs_2d"]:
+            if data_size_mb > 50 or memory_pressure in [
+                MemoryPressure.HIGH,
+                MemoryPressure.CRITICAL,
+            ]:
                 # Large images: use PyQtGraph with optimization
                 return PlotBackend.PYQTGRAPH
-            else:
-                # Smaller images: either backend works
-                return PlotBackend.PYQTGRAPH
+            # Smaller images: either backend works
+            return PlotBackend.PYQTGRAPH
 
-        elif plot_type in ['line', 'scatter', 'g2']:
+        if plot_type in ["line", "scatter", "g2"]:
             if complexity in [PlotComplexity.COMPLEX, PlotComplexity.VERY_COMPLEX]:
                 # Complex plots with many series: PyQtGraph for performance
                 return PlotBackend.PYQTGRAPH
-            elif data_size_mb < 10:
+            if data_size_mb < 10:
                 # Small datasets: matplotlib for quality
                 return PlotBackend.MATPLOTLIB
-            else:
-                # Medium datasets: PyQtGraph for speed
-                return PlotBackend.PYQTGRAPH
-
-        else:
-            # Default to PyQtGraph for unknown types
+            # Medium datasets: PyQtGraph for speed
             return PlotBackend.PYQTGRAPH
 
-    def optimize_pyqtgraph_plot(self, plot_widget, data: np.ndarray,
-                               plot_type: str) -> Dict[str, Any]:
+        # Default to PyQtGraph for unknown types
+        return PlotBackend.PYQTGRAPH
+
+    def optimize_pyqtgraph_plot(
+        self, plot_widget, data: np.ndarray, plot_type: str
+    ) -> dict[str, Any]:
         """
         Apply PyQtGraph-specific optimizations.
 
@@ -243,47 +252,48 @@ class PlotPerformanceOptimizer:
 
         Returns
         -------
-        Dict[str, Any]
+        dict[str, Any]
             Optimization settings applied
         """
         optimizations = {}
 
-        if plot_type == 'image':
+        if plot_type == "image":
             # Image-specific optimizations
-            if hasattr(plot_widget, 'getImageItem'):
+            if hasattr(plot_widget, "getImageItem"):
                 image_item = plot_widget.getImageItem()
                 if image_item is not None:
                     # Enable OpenGL if available
-                    if hasattr(image_item, 'setOpts'):
+                    if hasattr(image_item, "setOpts"):
                         image_item.setOpts(useOpenGL=True)
-                        optimizations['opengl_enabled'] = True
+                        optimizations["opengl_enabled"] = True
 
             # Optimize image data
             if data.size > 1e6:  # > 1M pixels
                 optimized_data = self.image_optimizer.optimize_image_for_display(data)
-                optimizations['image_downsampled'] = data.shape != optimized_data.shape
-                optimizations['original_size'] = data.shape
-                optimizations['optimized_size'] = optimized_data.shape
+                optimizations["image_downsampled"] = data.shape != optimized_data.shape
+                optimizations["original_size"] = data.shape
+                optimizations["optimized_size"] = optimized_data.shape
                 data = optimized_data
 
-        elif plot_type in ['line', 'scatter']:
+        elif plot_type in ["line", "scatter"]:
             # Line/scatter plot optimizations
-            if hasattr(plot_widget, 'setDownsampling'):
+            if hasattr(plot_widget, "setDownsampling"):
                 # Enable automatic downsampling for large datasets
                 if data.size > 1e5:  # > 100k points
-                    plot_widget.setDownsampling(auto=True, mode='peak')
-                    optimizations['downsampling_enabled'] = True
+                    plot_widget.setDownsampling(auto=True, mode="peak")
+                    optimizations["downsampling_enabled"] = True
 
             # Disable antialiasing for large datasets
             if data.size > 5e4:  # > 50k points
-                if hasattr(plot_widget, 'setAntialiasing'):
+                if hasattr(plot_widget, "setAntialiasing"):
                     plot_widget.setAntialiasing(False)
-                    optimizations['antialiasing_disabled'] = True
+                    optimizations["antialiasing_disabled"] = True
 
         return optimizations
 
-    def optimize_matplotlib_plot(self, figure, axes, data: np.ndarray,
-                                plot_type: str) -> Dict[str, Any]:
+    def optimize_matplotlib_plot(
+        self, figure, axes, data: np.ndarray, plot_type: str
+    ) -> dict[str, Any]:
         """
         Apply matplotlib-specific optimizations.
 
@@ -300,27 +310,27 @@ class PlotPerformanceOptimizer:
 
         Returns
         -------
-        Dict[str, Any]
+        dict[str, Any]
             Optimization settings applied
         """
         optimizations = {}
 
         # General matplotlib optimizations
-        figure.set_facecolor('white')  # Faster rendering
-        optimizations['background_optimized'] = True
+        figure.set_facecolor("white")  # Faster rendering
+        optimizations["background_optimized"] = True
 
-        if plot_type == 'image':
+        if plot_type == "image":
             # Image-specific optimizations
             if data.size > 1e6:  # > 1M pixels
                 optimized_data = self.image_optimizer.optimize_image_for_display(data)
-                optimizations['image_downsampled'] = data.shape != optimized_data.shape
+                optimizations["image_downsampled"] = data.shape != optimized_data.shape
                 data = optimized_data
 
             # Use faster interpolation
-            if hasattr(axes, 'imshow'):
-                optimizations['interpolation'] = 'nearest'
+            if hasattr(axes, "imshow"):
+                optimizations["interpolation"] = "nearest"
 
-        elif plot_type in ['line', 'scatter']:
+        elif plot_type in ["line", "scatter"]:
             # Line/scatter optimizations
             if data.size > 1e5:  # > 100k points
                 # Downsample data for matplotlib
@@ -329,8 +339,8 @@ class PlotPerformanceOptimizer:
                     data = data[::downsample_factor]
                 elif len(data.shape) == 2:
                     data = data[::downsample_factor, :]
-                optimizations['data_downsampled'] = True
-                optimizations['downsample_factor'] = downsample_factor
+                optimizations["data_downsampled"] = True
+                optimizations["downsample_factor"] = downsample_factor
 
         return optimizations
 
@@ -341,8 +351,9 @@ class ProgressiveImageLoader:
     def __init__(self, chunk_size_mb: float = 50.0):
         self.chunk_size_mb = chunk_size_mb
 
-    def load_image_progressive(self, image_loader_func,
-                              progress_callback: Optional[callable] = None) -> np.ndarray:
+    def load_image_progressive(
+        self, image_loader_func, progress_callback: callable | None = None
+    ) -> np.ndarray:
         """
         Load image progressively with progress reporting.
 
@@ -374,7 +385,7 @@ class ProgressiveImageLoader:
                 progress_callback(50, 100, "Processing image data...")
 
             # Apply any necessary post-processing
-            if hasattr(image_data, 'shape') and len(image_data.shape) > 2:
+            if hasattr(image_data, "shape") and len(image_data.shape) > 2:
                 # Multi-dimensional data - may need chunked processing
                 pass
 
@@ -388,7 +399,7 @@ class ProgressiveImageLoader:
 
         except Exception as e:
             if progress_callback:
-                progress_callback(0, 100, f"Image load failed: {str(e)}")
+                progress_callback(0, 100, f"Image load failed: {e!s}")
             raise
 
 
@@ -401,7 +412,7 @@ class PlotCacheManager:
         self.cache_access_times = {}
         self.current_cache_size_mb = 0.0
 
-    def get_plot_cache_key(self, data_hash: str, plot_params: Dict[str, Any]) -> str:
+    def get_plot_cache_key(self, data_hash: str, plot_params: dict[str, Any]) -> str:
         """Generate cache key for plot data."""
         # Create a hash from plot parameters
         param_str = str(sorted(plot_params.items()))
@@ -412,13 +423,16 @@ class PlotCacheManager:
         """Cache processed plot data."""
         try:
             # Estimate size
-            if hasattr(plot_data, 'nbytes'):
+            if hasattr(plot_data, "nbytes"):
                 size_mb = plot_data.nbytes / (1024 * 1024)
             else:
                 size_mb = 1.0  # Default estimate
 
             # Check if we need to evict old entries
-            while self.current_cache_size_mb + size_mb > self.max_cache_size_mb and self.plot_cache:
+            while (
+                self.current_cache_size_mb + size_mb > self.max_cache_size_mb
+                and self.plot_cache
+            ):
                 self._evict_oldest_entry()
 
             # Cache the data
@@ -431,7 +445,7 @@ class PlotCacheManager:
         except Exception as e:
             logger.warning(f"Failed to cache plot data: {e}")
 
-    def get_cached_plot_data(self, cache_key: str) -> Optional[Any]:
+    def get_cached_plot_data(self, cache_key: str) -> Any | None:
         """Retrieve cached plot data."""
         if cache_key in self.plot_cache:
             self.cache_access_times[cache_key] = time.time()
@@ -444,14 +458,15 @@ class PlotCacheManager:
         if not self.cache_access_times:
             return
 
-        oldest_key = min(self.cache_access_times.keys(),
-                        key=lambda k: self.cache_access_times[k])
+        oldest_key = min(
+            self.cache_access_times.keys(), key=lambda k: self.cache_access_times[k]
+        )
 
         # Remove from cache
         plot_data = self.plot_cache.pop(oldest_key, None)
         self.cache_access_times.pop(oldest_key, None)
 
-        if plot_data is not None and hasattr(plot_data, 'nbytes'):
+        if plot_data is not None and hasattr(plot_data, "nbytes"):
             size_mb = plot_data.nbytes / (1024 * 1024)
             self.current_cache_size_mb -= size_mb
 
@@ -480,8 +495,12 @@ def get_plot_cache_manager() -> PlotCacheManager:
 
 
 # Convenience functions
-def optimize_plot_performance(plot_widget, data: np.ndarray, plot_type: str,
-                             backend: PlotBackend = PlotBackend.AUTO) -> Dict[str, Any]:
+def optimize_plot_performance(
+    plot_widget,
+    data: np.ndarray,
+    plot_type: str,
+    backend: PlotBackend = PlotBackend.AUTO,
+) -> dict[str, Any]:
     """
     Convenience function to optimize plot performance.
 
@@ -504,16 +523,16 @@ def optimize_plot_performance(plot_widget, data: np.ndarray, plot_type: str,
     optimizer = get_plot_optimizer()
 
     if backend == PlotBackend.AUTO:
-        data_size_mb = data.nbytes / (1024 * 1024) if hasattr(data, 'nbytes') else 1.0
+        data_size_mb = data.nbytes / (1024 * 1024) if hasattr(data, "nbytes") else 1.0
         complexity = PlotComplexity.MODERATE  # Default assumption
         backend = optimizer.select_optimal_backend(plot_type, data_size_mb, complexity)
 
     if backend == PlotBackend.PYQTGRAPH:
         return optimizer.optimize_pyqtgraph_plot(plot_widget, data, plot_type)
-    elif backend == PlotBackend.MATPLOTLIB:
+    if backend == PlotBackend.MATPLOTLIB:
         # Extract figure and axes from widget
-        figure = getattr(plot_widget, 'figure', None)
-        axes = getattr(plot_widget, 'axes', None)
+        figure = getattr(plot_widget, "figure", None)
+        axes = getattr(plot_widget, "axes", None)
         if figure is not None and axes is not None:
             return optimizer.optimize_matplotlib_plot(figure, axes, data, plot_type)
 
@@ -571,16 +590,16 @@ class AdvancedGUIRenderer:
             self._restore_rendering_settings(original_settings)
             self._update_performance_metrics(start_time)
 
-    def _apply_rendering_optimizations(self) -> Dict[str, Any]:
+    def _apply_rendering_optimizations(self) -> dict[str, Any]:
         """Apply rendering optimizations and return original settings."""
         original_settings = {}
 
         if PYQTGRAPH_AVAILABLE:
             # Store original PyQtGraph settings
-            original_settings['pyqtgraph'] = {
-                'antialias': pg.getConfigOption('antialias'),
-                'useOpenGL': pg.getConfigOption('useOpenGL'),
-                'enableExperimental': pg.getConfigOption('enableExperimental')
+            original_settings["pyqtgraph"] = {
+                "antialias": pg.getConfigOption("antialias"),
+                "useOpenGL": pg.getConfigOption("useOpenGL"),
+                "enableExperimental": pg.getConfigOption("enableExperimental"),
             }
 
             # Apply performance optimizations based on current quality
@@ -594,14 +613,14 @@ class AdvancedGUIRenderer:
 
             # Reduce update frequency for complex scenes
             if quality_factor < 0.6:
-                pg.setConfigOption('crashWarning', False)
+                pg.setConfigOption("crashWarning", False)
 
         return original_settings
 
-    def _restore_rendering_settings(self, original_settings: Dict[str, Any]):
+    def _restore_rendering_settings(self, original_settings: dict[str, Any]):
         """Restore original rendering settings."""
-        if PYQTGRAPH_AVAILABLE and 'pyqtgraph' in original_settings:
-            pg.setConfigOptions(**original_settings['pyqtgraph'])
+        if PYQTGRAPH_AVAILABLE and "pyqtgraph" in original_settings:
+            pg.setConfigOptions(**original_settings["pyqtgraph"])
 
     def _update_performance_metrics(self, start_time: float):
         """Update frame time metrics for adaptive quality."""
@@ -624,7 +643,9 @@ class AdvancedGUIRenderer:
             new_quality = max(self._min_quality, self._current_quality * 0.9)
             if new_quality != self._current_quality:
                 self._current_quality = new_quality
-                logger.debug(f"Reduced rendering quality to {new_quality:.2f} due to performance")
+                logger.debug(
+                    f"Reduced rendering quality to {new_quality:.2f} due to performance"
+                )
 
         elif avg_frame_time < self.frame_time_target * 0.8:
             # Performance is good, can increase quality
@@ -633,7 +654,9 @@ class AdvancedGUIRenderer:
                 self._current_quality = new_quality
                 logger.debug(f"Increased rendering quality to {new_quality:.2f}")
 
-    def batch_widget_update(self, widget_id: str, update_func: callable, *args, **kwargs):
+    def batch_widget_update(
+        self, widget_id: str, update_func: callable, *args, **kwargs
+    ):
         """
         Batch widget updates to reduce rendering overhead.
 
@@ -662,7 +685,9 @@ class AdvancedGUIRenderer:
                         try:
                             func(*args, **kwargs)
                         except Exception as e:
-                            logger.warning(f"Batched update failed for {widget_id}: {e}")
+                            logger.warning(
+                                f"Batched update failed for {widget_id}: {e}"
+                            )
 
                 self._batch_timer = None
 
@@ -671,10 +696,12 @@ class AdvancedGUIRenderer:
                 f"batch_update_{time.time()}",
                 process_batched_updates,
                 TaskPriority.HIGH,
-                TaskType.GUI_UPDATE
+                TaskType.GUI_UPDATE,
             )
 
-    def optimize_large_dataset_display(self, data: np.ndarray, max_points: int = 10000) -> np.ndarray:
+    def optimize_large_dataset_display(
+        self, data: np.ndarray, max_points: int = 10000
+    ) -> np.ndarray:
         """
         Optimize display of large datasets through intelligent downsampling.
 
@@ -699,7 +726,7 @@ class AdvancedGUIRenderer:
             downsample_factor = max(1, data.size // max_points)
             return self._peak_preserving_downsample(data, downsample_factor)
 
-        elif len(data.shape) == 2:
+        if len(data.shape) == 2:
             # 2D data: use area-based downsampling
             total_pixels = data.shape[0] * data.shape[1]
             if total_pixels > max_points:
@@ -709,6 +736,7 @@ class AdvancedGUIRenderer:
 
                 try:
                     from scipy import ndimage
+
                     zoom_y = new_height / data.shape[0]
                     zoom_x = new_width / data.shape[1]
                     return ndimage.zoom(data, (zoom_y, zoom_x), order=1)
@@ -727,7 +755,7 @@ class AdvancedGUIRenderer:
 
         # Reshape data into chunks and find min/max for each
         n_complete_chunks = len(data) // factor
-        reshaped = data[:n_complete_chunks * factor].reshape(-1, factor)
+        reshaped = data[: n_complete_chunks * factor].reshape(-1, factor)
 
         # For each chunk, keep both min and max to preserve features
         mins = np.min(reshaped, axis=1)
@@ -737,31 +765,33 @@ class AdvancedGUIRenderer:
         result = np.column_stack((mins, maxs)).flatten()
 
         # Add remaining data points if any
-        remaining = data[n_complete_chunks * factor:]
+        remaining = data[n_complete_chunks * factor :]
         if len(remaining) > 0:
             result = np.concatenate([result, remaining])
 
         return result
 
-    def get_rendering_stats(self) -> Dict[str, Any]:
+    def get_rendering_stats(self) -> dict[str, Any]:
         """Get comprehensive rendering performance statistics."""
         stats = {
-            'target_fps': self.target_fps,
-            'current_quality': self._current_quality,
-            'frame_count': len(self._frame_times),
-            'pending_updates': len(self._pending_updates)
+            "target_fps": self.target_fps,
+            "current_quality": self._current_quality,
+            "frame_count": len(self._frame_times),
+            "pending_updates": len(self._pending_updates),
         }
 
         if self._frame_times:
             avg_frame_time = sum(self._frame_times) / len(self._frame_times)
             current_fps = 1.0 / max(0.001, avg_frame_time)  # Avoid division by zero
 
-            stats.update({
-                'avg_frame_time_ms': avg_frame_time * 1000,
-                'current_fps': current_fps,
-                'frame_time_target_ms': self.frame_time_target * 1000,
-                'performance_ratio': self.frame_time_target / avg_frame_time
-            })
+            stats.update(
+                {
+                    "avg_frame_time_ms": avg_frame_time * 1000,
+                    "current_fps": current_fps,
+                    "frame_time_target_ms": self.frame_time_target * 1000,
+                    "performance_ratio": self.frame_time_target / avg_frame_time,
+                }
+            )
 
         return stats
 

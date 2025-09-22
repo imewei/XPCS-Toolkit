@@ -4,15 +4,16 @@ This module tests PyQtGraph and Matplotlib integration, plot interactions,
 zooming, panning, data selection, and visualization updates.
 """
 
+import os
 from unittest.mock import Mock, patch
 
-import os
 # Set Qt API to PySide6 before importing matplotlib
-os.environ.setdefault('QT_API', 'PySide6')
+os.environ.setdefault("QT_API", "PySide6")
 
 import matplotlib
+
 # Set matplotlib backend to PySide6-compatible qtagg
-matplotlib.use('qtagg')
+matplotlib.use("qtagg")
 
 import numpy as np
 import pyqtgraph as pg
@@ -20,7 +21,6 @@ import pytest
 
 # Import from the PySide6-compatible backend
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg
-
 from PySide6 import QtCore, QtGui, QtWidgets
 
 
@@ -80,7 +80,7 @@ class TestPyQtGraphIntegration:
             QtCore.Qt.MouseButton.NoButton,
             QtCore.Qt.KeyboardModifier.NoModifier,
             QtCore.Qt.ScrollPhase.NoScrollPhase,
-            False  # inverted
+            False,  # inverted
         )
 
         # Send wheel event to both widget and view box
@@ -604,7 +604,10 @@ class TestPlotErrorHandling:
             # May succeed with automatic handling or fail gracefully
         except (ValueError, IndexError, Exception) as e:
             # Expected for size mismatch - PyQtGraph may raise various exception types
-            assert any(keyword in str(e).lower() for keyword in ["size", "length", "shape", "same"])
+            assert any(
+                keyword in str(e).lower()
+                for keyword in ["size", "length", "shape", "same"]
+            )
 
 
 if __name__ == "__main__":

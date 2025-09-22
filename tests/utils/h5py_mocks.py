@@ -5,15 +5,15 @@ This module provides standardized mock implementations of h5py objects
 to eliminate duplication across test files.
 """
 
-import numpy as np
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+
+import numpy as np
 
 
 class MockH5pyDataset:
     """Mock h5py Dataset for testing."""
 
-    def __init__(self, data: Optional[np.ndarray] = None, shape: Optional[tuple] = None):
+    def __init__(self, data: np.ndarray | None = None, shape: tuple | None = None):
         if data is not None:
             self._data = data
             self.shape = data.shape
@@ -63,8 +63,13 @@ class MockH5pyGroup:
     def get(self, key, default=None):
         return self._items.get(key, default)
 
-    def create_dataset(self, name: str, data: Optional[np.ndarray] = None,
-                      shape: Optional[tuple] = None, dtype: Optional[type] = None):
+    def create_dataset(
+        self,
+        name: str,
+        data: np.ndarray | None = None,
+        shape: tuple | None = None,
+        dtype: type | None = None,
+    ):
         """Create a mock dataset."""
         dataset = MockH5pyDataset(data, shape)
         self._items[name] = dataset
@@ -80,7 +85,9 @@ class MockH5pyGroup:
 class MockH5pyFile(MockH5pyGroup):
     """Mock h5py File for testing."""
 
-    def __init__(self, filename: Union[str, Path] = None, mode: str = 'r', *args, **kwargs):
+    def __init__(
+        self, filename: str | Path | None = None, mode: str = "r", *args, **kwargs
+    ):
         super().__init__()
         self.filename = filename or "mock_file.h5"
         self.mode = mode
@@ -92,13 +99,13 @@ class MockH5pyFile(MockH5pyGroup):
     def _setup_default_structure(self):
         """Set up default XPCS file structure."""
         # Create common XPCS groups and datasets
-        self.create_group('exchange')
-        exchange = self['exchange']
-        exchange.create_dataset('data', shape=(100, 100, 50))
+        self.create_group("exchange")
+        exchange = self["exchange"]
+        exchange.create_dataset("data", shape=(100, 100, 50))
 
         # Add some metadata
-        self.attrs['instrument'] = 'APS 8-ID-I'
-        self.attrs['sample'] = 'test_sample'
+        self.attrs["instrument"] = "APS 8-ID-I"
+        self.attrs["sample"] = "test_sample"
 
     def __enter__(self):
         return self
@@ -112,7 +119,6 @@ class MockH5pyFile(MockH5pyGroup):
 
     def flush(self):
         """Mock flush operation."""
-        pass
 
 
 class MockH5py:
@@ -125,23 +131,24 @@ class MockH5py:
     @staticmethod
     def is_hdf5(filename):
         """Mock HDF5 file check."""
-        return str(filename).endswith(('.h5', '.hdf5'))
+        return str(filename).endswith((".h5", ".hdf5"))
 
 
 # Convenience function for creating mock files
-def create_mock_hdf5_file(filename: str = "test.h5",
-                         data_shape: tuple = (100, 100, 50)) -> MockH5pyFile:
+def create_mock_hdf5_file(
+    filename: str = "test.h5", data_shape: tuple = (100, 100, 50)
+) -> MockH5pyFile:
     """Create a mock HDF5 file with standard XPCS structure."""
     mock_file = MockH5pyFile(filename)
 
     # Add common XPCS datasets
-    exchange = mock_file.create_group('exchange')
-    exchange.create_dataset('data', shape=data_shape)
+    exchange = mock_file.create_group("exchange")
+    exchange.create_dataset("data", shape=data_shape)
 
     # Add G2 analysis group
-    g2_group = mock_file.create_group('g2_analysis')
-    g2_group.create_dataset('correlation_function', shape=(50,))
-    g2_group.create_dataset('tau', shape=(50,))
+    g2_group = mock_file.create_group("g2_analysis")
+    g2_group.create_dataset("correlation_function", shape=(50,))
+    g2_group.create_dataset("tau", shape=(50,))
 
     return mock_file
 
@@ -149,6 +156,7 @@ def create_mock_hdf5_file(filename: str = "test.h5",
 # ============================================================================
 # Additional Mock Utilities
 # ============================================================================
+
 
 class MockXpcsFile:
     """Mock XPCS file object for testing."""
@@ -161,23 +169,23 @@ class MockXpcsFile:
     def get_correlation_data(self):
         """Mock correlation data retrieval."""
         return {
-            'tau': np.logspace(-6, 2, 50),
-            'g2': 1.0 + 0.8 * np.exp(-np.logspace(-6, 2, 50) / 1e-3),
-            'g2_err': 0.02 * np.ones(50)
+            "tau": np.logspace(-6, 2, 50),
+            "g2": 1.0 + 0.8 * np.exp(-np.logspace(-6, 2, 50) / 1e-3),
+            "g2_err": 0.02 * np.ones(50),
         }
 
     def get_scattering_data(self):
         """Mock scattering data retrieval."""
         q = np.linspace(0.001, 0.1, 100)
         return {
-            'q': q,
-            'intensity': 1e6 * q ** (-2.5) + 100,
-            'intensity_err': np.sqrt(1e6 * q ** (-2.5) + 100)
+            "q": q,
+            "intensity": 1e6 * q ** (-2.5) + 100,
+            "intensity_err": np.sqrt(1e6 * q ** (-2.5) + 100),
         }
 
     def close(self):
         """Mock close operation."""
-        if hasattr(self.h5_file, 'close'):
+        if hasattr(self.h5_file, "close"):
             self.h5_file.close()
 
 

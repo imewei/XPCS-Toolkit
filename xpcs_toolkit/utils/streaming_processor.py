@@ -7,12 +7,11 @@ particularly for operations like logarithmic transformations of SAXS data.
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Optional, Tuple
 
 import numpy as np
 
 from .logging_config import get_logger
-from .memory_manager import get_memory_manager, MemoryPressure
+from .memory_manager import MemoryPressure, get_memory_manager
 
 logger = get_logger(__name__)
 
@@ -20,9 +19,10 @@ logger = get_logger(__name__)
 @dataclass
 class ChunkInfo:
     """Information about a data chunk."""
+
     index: int
-    slice_obj: Tuple[slice, ...]
-    shape: Tuple[int, ...]
+    slice_obj: tuple[slice, ...]
+    shape: tuple[int, ...]
     estimated_size_mb: float
     total_chunks: int
 
@@ -37,15 +37,16 @@ class StreamingProcessor(ABC):
     @abstractmethod
     def process_chunk(self, chunk: np.ndarray, chunk_info: ChunkInfo) -> np.ndarray:
         """Process a single data chunk."""
-        pass
 
     @abstractmethod
-    def combine_chunks(self, processed_chunks: list, original_shape: Tuple[int, ...]) -> np.ndarray:
+    def combine_chunks(
+        self, processed_chunks: list, original_shape: tuple[int, ...]
+    ) -> np.ndarray:
         """Combine processed chunks into final result."""
-        pass
 
-    def process_array_streaming(self, data: np.ndarray,
-                              output_dtype: Optional[np.dtype] = None) -> np.ndarray:
+    def process_array_streaming(
+        self, data: np.ndarray, output_dtype: np.dtype | None = None
+    ) -> np.ndarray:
         """
         Process array data using streaming to reduce memory footprint.
 
@@ -68,16 +69,20 @@ class StreamingProcessor(ABC):
         chunk_slices = self._calculate_chunk_slices(data.shape, data.dtype)
         total_chunks = len(chunk_slices)
 
-        logger.info(f"Processing array with streaming: {total_chunks} chunks of ~{self.chunk_size_mb:.1f}MB each")
+        logger.info(
+            f"Processing array with streaming: {total_chunks} chunks of ~{self.chunk_size_mb:.1f}MB each"
+        )
 
         processed_chunks = []
-        memory_before = self.memory_manager.get_cache_stats()['current_memory_mb']
+        memory_before = self.memory_manager.get_cache_stats()["current_memory_mb"]
 
         for i, slice_obj in enumerate(chunk_slices):
             # Monitor memory pressure before each chunk
             pressure = self.memory_manager.get_memory_pressure()
             if pressure == MemoryPressure.CRITICAL:
-                logger.warning("Critical memory pressure during streaming, triggering cleanup")
+                logger.warning(
+                    "Critical memory pressure during streaming, triggering cleanup"
+                )
                 self.memory_manager._emergency_cleanup()
 
             # Create chunk info
@@ -89,8 +94,10 @@ class StreamingProcessor(ABC):
                 index=i,
                 slice_obj=slice_obj,
                 shape=chunk_shape,
-                estimated_size_mb=np.prod(chunk_shape) * np.dtype(data.dtype).itemsize / (1024 * 1024),
-                total_chunks=total_chunks
+                estimated_size_mb=np.prod(chunk_shape)
+                * np.dtype(data.dtype).itemsize
+                / (1024 * 1024),
+                total_chunks=total_chunks,
             )
 
             # Extract and process chunk
@@ -101,18 +108,22 @@ class StreamingProcessor(ABC):
             # Progress reporting
             if i % max(1, total_chunks // 10) == 0:
                 progress = (i + 1) / total_chunks * 100
-                logger.debug(f"Streaming progress: {progress:.1f}% ({i + 1}/{total_chunks})")
+                logger.debug(
+                    f"Streaming progress: {progress:.1f}% ({i + 1}/{total_chunks})"
+                )
 
         # Combine chunks into final result
         result = self.combine_chunks(processed_chunks, data.shape)
 
-        memory_after = self.memory_manager.get_cache_stats()['current_memory_mb']
+        memory_after = self.memory_manager.get_cache_stats()["current_memory_mb"]
         memory_used = memory_after - memory_before
-        logger.info(f"Streaming processing completed, memory used: {memory_used:+.1f}MB")
+        logger.info(
+            f"Streaming processing completed, memory used: {memory_used:+.1f}MB"
+        )
 
         return result
 
-    def _calculate_chunk_slices(self, shape: Tuple[int, ...], dtype: np.dtype) -> list:
+    def _calculate_chunk_slices(self, shape: tuple[int, ...], dtype: np.dtype) -> list:
         """Calculate optimal chunk slices for streaming processing."""
         itemsize = dtype.itemsize
         total_size_mb = np.prod(shape) * itemsize / (1024 * 1024)
@@ -136,10 +147,12 @@ class StreamingProcessor(ABC):
             end_row = min(start_row + rows_per_chunk, shape[0])
 
             # Create slice tuple
-            slice_obj = tuple([
-                slice(start_row, end_row) if dim == 0 else slice(0, shape[dim])
-                for dim in range(len(shape))
-            ])
+            slice_obj = tuple(
+                [
+                    slice(start_row, end_row) if dim == 0 else slice(0, shape[dim])
+                    for dim in range(len(shape))
+                ]
+            )
             chunk_slices.append(slice_obj)
 
         return chunk_slices
@@ -187,12 +200,16 @@ class SAXSLogProcessor(StreamingProcessor):
         # Apply log10 transformation
         log_chunk = np.log10(saxs_chunk).astype(np.float32)
 
-        logger.debug(f"Processed chunk {chunk_info.index + 1}/{chunk_info.total_chunks}: "
-                    f"{chunk_info.shape} -> log transform")
+        logger.debug(
+            f"Processed chunk {chunk_info.index + 1}/{chunk_info.total_chunks}: "
+            f"{chunk_info.shape} -> log transform"
+        )
 
         return log_chunk
 
-    def combine_chunks(self, processed_chunks: list, original_shape: Tuple[int, ...]) -> np.ndarray:
+    def combine_chunks(
+        self, processed_chunks: list, original_shape: tuple[int, ...]
+    ) -> np.ndarray:
         """
         Combine processed log chunks into final result array.
 
@@ -200,7 +217,7 @@ class SAXSLogProcessor(StreamingProcessor):
         ----------
         processed_chunks : list
             List of (slice_obj, processed_chunk) tuples
-        original_shape : Tuple[int, ...]
+        original_shape : tuple[int, ...]
             Shape of original array
 
         Returns
@@ -251,13 +268,15 @@ class ROIProcessor(StreamingProcessor):
         roi_std = np.std(roi_data, axis=(1, 2))
 
         return {
-            'sum': roi_sum,
-            'mean': roi_mean,
-            'std': roi_std,
-            'slice_obj': chunk_info.slice_obj
+            "sum": roi_sum,
+            "mean": roi_mean,
+            "std": roi_std,
+            "slice_obj": chunk_info.slice_obj,
         }
 
-    def combine_chunks(self, processed_chunks: list, original_shape: Tuple[int, ...]) -> dict:
+    def combine_chunks(
+        self, processed_chunks: list, original_shape: tuple[int, ...]
+    ) -> dict:
         """
         Combine ROI chunk results into final statistics.
 
@@ -265,7 +284,7 @@ class ROIProcessor(StreamingProcessor):
         ----------
         processed_chunks : list
             List of (slice_obj, roi_stats) tuples
-        original_shape : Tuple[int, ...]
+        original_shape : tuple[int, ...]
             Shape of original array
 
         Returns
@@ -282,15 +301,11 @@ class ROIProcessor(StreamingProcessor):
         # Combine chunk results
         for slice_obj, roi_stats in processed_chunks:
             time_slice = slice_obj[0]
-            roi_sum[time_slice] = roi_stats['sum']
-            roi_mean[time_slice] = roi_stats['mean']
-            roi_std[time_slice] = roi_stats['std']
+            roi_sum[time_slice] = roi_stats["sum"]
+            roi_mean[time_slice] = roi_stats["mean"]
+            roi_std[time_slice] = roi_stats["std"]
 
-        return {
-            'roi_sum': roi_sum,
-            'roi_mean': roi_mean,
-            'roi_std': roi_std
-        }
+        return {"roi_sum": roi_sum, "roi_mean": roi_mean, "roi_std": roi_std}
 
 
 class AdaptiveChunkSizer:
@@ -303,14 +318,15 @@ class AdaptiveChunkSizer:
         self.memory_manager = get_memory_manager()
         self.performance_history = []
 
-    def get_optimal_chunk_size(self, data_shape: Tuple[int, ...],
-                             data_dtype: np.dtype) -> float:
+    def get_optimal_chunk_size(
+        self, data_shape: tuple[int, ...], data_dtype: np.dtype
+    ) -> float:
         """
         Calculate optimal chunk size based on current conditions.
 
         Parameters
         ----------
-        data_shape : Tuple[int, ...]
+        data_shape : tuple[int, ...]
             Shape of data to be processed
         data_dtype : np.dtype
             Data type of array
@@ -329,7 +345,7 @@ class AdaptiveChunkSizer:
         if pressure == MemoryPressure.CRITICAL:
             chunk_size *= 0.25  # Very small chunks
         elif pressure == MemoryPressure.HIGH:
-            chunk_size *= 0.5   # Small chunks
+            chunk_size *= 0.5  # Small chunks
         elif pressure == MemoryPressure.MODERATE:
             chunk_size *= 0.75  # Moderately small chunks
         # LOW pressure uses base size
@@ -345,15 +361,17 @@ class AdaptiveChunkSizer:
         # Ensure minimum chunk size
         chunk_size = max(chunk_size, 10.0)
 
-        logger.debug(f"Adaptive chunk size: {chunk_size:.1f}MB "
-                    f"(pressure: {pressure.value}, data: {total_size_mb:.1f}MB)")
+        logger.debug(
+            f"Adaptive chunk size: {chunk_size:.1f}MB "
+            f"(pressure: {pressure.value}, data: {total_size_mb:.1f}MB)"
+        )
 
         return chunk_size
 
 
-def process_saxs_log_streaming(data: np.ndarray,
-                             chunk_size_mb: Optional[float] = None,
-                             epsilon: float = 1e-10) -> np.ndarray:
+def process_saxs_log_streaming(
+    data: np.ndarray, chunk_size_mb: float | None = None, epsilon: float = 1e-10
+) -> np.ndarray:
     """
     Convenience function for streaming SAXS log processing.
 
@@ -380,9 +398,9 @@ def process_saxs_log_streaming(data: np.ndarray,
     return processor.process_array_streaming(data)
 
 
-def process_roi_streaming(data: np.ndarray,
-                        roi_mask: np.ndarray,
-                        chunk_size_mb: Optional[float] = None) -> dict:
+def process_roi_streaming(
+    data: np.ndarray, roi_mask: np.ndarray, chunk_size_mb: float | None = None
+) -> dict:
     """
     Convenience function for streaming ROI processing.
 
@@ -413,15 +431,16 @@ def process_roi_streaming(data: np.ndarray,
     processed_chunks = []
     for i, slice_obj in enumerate(chunk_slices):
         chunk_shape = tuple(
-            slice_obj[dim].stop - slice_obj[dim].start
-            for dim in range(len(slice_obj))
+            slice_obj[dim].stop - slice_obj[dim].start for dim in range(len(slice_obj))
         )
         chunk_info = ChunkInfo(
             index=i,
             slice_obj=slice_obj,
             shape=chunk_shape,
-            estimated_size_mb=np.prod(chunk_shape) * data.dtype.itemsize / (1024 * 1024),
-            total_chunks=len(chunk_slices)
+            estimated_size_mb=np.prod(chunk_shape)
+            * data.dtype.itemsize
+            / (1024 * 1024),
+            total_chunks=len(chunk_slices),
         )
 
         chunk = data[slice_obj]
@@ -467,7 +486,7 @@ class MemoryEfficientIterator:
             slice_obj=slice_obj,
             shape=chunk.shape,
             estimated_size_mb=chunk.nbytes / (1024 * 1024),
-            total_chunks=len(self.chunk_slices)
+            total_chunks=len(self.chunk_slices),
         )
 
         self.current_index += 1

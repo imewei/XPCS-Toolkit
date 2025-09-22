@@ -16,15 +16,15 @@
 
 ## Scientific/Technical Context
 <!-- For scientific computing features, describe the scientific context -->
-- **Scientific Method/Algorithm**: 
+- **Scientific Method/Algorithm**:
 - **Physical/Mathematical Background**:
 - **Expected Impact on Analysis**:
 
 ## Changes Made
 <!-- List the main changes made in this PR -->
-- 
-- 
-- 
+-
+-
+-
 
 ## Testing
 <!-- Describe the tests performed -->
@@ -61,13 +61,13 @@
 
 ## Performance Impact
 <!-- If applicable, describe performance implications -->
-- **Memory usage**: 
-- **Processing time**: 
-- **Scaling behavior**: 
+- **Memory usage**:
+- **Processing time**:
+- **Scaling behavior**:
 
 ## Breaking Changes
 <!-- List any breaking changes and migration path -->
-- 
+-
 
 ## Additional Context
 <!-- Add any other context about the PR here -->
@@ -79,7 +79,7 @@ Closes #
 Related to #
 
 ---
-<!-- 
+<!--
 For maintainers:
 - Ensure all tests pass
 - Verify documentation is updated  

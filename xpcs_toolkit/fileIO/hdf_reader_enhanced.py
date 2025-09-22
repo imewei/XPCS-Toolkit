@@ -12,19 +12,20 @@ from collections import OrderedDict, defaultdict, deque
 from contextlib import contextmanager
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
-import numpy as np
 import h5py
+import numpy as np
 
 from ..utils.logging_config import get_logger
-from ..utils.memory_manager import get_memory_manager, MemoryPressure
+from ..utils.memory_manager import MemoryPressure, get_memory_manager
 
 logger = get_logger(__name__)
 
 
 class AccessPattern(Enum):
     """HDF5 data access patterns for optimization."""
+
     SEQUENTIAL = "sequential"
     RANDOM = "random"
     BLOCK = "block"
@@ -34,9 +35,10 @@ class AccessPattern(Enum):
 @dataclass
 class ReadRequest:
     """Request for HDF5 data reading."""
+
     file_path: str
     dataset_path: str
-    slice_info: Optional[Tuple[slice, ...]]
+    slice_info: tuple[slice, ...] | None
     priority: float = 0.5
     requested_time: float = 0.0
     access_pattern: AccessPattern = AccessPattern.RANDOM
@@ -45,10 +47,11 @@ class ReadRequest:
 @dataclass
 class CacheEntry:
     """Enhanced cache entry for HDF5 data."""
+
     data: np.ndarray
     file_path: str
     dataset_path: str
-    slice_info: Optional[Tuple[slice, ...]]
+    slice_info: tuple[slice, ...] | None
     access_count: int = 0
     last_accessed: float = 0.0
     created_time: float = 0.0
@@ -66,8 +69,12 @@ class IntelligentChunker:
         self.chunk_cache = {}
         self.memory_manager = get_memory_manager()
 
-    def analyze_access_pattern(self, file_path: str, dataset_path: str,
-                             recent_accesses: List[Tuple[slice, ...]]) -> AccessPattern:
+    def analyze_access_pattern(
+        self,
+        file_path: str,
+        dataset_path: str,
+        recent_accesses: list[tuple[slice, ...]],
+    ) -> AccessPattern:
         """
         Analyze access pattern from recent slice requests.
 
@@ -77,7 +84,7 @@ class IntelligentChunker:
             Path to HDF5 file
         dataset_path : str
             Path to dataset within file
-        recent_accesses : List[Tuple[slice, ...]]
+        recent_accesses : list[tuple[slice, ...]]
             Recent access slice patterns
 
         Returns
@@ -102,7 +109,7 @@ class IntelligentChunker:
 
         return AccessPattern.RANDOM
 
-    def _is_sequential_pattern(self, accesses: List[Tuple[slice, ...]]) -> bool:
+    def _is_sequential_pattern(self, accesses: list[tuple[slice, ...]]) -> bool:
         """Check if accesses follow sequential pattern."""
         if len(accesses) < 3:
             return False
@@ -124,7 +131,7 @@ class IntelligentChunker:
 
         return False
 
-    def _is_block_pattern(self, accesses: List[Tuple[slice, ...]]) -> bool:
+    def _is_block_pattern(self, accesses: list[tuple[slice, ...]]) -> bool:
         """Check if accesses follow block pattern."""
         # Block pattern: accessing contiguous blocks of data
         block_sizes = []
@@ -139,7 +146,7 @@ class IntelligentChunker:
         # Consistent block sizes suggest block pattern
         return np.std(block_sizes) < np.mean(block_sizes) * 0.2
 
-    def _is_sparse_pattern(self, accesses: List[Tuple[slice, ...]]) -> bool:
+    def _is_sparse_pattern(self, accesses: list[tuple[slice, ...]]) -> bool:
         """Check if accesses follow sparse pattern."""
         # Sparse pattern: non-contiguous, irregular access
         if len(accesses) < 3:
@@ -161,16 +168,19 @@ class IntelligentChunker:
 
         return False
 
-    def get_optimal_chunk_shape(self, dataset_shape: Tuple[int, ...],
-                              dtype: np.dtype,
-                              access_pattern: AccessPattern,
-                              target_chunk_mb: float = 10.0) -> Tuple[int, ...]:
+    def get_optimal_chunk_shape(
+        self,
+        dataset_shape: tuple[int, ...],
+        dtype: np.dtype,
+        access_pattern: AccessPattern,
+        target_chunk_mb: float = 10.0,
+    ) -> tuple[int, ...]:
         """
         Calculate optimal chunk shape for dataset based on access pattern.
 
         Parameters
         ----------
-        dataset_shape : Tuple[int, ...]
+        dataset_shape : tuple[int, ...]
             Shape of the dataset
         dtype : np.dtype
             Data type of the dataset
@@ -181,7 +191,7 @@ class IntelligentChunker:
 
         Returns
         -------
-        Tuple[int, ...]
+        tuple[int, ...]
             Optimal chunk shape
         """
         itemsize = dtype.itemsize
@@ -203,7 +213,9 @@ class IntelligentChunker:
             chunk_shape = []
             remaining_elements = target_elements
             for dim_size in dataset_shape:
-                dim_chunk = min(int(remaining_elements ** (1 / len(dataset_shape))), dim_size)
+                dim_chunk = min(
+                    int(remaining_elements ** (1 / len(dataset_shape))), dim_size
+                )
                 chunk_shape.append(dim_chunk)
                 remaining_elements = max(1, remaining_elements // dim_chunk)
 
@@ -212,7 +224,9 @@ class IntelligentChunker:
             target_elements = target_elements // 2  # Smaller chunks for sparse access
             chunk_shape = []
             for dim_size in dataset_shape:
-                dim_chunk = min(int((target_elements / len(dataset_shape)) ** 0.5), dim_size)
+                dim_chunk = min(
+                    int((target_elements / len(dataset_shape)) ** 0.5), dim_size
+                )
                 chunk_shape.append(max(1, dim_chunk))
 
         else:  # RANDOM
@@ -238,8 +252,9 @@ class ReadAheadCache:
         self._lock = threading.RLock()
         self.memory_manager = get_memory_manager()
 
-    def record_access(self, file_path: str, dataset_path: str,
-                     slice_info: Optional[Tuple[slice, ...]]):
+    def record_access(
+        self, file_path: str, dataset_path: str, slice_info: tuple[slice, ...] | None
+    ):
         """Record an access for pattern analysis."""
         key = f"{file_path}:{dataset_path}"
         with self._lock:
@@ -248,8 +263,9 @@ class ReadAheadCache:
             if len(self.access_patterns[key]) > 20:
                 self.access_patterns[key].popleft()
 
-    def predict_next_access(self, file_path: str, dataset_path: str,
-                          current_slice: Optional[Tuple[slice, ...]]) -> List[Tuple[slice, ...]]:
+    def predict_next_access(
+        self, file_path: str, dataset_path: str, current_slice: tuple[slice, ...] | None
+    ) -> list[tuple[slice, ...]]:
         """
         Predict next likely access patterns for read-ahead.
 
@@ -259,12 +275,12 @@ class ReadAheadCache:
             Path to HDF5 file
         dataset_path : str
             Path to dataset
-        current_slice : Optional[Tuple[slice, ...]]
+        current_slice : Optional[tuple[slice, ...]]
             Current slice being accessed
 
         Returns
         -------
-        List[Tuple[slice, ...]]
+        list[tuple[slice, ...]]
             Predicted next slice accesses
         """
         key = f"{file_path}:{dataset_path}"
@@ -284,7 +300,9 @@ class ReadAheadCache:
 
         return predictions[:3]  # Limit to 3 predictions
 
-    def _is_sequential_access(self, accesses: List[Tuple[float, Tuple[slice, ...]]]) -> bool:
+    def _is_sequential_access(
+        self, accesses: list[tuple[float, tuple[slice, ...]]]
+    ) -> bool:
         """Check if recent accesses show sequential pattern."""
         if len(accesses) < 3:
             return False
@@ -301,7 +319,9 @@ class ReadAheadCache:
         diffs = np.diff(slice_starts)
         return all(d > 0 for d in diffs) and np.std(diffs) < np.mean(diffs) * 0.5
 
-    def _is_sliding_window(self, accesses: List[Tuple[float, Tuple[slice, ...]]]) -> bool:
+    def _is_sliding_window(
+        self, accesses: list[tuple[float, tuple[slice, ...]]]
+    ) -> bool:
         """Check if accesses show sliding window pattern."""
         if len(accesses) < 3:
             return False
@@ -320,15 +340,21 @@ class ReadAheadCache:
         # Check for overlapping ranges
         overlaps = 0
         for i in range(len(slice_ranges) - 1):
-            if slice_ranges[i][1] > slice_ranges[i+1][0]:
+            if slice_ranges[i][1] > slice_ranges[i + 1][0]:
                 overlaps += 1
 
         return overlaps >= len(slice_ranges) - 2
 
-    def _predict_sequential(self, current_slice: Optional[Tuple[slice, ...]]) -> List[Tuple[slice, ...]]:
+    def _predict_sequential(
+        self, current_slice: tuple[slice, ...] | None
+    ) -> list[tuple[slice, ...]]:
         """Predict next slices for sequential access."""
         predictions = []
-        if current_slice and len(current_slice) > 0 and isinstance(current_slice[0], slice):
+        if (
+            current_slice
+            and len(current_slice) > 0
+            and isinstance(current_slice[0], slice)
+        ):
             start = current_slice[0].start or 0
             stop = current_slice[0].stop or start + 1
             step = stop - start
@@ -337,15 +363,21 @@ class ReadAheadCache:
             for i in range(1, 3):
                 next_start = stop + (i - 1) * step
                 next_stop = next_start + step
-                next_slice = tuple([slice(next_start, next_stop)] + list(current_slice[1:]))
+                next_slice = (slice(next_start, next_stop), *list(current_slice[1:]))
                 predictions.append(next_slice)
 
         return predictions
 
-    def _predict_sliding_window(self, current_slice: Optional[Tuple[slice, ...]]) -> List[Tuple[slice, ...]]:
+    def _predict_sliding_window(
+        self, current_slice: tuple[slice, ...] | None
+    ) -> list[tuple[slice, ...]]:
         """Predict next slices for sliding window access."""
         predictions = []
-        if current_slice and len(current_slice) > 0 and isinstance(current_slice[0], slice):
+        if (
+            current_slice
+            and len(current_slice) > 0
+            and isinstance(current_slice[0], slice)
+        ):
             start = current_slice[0].start or 0
             stop = current_slice[0].stop or start + 1
             window_size = stop - start
@@ -354,13 +386,14 @@ class ReadAheadCache:
             for shift in [window_size // 4, window_size // 2]:
                 next_start = start + shift
                 next_stop = stop + shift
-                next_slice = tuple([slice(next_start, next_stop)] + list(current_slice[1:]))
+                next_slice = (slice(next_start, next_stop), *list(current_slice[1:]))
                 predictions.append(next_slice)
 
         return predictions
 
-    def get_cached_data(self, file_path: str, dataset_path: str,
-                       slice_info: Optional[Tuple[slice, ...]]) -> Optional[np.ndarray]:
+    def get_cached_data(
+        self, file_path: str, dataset_path: str, slice_info: tuple[slice, ...] | None
+    ) -> np.ndarray | None:
         """Get cached data if available."""
         cache_key = f"{file_path}:{dataset_path}:{slice_info}"
         with self._lock:
@@ -374,8 +407,13 @@ class ReadAheadCache:
                 return entry.data
         return None
 
-    def cache_data(self, file_path: str, dataset_path: str,
-                  slice_info: Optional[Tuple[slice, ...]], data: np.ndarray):
+    def cache_data(
+        self,
+        file_path: str,
+        dataset_path: str,
+        slice_info: tuple[slice, ...] | None,
+        data: np.ndarray,
+    ):
         """Cache data with intelligent eviction."""
         if data is None:
             return
@@ -401,7 +439,7 @@ class ReadAheadCache:
                 access_count=1,
                 last_accessed=time.time(),
                 created_time=time.time(),
-                size_mb=data_size_mb
+                size_mb=data_size_mb,
             )
 
             self.cache[cache_key] = entry
@@ -412,11 +450,13 @@ class ReadAheadCache:
         current_size = sum(entry.size_mb for entry in self.cache.values())
 
         # Evict if we exceed capacity or need space
-        while (current_size + required_mb > self.max_cache_mb and self.cache):
+        while current_size + required_mb > self.max_cache_mb and self.cache:
             # Remove least recently used item
             oldest_key, oldest_entry = self.cache.popitem(last=False)
             current_size -= oldest_entry.size_mb
-            logger.debug(f"Evicted cache entry: {oldest_key} ({oldest_entry.size_mb:.1f}MB)")
+            logger.debug(
+                f"Evicted cache entry: {oldest_key} ({oldest_entry.size_mb:.1f}MB)"
+            )
 
     def clear_cache(self):
         """Clear all cached data."""
@@ -425,15 +465,17 @@ class ReadAheadCache:
             self.cache.clear()
             logger.info(f"Cleared read-ahead cache, freed {freed_mb:.1f}MB")
 
-    def get_cache_stats(self) -> Dict[str, Any]:
+    def get_cache_stats(self) -> dict[str, Any]:
         """Get cache statistics."""
         with self._lock:
             total_size = sum(entry.size_mb for entry in self.cache.values())
             return {
-                'cache_entries': len(self.cache),
-                'total_size_mb': total_size,
-                'max_size_mb': self.max_cache_mb,
-                'utilization': total_size / self.max_cache_mb if self.max_cache_mb > 0 else 0
+                "cache_entries": len(self.cache),
+                "total_size_mb": total_size,
+                "max_size_mb": self.max_cache_mb,
+                "utilization": total_size / self.max_cache_mb
+                if self.max_cache_mb > 0
+                else 0,
             }
 
 
@@ -457,11 +499,11 @@ class EnhancedHDF5Reader:
 
         # Statistics
         self.stats = {
-            'reads': 0,
-            'cache_hits': 0,
-            'cache_misses': 0,
-            'bytes_read': 0,
-            'read_ahead_predictions': 0
+            "reads": 0,
+            "cache_hits": 0,
+            "cache_misses": 0,
+            "bytes_read": 0,
+            "read_ahead_predictions": 0,
         }
 
         logger.info(f"EnhancedHDF5Reader initialized with {max_cache_mb}MB cache")
@@ -478,16 +520,20 @@ class EnhancedHDF5Reader:
 
             # Create new connection
             try:
-                file_obj = h5py.File(file_path, 'r')
+                file_obj = h5py.File(file_path, "r")
                 self._connections[file_path] = file_obj
                 yield file_obj
             except Exception as e:
                 logger.error(f"Failed to open HDF5 file {file_path}: {e}")
                 raise
 
-    def read_dataset(self, file_path: str, dataset_path: str,
-                    slice_info: Optional[Tuple[slice, ...]] = None,
-                    enable_read_ahead: Optional[bool] = None) -> np.ndarray:
+    def read_dataset(
+        self,
+        file_path: str,
+        dataset_path: str,
+        slice_info: tuple[slice, ...] | None = None,
+        enable_read_ahead: bool | None = None,
+    ) -> np.ndarray:
         """
         Read dataset with intelligent caching and read-ahead.
 
@@ -497,7 +543,7 @@ class EnhancedHDF5Reader:
             Path to HDF5 file
         dataset_path : str
             Path to dataset within file
-        slice_info : Optional[Tuple[slice, ...]]
+        slice_info : Optional[tuple[slice, ...]]
             Slice to read (None for full dataset)
         enable_read_ahead : Optional[bool]
             Override global read-ahead setting
@@ -507,29 +553,26 @@ class EnhancedHDF5Reader:
         np.ndarray
             Requested data
         """
-        self.stats['reads'] += 1
+        self.stats["reads"] += 1
 
         # Check cache first
         cached_data = self.cache.get_cached_data(file_path, dataset_path, slice_info)
         if cached_data is not None:
-            self.stats['cache_hits'] += 1
+            self.stats["cache_hits"] += 1
             self.cache.record_access(file_path, dataset_path, slice_info)
             return cached_data
 
-        self.stats['cache_misses'] += 1
+        self.stats["cache_misses"] += 1
 
         # Read from file
         with self.get_file_connection(file_path) as f:
             dataset = f[dataset_path]
 
             # Read requested data
-            if slice_info:
-                data = dataset[slice_info]
-            else:
-                data = dataset[:]
+            data = dataset[slice_info] if slice_info else dataset[:]
 
             data = np.array(data)  # Ensure we own the data
-            self.stats['bytes_read'] += data.nbytes
+            self.stats["bytes_read"] += data.nbytes
 
             # Cache the data
             self.cache.cache_data(file_path, dataset_path, slice_info, data)
@@ -538,14 +581,25 @@ class EnhancedHDF5Reader:
             self.cache.record_access(file_path, dataset_path, slice_info)
 
             # Trigger read-ahead if enabled
-            if (enable_read_ahead if enable_read_ahead is not None else self.enable_read_ahead):
-                self._trigger_read_ahead(file_path, dataset_path, slice_info, dataset.shape, dataset.dtype)
+            if (
+                enable_read_ahead
+                if enable_read_ahead is not None
+                else self.enable_read_ahead
+            ):
+                self._trigger_read_ahead(
+                    file_path, dataset_path, slice_info, dataset.shape, dataset.dtype
+                )
 
             return data
 
-    def _trigger_read_ahead(self, file_path: str, dataset_path: str,
-                          current_slice: Optional[Tuple[slice, ...]],
-                          dataset_shape: Tuple[int, ...], dtype: np.dtype):
+    def _trigger_read_ahead(
+        self,
+        file_path: str,
+        dataset_path: str,
+        current_slice: tuple[slice, ...] | None,
+        dataset_shape: tuple[int, ...],
+        dtype: np.dtype,
+    ):
         """Trigger read-ahead for predicted accesses."""
         # Check memory pressure before read-ahead
         pressure = self.memory_manager.get_memory_pressure()
@@ -554,11 +608,15 @@ class EnhancedHDF5Reader:
             return
 
         # Get predictions
-        predictions = self.cache.predict_next_access(file_path, dataset_path, current_slice)
+        predictions = self.cache.predict_next_access(
+            file_path, dataset_path, current_slice
+        )
 
         if predictions:
-            self.stats['read_ahead_predictions'] += len(predictions)
-            logger.debug(f"Read-ahead: {len(predictions)} predictions for {dataset_path}")
+            self.stats["read_ahead_predictions"] += len(predictions)
+            logger.debug(
+                f"Read-ahead: {len(predictions)} predictions for {dataset_path}"
+            )
 
             # Execute read-ahead in background (simplified - could use threading)
             for pred_slice in predictions:
@@ -566,18 +624,27 @@ class EnhancedHDF5Reader:
                     # Validate slice bounds
                     if self._is_valid_slice(pred_slice, dataset_shape):
                         # Check if already cached
-                        if self.cache.get_cached_data(file_path, dataset_path, pred_slice) is None:
+                        if (
+                            self.cache.get_cached_data(
+                                file_path, dataset_path, pred_slice
+                            )
+                            is None
+                        ):
                             # Read and cache
                             with self.get_file_connection(file_path) as f:
                                 dataset = f[dataset_path]
                                 pred_data = dataset[pred_slice]
                                 pred_data = np.array(pred_data)
-                                self.cache.cache_data(file_path, dataset_path, pred_slice, pred_data)
+                                self.cache.cache_data(
+                                    file_path, dataset_path, pred_slice, pred_data
+                                )
                                 logger.debug(f"Read-ahead cached: {pred_slice}")
                 except Exception as e:
                     logger.debug(f"Read-ahead failed for {pred_slice}: {e}")
 
-    def _is_valid_slice(self, slice_info: Tuple[slice, ...], shape: Tuple[int, ...]) -> bool:
+    def _is_valid_slice(
+        self, slice_info: tuple[slice, ...], shape: tuple[int, ...]
+    ) -> bool:
         """Check if slice is valid for dataset shape."""
         if len(slice_info) > len(shape):
             return False
@@ -591,8 +658,12 @@ class EnhancedHDF5Reader:
 
         return True
 
-    def read_multiple_datasets(self, file_path: str, dataset_paths: List[str],
-                             slice_info: Optional[Tuple[slice, ...]] = None) -> Dict[str, np.ndarray]:
+    def read_multiple_datasets(
+        self,
+        file_path: str,
+        dataset_paths: list[str],
+        slice_info: tuple[slice, ...] | None = None,
+    ) -> dict[str, np.ndarray]:
         """
         Efficiently read multiple datasets from the same file.
 
@@ -600,14 +671,14 @@ class EnhancedHDF5Reader:
         ----------
         file_path : str
             Path to HDF5 file
-        dataset_paths : List[str]
+        dataset_paths : list[str]
             List of dataset paths to read
-        slice_info : Optional[Tuple[slice, ...]]
+        slice_info : Optional[tuple[slice, ...]]
             Slice to apply to all datasets
 
         Returns
         -------
-        Dict[str, np.ndarray]
+        dict[str, np.ndarray]
             Dictionary of dataset_path -> data
         """
         results = {}
@@ -616,23 +687,22 @@ class EnhancedHDF5Reader:
             for dataset_path in dataset_paths:
                 try:
                     # Check cache first
-                    cached_data = self.cache.get_cached_data(file_path, dataset_path, slice_info)
+                    cached_data = self.cache.get_cached_data(
+                        file_path, dataset_path, slice_info
+                    )
                     if cached_data is not None:
                         results[dataset_path] = cached_data
-                        self.stats['cache_hits'] += 1
+                        self.stats["cache_hits"] += 1
                         continue
 
                     # Read from file
                     dataset = f[dataset_path]
-                    if slice_info:
-                        data = dataset[slice_info]
-                    else:
-                        data = dataset[:]
+                    data = dataset[slice_info] if slice_info else dataset[:]
 
                     data = np.array(data)
                     results[dataset_path] = data
-                    self.stats['cache_misses'] += 1
-                    self.stats['bytes_read'] += data.nbytes
+                    self.stats["cache_misses"] += 1
+                    self.stats["bytes_read"] += data.nbytes
 
                     # Cache the data
                     self.cache.cache_data(file_path, dataset_path, slice_info, data)
@@ -642,7 +712,7 @@ class EnhancedHDF5Reader:
 
         return results
 
-    def get_dataset_info(self, file_path: str, dataset_path: str) -> Dict[str, Any]:
+    def get_dataset_info(self, file_path: str, dataset_path: str) -> dict[str, Any]:
         """
         Get dataset metadata without loading data.
 
@@ -655,22 +725,28 @@ class EnhancedHDF5Reader:
 
         Returns
         -------
-        Dict[str, Any]
+        dict[str, Any]
             Dataset metadata
         """
         with self.get_file_connection(file_path) as f:
             dataset = f[dataset_path]
             return {
-                'shape': dataset.shape,
-                'dtype': dataset.dtype,
-                'size_mb': np.prod(dataset.shape) * dataset.dtype.itemsize / (1024 * 1024),
-                'chunks': dataset.chunks,
-                'compression': dataset.compression,
-                'compression_opts': dataset.compression_opts
+                "shape": dataset.shape,
+                "dtype": dataset.dtype,
+                "size_mb": np.prod(dataset.shape)
+                * dataset.dtype.itemsize
+                / (1024 * 1024),
+                "chunks": dataset.chunks,
+                "compression": dataset.compression,
+                "compression_opts": dataset.compression_opts,
             }
 
-    def optimize_chunking_for_dataset(self, file_path: str, dataset_path: str,
-                                    access_pattern: Optional[AccessPattern] = None) -> Tuple[int, ...]:
+    def optimize_chunking_for_dataset(
+        self,
+        file_path: str,
+        dataset_path: str,
+        access_pattern: AccessPattern | None = None,
+    ) -> tuple[int, ...]:
         """
         Get optimal chunk shape for dataset based on access pattern.
 
@@ -685,7 +761,7 @@ class EnhancedHDF5Reader:
 
         Returns
         -------
-        Tuple[int, ...]
+        tuple[int, ...]
             Optimal chunk shape
         """
         info = self.get_dataset_info(file_path, dataset_path)
@@ -693,11 +769,15 @@ class EnhancedHDF5Reader:
         if access_pattern is None:
             # Auto-detect pattern from access history
             key = f"{file_path}:{dataset_path}"
-            recent_accesses = [slice_info for _, slice_info in self.cache.access_patterns[key]]
-            access_pattern = self.chunker.analyze_access_pattern(file_path, dataset_path, recent_accesses)
+            recent_accesses = [
+                slice_info for _, slice_info in self.cache.access_patterns[key]
+            ]
+            access_pattern = self.chunker.analyze_access_pattern(
+                file_path, dataset_path, recent_accesses
+            )
 
         return self.chunker.get_optimal_chunk_shape(
-            info['shape'], info['dtype'], access_pattern
+            info["shape"], info["dtype"], access_pattern
         )
 
     def clear_caches(self):
@@ -705,19 +785,19 @@ class EnhancedHDF5Reader:
         self.cache.clear_cache()
         logger.info("Cleared all HDF5 caches")
 
-    def get_performance_stats(self) -> Dict[str, Any]:
+    def get_performance_stats(self) -> dict[str, Any]:
         """Get comprehensive performance statistics."""
         stats = self.stats.copy()
-        stats['cache_hit_rate'] = (
-            stats['cache_hits'] / max(1, stats['cache_hits'] + stats['cache_misses'])
+        stats["cache_hit_rate"] = stats["cache_hits"] / max(
+            1, stats["cache_hits"] + stats["cache_misses"]
         )
-        stats['mb_read'] = stats['bytes_read'] / (1024 * 1024)
+        stats["mb_read"] = stats["bytes_read"] / (1024 * 1024)
         stats.update(self.cache.get_cache_stats())
         return stats
 
 
 # Global enhanced reader instance
-_global_enhanced_reader: Optional[EnhancedHDF5Reader] = None
+_global_enhanced_reader: EnhancedHDF5Reader | None = None
 
 
 def get_enhanced_hdf5_reader() -> EnhancedHDF5Reader:
@@ -733,13 +813,19 @@ def get_enhanced_reader() -> EnhancedHDF5Reader:
     return get_enhanced_hdf5_reader()
 
 
-def read_hdf5_optimized(file_path: str, dataset_path: str,
-                       slice_info: Optional[Tuple[slice, ...]] = None) -> np.ndarray:
+def read_hdf5_optimized(
+    file_path: str, dataset_path: str, slice_info: tuple[slice, ...] | None = None
+) -> np.ndarray:
     """Convenience function for optimized HDF5 reading."""
     return get_enhanced_hdf5_reader().read_dataset(file_path, dataset_path, slice_info)
 
 
-def read_multiple_hdf5_optimized(file_path: str, dataset_paths: List[str],
-                                slice_info: Optional[Tuple[slice, ...]] = None) -> Dict[str, np.ndarray]:
+def read_multiple_hdf5_optimized(
+    file_path: str,
+    dataset_paths: list[str],
+    slice_info: tuple[slice, ...] | None = None,
+) -> dict[str, np.ndarray]:
     """Convenience function for reading multiple datasets."""
-    return get_enhanced_hdf5_reader().read_multiple_datasets(file_path, dataset_paths, slice_info)
+    return get_enhanced_hdf5_reader().read_multiple_datasets(
+        file_path, dataset_paths, slice_info
+    )

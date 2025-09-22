@@ -7,15 +7,17 @@ and integrates properly with the XPCS Toolkit testing infrastructure.
 """
 
 import unittest
+
 import numpy as np
+
 from tests.hypothesis_framework import (
+    HYPOTHESIS_AVAILABLE,
     HypothesisTestRunner,
     MathematicalInvariants,
     XPCSPropertyTests,
     calculate_mock_g2,
-    mock_exponential_fit,
     generate_test_matrix,
-    HYPOTHESIS_AVAILABLE
+    mock_exponential_fit,
 )
 
 
@@ -59,15 +61,15 @@ class TestHypothesisFramework(unittest.TestCase):
         fitted_params = mock_exponential_fit(x_data, y_data)
 
         # Check return structure
-        required_keys = ['amplitude', 'decay_rate', 'r_squared']
+        required_keys = ["amplitude", "decay_rate", "r_squared"]
         for key in required_keys:
             self.assertIn(key, fitted_params)
 
         # Check value ranges
-        self.assertGreater(fitted_params['amplitude'], 0)
-        self.assertGreater(fitted_params['decay_rate'], 0)
-        self.assertGreater(fitted_params['r_squared'], 0)
-        self.assertLessEqual(fitted_params['r_squared'], 1)
+        self.assertGreater(fitted_params["amplitude"], 0)
+        self.assertGreater(fitted_params["decay_rate"], 0)
+        self.assertGreater(fitted_params["r_squared"], 0)
+        self.assertLessEqual(fitted_params["r_squared"], 1)
 
     def test_test_matrix_generation(self):
         """Test the test matrix generation function."""
@@ -96,7 +98,7 @@ class TestHypothesisFramework(unittest.TestCase):
             math_invariants.correlation_function_properties(),
             math_invariants.fitting_properties(),
             math_invariants.numerical_stability_properties(),
-            math_invariants.fourier_transform_properties()
+            math_invariants.fourier_transform_properties(),
         ]
 
         for test_group in test_groups:
@@ -105,7 +107,7 @@ class TestHypothesisFramework(unittest.TestCase):
 
             for test_func in test_group:
                 self.assertTrue(callable(test_func))
-                self.assertTrue(hasattr(test_func, '__name__'))
+                self.assertTrue(hasattr(test_func, "__name__"))
 
     def test_xpcs_property_tests_structure(self):
         """Test that XPCS property tests are properly structured."""
@@ -113,7 +115,7 @@ class TestHypothesisFramework(unittest.TestCase):
 
         test_groups = [
             xpcs_tests.intensity_statistics_properties(),
-            xpcs_tests.scattering_properties()
+            xpcs_tests.scattering_properties(),
         ]
 
         for test_group in test_groups:
@@ -122,7 +124,7 @@ class TestHypothesisFramework(unittest.TestCase):
 
             for test_func in test_group:
                 self.assertTrue(callable(test_func))
-                self.assertTrue(hasattr(test_func, '__name__'))
+                self.assertTrue(hasattr(test_func, "__name__"))
 
     def test_runner_mathematical_tests(self):
         """Test running mathematical invariant tests."""
@@ -130,16 +132,20 @@ class TestHypothesisFramework(unittest.TestCase):
 
         if HYPOTHESIS_AVAILABLE:
             # Should have results for each test group
-            expected_groups = ['correlation_functions', 'fitting_algorithms',
-                             'numerical_stability', 'fourier_transforms']
+            expected_groups = [
+                "correlation_functions",
+                "fitting_algorithms",
+                "numerical_stability",
+                "fourier_transforms",
+            ]
 
             for group in expected_groups:
                 self.assertIn(group, results)
                 self.assertIsInstance(results[group], dict)
         else:
             # Should indicate that hypothesis is not available
-            self.assertEqual(results['status'], 'skipped')
-            self.assertIn('reason', results)
+            self.assertEqual(results["status"], "skipped")
+            self.assertIn("reason", results)
 
     def test_runner_xpcs_tests(self):
         """Test running XPCS-specific tests."""
@@ -147,15 +153,15 @@ class TestHypothesisFramework(unittest.TestCase):
 
         if HYPOTHESIS_AVAILABLE:
             # Should have results for each test group
-            expected_groups = ['intensity_statistics', 'scattering_calculations']
+            expected_groups = ["intensity_statistics", "scattering_calculations"]
 
             for group in expected_groups:
                 self.assertIn(group, results)
                 self.assertIsInstance(results[group], dict)
         else:
             # Should indicate that hypothesis is not available
-            self.assertEqual(results['status'], 'skipped')
-            self.assertIn('reason', results)
+            self.assertEqual(results["status"], "skipped")
+            self.assertIn("reason", results)
 
     def test_report_generation(self):
         """Test that test reports are generated correctly."""
@@ -189,8 +195,8 @@ class TestHypothesisFramework(unittest.TestCase):
         x_data = np.array([0, 1, 2])
         y_data = np.array([0, 0, 0])  # All zeros
         fitted_params = mock_exponential_fit(x_data, y_data)
-        self.assertIn('amplitude', fitted_params)
-        self.assertGreater(fitted_params['amplitude'], 0)
+        self.assertIn("amplitude", fitted_params)
+        self.assertGreater(fitted_params["amplitude"], 0)
 
     def test_numerical_precision_properties(self):
         """Test that numerical precision is maintained in calculations."""
@@ -234,5 +240,5 @@ class TestHypothesisFramework(unittest.TestCase):
             self.assertEqual(set(results1.keys()), set(results2.keys()))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

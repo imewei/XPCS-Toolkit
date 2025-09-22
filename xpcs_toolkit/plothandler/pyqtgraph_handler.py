@@ -3,7 +3,11 @@ import pyqtgraph as pg
 from pyqtgraph import GraphicsLayoutWidget, ImageView, QtCore, QtGui
 
 from xpcs_toolkit.utils.logging_config import get_logger
-from .qt_signal_fixes import qt_connection_context, configure_pyqtgraph_for_qt_compatibility
+
+from .qt_signal_fixes import (
+    configure_pyqtgraph_for_qt_compatibility,
+    qt_connection_context,
+)
 
 logger = get_logger(__name__)
 
@@ -53,11 +57,11 @@ class ImageViewDev(ImageView):
         self.reset_limits()
         # Safely disconnect signal if it has connections
         try:
-            if hasattr(self, 'scene') and self.scene is not None:
-                if hasattr(self.scene, 'sigMouseMoved'):
+            if hasattr(self, "scene") and self.scene is not None:
+                if hasattr(self.scene, "sigMouseMoved"):
                     # Check if signal has any connections before disconnecting
                     signal = self.scene.sigMouseMoved
-                    if hasattr(signal, 'receivers') and signal.receivers(signal) > 0:
+                    if hasattr(signal, "receivers") and signal.receivers(signal) > 0:
                         signal.disconnect()
         except (RuntimeError, TypeError, AttributeError):
             # Signal already disconnected or doesn't exist
@@ -81,8 +85,12 @@ class ImageViewDev(ImageView):
             cen = center
 
         # label: label of roi; default is None, which is for roi-draw
-        logger.debug(f"ImageViewDev: Adding ROI: type='{sl_type}', label='{label}', cen={cen}, radius={radius}")
-        logger.debug(f"ImageViewDev: ROI parameters: color='{color}', width={width}, sl_mode='{sl_mode}'")
+        logger.debug(
+            f"ImageViewDev: Adding ROI: type='{sl_type}', label='{label}', cen={cen}, radius={radius}"
+        )
+        logger.debug(
+            f"ImageViewDev: ROI parameters: color='{color}', width={width}, sl_mode='{sl_mode}'"
+        )
 
         if label is not None and label in self.roi_record:
             self.remove_roi(label)
@@ -133,34 +141,49 @@ class ImageViewDev(ImageView):
                 return None
         elif sl_type == "Q-Wedge":
             # Q-Wedge is a wedge-shaped ROI for Q-space analysis (similar to Pie)
-            logger.debug(f"ImageViewDev: Creating Q-Wedge ROI")
+            logger.debug("ImageViewDev: Creating Q-Wedge ROI")
             if cen is None:
-                logger.warning("Cannot add Q-Wedge ROI: center coordinates not provided")
+                logger.warning(
+                    "Cannot add Q-Wedge ROI: center coordinates not provided"
+                )
                 return None
             width = kwargs.pop("width", 1)
-            logger.debug(f"ImageViewDev: Q-Wedge parameters: cen={cen}, radius={radius}, width={width}")
+            logger.debug(
+                f"ImageViewDev: Q-Wedge parameters: cen={cen}, radius={radius}, width={width}"
+            )
             try:
                 # Validate parameters before creating PieROI
                 if not isinstance(cen, (tuple, list)) or len(cen) != 2:
-                    logger.error(f"Invalid center coordinates: {cen} (expected tuple/list of length 2)")
+                    logger.error(
+                        f"Invalid center coordinates: {cen} (expected tuple/list of length 2)"
+                    )
                     return None
                 if not isinstance(radius, (int, float)) or radius <= 0:
                     logger.error(f"Invalid radius: {radius} (expected positive number)")
                     return None
 
-                logger.debug(f"ImageViewDev: Creating PieROI with pos={cen}, size={radius}")
+                logger.debug(
+                    f"ImageViewDev: Creating PieROI with pos={cen}, size={radius}"
+                )
                 new_roi = PieROI(cen, radius, movable=False, **kwargs)
-                logger.debug(f"ImageViewDev: Q-Wedge PieROI created successfully, ROI state: {new_roi.getState()}")
+                logger.debug(
+                    f"ImageViewDev: Q-Wedge PieROI created successfully, ROI state: {new_roi.getState()}"
+                )
             except Exception as e:
                 logger.error(f"Failed to create Q-Wedge ROI: {e}")
-                logger.debug(f"ImageViewDev: Q-Wedge creation exception details: {type(e).__name__}: {e}")
+                logger.debug(
+                    f"ImageViewDev: Q-Wedge creation exception details: {type(e).__name__}: {e}"
+                )
                 import traceback
+
                 logger.debug(f"ImageViewDev: Full traceback: {traceback.format_exc()}")
                 return None
         elif sl_type == "Phi-Ring":
             # Phi-Ring is a ring-shaped ROI for angular analysis (similar to Circle)
             if cen is None:
-                logger.warning("Cannot add Phi-Ring ROI: center coordinates not provided")
+                logger.warning(
+                    "Cannot add Phi-Ring ROI: center coordinates not provided"
+                )
                 return None
             if second_point is not None:
                 radius = np.sqrt(
@@ -186,7 +209,7 @@ class ImageViewDev(ImageView):
             raise TypeError(f"type not implemented. {sl_type}")
 
         try:
-            logger.debug(f"ImageViewDev: Setting ROI properties and adding to plot")
+            logger.debug("ImageViewDev: Setting ROI properties and adding to plot")
             new_roi.sl_mode = sl_mode
 
             if label is None:
@@ -195,16 +218,20 @@ class ImageViewDev(ImageView):
 
             logger.debug(f"ImageViewDev: ROI label assigned: '{label}'")
             self.roi_record[label] = new_roi
-            logger.debug(f"ImageViewDev: ROI added to roi_record, total ROIs: {len(self.roi_record)}")
+            logger.debug(
+                f"ImageViewDev: ROI added to roi_record, total ROIs: {len(self.roi_record)}"
+            )
 
             self.addItem(new_roi)
-            logger.debug(f"ImageViewDev: ROI added to plot via addItem()")
+            logger.debug("ImageViewDev: ROI added to plot via addItem()")
 
             if sl_type != "Center":
                 new_roi.sigRemoveRequested.connect(lambda: self.remove_roi(label))
                 logger.debug(f"ImageViewDev: Connected remove signal for ROI '{label}'")
 
-            logger.debug(f"ImageViewDev: Successfully added ROI: type='{sl_type}', label='{label}'")
+            logger.debug(
+                f"ImageViewDev: Successfully added ROI: type='{sl_type}', label='{label}'"
+            )
             return label
 
         except Exception as e:
@@ -213,7 +240,9 @@ class ImageViewDev(ImageView):
             # Cleanup if ROI was partially created
             if label and label in self.roi_record:
                 del self.roi_record[label]
-                logger.debug(f"ImageViewDev: Cleaned up partial ROI '{label}' from roi_record")
+                logger.debug(
+                    f"ImageViewDev: Cleaned up partial ROI '{label}' from roi_record"
+                )
             return None
 
     def remove_rois(self, filter_str=None):
@@ -278,10 +307,12 @@ class PieROI(pg.ROI):
         # pos is the center of the pie ROI, but pg.ROI expects top-left corner
         # Convert center position to top-left corner position
         top_left = (pos[0] - size / 2.0, pos[1] - size / 2.0)
-        logger.debug(f"PieROI: __init__ called with pos={pos}, size={size}, converted to top_left={top_left}")
+        logger.debug(
+            f"PieROI: __init__ called with pos={pos}, size={size}, converted to top_left={top_left}"
+        )
         try:
             pg.ROI.__init__(self, top_left, [size, size], aspectLocked=False, **args)
-            logger.debug(f"PieROI: pg.ROI.__init__ completed successfully")
+            logger.debug("PieROI: pg.ROI.__init__ completed successfully")
         except Exception as e:
             logger.error(f"PieROI: Failed in pg.ROI.__init__: {e}")
             raise
@@ -289,16 +320,16 @@ class PieROI(pg.ROI):
         # update the view
         try:
             self.sigRegionChanged.connect(self._updateView)
-            logger.debug(f"PieROI: Connected sigRegionChanged signal")
+            logger.debug("PieROI: Connected sigRegionChanged signal")
 
             self.poly = None
             self.half_angle = None
             self.create_poly()
-            logger.debug(f"PieROI: Created polygon shape")
+            logger.debug("PieROI: Created polygon shape")
 
             self.addScaleRotateHandle([1.0, 0], [0, 0.5])
             self.addScaleHandle([1.0, 1.0], [0, 0.5])
-            logger.debug(f"PieROI: Added handles, initialization complete")
+            logger.debug("PieROI: Added handles, initialization complete")
         except Exception as e:
             logger.error(f"PieROI: Failed during signal/handle setup: {e}")
             raise

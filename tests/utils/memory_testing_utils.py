@@ -3,13 +3,14 @@
 Minimal implementation to support Qt error detection tests.
 """
 
-import psutil
 import os
+
+import psutil
 
 
 class MemoryTestUtils:
     """Memory testing utilities for test framework."""
-    
+
     @staticmethod
     def get_memory_usage():
         """Get current memory usage in bytes."""
@@ -19,7 +20,7 @@ class MemoryTestUtils:
         except Exception:
             # Fallback if psutil is not available
             return 0
-    
+
     @staticmethod
     def get_memory_percent():
         """Get current memory usage as percentage."""

@@ -11,16 +11,15 @@ import tempfile
 import warnings
 from collections.abc import Generator
 from pathlib import Path
-from typing import Any
 
 import pytest
 
-from xpcs_toolkit.utils.logging_config import get_logger, setup_logging
-
+from xpcs_toolkit.utils.logging_config import get_logger
 
 # ============================================================================
 # Temporary Directory and File Fixtures
 # ============================================================================
+
 
 @pytest.fixture(scope="function")
 def temp_dir() -> Generator[str, None, None]:
@@ -47,6 +46,7 @@ def fixtures_dir() -> Path:
 # ============================================================================
 # Logging and Test Configuration Fixtures
 # ============================================================================
+
 
 @pytest.fixture(scope="function")
 def test_logger() -> logging.Logger:
@@ -106,6 +106,7 @@ def performance_timer():
 # ============================================================================
 # Warning Suppression Configuration
 # ============================================================================
+
 
 def suppress_common_warnings():
     """Suppress common scientific computing warnings during tests."""

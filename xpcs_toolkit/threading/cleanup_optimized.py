@@ -8,7 +8,7 @@ import gc
 import threading
 import time
 from enum import Enum
-from typing import List, Optional, Dict, Any
+from typing import Any
 
 from xpcs_toolkit.utils.logging_config import get_logger
 
@@ -17,6 +17,7 @@ logger = get_logger(__name__)
 
 class CleanupPriority(Enum):
     """Priority levels for cleanup operations."""
+
     LOW = 1
     MEDIUM = 2
     HIGH = 3
@@ -27,7 +28,7 @@ class ObjectRegistry:
     """Registry for tracking objects that need cleanup."""
 
     def __init__(self):
-        self.objects: Dict[str, Any] = {}
+        self.objects: dict[str, Any] = {}
         self._lock = threading.Lock()
 
     def register(self, key: str, obj: Any):
@@ -40,7 +41,7 @@ class ObjectRegistry:
         with self._lock:
             self.objects.pop(key, None)
 
-    def get_object(self, key: str) -> Optional[Any]:
+    def get_object(self, key: str) -> Any | None:
         """Get a registered object."""
         with self._lock:
             return self.objects.get(key)
@@ -50,7 +51,7 @@ class ObjectRegistry:
         with self._lock:
             self.objects.clear()
 
-    def get_objects_by_type(self, obj_type: str) -> List[Any]:
+    def get_objects_by_type(self, obj_type: str) -> list[Any]:
         """Get all registered objects of a specific type.
 
         Args:
@@ -63,8 +64,9 @@ class ObjectRegistry:
             matching_objects = []
             for key, obj in self.objects.items():
                 # Check if the key contains the type name or if the object's class name matches
-                if (obj_type in key or
-                    (hasattr(obj, '__class__') and obj.__class__.__name__ == obj_type)):
+                if obj_type in key or (
+                    hasattr(obj, "__class__") and obj.__class__.__name__ == obj_type
+                ):
                     matching_objects.append(obj)
             return matching_objects
 
@@ -73,7 +75,7 @@ class ObjectRegistry:
 _object_registry = None
 
 
-def shutdown_threads(threads: List[threading.Thread], timeout: float = 5.0):
+def shutdown_threads(threads: list[threading.Thread], timeout: float = 5.0):
     """Utility function to shutdown a list of threads."""
     logger.debug(f"Shutting down {len(threads)} threads")
     for thread in threads:
@@ -86,18 +88,20 @@ class CleanupScheduler:
     """Schedules and manages cleanup operations."""
 
     def __init__(self):
-        self.cleanup_tasks: List[Dict[str, Any]] = []
+        self.cleanup_tasks: list[dict[str, Any]] = []
         self._lock = threading.Lock()
 
     def schedule_cleanup(self, task_name: str, cleanup_func, delay: float = 0.0):
         """Schedule a cleanup task."""
         with self._lock:
-            self.cleanup_tasks.append({
-                'name': task_name,
-                'func': cleanup_func,
-                'delay': delay,
-                'scheduled_time': time.time() + delay
-            })
+            self.cleanup_tasks.append(
+                {
+                    "name": task_name,
+                    "func": cleanup_func,
+                    "delay": delay,
+                    "scheduled_time": time.time() + delay,
+                }
+            )
         logger.debug(f"Scheduled cleanup task: {task_name}")
 
     def execute_pending_cleanup(self):
@@ -106,11 +110,13 @@ class CleanupScheduler:
         executed_tasks = []
 
         with self._lock:
-            for task in self.cleanup_tasks[:]:  # Copy to avoid modification during iteration
-                if current_time >= task['scheduled_time']:
+            for task in self.cleanup_tasks[
+                :
+            ]:  # Copy to avoid modification during iteration
+                if current_time >= task["scheduled_time"]:
                     try:
-                        task['func']()
-                        executed_tasks.append(task['name'])
+                        task["func"]()
+                        executed_tasks.append(task["name"])
                         self.cleanup_tasks.remove(task)
                     except Exception as e:
                         logger.warning(f"Cleanup task {task['name']} failed: {e}")
@@ -153,7 +159,7 @@ class OptimizedCleanupSystem:
     """Main cleanup system coordinating all cleanup operations."""
 
     def __init__(self):
-        self.active_threads: List[threading.Thread] = []
+        self.active_threads: list[threading.Thread] = []
         self.threads_lock = threading.Lock()
         self.cleanup_scheduler = CleanupScheduler()
         self.garbage_collector = SmartGarbageCollector()
@@ -180,7 +186,7 @@ class OptimizedCleanupSystem:
 
 
 # Global cleanup system instance
-_cleanup_system: Optional[OptimizedCleanupSystem] = None
+_cleanup_system: OptimizedCleanupSystem | None = None
 
 
 def get_cleanup_system() -> OptimizedCleanupSystem:
@@ -206,7 +212,9 @@ def schedule_cleanup(task_name: str, cleanup_func, delay: float = 0.0):
     """Schedule a cleanup task."""
     try:
         cleanup_system = get_cleanup_system()
-        cleanup_system.cleanup_scheduler.schedule_cleanup(task_name, cleanup_func, delay)
+        cleanup_system.cleanup_scheduler.schedule_cleanup(
+            task_name, cleanup_func, delay
+        )
     except Exception as e:
         logger.error(f"Error scheduling cleanup: {e}")
 
@@ -233,6 +241,7 @@ def cleanup_system_shutdown(timeout: float = 5.0):
 
 # Additional functions expected by the codebase
 
+
 def get_object_registry() -> ObjectRegistry:
     """Get or create the global object registry."""
     global _object_registry
@@ -249,8 +258,6 @@ def register_for_cleanup(key: str, obj: Any):
         logger.debug(f"Registered object for cleanup: {key}")
     except Exception as e:
         logger.error(f"Error registering object for cleanup: {e}")
-
-
 
 
 def shutdown_optimized_cleanup(timeout: float = 5.0):
@@ -293,8 +300,11 @@ def schedule_type_cleanup(obj_type: str, priority_or_func, delay: float = 0.0):
                 if priority_or_func == CleanupPriority.CRITICAL:
                     # Force immediate garbage collection
                     import gc
+
                     collected = gc.collect()
-                    logger.debug(f"Critical cleanup for {obj_type}: freed {collected} objects")
+                    logger.debug(
+                        f"Critical cleanup for {obj_type}: freed {collected} objects"
+                    )
                 elif priority_or_func == CleanupPriority.HIGH:
                     # Trigger smart garbage collection
                     cleanup_system.garbage_collector.collect()
@@ -314,9 +324,13 @@ def schedule_type_cleanup(obj_type: str, priority_or_func, delay: float = 0.0):
             cleanup_func = priority_or_func
         else:
             # Invalid parameter type
-            raise TypeError(f"priority_or_func must be CleanupPriority enum or callable, got {type(priority_or_func)}")
+            raise TypeError(
+                f"priority_or_func must be CleanupPriority enum or callable, got {type(priority_or_func)}"
+            )
 
-        cleanup_system.cleanup_scheduler.schedule_cleanup(task_name, cleanup_func, delay)
+        cleanup_system.cleanup_scheduler.schedule_cleanup(
+            task_name, cleanup_func, delay
+        )
         logger.debug(f"Scheduled type cleanup for: {obj_type}")
     except Exception as e:
         logger.error(f"Error scheduling type cleanup: {e}")

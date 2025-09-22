@@ -12,6 +12,7 @@ import pytest
 
 try:
     import h5py
+
     H5PY_AVAILABLE = True
 except ImportError:
     H5PY_AVAILABLE = False
@@ -25,7 +26,9 @@ class TestDataLoadingErrors:
     """Test suite for data loading error scenarios."""
 
     @pytest.mark.gui
-    def test_corrupted_hdf5_file_handling(self, gui_main_window, qtbot, mock_viewer_kernel, tmp_path):
+    def test_corrupted_hdf5_file_handling(
+        self, gui_main_window, qtbot, mock_viewer_kernel, tmp_path
+    ):
         """Test handling of corrupted HDF5 files."""
         window = gui_main_window
 
@@ -94,7 +97,9 @@ class TestDataLoadingErrors:
         assert window.isVisible()
 
     @pytest.mark.gui
-    def test_permission_denied_handling(self, gui_main_window, qtbot, mock_viewer_kernel, tmp_path):
+    def test_permission_denied_handling(
+        self, gui_main_window, qtbot, mock_viewer_kernel, tmp_path
+    ):
         """Test handling of permission-denied file access."""
         window = gui_main_window
 
@@ -248,7 +253,9 @@ class TestCalculationErrors:
 
             # Try to interact with G2 fitting controls (if any)
             buttons = g2_widget.findChildren(QtWidgets.QPushButton)
-            fit_buttons = [b for b in buttons if "fit" in b.text().lower() and b.isEnabled()]
+            fit_buttons = [
+                b for b in buttons if "fit" in b.text().lower() and b.isEnabled()
+            ]
 
             if fit_buttons:
                 # Test clicking fit button (may or may not work with mock data)
@@ -340,7 +347,7 @@ class TestUIBoundaryConditions:
 
         if tab_widget and tab_widget.count() > 2:
             # More controlled rapid switching to avoid hanging
-            for cycle in range(3):  # Reduced cycles
+            for _cycle in range(3):  # Reduced cycles
                 for i in range(min(3, tab_widget.count())):
                     tab_widget.setCurrentIndex(i)
                     qtbot.wait(5)  # Minimal wait to prevent hanging
@@ -365,7 +372,9 @@ class TestUIBoundaryConditions:
 
                 # Test spin box boundaries (limit to avoid triggering plot updates)
                 spin_boxes = current_widget.findChildren(QtWidgets.QSpinBox)
-                for spin_box in spin_boxes[:1]:  # Test only first spinbox to limit operations
+                for spin_box in spin_boxes[
+                    :1
+                ]:  # Test only first spinbox to limit operations
                     if spin_box.isVisible() and spin_box.isEnabled():
                         # Store original value to restore later
                         original_value = spin_box.value()

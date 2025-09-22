@@ -5,31 +5,30 @@ to ensure all components work correctly together.
 """
 
 import contextlib
-import os
 import sys
 import tempfile
 import time
 from pathlib import Path
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 from PySide6 import QtCore, QtWidgets
-from PySide6.QtCore import QTimer, QThread, Signal
+from PySide6.QtCore import QTimer, Signal
 
 # Import our Qt testing framework components
 tests_dir = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(tests_dir))
 
 try:
-    from framework.qt_test_runner import QtTestRunner, XpcsQtTestRunner
-    from utils.qt_threading_utils import (
-        ThreadingViolationDetector,
-        QtThreadSafetyValidator,
-        BackgroundThreadTester,
-        detect_threading_violations
-    )
     # Import regression tester separately to handle import issues
     from framework.qt_error_regression import ErrorBaseline
+    from framework.qt_test_runner import QtTestRunner, XpcsQtTestRunner
+    from utils.qt_threading_utils import (
+        BackgroundThreadTester,
+        QtThreadSafetyValidator,
+        ThreadingViolationDetector,
+        detect_threading_violations,
+    )
 
     # Mock the regression tester if import fails
     class QtErrorRegressionTester:
@@ -48,6 +47,7 @@ try:
 
 except ImportError as e:
     print(f"Import warning: {e}")
+
     # Provide minimal implementations for testing
     class QtTestRunner:
         """Qt test runner for executing Qt-specific tests with error capture.
@@ -55,11 +55,12 @@ except ImportError as e:
         This class provides a framework for running Qt-based tests while capturing
         Qt-specific errors and maintaining proper application lifecycle management.
         """
+
         def __init__(self, **kwargs):
             self.qt_errors = []
-            self.capture_stdout = kwargs.get('capture_stdout', True)
-            self.capture_stderr = kwargs.get('capture_stderr', True)
-            self.timeout = kwargs.get('timeout', 30)
+            self.capture_stdout = kwargs.get("capture_stdout", True)
+            self.capture_stderr = kwargs.get("capture_stderr", True)
+            self.timeout = kwargs.get("timeout", 30)
 
         def setup_qt_application(self):
             if not QtWidgets.QApplication.instance():
@@ -83,30 +84,29 @@ except ImportError as e:
                 Test result containing success, error info, and timing
             """
             import time
-            import traceback
 
             start_time = time.time()
             result = {
-                'success': False,
-                'test_name': test_function.__name__,
-                'return_value': None,
-                'error': None,
-                'exception_type': None,
-                'execution_time': 0.0,
-                'qt_errors': []
+                "success": False,
+                "test_name": test_function.__name__,
+                "return_value": None,
+                "error": None,
+                "exception_type": None,
+                "execution_time": 0.0,
+                "qt_errors": [],
             }
 
             try:
                 return_value = test_function()
-                result['success'] = True
-                result['return_value'] = return_value
+                result["success"] = True
+                result["return_value"] = return_value
             except Exception as e:
-                result['success'] = False
-                result['error'] = str(e)
-                result['exception_type'] = type(e).__name__
+                result["success"] = False
+                result["error"] = str(e)
+                result["exception_type"] = type(e).__name__
             finally:
-                result['execution_time'] = time.time() - start_time
-                result['qt_errors'] = list(self.qt_errors)  # Copy current errors
+                result["execution_time"] = time.time() - start_time
+                result["qt_errors"] = list(self.qt_errors)  # Copy current errors
 
             return result
 
@@ -120,13 +120,13 @@ except ImportError as e:
 =====================================
 
 Test Summary:
-- Total Tests: {results['total_tests']}
-- Passed: {results['passed']}
-- Failed: {results['failed']}
-- Total Qt Errors: {results.get('total_qt_errors', 0)}
+- Total Tests: {results["total_tests"]}
+- Passed: {results["passed"]}
+- Failed: {results["failed"]}
+- Total Qt Errors: {results.get("total_qt_errors", 0)}
 
 Error Analysis:
-{results.get('error_summary', {})}
+{results.get("error_summary", {})}
 
 Recommendations:
 - Fix timer errors
@@ -137,16 +137,35 @@ Recommendations:
     class XpcsQtTestRunner(QtTestRunner):
         def __init__(self, **kwargs):
             super().__init__(**kwargs)
-            self.xpcs_specific_patterns = ['viewer_kernel', 'plot_handler', 'data_manager']
+            self.xpcs_specific_patterns = [
+                "viewer_kernel",
+                "plot_handler",
+                "data_manager",
+            ]
 
         def run_xpcs_viewer_test(self):
-            return {'success': True, 'test_name': 'xpcs_viewer_test', 'viewer_created': True, 'errors': []}
+            return {
+                "success": True,
+                "test_name": "xpcs_viewer_test",
+                "viewer_created": True,
+                "errors": [],
+            }
 
         def run_background_cleanup_test(self):
-            return {'success': True, 'test_name': 'background_cleanup', 'cleanup_successful': True, 'memory_leaks': []}
+            return {
+                "success": True,
+                "test_name": "background_cleanup",
+                "cleanup_successful": True,
+                "memory_leaks": [],
+            }
 
         def run_plot_handler_test(self):
-            return {'success': True, 'test_name': 'plot_handler_creation', 'plots_created': True, 'rendering_errors': []}
+            return {
+                "success": True,
+                "test_name": "plot_handler_creation",
+                "plots_created": True,
+                "rendering_errors": [],
+            }
 
     class ThreadingViolationDetector:
         """Detector for Qt threading violations and unsafe operations.
@@ -154,6 +173,7 @@ Recommendations:
         This class monitors Qt operations for thread safety violations and provides
         reporting capabilities for debugging threading issues.
         """
+
         def __init__(self):
             self.violations = []
 
@@ -172,6 +192,7 @@ Recommendations:
         This class validates Qt operations for thread safety and provides
         recommendations for fixing threading violations.
         """
+
         def __init__(self):
             pass
 
@@ -193,21 +214,35 @@ Recommendations:
         This class tests Qt operations in background threads to ensure proper
         thread safety and identify potential threading issues.
         """
+
         def __init__(self):
             pass
 
         def test_widget_access(self):
-            return {'success': True, 'errors': []}
+            return {"success": True, "errors": []}
 
         def run_all_tests(self):
             return [
-                {'test_name': 'timer_in_background_thread', 'success': True, 'errors': []},
-                {'test_name': 'proper_qthread_timer', 'success': True, 'errors': []},
-                {'test_name': 'signal_connection_threading', 'success': True, 'errors': []}
+                {
+                    "test_name": "timer_in_background_thread",
+                    "success": True,
+                    "errors": [],
+                },
+                {"test_name": "proper_qthread_timer", "success": True, "errors": []},
+                {
+                    "test_name": "signal_connection_threading",
+                    "success": True,
+                    "errors": [],
+                },
             ]
 
         def get_compliance_report(self):
-            return {'overall_compliance': True, 'violations': [], 'total_tests': 3, 'compliance_score': 1.0}
+            return {
+                "overall_compliance": True,
+                "violations": [],
+                "total_tests": 3,
+                "compliance_score": 1.0,
+            }
 
     class ErrorBaseline:
         """Baseline for Qt error tracking and regression testing.
@@ -215,9 +250,20 @@ Recommendations:
         This class represents a baseline of Qt errors for comparison and
         regression testing purposes.
         """
-        def __init__(self, timestamp=None, total_errors=0, timer_errors=0,
-                     connection_errors=0, other_errors=0, error_patterns=None,
-                     test_environment=None, git_commit=None, notes=None, errors=None):
+
+        def __init__(
+            self,
+            timestamp=None,
+            total_errors=0,
+            timer_errors=0,
+            connection_errors=0,
+            other_errors=0,
+            error_patterns=None,
+            test_environment=None,
+            git_commit=None,
+            notes=None,
+            errors=None,
+        ):
             self.timestamp = timestamp or "2025-09-16T10:00:00"
             self.total_errors = total_errors
             self.timer_errors = timer_errors
@@ -235,6 +281,7 @@ Recommendations:
         This class manages Qt error baselines and performs regression testing
         to track improvements or regressions in Qt error handling.
         """
+
         def __init__(self, baseline_dir="tests/baselines/qt_errors"):
             self.baseline_dir = Path(baseline_dir)
             self.baseline_dir.mkdir(parents=True, exist_ok=True)
@@ -247,8 +294,8 @@ Recommendations:
         def create_baseline(self, name, errors):
             baseline = ErrorBaseline(
                 timestamp="2025-09-16T10:00:00",
-                test_environment={'python': '3.10', 'qt': '6.0'},
-                errors=errors
+                test_environment={"python": "3.10", "qt": "6.0"},
+                errors=errors,
             )
             self._save_baseline(name, baseline)
             return baseline
@@ -263,12 +310,12 @@ Recommendations:
             timer_error_diff = b2.timer_errors - b1.timer_errors
             connection_error_diff = b2.connection_errors - b1.connection_errors
             return {
-                'differences': [],
-                'similarity_score': 1.0,
-                'total_error_diff': total_error_diff,
-                'timer_error_diff': timer_error_diff,
-                'connection_error_diff': connection_error_diff,
-                'improvement': total_error_diff < 0
+                "differences": [],
+                "similarity_score": 1.0,
+                "total_error_diff": total_error_diff,
+                "timer_error_diff": timer_error_diff,
+                "connection_error_diff": connection_error_diff,
+                "improvement": total_error_diff < 0,
             }
 
         def _save_baseline(self, name, baseline):
@@ -324,10 +371,10 @@ class TestQtErrorDetectionFramework:
 
         result = runner.run_qt_test_function(error_generating_function)
 
-        assert result['success'] is True
-        assert result['test_name'] == 'error_generating_function'
-        assert 'execution_time' in result
-        assert isinstance(result['qt_errors'], list)
+        assert result["success"] is True
+        assert result["test_name"] == "error_generating_function"
+        assert "execution_time" in result
+        assert isinstance(result["qt_errors"], list)
 
         runner.cleanup_qt_application()
 
@@ -349,7 +396,7 @@ class TestQtErrorDetectionFramework:
         detector.stop_monitoring()
 
         # Detector should be functional
-        assert hasattr(ctx_detector, 'get_violations')
+        assert hasattr(ctx_detector, "get_violations")
 
     def test_qt_thread_safety_validator(self):
         """Test Qt thread safety validator."""
@@ -388,11 +435,11 @@ class TestQtErrorDetectionFramework:
         assert len(results) > 0
 
         # Check that we have expected test results
-        test_names = [r.get('test_name', '') for r in results]
+        test_names = [r.get("test_name", "") for r in results]
         expected_tests = [
-            'timer_in_background_thread',
-            'proper_qthread_timer',
-            'signal_connection_threading'
+            "timer_in_background_thread",
+            "proper_qthread_timer",
+            "signal_connection_threading",
         ]
 
         for expected_test in expected_tests:
@@ -400,8 +447,8 @@ class TestQtErrorDetectionFramework:
 
         # Generate compliance report
         compliance_report = tester.get_compliance_report()
-        assert 'total_tests' in compliance_report
-        assert 'compliance_score' in compliance_report
+        assert "total_tests" in compliance_report
+        assert "compliance_score" in compliance_report
 
 
 class TestXpcsSpecificTestRunner:
@@ -410,7 +457,7 @@ class TestXpcsSpecificTestRunner:
     def test_xpcs_qt_test_runner_initialization(self):
         """Test XPCS Qt test runner initialization."""
         runner = XpcsQtTestRunner()
-        assert hasattr(runner, 'xpcs_specific_patterns')
+        assert hasattr(runner, "xpcs_specific_patterns")
         assert len(runner.xpcs_specific_patterns) > 0
 
     def test_xpcs_viewer_test_simulation(self):
@@ -419,15 +466,15 @@ class TestXpcsSpecificTestRunner:
         runner.setup_qt_application()
 
         # Mock the XPCS viewer to avoid actual initialization
-        with patch('xpcs_toolkit.xpcs_viewer.XpcsViewer') as mock_viewer:
+        with patch("xpcs_toolkit.xpcs_viewer.XpcsViewer") as mock_viewer:
             mock_instance = MagicMock()
             mock_viewer.return_value = mock_instance
 
             result = runner.run_xpcs_viewer_test()
 
-            assert 'success' in result
-            assert 'test_name' in result
-            assert result['test_name'] == 'xpcs_viewer_test'
+            assert "success" in result
+            assert "test_name" in result
+            assert result["test_name"] == "xpcs_viewer_test"
 
         runner.cleanup_qt_application()
 
@@ -438,7 +485,9 @@ class TestXpcsSpecificTestRunner:
 
         # Mock the background cleanup manager (handle case where module doesn't exist)
         try:
-            with patch('xpcs_toolkit.threading.cleanup_ops.BackgroundCleanupManager') as mock_cleanup:
+            with patch(
+                "xpcs_toolkit.threading.cleanup_ops.BackgroundCleanupManager"
+            ) as mock_cleanup:
                 mock_instance = MagicMock()
                 mock_cleanup.return_value = mock_instance
                 result = runner.run_background_cleanup_test()
@@ -446,8 +495,8 @@ class TestXpcsSpecificTestRunner:
             # If module doesn't exist, just test the method directly
             result = runner.run_background_cleanup_test()
 
-        assert 'success' in result
-        assert 'test_name' in result
+        assert "success" in result
+        assert "test_name" in result
 
         runner.cleanup_qt_application()
 
@@ -457,14 +506,14 @@ class TestXpcsSpecificTestRunner:
         runner.setup_qt_application()
 
         # Mock the plot handler
-        with patch('xpcs_toolkit.plothandler.ImageViewDev') as mock_plot:
+        with patch("xpcs_toolkit.plothandler.ImageViewDev") as mock_plot:
             mock_instance = MagicMock()
             mock_plot.return_value = mock_instance
 
             result = runner.run_plot_handler_test()
 
-            assert 'success' in result
-            assert 'test_name' in result
+            assert "success" in result
+            assert "test_name" in result
 
         runner.cleanup_qt_application()
 
@@ -490,7 +539,7 @@ class TestQtErrorRegressionFramework:
             error_patterns={"timer_error": 2, "connection_error": 3},
             test_environment={"python": "3.10", "pyside6": "6.7"},
             git_commit="abc123",
-            notes="Test baseline"
+            notes="Test baseline",
         )
 
         assert baseline.total_errors == 5
@@ -510,7 +559,7 @@ class TestQtErrorRegressionFramework:
                 connection_errors=2,
                 other_errors=0,
                 error_patterns={"test_pattern": 3},
-                test_environment={"test": "env"}
+                test_environment={"test": "env"},
             )
 
             # Save baseline
@@ -537,7 +586,7 @@ class TestQtErrorRegressionFramework:
                 connection_errors=1,
                 other_errors=0,
                 error_patterns={},
-                test_environment={}
+                test_environment={},
             )
 
             baseline2 = ErrorBaseline(
@@ -547,7 +596,7 @@ class TestQtErrorRegressionFramework:
                 connection_errors=1,
                 other_errors=0,
                 error_patterns={},
-                test_environment={}
+                test_environment={},
             )
 
             tester._save_baseline("baseline1", baseline1)
@@ -571,7 +620,7 @@ class TestQtErrorRegressionFramework:
                 connection_errors=3,
                 other_errors=0,
                 error_patterns={},
-                test_environment={}
+                test_environment={},
             )
 
             baseline2 = ErrorBaseline(
@@ -581,7 +630,7 @@ class TestQtErrorRegressionFramework:
                 connection_errors=2,
                 other_errors=0,
                 error_patterns={},
-                test_environment={}
+                test_environment={},
             )
 
             tester._save_baseline("before", baseline1)
@@ -589,10 +638,10 @@ class TestQtErrorRegressionFramework:
 
             comparison = tester.compare_baselines("before", "after")
 
-            assert comparison['total_error_diff'] == -2  # Improvement
-            assert comparison['timer_error_diff'] == -1
-            assert comparison['connection_error_diff'] == -1
-            assert comparison['improvement'] is True
+            assert comparison["total_error_diff"] == -2  # Improvement
+            assert comparison["timer_error_diff"] == -1
+            assert comparison["connection_error_diff"] == -1
+            assert comparison["improvement"] is True
 
 
 class TestIntegratedFrameworkFunctionality:
@@ -602,12 +651,13 @@ class TestIntegratedFrameworkFunctionality:
         """Test complete error detection workflow."""
         # Initialize components
         runner = XpcsQtTestRunner()
-        detector = ThreadingViolationDetector()
+        ThreadingViolationDetector()
 
         runner.setup_qt_application()
 
         # Run a test with error detection
         with detect_threading_violations() as violation_detector:
+
             def test_workflow():
                 # Create some Qt objects that might generate warnings
                 widget = QtWidgets.QWidget()
@@ -621,9 +671,9 @@ class TestIntegratedFrameworkFunctionality:
             result = runner.run_qt_test_function(test_workflow)
 
         # Verify workflow completed
-        assert result['success'] is True
-        assert 'qt_errors' in result
-        assert 'execution_time' in result
+        assert result["success"] is True
+        assert "qt_errors" in result
+        assert "execution_time" in result
 
         # Check violation detector worked
         violations = violation_detector.get_violations()
@@ -651,11 +701,11 @@ class TestIntegratedFrameworkFunctionality:
 
         result = runner.run_qt_test_function(pattern_test)
 
-        assert result['success'] is True
-        assert result['return_value'] == "pattern_test_completed"
+        assert result["success"] is True
+        assert result["return_value"] == "pattern_test_completed"
 
         # Framework should capture any Qt errors
-        assert isinstance(result['qt_errors'], list)
+        assert isinstance(result["qt_errors"], list)
 
         runner.cleanup_qt_application()
 
@@ -678,7 +728,7 @@ class TestIntegratedFrameworkFunctionality:
 
         # Framework overhead should be minimal (less than 1 second for simple test)
         assert execution_time < 1.0
-        assert result['success'] is True
+        assert result["success"] is True
 
         runner.cleanup_qt_application()
 
@@ -688,16 +738,13 @@ class TestIntegratedFrameworkFunctionality:
 
         # Mock test results
         mock_results = {
-            'total_tests': 3,
-            'passed': 2,
-            'failed': 1,
-            'total_qt_errors': 5,
-            'error_summary': {
-                'most_common_errors': [
-                    ('timer_error', 3),
-                    ('connection_error', 2)
-                ]
-            }
+            "total_tests": 3,
+            "passed": 2,
+            "failed": 1,
+            "total_qt_errors": 5,
+            "error_summary": {
+                "most_common_errors": [("timer_error", 3), ("connection_error", 2)]
+            },
         }
 
         report = runner.generate_error_report(mock_results)
@@ -714,7 +761,7 @@ class TestIntegratedFrameworkFunctionality:
         detector = ThreadingViolationDetector()
 
         # Setup
-        app = runner.setup_qt_application()
+        runner.setup_qt_application()
         detector.start_monitoring()
 
         # Verify setup
@@ -741,10 +788,10 @@ class TestFrameworkErrorHandling:
 
         result = runner.run_qt_test_function(failing_test)
 
-        assert result['success'] is False
-        assert result['error'] is not None
-        assert "Test exception" in result['error']
-        assert result['exception_type'] == 'ValueError'
+        assert result["success"] is False
+        assert result["error"] is not None
+        assert "Test exception" in result["error"]
+        assert result["exception_type"] == "ValueError"
 
         runner.cleanup_qt_application()
 
@@ -763,8 +810,8 @@ class TestFrameworkErrorHandling:
         result = runner.run_qt_test_function(no_app_test)
 
         # Result should contain information about what happened
-        assert 'success' in result
-        assert 'error' in result or result['success']
+        assert "success" in result
+        assert "error" in result or result["success"]
 
     def test_timeout_handling(self):
         """Test timeout handling in test runner."""
@@ -777,7 +824,7 @@ class TestFrameworkErrorHandling:
         # For function-level testing, we don't have built-in timeout
         # but we can test that the framework doesn't hang
         start_time = time.time()
-        result = runner.run_qt_test_function(long_running_test)
+        runner.run_qt_test_function(long_running_test)
         end_time = time.time()
 
         # Test should complete (even if it takes longer than intended)
@@ -817,8 +864,8 @@ class TestFrameworkIntegration:
         result = runner.run_qt_test_function(reproduce_qt_errors)
 
         # Should complete without crashing the test framework
-        assert 'success' in result
-        assert 'qt_errors' in result
+        assert "success" in result
+        assert "qt_errors" in result
 
         runner.cleanup_qt_application()
 
@@ -844,7 +891,7 @@ class TestFrameworkIntegration:
             ThreadingViolationDetector,
             QtThreadSafetyValidator,
             BackgroundThreadTester,
-            QtErrorRegressionTester
+            QtErrorRegressionTester,
         ]
 
         for component in components:
@@ -863,19 +910,19 @@ def validate_qt_error_framework():
         Dict with validation results
     """
     validation_results = {
-        'framework_initialized': False,
-        'error_detection_working': False,
-        'threading_detection_working': False,
-        'regression_testing_working': False,
-        'integration_successful': False,
-        'issues_found': []
+        "framework_initialized": False,
+        "error_detection_working": False,
+        "threading_detection_working": False,
+        "regression_testing_working": False,
+        "integration_successful": False,
+        "issues_found": [],
     }
 
     try:
         # Test framework initialization
         runner = QtTestRunner()
         runner.setup_qt_application()
-        validation_results['framework_initialized'] = True
+        validation_results["framework_initialized"] = True
 
         # Test error detection
         def test_func():
@@ -884,8 +931,8 @@ def validate_qt_error_framework():
             return True
 
         result = runner.run_qt_test_function(test_func)
-        if result['success']:
-            validation_results['error_detection_working'] = True
+        if result["success"]:
+            validation_results["error_detection_working"] = True
 
         runner.cleanup_qt_application()
 
@@ -893,25 +940,27 @@ def validate_qt_error_framework():
         detector = ThreadingViolationDetector()
         detector.start_monitoring()
         detector.stop_monitoring()
-        validation_results['threading_detection_working'] = True
+        validation_results["threading_detection_working"] = True
 
         # Test regression framework
         with tempfile.TemporaryDirectory() as temp_dir:
             tester = QtErrorRegressionTester(baseline_dir=temp_dir)
-            baselines = tester.list_baselines()
-            validation_results['regression_testing_working'] = True
+            tester.list_baselines()
+            validation_results["regression_testing_working"] = True
 
         # Overall integration check
-        if all([
-            validation_results['framework_initialized'],
-            validation_results['error_detection_working'],
-            validation_results['threading_detection_working'],
-            validation_results['regression_testing_working']
-        ]):
-            validation_results['integration_successful'] = True
+        if all(
+            [
+                validation_results["framework_initialized"],
+                validation_results["error_detection_working"],
+                validation_results["threading_detection_working"],
+                validation_results["regression_testing_working"],
+            ]
+        ):
+            validation_results["integration_successful"] = True
 
     except Exception as e:
-        validation_results['issues_found'].append(str(e))
+        validation_results["issues_found"].append(str(e))
 
     return validation_results
 
@@ -922,15 +971,15 @@ if __name__ == "__main__":
     print("Qt Error Detection Framework Validation Results:")
     for key, value in results.items():
         status = "✅" if value else "❌"
-        if key != 'issues_found':
+        if key != "issues_found":
             print(f"{status} {key}: {value}")
 
-    if results['issues_found']:
+    if results["issues_found"]:
         print("\n❌ Issues found:")
-        for issue in results['issues_found']:
+        for issue in results["issues_found"]:
             print(f"  - {issue}")
 
-    if results['integration_successful']:
+    if results["integration_successful"]:
         print("\n🎉 Qt Error Detection Framework validation successful!")
     else:
         print("\n⚠️ Qt Error Detection Framework validation incomplete")

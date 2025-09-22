@@ -7,12 +7,13 @@ parallel initialization, and intelligent resource preloading strategies.
 
 import atexit
 import importlib
-import time
 import threading
+import time
+from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Set, Tuple
+from typing import Any
 
 import psutil
 
@@ -24,6 +25,7 @@ logger = get_logger(__name__)
 @dataclass
 class StartupMetrics:
     """Container for startup performance metrics."""
+
     component_name: str
     start_time: float
     end_time: float
@@ -38,9 +40,10 @@ class StartupMetrics:
 @dataclass
 class ComponentInfo:
     """Information about a startup component."""
+
     name: str
     init_func: Callable
-    dependencies: Set[str]
+    dependencies: set[str]
     priority: int  # Lower number = higher priority
     lazy_load: bool = False
     critical: bool = True
@@ -50,9 +53,9 @@ class LazyImportManager:
     """Manages lazy importing of heavy modules to speed up startup."""
 
     def __init__(self):
-        self._lazy_modules: Dict[str, Any] = {}
-        self._import_aliases: Dict[str, str] = {}
-        self._load_times: Dict[str, float] = {}
+        self._lazy_modules: dict[str, Any] = {}
+        self._import_aliases: dict[str, str] = {}
+        self._load_times: dict[str, float] = {}
 
     def register_lazy_import(self, alias: str, module_name: str):
         """
@@ -105,13 +108,13 @@ class LazyImportManager:
 
         return self._lazy_modules[alias]
 
-    def preload_modules(self, aliases: List[str], background: bool = True):
+    def preload_modules(self, aliases: list[str], background: bool = True):
         """
         Preload modules in the background.
 
         Parameters
         ----------
-        aliases : List[str]
+        aliases : list[str]
             List of module aliases to preload
         background : bool
             Whether to load in background thread
@@ -121,13 +124,13 @@ class LazyImportManager:
                 target=self._preload_worker,
                 args=(aliases,),
                 daemon=True,
-                name="module_preloader"
+                name="module_preloader",
             )
             thread.start()
         else:
             self._preload_worker(aliases)
 
-    def _preload_worker(self, aliases: List[str]):
+    def _preload_worker(self, aliases: list[str]):
         """Background worker for preloading modules."""
         for alias in aliases:
             try:
@@ -135,7 +138,7 @@ class LazyImportManager:
             except Exception as e:
                 logger.warning(f"Failed to preload module {alias}: {e}")
 
-    def get_load_statistics(self) -> Dict[str, float]:
+    def get_load_statistics(self) -> dict[str, float]:
         """Get module loading statistics."""
         return self._load_times.copy()
 
@@ -144,7 +147,7 @@ class StartupProfiler:
     """Profiles application startup performance."""
 
     def __init__(self):
-        self.metrics: List[StartupMetrics] = []
+        self.metrics: list[StartupMetrics] = []
         self.total_startup_time = 0.0
         self.startup_start_time = None
 
@@ -157,7 +160,9 @@ class StartupProfiler:
         """End overall startup profiling."""
         if self.startup_start_time:
             self.total_startup_time = time.time() - self.startup_start_time
-            logger.info(f"Total application startup time: {self.total_startup_time:.3f}s")
+            logger.info(
+                f"Total application startup time: {self.total_startup_time:.3f}s"
+            )
             self._log_startup_summary()
 
     def profile_component(self, component_name: str):
@@ -192,7 +197,11 @@ class StartupProfiler:
             )
 
         total_component_time = sum(m.duration for m in self.metrics)
-        parallel_efficiency = (total_component_time / self.total_startup_time) if self.total_startup_time > 0 else 1.0
+        parallel_efficiency = (
+            (total_component_time / self.total_startup_time)
+            if self.total_startup_time > 0
+            else 1.0
+        )
 
         logger.info(f"Total component time: {total_component_time:.3f}s")
         logger.info(f"Parallel efficiency: {parallel_efficiency:.1%}")
@@ -202,20 +211,20 @@ class StartupProfiler:
         import json
 
         data = {
-            'total_startup_time': self.total_startup_time,
-            'component_metrics': [
+            "total_startup_time": self.total_startup_time,
+            "component_metrics": [
                 {
-                    'component_name': m.component_name,
-                    'duration': m.duration,
-                    'memory_delta_mb': m.memory_delta_mb,
-                    'success': m.success,
-                    'error_message': m.error_message
+                    "component_name": m.component_name,
+                    "duration": m.duration,
+                    "memory_delta_mb": m.memory_delta_mb,
+                    "success": m.success,
+                    "error_message": m.error_message,
                 }
                 for m in self.metrics
-            ]
+            ],
         }
 
-        with open(filepath, 'w') as f:
+        with open(filepath, "w") as f:
             json.dump(data, f, indent=2)
 
         logger.info(f"Startup metrics exported to {filepath}")
@@ -257,30 +266,39 @@ class StartupComponentProfiler:
             memory_after_mb=memory_after,
             memory_delta_mb=memory_delta,
             success=success,
-            error_message=error_message
+            error_message=error_message,
         )
 
         self.profiler.add_metrics(metrics)
 
         if success:
-            logger.debug(f"Completed initialization: {self.component_name} in {duration:.3f}s")
+            logger.debug(
+                f"Completed initialization: {self.component_name} in {duration:.3f}s"
+            )
         else:
-            logger.error(f"Failed initialization: {self.component_name} - {error_message}")
+            logger.error(
+                f"Failed initialization: {self.component_name} - {error_message}"
+            )
 
 
 class ParallelStartupManager:
     """Manages parallel initialization of application components."""
 
-    def __init__(self, max_workers: Optional[int] = None):
+    def __init__(self, max_workers: int | None = None):
         self.max_workers = max_workers or min(4, (psutil.cpu_count() or 1))
-        self.components: Dict[str, ComponentInfo] = {}
-        self.initialized_components: Set[str] = set()
+        self.components: dict[str, ComponentInfo] = {}
+        self.initialized_components: set[str] = set()
         self.profiler = StartupProfiler()
 
-    def register_component(self, name: str, init_func: Callable,
-                          dependencies: Optional[Set[str]] = None,
-                          priority: int = 5, lazy_load: bool = False,
-                          critical: bool = True):
+    def register_component(
+        self,
+        name: str,
+        init_func: Callable,
+        dependencies: set[str] | None = None,
+        priority: int = 5,
+        lazy_load: bool = False,
+        critical: bool = True,
+    ):
         """
         Register a component for initialization.
 
@@ -290,7 +308,7 @@ class ParallelStartupManager:
             Component name
         init_func : Callable
             Initialization function
-        dependencies : Set[str], optional
+        dependencies : set[str], optional
             Set of component names this depends on
         priority : int
             Priority level (lower = higher priority)
@@ -305,7 +323,7 @@ class ParallelStartupManager:
             dependencies=dependencies or set(),
             priority=priority,
             lazy_load=lazy_load,
-            critical=critical
+            critical=critical,
         )
 
         self.components[name] = component
@@ -325,13 +343,13 @@ class ParallelStartupManager:
         try:
             # Separate lazy and immediate components
             immediate_components = {
-                name: comp for name, comp in self.components.items()
+                name: comp
+                for name, comp in self.components.items()
                 if not comp.lazy_load
             }
 
             lazy_components = {
-                name: comp for name, comp in self.components.items()
-                if comp.lazy_load
+                name: comp for name, comp in self.components.items() if comp.lazy_load
             }
 
             # Initialize immediate components in dependency order
@@ -345,7 +363,7 @@ class ParallelStartupManager:
         finally:
             self.profiler.end_startup_profiling()
 
-    def _initialize_components(self, components: Dict[str, ComponentInfo]) -> bool:
+    def _initialize_components(self, components: dict[str, ComponentInfo]) -> bool:
         """Initialize components respecting dependencies and priorities."""
         # Create dependency-sorted initialization order
         init_order = self._resolve_dependencies(components)
@@ -356,7 +374,9 @@ class ParallelStartupManager:
         overall_success = True
 
         for priority, component_names in priority_groups:
-            logger.info(f"Initializing priority {priority} components: {component_names}")
+            logger.info(
+                f"Initializing priority {priority} components: {component_names}"
+            )
 
             # Initialize components in this priority group in parallel
             group_success = self._initialize_priority_group(component_names, components)
@@ -364,7 +384,8 @@ class ParallelStartupManager:
             if not group_success:
                 # Check if any failed components were critical
                 failed_critical = any(
-                    name not in self.initialized_components and components[name].critical
+                    name not in self.initialized_components
+                    and components[name].critical
                     for name in component_names
                 )
 
@@ -375,7 +396,7 @@ class ParallelStartupManager:
 
         return overall_success
 
-    def _resolve_dependencies(self, components: Dict[str, ComponentInfo]) -> List[str]:
+    def _resolve_dependencies(self, components: dict[str, ComponentInfo]) -> list[str]:
         """Resolve component dependencies using topological sort."""
         # Simple topological sort implementation
         visited = set()
@@ -406,8 +427,9 @@ class ParallelStartupManager:
 
         return result
 
-    def _group_by_priority(self, component_names: List[str],
-                          components: Dict[str, ComponentInfo]) -> List[Tuple[int, List[str]]]:
+    def _group_by_priority(
+        self, component_names: list[str], components: dict[str, ComponentInfo]
+    ) -> list[tuple[int, list[str]]]:
         """Group components by priority level."""
         priority_groups = {}
 
@@ -423,18 +445,23 @@ class ParallelStartupManager:
         # Sort by priority (lower number = higher priority)
         return sorted(priority_groups.items())
 
-    def _initialize_priority_group(self, component_names: List[str],
-                                  components: Dict[str, ComponentInfo]) -> bool:
+    def _initialize_priority_group(
+        self, component_names: list[str], components: dict[str, ComponentInfo]
+    ) -> bool:
         """Initialize a group of components in parallel."""
         if len(component_names) == 1:
             # Single component - initialize directly
             return self._initialize_single_component(component_names[0], components)
 
         # Multiple components - use thread pool
-        with ThreadPoolExecutor(max_workers=min(len(component_names), self.max_workers)) as executor:
+        with ThreadPoolExecutor(
+            max_workers=min(len(component_names), self.max_workers)
+        ) as executor:
             # Submit all initialization tasks
             future_to_name = {
-                executor.submit(self._initialize_single_component, name, components): name
+                executor.submit(
+                    self._initialize_single_component, name, components
+                ): name
                 for name in component_names
             }
 
@@ -448,14 +475,17 @@ class ParallelStartupManager:
                     if not component_success and components[name].critical:
                         group_success = False
                 except Exception as e:
-                    logger.error(f"Component {name} initialization failed with exception: {e}")
+                    logger.error(
+                        f"Component {name} initialization failed with exception: {e}"
+                    )
                     if components[name].critical:
                         group_success = False
 
             return group_success
 
-    def _initialize_single_component(self, name: str,
-                                   components: Dict[str, ComponentInfo]) -> bool:
+    def _initialize_single_component(
+        self, name: str, components: dict[str, ComponentInfo]
+    ) -> bool:
         """Initialize a single component."""
         component = components[name]
 
@@ -477,7 +507,7 @@ class ParallelStartupManager:
                 logger.error(f"Failed to initialize component {name}: {e}")
                 return False
 
-    def _register_lazy_components(self, lazy_components: Dict[str, ComponentInfo]):
+    def _register_lazy_components(self, lazy_components: dict[str, ComponentInfo]):
         """Register lazy components for on-demand initialization."""
         # In a full implementation, this would set up lazy loading mechanisms
         logger.info(f"Registered {len(lazy_components)} lazy components")
@@ -492,29 +522,29 @@ class ConfigurationManager:
 
     def __init__(self):
         self.config = {
-            'startup': {
-                'parallel_init': True,
-                'max_init_workers': 4,
-                'lazy_loading': True,
-                'preload_modules': True,
-                'profile_startup': False
+            "startup": {
+                "parallel_init": True,
+                "max_init_workers": 4,
+                "lazy_loading": True,
+                "preload_modules": True,
+                "profile_startup": False,
             },
-            'performance': {
-                'cache_size_mb': 500,
-                'thread_pool_size': 8,
-                'enable_opengl': True,
-                'optimize_plots': True
-            }
+            "performance": {
+                "cache_size_mb": 500,
+                "thread_pool_size": 8,
+                "enable_opengl": True,
+                "optimize_plots": True,
+            },
         }
 
-    def load_config(self, config_path: Optional[str] = None):
+    def load_config(self, config_path: str | None = None):
         """Load configuration from file."""
         if config_path is None:
             # Default config locations
             config_paths = [
-                Path.home() / '.xpcs_toolkit' / 'config.json',
-                Path('config.json'),
-                Path('xpcs_config.json')
+                Path.home() / ".xpcs_toolkit" / "config.json",
+                Path("config.json"),
+                Path("xpcs_config.json"),
             ]
 
             for path in config_paths:
@@ -525,7 +555,8 @@ class ConfigurationManager:
         if config_path and Path(config_path).exists():
             try:
                 import json
-                with open(config_path, 'r') as f:
+
+                with open(config_path) as f:
                     loaded_config = json.load(f)
 
                 # Merge with defaults
@@ -535,11 +566,16 @@ class ConfigurationManager:
             except Exception as e:
                 logger.warning(f"Failed to load config from {config_path}: {e}")
 
-    def _merge_config(self, loaded_config: Dict[str, Any]):
+    def _merge_config(self, loaded_config: dict[str, Any]):
         """Merge loaded configuration with defaults."""
-        def merge_dict(target: Dict[str, Any], source: Dict[str, Any]):
+
+        def merge_dict(target: dict[str, Any], source: dict[str, Any]):
             for key, value in source.items():
-                if key in target and isinstance(target[key], dict) and isinstance(value, dict):
+                if (
+                    key in target
+                    and isinstance(target[key], dict)
+                    and isinstance(value, dict)
+                ):
                     merge_dict(target[key], value)
                 else:
                     target[key] = value
@@ -548,7 +584,7 @@ class ConfigurationManager:
 
     def get(self, key_path: str, default: Any = None) -> Any:
         """Get configuration value by dot-separated path."""
-        keys = key_path.split('.')
+        keys = key_path.split(".")
         value = self.config
 
         for key in keys:
@@ -621,7 +657,6 @@ def profile_startup(component_name: str):
 def _cleanup_startup_system():
     """Cleanup startup optimization system."""
     # This would cleanup any background threads or resources
-    pass
 
 
 atexit.register(_cleanup_startup_system)

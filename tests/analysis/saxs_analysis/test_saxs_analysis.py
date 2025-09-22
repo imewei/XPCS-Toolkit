@@ -79,13 +79,13 @@ class TestSAXSMathematicalProperties(unittest.TestCase):
 
     def sphere_form_factor(self, q, radius):
         """Analytical sphere form factor for validation"""
-        qR = q * radius
+        q_r = q * radius
 
         # Handle q=0 case
-        qR = np.where(qR == 0, 1e-10, qR)
+        q_r = np.where(q_r == 0, 1e-10, q_r)
 
         # Sphere form factor: F(q) = 3[sin(qR) - qR*cos(qR)]/(qR)³
-        form_factor = 3 * (np.sin(qR) - qR * np.cos(qR)) / (qR**3)
+        form_factor = 3 * (np.sin(q_r) - q_r * np.cos(q_r)) / (q_r**3)
 
         # Intensity is |F(q)|²
         intensity = form_factor**2
@@ -117,7 +117,7 @@ class TestSAXSMathematicalProperties(unittest.TestCase):
         )
 
         # 2. First minimum should occur around q*R ≈ 4.493
-        qR_values = self.q_values * self.particle_radius
+        q_r_values = self.q_values * self.particle_radius
         first_min_theory = 4.493
 
         # Find first minimum numerically
@@ -131,14 +131,14 @@ class TestSAXSMathematicalProperties(unittest.TestCase):
 
         if min_indices:
             first_min_idx = min_indices[0]
-            first_min_qR = qR_values[first_min_idx]
+            first_min_q_r = q_r_values[first_min_idx]
 
             # Check if first minimum is near theoretical value
-            rel_error = abs(first_min_qR - first_min_theory) / first_min_theory
+            rel_error = abs(first_min_q_r - first_min_theory) / first_min_theory
             self.assertLess(
                 rel_error,
                 0.1,  # 10% tolerance
-                f"First minimum at qR={first_min_qR:.3f}, expected ≈{first_min_theory}",
+                f"First minimum at qR={first_min_q_r:.3f}, expected ≈{first_min_theory}",
             )
 
     def test_guinier_approximation(self):
@@ -158,17 +158,17 @@ class TestSAXSMathematicalProperties(unittest.TestCase):
 
         if np.any(small_q_mask):
             q_small = self.q_values[small_q_mask]
-            I_exact_small = intensity_exact[small_q_mask]
+            i_exact_small = intensity_exact[small_q_mask]
 
             # Guinier approximation
-            I_guinier = I_exact_small[0] * np.exp(-(q_small**2) * rg_sphere**2 / 3)
+            i_guinier = i_exact_small[0] * np.exp(-(q_small**2) * rg_sphere**2 / 3)
 
             # Compare in logarithmic scale (more appropriate for Guinier)
-            log_I_exact = np.log(I_exact_small)
-            log_I_guinier = np.log(I_guinier)
+            log_i_exact = np.log(i_exact_small)
+            log_i_guinier = np.log(i_guinier)
 
             # Calculate relative error in log space
-            rel_error = np.abs(log_I_exact - log_I_guinier) / np.abs(log_I_exact)
+            rel_error = np.abs(log_i_exact - log_i_guinier) / np.abs(log_i_exact)
             max_rel_error = np.max(rel_error)
 
             self.assertLess(
@@ -191,14 +191,14 @@ class TestSAXSMathematicalProperties(unittest.TestCase):
         # Limited q-range to avoid numerical issues
         q_test = np.logspace(-3, -1, 50)  # Smaller q-range
 
-        I1 = contrast**2 * self.sphere_form_factor(q_test, radius1) / contrast**2
-        I2 = contrast**2 * self.sphere_form_factor(q_test, radius2) / contrast**2
+        i1 = contrast**2 * self.sphere_form_factor(q_test, radius1) / contrast**2
+        i2 = contrast**2 * self.sphere_form_factor(q_test, radius2) / contrast**2
 
         # Ratio should be (V2/V1)² = (R2/R1)⁶ = 2⁶ = 64
         expected_ratio = (radius2 / radius1) ** 6
 
         # Test at forward scattering where ratio should be exact
-        actual_ratio = I2[0] / I1[0]  # q ≈ 0
+        actual_ratio = i2[0] / i1[0]  # q ≈ 0
 
         rel_error = abs(actual_ratio - expected_ratio) / expected_ratio
         self.assertLess(
@@ -739,7 +739,9 @@ class TestSAXSROIExtraction(unittest.TestCase):
             zero_roi["pixel_count"], 1, "Zero radius ROI should have one pixel (center)"
         )
         self.assertGreater(
-            zero_roi["intensities"], 0, "Zero radius ROI should have center pixel intensity"
+            zero_roi["intensities"],
+            0,
+            "Zero radius ROI should have center pixel intensity",
         )
 
 

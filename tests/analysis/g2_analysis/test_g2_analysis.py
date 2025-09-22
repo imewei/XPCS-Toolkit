@@ -16,6 +16,7 @@ import unittest
 import warnings
 
 import numpy as np
+import pytest
 from hypothesis import assume, given, settings
 from hypothesis import strategies as st
 from scipy import optimize
@@ -141,7 +142,9 @@ class TestG2VectorizedOperations(unittest.TestCase):
 
         # Create multiple G2 datasets
         self.g2_datasets = []
-        self.baselines = np.random.uniform(1.0, 1.05, self.n_q)  # Ensure baselines ≥ 1.0
+        self.baselines = np.random.uniform(
+            1.0, 1.05, self.n_q
+        )  # Ensure baselines ≥ 1.0
 
         for _ in range(self.n_datasets):
             beta = np.random.uniform(0.5, 1.5, self.n_q)
@@ -241,7 +244,10 @@ class TestG2VectorizedOperations(unittest.TestCase):
         # Mean should be within reasonable bounds (allowing for small numerical errors)
         for q_idx in range(self.n_q):
             q_mean = ensemble_mean[:, q_idx]
-            self.assertTrue(np.all(q_mean >= 0.98), "Ensemble mean G2 should be approximately ≥ 1 (within noise tolerance)")
+            self.assertTrue(
+                np.all(q_mean >= 0.98),
+                "Ensemble mean G2 should be approximately ≥ 1 (within noise tolerance)",
+            )
 
     def test_error_propagation_accuracy(self):
         """Test error propagation for G2 operations"""
@@ -505,9 +511,10 @@ class TestG2FittingValidation(unittest.TestCase):
                 f"Beta error too large: {beta_rel_error:.3f}",
             )
 
-        except Exception:
+        except Exception as e:
             # Some high-noise cases may fail to converge - this is acceptable
-            pass
+            # Store exception info for potential debugging
+            pytest.skip(f"High-noise case failed to converge (acceptable): {e}")
 
 
 if __name__ == "__main__":

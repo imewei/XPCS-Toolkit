@@ -4,23 +4,27 @@ This module provides fixtures for synthetic XPCS datasets, correlation functions
 scattering patterns, detector geometries, and Q-space mappings.
 """
 
+from pathlib import Path
+from typing import Any
+
 import numpy as np
 import pytest
-from pathlib import Path
-from typing import Dict, Any, Optional
 
 try:
     import h5py
+
     H5PY_AVAILABLE = True
 except ImportError:
     H5PY_AVAILABLE = False
     from tests.utils.h5py_mocks import MockH5py
+
     h5py = MockH5py()
 
 
 # ============================================================================
 # Random Seed and Reproducibility
 # ============================================================================
+
 
 @pytest.fixture(scope="function")
 def random_seed() -> int:
@@ -34,8 +38,9 @@ def random_seed() -> int:
 # Synthetic Scientific Data Fixtures
 # ============================================================================
 
+
 @pytest.fixture(scope="function")
-def synthetic_correlation_data(random_seed) -> Dict[str, np.ndarray]:
+def synthetic_correlation_data(random_seed) -> dict[str, np.ndarray]:
     """Generate synthetic G2 correlation function data."""
     # Time points (logarithmic spacing)
     tau = np.logspace(-6, 2, 50)  # 1μs to 100s
@@ -61,7 +66,7 @@ def synthetic_correlation_data(random_seed) -> Dict[str, np.ndarray]:
 
 
 @pytest.fixture(scope="function")
-def synthetic_scattering_data(random_seed) -> Dict[str, np.ndarray]:
+def synthetic_scattering_data(random_seed) -> dict[str, np.ndarray]:
     """Generate synthetic SAXS scattering data."""
     # Q-space points
     q = np.linspace(0.001, 0.1, 100)  # Å⁻¹
@@ -80,7 +85,7 @@ def synthetic_scattering_data(random_seed) -> Dict[str, np.ndarray]:
 
 
 @pytest.fixture(scope="function")
-def detector_geometry() -> Dict[str, Any]:
+def detector_geometry() -> dict[str, Any]:
     """Standard detector geometry parameters."""
     return {
         "detector_distance": 5.0,  # meters
@@ -93,18 +98,18 @@ def detector_geometry() -> Dict[str, Any]:
 
 
 @pytest.fixture(scope="function")
-def qmap_data(detector_geometry) -> Dict[str, np.ndarray]:
+def qmap_data(detector_geometry) -> dict[str, np.ndarray]:
     """Generate Q-space mapping data."""
     shape = detector_geometry["detector_shape"]
 
     # Create coordinate arrays
-    y, x = np.ogrid[:shape[0], :shape[1]]
+    y, x = np.ogrid[: shape[0], : shape[1]]
 
     # Center coordinates
     cx, cy = detector_geometry["beam_center"]
 
     # Distance from beam center
-    r = np.sqrt((x - cx)**2 + (y - cy)**2)
+    r = np.sqrt((x - cx) ** 2 + (y - cy) ** 2)
 
     # Convert to Q (simplified)
     pixel_size = detector_geometry["pixel_size"]
@@ -132,6 +137,7 @@ def qmap_data(detector_geometry) -> Dict[str, np.ndarray]:
 # ============================================================================
 # HDF5 Test File Fixtures
 # ============================================================================
+
 
 @pytest.fixture(scope="function")
 def minimal_xpcs_hdf5(temp_dir, synthetic_correlation_data) -> str:
@@ -161,8 +167,9 @@ def minimal_xpcs_hdf5(temp_dir, synthetic_correlation_data) -> str:
 
 
 @pytest.fixture(scope="function")
-def comprehensive_xpcs_hdf5(temp_dir, synthetic_correlation_data,
-                           synthetic_scattering_data, qmap_data) -> str:
+def comprehensive_xpcs_hdf5(
+    temp_dir, synthetic_correlation_data, synthetic_scattering_data, qmap_data
+) -> str:
     """Create comprehensive XPCS HDF5 file for testing."""
     filepath = Path(temp_dir) / "comprehensive_test.h5"
 
@@ -180,7 +187,9 @@ def comprehensive_xpcs_hdf5(temp_dir, synthetic_correlation_data,
         saxs_1d = f.create_group("saxs_1d")
         saxs_1d.create_dataset("q", data=synthetic_scattering_data["q"])
         saxs_1d.create_dataset("intensity", data=synthetic_scattering_data["intensity"])
-        saxs_1d.create_dataset("intensity_err", data=synthetic_scattering_data["intensity_err"])
+        saxs_1d.create_dataset(
+            "intensity_err", data=synthetic_scattering_data["intensity_err"]
+        )
 
         # Q-mapping data
         qmap = f.create_group("qmap")
@@ -189,14 +198,16 @@ def comprehensive_xpcs_hdf5(temp_dir, synthetic_correlation_data,
         qmap.create_dataset("q_magnitude", data=qmap_data["q_magnitude"])
 
         # Comprehensive metadata
-        f.attrs.update({
-            "instrument": "APS 8-ID-I",
-            "sample": "comprehensive_test_sample",
-            "temperature": 295.0,
-            "exposure_time": 0.1,
-            "num_frames": 10000,
-            "detector": "Lambda",
-        })
+        f.attrs.update(
+            {
+                "instrument": "APS 8-ID-I",
+                "sample": "comprehensive_test_sample",
+                "temperature": 295.0,
+                "exposure_time": 0.1,
+                "num_frames": 10000,
+                "detector": "Lambda",
+            }
+        )
 
     return str(filepath)
 
@@ -205,22 +216,26 @@ def comprehensive_xpcs_hdf5(temp_dir, synthetic_correlation_data,
 # Scientific Validation Utilities
 # ============================================================================
 
+
 @pytest.fixture(scope="function")
 def assert_arrays_close():
     """Fixture providing array comparison utility."""
-    def _assert_close(actual, expected, rtol=1e-7, atol=1e-14,
-                     err_msg="", verbose=True):
+
+    def _assert_close(
+        actual, expected, rtol=1e-7, atol=1e-14, err_msg="", verbose=True
+    ):
         """Assert that two arrays are element-wise equal within a tolerance."""
         np.testing.assert_allclose(
-            actual, expected, rtol=rtol, atol=atol,
-            err_msg=err_msg, verbose=verbose
+            actual, expected, rtol=rtol, atol=atol, err_msg=err_msg, verbose=verbose
         )
+
     return _assert_close
 
 
 @pytest.fixture(scope="function")
 def correlation_function_validator():
     """Fixture providing G2 correlation function validation."""
+
     def _validate_g2(tau, g2, expected_params=None):
         """Validate G2 correlation function properties."""
         # Basic sanity checks
@@ -231,7 +246,7 @@ def correlation_function_validator():
         # Check for reasonable decay
         if len(g2) > 10:
             initial_g2 = np.mean(g2[:5])  # Average of first few points
-            final_g2 = np.mean(g2[-5:])   # Average of last few points
+            final_g2 = np.mean(g2[-5:])  # Average of last few points
             assert initial_g2 > final_g2, "G2 should decay from initial to final tau"
 
         # If expected parameters provided, validate fit
@@ -240,8 +255,9 @@ def correlation_function_validator():
                 beta_expected = expected_params.get("beta", None)
                 if beta_expected:
                     measured_contrast = np.max(g2) - 1.0
-                    assert abs(measured_contrast - beta_expected) < 0.1, \
+                    assert abs(measured_contrast - beta_expected) < 0.1, (
                         f"Measured contrast {measured_contrast:.3f} differs from expected {beta_expected:.3f}"
+                    )
 
         return True
 
@@ -251,6 +267,7 @@ def correlation_function_validator():
 @pytest.fixture(scope="function")
 def create_test_dataset():
     """Fixture for creating custom test datasets."""
+
     def _create_dataset(size=100, data_type="correlation", **kwargs):
         """Create various types of test datasets."""
         if data_type == "correlation":
@@ -264,17 +281,16 @@ def create_test_dataset():
 
             return {"tau": tau, "g2": g2_noise, "g2_theory": g2_theory}
 
-        elif data_type == "scattering":
+        if data_type == "scattering":
             q = np.linspace(0.001, 0.1, size)
             power = kwargs.get("power", -2.5)
             background = kwargs.get("background", 100)
 
-            intensity = 1e6 * q ** power + background
+            intensity = 1e6 * q**power + background
             intensity_noise = intensity + np.random.poisson(np.sqrt(intensity))
 
             return {"q": q, "intensity": intensity_noise, "intensity_theory": intensity}
 
-        else:
-            raise ValueError(f"Unknown data_type: {data_type}")
+        raise ValueError(f"Unknown data_type: {data_type}")
 
     return _create_dataset

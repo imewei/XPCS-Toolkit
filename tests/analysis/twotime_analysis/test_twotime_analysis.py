@@ -256,7 +256,9 @@ class TestTwoTimeCorrelationProperties(unittest.TestCase):
                 # NOTE: This test primarily validates algorithm robustness rather than accuracy
                 # Correlation time estimation algorithms have severe accuracy limitations with noisy data
                 # The main purpose is to ensure the algorithm completes without crashing
-                max_allowed_error = 10000.0  # Extremely high tolerance - this is a robustness test only
+                max_allowed_error = (
+                    10000.0  # Extremely high tolerance - this is a robustness test only
+                )
 
                 self.assertLess(
                     rel_error,

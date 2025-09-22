@@ -6,7 +6,6 @@ with comprehensive error capture and analysis capabilities.
 
 import contextlib
 import io
-import logging
 import os
 import re
 import subprocess
@@ -14,13 +13,8 @@ import sys
 import tempfile
 import threading
 import time
-from pathlib import Path
-from typing import Dict, List, Optional, Tuple
 
-import pytest
-from PySide6 import QtCore, QtWidgets
-from PySide6.QtCore import QTimer, QThread
-from PySide6.QtTest import QTest
+from PySide6 import QtWidgets
 
 
 class QtTestRunner:
@@ -76,7 +70,7 @@ class QtTestRunner:
                 r"QTimer: QTimer can only be used with threads started with QThread",
                 r"QObject::moveToThread.*",
                 r"Qt.*Warning.*",
-                r"Qt.*Critical.*"
+                r"Qt.*Critical.*",
             ]
 
         def __enter__(self):
@@ -96,7 +90,7 @@ class QtTestRunner:
 
         def _parse_qt_errors(self, output):
             """Parse Qt errors from captured output."""
-            lines = output.split('\n')
+            lines = output.split("\n")
             for line in lines:
                 line = line.strip()
                 if not line:
@@ -105,10 +99,10 @@ class QtTestRunner:
                 for pattern in self.qt_error_patterns:
                     if re.search(pattern, line, re.IGNORECASE):
                         error_info = {
-                            'message': line,
-                            'pattern': pattern,
-                            'timestamp': time.time(),
-                            'thread': threading.current_thread().name
+                            "message": line,
+                            "pattern": pattern,
+                            "timestamp": time.time(),
+                            "thread": threading.current_thread().name,
                         }
                         self.runner.qt_errors.append(error_info)
                         break
@@ -125,16 +119,16 @@ class QtTestRunner:
         Returns:
             Dict with test results and captured errors
         """
-        test_name = getattr(test_func, '__name__', str(test_func))
+        test_name = getattr(test_func, "__name__", str(test_func))
         start_time = time.time()
 
         result = {
-            'test_name': test_name,
-            'success': False,
-            'error': None,
-            'qt_errors': [],
-            'execution_time': 0,
-            'warnings': []
+            "test_name": test_name,
+            "success": False,
+            "error": None,
+            "qt_errors": [],
+            "execution_time": 0,
+            "warnings": [],
         }
 
         try:
@@ -143,16 +137,16 @@ class QtTestRunner:
             with self.capture_qt_errors():
                 # Run the test function
                 test_result = test_func(*args, **kwargs)
-                result['success'] = True
-                result['return_value'] = test_result
+                result["success"] = True
+                result["return_value"] = test_result
 
         except Exception as e:
-            result['error'] = str(e)
-            result['exception_type'] = type(e).__name__
+            result["error"] = str(e)
+            result["exception_type"] = type(e).__name__
 
         finally:
-            result['execution_time'] = time.time() - start_time
-            result['qt_errors'] = self.qt_errors.copy()
+            result["execution_time"] = time.time() - start_time
+            result["qt_errors"] = self.qt_errors.copy()
             self.qt_errors.clear()
 
             # Process Qt events to ensure cleanup
@@ -172,12 +166,12 @@ class QtTestRunner:
             Dict with overall test results
         """
         suite_results = {
-            'total_tests': len(test_functions),
-            'passed': 0,
-            'failed': 0,
-            'total_qt_errors': 0,
-            'test_details': [],
-            'error_summary': {}
+            "total_tests": len(test_functions),
+            "passed": 0,
+            "failed": 0,
+            "total_qt_errors": 0,
+            "test_details": [],
+            "error_summary": {},
         }
 
         for test_item in test_functions:
@@ -193,17 +187,19 @@ class QtTestRunner:
             else:
                 continue
 
-            suite_results['test_details'].append(result)
+            suite_results["test_details"].append(result)
 
-            if result['success']:
-                suite_results['passed'] += 1
+            if result["success"]:
+                suite_results["passed"] += 1
             else:
-                suite_results['failed'] += 1
+                suite_results["failed"] += 1
 
-            suite_results['total_qt_errors'] += len(result['qt_errors'])
+            suite_results["total_qt_errors"] += len(result["qt_errors"])
 
         # Generate error summary
-        suite_results['error_summary'] = self._generate_error_summary(suite_results['test_details'])
+        suite_results["error_summary"] = self._generate_error_summary(
+            suite_results["test_details"]
+        )
 
         return suite_results
 
@@ -213,9 +209,9 @@ class QtTestRunner:
         error_patterns = {}
 
         for test in test_details:
-            for error in test['qt_errors']:
-                pattern = error['pattern']
-                message = error['message']
+            for error in test["qt_errors"]:
+                pattern = error["pattern"]
+                message = error["message"]
 
                 if pattern not in error_patterns:
                     error_patterns[pattern] = []
@@ -226,9 +222,11 @@ class QtTestRunner:
                 error_counts[pattern] += 1
 
         return {
-            'error_counts': error_counts,
-            'error_patterns': error_patterns,
-            'most_common_errors': sorted(error_counts.items(), key=lambda x: x[1], reverse=True)
+            "error_counts": error_counts,
+            "error_patterns": error_patterns,
+            "most_common_errors": sorted(
+                error_counts.items(), key=lambda x: x[1], reverse=True
+            ),
         }
 
     def run_pytest_with_qt_capture(self, test_path, markers=None, verbose=True):
@@ -244,86 +242,87 @@ class QtTestRunner:
             Dict with pytest results and Qt error analysis
         """
         # Create temporary file for pytest output
-        with tempfile.NamedTemporaryFile(mode='w+', suffix='.log', delete=False) as temp_file:
+        with tempfile.NamedTemporaryFile(
+            mode="w+", suffix=".log", delete=False
+        ) as temp_file:
             temp_file_path = temp_file.name
 
         try:
             # Build pytest command
-            cmd = [sys.executable, '-m', 'pytest', str(test_path)]
+            cmd = [sys.executable, "-m", "pytest", str(test_path)]
 
             if verbose:
-                cmd.append('-v')
+                cmd.append("-v")
 
             if markers:
-                cmd.extend(['-m', markers])
+                cmd.extend(["-m", markers])
 
             # Add capture options
-            cmd.extend(['--tb=short', '--capture=no'])
+            cmd.extend(["--tb=short", "--capture=no"])
 
             # Set environment for Qt testing
             env = os.environ.copy()
-            env['QT_QPA_PLATFORM'] = 'offscreen'
-            env['PYXPCS_SUPPRESS_QT_WARNINGS'] = '0'  # We want to capture warnings
+            env["QT_QPA_PLATFORM"] = "offscreen"
+            env["PYXPCS_SUPPRESS_QT_WARNINGS"] = "0"  # We want to capture warnings
 
             # Run pytest
             start_time = time.time()
             result = subprocess.run(
                 cmd,
+                check=False,
                 capture_output=True,
                 text=True,
                 timeout=self.timeout,
-                env=env
+                env=env,
             )
             execution_time = time.time() - start_time
 
             # Parse pytest output for Qt errors
-            qt_errors = self._parse_pytest_output_for_qt_errors(result.stderr + result.stdout)
+            qt_errors = self._parse_pytest_output_for_qt_errors(
+                result.stderr + result.stdout
+            )
 
             return {
-                'success': result.returncode == 0,
-                'returncode': result.returncode,
-                'stdout': result.stdout,
-                'stderr': result.stderr,
-                'qt_errors': qt_errors,
-                'execution_time': execution_time,
-                'command': ' '.join(cmd)
+                "success": result.returncode == 0,
+                "returncode": result.returncode,
+                "stdout": result.stdout,
+                "stderr": result.stderr,
+                "qt_errors": qt_errors,
+                "execution_time": execution_time,
+                "command": " ".join(cmd),
             }
 
         except subprocess.TimeoutExpired:
             return {
-                'success': False,
-                'error': 'Test execution timed out',
-                'timeout': self.timeout
+                "success": False,
+                "error": "Test execution timed out",
+                "timeout": self.timeout,
             }
 
         finally:
             # Clean up temporary file
-            try:
+            with contextlib.suppress(OSError):
                 os.unlink(temp_file_path)
-            except OSError:
-                pass
 
     def _parse_pytest_output_for_qt_errors(self, output):
         """Parse pytest output for Qt error messages."""
         qt_errors = []
-        lines = output.split('\n')
+        lines = output.split("\n")
 
         qt_patterns = [
             r"QObject::startTimer.*",
             r"qt\.core\.qobject\.connect.*",
             r"QWidget.*QApplication.*",
-            r"QTimer.*QThread.*"
+            r"QTimer.*QThread.*",
         ]
 
         for line in lines:
             line = line.strip()
             for pattern in qt_patterns:
                 if re.search(pattern, line, re.IGNORECASE):
-                    qt_errors.append({
-                        'message': line,
-                        'pattern': pattern,
-                        'source': 'pytest_output'
-                    })
+                    qt_errors.append(
+                        {"message": line, "pattern": pattern, "source": "pytest_output"}
+                    )
                     break
 
         return qt_errors
@@ -346,7 +345,7 @@ class QtTestRunner:
         report_lines.append(f"Generated at: {time.strftime('%Y-%m-%d %H:%M:%S')}")
         report_lines.append("")
 
-        if 'total_tests' in results:
+        if "total_tests" in results:
             # Test suite results
             report_lines.append(f"Total Tests: {results['total_tests']}")
             report_lines.append(f"Passed: {results['passed']}")
@@ -354,30 +353,38 @@ class QtTestRunner:
             report_lines.append(f"Total Qt Errors: {results['total_qt_errors']}")
             report_lines.append("")
 
-            if results['error_summary']['most_common_errors']:
+            if results["error_summary"]["most_common_errors"]:
                 report_lines.append("Most Common Qt Errors:")
-                for pattern, count in results['error_summary']['most_common_errors'][:5]:
+                for pattern, count in results["error_summary"]["most_common_errors"][
+                    :5
+                ]:
                     report_lines.append(f"  {count}x: {pattern}")
                 report_lines.append("")
 
-        elif 'qt_errors' in results:
+        elif "qt_errors" in results:
             # Pytest results
-            report_lines.append(f"Execution Time: {results.get('execution_time', 0):.2f}s")
+            report_lines.append(
+                f"Execution Time: {results.get('execution_time', 0):.2f}s"
+            )
             report_lines.append(f"Success: {results['success']}")
             report_lines.append(f"Qt Errors Found: {len(results['qt_errors'])}")
             report_lines.append("")
 
-            if results['qt_errors']:
+            if results["qt_errors"]:
                 report_lines.append("Qt Errors Detected:")
-                for error in results['qt_errors']:
+                for error in results["qt_errors"]:
                     report_lines.append(f"  - {error['message']}")
                 report_lines.append("")
 
         # Recommendations
         report_lines.append("Recommendations:")
-        if 'total_qt_errors' in results and results['total_qt_errors'] > 0:
-            report_lines.append("  1. Fix Qt timer threading violations by using QThread-started threads")
-            report_lines.append("  2. Update signal/slot connections to use Qt5+ syntax")
+        if "total_qt_errors" in results and results["total_qt_errors"] > 0:
+            report_lines.append(
+                "  1. Fix Qt timer threading violations by using QThread-started threads"
+            )
+            report_lines.append(
+                "  2. Update signal/slot connections to use Qt5+ syntax"
+            )
             report_lines.append("  3. Ensure GUI operations happen in main thread")
         else:
             report_lines.append("  No Qt errors detected - good job!")
@@ -385,10 +392,10 @@ class QtTestRunner:
         report_lines.append("")
         report_lines.append("=" * 80)
 
-        report = '\n'.join(report_lines)
+        report = "\n".join(report_lines)
 
         if output_file:
-            with open(output_file, 'w') as f:
+            with open(output_file, "w") as f:
                 f.write(report)
 
         return report
@@ -403,14 +410,16 @@ class XpcsQtTestRunner(QtTestRunner):
             r"BackgroundCleanupManager.*timer.*",
             r"XpcsViewer.*initialization.*",
             r"ViewerKernel.*thread.*",
-            r"ImageViewDev.*connection.*"
+            r"ImageViewDev.*connection.*",
         ]
 
     def run_xpcs_viewer_test(self, test_path="./", **kwargs):
         """Run XPCS viewer-specific test with error detection."""
+
         def xpcs_viewer_test():
             try:
                 from xpcs_toolkit.xpcs_viewer import XpcsViewer
+
                 viewer = XpcsViewer(path=test_path, **kwargs)
                 # Let the application process events
                 self.app.processEvents()
@@ -424,9 +433,11 @@ class XpcsQtTestRunner(QtTestRunner):
 
     def run_background_cleanup_test(self):
         """Test background cleanup system for Qt compliance."""
+
         def background_cleanup_test():
             try:
                 from xpcs_toolkit.threading.cleanup_ops import BackgroundCleanupManager
+
                 # This might trigger timer threading warnings
                 cleanup_manager = BackgroundCleanupManager()
                 cleanup_manager.start()
@@ -441,9 +452,11 @@ class XpcsQtTestRunner(QtTestRunner):
 
     def run_plot_handler_test(self):
         """Test plot handlers for Qt compliance."""
+
         def plot_handler_test():
             try:
                 from xpcs_toolkit.plothandler import ImageViewDev
+
                 # This might trigger QStyleHints connection warnings
                 plot_handler = ImageViewDev()
                 self.app.processEvents()
@@ -460,7 +473,7 @@ class XpcsQtTestRunner(QtTestRunner):
         test_functions = [
             self.run_xpcs_viewer_test,
             self.run_background_cleanup_test,
-            self.run_plot_handler_test
+            self.run_plot_handler_test,
         ]
 
         return self.run_qt_test_suite(test_functions)
@@ -472,10 +485,16 @@ def main():
     import argparse
 
     parser = argparse.ArgumentParser(description="Qt Error Detection Test Runner")
-    parser.add_argument("test_path", nargs="?", default="tests/unit/threading/test_qt_error_detection.py",
-                       help="Path to test file or directory")
+    parser.add_argument(
+        "test_path",
+        nargs="?",
+        default="tests/unit/threading/test_qt_error_detection.py",
+        help="Path to test file or directory",
+    )
     parser.add_argument("--markers", "-m", help="Pytest markers to filter tests")
-    parser.add_argument("--timeout", "-t", type=int, default=30, help="Test timeout in seconds")
+    parser.add_argument(
+        "--timeout", "-t", type=int, default=30, help="Test timeout in seconds"
+    )
     parser.add_argument("--output", "-o", help="Output file for error report")
     parser.add_argument("--xpcs", action="store_true", help="Run XPCS-specific tests")
     parser.add_argument("--verbose", "-v", action="store_true", help="Verbose output")
@@ -488,9 +507,7 @@ def main():
     else:
         runner = QtTestRunner(timeout=args.timeout)
         results = runner.run_pytest_with_qt_capture(
-            args.test_path,
-            markers=args.markers,
-            verbose=args.verbose
+            args.test_path, markers=args.markers, verbose=args.verbose
         )
 
     # Generate and display report
@@ -498,10 +515,10 @@ def main():
     print(report)
 
     # Exit with error code if Qt errors were found
-    if 'total_qt_errors' in results:
-        exit_code = 1 if results['total_qt_errors'] > 0 else 0
-    elif 'qt_errors' in results:
-        exit_code = 1 if len(results['qt_errors']) > 0 else 0
+    if "total_qt_errors" in results:
+        exit_code = 1 if results["total_qt_errors"] > 0 else 0
+    elif "qt_errors" in results:
+        exit_code = 1 if len(results["qt_errors"]) > 0 else 0
     else:
         exit_code = 0
 

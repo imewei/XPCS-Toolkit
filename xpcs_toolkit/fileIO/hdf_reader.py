@@ -21,6 +21,11 @@ logger = get_logger(__name__)
 # Performance monitoring stub for testing
 _perf_monitor = None
 
+# Memory pressure thresholds for connection pool management
+MEMORY_PRESSURE_CRITICAL = 0.90  # 90% - Critical memory pressure
+MEMORY_PRESSURE_HIGH = 0.80  # 80% - High memory pressure
+MEMORY_PRESSURE_MODERATE = 0.70  # 70% - Moderate memory pressure
+
 
 class PooledConnection:
     """Wrapper for pooled HDF5 connections with metadata."""
@@ -34,7 +39,7 @@ class PooledConnection:
         self.is_healthy = True
         self.lock = threading.RLock()
 
-    def touch(self):
+    def touch(self) -> None:
         """Update access time and count."""
         self.last_accessed = time.time()
         self.access_count += 1
@@ -56,7 +61,7 @@ class PooledConnection:
             self.is_healthy = False
             return False
 
-    def close(self):
+    def close(self) -> None:
         """Close the connection safely."""
         try:
             with self.lock:
@@ -71,7 +76,7 @@ class PooledConnection:
 class ConnectionStats:
     """Statistics tracker for HDF5 connections."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.total_connections_created = 0
         self.total_connections_reused = 0
         self.total_connections_evicted = 0
@@ -83,16 +88,16 @@ class ConnectionStats:
         self.start_time = time.time()
         self._lock = threading.RLock()
 
-    def record_connection_created(self):
+    def record_connection_created(self) -> None:
         with self._lock:
             self.total_connections_created += 1
 
-    def record_connection_reused(self):
+    def record_connection_reused(self) -> None:
         with self._lock:
             self.total_connections_reused += 1
             self.cache_hits += 1
 
-    def record_connection_evicted(self):
+    def record_connection_evicted(self) -> None:
         with self._lock:
             self.total_connections_evicted += 1
 
@@ -102,7 +107,7 @@ class ConnectionStats:
             if not success:
                 self.failed_health_checks += 1
 
-    def record_cache_miss(self):
+    def record_cache_miss(self) -> None:
         with self._lock:
             self.cache_misses += 1
 
@@ -191,7 +196,7 @@ class HDF5ConnectionPool:
                 self._file_locks[fname] = threading.RLock()
             return self._file_locks[fname]
 
-    def _adapt_pool_size_to_memory_pressure(self):
+    def _adapt_pool_size_to_memory_pressure(self) -> None:
         """Dynamically adapt pool size based on system memory pressure."""
         if not self.enable_memory_pressure_adaptation:
             return
@@ -200,13 +205,13 @@ class HDF5ConnectionPool:
             memory = psutil.virtual_memory()
             memory_pressure = memory.percent / 100.0
 
-            if memory_pressure > 0.90:
+            if memory_pressure > MEMORY_PRESSURE_CRITICAL:
                 # Very high memory pressure - reduce pool size significantly
                 new_size = max(3, self.base_pool_size // 4)
-            elif memory_pressure > 0.80:
+            elif memory_pressure > MEMORY_PRESSURE_HIGH:
                 # High memory pressure - reduce pool size moderately
                 new_size = max(5, self.base_pool_size // 2)
-            elif memory_pressure > 0.70:
+            elif memory_pressure > MEMORY_PRESSURE_MODERATE:
                 # Moderate memory pressure - slight reduction
                 new_size = max(8, int(self.base_pool_size * 0.75))
             else:
@@ -251,13 +256,13 @@ class HDF5ConnectionPool:
 
         return evicted
 
-    def _evict_excess_connections(self):
+    def _evict_excess_connections(self) -> None:
         """Evict connections when pool exceeds maximum size."""
         excess = len(self._pool) - self.max_pool_size
         if excess > 0:
             self._evict_lru_connections(excess)
 
-    def _perform_health_check(self):
+    def _perform_health_check(self) -> None:
         """Perform health checks on all connections."""
         current_time = time.time()
         if current_time - self._last_health_check < self.health_check_interval:
@@ -296,7 +301,9 @@ class HDF5ConnectionPool:
                 connection_age = current_time - self._pool[fname].created_at
                 self._pool[fname].close()
                 del self._pool[fname]
-                logger.info(f"Removed aged connection: {fname} (age: {connection_age:.1f}s)")
+                logger.info(
+                    f"Removed aged connection: {fname} (age: {connection_age:.1f}s)"
+                )
 
         total_removed = len(unhealthy_connections) + len(aged_connections)
         if total_removed:
@@ -423,7 +430,6 @@ class HDF5ConnectionPool:
                 # Record I/O time
                 io_time = time.time() - start_time
                 self.stats.record_io_time(io_time)
-
 
                 if io_time > 1.0:  # Log slow operations
                     logger.debug(f"Slow I/O operation: {fname} took {io_time:.2f}s")
@@ -576,7 +582,6 @@ class HDF5ConnectionPool:
             f"Batch read of {len(dataset_paths)} datasets from {fname} completed in {read_time:.3f}s"
         )
 
-
         return results
 
     def clear_read_cache(self, fname: str | None = None):
@@ -725,14 +730,14 @@ def get(fname, fields, mode="raw", ret_type="dict", ftype="nexus", use_pool=True
     else:
         context_manager = h5py.File(fname, "r")
 
-    with context_manager as HDF_Result:
+    with context_manager as hdf_result:
         # Batch read all fields in a single file operation
         for key in fields:
             path = hdf_key[ftype][key] if mode == "alias" else key
-            if path not in HDF_Result:
+            if path not in hdf_result:
                 logger.error("path to field not found: %s", path)
                 raise ValueError("key not found: %s:%s", key, path)
-            val = HDF_Result.get(path)[()]
+            val = hdf_result.get(path)[()]
             if key in ["saxs_2d"] and val.ndim == 3:  # saxs_2d is in [1xNxM] format
                 val = val[0]
             # converts bytes to unicode;
@@ -774,28 +779,38 @@ def get_analysis_type(fname, ftype="nexus", use_pool=True):
         if use_pool
         else h5py.File(fname, "r")
     )
-    with context_manager as HDF_Result:
+    with context_manager as hdf_result:
         # Primary detection: Check for folder presence (more reliable)
         multitau_folder = "/xpcs/multitau"
         twotime_folder = "/xpcs/twotime"
 
-        if multitau_folder in HDF_Result:
+        if multitau_folder in hdf_result:
             analysis_type.append("Multitau")
-            logger.debug(f"Detected Multitau format: folder {multitau_folder} found in {fname}")
+            logger.debug(
+                f"Detected Multitau format: folder {multitau_folder} found in {fname}"
+            )
 
-        if twotime_folder in HDF_Result:
+        if twotime_folder in hdf_result:
             analysis_type.append("Twotime")
-            logger.debug(f"Detected Twotime format: folder {twotime_folder} found in {fname}")
+            logger.debug(
+                f"Detected Twotime format: folder {twotime_folder} found in {fname}"
+            )
 
         # Fallback detection: Check for specific files (backward compatibility)
         if not analysis_type:
-            logger.debug(f"Folder detection failed, falling back to file detection for {fname}")
-            if c2_prefix in HDF_Result:
+            logger.debug(
+                f"Folder detection failed, falling back to file detection for {fname}"
+            )
+            if c2_prefix in hdf_result:
                 analysis_type.append("Twotime")
-                logger.debug(f"Detected Twotime format via file: {c2_prefix} found in {fname}")
-            if g2_prefix in HDF_Result:
+                logger.debug(
+                    f"Detected Twotime format via file: {c2_prefix} found in {fname}"
+                )
+            if g2_prefix in hdf_result:
                 analysis_type.append("Multitau")
-                logger.debug(f"Detected Multitau format via file: {g2_prefix} found in {fname}")
+                logger.debug(
+                    f"Detected Multitau format via file: {g2_prefix} found in {fname}"
+                )
 
     if len(analysis_type) == 0:
         raise ValueError(f"No analysis type found in {fname}")
@@ -942,8 +957,6 @@ def force_connection_health_check():
     Force an immediate health check of all pooled connections.
     """
     _connection_pool.force_health_check()
-
-
 
 
 def get_chunked_dataset(

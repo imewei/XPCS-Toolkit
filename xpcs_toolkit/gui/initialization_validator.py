@@ -8,10 +8,11 @@ improvements for the XPCS Toolkit GUI initialization process.
 import os
 import time
 import traceback
+from collections.abc import Callable
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any
 
 from PySide6 import QtCore, QtWidgets
 
@@ -41,9 +42,9 @@ class InitializationResult:
     stage: InitializationStage
     success: bool
     duration: float
-    error: Optional[str] = None
-    warning: Optional[str] = None
-    details: Dict[str, Any] = field(default_factory=dict)
+    error: str | None = None
+    warning: str | None = None
+    details: dict[str, Any] = field(default_factory=dict)
 
 
 class GuiInitializationValidator:
@@ -55,14 +56,15 @@ class GuiInitializationValidator:
     """
 
     def __init__(self):
-        self.results: List[InitializationResult] = []
+        self.results: list[InitializationResult] = []
         self.current_stage = None
         self.start_time = None
         self.validation_errors = []
         self.validation_warnings = []
 
-    def validate_initialization_step(self, stage: InitializationStage,
-                                   operation: Callable, *args, **kwargs) -> InitializationResult:
+    def validate_initialization_step(
+        self, stage: InitializationStage, operation: Callable, *args, **kwargs
+    ) -> InitializationResult:
         """
         Validate and execute an initialization step with error handling.
 
@@ -86,24 +88,21 @@ class GuiInitializationValidator:
 
             duration = time.time() - start_time
             init_result = InitializationResult(
-                stage=stage,
-                success=True,
-                duration=duration,
-                details={'result': result}
+                stage=stage, success=True, duration=duration, details={"result": result}
             )
 
             logger.info(f"✅ {stage.value} completed successfully in {duration:.3f}s")
 
         except Exception as e:
             duration = time.time() - start_time
-            error_msg = f"{type(e).__name__}: {str(e)}"
+            error_msg = f"{type(e).__name__}: {e!s}"
 
             init_result = InitializationResult(
                 stage=stage,
                 success=False,
                 duration=duration,
                 error=error_msg,
-                details={'exception': e, 'traceback': traceback.format_exc()}
+                details={"exception": e, "traceback": traceback.format_exc()},
             )
 
             logger.error(f"❌ {stage.value} failed after {duration:.3f}s: {error_msg}")
@@ -122,26 +121,35 @@ class GuiInitializationValidator:
         issues = []
 
         # Check Qt availability
-        try:
-            from PySide6 import QtWidgets, QtCore
+        import importlib.util
+
+        if importlib.util.find_spec("PySide6.QtCore") and importlib.util.find_spec(
+            "PySide6.QtWidgets"
+        ):
             logger.debug("✅ PySide6 modules available")
-        except ImportError as e:
-            issues.append(f"PySide6 import failed: {e}")
+        else:
+            issues.append("PySide6 modules not available")
 
         # Check display environment
-        if os.name != 'nt':  # Unix-like systems
-            display = os.environ.get('DISPLAY')
-            if not display and os.environ.get('QT_QPA_PLATFORM') not in ['offscreen', 'minimal']:
-                issues.append("No DISPLAY environment variable and no offscreen platform set")
+        if os.name != "nt":  # Unix-like systems
+            display = os.environ.get("DISPLAY")
+            if not display and os.environ.get("QT_QPA_PLATFORM") not in [
+                "offscreen",
+                "minimal",
+            ]:
+                issues.append(
+                    "No DISPLAY environment variable and no offscreen platform set"
+                )
 
         # Check Qt platform plugin
-        qt_platform = os.environ.get('QT_QPA_PLATFORM')
+        qt_platform = os.environ.get("QT_QPA_PLATFORM")
         if qt_platform:
             logger.debug(f"Qt platform plugin: {qt_platform}")
 
         # Memory check
         try:
             import psutil
+
             memory = psutil.virtual_memory()
             if memory.available < 500 * 1024 * 1024:  # 500MB
                 issues.append("Low available memory for GUI initialization")
@@ -197,7 +205,7 @@ class GuiInitializationValidator:
                 essential_widgets.extend(tab_widgets)
 
             plot_widgets = main_window.findChildren(QtWidgets.QWidget)
-            plot_widgets = [w for w in plot_widgets if 'plot' in w.objectName().lower()]
+            plot_widgets = [w for w in plot_widgets if "plot" in w.objectName().lower()]
             essential_widgets.extend(plot_widgets)
 
             logger.debug(f"Found {len(essential_widgets)} essential widgets")
@@ -236,17 +244,19 @@ class GuiInitializationValidator:
 
         try:
             # Check thread pool
-            if hasattr(main_window, 'thread_pool'):
+            if hasattr(main_window, "thread_pool"):
                 thread_pool = main_window.thread_pool
                 if thread_pool.maxThreadCount() <= 0:
                     issues.append("Thread pool has invalid max thread count")
                 else:
-                    logger.debug(f"✅ Thread pool initialized with {thread_pool.maxThreadCount()} threads")
+                    logger.debug(
+                        f"✅ Thread pool initialized with {thread_pool.maxThreadCount()} threads"
+                    )
             else:
                 issues.append("Main window missing thread_pool attribute")
 
             # Check progress manager
-            if hasattr(main_window, 'progress_manager'):
+            if hasattr(main_window, "progress_manager"):
                 progress_manager = main_window.progress_manager
                 if progress_manager is None:
                     issues.append("Progress manager is None")
@@ -256,14 +266,16 @@ class GuiInitializationValidator:
                 issues.append("Main window missing progress_manager attribute")
 
             # Check async viewer kernel
-            if hasattr(main_window, 'async_vk'):
+            if hasattr(main_window, "async_vk"):
                 if main_window.async_vk is None:
-                    logger.debug("Async viewer kernel not yet initialized (may be normal)")
+                    logger.debug(
+                        "Async viewer kernel not yet initialized (may be normal)"
+                    )
                 else:
                     logger.debug("✅ Async viewer kernel initialized")
 
             # Check viewer kernel
-            if hasattr(main_window, 'vk'):
+            if hasattr(main_window, "vk"):
                 if main_window.vk is None:
                     logger.debug("Viewer kernel not yet initialized (may be normal)")
                 else:
@@ -281,7 +293,7 @@ class GuiInitializationValidator:
         logger.info("✅ Async components validation passed")
         return True
 
-    def get_initialization_summary(self) -> Dict[str, Any]:
+    def get_initialization_summary(self) -> dict[str, Any]:
         """
         Get summary of initialization validation results.
 
@@ -295,22 +307,24 @@ class GuiInitializationValidator:
         failed_stages = [r.stage.value for r in self.results if not r.success]
 
         return {
-            'total_stages': total_stages,
-            'successful_stages': successful_stages,
-            'failed_stages': failed_stages,
-            'total_duration': total_duration,
-            'success_rate': (successful_stages / total_stages) * 100 if total_stages > 0 else 0,
-            'validation_errors': self.validation_errors,
-            'validation_warnings': self.validation_warnings,
-            'stage_details': [
+            "total_stages": total_stages,
+            "successful_stages": successful_stages,
+            "failed_stages": failed_stages,
+            "total_duration": total_duration,
+            "success_rate": (successful_stages / total_stages) * 100
+            if total_stages > 0
+            else 0,
+            "validation_errors": self.validation_errors,
+            "validation_warnings": self.validation_warnings,
+            "stage_details": [
                 {
-                    'stage': r.stage.value,
-                    'success': r.success,
-                    'duration': r.duration,
-                    'error': r.error
+                    "stage": r.stage.value,
+                    "success": r.success,
+                    "duration": r.duration,
+                    "error": r.error,
                 }
                 for r in self.results
-            ]
+            ],
         }
 
 
@@ -335,13 +349,16 @@ class RobustGuiStarter:
         Returns:
             True if setup successful
         """
+
         def setup_operation():
             # Configure Qt application attributes
             QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True)
             QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps, True)
 
             # Configure for better stability
-            QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_DontCreateNativeWidgetSiblings, True)
+            QtWidgets.QApplication.setAttribute(
+                QtCore.Qt.AA_DontCreateNativeWidgetSiblings, True
+            )
 
             logger.debug("Qt application attributes configured")
             return True
@@ -358,6 +375,7 @@ class RobustGuiStarter:
         Returns:
             True if application created successfully
         """
+
         def create_app_operation():
             # Check if application already exists
             existing_app = QtWidgets.QApplication.instance()
@@ -391,6 +409,7 @@ class RobustGuiStarter:
         Returns:
             True if main window created successfully
         """
+
         def create_window_operation():
             from ..xpcs_viewer import XpcsViewer
 
@@ -416,6 +435,7 @@ class RobustGuiStarter:
         Returns:
             True if validation passed
         """
+
         def validation_operation():
             if not self.main_window:
                 raise RuntimeError("Main window not available for validation")
@@ -458,7 +478,9 @@ class RobustGuiStarter:
 
             # Step 1: Validate Qt environment
             if not self.validator.validate_qt_environment():
-                logger.warning("Qt environment validation failed, proceeding with caution")
+                logger.warning(
+                    "Qt environment validation failed, proceeding with caution"
+                )
 
             # Step 2: Set up Qt environment
             if not self.setup_qt_environment():
@@ -484,20 +506,23 @@ class RobustGuiStarter:
 
             # Final validation stage
             self.validator.validate_initialization_step(
-                InitializationStage.STARTUP_COMPLETE,
-                lambda: True
+                InitializationStage.STARTUP_COMPLETE, lambda: True
             )
 
             logger.info("🎉 Robust GUI initialization completed successfully")
 
             # Show summary
             summary = self.validator.get_initialization_summary()
-            logger.info(f"Initialization summary: {summary['successful_stages']}/{summary['total_stages']} stages successful")
+            logger.info(
+                f"Initialization summary: {summary['successful_stages']}/{summary['total_stages']} stages successful"
+            )
 
             return True
 
         except Exception as e:
-            logger.critical(f"Critical failure during GUI initialization: {e}", exc_info=True)
+            logger.critical(
+                f"Critical failure during GUI initialization: {e}", exc_info=True
+            )
             self.startup_successful = False
             return False
 
@@ -519,7 +544,9 @@ class RobustGuiStarter:
             return exit_code
 
         except Exception as e:
-            logger.critical(f"Critical error during application execution: {e}", exc_info=True)
+            logger.critical(
+                f"Critical error during application execution: {e}", exc_info=True
+            )
             return 1
 
         finally:
@@ -544,29 +571,33 @@ class RobustGuiStarter:
         report_lines.append(f"Successful Stages: {summary['successful_stages']}")
         report_lines.append(f"Total Duration: {summary['total_duration']:.3f}s")
 
-        if summary['failed_stages']:
-            report_lines.append(f"\nFailed Stages: {', '.join(summary['failed_stages'])}")
+        if summary["failed_stages"]:
+            report_lines.append(
+                f"\nFailed Stages: {', '.join(summary['failed_stages'])}"
+            )
 
-        if summary['validation_errors']:
+        if summary["validation_errors"]:
             report_lines.append("\nValidation Errors:")
-            for error in summary['validation_errors']:
+            for error in summary["validation_errors"]:
                 report_lines.append(f"  ❌ {error}")
 
-        if summary['validation_warnings']:
+        if summary["validation_warnings"]:
             report_lines.append("\nValidation Warnings:")
-            for warning in summary['validation_warnings']:
+            for warning in summary["validation_warnings"]:
                 report_lines.append(f"  ⚠️  {warning}")
 
         report_lines.append("\nStage Details:")
-        for stage in summary['stage_details']:
-            status = "✅" if stage['success'] else "❌"
-            report_lines.append(f"  {status} {stage['stage']}: {stage['duration']:.3f}s")
-            if stage['error']:
+        for stage in summary["stage_details"]:
+            status = "✅" if stage["success"] else "❌"
+            report_lines.append(
+                f"  {status} {stage['stage']}: {stage['duration']:.3f}s"
+            )
+            if stage["error"]:
                 report_lines.append(f"    Error: {stage['error']}")
 
         report_lines.append("=" * 60)
 
-        return '\n'.join(report_lines)
+        return "\n".join(report_lines)
 
 
 @contextmanager
@@ -612,11 +643,10 @@ def robust_main_gui(path=None, label_style=None) -> int:
         if starter.start_gui_application(path, label_style):
             # Show validation report if there were any issues
             summary = starter.validator.get_initialization_summary()
-            if summary['validation_warnings'] or summary['validation_errors']:
+            if summary["validation_warnings"] or summary["validation_errors"]:
                 logger.info("Validation report:\n" + starter.get_validation_report())
 
             return starter.run_application()
-        else:
-            logger.error("Failed to start GUI application")
-            logger.error("Validation report:\n" + starter.get_validation_report())
-            return 1
+        logger.error("Failed to start GUI application")
+        logger.error("Validation report:\n" + starter.get_validation_report())
+        return 1

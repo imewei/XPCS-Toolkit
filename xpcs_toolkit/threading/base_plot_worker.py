@@ -5,8 +5,8 @@ This module provides a standardized base class for plot workers with common
 initialization patterns, error handling, and progress reporting.
 """
 
-from typing import Any, Dict, List, Optional
 from abc import abstractmethod
+from typing import Any
 
 from .async_workers import BaseAsyncWorker
 
@@ -27,9 +27,9 @@ class BasePlotWorker(BaseAsyncWorker):
         self,
         viewer_kernel,
         plot_handler,
-        plot_kwargs: Dict[str, Any],
+        plot_kwargs: dict[str, Any],
         worker_id: str,
-        worker_type: str = "plot"
+        worker_type: str = "plot",
     ):
         """
         Initialize base plot worker.
@@ -47,7 +47,7 @@ class BasePlotWorker(BaseAsyncWorker):
         self.plot_kwargs = plot_kwargs
         self.worker_type = worker_type
 
-    def get_file_list(self, rows: Optional[List[int]] = None) -> List[Any]:
+    def get_file_list(self, rows: list[int] | None = None) -> list[Any]:
         """
         Get file list from viewer kernel with standardized error handling.
 
@@ -62,7 +62,7 @@ class BasePlotWorker(BaseAsyncWorker):
 
         return self.viewer_kernel.get_xf_list(rows)
 
-    def validate_file_list(self, xf_list: List[Any], min_files: int = 1) -> bool:
+    def validate_file_list(self, xf_list: list[Any], min_files: int = 1) -> bool:
         """
         Validate that we have sufficient files for plotting.
 
@@ -74,7 +74,9 @@ class BasePlotWorker(BaseAsyncWorker):
             True if validation passes, False otherwise
         """
         if len(xf_list) < min_files:
-            self.emit_status(f"Insufficient files: need {min_files}, got {len(xf_list)}")
+            self.emit_status(
+                f"Insufficient files: need {min_files}, got {len(xf_list)}"
+            )
             return False
         return True
 
@@ -91,7 +93,9 @@ class BasePlotWorker(BaseAsyncWorker):
         """
         return self.plot_kwargs.get(key, default)
 
-    def emit_step_progress(self, current_step: int, total_steps: int, description: str) -> None:
+    def emit_step_progress(
+        self, current_step: int, total_steps: int, description: str
+    ) -> None:
         """
         Emit progress with standardized step-based reporting.
 
@@ -102,7 +106,7 @@ class BasePlotWorker(BaseAsyncWorker):
         """
         self.emit_progress(current_step, total_steps, description)
 
-    def create_error_result(self, error_message: str) -> Dict[str, Any]:
+    def create_error_result(self, error_message: str) -> dict[str, Any]:
         """
         Create standardized error result dictionary.
 
@@ -116,10 +120,10 @@ class BasePlotWorker(BaseAsyncWorker):
             "success": False,
             "error": error_message,
             "worker_type": self.worker_type,
-            "worker_id": self.worker_id
+            "worker_id": self.worker_id,
         }
 
-    def create_success_result(self, data: Dict[str, Any]) -> Dict[str, Any]:
+    def create_success_result(self, data: dict[str, Any]) -> dict[str, Any]:
         """
         Create standardized success result dictionary.
 
@@ -132,7 +136,7 @@ class BasePlotWorker(BaseAsyncWorker):
         result = {
             "success": True,
             "worker_type": self.worker_type,
-            "worker_id": self.worker_id
+            "worker_id": self.worker_id,
         }
         result.update(data)
         return result
@@ -147,7 +151,7 @@ class BasePlotWorker(BaseAsyncWorker):
         return CommonExceptionHandler(self, func_name)
 
     @abstractmethod
-    def do_work(self) -> Dict[str, Any]:
+    def do_work(self) -> dict[str, Any]:
         """
         Execute the specific plotting work.
 
@@ -157,7 +161,6 @@ class BasePlotWorker(BaseAsyncWorker):
         Returns:
             Dictionary containing plot results
         """
-        pass
 
 
 class CommonExceptionHandler:
@@ -187,7 +190,7 @@ class StandardPlotProgressSteps:
         "Loading data files",
         "Processing data",
         "Generating plot",
-        "Finalizing display"
+        "Finalizing display",
     ]
 
     FITTING_PLOT_STEPS = [
@@ -196,7 +199,7 @@ class StandardPlotProgressSteps:
         "Performing fitting",
         "Processing fit results",
         "Generating plot",
-        "Finalizing display"
+        "Finalizing display",
     ]
 
     MULTI_PANEL_STEPS = [
@@ -205,7 +208,7 @@ class StandardPlotProgressSteps:
         "Processing panel 2",
         "Processing panel 3",
         "Combining panels",
-        "Finalizing display"
+        "Finalizing display",
     ]
 
 
@@ -213,9 +216,9 @@ def create_standard_plot_worker(
     worker_class: type,
     viewer_kernel,
     plot_handler,
-    plot_kwargs: Dict[str, Any],
+    plot_kwargs: dict[str, Any],
     worker_id: str,
-    worker_type: str = "plot"
+    worker_type: str = "plot",
 ) -> BasePlotWorker:
     """
     Factory function to create standardized plot workers.
@@ -236,5 +239,5 @@ def create_standard_plot_worker(
         plot_handler=plot_handler,
         plot_kwargs=plot_kwargs,
         worker_id=worker_id,
-        worker_type=worker_type
+        worker_type=worker_type,
     )

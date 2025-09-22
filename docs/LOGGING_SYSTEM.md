@@ -53,26 +53,26 @@ logger = get_logger(__name__)
 
 class YourClass:
     """Your class with integrated logging."""
-    
+
     def __init__(self, config: Optional[Dict[str, Any]] = None):
         logger.debug("Initializing %s with config: %s", self.__class__.__name__, config)
         self.config = config or {}
         logger.info("%s initialized successfully", self.__class__.__name__)
-    
+
     def process_data(self, data: np.ndarray) -> np.ndarray:
         """Process data with comprehensive logging."""
         logger.info("Processing data with shape: %s, dtype: %s", data.shape, data.dtype)
-        
+
         if data.size == 0:
             logger.warning("Empty data array provided")
             return data
-        
+
         try:
             # Your processing logic here
             result = data * 2  # Example operation
             logger.debug("Processing completed, output shape: %s", result.shape)
             return result
-            
+
         except Exception as e:
             logger.error("Data processing failed for input shape %s", data.shape)
             logger.exception("Full exception details")
@@ -237,7 +237,7 @@ class MyWidget(QWidget):
         super().__init__()
         self.logger = get_logger(f"{__name__}.{self.__class__.__name__}")
         self.logger.info("Widget %s initialized", self.__class__.__name__)
-    
+
     def on_button_clicked(self):
         self.logger.debug("Button clicked, processing request")
         try:
@@ -262,7 +262,7 @@ class TestMyModule:
         """Setup for each test method."""
         set_log_level('DEBUG')  # Enable detailed logging for tests
         logger.info("Starting test: %s", self._testMethodName)
-    
+
     def test_data_processing(self):
         logger.debug("Testing data processing functionality")
         # Test implementation

@@ -12,6 +12,7 @@ import pytest
 
 try:
     import h5py
+
     H5PY_AVAILABLE = True
 except ImportError:
     H5PY_AVAILABLE = False

@@ -6,46 +6,48 @@ that provides intelligent resource allocation, priority-based execution, and
 seamless integration with the XPCS GUI and memory management systems.
 """
 
-import time
 import threading
-from concurrent.futures import ThreadPoolExecutor, as_completed
+import time
+from collections.abc import Callable
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from enum import Enum
-from queue import PriorityQueue, Empty
-from typing import Any, Callable, Dict, List, Optional, Set, Union
-from weakref import WeakSet
+from queue import Empty, PriorityQueue
+from typing import Any
 
 import psutil
-from PySide6 import QtCore
-from PySide6.QtCore import QObject, Signal, QTimer
+from PySide6.QtCore import QObject, Signal
 
 from ..utils.logging_config import get_logger
-from ..utils.memory_manager import get_memory_manager, MemoryPressure
+from ..utils.memory_manager import MemoryPressure, get_memory_manager
 
 logger = get_logger(__name__)
 
 
 class TaskPriority(Enum):
     """Unified priority system for all task types."""
-    CRITICAL = 0    # UI-blocking operations (must complete immediately)
-    HIGH = 1        # User-triggered operations (plotting, analysis)
-    NORMAL = 2      # Background processing (preloading, caching)
-    LOW = 3         # Maintenance tasks (cleanup, optimization)
-    DEFERRED = 4    # Can be postponed during high load
+
+    CRITICAL = 0  # UI-blocking operations (must complete immediately)
+    HIGH = 1  # User-triggered operations (plotting, analysis)
+    NORMAL = 2  # Background processing (preloading, caching)
+    LOW = 3  # Maintenance tasks (cleanup, optimization)
+    DEFERRED = 4  # Can be postponed during high load
 
 
 class TaskType(Enum):
     """Categories of tasks for optimized execution."""
-    GUI_UPDATE = "gui_update"         # GUI updates, widget changes
-    COMPUTATION = "computation"       # Heavy calculations, fitting
-    DATA_LOADING = "data_loading"     # File I/O, data loading
-    PLOT_GENERATION = "plotting"      # Plot creation, rendering
-    MEMORY_OPERATION = "memory"       # Cache operations, cleanup
+
+    GUI_UPDATE = "gui_update"  # GUI updates, widget changes
+    COMPUTATION = "computation"  # Heavy calculations, fitting
+    DATA_LOADING = "data_loading"  # File I/O, data loading
+    PLOT_GENERATION = "plotting"  # Plot creation, rendering
+    MEMORY_OPERATION = "memory"  # Cache operations, cleanup
 
 
 @dataclass
 class UnifiedTask:
     """Unified task container for all worker types."""
+
     task_id: str
     priority: TaskPriority
     task_type: TaskType
@@ -54,18 +56,18 @@ class UnifiedTask:
     kwargs: dict = field(default_factory=dict)
 
     # Execution control
-    timeout_seconds: Optional[float] = None
-    memory_limit_mb: Optional[float] = None
+    timeout_seconds: float | None = None
+    memory_limit_mb: float | None = None
     requires_gui: bool = False
 
     # State tracking
     created_at: float = field(default_factory=time.time)
-    started_at: Optional[float] = None
-    completed_at: Optional[float] = None
+    started_at: float | None = None
+    completed_at: float | None = None
 
     # Results
     result: Any = None
-    error: Optional[Exception] = None
+    error: Exception | None = None
 
     def __lt__(self, other):
         """Priority queue comparison."""
@@ -108,7 +110,7 @@ class UnifiedThreadingManager(QObject):
     load_changed = Signal(float)  # system load percentage
     memory_pressure_changed = Signal(str)  # pressure level
 
-    def __init__(self, max_workers: Optional[int] = None):
+    def __init__(self, max_workers: int | None = None):
         super().__init__()
 
         # System resource detection
@@ -124,36 +126,46 @@ class UnifiedThreadingManager(QObject):
 
         # Specialized thread pools for different task types
         self._thread_pools = {
-            TaskType.GUI_UPDATE: ThreadPoolExecutor(max_workers=2, thread_name_prefix="gui-"),
-            TaskType.COMPUTATION: ThreadPoolExecutor(max_workers=max(1, self.cpu_count - 1), thread_name_prefix="compute-"),
-            TaskType.DATA_LOADING: ThreadPoolExecutor(max_workers=4, thread_name_prefix="io-"),
-            TaskType.PLOT_GENERATION: ThreadPoolExecutor(max_workers=3, thread_name_prefix="plot-"),
-            TaskType.MEMORY_OPERATION: ThreadPoolExecutor(max_workers=2, thread_name_prefix="memory-")
+            TaskType.GUI_UPDATE: ThreadPoolExecutor(
+                max_workers=2, thread_name_prefix="gui-"
+            ),
+            TaskType.COMPUTATION: ThreadPoolExecutor(
+                max_workers=max(1, self.cpu_count - 1), thread_name_prefix="compute-"
+            ),
+            TaskType.DATA_LOADING: ThreadPoolExecutor(
+                max_workers=4, thread_name_prefix="io-"
+            ),
+            TaskType.PLOT_GENERATION: ThreadPoolExecutor(
+                max_workers=3, thread_name_prefix="plot-"
+            ),
+            TaskType.MEMORY_OPERATION: ThreadPoolExecutor(
+                max_workers=2, thread_name_prefix="memory-"
+            ),
         }
 
         # Task management
         self._task_queue = PriorityQueue()
-        self._active_tasks: Dict[str, UnifiedTask] = {}
-        self._completed_tasks: Dict[str, UnifiedTask] = {}
+        self._active_tasks: dict[str, UnifiedTask] = {}
+        self._completed_tasks: dict[str, UnifiedTask] = {}
         self._task_lock = threading.RLock()
 
         # Performance tracking
         self._stats = {
-            'tasks_submitted': 0,
-            'tasks_completed': 0,
-            'tasks_failed': 0,
-            'total_execution_time': 0.0,
-            'total_wait_time': 0.0,
-            'memory_rejected': 0,
-            'timeout_cancelled': 0
+            "tasks_submitted": 0,
+            "tasks_completed": 0,
+            "tasks_failed": 0,
+            "total_execution_time": 0.0,
+            "total_wait_time": 0.0,
+            "memory_rejected": 0,
+            "timeout_cancelled": 0,
         }
 
         # Adaptive configuration
         self._last_pressure_check = 0
         self._adaptive_config = {
-            'queue_size_limit': 100,
-            'memory_check_interval': 5.0,
-            'load_balance_interval': 10.0
+            "queue_size_limit": 100,
+            "memory_check_interval": 5.0,
+            "load_balance_interval": 10.0,
         }
 
         # System monitoring
@@ -161,12 +173,19 @@ class UnifiedThreadingManager(QObject):
         self._monitor_thread = None
         self._start_monitoring()
 
-        logger.info(f"UnifiedThreadingManager initialized: {max_workers} workers, {self.cpu_count} CPUs, {self.total_memory_gb:.1f}GB RAM")
+        logger.info(
+            f"UnifiedThreadingManager initialized: {max_workers} workers, {self.cpu_count} CPUs, {self.total_memory_gb:.1f}GB RAM"
+        )
 
-    def submit_task(self, task_id: str, function: Callable,
-                   priority: TaskPriority = TaskPriority.NORMAL,
-                   task_type: TaskType = TaskType.COMPUTATION,
-                   *args, **kwargs) -> bool:
+    def submit_task(
+        self,
+        task_id: str,
+        function: Callable,
+        priority: TaskPriority = TaskPriority.NORMAL,
+        task_type: TaskType = TaskType.COMPUTATION,
+        *args,
+        **kwargs,
+    ) -> bool:
         """
         Submit a task for execution with unified priority handling.
 
@@ -191,7 +210,7 @@ class UnifiedThreadingManager(QObject):
         # Check system limits
         if not self._can_accept_task(task_type):
             logger.warning(f"Task {task_id} rejected due to system limits")
-            self._stats['memory_rejected'] += 1
+            self._stats["memory_rejected"] += 1
             return False
 
         # Create unified task
@@ -201,13 +220,13 @@ class UnifiedThreadingManager(QObject):
             task_type=task_type,
             function=function,
             args=args,
-            kwargs=kwargs
+            kwargs=kwargs,
         )
 
         # Add to queue
         with self._task_lock:
             self._task_queue.put(task)
-            self._stats['tasks_submitted'] += 1
+            self._stats["tasks_submitted"] += 1
 
         # Schedule execution
         self._schedule_task_execution()
@@ -225,7 +244,7 @@ class UnifiedThreadingManager(QObject):
             return False
 
         # Queue size check
-        if self._task_queue.qsize() > self._adaptive_config['queue_size_limit']:
+        if self._task_queue.qsize() > self._adaptive_config["queue_size_limit"]:
             return task_type == TaskType.GUI_UPDATE  # Always accept critical GUI tasks
 
         return True
@@ -286,19 +305,20 @@ class UnifiedThreadingManager(QObject):
 
             # Update statistics
             if task.error:
-                self._stats['tasks_failed'] += 1
+                self._stats["tasks_failed"] += 1
                 self.task_failed.emit(task.task_id, str(task.error))
             else:
-                self._stats['tasks_completed'] += 1
+                self._stats["tasks_completed"] += 1
                 self.task_completed.emit(task.task_id, task.result)
 
-            self._stats['total_execution_time'] += task.execution_time
-            self._stats['total_wait_time'] += task.wait_time
+            self._stats["total_execution_time"] += task.execution_time
+            self._stats["total_wait_time"] += task.wait_time
 
         # Clean up old completed tasks (keep last 50)
         if len(self._completed_tasks) > 50:
-            oldest_tasks = sorted(self._completed_tasks.items(),
-                                key=lambda x: x[1].completed_at or 0)
+            oldest_tasks = sorted(
+                self._completed_tasks.items(), key=lambda x: x[1].completed_at or 0
+            )
             for task_id, _ in oldest_tasks[:-50]:
                 self._completed_tasks.pop(task_id, None)
 
@@ -309,9 +329,7 @@ class UnifiedThreadingManager(QObject):
     def _start_monitoring(self):
         """Start system monitoring thread."""
         self._monitor_thread = threading.Thread(
-            target=self._monitor_system,
-            daemon=True,
-            name="unified-monitor"
+            target=self._monitor_system, daemon=True, name="unified-monitor"
         )
         self._monitor_thread.start()
 
@@ -325,13 +343,19 @@ class UnifiedThreadingManager(QObject):
                 current_time = time.time()
 
                 # Check memory pressure
-                if current_time - last_memory_check > self._adaptive_config['memory_check_interval']:
+                if (
+                    current_time - last_memory_check
+                    > self._adaptive_config["memory_check_interval"]
+                ):
                     memory_pressure = self.memory_manager.get_memory_pressure()
                     self.memory_pressure_changed.emit(memory_pressure.value)
                     last_memory_check = current_time
 
                 # Load balancing
-                if current_time - last_load_balance > self._adaptive_config['load_balance_interval']:
+                if (
+                    current_time - last_load_balance
+                    > self._adaptive_config["load_balance_interval"]
+                ):
                     self._balance_thread_pools()
                     last_load_balance = current_time
 
@@ -369,18 +393,20 @@ class UnifiedThreadingManager(QObject):
         if new_size != current_workers:
             # Note: ThreadPoolExecutor doesn't support runtime resizing
             # This is more of a monitoring/logging feature for now
-            logger.debug(f"Would adjust {task_type.value} pool from {current_workers} to {new_size}")
+            logger.debug(
+                f"Would adjust {task_type.value} pool from {current_workers} to {new_size}"
+            )
 
-    def get_performance_stats(self) -> Dict[str, Any]:
+    def get_performance_stats(self) -> dict[str, Any]:
         """Get comprehensive performance statistics."""
         with self._task_lock:
             active_count = len(self._active_tasks)
             queue_size = self._task_queue.qsize()
 
             # Calculate averages
-            completed = self._stats['tasks_completed']
-            avg_execution_time = (self._stats['total_execution_time'] / max(1, completed))
-            avg_wait_time = (self._stats['total_wait_time'] / max(1, completed))
+            completed = self._stats["tasks_completed"]
+            avg_execution_time = self._stats["total_execution_time"] / max(1, completed)
+            avg_wait_time = self._stats["total_wait_time"] / max(1, completed)
 
         # System resources
         cpu_percent = psutil.cpu_percent()
@@ -388,31 +414,28 @@ class UnifiedThreadingManager(QObject):
 
         return {
             # Task statistics
-            'tasks_submitted': self._stats['tasks_submitted'],
-            'tasks_completed': self._stats['tasks_completed'],
-            'tasks_failed': self._stats['tasks_failed'],
-            'active_tasks': active_count,
-            'queued_tasks': queue_size,
-
+            "tasks_submitted": self._stats["tasks_submitted"],
+            "tasks_completed": self._stats["tasks_completed"],
+            "tasks_failed": self._stats["tasks_failed"],
+            "active_tasks": active_count,
+            "queued_tasks": queue_size,
             # Performance metrics
-            'avg_execution_time_ms': avg_execution_time * 1000,
-            'avg_wait_time_ms': avg_wait_time * 1000,
-            'memory_rejected': self._stats['memory_rejected'],
-            'timeout_cancelled': self._stats['timeout_cancelled'],
-
+            "avg_execution_time_ms": avg_execution_time * 1000,
+            "avg_wait_time_ms": avg_wait_time * 1000,
+            "memory_rejected": self._stats["memory_rejected"],
+            "timeout_cancelled": self._stats["timeout_cancelled"],
             # System resources
-            'cpu_percent': cpu_percent,
-            'memory_percent': memory.percent,
-            'memory_available_gb': memory.available / (1024**3),
-
+            "cpu_percent": cpu_percent,
+            "memory_percent": memory.percent,
+            "memory_available_gb": memory.available / (1024**3),
             # Thread pool status
-            'thread_pools': {
+            "thread_pools": {
                 task_type.value: {
-                    'max_workers': pool._max_workers,
-                    'active_workers': len([t for t in pool._threads if t.is_alive()])
+                    "max_workers": pool._max_workers,
+                    "active_workers": len([t for t in pool._threads if t.is_alive()]),
                 }
                 for task_type, pool in self._thread_pools.items()
-            }
+            },
         }
 
     def shutdown(self):
@@ -433,7 +456,7 @@ class UnifiedThreadingManager(QObject):
 
 
 # Global instance management
-_global_threading_manager: Optional[UnifiedThreadingManager] = None
+_global_threading_manager: UnifiedThreadingManager | None = None
 
 
 def get_unified_threading_manager() -> UnifiedThreadingManager:

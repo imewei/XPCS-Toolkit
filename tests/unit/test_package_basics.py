@@ -4,6 +4,8 @@ This module provides unit tests for package-level functionality including
 version access, CLI module imports, and basic component imports.
 """
 
+import os
+
 import pytest
 
 from xpcs_toolkit import __version__
@@ -44,8 +46,6 @@ def test_threading_imports():
     """Test that threading components can be imported without metaclass conflicts."""
     try:
         # Test that WorkerSignals can be instantiated
-        import os
-
         from xpcs_toolkit.threading.async_workers import WorkerSignals
 
         os.environ["QT_QPA_PLATFORM"] = "offscreen"  # Headless mode

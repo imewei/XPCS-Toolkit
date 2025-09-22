@@ -7,7 +7,7 @@ body:
     attributes:
       value: |
         Thanks for taking the time to fill out this bug report!
-        
+
   - type: textarea
     id: what-happened
     attributes:
@@ -16,7 +16,7 @@ body:
       placeholder: Tell us what you see!
     validations:
       required: true
-      
+
   - type: textarea
     id: expected-behavior
     attributes:
@@ -24,8 +24,8 @@ body:
       description: A clear and concise description of what you expected to happen
     validations:
       required: true
-      
-  - type: textarea  
+
+  - type: textarea
     id: steps-to-reproduce
     attributes:
       label: Steps to reproduce
@@ -63,7 +63,7 @@ body:
         - Linux (Other)
     validations:
       required: true
-      
+
   - type: input
     id: python-version
     attributes:
@@ -71,7 +71,7 @@ body:
       placeholder: "3.12.0"
     validations:
       required: true
-      
+
   - type: input
     id: toolkit-version
     attributes:

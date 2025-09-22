@@ -4,9 +4,12 @@ Test suite for lazy loading functionality in the XPCS Toolkit.
 Tests the lazy loading system implemented in viewer_kernel.py.
 """
 
+import gc
 import sys
+import tempfile
+import threading
+import time
 import unittest
-from unittest.mock import MagicMock, patch
 
 try:
     from xpcs_toolkit.viewer_kernel import ViewerKernel, _get_module, _module_cache
@@ -45,7 +48,7 @@ class TestLazyLoading(unittest.TestCase):
         _module_cache.clear()
 
         # Load a module
-        module_name = 'g2mod'
+        module_name = "g2mod"
         module1 = _get_module(module_name)
 
         # Check that module is now in cache
@@ -60,7 +63,7 @@ class TestLazyLoading(unittest.TestCase):
 
     def test_lazy_loading_different_modules(self):
         """Test lazy loading of different analysis modules."""
-        analysis_modules = ['g2mod', 'saxs1d', 'saxs2d', 'stability', 'intt', 'twotime']
+        analysis_modules = ["g2mod", "saxs1d", "saxs2d", "stability", "intt", "twotime"]
 
         loaded_modules = {}
         for module_name in analysis_modules:
@@ -79,29 +82,27 @@ class TestLazyLoading(unittest.TestCase):
                 for j, mod2 in enumerate(module_objects):
                     if i != j:
                         self.assertIsNot(
-                            mod1, mod2,
-                            f"Different modules should be different objects"
+                            mod1, mod2, "Different modules should be different objects"
                         )
 
     def test_invalid_module_name(self):
         """Test behavior with invalid module names."""
         with self.assertRaises((ImportError, ModuleNotFoundError)):
-            _get_module('nonexistent_module')
+            _get_module("nonexistent_module")
 
     def test_viewer_kernel_get_module_method(self):
         """Test the ViewerKernel.get_module method."""
         # Create a minimal ViewerKernel instance with a test path
-        import tempfile
         with tempfile.TemporaryDirectory() as temp_dir:
             vk = ViewerKernel(temp_dir)
 
             # Test that get_module method exists
-            self.assertTrue(hasattr(vk, 'get_module'))
+            self.assertTrue(hasattr(vk, "get_module"))
             self.assertTrue(callable(vk.get_module))
 
             # Test loading a module through ViewerKernel
             try:
-                module = vk.get_module('g2mod')
+                module = vk.get_module("g2mod")
                 self.assertIsNotNone(module)
             except ImportError:
                 # Skip if module not available in test environment
@@ -109,7 +110,6 @@ class TestLazyLoading(unittest.TestCase):
 
     def test_lazy_loading_performance(self):
         """Test that lazy loading provides performance benefits."""
-        import time
 
         # Clear cache
         _module_cache.clear()
@@ -117,25 +117,27 @@ class TestLazyLoading(unittest.TestCase):
         # Time first load (should be slower)
         start_time = time.perf_counter()
         try:
-            module1 = _get_module('g2mod')
+            _get_module("g2mod")
             first_load_time = time.perf_counter() - start_time
 
             # Time second load (should be faster due to caching)
             start_time = time.perf_counter()
-            module2 = _get_module('g2mod')
+            _get_module("g2mod")
             second_load_time = time.perf_counter() - start_time
 
             # Second load should be significantly faster
             self.assertLess(
-                second_load_time, first_load_time,
-                "Cached module loading should be faster than initial load"
+                second_load_time,
+                first_load_time,
+                "Cached module loading should be faster than initial load",
             )
 
             # Should be much faster (at least 10x)
             if first_load_time > 0.001:  # Only test if first load was measurable
                 self.assertLess(
-                    second_load_time, first_load_time / 10,
-                    "Cached loading should be at least 10x faster"
+                    second_load_time,
+                    first_load_time / 10,
+                    "Cached loading should be at least 10x faster",
                 )
 
         except ImportError:
@@ -144,8 +146,6 @@ class TestLazyLoading(unittest.TestCase):
 
     def test_memory_efficiency(self):
         """Test that lazy loading doesn't cause memory leaks."""
-        import gc
-        import sys
 
         # Clear cache and run garbage collection
         _module_cache.clear()
@@ -153,20 +153,21 @@ class TestLazyLoading(unittest.TestCase):
 
         # Get initial reference count for a module
         try:
-            module = _get_module('g2mod')
+            module = _get_module("g2mod")
             initial_refs = sys.getrefcount(module)
 
             # Load same module multiple times
             for _ in range(10):
-                _get_module('g2mod')
+                _get_module("g2mod")
 
             # Reference count should not increase significantly
             final_refs = sys.getrefcount(module)
 
             # Allow for some variance but should not leak significantly
             self.assertLess(
-                final_refs - initial_refs, 5,
-                "Multiple module loads should not create significant ref count increase"
+                final_refs - initial_refs,
+                5,
+                "Multiple module loads should not create significant ref count increase",
             )
 
         except ImportError:
@@ -175,8 +176,6 @@ class TestLazyLoading(unittest.TestCase):
 
     def test_thread_safety_basic(self):
         """Basic test for thread safety of lazy loading."""
-        import threading
-        import time
 
         _module_cache.clear()
         results = []
@@ -184,7 +183,7 @@ class TestLazyLoading(unittest.TestCase):
 
         def load_module():
             try:
-                module = _get_module('g2mod')
+                module = _get_module("g2mod")
                 results.append(module)
             except Exception as e:
                 errors.append(e)
@@ -210,8 +209,9 @@ class TestLazyLoading(unittest.TestCase):
                 first_module = results[0]
                 for module in results[1:]:
                     self.assertIs(
-                        module, first_module,
-                        "All threads should get the same cached module instance"
+                        module,
+                        first_module,
+                        "All threads should get the same cached module instance",
                     )
 
     def test_cache_persistence(self):
@@ -219,7 +219,7 @@ class TestLazyLoading(unittest.TestCase):
         _module_cache.clear()
 
         # Load multiple modules
-        modules_to_test = ['g2mod', 'saxs1d']
+        modules_to_test = ["g2mod", "saxs1d"]
         loaded_modules = {}
 
         for module_name in modules_to_test:
@@ -235,28 +235,27 @@ class TestLazyLoading(unittest.TestCase):
             self.assertIs(_module_cache[module_name], module)
 
         # Clear a specific module from cache and reload
-        if 'g2mod' in loaded_modules:
-            original_module = loaded_modules['g2mod']
-            del _module_cache['g2mod']
+        if "g2mod" in loaded_modules:
+            loaded_modules["g2mod"]
+            del _module_cache["g2mod"]
 
             # Reload should create new instance
-            reloaded_module = _get_module('g2mod')
+            _get_module("g2mod")
 
             # Should be back in cache
-            self.assertIn('g2mod', _module_cache)
+            self.assertIn("g2mod", _module_cache)
 
     def test_lazy_loading_integration(self):
         """Integration test for lazy loading with viewer kernel."""
         # This test simulates how lazy loading is used in the actual application
-        import tempfile
         with tempfile.TemporaryDirectory() as temp_dir:
             vk = ViewerKernel(temp_dir)
 
             # Test that we can access analysis modules through the kernel
             analysis_methods = [
-                ('g2mod', 'get_data'),
-                ('saxs1d', 'pg_plot'),
-                ('stability', 'plot'),  # stability uses 'plot', not 'pg_plot'
+                ("g2mod", "get_data"),
+                ("saxs1d", "pg_plot"),
+                ("stability", "plot"),  # stability uses 'plot', not 'pg_plot'
             ]
 
             for module_name, method_name in analysis_methods:
@@ -264,7 +263,7 @@ class TestLazyLoading(unittest.TestCase):
                     module = vk.get_module(module_name)
                     self.assertTrue(
                         hasattr(module, method_name),
-                        f"Module {module_name} should have method {method_name}"
+                        f"Module {module_name} should have method {method_name}",
                     )
                 except ImportError:
                     # Skip modules not available in test environment

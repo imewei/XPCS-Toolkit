@@ -1,12 +1,13 @@
 import numpy as np
 
+from xpcs_toolkit.plothandler.plot_constants import BASIC_COLORS as colors
+from xpcs_toolkit.plothandler.plot_constants import EXTENDED_MARKERS as shapes
 from xpcs_toolkit.utils.logging_config import get_logger
 from xpcs_toolkit.utils.validation import (
-    validate_xf_fit_summary,
     get_file_label_safe,
-    validate_array_compatibility
+    validate_array_compatibility,
+    validate_xf_fit_summary,
 )
-from xpcs_toolkit.plothandler.plot_constants import BASIC_COLORS as colors, EXTENDED_MARKERS as shapes
 
 logger = get_logger(__name__)
 
@@ -31,21 +32,21 @@ def plot(xf_list, hdl, q_range, offset, plot_type=3):
 
     for n, xf in enumerate(xf_list):
         # Extract data with error checking using validation utility
-        is_valid, fit_summary, error_msg = validate_xf_fit_summary(xf)
+        is_valid, fit_summary, _error_msg = validate_xf_fit_summary(xf)
         if not is_valid:
             continue
 
         s = scale_factors[n]
         x = fit_summary["q_val"]
         # Ensure x is a numpy array (convert from list if necessary)
-        if not hasattr(x, 'shape'):
+        if not hasattr(x, "shape"):
             x = np.array(x)
         y = fit_summary["fit_val"][:, 0, 1]
         e = fit_summary["fit_val"][:, 1, 1]
 
         # Ensure all arrays have the same length to avoid boolean index mismatch
         file_label = get_file_label_safe(xf)
-        is_compatible, min_length, warning_msg = validate_array_compatibility(
+        is_compatible, min_length, _warning_msg = validate_array_compatibility(
             x, y, e, file_label=file_label
         )
         if not is_compatible:
@@ -91,7 +92,11 @@ def plot(xf_list, hdl, q_range, offset, plot_type=3):
         # Plot fit line if available
         if fit_summary.get("tauq_success", False):
             tauq_fit_line = fit_summary.get("tauq_fit_line")
-            if isinstance(tauq_fit_line, dict) and "fit_x" in tauq_fit_line and "fit_y" in tauq_fit_line:
+            if (
+                isinstance(tauq_fit_line, dict)
+                and "fit_x" in tauq_fit_line
+                and "fit_y" in tauq_fit_line
+            ):
                 fit_x = tauq_fit_line["fit_x"]
                 fit_y = tauq_fit_line["fit_y"]
                 ax.plot(fit_x, fit_y / s, color=color)
@@ -120,7 +125,9 @@ def plot_pre(xf_list, hdl):
 
     # Handle empty file list case
     if len(xf_list) == 0:
-        logger.warning("No files provided for tau-q pre-plot - showing instruction message")
+        logger.warning(
+            "No files provided for tau-q pre-plot - showing instruction message"
+        )
         ax = hdl.subplots(1, 1)
         ax.text(
             0.5,
@@ -155,7 +162,7 @@ def plot_pre(xf_list, hdl):
     for idx, xf in enumerate(xf_list):
         try:
             # Validate file using validation utility
-            is_valid, fit_summary, error_msg = validate_xf_fit_summary(xf)
+            is_valid, fit_summary, _error_msg = validate_xf_fit_summary(xf)
             if not is_valid:
                 continue
 
@@ -166,7 +173,7 @@ def plot_pre(xf_list, hdl):
             fit_val = fit_summary["fit_val"]
 
             # Ensure x is a numpy array (convert from list if necessary)
-            if not hasattr(x, 'shape'):
+            if not hasattr(x, "shape"):
                 x = np.array(x)
 
             # Validate array dimensions before plotting
@@ -258,5 +265,7 @@ def plot_pre(xf_list, hdl):
     logger.info(f"Global bounds available: {global_bounds is not None}")
 
     hdl.draw()
-    logger.info(f"Tau-q pre-plot completed successfully - processed {processed_files}/{len(xf_list)} files")
+    logger.info(
+        f"Tau-q pre-plot completed successfully - processed {processed_files}/{len(xf_list)} files"
+    )
     return

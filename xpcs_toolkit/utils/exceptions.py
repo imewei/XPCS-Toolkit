@@ -9,8 +9,9 @@ This module provides a comprehensive exception hierarchy that enables:
 - Automated error reporting and classification
 """
 
-from typing import Any, Dict, Optional, List, Union
+from collections.abc import Callable
 from pathlib import Path
+from typing import Any
 
 
 class XPCSBaseError(Exception):
@@ -25,10 +26,10 @@ class XPCSBaseError(Exception):
         self,
         message: str,
         *,
-        error_code: Optional[str] = None,
-        context: Optional[Dict[str, Any]] = None,
-        recovery_suggestions: Optional[List[str]] = None,
-        severity: str = "ERROR"
+        error_code: str | None = None,
+        context: dict[str, Any] | None = None,
+        recovery_suggestions: list[str] | None = None,
+        severity: str = "ERROR",
     ):
         super().__init__(message)
         self.message = message
@@ -38,17 +39,17 @@ class XPCSBaseError(Exception):
         self.severity = severity
         self.timestamp = None  # Set by error handler when needed
 
-    def add_context(self, key: str, value: Any) -> 'XPCSBaseError':
+    def add_context(self, key: str, value: Any) -> "XPCSBaseError":
         """Add context information to the error (fluent interface)."""
         self.context[key] = value
         return self
 
-    def add_recovery_suggestion(self, suggestion: str) -> 'XPCSBaseError':
+    def add_recovery_suggestion(self, suggestion: str) -> "XPCSBaseError":
         """Add recovery suggestion (fluent interface)."""
         self.recovery_suggestions.append(suggestion)
         return self
 
-    def get_error_details(self) -> Dict[str, Any]:
+    def get_error_details(self) -> dict[str, Any]:
         """Get comprehensive error details for logging/reporting."""
         return {
             "error_type": self.__class__.__name__,
@@ -57,7 +58,7 @@ class XPCSBaseError(Exception):
             "severity": self.severity,
             "context": self.context,
             "recovery_suggestions": self.recovery_suggestions,
-            "timestamp": self.timestamp
+            "timestamp": self.timestamp,
         }
 
 
@@ -72,7 +73,7 @@ class XPCSDataError(XPCSBaseError):
     - Data consistency violations
     """
 
-    def __init__(self, message: str, **kwargs):
+    def __init__(self, message: str, **kwargs: Any) -> None:
         super().__init__(message, severity="ERROR", **kwargs)
 
 
@@ -87,7 +88,9 @@ class XPCSFileError(XPCSBaseError):
     - Network file access problems
     """
 
-    def __init__(self, message: str, file_path: Optional[Union[str, Path]] = None, **kwargs):
+    def __init__(
+        self, message: str, file_path: str | Path | None = None, **kwargs: Any
+    ) -> None:
         super().__init__(message, severity="ERROR", **kwargs)
         if file_path:
             self.add_context("file_path", str(file_path))
@@ -104,7 +107,9 @@ class XPCSComputationError(XPCSBaseError):
     - Mathematical domain errors
     """
 
-    def __init__(self, message: str, operation: Optional[str] = None, **kwargs):
+    def __init__(
+        self, message: str, operation: str | None = None, **kwargs: Any
+    ) -> None:
         super().__init__(message, severity="ERROR", **kwargs)
         if operation:
             self.add_context("operation", operation)
@@ -121,7 +126,9 @@ class XPCSMemoryError(XPCSBaseError):
     - Resource limit exceeded
     """
 
-    def __init__(self, message: str, requested_mb: Optional[float] = None, **kwargs):
+    def __init__(
+        self, message: str, requested_mb: float | None = None, **kwargs: Any
+    ) -> None:
         super().__init__(message, severity="CRITICAL", **kwargs)
         if requested_mb is not None:
             self.add_context("requested_memory_mb", requested_mb)
@@ -138,7 +145,9 @@ class XPCSConfigurationError(XPCSBaseError):
     - Environment setup problems
     """
 
-    def __init__(self, message: str, config_key: Optional[str] = None, **kwargs):
+    def __init__(
+        self, message: str, config_key: str | None = None, **kwargs: Any
+    ) -> None:
         super().__init__(message, severity="ERROR", **kwargs)
         if config_key:
             self.add_context("config_key", config_key)
@@ -155,7 +164,9 @@ class XPCSGUIError(XPCSBaseError):
     - Display or rendering issues
     """
 
-    def __init__(self, message: str, component: Optional[str] = None, **kwargs):
+    def __init__(
+        self, message: str, component: str | None = None, **kwargs: Any
+    ) -> None:
         super().__init__(message, severity="WARNING", **kwargs)
         if component:
             self.add_context("gui_component", component)
@@ -172,7 +183,9 @@ class XPCSValidationError(XPCSDataError):
     - Type validation failures
     """
 
-    def __init__(self, message: str, field: Optional[str] = None, value: Any = None, **kwargs):
+    def __init__(
+        self, message: str, field: str | None = None, value: Any = None, **kwargs: Any
+    ) -> None:
         super().__init__(message, **kwargs)
         if field:
             self.add_context("field", field)
@@ -191,7 +204,7 @@ class XPCSNetworkError(XPCSBaseError):
     - Timeout conditions
     """
 
-    def __init__(self, message: str, url: Optional[str] = None, **kwargs):
+    def __init__(self, message: str, url: str | None = None, **kwargs: Any) -> None:
         super().__init__(message, severity="WARNING", **kwargs)
         if url:
             self.add_context("url", url)
@@ -208,7 +221,7 @@ class XPCSCriticalError(XPCSBaseError):
     - Data integrity failures
     """
 
-    def __init__(self, message: str, **kwargs):
+    def __init__(self, message: str, **kwargs: Any) -> None:
         super().__init__(message, severity="CRITICAL", **kwargs)
 
 
@@ -223,12 +236,14 @@ class XPCSWarning(XPCSBaseError):
     - Resource usage warnings
     """
 
-    def __init__(self, message: str, **kwargs):
+    def __init__(self, message: str, **kwargs: Any) -> None:
         super().__init__(message, severity="WARNING", **kwargs)
 
 
 # Convenience function for exception chaining
-def chain_exception(new_exception: XPCSBaseError, original_exception: Exception) -> XPCSBaseError:
+def chain_exception(
+    new_exception: XPCSBaseError, original_exception: Exception
+) -> XPCSBaseError:
     """
     Chain exceptions to preserve full error context with zero overhead.
 
@@ -257,17 +272,14 @@ EXCEPTION_MAPPING = {
     PermissionError: XPCSFileError,
     OSError: XPCSFileError,
     IOError: XPCSFileError,
-
     # Data and validation related
     ValueError: XPCSValidationError,
     TypeError: XPCSValidationError,
     KeyError: XPCSDataError,
     IndexError: XPCSDataError,
-
     # Memory related
     MemoryError: XPCSMemoryError,
     OverflowError: XPCSMemoryError,
-
     # Computation related
     ArithmeticError: XPCSComputationError,
     ZeroDivisionError: XPCSComputationError,
@@ -275,7 +287,9 @@ EXCEPTION_MAPPING = {
 }
 
 
-def convert_exception(original_exception: Exception, message: Optional[str] = None) -> XPCSBaseError:
+def convert_exception(
+    original_exception: Exception, message: str | None = None
+) -> XPCSBaseError:
     """
     Convert standard Python exceptions to XPCS exceptions with zero overhead.
 
@@ -299,8 +313,8 @@ def convert_exception(original_exception: Exception, message: Optional[str] = No
 def handle_exceptions(
     default_exception: type = XPCSBaseError,
     convert_exceptions: bool = True,
-    add_context: Optional[Dict[str, Any]] = None
-):
+    add_context: dict[str, Any] | None = None,
+) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
     """
     Decorator for automatic exception handling and conversion.
 
@@ -312,8 +326,9 @@ def handle_exceptions(
             # Function implementation
             pass
     """
-    def decorator(func):
-        def wrapper(*args, **kwargs):
+
+    def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
+        def wrapper(*args: Any, **kwargs: Any) -> Any:
             try:
                 return func(*args, **kwargs)
             except XPCSBaseError:
@@ -334,6 +349,7 @@ def handle_exceptions(
                 raise xpcs_exception
 
         return wrapper
+
     return decorator
 
 
@@ -354,16 +370,16 @@ class exception_context:
         self,
         exception_type: type = XPCSBaseError,
         message: str = "Operation failed",
-        cleanup_func: Optional[callable] = None
+        cleanup_func: Callable[[], None] | None = None,
     ):
         self.exception_type = exception_type
         self.message = message
         self.cleanup_func = cleanup_func
 
-    def __enter__(self):
+    def __enter__(self) -> "exception_context":
         return self
 
-    def __exit__(self, exc_type, exc_value, traceback_obj):
+    def __exit__(self, exc_type: Any, exc_value: Any, traceback_obj: Any) -> None:
         if exc_type is not None:
             # Perform cleanup if provided
             if self.cleanup_func:
@@ -377,4 +393,4 @@ class exception_context:
                 xpcs_exception = convert_exception(exc_value, self.message)
                 raise xpcs_exception from exc_value
 
-        return False  # Don't suppress exceptions
+        # Don't suppress exceptions - no return needed for None

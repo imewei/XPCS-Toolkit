@@ -24,32 +24,30 @@ from .fileIO.hdf_reader import (
     get_file_info,
     read_metadata_to_dict,
 )
+from .fileIO.hdf_reader_enhanced import get_enhanced_hdf5_reader
 from .fileIO.qmap_utils import get_qmap
-from .helper.fitting import fit_with_fixed, fit_with_fixed_parallel, fit_with_fixed_sequential
+from .helper.fitting import (
+    fit_with_fixed,
+    fit_with_fixed_parallel,
+    fit_with_fixed_sequential,
+)
 from .module.twotime_utils import get_c2_stream, get_single_c2_from_hdf
+from .utils.exceptions import XPCSFileError, convert_exception
+from .utils.lazy_loader import LazyHDF5Array, get_lazy_loader, register_lazy_hdf5
 from .utils.logging_config import get_logger
-from .utils.exceptions import (
-    XPCSFileError,
-    convert_exception,
-)
-from .utils.memory_manager import (
-    get_memory_manager, CacheType, MemoryPressure
-)
+from .utils.memory_manager import CacheType, MemoryPressure, get_memory_manager
 from .utils.memory_predictor import (
-    get_memory_predictor, predict_operation_memory, record_operation_memory
+    get_memory_predictor,
+    predict_operation_memory,
+    record_operation_memory,
 )
-from .utils.lazy_loader import (
-    get_lazy_loader, register_lazy_hdf5, LazyHDF5Array
-)
-from .utils.streaming_processor import (
-    process_saxs_log_streaming, AdaptiveChunkSizer
-)
+from .utils.streaming_processor import AdaptiveChunkSizer, process_saxs_log_streaming
 from .utils.vectorized_roi import (
-    PieROICalculator, RingROICalculator, ParallelROIProcessor,
-    ROIParameters, ROIType
-)
-from .fileIO.hdf_reader_enhanced import (
-    get_enhanced_hdf5_reader
+    ParallelROIProcessor,
+    PieROICalculator,
+    RingROICalculator,
+    ROIParameters,
+    ROIType,
 )
 
 logger = get_logger(__name__)
@@ -57,6 +55,7 @@ logger = get_logger(__name__)
 
 class MemoryStatus:
     """Container for memory status information."""
+
     def __init__(self, percent_used: float):
         self.percent_used = percent_used
 
@@ -124,6 +123,7 @@ class MemoryMonitor:
         """Check if memory pressure is above threshold (static method for backward compatibility)."""
         # Use psutil directly to avoid recursion issues and allow for mocking at the psutil level
         import psutil
+
         memory = psutil.virtual_memory()
         return (memory.percent / 100.0) > threshold
 
@@ -654,8 +654,7 @@ class XpcsFile:
         if isinstance(self._saxs_2d_data, LazyHDF5Array):
             # This will trigger loading if not already loaded
             return np.array(self._saxs_2d_data)
-        else:
-            return self._saxs_2d_data
+        return self._saxs_2d_data
 
     @saxs_2d.setter
     def saxs_2d(self, value):
@@ -726,43 +725,53 @@ class XpcsFile:
             enhanced_reader = get_enhanced_reader()
             batch_cache_key = f"{self._cache_prefix}_batch_metadata"
 
-            logger.debug(f"Loading metadata fields using enhanced HDF5 reader: {fields}")
+            logger.debug(
+                f"Loading metadata fields using enhanced HDF5 reader: {fields}"
+            )
             ret = enhanced_reader.read_multiple_datasets(
                 self.fname,
                 fields,
                 cache_key=batch_cache_key,
                 access_pattern="sequential",
-                use_aliases=True
+                use_aliases=True,
             )
 
         except (ImportError, ModuleNotFoundError, AttributeError) as e:
             # Expected - enhanced reader not available, use fallback
-            logger.debug(f"Enhanced HDF5 reader not available, using standard method: {e}")
+            logger.debug(
+                f"Enhanced HDF5 reader not available, using standard method: {e}"
+            )
             ret = batch_read_fields(
                 self.fname, fields, "alias", ftype="nexus", use_pool=True
             )
-        except (OSError, IOError, PermissionError) as e:
+        except (OSError, PermissionError) as e:
             # File access issues - convert to XPCSFileError
             raise XPCSFileError(
-                f"Failed to read metadata from HDF5 file: {e}",
-                file_path=self.fname
+                f"Failed to read metadata from HDF5 file: {e}", file_path=self.fname
             ).add_recovery_suggestion("Check file permissions and disk space") from e
         except Exception as enhanced_error:
             # Unexpected enhanced reader errors - log and fallback
-            xpcs_error = convert_exception(enhanced_error, "Enhanced HDF5 reader failed for metadata loading")
-            logger.warning(f"Enhanced reader error: {xpcs_error}, falling back to standard method")
+            xpcs_error = convert_exception(
+                enhanced_error, "Enhanced HDF5 reader failed for metadata loading"
+            )
+            logger.warning(
+                f"Enhanced reader error: {xpcs_error}, falling back to standard method"
+            )
             try:
                 ret = batch_read_fields(
                     self.fname, fields, "alias", ftype="nexus", use_pool=True
                 )
             except Exception as fallback_error:
                 # Both methods failed - this is critical
-                raise XPCSFileError(
-                    f"Both enhanced and standard HDF5 readers failed",
-                    file_path=self.fname
-                ).add_context("enhanced_error", str(enhanced_error)
-                ).add_context("fallback_error", str(fallback_error)
-                ).add_recovery_suggestion("Verify HDF5 file integrity") from fallback_error
+                raise (
+                    XPCSFileError(
+                        "Both enhanced and standard HDF5 readers failed",
+                        file_path=self.fname,
+                    )
+                    .add_context("enhanced_error", str(enhanced_error))
+                    .add_context("fallback_error", str(fallback_error))
+                    .add_recovery_suggestion("Verify HDF5 file integrity")
+                ) from fallback_error
 
         if "Twotime" in self.atype:
             stride_frame = ret.pop("c2_stride_frame")
@@ -838,7 +847,8 @@ class XpcsFile:
                 f"High memory pressure ({memory_pressure * 100:.1f}%) before loading SAXS data"
             )
             # Force cache cleanup from global cache
-            _global_cache.force_cleanup()
+            # TODO: Fix undefined _global_cache reference
+            # _global_cache.force_cleanup()
 
         # Get file information to make intelligent loading decisions
         try:
@@ -878,7 +888,7 @@ class XpcsFile:
         memory_before_mb, _ = MemoryMonitor.get_memory_usage()
 
         # Predict memory requirements for SAXS loading
-        prediction = predict_operation_memory('load_saxs_2d', estimated_saxs_size_mb)
+        prediction = predict_operation_memory("load_saxs_2d", estimated_saxs_size_mb)
 
         logger.info(
             f"SAXS 2D loading prediction for {self.fname}: "
@@ -890,13 +900,15 @@ class XpcsFile:
 
         # Act on memory pressure predictions
         if prediction.pressure_level in [MemoryPressure.HIGH, MemoryPressure.CRITICAL]:
-            logger.warning(f"High memory pressure predicted for SAXS loading")
+            logger.warning("High memory pressure predicted for SAXS loading")
             for action in prediction.recommended_actions:
                 logger.warning(f"Recommendation: {action}")
 
             # Proactive cleanup based on predictions
             if prediction.pressure_level == MemoryPressure.CRITICAL:
-                logger.warning("Critical memory pressure - performing emergency cleanup")
+                logger.warning(
+                    "Critical memory pressure - performing emergency cleanup"
+                )
                 self._memory_manager._emergency_cleanup()
             else:
                 logger.warning("High memory pressure - performing aggressive cleanup")
@@ -904,20 +916,23 @@ class XpcsFile:
 
         # Decide whether to use lazy loading based on dataset size and memory pressure
         use_lazy_loading = (
-            self._use_lazy_loading and
-            estimated_saxs_size_mb > 200 and  # Use lazy loading for datasets > 200MB
-            prediction.pressure_level in [MemoryPressure.MODERATE, MemoryPressure.HIGH, MemoryPressure.CRITICAL]
+            self._use_lazy_loading
+            and estimated_saxs_size_mb > 200  # Use lazy loading for datasets > 200MB
+            and prediction.pressure_level
+            in [MemoryPressure.MODERATE, MemoryPressure.HIGH, MemoryPressure.CRITICAL]
         )
 
         if use_lazy_loading:
-            logger.info(f"Using lazy loading for large SAXS dataset ({estimated_saxs_size_mb:.1f}MB)")
+            logger.info(
+                f"Using lazy loading for large SAXS dataset ({estimated_saxs_size_mb:.1f}MB)"
+            )
             # Register for lazy loading instead of immediate loading
             lazy_key = f"{self._cache_prefix}_saxs_2d_lazy"
             self.saxs_2d_data = register_lazy_hdf5(
                 data_key=lazy_key,
                 hdf5_path=self.fname,
                 dataset_path="/xpcs/scattering_2d",
-                estimated_size_mb=estimated_saxs_size_mb
+                estimated_size_mb=estimated_saxs_size_mb,
             )
             # Skip the rest of the loading process
             return
@@ -938,22 +953,23 @@ class XpcsFile:
                     )
                     try:
                         # Use enhanced HDF5 reader with chunked access
-                        from .fileIO.hdf_reader_enhanced import get_enhanced_reader
                         from .fileIO.aps_8idi import key as hdf_key
+                        from .fileIO.hdf_reader_enhanced import get_enhanced_reader
 
                         enhanced_reader = get_enhanced_reader()
-                        reader_key = f"{self._cache_prefix}_saxs_reader_chunked"
                         saxs_path = hdf_key["nexus"]["saxs_2d"]
 
-                        logger.debug(f"Loading large SAXS dataset using enhanced chunked reader: {saxs_path}")
+                        logger.debug(
+                            f"Loading large SAXS dataset using enhanced chunked reader: {saxs_path}"
+                        )
                         self.saxs_2d_data = enhanced_reader.read_dataset(
-                            self.fname,
-                            saxs_path,
-                            enable_read_ahead=True
+                            self.fname, saxs_path, enable_read_ahead=True
                         )
 
                     except Exception as enhanced_error:
-                        logger.warning(f"Enhanced chunked reader failed, falling back to standard method: {enhanced_error}")
+                        logger.warning(
+                            f"Enhanced chunked reader failed, falling back to standard method: {enhanced_error}"
+                        )
                         # Fallback to original chunked dataset reading
                         from .fileIO.aps_8idi import key as hdf_key
 
@@ -967,30 +983,38 @@ class XpcsFile:
                         from .fileIO.hdf_reader_enhanced import get_enhanced_reader
 
                         enhanced_reader = get_enhanced_reader()
-                        reader_key = f"{self._cache_prefix}_saxs_reader"
 
                         # Get the SAXS 2D dataset path
                         from .fileIO.aps_8idi import key as hdf_key
+
                         saxs_path = hdf_key["nexus"]["saxs_2d"]
 
-                        logger.debug(f"Loading SAXS 2D data using enhanced HDF5 reader: {saxs_path}")
+                        logger.debug(
+                            f"Loading SAXS 2D data using enhanced HDF5 reader: {saxs_path}"
+                        )
                         self.saxs_2d_data = enhanced_reader.read_dataset(
-                            self.fname,
-                            saxs_path,
-                            enable_read_ahead=True
+                            self.fname, saxs_path, enable_read_ahead=True
                         )
 
                     except Exception as enhanced_error:
-                        logger.warning(f"Enhanced HDF5 reader failed, falling back to standard method: {enhanced_error}")
+                        logger.warning(
+                            f"Enhanced HDF5 reader failed, falling back to standard method: {enhanced_error}"
+                        )
                         # Fallback to standard optimized batch reading
                         ret = batch_read_fields(
-                            self.fname, ["saxs_2d"], "alias", ftype="nexus", use_pool=True
+                            self.fname,
+                            ["saxs_2d"],
+                            "alias",
+                            ftype="nexus",
+                            use_pool=True,
                         )
                         self.saxs_2d_data = ret["saxs_2d"]
 
                 # Cache the loaded data using unified memory manager
                 if estimated_saxs_size_mb < 800:  # Only cache if less than 800MB
-                    self._memory_manager.cache_put(cache_key, self.saxs_2d_data, CacheType.ARRAY_DATA)
+                    self._memory_manager.cache_put(
+                        cache_key, self.saxs_2d_data, CacheType.ARRAY_DATA
+                    )
 
             except Exception as e:
                 logger.error(f"Error loading SAXS 2D data: {e}")
@@ -1002,7 +1026,9 @@ class XpcsFile:
 
         # Compute log version with optional chunked processing
         log_cache_key = f"{self._cache_prefix}_saxs_2d_log"
-        cached_log_data = self._memory_manager.cache_get(log_cache_key, CacheType.ARRAY_DATA)
+        cached_log_data = self._memory_manager.cache_get(
+            log_cache_key, CacheType.ARRAY_DATA
+        )
 
         if cached_log_data is not None:
             logger.debug("Using cached SAXS 2D log data from unified memory manager")
@@ -1021,7 +1047,9 @@ class XpcsFile:
 
             # Cache log data using unified memory manager if reasonable size
             if estimated_saxs_size_mb < 400:  # Log data is typically smaller
-                self._memory_manager.cache_put(log_cache_key, self.saxs_2d_log_data, CacheType.ARRAY_DATA)
+                self._memory_manager.cache_put(
+                    log_cache_key, self.saxs_2d_log_data, CacheType.ARRAY_DATA
+                )
 
         # Log memory usage after loading
         memory_after_mb, _ = MemoryMonitor.get_memory_usage()
@@ -1040,13 +1068,13 @@ class XpcsFile:
             )
 
         # Record operation for memory predictor learning
-        operation_end_time = time.time()
+        time.time()
         record_operation_memory(
-            operation_type='load_saxs_2d',
+            operation_type="load_saxs_2d",
             input_size_mb=estimated_saxs_size_mb,
             memory_before_mb=memory_before_mb,
             memory_after_mb=memory_after_mb,
-            duration_seconds=2.0  # Approximate duration - could be improved with actual timing
+            duration_seconds=2.0,  # Approximate duration - could be improved with actual timing
         )
 
         self._saxs_data_loaded = True
@@ -1068,39 +1096,45 @@ class XpcsFile:
         Uses adaptive chunk sizing and streaming processing to minimize
         memory footprint while computing logarithmic transformation.
         """
-        logger.info(f"Starting streaming SAXS log computation for data shape {saxs_data.shape}")
+        logger.info(
+            f"Starting streaming SAXS log computation for data shape {saxs_data.shape}"
+        )
 
         # Record operation start for memory tracking
         memory_before_mb, _ = MemoryMonitor.get_memory_usage()
 
         # Use adaptive chunk sizing based on current memory pressure
         sizer = AdaptiveChunkSizer()
-        optimal_chunk_size = sizer.get_optimal_chunk_size(saxs_data.shape, saxs_data.dtype)
+        optimal_chunk_size = sizer.get_optimal_chunk_size(
+            saxs_data.shape, saxs_data.dtype
+        )
 
-        logger.debug(f"Using adaptive chunk size: {optimal_chunk_size:.1f}MB for streaming log computation")
+        logger.debug(
+            f"Using adaptive chunk size: {optimal_chunk_size:.1f}MB for streaming log computation"
+        )
 
         # Process using streaming processor
         try:
             result = process_saxs_log_streaming(
-                data=saxs_data,
-                chunk_size_mb=optimal_chunk_size,
-                epsilon=1e-10
+                data=saxs_data, chunk_size_mb=optimal_chunk_size, epsilon=1e-10
             )
 
             # Record operation completion
             memory_after_mb, _ = MemoryMonitor.get_memory_usage()
             memory_used = memory_after_mb - memory_before_mb
 
-            logger.info(f"Streaming SAXS log computation completed, "
-                       f"memory used: {memory_used:+.1f}MB")
+            logger.info(
+                f"Streaming SAXS log computation completed, "
+                f"memory used: {memory_used:+.1f}MB"
+            )
 
             # Record operation for memory predictor learning
             record_operation_memory(
-                operation_type='compute_saxs_log',
+                operation_type="compute_saxs_log",
                 input_size_mb=saxs_data.nbytes / (1024 * 1024),
                 memory_before_mb=memory_before_mb,
                 memory_after_mb=memory_after_mb,
-                duration_seconds=2.0  # Approximate duration
+                duration_seconds=2.0,  # Approximate duration
             )
 
             return result
@@ -1254,13 +1288,14 @@ class XpcsFile:
 
         # For Multitau analysis, we need g2, g2_err, t_el
         # For Twotime analysis, we can use c2_g2 and compute from c2_delay
-        required_attrs = ["qmap"]
         missing_attrs = []
 
         if has_multitau:
             # Check Multitau-specific attributes
             multitau_attrs = ["g2", "g2_err"]
-            missing_multitau = [attr for attr in multitau_attrs if not hasattr(self, attr)]
+            missing_multitau = [
+                attr for attr in multitau_attrs if not hasattr(self, attr)
+            ]
 
             # Special handling for t_el - compute it if missing but tau and t0/g2_t0 are available
             if not hasattr(self, "t_el"):
@@ -1274,10 +1309,12 @@ class XpcsFile:
                         self.t_el = self.tau * self.t0
                     else:
                         missing_multitau.append("t_el")
-                        logger.warning(f"Cannot compute t_el: tau available, but neither g2_t0 nor t0 available")
+                        logger.warning(
+                            "Cannot compute t_el: tau available, but neither g2_t0 nor t0 available"
+                        )
                 else:
                     missing_multitau.append("t_el")
-                    logger.warning(f"Cannot compute t_el: tau not available")
+                    logger.warning("Cannot compute t_el: tau not available")
 
             if missing_multitau and not has_twotime:
                 missing_attrs.extend(missing_multitau)
@@ -1285,11 +1322,15 @@ class XpcsFile:
         if has_twotime and not (has_multitau and not missing_attrs):
             # Check Twotime-specific attributes as fallback
             twotime_attrs = ["c2_g2"]
-            missing_twotime = [attr for attr in twotime_attrs if not hasattr(self, attr)]
+            missing_twotime = [
+                attr for attr in twotime_attrs if not hasattr(self, attr)
+            ]
 
             if missing_twotime:
                 missing_attrs.extend(missing_twotime)
-                logger.error(f"Neither Multitau nor Twotime data available for G2 plotting")
+                logger.error(
+                    "Neither Multitau nor Twotime data available for G2 plotting"
+                )
 
         # Check common required attributes
         if not hasattr(self, "qmap"):
@@ -1297,8 +1338,10 @@ class XpcsFile:
 
         if missing_attrs:
             # Provide detailed diagnostic information
-            available_attrs = [attr for attr in dir(self) if not attr.startswith('_')]
-            data_attrs = [attr for attr in available_attrs if not callable(getattr(self, attr))]
+            available_attrs = [attr for attr in dir(self) if not attr.startswith("_")]
+            data_attrs = [
+                attr for attr in available_attrs if not callable(getattr(self, attr))
+            ]
             logger.error(f"Available data attributes: {sorted(data_attrs)}")
             raise AttributeError(
                 f"Missing required attributes for G2 plotting: {missing_attrs}"
@@ -1309,7 +1352,7 @@ class XpcsFile:
         labels = [self.qmap.get_qbin_label(qbin + 1) for qbin in qindex_selected]
 
         # Extract data based on analysis type
-        if has_multitau and hasattr(self, 'g2') and hasattr(self, 'g2_err'):
+        if has_multitau and hasattr(self, "g2") and hasattr(self, "g2_err"):
             # Use Multitau data
             # Validate qindex_selected bounds before array access
             max_q_index = min(self.g2.shape[1], self.g2_err.shape[1]) - 1
@@ -1317,10 +1360,14 @@ class XpcsFile:
             invalid_qindex = [idx for idx in qindex_selected if idx not in valid_qindex]
 
             if invalid_qindex:
-                logger.warning(f"Filtering out invalid Q indices {invalid_qindex} (max valid: {max_q_index}) for file {self.label}")
+                logger.warning(
+                    f"Filtering out invalid Q indices {invalid_qindex} (max valid: {max_q_index}) for file {self.label}"
+                )
 
             if not valid_qindex:
-                raise ValueError(f"No valid Q indices found in qindex_selected {qindex_selected} for file {self.label}")
+                raise ValueError(
+                    f"No valid Q indices found in qindex_selected {qindex_selected} for file {self.label}"
+                )
 
             # Use validated indices for array access
             g2 = self.g2[:, valid_qindex]
@@ -1328,34 +1375,54 @@ class XpcsFile:
             t_el = self.t_el
 
             # Update corresponding qvalues and labels to match filtered indices
-            qvalues = [qvalues[i] for i, idx in enumerate(qindex_selected) if idx in valid_qindex]
-            labels = [labels[i] for i, idx in enumerate(qindex_selected) if idx in valid_qindex]
+            qvalues = [
+                qvalues[i]
+                for i, idx in enumerate(qindex_selected)
+                if idx in valid_qindex
+            ]
+            labels = [
+                labels[i]
+                for i, idx in enumerate(qindex_selected)
+                if idx in valid_qindex
+            ]
 
-            logger.info(f"Using Multitau G2 data for plotting ({len(valid_qindex)} valid Q indices)")
-        elif has_twotime and hasattr(self, 'c2_g2'):
+            logger.info(
+                f"Using Multitau G2 data for plotting ({len(valid_qindex)} valid Q indices)"
+            )
+        elif has_twotime and hasattr(self, "c2_g2"):
             # Use Twotime data as fallback
             logger.info("Using Twotime G2 data for plotting")
 
             # Validate qindex_selected bounds for twotime data
             max_q_index_c2 = self.c2_g2.shape[1] - 1
-            valid_qindex = [idx for idx in qindex_selected if 0 <= idx <= max_q_index_c2]
+            valid_qindex = [
+                idx for idx in qindex_selected if 0 <= idx <= max_q_index_c2
+            ]
             invalid_qindex = [idx for idx in qindex_selected if idx not in valid_qindex]
 
             if invalid_qindex:
-                logger.warning(f"Filtering out invalid Q indices {invalid_qindex} (max valid: {max_q_index_c2}) for twotime file {self.label}")
+                logger.warning(
+                    f"Filtering out invalid Q indices {invalid_qindex} (max valid: {max_q_index_c2}) for twotime file {self.label}"
+                )
 
             if not valid_qindex:
-                raise ValueError(f"No valid Q indices found in qindex_selected {qindex_selected} for twotime file {self.label}")
+                raise ValueError(
+                    f"No valid Q indices found in qindex_selected {qindex_selected} for twotime file {self.label}"
+                )
 
             g2 = self.c2_g2[:, valid_qindex]
 
             # For twotime, we might not have error data - create placeholder
-            if hasattr(self, 'c2_g2_err'):
+            if hasattr(self, "c2_g2_err"):
                 # Validate error array bounds too
                 max_q_index_err = self.c2_g2_err.shape[1] - 1
-                valid_qindex_err = [idx for idx in valid_qindex if idx <= max_q_index_err]
+                valid_qindex_err = [
+                    idx for idx in valid_qindex if idx <= max_q_index_err
+                ]
                 if len(valid_qindex_err) != len(valid_qindex):
-                    logger.warning(f"Error array has different size, using available indices for {self.label}")
+                    logger.warning(
+                        f"Error array has different size, using available indices for {self.label}"
+                    )
                     valid_qindex = valid_qindex_err
                     g2 = self.c2_g2[:, valid_qindex]
 
@@ -1365,19 +1432,31 @@ class XpcsFile:
                 g2_err = np.zeros_like(g2)
 
             # Update corresponding qvalues and labels to match filtered indices
-            qvalues = [qvalues[i] for i, idx in enumerate(qindex_selected) if idx in valid_qindex]
-            labels = [labels[i] for i, idx in enumerate(qindex_selected) if idx in valid_qindex]
+            qvalues = [
+                qvalues[i]
+                for i, idx in enumerate(qindex_selected)
+                if idx in valid_qindex
+            ]
+            labels = [
+                labels[i]
+                for i, idx in enumerate(qindex_selected)
+                if idx in valid_qindex
+            ]
 
             # For twotime delay, we need to compute t_el from available delay data
-            if hasattr(self, 'c2_delay'):
+            if hasattr(self, "c2_delay"):
                 t_el = self.c2_delay
-            elif hasattr(self, 'c2_t0'):
+            elif hasattr(self, "c2_t0"):
                 # Fallback - create delay array assuming regular spacing
-                logger.warning("No c2_delay available - creating delay array from c2_t0")
+                logger.warning(
+                    "No c2_delay available - creating delay array from c2_t0"
+                )
                 t_el = np.arange(g2.shape[0]) * self.c2_t0
             else:
                 logger.error("Cannot determine time delays for Twotime data")
-                raise AttributeError("Missing delay information for Twotime G2 plotting")
+                raise AttributeError(
+                    "Missing delay information for Twotime G2 plotting"
+                )
         else:
             raise AttributeError("No valid G2 data found for plotting")
 
@@ -1514,7 +1593,10 @@ class XpcsFile:
             logger.warning("High memory pressure before C2 loading, clearing caches")
             self.clear_cache("saxs")
             # Also trigger cleanup in unified memory manager
-            if self._memory_manager.get_memory_pressure() in [MemoryPressure.HIGH, MemoryPressure.CRITICAL]:
+            if self._memory_manager.get_memory_pressure() in [
+                MemoryPressure.HIGH,
+                MemoryPressure.CRITICAL,
+            ]:
                 self._memory_manager._aggressive_cleanup()
         c2_result = get_single_c2_from_hdf(
             self.fname,
@@ -1616,9 +1698,18 @@ class XpcsFile:
         return result
 
     def fit_g2(
-        self, q_range=None, t_range=None, bounds=None, fit_flag=None, fit_func="single",
-        robust_fitting=False, diagnostic_level="standard", bootstrap_samples=None,
-        force_refit=False, use_parallel=False, max_workers=None
+        self,
+        q_range=None,
+        t_range=None,
+        bounds=None,
+        fit_flag=None,
+        fit_func="single",
+        robust_fitting=False,
+        diagnostic_level="standard",
+        bootstrap_samples=None,
+        force_refit=False,
+        use_parallel=False,
+        max_workers=None,
     ):
         """
         Optimized g2 fitting with caching and improved parameter initialization.
@@ -1642,8 +1733,12 @@ class XpcsFile:
         memory_before_mb, _ = MemoryMonitor.get_memory_usage()
 
         # Predictive memory management for G2 fitting
-        g2_size_mb = (self.g2.nbytes / (1024 * 1024)) if hasattr(self, 'g2') and self.g2 is not None else 10.0
-        fit_operation = 'fit_g2_parallel' if robust_fitting else 'fit_g2'
+        g2_size_mb = (
+            (self.g2.nbytes / (1024 * 1024))
+            if hasattr(self, "g2") and self.g2 is not None
+            else 10.0
+        )
+        fit_operation = "fit_g2_parallel" if robust_fitting else "fit_g2"
         prediction = predict_operation_memory(fit_operation, g2_size_mb)
 
         logger.info(
@@ -1660,7 +1755,9 @@ class XpcsFile:
 
             # Consider switching to standard fitting if memory pressure is critical
             if prediction.pressure_level == MemoryPressure.CRITICAL and robust_fitting:
-                logger.warning("Switching from robust to standard fitting due to memory pressure")
+                logger.warning(
+                    "Switching from robust to standard fitting due to memory pressure"
+                )
                 robust_fitting = False
 
         # Check memory pressure and clean cache if needed
@@ -1670,7 +1767,10 @@ class XpcsFile:
             )
             self.clear_cache("computation")
             # Force cleanup in unified memory manager if under pressure
-            if self._memory_manager.get_memory_pressure() in [MemoryPressure.HIGH, MemoryPressure.CRITICAL]:
+            if self._memory_manager.get_memory_pressure() in [
+                MemoryPressure.HIGH,
+                MemoryPressure.CRITICAL,
+            ]:
                 self._memory_manager._aggressive_cleanup()
         # Generate cache key for fitting parameters
         cache_key = self._generate_cache_key(
@@ -1680,7 +1780,9 @@ class XpcsFile:
         # Check if fitting result is already cached (unless force_refit is True)
         fit_cache_key = f"{self._cache_prefix}_fit_summary_{cache_key}"
         if not force_refit:
-            cached_fit = self._memory_manager.cache_get(fit_cache_key, CacheType.COMPUTATION)
+            cached_fit = self._memory_manager.cache_get(
+                fit_cache_key, CacheType.COMPUTATION
+            )
             if cached_fit is not None:
                 self.fit_summary = cached_fit
                 return self.fit_summary
@@ -1720,8 +1822,12 @@ class XpcsFile:
                 )
 
         # Optimized fit_x generation - cache if t_el doesn't change
-        t_range_key = f"{self._cache_prefix}_fit_x_{np.min(t_el):.6e}_{np.max(t_el):.6e}"
-        cached_fit_x = self._memory_manager.cache_get(t_range_key, CacheType.COMPUTATION)
+        t_range_key = (
+            f"{self._cache_prefix}_fit_x_{np.min(t_el):.6e}_{np.max(t_el):.6e}"
+        )
+        cached_fit_x = self._memory_manager.cache_get(
+            t_range_key, CacheType.COMPUTATION
+        )
         if cached_fit_x is not None:
             fit_x = cached_fit_x
         else:
@@ -1734,30 +1840,56 @@ class XpcsFile:
         if robust_fitting:
             # Use comprehensive robust fitting for enhanced reliability
             fit_line, fit_val = self._perform_robust_g2_fitting(
-                func, t_el, g2, sigma, bounds, fit_flag, fit_x, p0,
-                diagnostic_level, bootstrap_samples
+                func,
+                t_el,
+                g2,
+                sigma,
+                bounds,
+                fit_flag,
+                fit_x,
+                p0,
+                diagnostic_level,
+                bootstrap_samples,
             )
         else:
             # Check if we should use parallel processing
             num_qvals = g2.shape[1] if g2.ndim > 1 else 1
             use_parallel_actual = (
-                use_parallel and
-                num_qvals > 4 and  # Only use parallel for multiple q-values
-                prediction.pressure_level != MemoryPressure.CRITICAL  # Avoid parallel if memory critical
+                use_parallel
+                and num_qvals > 4  # Only use parallel for multiple q-values
+                and prediction.pressure_level
+                != MemoryPressure.CRITICAL  # Avoid parallel if memory critical
             )
 
             if use_parallel_actual:
-                logger.info(f"Using parallel G2 fitting for {num_qvals} q-values with {max_workers or 'auto'} workers")
+                logger.info(
+                    f"Using parallel G2 fitting for {num_qvals} q-values with {max_workers or 'auto'} workers"
+                )
                 fit_line, fit_val = fit_with_fixed_parallel(
-                    func, t_el, g2, sigma, bounds, fit_flag, fit_x, p0=p0,
-                    max_workers=max_workers, use_threads=True
+                    func,
+                    t_el,
+                    g2,
+                    sigma,
+                    bounds,
+                    fit_flag,
+                    fit_x,
+                    p0=p0,
+                    max_workers=max_workers,
+                    use_threads=True,
                 )
             else:
                 # Standard sequential fitting
                 if use_parallel and num_qvals <= 4:
-                    logger.debug(f"Using sequential fitting for small dataset ({num_qvals} q-values)")
-                elif use_parallel and prediction.pressure_level == MemoryPressure.CRITICAL:
-                    logger.warning("Using sequential fitting due to critical memory pressure")
+                    logger.debug(
+                        f"Using sequential fitting for small dataset ({num_qvals} q-values)"
+                    )
+                elif (
+                    use_parallel
+                    and prediction.pressure_level == MemoryPressure.CRITICAL
+                ):
+                    logger.warning(
+                        "Using sequential fitting due to critical memory pressure"
+                    )
 
                 fit_line, fit_val = fit_with_fixed(
                     func, t_el, g2, sigma, bounds, fit_flag, fit_x, p0=p0
@@ -1779,7 +1911,9 @@ class XpcsFile:
         }
 
         # Cache the fit summary for future calls using unified memory manager
-        self._memory_manager.cache_put(fit_cache_key, self.fit_summary, CacheType.COMPUTATION)
+        self._memory_manager.cache_put(
+            fit_cache_key, self.fit_summary, CacheType.COMPUTATION
+        )
 
         # Log memory usage after fitting
         memory_after_mb, _ = MemoryMonitor.get_memory_usage()
@@ -1794,14 +1928,24 @@ class XpcsFile:
             input_size_mb=g2_size_mb,
             memory_before_mb=memory_before_mb,
             memory_after_mb=memory_after_mb,
-            duration_seconds=5.0  # Approximate fitting duration
+            duration_seconds=5.0,  # Approximate fitting duration
         )
 
         return self.fit_summary
 
-    def _perform_robust_g2_fitting(self, func, t_el, g2, sigma, bounds, fit_flag,
-                                  fit_x, p0, diagnostic_level="standard",
-                                  bootstrap_samples=None):
+    def _perform_robust_g2_fitting(
+        self,
+        func,
+        t_el,
+        g2,
+        sigma,
+        bounds,
+        fit_flag,
+        fit_x,
+        p0,
+        diagnostic_level="standard",
+        bootstrap_samples=None,
+    ):
         """
         Perform robust G2 fitting using sequential method approach.
 
@@ -1812,7 +1956,7 @@ class XpcsFile:
 
         # Use the new sequential fitting approach
         try:
-            fit_line, fit_val, fit_methods = fit_with_fixed_sequential(
+            fit_line, fit_val, _fit_methods = fit_with_fixed_sequential(
                 func, t_el, g2, sigma, bounds, fit_flag, fit_x, p0=p0
             )
 
@@ -1825,10 +1969,14 @@ class XpcsFile:
             logger.error(f"Sequential fitting failed: {e}")
             # Fallback to original method
             logger.info("Falling back to standard fitting")
-            fallback_fit_line, fallback_fit_val = fit_with_fixed(func, t_el, g2, sigma, bounds, fit_flag, fit_x, p0=p0)
+            fallback_fit_line, fallback_fit_val = fit_with_fixed(
+                func, t_el, g2, sigma, bounds, fit_flag, fit_x, p0=p0
+            )
             return fallback_fit_line, fallback_fit_val
 
-    def _fallback_standard_fit(self, func, t_el, g2_col, sigma_col, bounds, fit_flag, fit_x, p0):
+    def _fallback_standard_fit(
+        self, func, t_el, g2_col, sigma_col, bounds, fit_flag, fit_x, p0
+    ):
         """
         Fallback to standard fitting when robust fitting is not applicable.
         Maintains full backward compatibility.
@@ -1842,15 +1990,33 @@ class XpcsFile:
                 func, t_el, g2_single, sigma_single, bounds, fit_flag, fit_x, p0=p0
             )
 
-            return fit_line_single[:, 0], fit_val_single[0] if fit_val_single else {'params': p0, 'robust_fit': False}
+            return fit_line_single[:, 0], fit_val_single[0] if fit_val_single else {
+                "params": p0,
+                "robust_fit": False,
+            }
 
         except Exception as e:
             logger.warning(f"Standard fitting fallback also failed: {e}")
-            return np.ones_like(fit_x), {'params': p0, 'error': str(e), 'robust_fit': False}
+            return np.ones_like(fit_x), {
+                "params": p0,
+                "error": str(e),
+                "robust_fit": False,
+            }
 
-    def fit_g2_robust(self, q_range=None, t_range=None, bounds=None, fit_flag=None,
-                     fit_func="single", diagnostic_level="standard", bootstrap_samples=500,
-                     enable_caching=True, enable_diagnostics=None, force_refit=False, **kwargs):
+    def fit_g2_robust(
+        self,
+        q_range=None,
+        t_range=None,
+        bounds=None,
+        fit_flag=None,
+        fit_func="single",
+        diagnostic_level="standard",
+        bootstrap_samples=500,
+        enable_caching=True,
+        enable_diagnostics=None,
+        force_refit=False,
+        **kwargs,
+    ):
         """
         Dedicated robust G2 fitting method with comprehensive diagnostics.
 
@@ -1872,15 +2038,30 @@ class XpcsFile:
             diagnostic_level = "comprehensive" if enable_diagnostics else "basic"
 
         return self.fit_g2(
-            q_range=q_range, t_range=t_range, bounds=bounds, fit_flag=fit_flag,
-            fit_func=fit_func, robust_fitting=True, diagnostic_level=diagnostic_level,
-            bootstrap_samples=bootstrap_samples, force_refit=force_refit
+            q_range=q_range,
+            t_range=t_range,
+            bounds=bounds,
+            fit_flag=fit_flag,
+            fit_func=fit_func,
+            robust_fitting=True,
+            diagnostic_level=diagnostic_level,
+            bootstrap_samples=bootstrap_samples,
+            force_refit=force_refit,
         )
 
-    def fit_g2_high_performance(self, q_range=None, t_range=None, bounds=None,
-                               fit_flag=None, fit_func="single", bootstrap_samples=500,
-                               diagnostic_level="standard", max_memory_mb=2048,
-                               max_workers=None, use_parallel=True):
+    def fit_g2_high_performance(
+        self,
+        q_range=None,
+        t_range=None,
+        bounds=None,
+        fit_flag=None,
+        fit_func="single",
+        bootstrap_samples=500,
+        diagnostic_level="standard",
+        max_memory_mb=2048,
+        max_workers=None,
+        use_parallel=True,
+    ):
         """
         High-performance G2 fitting optimized for large XPCS datasets with parallel processing.
 
@@ -1910,8 +2091,8 @@ class XpcsFile:
         num_qvals = g2.shape[1] if g2.ndim > 1 else 1
 
         # Predictive memory management for high-performance fitting
-        g2_size_mb = g2.nbytes / (1024 * 1024) if hasattr(g2, 'nbytes') else 10.0
-        prediction = predict_operation_memory('fit_g2_parallel', g2_size_mb)
+        g2_size_mb = g2.nbytes / (1024 * 1024) if hasattr(g2, "nbytes") else 10.0
+        prediction = predict_operation_memory("fit_g2_parallel", g2_size_mb)
 
         logger.info(
             f"High-performance G2 fitting: {num_qvals} q-values, "
@@ -1921,20 +2102,25 @@ class XpcsFile:
 
         # Decide on parallel processing based on dataset size and memory pressure
         use_parallel_actual = (
-            use_parallel and
-            num_qvals > 4 and  # Only use parallel for multiple q-values
-            prediction.pressure_level != MemoryPressure.CRITICAL  # Avoid parallel if memory critical
+            use_parallel
+            and num_qvals > 4  # Only use parallel for multiple q-values
+            and prediction.pressure_level
+            != MemoryPressure.CRITICAL  # Avoid parallel if memory critical
         )
 
         if not use_parallel_actual:
-            logger.info("Using sequential fitting due to small dataset or memory constraints")
+            logger.info(
+                "Using sequential fitting due to small dataset or memory constraints"
+            )
 
         # Prepare fitting parameters
         if fit_func == "single":
             from .helper.fitting import single_exp
+
             func = single_exp
         elif fit_func == "double":
             from .helper.fitting import double_exp
+
             func = double_exp
         else:
             # Try dynamic import for other function names
@@ -1956,10 +2142,19 @@ class XpcsFile:
 
         # Perform fitting using parallel or sequential method
         if use_parallel_actual:
-            logger.info(f"Using parallel G2 fitting with {max_workers or 'auto'} workers")
+            logger.info(
+                f"Using parallel G2 fitting with {max_workers or 'auto'} workers"
+            )
             fit_line, fit_val = fit_with_fixed_parallel(
-                func, t_el, g2, sigma, bounds, fit_flag, fit_x,
-                max_workers=max_workers, use_threads=True
+                func,
+                t_el,
+                g2,
+                sigma,
+                bounds,
+                fit_flag,
+                fit_x,
+                max_workers=max_workers,
+                use_threads=True,
             )
         else:
             logger.info("Using sequential G2 fitting")
@@ -1969,14 +2164,14 @@ class XpcsFile:
 
         # Create results structure
         results = {
-            'fit_line': fit_line,
-            'fit_params': fit_val,
-            'q_values': q_val,
-            'tau': t_el,
-            'g2_data': g2,
-            'g2_errors': sigma,
-            'parallel_used': use_parallel_actual,
-            'num_qvals': num_qvals
+            "fit_line": fit_line,
+            "fit_params": fit_val,
+            "q_values": q_val,
+            "tau": t_el,
+            "g2_data": g2,
+            "g2_errors": sigma,
+            "parallel_used": use_parallel_actual,
+            "num_qvals": num_qvals,
         }
 
         # Convert results to XPCS format for compatibility
@@ -1986,13 +2181,13 @@ class XpcsFile:
 
         # Record operation for memory predictor learning
         memory_after_mb, _ = MemoryMonitor.get_memory_usage()
-        operation_type = 'fit_g2_parallel' if use_parallel_actual else 'fit_g2'
+        operation_type = "fit_g2_parallel" if use_parallel_actual else "fit_g2"
         record_operation_memory(
             operation_type=operation_type,
             input_size_mb=g2_size_mb,
             memory_before_mb=memory_before_mb,
             memory_after_mb=memory_after_mb,
-            duration_seconds=2.0  # Approximate - could track actual duration
+            duration_seconds=2.0,  # Approximate - could track actual duration
         )
 
         # Cache the high-performance results
@@ -2000,41 +2195,52 @@ class XpcsFile:
             "fit_g2_hp", q_range, t_range, bounds, fit_flag, fit_func, bootstrap_samples
         )
         fit_cache_key = f"{self._cache_prefix}_hp_fit_summary_{cache_key}"
-        self._memory_manager.cache_put(fit_cache_key, fit_summary, CacheType.COMPUTATION)
+        self._memory_manager.cache_put(
+            fit_cache_key, fit_summary, CacheType.COMPUTATION
+        )
 
         # Store as primary fit summary
         self.fit_summary = fit_summary
 
         return fit_summary
 
-    def _convert_optimized_results_to_xpcs_format(self, results, q_val, t_el, fit_func,
-                                                 bounds, fit_flag, label, q_range, t_range):
+    def _convert_optimized_results_to_xpcs_format(
+        self, results, q_val, t_el, fit_func, bounds, fit_flag, label, q_range, t_range
+    ):
         """
         Convert high-performance fitting results to standard XPCS format.
 
         Maintains backward compatibility while preserving enhanced diagnostic information.
         """
         # Extract fit results
-        fit_results = results['fit_results']
+        fit_results = results["fit_results"]
         n_q = len(q_val)
 
         # Create fit_line and fit_val in expected format
-        fit_x = np.logspace(np.log10(np.min(t_el)) - 0.5, np.log10(np.max(t_el)) + 0.5, 128)
+        fit_x = np.logspace(
+            np.log10(np.min(t_el)) - 0.5, np.log10(np.max(t_el)) + 0.5, 128
+        )
         fit_line = np.zeros((n_q, len(fit_x)))
         fit_val = []
 
         # Process results for each q-value
         for i, fit_result in enumerate(fit_results[:n_q]):  # Ensure we don't exceed n_q
-            if fit_result['status'] == 'success' and fit_result['params'] is not None:
+            if fit_result["status"] == "success" and fit_result["params"] is not None:
                 # Reconstruct fitted curve
-                params = fit_result['params']
+                params = fit_result["params"]
                 try:
                     if fit_func == "single" and len(params) >= 4:
                         from .helper.fitting import single_exp_all
-                        fit_line[i, :] = single_exp_all(fit_x, params, fit_flag or [True]*4)
+
+                        fit_line[i, :] = single_exp_all(
+                            fit_x, params, fit_flag or [True] * 4
+                        )
                     elif fit_func == "double" and len(params) >= 7:
                         from .helper.fitting import double_exp_all
-                        fit_line[i, :] = double_exp_all(fit_x, params, fit_flag or [True]*7)
+
+                        fit_line[i, :] = double_exp_all(
+                            fit_x, params, fit_flag or [True] * 7
+                        )
                     else:
                         fit_line[i, :] = np.ones_like(fit_x)  # Fallback
                 except Exception:
@@ -2042,22 +2248,22 @@ class XpcsFile:
 
                 # Create enhanced fit value dictionary
                 fit_val_entry = {
-                    'params': params,
-                    'param_errors': fit_result.get('param_errors'),
-                    'covariance': fit_result.get('covariance'),
-                    'robust_fit': fit_result.get('robust_fit', False),
-                    'diagnostics': fit_result.get('diagnostics', {}),
-                    'q_index': i,
-                    'status': 'success'
+                    "params": params,
+                    "param_errors": fit_result.get("param_errors"),
+                    "covariance": fit_result.get("covariance"),
+                    "robust_fit": fit_result.get("robust_fit", False),
+                    "diagnostics": fit_result.get("diagnostics", {}),
+                    "q_index": i,
+                    "status": "success",
                 }
             else:
                 # Failed fit
                 fit_line[i, :] = np.ones_like(fit_x)
                 fit_val_entry = {
-                    'params': None,
-                    'error': fit_result.get('error', 'Unknown error'),
-                    'status': 'failed',
-                    'q_index': i
+                    "params": None,
+                    "error": fit_result.get("error", "Unknown error"),
+                    "status": "failed",
+                    "q_index": i,
                 }
 
             fit_val.append(fit_val_entry)
@@ -2075,11 +2281,11 @@ class XpcsFile:
             "fit_line": fit_line,
             "label": label,
             # Enhanced performance and diagnostic information
-            "performance_info": results.get('performance_info', {}),
-            "timing": results.get('timing', {}),
-            "optimization_summary": results.get('optimization_summary', {}),
+            "performance_info": results.get("performance_info", {}),
+            "timing": results.get("timing", {}),
+            "optimization_summary": results.get("optimization_summary", {}),
             "high_performance_fit": True,
-            "fit_x": fit_x
+            "fit_x": fit_x,
         }
 
         return fit_summary
@@ -2125,7 +2331,9 @@ class XpcsFile:
         # Check if tauq fitting result is already cached (unless force_refit is True)
         tauq_full_cache_key = f"{self._cache_prefix}_{tauq_cache_key}"
         if not force_refit:
-            cached_result = self._memory_manager.cache_get(tauq_full_cache_key, CacheType.COMPUTATION)
+            cached_result = self._memory_manager.cache_get(
+                tauq_full_cache_key, CacheType.COMPUTATION
+            )
             if cached_result is not None:
                 self.fit_summary.update(cached_result)
                 return self.fit_summary
@@ -2135,11 +2343,11 @@ class XpcsFile:
             fit_val = self.fit_summary["fit_val"]
 
             # Ensure x is a numpy array (convert from list if necessary)
-            if not hasattr(x, 'shape'):
+            if not hasattr(x, "shape"):
                 x = np.array(x)
 
             # Ensure fit_val is a numpy array (convert from list if necessary)
-            if not hasattr(fit_val, 'shape'):
+            if not hasattr(fit_val, "shape"):
                 fit_val = np.array(fit_val)
 
             # Validate array dimensions and ensure compatibility
@@ -2167,7 +2375,9 @@ class XpcsFile:
             if not np.any(q_slice):
                 logger.warning(f"No data points in q_range {q_range}")
                 tauq_result = {"tauq_success": False}
-                self._memory_manager.cache_put(tauq_full_cache_key, tauq_result, CacheType.COMPUTATION)
+                self._memory_manager.cache_put(
+                    tauq_full_cache_key, tauq_result, CacheType.COMPUTATION
+                )
                 self.fit_summary.update(tauq_result)
                 return self.fit_summary
 
@@ -2187,7 +2397,9 @@ class XpcsFile:
 
         if np.sum(valid_idx) == 0:
             tauq_result = {"tauq_success": False}
-            self._memory_manager.cache_put(tauq_full_cache_key, tauq_result, CacheType.COMPUTATION)
+            self._memory_manager.cache_put(
+                tauq_full_cache_key, tauq_result, CacheType.COMPUTATION
+            )
             self.fit_summary.update(tauq_result)
             return self.fit_summary
 
@@ -2225,7 +2437,9 @@ class XpcsFile:
                 # Clamp p0_b to bounds
                 p0_b = np.clip(p0_b, b_min, b_max)
 
-                logger.debug(f"Initial guess constrained: a={p0_a:.6e} (bounds: {a_min:.6e}-{a_max:.6e}), b={p0_b:.3f} (bounds: {b_min:.3f}-{b_max:.3f})")
+                logger.debug(
+                    f"Initial guess constrained: a={p0_a:.6e} (bounds: {a_min:.6e}-{a_max:.6e}), b={p0_b:.3f} (bounds: {b_min:.3f}-{b_max:.3f})"
+                )
 
             p0 = [p0_a, p0_b]
         else:
@@ -2236,12 +2450,16 @@ class XpcsFile:
                 a_max, b_max = bounds[1]
                 p0_a = np.clip(p0_a, a_min, a_max)
                 p0_b = np.clip(p0_b, b_min, b_max)
-                logger.debug(f"Fallback initial guess constrained: a={p0_a:.6e}, b={p0_b:.3f}")
+                logger.debug(
+                    f"Fallback initial guess constrained: a={p0_a:.6e}, b={p0_b:.3f}"
+                )
             p0 = [p0_a, p0_b]
 
         # Cache fit_x calculation
         x_range_key = f"{self._cache_prefix}_tauq_fit_x_{np.min(x_valid):.6e}_{np.max(x_valid):.6e}"
-        cached_tauq_fit_x = self._memory_manager.cache_get(x_range_key, CacheType.COMPUTATION)
+        cached_tauq_fit_x = self._memory_manager.cache_get(
+            x_range_key, CacheType.COMPUTATION
+        )
         if cached_tauq_fit_x is not None:
             fit_x = cached_tauq_fit_x
         else:
@@ -2264,12 +2482,12 @@ class XpcsFile:
         # Store tauq fitting results
         # Check if fitting was successful by validating the results
         fitting_success = (
-            fit_line is not None and
-            fit_val is not None and
-            fit_line.shape[0] > 0 and
-            fit_val.shape[0] > 0 and
-            np.all(np.isfinite(fit_line[0])) and
-            np.all(np.isfinite(fit_val[0, 0, :]))
+            fit_line is not None
+            and fit_val is not None
+            and fit_line.shape[0] > 0
+            and fit_val.shape[0] > 0
+            and np.all(np.isfinite(fit_line[0]))
+            and np.all(np.isfinite(fit_val[0, 0, :]))
         )
 
         tauq_result = {
@@ -2278,16 +2496,22 @@ class XpcsFile:
             "tauq_tau": y_valid,
             "tauq_tau_err": sigma_valid,
             "tauq_fit_line": fit_line[0] if fitting_success else np.ones_like(fit_x),
-            "tauq_fit_val": fit_val[0] if fitting_success else np.zeros((2, len(fit_flag))),
+            "tauq_fit_val": fit_val[0]
+            if fitting_success
+            else np.zeros((2, len(fit_flag))),
         }
 
         # Cache the result using unified memory manager
-        self._memory_manager.cache_put(tauq_full_cache_key, tauq_result, CacheType.COMPUTATION)
+        self._memory_manager.cache_put(
+            tauq_full_cache_key, tauq_result, CacheType.COMPUTATION
+        )
         self.fit_summary.update(tauq_result)
 
         return self.fit_summary
 
-    def get_roi_data_vectorized(self, roi_parameter, phi_num=180, use_vectorized=True, use_parallel=False):
+    def get_roi_data_vectorized(
+        self, roi_parameter, phi_num=180, use_vectorized=True, use_parallel=False
+    ):
         """
         Enhanced ROI calculation using vectorized operations for optimal performance.
 
@@ -2316,20 +2540,20 @@ class XpcsFile:
 
         # Prepare geometry data for vectorized calculators
         geometry_data = {
-            'qmap': self.qmap,
-            'rmap': getattr(self, 'rmap', None),
-            'pmap': getattr(self, 'pmap', None),
-            'mask': getattr(self, 'mask', np.ones_like(self.qmap))
+            "qmap": self.qmap,
+            "rmap": getattr(self, "rmap", None),
+            "pmap": getattr(self, "pmap", None),
+            "mask": getattr(self, "mask", np.ones_like(self.qmap)),
         }
 
         # Determine ROI type and prepare parameters
         roi_type_map = {
-            'Pie': ROIType.PIE,
-            'Ring': ROIType.RING,
-            'Phi_ring': ROIType.PHI_RING
+            "Pie": ROIType.PIE,
+            "Ring": ROIType.RING,
+            "Phi_ring": ROIType.PHI_RING,
         }
 
-        sl_type = roi_parameter.get('sl_type', 'Pie')
+        sl_type = roi_parameter.get("sl_type", "Pie")
         roi_type = roi_type_map.get(sl_type, ROIType.PIE)
 
         # Prepare ROI parameters based on type
@@ -2338,24 +2562,28 @@ class XpcsFile:
             roi_params = ROIParameters(
                 roi_type=roi_type,
                 parameters={
-                    'angle_range': roi_parameter.get('angle_range', (0, 360)),
-                    'qmap_idx': getattr(self, 'qmap_idx', None),
-                    'qsize': len(getattr(self, 'sqlist', [])) if hasattr(self, 'sqlist') else 1000,
-                    'qspan': getattr(self, 'sqspan', None),
-                    'qmax': roi_parameter.get('dist', None),
-                    'phi_num': phi_num
+                    "angle_range": roi_parameter.get("angle_range", (0, 360)),
+                    "qmap_idx": getattr(self, "qmap_idx", None),
+                    "qsize": len(getattr(self, "sqlist", []))
+                    if hasattr(self, "sqlist")
+                    else 1000,
+                    "qspan": getattr(self, "sqspan", None),
+                    "qmax": roi_parameter.get("dist", None),
+                    "phi_num": phi_num,
                 },
-                label=f"pie_{roi_parameter.get('angle_range', (0, 360))}"
+                label=f"pie_{roi_parameter.get('angle_range', (0, 360))}",
             )
 
             # Ensure we have necessary geometry data
-            if geometry_data['pmap'] is None:
+            if geometry_data["pmap"] is None:
                 # Generate pmap from qmap if not available
-                if hasattr(self, 'qmap') and hasattr(self, 'mask'):
-                    y, x = np.mgrid[:self.qmap.shape[0], :self.qmap.shape[1]]
+                if hasattr(self, "qmap") and hasattr(self, "mask"):
+                    y, x = np.mgrid[: self.qmap.shape[0], : self.qmap.shape[1]]
                     center_x = self.qmap.shape[1] // 2
                     center_y = self.qmap.shape[0] // 2
-                    geometry_data['pmap'] = np.degrees(np.arctan2(y - center_y, x - center_x)) % 360
+                    geometry_data["pmap"] = (
+                        np.degrees(np.arctan2(y - center_y, x - center_x)) % 360
+                    )
                 else:
                     logger.error("Cannot create pie ROI without angular map data")
                     return self.get_roi_data(roi_parameter, phi_num)
@@ -2367,21 +2595,23 @@ class XpcsFile:
             roi_params = ROIParameters(
                 roi_type=roi_type,
                 parameters={
-                    'radius_range': roi_parameter.get('radius', (0, 100)),
-                    'pmap': geometry_data['pmap'],
-                    'phi_num': phi_num
+                    "radius_range": roi_parameter.get("radius", (0, 100)),
+                    "pmap": geometry_data["pmap"],
+                    "phi_num": phi_num,
                 },
-                label=f"ring_{roi_parameter.get('radius', (0, 100))}"
+                label=f"ring_{roi_parameter.get('radius', (0, 100))}",
             )
 
             # Ensure we have radial map
-            if geometry_data['rmap'] is None:
+            if geometry_data["rmap"] is None:
                 # Generate rmap from qmap if not available
-                if hasattr(self, 'qmap'):
-                    y, x = np.mgrid[:self.qmap.shape[0], :self.qmap.shape[1]]
+                if hasattr(self, "qmap"):
+                    y, x = np.mgrid[: self.qmap.shape[0], : self.qmap.shape[1]]
                     center_x = self.qmap.shape[1] // 2
                     center_y = self.qmap.shape[0] // 2
-                    geometry_data['rmap'] = np.sqrt((y - center_y)**2 + (x - center_x)**2)
+                    geometry_data["rmap"] = np.sqrt(
+                        (y - center_y) ** 2 + (x - center_x) ** 2
+                    )
                 else:
                     logger.error("Cannot create ring ROI without radial map data")
                     return self.get_roi_data(roi_parameter, phi_num)
@@ -2389,12 +2619,18 @@ class XpcsFile:
             calculator = RingROICalculator()
 
         else:
-            logger.warning(f"Unsupported ROI type {sl_type}, falling back to original method")
+            logger.warning(
+                f"Unsupported ROI type {sl_type}, falling back to original method"
+            )
             return self.get_roi_data(roi_parameter, phi_num)
 
         # Predict memory requirements for ROI calculation
-        saxs_size_mb = self.saxs_2d.nbytes / (1024 * 1024) if hasattr(self.saxs_2d, 'nbytes') else 10.0
-        prediction = predict_operation_memory('roi_calculation', saxs_size_mb)
+        saxs_size_mb = (
+            self.saxs_2d.nbytes / (1024 * 1024)
+            if hasattr(self.saxs_2d, "nbytes")
+            else 10.0
+        )
+        prediction = predict_operation_memory("roi_calculation", saxs_size_mb)
 
         logger.info(
             f"Vectorized ROI calculation: type={sl_type}, "
@@ -2403,18 +2639,20 @@ class XpcsFile:
         )
 
         # Act on memory pressure predictions
-        use_streaming = prediction.pressure_level in [MemoryPressure.HIGH, MemoryPressure.CRITICAL]
+        use_streaming = prediction.pressure_level in [
+            MemoryPressure.HIGH,
+            MemoryPressure.CRITICAL,
+        ]
 
         if use_streaming:
-            logger.info("Using streaming for vectorized ROI calculation due to memory pressure")
+            logger.info(
+                "Using streaming for vectorized ROI calculation due to memory pressure"
+            )
 
         # Perform vectorized ROI calculation
         try:
             result = calculator.calculate_roi(
-                self.saxs_2d,
-                geometry_data,
-                roi_params,
-                use_streaming=use_streaming
+                self.saxs_2d, geometry_data, roi_params, use_streaming=use_streaming
             )
 
             # Log memory usage after calculation
@@ -2428,11 +2666,11 @@ class XpcsFile:
 
             # Record operation for memory predictor learning
             record_operation_memory(
-                operation_type='roi_calculation',
+                operation_type="roi_calculation",
                 input_size_mb=saxs_size_mb,
                 memory_before_mb=memory_before_mb,
                 memory_after_mb=memory_after_mb,
-                duration_seconds=result.processing_time
+                duration_seconds=result.processing_time,
             )
 
             # Return results in the expected format (x_values, roi_data)
@@ -2467,40 +2705,46 @@ class XpcsFile:
         # Convert to ROIParameters format
         roi_params_list = []
         for i, roi_param in enumerate(roi_list):
-            sl_type = roi_param.get('sl_type', 'Pie')
-            roi_type_map = {'Pie': ROIType.PIE, 'Ring': ROIType.RING, 'Phi_ring': ROIType.PHI_RING}
+            sl_type = roi_param.get("sl_type", "Pie")
+            roi_type_map = {
+                "Pie": ROIType.PIE,
+                "Ring": ROIType.RING,
+                "Phi_ring": ROIType.PHI_RING,
+            }
             roi_type = roi_type_map.get(sl_type, ROIType.PIE)
 
             if roi_type == ROIType.PIE:
                 params = {
-                    'angle_range': roi_param.get('angle_range', (0, 360)),
-                    'qmap_idx': getattr(self, 'qmap_idx', None),
-                    'qsize': len(getattr(self, 'sqlist', [])) if hasattr(self, 'sqlist') else 1000,
-                    'qspan': getattr(self, 'sqspan', None),
-                    'qmax': roi_param.get('dist', None),
-                    'phi_num': phi_num
+                    "angle_range": roi_param.get("angle_range", (0, 360)),
+                    "qmap_idx": getattr(self, "qmap_idx", None),
+                    "qsize": len(getattr(self, "sqlist", []))
+                    if hasattr(self, "sqlist")
+                    else 1000,
+                    "qspan": getattr(self, "sqspan", None),
+                    "qmax": roi_param.get("dist", None),
+                    "phi_num": phi_num,
                 }
             elif roi_type == ROIType.RING:
                 params = {
-                    'radius_range': roi_param.get('radius', (0, 100)),
-                    'pmap': getattr(self, 'pmap', None),
-                    'phi_num': phi_num
+                    "radius_range": roi_param.get("radius", (0, 100)),
+                    "pmap": getattr(self, "pmap", None),
+                    "phi_num": phi_num,
                 }
             else:
                 params = {}
 
-            roi_params_list.append(ROIParameters(
-                roi_type=roi_type,
-                parameters=params,
-                label=f"{sl_type}_{i}"
-            ))
+            roi_params_list.append(
+                ROIParameters(
+                    roi_type=roi_type, parameters=params, label=f"{sl_type}_{i}"
+                )
+            )
 
         # Prepare geometry data
         geometry_data = {
-            'qmap': self.qmap,
-            'rmap': getattr(self, 'rmap', None),
-            'pmap': getattr(self, 'pmap', None),
-            'mask': getattr(self, 'mask', np.ones_like(self.qmap))
+            "qmap": self.qmap,
+            "rmap": getattr(self, "rmap", None),
+            "pmap": getattr(self, "pmap", None),
+            "mask": getattr(self, "mask", np.ones_like(self.qmap)),
         }
 
         # Calculate ROIs in parallel
@@ -2517,14 +2761,21 @@ class XpcsFile:
         memory_before_mb, _ = MemoryMonitor.get_memory_usage()
 
         # Check if we should use streaming for very large datasets
-        saxs_size_mb = self.saxs_2d.nbytes / (1024 * 1024) if hasattr(self.saxs_2d, 'nbytes') else 0
+        saxs_size_mb = (
+            self.saxs_2d.nbytes / (1024 * 1024)
+            if hasattr(self.saxs_2d, "nbytes")
+            else 0
+        )
         use_streaming = (
-            saxs_size_mb > 500 and  # Large dataset > 500MB
-            self.memory_manager.get_memory_pressure() in [MemoryPressure.HIGH, MemoryPressure.CRITICAL]
+            saxs_size_mb > 500  # Large dataset > 500MB
+            and self.memory_manager.get_memory_pressure()
+            in [MemoryPressure.HIGH, MemoryPressure.CRITICAL]
         )
 
         if use_streaming:
-            logger.info(f"Using streaming ROI calculation for large dataset ({saxs_size_mb:.1f}MB)")
+            logger.info(
+                f"Using streaming ROI calculation for large dataset ({saxs_size_mb:.1f}MB)"
+            )
             return self._get_roi_data_streaming(roi_parameter, phi_num)
 
         # Access qmap data directly from attributes
@@ -2654,10 +2905,10 @@ class XpcsFile:
             # For SAXS 2D data, we need to add a time dimension for the streaming processor
             saxs_with_time = self.saxs_2d[np.newaxis, ...]  # Add time dimension
 
-            roi_stats = process_roi_streaming(
+            process_roi_streaming(
                 data=saxs_with_time,
                 roi_mask=roi_mask,
-                chunk_size_mb=100.0  # Conservative chunk size for ROI processing
+                chunk_size_mb=100.0,  # Conservative chunk size for ROI processing
             )
 
             # Process results to match expected output format
@@ -2706,16 +2957,18 @@ class XpcsFile:
             logger.info("Streaming ROI calculation completed")
             return self.sqspan[:-1], saxs_roi
 
-        elif roi_parameter["sl_type"] == "Phi_ring":
+        if roi_parameter["sl_type"] == "Phi_ring":
             # Similar streaming approach for phi_ring ROI
             rmin, rmax = roi_parameter["r_range"]
             roi_mask = (rmap >= rmin) & (rmap < rmax) & (self.mask > 0)
 
             # Streaming processing for phi_ring
-            phi_center = np.degrees(np.arctan2(
-                np.arange(self.mask.shape[0])[:, np.newaxis] - self.bcy,
-                np.arange(self.mask.shape[1]) - self.bcx
-            ))
+            phi_center = np.degrees(
+                np.arctan2(
+                    np.arange(self.mask.shape[0])[:, np.newaxis] - self.bcy,
+                    np.arange(self.mask.shape[1]) - self.bcx,
+                )
+            )
             phi_center = np.where(phi_center < 0, phi_center + 360, phi_center)
 
             phi_step = 360.0 / phi_num
@@ -2820,8 +3073,9 @@ class XpcsFile:
             if hasattr(self, attr) and getattr(self, attr) is not None:
                 arr = getattr(self, attr)
                 if isinstance(arr, np.ndarray):
-                    memory_mb = MemoryTracker.array_memory_mb(arr)
-                    optimal_dtype = MemoryTracker.get_optimal_dtype(arr)
+                    # TODO: Fix undefined MemoryTracker reference
+                    memory_mb = arr.nbytes / (1024 * 1024)  # Simple memory calculation
+                    optimal_dtype = arr.dtype  # Use current dtype as fallback
 
                     report["arrays"][attr] = {
                         "shape": arr.shape,
@@ -2859,16 +3113,15 @@ class XpcsFile:
                     try:
                         arr = getattr(self, attr)
                         if isinstance(arr, np.ndarray):
-                            original_memory = MemoryTracker.array_memory_mb(arr)
-                            optimal_dtype = MemoryTracker.get_optimal_dtype(arr)
+                            # TODO: Fix undefined MemoryTracker reference
+                            original_memory = arr.nbytes / (1024 * 1024)
+                            optimal_dtype = arr.dtype  # Use current dtype as fallback
 
                             if optimal_dtype != arr.dtype:
                                 optimized_arr = arr.astype(optimal_dtype)
                                 setattr(self, attr, optimized_arr)
 
-                                new_memory = MemoryTracker.array_memory_mb(
-                                    optimized_arr
-                                )
+                                new_memory = optimized_arr.nbytes / (1024 * 1024)
                                 saved_mb = original_memory - new_memory
 
                                 results["optimizations_applied"].append(
@@ -2976,17 +3229,19 @@ class XpcsFile:
         if cache_type in ("all", "computation"):
             # Clear computation cache entries for this instance from unified memory manager
             stats_before = self._memory_manager.get_cache_stats()
-            computation_entries_before = stats_before.get('computation_entries', 0)
+            stats_before.get("computation_entries", 0)
 
             # We can't directly clear specific entries by prefix, so we'll track what we had
             # This is a limitation of the current interface that could be improved
-            logger.info(f"Clearing computation cache (unified memory manager handles cleanup)")
+            logger.info(
+                "Clearing computation cache (unified memory manager handles cleanup)"
+            )
 
         if cache_type in ("all", "saxs") and self._saxs_data_loaded:
             # Handle both regular arrays and lazy-loaded data
             if isinstance(self._saxs_2d_data, LazyHDF5Array):
                 # For lazy-loaded data, just clear the loaded data, keep the proxy
-                if hasattr(self._saxs_2d_data, '_loaded_data'):
+                if hasattr(self._saxs_2d_data, "_loaded_data"):
                     self._saxs_2d_data._loaded_data = None
                 logger.info("Cleared lazy-loaded SAXS 2D data cache")
             else:
@@ -2994,7 +3249,7 @@ class XpcsFile:
                 logger.info("Cleared SAXS 2D data cache")
 
             if isinstance(self._saxs_2d_log_data, LazyHDF5Array):
-                if hasattr(self._saxs_2d_log_data, '_loaded_data'):
+                if hasattr(self._saxs_2d_log_data, "_loaded_data"):
                     self._saxs_2d_log_data._loaded_data = None
                 logger.info("Cleared lazy-loaded SAXS 2D log data cache")
             else:
@@ -3060,9 +3315,13 @@ class XpcsFile:
         if self._saxs_data_loaded and self._saxs_2d_data is not None:
             if isinstance(self._saxs_2d_data, LazyHDF5Array):
                 # For lazy data, only count loaded portion
-                if hasattr(self._saxs_2d_data, '_loaded_data') and self._saxs_2d_data._loaded_data is not None:
+                if (
+                    hasattr(self._saxs_2d_data, "_loaded_data")
+                    and self._saxs_2d_data._loaded_data is not None
+                ):
                     stats["saxs_2d_memory_mb"] = MemoryMonitor.estimate_array_memory(
-                        self._saxs_2d_data._loaded_data.shape, self._saxs_2d_data._loaded_data.dtype
+                        self._saxs_2d_data._loaded_data.shape,
+                        self._saxs_2d_data._loaded_data.dtype,
                     )
                     stats["estimated_memory_mb"] += stats["saxs_2d_memory_mb"]
                 else:
@@ -3075,9 +3334,15 @@ class XpcsFile:
 
         if self._saxs_data_loaded and self._saxs_2d_log_data is not None:
             if isinstance(self._saxs_2d_log_data, LazyHDF5Array):
-                if hasattr(self._saxs_2d_log_data, '_loaded_data') and self._saxs_2d_log_data._loaded_data is not None:
-                    stats["saxs_2d_log_memory_mb"] = MemoryMonitor.estimate_array_memory(
-                        self._saxs_2d_log_data._loaded_data.shape, self._saxs_2d_log_data._loaded_data.dtype
+                if (
+                    hasattr(self._saxs_2d_log_data, "_loaded_data")
+                    and self._saxs_2d_log_data._loaded_data is not None
+                ):
+                    stats["saxs_2d_log_memory_mb"] = (
+                        MemoryMonitor.estimate_array_memory(
+                            self._saxs_2d_log_data._loaded_data.shape,
+                            self._saxs_2d_log_data._loaded_data.dtype,
+                        )
                     )
                     stats["estimated_memory_mb"] += stats["saxs_2d_log_memory_mb"]
                 else:

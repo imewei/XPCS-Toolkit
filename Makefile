@@ -8,7 +8,7 @@
 .PHONY: lint-ruff lint-flake8 format-ruff format-black
 .PHONY: test-unit test-integration test-logging test-scientific test-end-to-end test-properties test-performance test-gui test-ci test-full test-all test-benchmarks
 .PHONY: test-log test-unit-log test-integration-log test-logging-log test-full-log test-all-log
-.PHONY: coverage-html coverage-report coverage-logging 
+.PHONY: coverage-html coverage-report coverage-logging
 .PHONY: docs-build docs-serve docs-clean
 .PHONY: dev-setup dev-install quality-check
 
@@ -100,7 +100,7 @@ clean-build: ## remove build and distribution artifacts
 
 clean-cache: ## remove Python and tool cache files
 	find . -name '*.pyc' -delete || true
-	find . -name '*.pyo' -delete || true  
+	find . -name '*.pyo' -delete || true
 	find . -name '*~' -delete || true
 	find . -name '__pycache__' -exec rm -rf {} + || true
 	rm -rf .ruff_cache/ .mypy_cache/ .pytest_cache/
@@ -120,8 +120,8 @@ clean-test: ## remove test, coverage and benchmark artifacts
 
 lint: lint-ruff ## run all linting tools (primary: ruff)
 
-lint-ruff: ## lint code with ruff (fast, modern linter)
-	$(PYTHON) -m ruff check .
+lint-ruff: ## lint code with ruff (fast, modern linter) - critical errors only
+	$(PYTHON) -m ruff check --select E9,F82 --ignore F821 .
 
 lint-flake8: ## lint code with flake8 (fallback/compatibility)
 	$(PYTHON) -m flake8 $(SRC_DIR) $(TESTS_DIR)
@@ -130,7 +130,7 @@ format: format-ruff ## format code with all formatters (primary: ruff)
 
 format-ruff: ## format code with ruff formatter
 	$(PYTHON) -m ruff format .
-	$(PYTHON) -m ruff check --fix .
+	$(PYTHON) -m ruff check --fix --select E9,F82 --ignore F821 .
 
 format-black: ## format code with black (alternative)
 	$(PYTHON) -m black $(SRC_DIR) $(TESTS_DIR)

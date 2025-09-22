@@ -52,12 +52,11 @@ class TestMainWindow:
                 assert current_widget is not None
 
                 # Verify tab-specific elements exist - more robust check
-                if tab_name == "saxs_2d":
+                if tab_name in {"saxs_2d", "g2"}:
                     # Just verify we have some kind of widget content
-                    assert current_widget.children() or True  # Has children or is at least present
-                elif tab_name == "g2":
-                    # Just verify we have some kind of widget content
-                    assert current_widget.children() or True  # Has children or is at least present
+                    assert (
+                        current_widget.children() or True
+                    )  # Has children or is at least present
 
     @pytest.mark.gui
     def test_status_bar_updates(self, gui_main_window, qtbot):
@@ -86,8 +85,10 @@ class TestMainWindow:
 
         # Verify size changed (may not be exact due to window constraints)
         current_size = window.size()
-        size_changed = (current_size.width() != original_size.width() or
-                       current_size.height() != original_size.height())
+        size_changed = (
+            current_size.width() != original_size.width()
+            or current_size.height() != original_size.height()
+        )
 
         # Either the window resized or it respects minimum size constraints
         if size_changed:

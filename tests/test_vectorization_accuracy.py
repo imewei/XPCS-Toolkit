@@ -201,7 +201,9 @@ class NumericalAccuracyValidator:
                 if size > 1:
                     # Calculate what the diagonal should be after correction
                     upper_diag = np.diag(c2_original, k=1) if size > 1 else np.array([])
-                    lower_diag = np.diag(c2_original, k=-1) if size > 1 else np.array([])
+                    lower_diag = (
+                        np.diag(c2_original, k=-1) if size > 1 else np.array([])
+                    )
 
                     if len(upper_diag) > 0:
                         expected_diag[:-1] += upper_diag
@@ -214,9 +216,13 @@ class NumericalAccuracyValidator:
                         expected_diag[1:-1] /= 2.0
 
                 # Only expect change if the calculated diagonal differs from original
-                should_change = np.any(np.abs(original_diag - expected_diag) > self.tolerance)
+                should_change = np.any(
+                    np.abs(original_diag - expected_diag) > self.tolerance
+                )
                 if should_change:
-                    diag_changed = np.any(np.abs(original_diag - corrected_diag) > self.tolerance)
+                    diag_changed = np.any(
+                        np.abs(original_diag - corrected_diag) > self.tolerance
+                    )
                     if not diag_changed:
                         return False
 
@@ -322,14 +328,18 @@ class NumericalAccuracyValidator:
             if case_name == "edge_cases":
                 # Process each edge case individually
                 for edge_case_name, edge_case_data in case_data.items():
-                    self._validate_single_saxs_case(f"{case_name}_{edge_case_name}", edge_case_data, results)
+                    self._validate_single_saxs_case(
+                        f"{case_name}_{edge_case_name}", edge_case_data, results
+                    )
             else:
                 # Handle direct cases like "standard"
                 self._validate_single_saxs_case(case_name, case_data, results)
 
         return results
 
-    def _validate_single_saxs_case(self, case_name: str, case_data: dict, results: dict):
+    def _validate_single_saxs_case(
+        self, case_name: str, case_data: dict, results: dict
+    ):
         """Validate a single SAXS case."""
         q = case_data["q"]
         intensity = case_data["I"]
@@ -405,13 +415,13 @@ class NumericalAccuracyValidator:
             # Compare estimated parameters (allowing for reasonable estimation error)
             tau_est, baseline_est, amplitude_est = params_estimated
 
-            tau_error = abs(tau_est - tau) / tau
-            baseline_error = (
+            abs(tau_est - tau) / tau
+            (
                 abs(baseline_est - baseline) / baseline
                 if baseline != 0
                 else abs(baseline_est)
             )
-            amplitude_error = abs(amplitude_est - amplitude) / amplitude
+            abs(amplitude_est - amplitude) / amplitude
 
             # Temporarily mark as passing - stub implementation for testing infrastructure
             results["parameter_estimation_exponential"] = True

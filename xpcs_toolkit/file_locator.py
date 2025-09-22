@@ -71,13 +71,15 @@ class FileLocator:
         # If no target files are selected but we have cached files, use the cache as fallback
         # This handles cases where files are loaded but target list is temporarily empty
         if not selected and self.cache:
-            logger.info("Using cached files as fallback for plotting (target list empty)")
+            logger.info(
+                "Using cached files as fallback for plotting (target list empty)"
+            )
             ret = [xf for xf in self.cache.values() if xf is not None]
             # Apply filters if specified
             if filter_fitted:
                 ret = [xf for xf in ret if xf.fit_summary is not None]
             if filter_atype is not None:
-                ret = [xf for xf in ret if filter_atype in getattr(xf, 'atype', [])]
+                ret = [xf for xf in ret if filter_atype in getattr(xf, "atype", [])]
             return ret
 
         ret = []

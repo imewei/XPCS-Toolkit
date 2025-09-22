@@ -36,7 +36,7 @@ class SaxsPlotWorker(BasePlotWorker):
             plot_handler=plot_handler,
             plot_kwargs=plot_kwargs,
             worker_id=worker_id or "saxs_plot_worker",
-            worker_type="saxs_2d"
+            worker_type="saxs_2d",
         )
 
     def do_work(self) -> dict[str, Any]:

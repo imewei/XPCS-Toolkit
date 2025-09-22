@@ -132,7 +132,7 @@ class TestViewerKernelAverageToolbox:
 
         kernel = ViewerKernel(temp_dir)
 
-        mock_get_module.assert_called_with('average_toolbox')
+        mock_get_module.assert_called_with("average_toolbox")
         mock_avg_tb_class.assert_called_once_with(temp_dir)
         assert kernel.avg_tb is mock_avg_tb
 

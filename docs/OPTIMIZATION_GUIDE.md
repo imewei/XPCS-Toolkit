@@ -245,7 +245,7 @@ pool = HDF5ConnectionPool.get_instance()
 # Connection pooling is automatic - just use normal file operations
 with pool.get_connection(file_path) as conn:
     data = conn['exchange/data'][:]
-    
+
 # Check pool statistics
 stats = pool.get_connection_statistics()
 print(f"Connection reuse rate: {stats['reuse_rate']:.1%}")
@@ -358,7 +358,7 @@ with profiler.profile_workflow("g2_analysis") as workflow_id:
     with profiler.profile_step(workflow_id, "data_loading"):
         # Your data loading code
         pass
-    
+
     with profiler.profile_step(workflow_id, "correlation_computation"):
         # Your correlation code
         pass
@@ -393,7 +393,7 @@ from xpcs_toolkit.utils import setup_complete_optimization_ecosystem
 def initialize_xpcs_app():
     # Start optimization ecosystem
     ecosystem_active = setup_complete_optimization_ecosystem()
-    
+
     # Your existing initialization code
     app = create_xpcs_viewer()
     return app
@@ -410,23 +410,23 @@ from xpcs_toolkit.utils import get_workflow_profiler
 class OptimizedXpcsAnalysis:
     def __init__(self):
         self.profiler = get_workflow_profiler()
-    
+
     def analyze_dataset(self, file_path):
         workflow_id = self.profiler.start_workflow_profiling("dataset_analysis")
-        
+
         try:
             with self.profiler.profile_step(workflow_id, "data_loading"):
                 xpcs_file = XpcsFile(file_path)
                 data = xpcs_file.load_data()
-            
+
             with self.profiler.profile_step(workflow_id, "g2_analysis"):
                 g2_results = xpcs_file.analyze_g2()
-            
+
             with self.profiler.profile_step(workflow_id, "visualization"):
                 plot_results = xpcs_file.generate_plots()
-            
+
             return g2_results, plot_results
-        
+
         finally:
             self.profiler.end_workflow_profiling(workflow_id)
 ```
@@ -457,17 +457,17 @@ optimization:
     enable_signal_optimization: true
     thread_pool_size: auto
     enable_worker_caching: true
-  
+
   memory:
     cache_max_memory_mb: 500
     memory_pressure_threshold: 0.85
     enable_background_monitoring: true
-  
+
   io:
     connection_pool_size: 10
     enable_batch_operations: true
     hdf5_chunk_size: auto
-  
+
   monitoring:
     enable_ecosystem: true
     enable_profiling: true
@@ -536,7 +536,7 @@ from xpcs_toolkit.utils import get_optimization_status_summary, run_ecosystem_ma
 status = get_optimization_status_summary()
 if status['critical_issues'] > 0:
     print("Critical memory issues detected")
-    
+
     # Run emergency maintenance
     results = run_ecosystem_maintenance(force=True)
     print(f"Maintenance completed: {len(results)} tasks executed")
@@ -551,7 +551,7 @@ stats = manager.get_global_statistics()
 
 if stats['average_efficiency'] < 0.7:
     print("Threading efficiency below threshold")
-    
+
     # Adjust thread pool configuration
     manager.optimize_pool_sizes()
     print("Thread pool sizes optimized")
@@ -566,7 +566,7 @@ stats = pool.get_connection_statistics()
 
 if stats['average_connection_time'] > 0.1:
     print("I/O performance degraded")
-    
+
     # Clear unhealthy connections
     pool.clear_unhealthy_connections()
     print("Connection pool cleaned")
@@ -581,15 +581,15 @@ from xpcs_toolkit.utils import analyze_ecosystem_performance
 
 def check_performance_regression():
     analysis = analyze_ecosystem_performance()
-    
+
     # Check for critical performance issues
     if analysis.get('critical_bottlenecks', 0) > 0:
         raise Exception("Critical performance regression detected!")
-    
+
     # Check ecosystem health
     if analysis.get('ecosystem_health', 0) < 0.7:
         raise Exception("Ecosystem health below acceptable threshold!")
-    
+
     print("✅ No performance regressions detected")
 
 # Run in your test suite

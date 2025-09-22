@@ -4,10 +4,15 @@ Test suite for centralized detector constants in qmap_utils.
 Tests the consolidated detector size and beam center constants.
 """
 
+import sys
+import time
 import unittest
 
 try:
-    from xpcs_toolkit.fileIO.qmap_utils import DEFAULT_DETECTOR_SIZE, DEFAULT_BEAM_CENTER
+    from xpcs_toolkit.fileIO.qmap_utils import (
+        DEFAULT_BEAM_CENTER,
+        DEFAULT_DETECTOR_SIZE,
+    )
 
     QMAP_CONSTANTS_AVAILABLE = True
 except ImportError:
@@ -20,7 +25,7 @@ class TestQMapConstants(unittest.TestCase):
 
     def test_constants_exist(self):
         """Test that the required constants exist."""
-        self.assertTrue(hasattr(self, '__class__'))  # Basic test setup
+        self.assertTrue(hasattr(self, "__class__"))  # Basic test setup
 
         # Test that constants are defined
         self.assertIsNotNone(DEFAULT_DETECTOR_SIZE)
@@ -54,8 +59,9 @@ class TestQMapConstants(unittest.TestCase):
         # Beam center should be half the detector size (center of detector)
         expected_beam_center = DEFAULT_DETECTOR_SIZE // 2
         self.assertEqual(
-            DEFAULT_BEAM_CENTER, expected_beam_center,
-            f"Beam center should be detector_size//2: {expected_beam_center}"
+            DEFAULT_BEAM_CENTER,
+            expected_beam_center,
+            f"Beam center should be detector_size//2: {expected_beam_center}",
         )
 
     def test_constants_immutability(self):
@@ -67,8 +73,8 @@ class TestQMapConstants(unittest.TestCase):
         # Attempt to modify (this should not affect the constants in the module)
         try:
             # These assignments create new local variables, they don't modify module constants
-            modified_detector = DEFAULT_DETECTOR_SIZE + 100
-            modified_beam = DEFAULT_BEAM_CENTER + 50
+            DEFAULT_DETECTOR_SIZE + 100
+            DEFAULT_BEAM_CENTER + 50
 
             # Original constants should be unchanged
             self.assertEqual(DEFAULT_DETECTOR_SIZE, original_detector_size)
@@ -103,7 +109,9 @@ class TestQMapConstants(unittest.TestCase):
 
         # Should be able to create detector-sized arrays
         detector_array = np.zeros((DEFAULT_DETECTOR_SIZE, DEFAULT_DETECTOR_SIZE))
-        self.assertEqual(detector_array.shape, (DEFAULT_DETECTOR_SIZE, DEFAULT_DETECTOR_SIZE))
+        self.assertEqual(
+            detector_array.shape, (DEFAULT_DETECTOR_SIZE, DEFAULT_DETECTOR_SIZE)
+        )
 
         # Should be able to use beam center for indexing
         center_pixel = detector_array[DEFAULT_BEAM_CENTER, DEFAULT_BEAM_CENTER]
@@ -112,8 +120,8 @@ class TestQMapConstants(unittest.TestCase):
         # Should be able to calculate distances from center
         y_coords, x_coords = np.ogrid[:DEFAULT_DETECTOR_SIZE, :DEFAULT_DETECTOR_SIZE]
         distances = np.sqrt(
-            (x_coords - DEFAULT_BEAM_CENTER)**2 +
-            (y_coords - DEFAULT_BEAM_CENTER)**2
+            (x_coords - DEFAULT_BEAM_CENTER) ** 2
+            + (y_coords - DEFAULT_BEAM_CENTER) ** 2
         )
 
         # Distance at center should be 0
@@ -127,7 +135,6 @@ class TestQMapConstants(unittest.TestCase):
 
     def test_memory_efficiency(self):
         """Test that constants don't use excessive memory."""
-        import sys
 
         # Constants should be simple integers, very small memory footprint
         detector_size_memory = sys.getsizeof(DEFAULT_DETECTOR_SIZE)
@@ -139,7 +146,6 @@ class TestQMapConstants(unittest.TestCase):
 
     def test_performance_access(self):
         """Test that accessing constants is performant."""
-        import time
 
         # Time multiple accesses
         start_time = time.perf_counter()
@@ -152,8 +158,9 @@ class TestQMapConstants(unittest.TestCase):
         # Should be very fast (less than 5ms for 10000 accesses, allowing for system variations)
         elapsed_time = end_time - start_time
         self.assertLess(
-            elapsed_time, 0.005,
-            f"Constants access too slow: {elapsed_time:.6f}s for 10000 accesses"
+            elapsed_time,
+            0.005,
+            f"Constants access too slow: {elapsed_time:.6f}s for 10000 accesses",
         )
 
 

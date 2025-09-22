@@ -7,7 +7,7 @@ body:
     attributes:
       value: |
         Thank you for suggesting a new feature for XPCS Toolkit!
-        
+
   - type: textarea
     id: feature-description
     attributes:
@@ -28,7 +28,7 @@ body:
         - How would this improve XPCS data analysis workflows?
     validations:
       required: true
-      
+
   - type: textarea
     id: use-case
     attributes:

@@ -9,20 +9,36 @@ import os
 import h5py
 import numpy as np
 import pytest
+
 try:
     import h5py
+
     H5PY_AVAILABLE = True
 except ImportError:
     H5PY_AVAILABLE = False
+
     # Mock h5py for basic testing
     class MockH5pyFile:
-        def __init__(self, *args, **kwargs): pass
-        def __enter__(self): return self
-        def __exit__(self, *args): pass
-        def create_dataset(self, *args, **kwargs): pass
-        def create_group(self, *args, **kwargs): return self
-        def __getitem__(self, key): return self
-        def __setitem__(self, key, value): pass
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            pass
+
+        def create_dataset(self, *args, **kwargs):
+            pass
+
+        def create_group(self, *args, **kwargs):
+            return self
+
+        def __getitem__(self, key):
+            return self
+
+        def __setitem__(self, key, value):
+            pass
 
     class MockH5py:
         File = MockH5pyFile
@@ -46,7 +62,7 @@ class TestBoundaryValues:
 
         with h5py.File(zero_file, "w") as f:
             # All-zero datasets
-            zero_saxs = edge_case_data["zero_array"]
+            edge_case_data["zero_array"]
             # Use the zeros array, extending if needed for proper shape
             zero_data_3d = np.zeros((10, 10, 10))
             f.create_dataset("saxs_2d", data=zero_data_3d)
@@ -57,7 +73,9 @@ class TestBoundaryValues:
 
             # Very small geometric parameters that should cause validation errors
             f.attrs["analysis_type"] = "XPCS"
-            f.attrs["detector_distance"] = 1e-15  # Effectively zero but won't cause infinite loops
+            f.attrs["detector_distance"] = (
+                1e-15  # Effectively zero but won't cause infinite loops
+            )
             f.attrs["pixel_size_x"] = 1e-15
             f.attrs["pixel_size_y"] = 1e-15
 
@@ -525,10 +543,9 @@ class TestSpecialNumericalValues:
                 data = xf.saxs_2d.flatten()[:6]  # Fallback
 
             # Categorize values
-            is_finite = np.isfinite(data)
-            is_inf = np.isinf(data)
-            is_nan = np.isnan(data)
-            is_zero = data == 0.0
+            np.isfinite(data)
+            np.isinf(data)
+            np.isnan(data)
 
             # System might process special values, so check if any remain
             # At least some should be processed correctly
@@ -805,7 +822,16 @@ class TestExtremeArrayShapes:
             # Thin arrays might cause processing issues
             assert any(
                 keyword in str(e).lower()
-                for keyword in ["shape", "dimension", "single", "thin", "key", "dataset", "open", "read-only"]
+                for keyword in [
+                    "shape",
+                    "dimension",
+                    "single",
+                    "thin",
+                    "key",
+                    "dataset",
+                    "open",
+                    "read-only",
+                ]
             )
 
     def test_single_pixel_detector(self, error_temp_dir):
@@ -1166,7 +1192,22 @@ class TestParameterValidationEdgeCases:
             # File validation might fail
             assert any(
                 keyword in str(e).lower()
-                for keyword in ["tau", "time", "correlation", "edge", "xpcs", "file", "dataset", "key", "missing", "required", "typeerror", "nonetype", "bounds", "len"]
+                for keyword in [
+                    "tau",
+                    "time",
+                    "correlation",
+                    "edge",
+                    "xpcs",
+                    "file",
+                    "dataset",
+                    "key",
+                    "missing",
+                    "required",
+                    "typeerror",
+                    "nonetype",
+                    "bounds",
+                    "len",
+                ]
             )
 
     def test_q_value_edge_cases(self, error_temp_dir):
@@ -1331,7 +1372,24 @@ class TestParameterValidationEdgeCases:
                 # Geometry edge cases might fail validation
                 assert any(
                     keyword in str(e).lower()
-                    for keyword in ["geometry", "detector", "distance", "pixel", "xpcs", "file", "dataset", "key", "missing", "required", "qmap", "typeerror", "ufunc", "isfinite", "coerced", "casting"]
+                    for keyword in [
+                        "geometry",
+                        "detector",
+                        "distance",
+                        "pixel",
+                        "xpcs",
+                        "file",
+                        "dataset",
+                        "key",
+                        "missing",
+                        "required",
+                        "qmap",
+                        "typeerror",
+                        "ufunc",
+                        "isfinite",
+                        "coerced",
+                        "casting",
+                    ]
                 )
 
 

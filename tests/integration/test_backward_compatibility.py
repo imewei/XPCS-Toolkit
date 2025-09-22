@@ -5,53 +5,74 @@ This module ensures all existing XPCS analysis workflows continue to work
 unchanged with comprehensive regression testing.
 """
 
+import inspect
 import unittest
-import numpy as np
 import warnings
-from unittest.mock import patch, MagicMock
-import tempfile
-import os
+
+import numpy as np
 
 # Import existing XPCS modules to test compatibility
 try:
     from xpcs_toolkit.module import g2mod
+
     HAVE_G2MOD = True
 except ImportError:
     HAVE_G2MOD = False
 
 try:
     from xpcs_toolkit.xpcs_file import XpcsFile
+
     HAVE_XPCS_FILE = True
 except ImportError:
     HAVE_XPCS_FILE = False
 
 # Import basic fitting components (RobustOptimizer removed)
-from xpcs_toolkit.helper.fitting import (
-    fit_with_fixed,
-    single_exp,
-    double_exp
-)
+from xpcs_toolkit.helper.fitting import single_exp
+
 
 # Define robust_curve_fit as alias to scipy for backward compatibility testing
-def robust_curve_fit(f, xdata, ydata, p0=None, sigma=None, bounds=(-np.inf, np.inf),
-                     method=None, jac=None, absolute_sigma=False, **kwargs):
+def robust_curve_fit(
+    f,
+    xdata,
+    ydata,
+    p0=None,
+    sigma=None,
+    bounds=(-np.inf, np.inf),
+    method=None,
+    jac=None,
+    absolute_sigma=False,
+    **kwargs,
+):
     """Fallback to scipy curve_fit for backward compatibility tests."""
-    from scipy.optimize import curve_fit
     import numpy as np
+    from scipy.optimize import curve_fit
 
     # Auto-select method based on bounds (scipy requirement)
     if method is None:
-        bounded_problem = np.any((np.asarray(bounds[0]) > -np.inf) | (np.asarray(bounds[1]) < np.inf))
-        method = 'trf' if bounded_problem else 'lm'
+        bounded_problem = np.any(
+            (np.asarray(bounds[0]) > -np.inf) | (np.asarray(bounds[1]) < np.inf)
+        )
+        method = "trf" if bounded_problem else "lm"
 
     try:
-        return curve_fit(f, xdata, ydata, p0=p0, sigma=sigma, bounds=bounds,
-                         method=method, jac=jac, absolute_sigma=absolute_sigma, **kwargs)
+        return curve_fit(
+            f,
+            xdata,
+            ydata,
+            p0=p0,
+            sigma=sigma,
+            bounds=bounds,
+            method=method,
+            jac=jac,
+            absolute_sigma=absolute_sigma,
+            **kwargs,
+        )
     except TypeError as e:
         # Convert scipy TypeError to ValueError for backward compatibility
         if "func parameters" in str(e) and "data points" in str(e):
             raise ValueError(f"Mismatched data dimensions: {e}") from e
         raise
+
 
 # Mock RobustOptimizer for backward compatibility testing
 class RobustOptimizer:
@@ -59,15 +80,17 @@ class RobustOptimizer:
 
     def robust_curve_fit(self, *args, **kwargs):
         """Fallback to scipy curve_fit."""
-        from scipy.optimize import curve_fit
         import numpy as np
+        from scipy.optimize import curve_fit
 
         # Auto-select method based on bounds if method not specified or is 'lm' with bounds
-        if 'bounds' in kwargs and kwargs['bounds'] != (-np.inf, np.inf):
-            bounds = kwargs['bounds']
-            bounded_problem = np.any((np.asarray(bounds[0]) > -np.inf) | (np.asarray(bounds[1]) < np.inf))
-            if bounded_problem and kwargs.get('method', 'lm') == 'lm':
-                kwargs['method'] = 'trf'
+        if "bounds" in kwargs and kwargs["bounds"] != (-np.inf, np.inf):
+            bounds = kwargs["bounds"]
+            bounded_problem = np.any(
+                (np.asarray(bounds[0]) > -np.inf) | (np.asarray(bounds[1]) < np.inf)
+            )
+            if bounded_problem and kwargs.get("method", "lm") == "lm":
+                kwargs["method"] = "trf"
 
         popt, pcov = curve_fit(*args, **kwargs)
 
@@ -80,9 +103,11 @@ class RobustOptimizer:
 
         return popt, pcov, {"method": "scipy", "r_squared": r_squared}
 
+
 # Test scipy compatibility
 try:
     from scipy.optimize import curve_fit
+
     HAVE_SCIPY = True
 except ImportError:
     HAVE_SCIPY = False
@@ -107,18 +132,22 @@ class TestScipyCompatibility(unittest.TestCase):
         # Test scipy curve_fit
         try:
             popt_scipy, pcov_scipy = curve_fit(
-                single_exp, xdata, ydata,
+                single_exp,
+                xdata,
+                ydata,
                 bounds=([0.1, 0.9, 0.1], [10, 1.1, 10]),
-                sigma=sigma
+                sigma=sigma,
             )
         except Exception:
             self.skipTest("scipy curve_fit failed on test data")
 
         # Test robust_curve_fit with same interface
         popt_robust, pcov_robust = robust_curve_fit(
-            single_exp, xdata, ydata,
+            single_exp,
+            xdata,
+            ydata,
             bounds=([0.1, 0.9, 0.1], [10, 1.1, 10]),
-            sigma=sigma
+            sigma=sigma,
         )
 
         # Verify same return structure
@@ -150,7 +179,9 @@ class TestScipyCompatibility(unittest.TestCase):
         self.assertEqual(len(popt), 3)
 
         # Test with absolute_sigma parameter
-        popt, pcov = robust_curve_fit(single_exp, xdata, ydata, sigma=sigma, absolute_sigma=True)
+        popt, _pcov = robust_curve_fit(
+            single_exp, xdata, ydata, sigma=sigma, absolute_sigma=True
+        )
         self.assertEqual(len(popt), 3)
 
     def test_error_handling_compatibility(self):
@@ -189,7 +220,7 @@ class TestG2ModCompatibility(unittest.TestCase):
         # This test ensures that importing robust fitting doesn't break g2mod
         try:
             # Try to use g2mod functions (if they exist)
-            if hasattr(g2mod, 'single_exp'):
+            if hasattr(g2mod, "single_exp"):
                 # Test that g2mod.single_exp still works
                 tau = np.array([1e-6, 1e-5, 1e-4])
                 g2 = g2mod.single_exp(tau, 1000.0, 1.0, 0.5)
@@ -209,13 +240,12 @@ class TestG2ModCompatibility(unittest.TestCase):
         # Test robust fitting
         try:
             optimizer = RobustOptimizer()
-            popt_robust, pcov_robust, info = optimizer.robust_curve_fit(
-                single_exp, tau, g2,
-                bounds=([1, 0.9, 0.01], [100000, 1.1, 2.0])
+            popt_robust, _pcov_robust, info = optimizer.robust_curve_fit(
+                single_exp, tau, g2, bounds=([1, 0.9, 0.01], [100000, 1.1, 2.0])
             )
 
             self.assertEqual(len(popt_robust), 3)
-            self.assertIn('r_squared', info)
+            self.assertIn("r_squared", info)
 
         except Exception as e:
             self.fail(f"Robust fitting failed in compatibility test: {e}")
@@ -231,25 +261,21 @@ class TestXpcsFileCompatibility(unittest.TestCase):
         # In practice, this would test that XpcsFile.fit_g2() can use robust fitting
 
         # Create mock XpcsFile data structure
-        mock_data = {
-            'tau': np.logspace(-6, 0, 50),
-            'g2': None,
-            'g2_err': None
-        }
+        mock_data = {"tau": np.logspace(-6, 0, 50), "g2": None, "g2_err": None}
 
         # Generate realistic G2 data
-        mock_data['g2'] = single_exp(mock_data['tau'], 1000.0, 1.0, 0.3)
-        mock_data['g2'] += 0.03 * 0.3 * np.random.normal(size=len(mock_data['tau']))
-        mock_data['g2_err'] = 0.03 * 0.3 * np.ones_like(mock_data['g2'])
+        mock_data["g2"] = single_exp(mock_data["tau"], 1000.0, 1.0, 0.3)
+        mock_data["g2"] += 0.03 * 0.3 * np.random.normal(size=len(mock_data["tau"]))
+        mock_data["g2_err"] = 0.03 * 0.3 * np.ones_like(mock_data["g2"])
 
         # Test that robust fitting can be used in XpcsFile-like context
         try:
             popt, pcov = robust_curve_fit(
                 single_exp,
-                mock_data['tau'],
-                mock_data['g2'],
-                sigma=mock_data['g2_err'],
-                bounds=([1, 0.9, 0.01], [100000, 1.1, 2.0])
+                mock_data["tau"],
+                mock_data["g2"],
+                sigma=mock_data["g2_err"],
+                bounds=([1, 0.9, 0.01], [100000, 1.1, 2.0]),
             )
 
             # Verify results are compatible with expected XpcsFile outputs
@@ -267,7 +293,7 @@ class TestXpcsFileCompatibility(unittest.TestCase):
         g2 = single_exp(tau, 1000.0, 1.0, 0.5)
 
         # Test fitting
-        popt, pcov = robust_curve_fit(single_exp, tau, g2)
+        popt, _pcov = robust_curve_fit(single_exp, tau, g2)
 
         # Parameters should be in expected order: [gamma, baseline, beta]
         gamma, baseline, beta = popt
@@ -285,12 +311,11 @@ class TestAPIStability(unittest.TestCase):
 
     def test_function_signatures_unchanged(self):
         """Test that key function signatures haven't changed."""
-        import inspect
 
         # Test robust_curve_fit signature
         sig = inspect.signature(robust_curve_fit)
-        required_params = ['f', 'xdata', 'ydata']
-        optional_params = ['p0', 'sigma', 'bounds', 'method', 'jac', 'absolute_sigma']
+        required_params = ["f", "xdata", "ydata"]
+        optional_params = ["p0", "sigma", "bounds", "method", "jac", "absolute_sigma"]
 
         # Check that required parameters exist
         param_names = list(sig.parameters.keys())
@@ -302,8 +327,10 @@ class TestAPIStability(unittest.TestCase):
             if param in param_names:
                 # If parameter exists, check it has reasonable defaults
                 param_obj = sig.parameters[param]
-                self.assertTrue(param_obj.default is not inspect.Parameter.empty or
-                              param_obj.default is None)
+                self.assertTrue(
+                    param_obj.default is not inspect.Parameter.empty
+                    or param_obj.default is None
+                )
 
     def test_return_value_compatibility(self):
         """Test that return values maintain expected structure."""
@@ -344,9 +371,7 @@ class TestAPIStability(unittest.TestCase):
         # Test that key functions can be imported
         try:
             # Using local definitions for backward compatibility testing
-            pass
-            from xpcs_toolkit.helper.fitting import single_exp
-            from xpcs_toolkit.helper.fitting import double_exp
+            from xpcs_toolkit.helper.fitting import double_exp, single_exp
 
         except ImportError as e:
             self.fail(f"Import compatibility broken: {e}")
@@ -379,23 +404,27 @@ class TestLegacyWorkflowCompatibility(unittest.TestCase):
             # Step 3: Fit G2 with robust fitting (should be drop-in replacement)
             try:
                 popt, pcov = robust_curve_fit(
-                    single_exp, tau, g2,
+                    single_exp,
+                    tau,
+                    g2,
                     bounds=([1, 0.9, 0.01], [1e6, 1.1, 2.0]),
-                    sigma=g2_err
+                    sigma=g2_err,
                 )
 
                 gamma_fit, baseline_fit, beta_fit = popt
                 gamma_error = np.sqrt(pcov[0, 0])
 
                 # Step 4: Store results in typical format
-                results.append({
-                    'q': q,
-                    'gamma': gamma_fit,
-                    'gamma_error': gamma_error,
-                    'baseline': baseline_fit,
-                    'beta': beta_fit,
-                    'tau_relax': 1.0 / gamma_fit  # Typical derived parameter
-                })
+                results.append(
+                    {
+                        "q": q,
+                        "gamma": gamma_fit,
+                        "gamma_error": gamma_error,
+                        "baseline": baseline_fit,
+                        "beta": beta_fit,
+                        "tau_relax": 1.0 / gamma_fit,  # Typical derived parameter
+                    }
+                )
 
             except Exception as e:
                 self.fail(f"Legacy workflow failed at q={q}: {e}")
@@ -405,7 +434,14 @@ class TestLegacyWorkflowCompatibility(unittest.TestCase):
 
         # Step 6: Check results have expected structure
         for result in results:
-            required_keys = ['q', 'gamma', 'gamma_error', 'baseline', 'beta', 'tau_relax']
+            required_keys = [
+                "q",
+                "gamma",
+                "gamma_error",
+                "baseline",
+                "beta",
+                "tau_relax",
+            ]
             for key in required_keys:
                 self.assertIn(key, result)
                 self.assertTrue(np.isfinite(result[key]))
@@ -426,25 +462,18 @@ class TestLegacyWorkflowCompatibility(unittest.TestCase):
             try:
                 # Fit with robust method
                 popt, pcov = robust_curve_fit(
-                    single_exp, tau, g2,
-                    bounds=([1, 0.9, 0.01], [10000, 1.1, 2.0])
+                    single_exp, tau, g2, bounds=([1, 0.9, 0.01], [10000, 1.1, 2.0])
                 )
 
-                batch_results.append({
-                    'dataset_id': i,
-                    'popt': popt,
-                    'pcov': pcov,
-                    'success': True
-                })
+                batch_results.append(
+                    {"dataset_id": i, "popt": popt, "pcov": pcov, "success": True}
+                )
 
             except Exception:
-                batch_results.append({
-                    'dataset_id': i,
-                    'success': False
-                })
+                batch_results.append({"dataset_id": i, "success": False})
 
         # Verify batch processing succeeded
-        successful_results = [r for r in batch_results if r['success']]
+        successful_results = [r for r in batch_results if r["success"]]
         self.assertGreaterEqual(len(successful_results), 4)  # Most should succeed
 
     def test_parameter_extraction_compatibility(self):
@@ -456,9 +485,9 @@ class TestLegacyWorkflowCompatibility(unittest.TestCase):
         popt, pcov = robust_curve_fit(single_exp, tau, g2)
 
         # Extract parameters in typical way
-        gamma, baseline, beta = popt
+        gamma, _baseline, _beta = popt
         param_errors = np.sqrt(np.diag(pcov))
-        gamma_error, baseline_error, beta_error = param_errors
+        gamma_error, _baseline_error, _beta_error = param_errors
 
         # Calculate derived parameters
         tau_relax = 1.0 / gamma
@@ -490,10 +519,7 @@ class TestConfigurationCompatibility(unittest.TestCase):
 
         # Test with explicit defaults
         popt2, pcov2 = robust_curve_fit(
-            single_exp, xdata, ydata,
-            p0=None,
-            sigma=None,
-            absolute_sigma=False
+            single_exp, xdata, ydata, p0=None, sigma=None, absolute_sigma=False
         )
 
         # Should get same results
@@ -514,12 +540,14 @@ class TestConfigurationCompatibility(unittest.TestCase):
         self.assertEqual(pcov1.shape, (3, 3))
 
         # Verify bounds are respected
-        for i, (low, high) in enumerate(zip(bounds_tuple[0], bounds_tuple[1])):
+        for i, (low, high) in enumerate(
+            zip(bounds_tuple[0], bounds_tuple[1], strict=False)
+        ):
             self.assertGreaterEqual(popt1[i], low)
             self.assertLessEqual(popt1[i], high)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # Suppress warnings for cleaner test output
     warnings.filterwarnings("ignore", category=RuntimeWarning)
     warnings.filterwarnings("ignore", category=UserWarning)

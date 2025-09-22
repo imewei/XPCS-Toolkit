@@ -37,5 +37,4 @@ fi
 echo "$(date): Cleaning up temporary files..."
 rm viewer_ui.py
 
-echo "$(date): UI update completed successfully" 
-
+echo "$(date): UI update completed successfully"

@@ -8,16 +8,17 @@ performance of core operations.
 
 import gc
 import os
-import psutil
 import threading
 import time
 import weakref
 from collections import defaultdict, deque
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Set
+from typing import Any
 
 import numpy as np
+import psutil
 
 from .logging_config import get_logger
 
@@ -26,15 +27,17 @@ logger = get_logger(__name__)
 
 class HealthStatus(Enum):
     """Overall system health status levels."""
-    EXCELLENT = "excellent"    # All systems optimal
-    GOOD = "good"             # Minor issues, no impact
-    WARNING = "warning"       # Issues detected, monitoring
-    CRITICAL = "critical"     # Immediate attention required
-    EMERGENCY = "emergency"   # System stability at risk
+
+    EXCELLENT = "excellent"  # All systems optimal
+    GOOD = "good"  # Minor issues, no impact
+    WARNING = "warning"  # Issues detected, monitoring
+    CRITICAL = "critical"  # Immediate attention required
+    EMERGENCY = "emergency"  # System stability at risk
 
 
 class ResourceType(Enum):
     """Types of system resources to monitor."""
+
     MEMORY = "memory"
     CPU = "cpu"
     DISK = "disk"
@@ -46,6 +49,7 @@ class ResourceType(Enum):
 @dataclass
 class HealthMetric:
     """Individual health metric with thresholds and history."""
+
     name: str
     current_value: float
     threshold_warning: float
@@ -64,10 +68,9 @@ class HealthMetric:
         """Get current status based on thresholds."""
         if self.current_value >= self.threshold_critical:
             return HealthStatus.CRITICAL
-        elif self.current_value >= self.threshold_warning:
+        if self.current_value >= self.threshold_warning:
             return HealthStatus.WARNING
-        else:
-            return HealthStatus.GOOD
+        return HealthStatus.GOOD
 
     def get_trend(self, window_minutes: float = 5.0) -> str:
         """Get trend over specified time window."""
@@ -84,10 +87,9 @@ class HealthMetric:
         trend = np.polyfit(range(len(recent_values)), recent_values, 1)[0]
         if abs(trend) < 0.01:  # Threshold for "stable"
             return "stable"
-        elif trend > 0:
+        if trend > 0:
             return "increasing"
-        else:
-            return "decreasing"
+        return "decreasing"
 
 
 class HealthMonitor:
@@ -101,16 +103,16 @@ class HealthMonitor:
     def __init__(self, monitoring_interval: float = 30.0, history_size: int = 100):
         self.monitoring_interval = monitoring_interval
         self.history_size = history_size
-        self._metrics: Dict[str, HealthMetric] = {}
+        self._metrics: dict[str, HealthMetric] = {}
         self._monitoring_active = False
-        self._monitor_thread: Optional[threading.Thread] = None
+        self._monitor_thread: threading.Thread | None = None
         self._lock = threading.RLock()
-        self._callbacks: Dict[HealthStatus, List[Callable]] = defaultdict(list)
-        self._last_alert_times: Dict[str, float] = {}
+        self._callbacks: dict[HealthStatus, list[Callable]] = defaultdict(list)
+        self._last_alert_times: dict[str, float] = {}
         self._alert_cooldown = 300.0  # 5 minutes between same alerts
 
         # Track application objects for health monitoring
-        self._tracked_objects: Set[weakref.ref] = set()
+        self._tracked_objects: set[weakref.ref] = set()
 
         # Initialize core metrics
         self._initialize_metrics()
@@ -123,50 +125,50 @@ class HealthMonitor:
                 current_value=0.0,
                 threshold_warning=75.0,
                 threshold_critical=90.0,
-                unit="%"
+                unit="%",
             ),
             "memory_available_gb": HealthMetric(
                 name="Available Memory",
                 current_value=0.0,
-                threshold_warning=2.0,   # < 2GB available
+                threshold_warning=2.0,  # < 2GB available
                 threshold_critical=0.5,  # < 500MB available
-                unit="GB"
+                unit="GB",
             ),
             "cpu_usage_percent": HealthMetric(
                 name="CPU Usage",
                 current_value=0.0,
                 threshold_warning=80.0,
                 threshold_critical=95.0,
-                unit="%"
+                unit="%",
             ),
             "thread_count": HealthMetric(
                 name="Thread Count",
                 current_value=0.0,
                 threshold_warning=100,
                 threshold_critical=200,
-                unit=""
+                unit="",
             ),
             "hdf5_connections": HealthMetric(
                 name="HDF5 Connections",
                 current_value=0.0,
                 threshold_warning=50,
                 threshold_critical=100,
-                unit=""
+                unit="",
             ),
             "disk_usage_percent": HealthMetric(
                 name="Disk Usage",
                 current_value=0.0,
                 threshold_warning=85.0,
                 threshold_critical=95.0,
-                unit="%"
+                unit="%",
             ),
             "gc_collections_per_hour": HealthMetric(
                 name="GC Collections/Hour",
                 current_value=0.0,
                 threshold_warning=100,
                 threshold_critical=300,
-                unit=""
-            )
+                unit="",
+            ),
         }
 
     def start_monitoring(self) -> None:
@@ -178,12 +180,12 @@ class HealthMonitor:
 
             self._monitoring_active = True
             self._monitor_thread = threading.Thread(
-                target=self._monitoring_loop,
-                name="XPCS-HealthMonitor",
-                daemon=True
+                target=self._monitoring_loop, name="XPCS-HealthMonitor", daemon=True
             )
             self._monitor_thread.start()
-            logger.info(f"Health monitoring started (interval: {self.monitoring_interval}s)")
+            logger.info(
+                f"Health monitoring started (interval: {self.monitoring_interval}s)"
+            )
 
     def stop_monitoring(self) -> None:
         """Stop background health monitoring."""
@@ -267,22 +269,26 @@ class HealthMonitor:
         except Exception as e:
             logger.debug(f"Error updating application metrics: {e}")
 
-    def _update_gc_metrics(self, initial_stats: List[Dict]) -> None:
+    def _update_gc_metrics(self, initial_stats: list[dict]) -> None:
         """Update garbage collection metrics."""
         try:
             current_stats = gc.get_stats()
             if len(current_stats) == len(initial_stats):
                 # Calculate GC collections per hour
                 total_collections = sum(
-                    current_stats[i]['collections'] - initial_stats[i]['collections']
+                    current_stats[i]["collections"] - initial_stats[i]["collections"]
                     for i in range(len(current_stats))
                 )
 
                 # Convert to collections per hour
-                elapsed_hours = (time.time() - getattr(self, '_monitor_start_time', time.time())) / 3600
+                elapsed_hours = (
+                    time.time() - getattr(self, "_monitor_start_time", time.time())
+                ) / 3600
                 if elapsed_hours > 0:
                     collections_per_hour = total_collections / elapsed_hours
-                    self._metrics["gc_collections_per_hour"].update(collections_per_hour)
+                    self._metrics["gc_collections_per_hour"].update(
+                        collections_per_hour
+                    )
 
         except Exception as e:
             logger.debug(f"Error updating GC metrics: {e}")
@@ -292,9 +298,10 @@ class HealthMonitor:
         try:
             # Try to get connection count from HDF5 reader
             from ..fileIO.hdf_reader import _connection_pool
-            if hasattr(_connection_pool, 'get_pool_size'):
+
+            if hasattr(_connection_pool, "get_pool_size"):
                 return float(_connection_pool.get_pool_size())
-            elif hasattr(_connection_pool, '_pool_size'):
+            if hasattr(_connection_pool, "_pool_size"):
                 return float(_connection_pool._pool_size)
         except (ImportError, AttributeError):
             pass
@@ -312,7 +319,10 @@ class HealthMonitor:
             # Update overall status to worst individual status
             if status.value == "critical":
                 overall_status = HealthStatus.CRITICAL
-            elif status.value == "warning" and overall_status.value in ["excellent", "good"]:
+            elif status.value == "warning" and overall_status.value in [
+                "excellent",
+                "good",
+            ]:
                 overall_status = HealthStatus.WARNING
             elif status.value == "good" and overall_status.value == "excellent":
                 overall_status = HealthStatus.GOOD
@@ -321,16 +331,19 @@ class HealthMonitor:
             alert_key = f"{metric_name}_{status.value}"
             last_alert = self._last_alert_times.get(alert_key, 0)
 
-            if (status in [HealthStatus.WARNING, HealthStatus.CRITICAL] and
-                current_time - last_alert > self._alert_cooldown):
-
+            if (
+                status in [HealthStatus.WARNING, HealthStatus.CRITICAL]
+                and current_time - last_alert > self._alert_cooldown
+            ):
                 self._trigger_alert(metric_name, metric, status)
                 self._last_alert_times[alert_key] = current_time
 
         # Trigger overall status callbacks
         self._trigger_status_callbacks(overall_status)
 
-    def _trigger_alert(self, metric_name: str, metric: HealthMetric, status: HealthStatus) -> None:
+    def _trigger_alert(
+        self, metric_name: str, metric: HealthMetric, status: HealthStatus
+    ) -> None:
         """Trigger alert for specific metric."""
         trend = metric.get_trend()
         message = (
@@ -348,11 +361,15 @@ class HealthMonitor:
         # Trigger specific actions based on metric and status
         self._handle_metric_alert(metric_name, metric, status)
 
-    def _handle_metric_alert(self, metric_name: str, metric: HealthMetric, status: HealthStatus) -> None:
+    def _handle_metric_alert(
+        self, metric_name: str, metric: HealthMetric, status: HealthStatus
+    ) -> None:
         """Handle specific metric alerts with automatic recovery actions."""
         if metric_name == "memory_usage_percent" and status == HealthStatus.CRITICAL:
             # Trigger emergency memory cleanup
-            logger.warning("Triggering emergency memory cleanup due to high memory usage")
+            logger.warning(
+                "Triggering emergency memory cleanup due to high memory usage"
+            )
             self._emergency_memory_cleanup()
 
         elif metric_name == "hdf5_connections" and status == HealthStatus.WARNING:
@@ -360,9 +377,13 @@ class HealthMonitor:
             logger.warning("Cleaning up HDF5 connections due to high connection count")
             self._cleanup_hdf5_connections()
 
-        elif metric_name == "gc_collections_per_hour" and status == HealthStatus.CRITICAL:
+        elif (
+            metric_name == "gc_collections_per_hour" and status == HealthStatus.CRITICAL
+        ):
             # Log GC pressure warning
-            logger.warning("High garbage collection pressure detected - potential memory leaks")
+            logger.warning(
+                "High garbage collection pressure detected - potential memory leaks"
+            )
 
     def _emergency_memory_cleanup(self) -> None:
         """Perform emergency memory cleanup."""
@@ -374,6 +395,7 @@ class HealthMonitor:
             # Try to trigger cleanup in memory manager if available
             try:
                 from .memory_manager import get_memory_manager
+
                 memory_manager = get_memory_manager()
                 memory_manager._emergency_cleanup()
                 logger.debug("Triggered memory manager emergency cleanup")
@@ -387,7 +409,8 @@ class HealthMonitor:
         """Clean up HDF5 connections."""
         try:
             from ..fileIO.hdf_reader import _connection_pool
-            if hasattr(_connection_pool, 'cleanup_idle_connections'):
+
+            if hasattr(_connection_pool, "cleanup_idle_connections"):
                 _connection_pool.cleanup_idle_connections()
                 logger.debug("Cleaned up idle HDF5 connections")
         except (ImportError, AttributeError):
@@ -404,9 +427,13 @@ class HealthMonitor:
 
     def _cleanup_tracked_objects(self) -> None:
         """Clean up dead weak references."""
-        self._tracked_objects = {ref for ref in self._tracked_objects if ref() is not None}
+        self._tracked_objects = {
+            ref for ref in self._tracked_objects if ref() is not None
+        }
 
-    def register_health_callback(self, status: HealthStatus, callback: Callable) -> None:
+    def register_health_callback(
+        self, status: HealthStatus, callback: Callable
+    ) -> None:
         """Register callback for specific health status."""
         self._callbacks[status].append(callback)
 
@@ -414,7 +441,7 @@ class HealthMonitor:
         """Track object for health monitoring."""
         self._tracked_objects.add(weakref.ref(obj))
 
-    def get_health_summary(self) -> Dict[str, Any]:
+    def get_health_summary(self) -> dict[str, Any]:
         """Get comprehensive health summary."""
         with self._lock:
             summary = {
@@ -422,7 +449,7 @@ class HealthMonitor:
                 "monitoring_active": self._monitoring_active,
                 "metrics": {},
                 "alerts": [],
-                "recommendations": []
+                "recommendations": [],
             }
 
             # Add metric summaries
@@ -433,18 +460,20 @@ class HealthMonitor:
                     "status": metric.get_status().value,
                     "trend": metric.get_trend(),
                     "threshold_warning": metric.threshold_warning,
-                    "threshold_critical": metric.threshold_critical
+                    "threshold_critical": metric.threshold_critical,
                 }
 
                 # Add to alerts if problematic
                 status = metric.get_status()
                 if status in [HealthStatus.WARNING, HealthStatus.CRITICAL]:
-                    summary["alerts"].append({
-                        "metric": name,
-                        "status": status.value,
-                        "value": metric.current_value,
-                        "message": f"{metric.name} is {status.value}: {metric.current_value:.1f}{metric.unit}"
-                    })
+                    summary["alerts"].append(
+                        {
+                            "metric": name,
+                            "status": status.value,
+                            "value": metric.current_value,
+                            "message": f"{metric.name} is {status.value}: {metric.current_value:.1f}{metric.unit}",
+                        }
+                    )
 
             # Add recommendations
             summary["recommendations"] = self._get_health_recommendations()
@@ -459,48 +488,56 @@ class HealthMonitor:
             status = metric.get_status()
             if status == HealthStatus.CRITICAL:
                 return HealthStatus.CRITICAL
-            elif status == HealthStatus.WARNING and worst_status != HealthStatus.CRITICAL:
+            if status == HealthStatus.WARNING and worst_status != HealthStatus.CRITICAL:
                 worst_status = HealthStatus.WARNING
             elif status == HealthStatus.GOOD and worst_status == HealthStatus.EXCELLENT:
                 worst_status = HealthStatus.GOOD
 
         return worst_status
 
-    def _get_health_recommendations(self) -> List[str]:
+    def _get_health_recommendations(self) -> list[str]:
         """Get health improvement recommendations."""
         recommendations = []
 
         memory_metric = self._metrics.get("memory_usage_percent")
         if memory_metric and memory_metric.current_value > 70:
-            recommendations.append("Consider closing unused data files or reducing dataset sizes")
+            recommendations.append(
+                "Consider closing unused data files or reducing dataset sizes"
+            )
 
         cpu_metric = self._metrics.get("cpu_usage_percent")
         if cpu_metric and cpu_metric.current_value > 80:
-            recommendations.append("High CPU usage detected - consider reducing parallel operations")
+            recommendations.append(
+                "High CPU usage detected - consider reducing parallel operations"
+            )
 
         hdf5_metric = self._metrics.get("hdf5_connections")
         if hdf5_metric and hdf5_metric.current_value > 30:
-            recommendations.append("Many HDF5 connections open - consider closing unused files")
+            recommendations.append(
+                "Many HDF5 connections open - consider closing unused files"
+            )
 
         gc_metric = self._metrics.get("gc_collections_per_hour")
         if gc_metric and gc_metric.current_value > 200:
-            recommendations.append("High garbage collection rate - potential memory leaks detected")
+            recommendations.append(
+                "High garbage collection rate - potential memory leaks detected"
+            )
 
         return recommendations
 
-    def get_performance_impact(self) -> Dict[str, float]:
+    def get_performance_impact(self) -> dict[str, float]:
         """Get monitoring performance impact statistics."""
         return {
             "monitoring_cpu_percent": 0.1,  # Estimated < 0.1% CPU
-            "monitoring_memory_mb": 5.0,    # Estimated < 5MB memory
+            "monitoring_memory_mb": 5.0,  # Estimated < 5MB memory
             "monitoring_interval_seconds": self.monitoring_interval,
             "metrics_tracked": len(self._metrics),
-            "objects_tracked": len(self._tracked_objects)
+            "objects_tracked": len(self._tracked_objects),
         }
 
 
 # Global health monitor instance
-_health_monitor: Optional[HealthMonitor] = None
+_health_monitor: HealthMonitor | None = None
 _monitor_lock = threading.Lock()
 
 
@@ -528,7 +565,7 @@ def stop_health_monitoring() -> None:
         _health_monitor.stop_monitoring()
 
 
-def get_health_status() -> Dict[str, Any]:
+def get_health_status() -> dict[str, Any]:
     """Get current health status summary."""
     monitor = get_health_monitor()
     return monitor.get_health_summary()
@@ -559,8 +596,7 @@ class health_monitoring_context:
         # Capture initial metrics
         monitor = get_health_monitor()
         self.start_metrics = {
-            name: metric.current_value
-            for name, metric in monitor._metrics.items()
+            name: metric.current_value for name, metric in monitor._metrics.items()
         }
         return self
 
@@ -572,11 +608,19 @@ class health_monitoring_context:
         for name, start_value in self.start_metrics.items():
             current_metric = monitor._metrics.get(name)
             if current_metric:
-                change_percent = abs(current_metric.current_value - start_value) / max(start_value, 1.0) * 100
+                change_percent = (
+                    abs(current_metric.current_value - start_value)
+                    / max(start_value, 1.0)
+                    * 100
+                )
                 if change_percent > 10:  # > 10% change
-                    significant_changes.append(f"{name}: {start_value:.1f} -> {current_metric.current_value:.1f}")
+                    significant_changes.append(
+                        f"{name}: {start_value:.1f} -> {current_metric.current_value:.1f}"
+                    )
 
         if significant_changes:
-            logger.debug(f"Operation '{self.operation_name}' caused significant resource changes: {', '.join(significant_changes)}")
+            logger.debug(
+                f"Operation '{self.operation_name}' caused significant resource changes: {', '.join(significant_changes)}"
+            )
 
         return False  # Don't suppress exceptions

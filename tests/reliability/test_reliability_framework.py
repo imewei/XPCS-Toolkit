@@ -6,14 +6,10 @@ validation, fallback strategies, health monitoring, and state consistency.
 """
 
 import gc
-import os
-import tempfile
 import threading
 import time
-import weakref
 from concurrent.futures import ThreadPoolExecutor
-from pathlib import Path
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 import numpy as np
 import pytest
@@ -23,19 +19,11 @@ try:
         XPCSBaseError,
         XPCSDataError,
         XPCSFileError,
-        XPCSValidationError,
         XPCSMemoryError,
+        XPCSValidationError,
         convert_exception,
-        handle_exceptions,
         exception_context,
-    )
-    from xpcs_toolkit.utils.reliability import (
-        ValidationLevel,
-        validate_input,
-        get_validation_cache,
-        get_fallback_manager,
-        reliability_context,
-        SmartFallbackManager,
+        handle_exceptions,
     )
     from xpcs_toolkit.utils.health_monitor import (
         HealthMonitor,
@@ -43,25 +31,34 @@ try:
         get_health_monitor,
         health_monitoring_context,
     )
+    from xpcs_toolkit.utils.reliability import (
+        SmartFallbackManager,
+        ValidationLevel,
+        get_fallback_manager,
+        get_validation_cache,
+        reliability_context,
+        validate_input,
+    )
     from xpcs_toolkit.utils.state_validator import (
         LockFreeStateValidator,
         StateTransition,
         StateValidationLevel,
         get_state_validator,
+        state_validation_context,
         track_object_state,
         update_object_state,
         validate_object_state,
-        state_validation_context,
     )
     from xpcs_toolkit.utils.validation import (
+        get_validation_statistics,
+        validate_g2_data,
         validate_hdf5_file_integrity,
         validate_scientific_array,
-        validate_g2_data,
-        get_validation_statistics,
     )
 except ImportError:
     # Import fallback implementations
     import contextlib
+
     from .reliability_fallbacks import *
 
     # Additional missing functions
@@ -89,7 +86,7 @@ except ImportError:
         return True
 
     def get_validation_statistics():
-        return {'validated': 0, 'errors': 0}
+        return {"validated": 0, "errors": 0}
 
 
 class TestObject:
@@ -129,6 +126,7 @@ class TestExceptionHierarchy:
 
     def test_exception_decorator(self):
         """Test automatic exception handling decorator."""
+
         @handle_exceptions(XPCSDataError, add_context={"operation": "test"})
         def failing_function():
             raise ValueError("Test error")
@@ -161,6 +159,7 @@ class TestValidationFramework:
 
     def test_input_validation_decorator(self):
         """Test input validation with automatic caching."""
+
         @validate_input(check_types=True, check_ranges=True, cache_results=True)
         def process_data(data: np.ndarray, threshold: float):
             return np.sum(data > threshold)
@@ -233,7 +232,9 @@ class TestFallbackStrategies:
         def fallback_strategy(*args, **kwargs):
             return "fallback_success"
 
-        manager.register_fallback_chain("test_operation", [primary_strategy, fallback_strategy])
+        manager.register_fallback_chain(
+            "test_operation", [primary_strategy, fallback_strategy]
+        )
         result = manager.execute_with_fallback("test_operation")
         assert result == "fallback_success"
 
@@ -447,6 +448,7 @@ class TestPerformanceImpact:
 
     def test_validation_performance_overhead(self):
         """Test that validation adds minimal performance overhead."""
+
         @validate_input(check_types=True, cache_results=True)
         def simple_function(x: int):
             return x * 2
@@ -468,11 +470,15 @@ class TestPerformanceImpact:
 
         # Validation overhead should be reasonable for fallback implementation
         # Note: Performance tests are sensitive to system load and CI environments
-        overhead_ratio = validation_time / no_validation_time if no_validation_time > 0 else 1.0
+        overhead_ratio = (
+            validation_time / no_validation_time if no_validation_time > 0 else 1.0
+        )
 
         # For fallback implementations, we accept higher overhead but test that functions work
         # In real implementations, overhead would be < 1.5x
-        assert overhead_ratio < 1000, f"Validation overhead unreasonably high: {overhead_ratio:.2f}x"
+        assert overhead_ratio < 1000, (
+            f"Validation overhead unreasonably high: {overhead_ratio:.2f}x"
+        )
 
         # Ensure both functions actually work
         assert simple_function(5) == 10
@@ -491,11 +497,11 @@ class TestPerformanceImpact:
 
         # Stop monitoring
         monitor.stop_monitoring()
-        total_time = time.time() - start_time
+        time.time() - start_time
 
         impact = monitor.get_performance_impact()
         assert impact["monitoring_cpu_percent"] < 1.0  # < 1% CPU
-        assert impact["monitoring_memory_mb"] < 20.0   # < 20MB memory
+        assert impact["monitoring_memory_mb"] < 20.0  # < 20MB memory
 
     def test_state_validation_performance(self):
         """Test state validation performance with many objects."""
@@ -517,7 +523,7 @@ class TestPerformanceImpact:
 
         # Performance should be reasonable
         assert registration_time < 1.0  # < 1 second for 100 objects
-        assert validation_time < 2.0    # < 2 seconds for validation
+        assert validation_time < 2.0  # < 2 seconds for validation
         assert results["total_objects"] == 100
 
 
@@ -558,14 +564,19 @@ class TestReliabilityIntegration:
             assert result == "processed"
 
             # Validate final state
-            is_valid, issues = validate_object_state(test_obj)
+            is_valid, _issues = validate_object_state(test_obj)
             assert is_valid
 
             # Check health summary
             health_summary = monitor.get_health_summary()
             # In test environments, health status may be degraded due to resource constraints
             # Accept any reasonable status that shows the monitoring is working
-            assert health_summary["overall_status"] in ["excellent", "good", "warning", "critical"]
+            assert health_summary["overall_status"] in [
+                "excellent",
+                "good",
+                "warning",
+                "critical",
+            ]
             assert "overall_status" in health_summary  # Ensure monitoring is working
 
             # Check state statistics
@@ -602,7 +613,9 @@ class TestReliabilityIntegration:
 
         try:
             # Create error in one system
-            with patch.object(monitor, '_update_system_metrics', side_effect=Exception("Test error")):
+            with patch.object(
+                monitor, "_update_system_metrics", side_effect=Exception("Test error")
+            ):
                 time.sleep(0.2)  # Let monitoring run with error
 
             # Other system should continue working
@@ -707,4 +720,4 @@ if __name__ == "__main__":
     print(f"State validation: {validation_time:.3f}s for 1,000 objects")
 
     print("\nReliability Benchmark Complete!")
-    print(f"Estimated overhead: < 5% CPU, < 10MB memory")
+    print("Estimated overhead: < 5% CPU, < 10MB memory")

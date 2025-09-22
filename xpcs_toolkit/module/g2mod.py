@@ -2,9 +2,10 @@
 import numpy as np
 import pyqtgraph as pg
 
+from xpcs_toolkit.plothandler.plot_constants import MATPLOTLIB_COLORS_RGB as colors
+
 # Local imports
 from xpcs_toolkit.utils.logging_config import get_logger
-from xpcs_toolkit.plothandler.plot_constants import MATPLOTLIB_COLORS_RGB as colors
 
 pg.setConfigOption("foreground", pg.mkColor(80, 80, 80))
 # pg.setConfigOption("background", 'w')
@@ -114,10 +115,12 @@ def pg_plot(
     # a bug in pyqtgraph; the log scale in x-axis doesn't apply
     if t_range:
         # Handle log10 of zero or negative values
-        with np.errstate(divide='ignore', invalid='ignore'):
+        with np.errstate(divide="ignore", invalid="ignore"):
             # Only take log10 of positive values
             t_range_positive = np.asarray(t_range)
-            t_range_positive = np.where(t_range_positive > 0, t_range_positive, np.finfo(float).eps)
+            t_range_positive = np.where(
+                t_range_positive > 0, t_range_positive, np.finfo(float).eps
+            )
             t0_range = np.log10(t_range_positive)
     axes = []
     for n in range(num_figs):
@@ -135,26 +138,37 @@ def pg_plot(
         baseline_offset = np.ones(num_qval)
         if show_fit:
             # Extract force_refit parameter from kwargs
-            force_refit = kwargs.get('force_refit', False)
+            force_refit = kwargs.get("force_refit", False)
 
             if robust_fitting:
                 # Use robust fitting with diagnostics
                 fit_summary = xf_list[m].fit_g2_robust(
-                    q_range, t_range, bounds, fit_flag, fit_func,
+                    q_range,
+                    t_range,
+                    bounds,
+                    fit_flag,
+                    fit_func,
                     enable_diagnostics=enable_diagnostics,
                     force_refit=force_refit,
-                    **{k: v for k, v in kwargs.items() if k != 'force_refit'}
+                    **{k: v for k, v in kwargs.items() if k != "force_refit"},
                 )
             else:
                 # Use traditional fitting
                 fit_summary = xf_list[m].fit_g2(
-                    q_range, t_range, bounds, fit_flag, fit_func,
-                    force_refit=force_refit
+                    q_range,
+                    t_range,
+                    bounds,
+                    fit_flag,
+                    fit_func,
+                    force_refit=force_refit,
                 )
 
             if fit_summary is not None and subtract_baseline:
                 # Check if fitting was successful by validating fit_val
-                if fit_summary["fit_val"] is not None and len(fit_summary["fit_val"]) > 0:
+                if (
+                    fit_summary["fit_val"] is not None
+                    and len(fit_summary["fit_val"]) > 0
+                ):
                     # Extract baseline parameter (parameter index 3 for single exponential)
                     try:
                         baseline_offset = fit_summary["fit_val"][:, 0, 3]
@@ -210,9 +224,11 @@ def pg_plot(
 
             if show_fit and fit_summary is not None:
                 # Check if we have valid fit_line data for this q-index
-                if (fit_summary["fit_line"] is not None and
-                    n < fit_summary["fit_line"].shape[0] and
-                    fit_summary.get("fit_x") is not None):
+                if (
+                    fit_summary["fit_line"] is not None
+                    and n < fit_summary["fit_line"].shape[0]
+                    and fit_summary.get("fit_x") is not None
+                ):
                     # Get fitted y-values from the numpy array
                     y_fit = fit_summary["fit_line"][n] + m * offset
                     # normalize baseline
@@ -226,8 +242,13 @@ def pg_plot(
                     )
 
                     # Add fitted parameter text annotation
-                    if fit_summary.get("fit_val") is not None and n < fit_summary["fit_val"].shape[0]:
-                        fit_val = fit_summary["fit_val"][n]  # [2, n_params] - values and errors
+                    if (
+                        fit_summary.get("fit_val") is not None
+                        and n < fit_summary["fit_val"].shape[0]
+                    ):
+                        fit_val = fit_summary["fit_val"][
+                            n
+                        ]  # [2, n_params] - values and errors
 
                         # Format parameters based on fit function
                         if fit_func == "single":
@@ -243,15 +264,27 @@ def pg_plot(
 
                             # Format error gracefully
                             if np.isfinite(error) and error > 0:
-                                if param_names[p_idx] == "τ" or param_names[p_idx] == "τ1":
-                                    param_text_lines.append(f"{param_names[p_idx]} = {value:.3e} ± {error:.2e}")
+                                if (
+                                    param_names[p_idx] == "τ"
+                                    or param_names[p_idx] == "τ1"
+                                ):
+                                    param_text_lines.append(
+                                        f"{param_names[p_idx]} = {value:.3e} ± {error:.2e}"
+                                    )
                                 else:
-                                    param_text_lines.append(f"{param_names[p_idx]} = {value:.3f} ± {error:.3f}")
+                                    param_text_lines.append(
+                                        f"{param_names[p_idx]} = {value:.3f} ± {error:.3f}"
+                                    )
+                            elif (
+                                param_names[p_idx] == "τ" or param_names[p_idx] == "τ1"
+                            ):
+                                param_text_lines.append(
+                                    f"{param_names[p_idx]} = {value:.3e} ± --"
+                                )
                             else:
-                                if param_names[p_idx] == "τ" or param_names[p_idx] == "τ1":
-                                    param_text_lines.append(f"{param_names[p_idx]} = {value:.3e} ± --")
-                                else:
-                                    param_text_lines.append(f"{param_names[p_idx]} = {value:.3f} ± --")
+                                param_text_lines.append(
+                                    f"{param_names[p_idx]} = {value:.3f} ± --"
+                                )
 
                         param_text = "\n".join(param_text_lines)
 

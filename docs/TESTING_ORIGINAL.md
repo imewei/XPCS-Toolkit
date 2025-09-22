@@ -143,11 +143,11 @@ import pytest
 def test_message_preservation_property(self, messages):
     """Test that all messages are preserved in logging."""
     logger = get_logger("test")
-    
+
     # Log all messages
     for msg in messages:
         logger.info(msg)
-    
+
     # Verify all messages appear in output
     log_output = capture_logs()
     for msg in messages:
@@ -157,7 +157,7 @@ def test_message_preservation_property(self, messages):
 def test_monotonicity_property(self, timestamps):
     """Test that timestamps are monotonically increasing."""
     sorted_timestamps = sorted(timestamps)
-    
+
     # Verify monotonic property
     for i in range(1, len(sorted_timestamps)):
         assert sorted_timestamps[i] >= sorted_timestamps[i-1]
@@ -249,14 +249,14 @@ from xpcs_toolkit.utils.logging_config import get_logger
 def test_throughput_console_logging(benchmark):
     """Benchmark console logging throughput."""
     logger = get_logger("benchmark")
-    
+
     def log_messages():
         for i in range(1000):
             logger.info("Test message %d", i)
-    
+
     # Run benchmark
     result = benchmark(log_messages)
-    
+
     # Validate performance requirements
     assert result.stats.mean < 0.1  # Less than 100ms for 1000 messages
 
@@ -264,21 +264,21 @@ def test_throughput_console_logging(benchmark):
 def test_memory_scaling(benchmark, message_count):
     """Test memory usage scaling with message count."""
     logger = get_logger("memory_test")
-    
+
     def log_batch():
         for i in range(message_count):
             logger.info("Memory test message %d with data", i)
-    
+
     # Measure memory usage
     import psutil
     process = psutil.Process()
     memory_before = process.memory_info().rss
-    
+
     benchmark(log_batch)
-    
+
     memory_after = process.memory_info().rss
     memory_delta_mb = (memory_after - memory_before) / 1024 / 1024
-    
+
     # Validate memory usage is reasonable
     assert memory_delta_mb < message_count * 0.001  # Less than 1KB per message
 ```
@@ -375,23 +375,23 @@ class TestMyModule(unittest.TestCase):
     def test_basic_functionality(self):
         """Test basic functionality."""
         self.logger.debug("Testing basic functionality")
-        
+
         # Test implementation
         result = my_function("test input")
-        
+
         # Assertions
         self.assertIsNotNone(result)
         self.assertEqual(result.status, "success")
-        
+
         self.logger.info("Basic functionality test passed")
 
     def test_error_conditions(self):
         """Test error handling."""
         self.logger.debug("Testing error conditions")
-        
+
         with self.assertRaises(ValueError):
             my_function(invalid_input)
-        
+
         self.logger.info("Error conditions test passed")
 ```
 
@@ -404,26 +404,26 @@ class TestModuleIntegration(unittest.TestCase):
     def test_logging_system_integration(self):
         """Test integration with logging system."""
         from xpcs_toolkit.utils.logging_config import get_logger
-        
+
         logger = get_logger("integration_test")
-        
+
         # Test that logging works correctly
         logger.info("Integration test message")
-        
+
         # Verify log output
         # (Implementation depends on your log capture mechanism)
-        
+
     def test_gui_integration(self):
         """Test GUI component integration."""
         # Set up headless GUI testing
         os.environ['QT_QPA_PLATFORM'] = 'offscreen'
-        
+
         from PySide6.QtWidgets import QApplication
         app = QApplication([])
-        
+
         # Test GUI components
         # ...
-        
+
         app.quit()
 ```
 
@@ -440,12 +440,12 @@ def capture_log_output(logger_name):
     """Capture log output for testing."""
     import logging
     import io
-    
+
     log_capture = io.StringIO()
     handler = logging.StreamHandler(log_capture)
     logger = logging.getLogger(logger_name)
     logger.addHandler(handler)
-    
+
     return log_capture
 
 def assert_log_contains(log_output, expected_message):
@@ -503,9 +503,9 @@ from unittest.mock import Mock, patch
 @patch('requests.get')
 def test_api_call(self, mock_get):
     mock_get.return_value.json.return_value = {'status': 'success'}
-    
+
     result = api_function()
-    
+
     mock_get.assert_called_once_with('expected_url')
     self.assertEqual(result['status'], 'success')
 ```

@@ -9,16 +9,11 @@ import os
 import platform
 import sys
 import unittest
-from pathlib import Path
-from typing import Any, Dict, List, Optional
 
 import pytest
 
 # Use shared Qt fixtures
-from tests.fixtures.qt_fixtures import (
-    QT_AVAILABLE, QtWidgets, QtCore, QtTest,
-    qt_application, qt_widget, qt_wait, gui_test_helper
-)
+from tests.fixtures.qt_fixtures import QT_AVAILABLE, QtCore, QtWidgets
 
 
 class TestCrossPlatformQtValidation(unittest.TestCase):
@@ -27,10 +22,10 @@ class TestCrossPlatformQtValidation(unittest.TestCase):
     def setUp(self):
         """Set up test environment."""
         self.platform_info = {
-            'system': platform.system(),
-            'version': platform.version(),
-            'python_version': sys.version,
-            'qt_available': QT_AVAILABLE
+            "system": platform.system(),
+            "version": platform.version(),
+            "python_version": sys.version,
+            "qt_available": QT_AVAILABLE,
         }
 
     @pytest.mark.qt_validation
@@ -151,7 +146,7 @@ class TestQtComplianceValidation(unittest.TestCase):
 
         def create_widget():
             try:
-                widget = QtWidgets.QWidget()
+                QtWidgets.QWidget()
                 results.append("success")
             except Exception as e:
                 results.append(f"error: {e}")
@@ -174,7 +169,7 @@ class TestQtComplianceValidation(unittest.TestCase):
         # Create and destroy widgets to test memory management
         widgets = []
 
-        for i in range(10):
+        for _i in range(10):
             widget = QtWidgets.QWidget()
             widgets.append(widget)
 
@@ -191,7 +186,7 @@ class TestQtSystemIntegration:
 
     def test_qt_display_environment(self):
         """Test Qt display environment setup."""
-        display_env = os.environ.get("DISPLAY")
+        os.environ.get("DISPLAY")
         qpa_platform = os.environ.get("QT_QPA_PLATFORM")
 
         # In test environment, should use offscreen platform

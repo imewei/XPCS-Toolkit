@@ -7,28 +7,29 @@ algorithms using numpy.testing utilities to ensure computational accuracy
 and numerical stability across different platforms and conditions.
 """
 
+import json
+import platform
+import sys
+import tempfile
+import unittest
+from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Any
+
 import numpy as np
 import numpy.testing as npt
-import unittest
-import warnings
-import sys
-from typing import Dict, List, Any, Optional, Tuple, Callable, Union
-from pathlib import Path
-import tempfile
-import json
-from dataclasses import dataclass, field
-import platform
-import math
 
 try:
-    from scipy import stats, optimize, linalg
-    from scipy.special import gamma, factorial
+    from scipy import linalg, optimize, stats
+    from scipy.special import factorial, gamma
+
     SCIPY_AVAILABLE = True
 except ImportError:
     SCIPY_AVAILABLE = False
 
 try:
     import h5py
+
     H5PY_AVAILABLE = True
 except ImportError:
     H5PY_AVAILABLE = False
@@ -37,15 +38,16 @@ except ImportError:
 @dataclass
 class PrecisionTestResult:
     """Result of a numerical precision test."""
+
     test_name: str
     passed: bool
     tolerance_used: float
     max_error: float
     error_type: str  # 'absolute', 'relative', 'ulp'
-    platform_info: Dict[str, str]
-    array_shapes: List[Tuple[int, ...]]
-    data_types: List[str]
-    details: Dict[str, Any] = field(default_factory=dict)
+    platform_info: dict[str, str]
+    array_shapes: list[tuple[int, ...]]
+    data_types: list[str]
+    details: dict[str, Any] = field(default_factory=dict)
 
 
 class NumericalPrecisionValidator:
@@ -56,15 +58,15 @@ class NumericalPrecisionValidator:
         self.rtol = rtol
         self.atol = atol
         self.platform_info = {
-            'system': platform.system(),
-            'machine': platform.machine(),
-            'processor': platform.processor(),
-            'python_version': platform.python_version(),
-            'numpy_version': np.__version__
+            "system": platform.system(),
+            "machine": platform.machine(),
+            "processor": platform.processor(),
+            "python_version": platform.python_version(),
+            "numpy_version": np.__version__,
         }
-        self.test_results: List[PrecisionTestResult] = []
+        self.test_results: list[PrecisionTestResult] = []
 
-    def validate_basic_arithmetic(self) -> List[PrecisionTestResult]:
+    def validate_basic_arithmetic(self) -> list[PrecisionTestResult]:
         """Validate basic arithmetic operations precision."""
         results = []
 
@@ -72,7 +74,7 @@ class NumericalPrecisionValidator:
         test_arrays = [
             np.random.randn(100),
             np.random.randn(50, 50),
-            np.random.uniform(-1000, 1000, 1000)
+            np.random.uniform(-1000, 1000, 1000),
         ]
 
         for i, arr in enumerate(test_arrays):
@@ -86,8 +88,8 @@ class NumericalPrecisionValidator:
 
             split_size = len(arr) // 3
             a = arr[:split_size]
-            b = arr[split_size:2*split_size]
-            c = arr[2*split_size:3*split_size]
+            b = arr[split_size : 2 * split_size]
+            c = arr[2 * split_size : 3 * split_size]
 
             if len(a) == 0 or len(b) == 0 or len(c) == 0:
                 continue
@@ -100,7 +102,7 @@ class NumericalPrecisionValidator:
                 npt.assert_allclose(result1, result2, rtol=self.rtol, atol=self.atol)
                 passed = True
                 max_error = np.max(np.abs(result1 - result2))
-            except AssertionError as e:
+            except AssertionError:
                 passed = False
                 max_error = np.max(np.abs(result1 - result2))
 
@@ -116,8 +118,8 @@ class NumericalPrecisionValidator:
                 details={
                     "operation": "addition_associativity",
                     "array_size": len(arr),
-                    "array_range": [float(np.min(arr)), float(np.max(arr))]
-                }
+                    "array_range": [float(np.min(arr)), float(np.max(arr))],
+                },
             )
             results.append(result)
 
@@ -149,14 +151,14 @@ class NumericalPrecisionValidator:
             data_types=[str(a.dtype)],
             details={
                 "operation": "multiplication_distributivity",
-                "test_description": "a * (b + c) vs (a * b) + (a * c)"
-            }
+                "test_description": "a * (b + c) vs (a * b) + (a * c)",
+            },
         )
         results.append(result)
 
         return results
 
-    def validate_transcendental_functions(self) -> List[PrecisionTestResult]:
+    def validate_transcendental_functions(self) -> list[PrecisionTestResult]:
         """Validate transcendental function precision."""
         results = []
 
@@ -164,7 +166,7 @@ class NumericalPrecisionValidator:
         x_values = [
             np.random.uniform(0.1, 100, 1000),
             np.random.uniform(1e-6, 1e6, 500),
-            np.logspace(-3, 3, 1000)
+            np.logspace(-3, 3, 1000),
         ]
 
         for i, x in enumerate(x_values):
@@ -190,14 +192,17 @@ class NumericalPrecisionValidator:
                 data_types=[str(x.dtype)],
                 details={
                     "operation": "exp(log(x)) = x",
-                    "value_range": [float(np.min(x_positive)), float(np.max(x_positive))]
-                }
+                    "value_range": [
+                        float(np.min(x_positive)),
+                        float(np.max(x_positive)),
+                    ],
+                },
             )
             results.append(test_result)
 
         # Test 2: sin²(x) + cos²(x) = 1
-        angles = np.random.uniform(-10*np.pi, 10*np.pi, 1000)
-        sin_cos_sum = np.sin(angles)**2 + np.cos(angles)**2
+        angles = np.random.uniform(-10 * np.pi, 10 * np.pi, 1000)
+        sin_cos_sum = np.sin(angles) ** 2 + np.cos(angles) ** 2
         expected_ones = np.ones_like(angles)
 
         try:
@@ -219,14 +224,14 @@ class NumericalPrecisionValidator:
             data_types=[str(angles.dtype)],
             details={
                 "operation": "sin²(x) + cos²(x) = 1",
-                "angle_range": [float(np.min(angles)), float(np.max(angles))]
-            }
+                "angle_range": [float(np.min(angles)), float(np.max(angles))],
+            },
         )
         results.append(result)
 
         return results
 
-    def validate_linear_algebra_precision(self) -> List[PrecisionTestResult]:
+    def validate_linear_algebra_precision(self) -> list[PrecisionTestResult]:
         """Validate linear algebra operations precision."""
         results = []
 
@@ -261,8 +266,8 @@ class NumericalPrecisionValidator:
                 data_types=[str(A.dtype)],
                 details={
                     "operation": "matrix_multiplication_associativity",
-                    "matrix_size": size
-                }
+                    "matrix_size": size,
+                },
             )
             results.append(result)
 
@@ -277,32 +282,36 @@ class NumericalPrecisionValidator:
                 identity_test = A @ A_inv
                 expected_identity = np.eye(size[0])
 
-                npt.assert_allclose(identity_test, expected_identity, rtol=1e-10, atol=1e-12)
+                npt.assert_allclose(
+                    identity_test, expected_identity, rtol=1e-10, atol=1e-12
+                )
                 passed = True
                 max_error = np.max(np.abs(identity_test - expected_identity))
             except (AssertionError, np.linalg.LinAlgError):
                 passed = False
-                max_error = float('inf')
+                max_error = float("inf")
 
             result = PrecisionTestResult(
                 test_name=f"matrix_inverse_precision_{size[0]}x{size[1]}",
                 passed=passed,
                 tolerance_used=1e-10,
-                max_error=float(max_error) if max_error != float('inf') else 1.0,
+                max_error=float(max_error) if max_error != float("inf") else 1.0,
                 error_type="absolute",
                 platform_info=self.platform_info,
                 array_shapes=[size],
                 data_types=[str(A.dtype)],
                 details={
                     "operation": "matrix_inverse",
-                    "condition_number": float(np.linalg.cond(A)) if passed else "singular"
-                }
+                    "condition_number": float(np.linalg.cond(A))
+                    if passed
+                    else "singular",
+                },
             )
             results.append(result)
 
         return results
 
-    def validate_statistical_precision(self) -> List[PrecisionTestResult]:
+    def validate_statistical_precision(self) -> list[PrecisionTestResult]:
         """Validate statistical computation precision."""
         results = []
 
@@ -310,7 +319,7 @@ class NumericalPrecisionValidator:
         test_arrays = [
             np.random.randn(10000),
             np.random.uniform(-1e6, 1e6, 5000),
-            np.array([1e20, 1.0, -1e20])  # Severe cancellation test
+            np.array([1e20, 1.0, -1e20]),  # Severe cancellation test
         ]
 
         for i, arr in enumerate(test_arrays):
@@ -340,9 +349,9 @@ class NumericalPrecisionValidator:
                     "array_properties": {
                         "min": float(np.min(arr)),
                         "max": float(np.max(arr)),
-                        "std": float(np.std(arr))
-                    }
-                }
+                        "std": float(np.std(arr)),
+                    },
+                },
             )
             results.append(result)
 
@@ -351,7 +360,7 @@ class NumericalPrecisionValidator:
             # Compare numpy variance with manual calculation
             numpy_var = np.var(arr, ddof=0)
             mean_val = np.mean(arr)
-            manual_var = np.mean((arr - mean_val)**2)
+            manual_var = np.mean((arr - mean_val) ** 2)
 
             try:
                 npt.assert_allclose([numpy_var], [manual_var], rtol=1e-12, atol=1e-14)
@@ -372,14 +381,14 @@ class NumericalPrecisionValidator:
                 data_types=[str(arr.dtype)],
                 details={
                     "operation": "variance_calculation",
-                    "computed_variance": float(numpy_var)
-                }
+                    "computed_variance": float(numpy_var),
+                },
             )
             results.append(result)
 
         return results
 
-    def validate_fft_precision(self) -> List[PrecisionTestResult]:
+    def validate_fft_precision(self) -> list[PrecisionTestResult]:
         """Validate FFT precision using round-trip tests."""
         results = []
 
@@ -388,7 +397,7 @@ class NumericalPrecisionValidator:
             np.random.randn(128),
             np.random.randn(256),
             np.random.randn(512),
-            np.sin(2 * np.pi * np.arange(64) / 64)  # Pure sinusoid
+            np.sin(2 * np.pi * np.arange(64) / 64),  # Pure sinusoid
         ]
 
         for i, signal in enumerate(test_signals):
@@ -416,18 +425,22 @@ class NumericalPrecisionValidator:
                 details={
                     "operation": "fft_roundtrip",
                     "signal_length": len(signal),
-                    "imaginary_component_max": float(np.max(np.abs(reconstructed.imag)))
-                }
+                    "imaginary_component_max": float(
+                        np.max(np.abs(reconstructed.imag))
+                    ),
+                },
             )
             results.append(result)
 
         # Test 2: Parseval's theorem validation
         for i, signal in enumerate(test_signals):
             time_energy = np.sum(signal**2)
-            freq_energy = np.sum(np.abs(np.fft.fft(signal))**2) / len(signal)
+            freq_energy = np.sum(np.abs(np.fft.fft(signal)) ** 2) / len(signal)
 
             try:
-                npt.assert_allclose([time_energy], [freq_energy], rtol=1e-12, atol=1e-14)
+                npt.assert_allclose(
+                    [time_energy], [freq_energy], rtol=1e-12, atol=1e-14
+                )
                 passed = True
                 max_error = abs(time_energy - freq_energy)
             except AssertionError:
@@ -446,14 +459,14 @@ class NumericalPrecisionValidator:
                 details={
                     "operation": "parseval_theorem",
                     "time_domain_energy": float(time_energy),
-                    "frequency_domain_energy": float(freq_energy)
-                }
+                    "frequency_domain_energy": float(freq_energy),
+                },
             )
             results.append(result)
 
         return results
 
-    def validate_correlation_precision(self) -> List[PrecisionTestResult]:
+    def validate_correlation_precision(self) -> list[PrecisionTestResult]:
         """Validate correlation calculation precision."""
         results = []
 
@@ -461,28 +474,36 @@ class NumericalPrecisionValidator:
         signals = [
             np.random.randn(100),
             np.sin(2 * np.pi * np.arange(128) / 16),
-            np.random.uniform(-10, 10, 200)
+            np.random.uniform(-10, 10, 200),
         ]
 
         for i, signal in enumerate(signals):
             # Calculate autocorrelation using numpy.correlate
-            autocorr_full = np.correlate(signal, signal, mode='full')
+            autocorr_full = np.correlate(signal, signal, mode="full")
             mid_point = len(autocorr_full) // 2
 
             # Test symmetry: R(-τ) = R(τ) for real signals
             left_half = autocorr_full[:mid_point]
-            right_half = autocorr_full[mid_point+1:][::-1]  # Reverse and align
+            right_half = autocorr_full[mid_point + 1 :][::-1]  # Reverse and align
 
             min_len = min(len(left_half), len(right_half))
             if min_len > 0:
                 try:
-                    npt.assert_allclose(left_half[:min_len], right_half[:min_len],
-                                      rtol=1e-12, atol=1e-14)
+                    npt.assert_allclose(
+                        left_half[:min_len],
+                        right_half[:min_len],
+                        rtol=1e-12,
+                        atol=1e-14,
+                    )
                     passed = True
-                    max_error = np.max(np.abs(left_half[:min_len] - right_half[:min_len]))
+                    max_error = np.max(
+                        np.abs(left_half[:min_len] - right_half[:min_len])
+                    )
                 except AssertionError:
                     passed = False
-                    max_error = np.max(np.abs(left_half[:min_len] - right_half[:min_len]))
+                    max_error = np.max(
+                        np.abs(left_half[:min_len] - right_half[:min_len])
+                    )
 
                 result = PrecisionTestResult(
                     test_name=f"autocorrelation_symmetry_{i}",
@@ -496,14 +517,14 @@ class NumericalPrecisionValidator:
                     details={
                         "operation": "autocorrelation_symmetry",
                         "signal_length": len(signal),
-                        "correlation_length": len(autocorr_full)
-                    }
+                        "correlation_length": len(autocorr_full),
+                    },
                 )
                 results.append(result)
 
         return results
 
-    def run_comprehensive_precision_tests(self) -> Dict[str, List[PrecisionTestResult]]:
+    def run_comprehensive_precision_tests(self) -> dict[str, list[PrecisionTestResult]]:
         """Run all precision validation tests."""
         test_suite = {
             "basic_arithmetic": self.validate_basic_arithmetic(),
@@ -511,7 +532,7 @@ class NumericalPrecisionValidator:
             "linear_algebra": self.validate_linear_algebra_precision(),
             "statistical_operations": self.validate_statistical_precision(),
             "fft_operations": self.validate_fft_precision(),
-            "correlation_functions": self.validate_correlation_precision()
+            "correlation_functions": self.validate_correlation_precision(),
         }
 
         # Store all results
@@ -529,35 +550,41 @@ class NumericalPrecisionValidator:
         report = ["Numerical Precision Validation Report", "=" * 60, ""]
 
         # Platform information
-        report.extend([
-            "PLATFORM INFORMATION:",
-            f"  System: {self.platform_info['system']}",
-            f"  Machine: {self.platform_info['machine']}",
-            f"  Python: {self.platform_info['python_version']}",
-            f"  NumPy: {self.platform_info['numpy_version']}",
-            ""
-        ])
+        report.extend(
+            [
+                "PLATFORM INFORMATION:",
+                f"  System: {self.platform_info['system']}",
+                f"  Machine: {self.platform_info['machine']}",
+                f"  Python: {self.platform_info['python_version']}",
+                f"  NumPy: {self.platform_info['numpy_version']}",
+                "",
+            ]
+        )
 
         # Summary statistics
         total_tests = len(self.test_results)
         passed_tests = sum(1 for r in self.test_results if r.passed)
         failed_tests = total_tests - passed_tests
 
-        report.extend([
-            "PRECISION TEST SUMMARY:",
-            f"  Total Tests: {total_tests}",
-            f"  Passed: {passed_tests}",
-            f"  Failed: {failed_tests}",
-            f"  Success Rate: {passed_tests/total_tests*100:.1f}%",
-            f"  Default Tolerance (rtol): {self.rtol:.2e}",
-            f"  Default Tolerance (atol): {self.atol:.2e}",
-            ""
-        ])
+        report.extend(
+            [
+                "PRECISION TEST SUMMARY:",
+                f"  Total Tests: {total_tests}",
+                f"  Passed: {passed_tests}",
+                f"  Failed: {failed_tests}",
+                f"  Success Rate: {passed_tests / total_tests * 100:.1f}%",
+                f"  Default Tolerance (rtol): {self.rtol:.2e}",
+                f"  Default Tolerance (atol): {self.atol:.2e}",
+                "",
+            ]
+        )
 
         # Group results by category
         categories = {}
         for result in self.test_results:
-            category = result.test_name.split('_')[0] if '_' in result.test_name else 'general'
+            category = (
+                result.test_name.split("_")[0] if "_" in result.test_name else "general"
+            )
             if category not in categories:
                 categories[category] = []
             categories[category].append(result)
@@ -580,8 +607,10 @@ class NumericalPrecisionValidator:
                 report.append("")
 
             category_passed = sum(1 for r in results if r.passed)
-            report.append(f"  Category Success: {category_passed}/{len(results)} "
-                         f"({category_passed/len(results)*100:.1f}%)")
+            report.append(
+                f"  Category Success: {category_passed}/{len(results)} "
+                f"({category_passed / len(results) * 100:.1f}%)"
+            )
             report.append("")
 
         # Overall assessment
@@ -609,25 +638,21 @@ class NumericalPrecisionValidator:
             """Convert numpy types to JSON-serializable types."""
             if isinstance(obj, np.ndarray):
                 return obj.tolist()
-            elif isinstance(obj, (np.floating, float)):
+            if isinstance(obj, (np.floating, float)):
                 return float(obj)
-            elif isinstance(obj, (np.integer, int)):
+            if isinstance(obj, (np.integer, int)):
                 return int(obj)
-            elif isinstance(obj, (np.bool_, bool)):
+            if isinstance(obj, (np.bool_, bool)):
                 return bool(obj)
-            elif isinstance(obj, dict):
+            if isinstance(obj, dict):
                 return {k: convert_for_json(v) for k, v in obj.items()}
-            elif isinstance(obj, (list, tuple)):
+            if isinstance(obj, (list, tuple)):
                 return [convert_for_json(v) for v in obj]
-            else:
-                return obj
+            return obj
 
         export_data = {
             "platform_info": self.platform_info,
-            "test_configuration": {
-                "rtol": self.rtol,
-                "atol": self.atol
-            },
+            "test_configuration": {"rtol": self.rtol, "atol": self.atol},
             "results": [
                 {
                     "test_name": r.test_name,
@@ -637,18 +662,20 @@ class NumericalPrecisionValidator:
                     "error_type": r.error_type,
                     "array_shapes": r.array_shapes,
                     "data_types": r.data_types,
-                    "details": convert_for_json(r.details)
+                    "details": convert_for_json(r.details),
                 }
                 for r in self.test_results
             ],
             "summary": {
                 "total_tests": len(self.test_results),
                 "passed_tests": sum(1 for r in self.test_results if r.passed),
-                "success_rate": sum(1 for r in self.test_results if r.passed) / len(self.test_results) * 100
-            }
+                "success_rate": sum(1 for r in self.test_results if r.passed)
+                / len(self.test_results)
+                * 100,
+            },
         }
 
-        with open(filepath, 'w') as f:
+        with open(filepath, "w") as f:
             json.dump(export_data, f, indent=2)
 
 
@@ -710,16 +737,18 @@ class TestNumericalPrecision(unittest.TestCase):
 
     def test_json_export(self):
         """Test JSON export functionality."""
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as tmp_file:
+        with tempfile.NamedTemporaryFile(
+            mode="w", suffix=".json", delete=False
+        ) as tmp_file:
             self.validator.export_precision_results(tmp_file.name)
 
             # Verify file was created and contains valid JSON
-            with open(tmp_file.name, 'r') as f:
+            with open(tmp_file.name) as f:
                 data = json.load(f)
 
-            self.assertIn('platform_info', data)
-            self.assertIn('results', data)
-            self.assertIn('summary', data)
+            self.assertIn("platform_info", data)
+            self.assertIn("results", data)
+            self.assertIn("summary", data)
 
             Path(tmp_file.name).unlink()  # Clean up
 
@@ -728,20 +757,33 @@ if __name__ == "__main__":
     """Command-line interface for numerical precision validation."""
     import argparse
 
-    parser = argparse.ArgumentParser(description='XPCS Numerical Precision Validation')
-    parser.add_argument('--rtol', type=float, default=1e-7,
-                       help='Relative tolerance for comparisons')
-    parser.add_argument('--atol', type=float, default=1e-14,
-                       help='Absolute tolerance for comparisons')
-    parser.add_argument('--category', type=str,
-                       choices=['arithmetic', 'transcendental', 'linalg', 'statistics', 'fft', 'correlation'],
-                       help='Run specific validation category')
-    parser.add_argument('--report', action='store_true',
-                       help='Generate detailed precision report')
-    parser.add_argument('--export', type=str, metavar='FILE',
-                       help='Export results to JSON file')
-    parser.add_argument('--unittest', action='store_true',
-                       help='Run unit tests')
+    parser = argparse.ArgumentParser(description="XPCS Numerical Precision Validation")
+    parser.add_argument(
+        "--rtol", type=float, default=1e-7, help="Relative tolerance for comparisons"
+    )
+    parser.add_argument(
+        "--atol", type=float, default=1e-14, help="Absolute tolerance for comparisons"
+    )
+    parser.add_argument(
+        "--category",
+        type=str,
+        choices=[
+            "arithmetic",
+            "transcendental",
+            "linalg",
+            "statistics",
+            "fft",
+            "correlation",
+        ],
+        help="Run specific validation category",
+    )
+    parser.add_argument(
+        "--report", action="store_true", help="Generate detailed precision report"
+    )
+    parser.add_argument(
+        "--export", type=str, metavar="FILE", help="Export results to JSON file"
+    )
+    parser.add_argument("--unittest", action="store_true", help="Run unit tests")
 
     args = parser.parse_args()
 
@@ -753,12 +795,12 @@ if __name__ == "__main__":
         if args.category:
             # Run specific category
             category_map = {
-                'arithmetic': validator.validate_basic_arithmetic,
-                'transcendental': validator.validate_transcendental_functions,
-                'linalg': validator.validate_linear_algebra_precision,
-                'statistics': validator.validate_statistical_precision,
-                'fft': validator.validate_fft_precision,
-                'correlation': validator.validate_correlation_precision
+                "arithmetic": validator.validate_basic_arithmetic,
+                "transcendental": validator.validate_transcendental_functions,
+                "linalg": validator.validate_linear_algebra_precision,
+                "statistics": validator.validate_statistical_precision,
+                "fft": validator.validate_fft_precision,
+                "correlation": validator.validate_correlation_precision,
             }
 
             results = category_map[args.category]()
@@ -784,14 +826,17 @@ if __name__ == "__main__":
             test_suite = validator.run_comprehensive_precision_tests()
 
             total_tests = sum(len(results) for results in test_suite.values())
-            total_passed = sum(sum(1 for r in results if r.passed)
-                              for results in test_suite.values())
+            total_passed = sum(
+                sum(1 for r in results if r.passed) for results in test_suite.values()
+            )
 
-            print(f"Numerical Precision Validation Summary:")
-            print(f"  Platform: {validator.platform_info['system']} {validator.platform_info['machine']}")
+            print("Numerical Precision Validation Summary:")
+            print(
+                f"  Platform: {validator.platform_info['system']} {validator.platform_info['machine']}"
+            )
             print(f"  Total Tests: {total_tests}")
             print(f"  Passed: {total_passed}")
-            print(f"  Success Rate: {total_passed/total_tests*100:.1f}%")
+            print(f"  Success Rate: {total_passed / total_tests * 100:.1f}%")
 
             for category, results in test_suite.items():
                 passed = sum(1 for r in results if r.passed)

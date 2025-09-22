@@ -21,16 +21,16 @@ MATPLOTLIB_COLORS_HEX = (
 
 # Same colors in RGB format for backends that require tuples
 MATPLOTLIB_COLORS_RGB = (
-    (31, 119, 180),   # blue
-    (255, 127, 14),   # orange
-    (44, 160, 44),    # green
-    (214, 39, 40),    # red
+    (31, 119, 180),  # blue
+    (255, 127, 14),  # orange
+    (44, 160, 44),  # green
+    (214, 39, 40),  # red
     (148, 103, 189),  # purple
-    (140, 86, 75),    # brown
+    (140, 86, 75),  # brown
     (227, 119, 194),  # pink
     (127, 127, 127),  # gray
-    (188, 189, 34),   # olive
-    (23, 190, 207),   # cyan
+    (188, 189, 34),  # olive
+    (23, 190, 207),  # cyan
 )
 
 # Short color codes for simple plotting
@@ -46,7 +46,9 @@ PYQTGRAPH_MARKERS = ["o", "t", "t1", "t2", "t3", "s", "p", "h", "star", "+", "d"
 EXTENDED_MARKERS = ("o", "v", "^", "<", ">", "8", "s", "p", "P", "*")
 
 
-def get_color_marker(n, backend="matplotlib", color_format="hex"):
+def get_color_marker(
+    n: int, backend: str = "matplotlib", color_format: str = "hex"
+) -> tuple[str | tuple[int, int, int], str]:
     """
     Get color and marker for plotting by index.
 
@@ -65,6 +67,7 @@ def get_color_marker(n, backend="matplotlib", color_format="hex"):
         (color, marker) for the given index
     """
     # Select color based on format
+    color: str | tuple[int, int, int]
     if color_format == "hex":
         color = MATPLOTLIB_COLORS_HEX[n % len(MATPLOTLIB_COLORS_HEX)]
     elif color_format == "rgb":
@@ -85,7 +88,9 @@ def get_color_marker(n, backend="matplotlib", color_format="hex"):
     return color, marker
 
 
-def get_color_cycle(backend="matplotlib", color_format="hex"):
+def get_color_cycle(
+    backend: str = "matplotlib", color_format: str = "hex"
+) -> tuple[str | tuple[int, int, int], ...]:
     """
     Get the full color cycle for a backend.
 
@@ -103,15 +108,14 @@ def get_color_cycle(backend="matplotlib", color_format="hex"):
     """
     if color_format == "hex":
         return MATPLOTLIB_COLORS_HEX
-    elif color_format == "rgb":
+    if color_format == "rgb":
         return MATPLOTLIB_COLORS_RGB
-    elif color_format == "basic":
+    if color_format == "basic":
         return BASIC_COLORS
-    else:
-        raise ValueError(f"Unknown color format: {color_format}")
+    raise ValueError(f"Unknown color format: {color_format}")
 
 
-def get_marker_cycle(backend="matplotlib"):
+def get_marker_cycle(backend: str = "matplotlib") -> list[str] | tuple[str, ...]:
     """
     Get the marker cycle for a backend.
 
@@ -127,9 +131,8 @@ def get_marker_cycle(backend="matplotlib"):
     """
     if backend == "matplotlib":
         return MATPLOTLIB_MARKERS
-    elif backend == "pyqtgraph":
+    if backend == "pyqtgraph":
         return PYQTGRAPH_MARKERS
-    elif backend == "extended":
+    if backend == "extended":
         return EXTENDED_MARKERS
-    else:
-        raise ValueError(f"Unknown backend: {backend}")
+    raise ValueError(f"Unknown backend: {backend}")

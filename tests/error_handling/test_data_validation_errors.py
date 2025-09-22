@@ -9,20 +9,36 @@ import os
 import h5py
 import numpy as np
 import pytest
+
 try:
     import h5py
+
     H5PY_AVAILABLE = True
 except ImportError:
     H5PY_AVAILABLE = False
+
     # Mock h5py for basic testing
     class MockH5pyFile:
-        def __init__(self, *args, **kwargs): pass
-        def __enter__(self): return self
-        def __exit__(self, *args): pass
-        def create_dataset(self, *args, **kwargs): pass
-        def create_group(self, *args, **kwargs): return self
-        def __getitem__(self, key): return self
-        def __setitem__(self, key, value): pass
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            pass
+
+        def create_dataset(self, *args, **kwargs):
+            pass
+
+        def create_group(self, *args, **kwargs):
+            return self
+
+        def __getitem__(self, key):
+            return self
+
+        def __setitem__(self, key, value):
+            pass
 
     class MockH5py:
         File = MockH5pyFile
@@ -310,7 +326,9 @@ class TestDataRangeValidation:
             f.create_dataset(
                 "empty_saxs", data=edge_case_data["empty_arrays"]["empty_float"]
             )
-            f.create_dataset("empty_g2", data=edge_case_data["empty_arrays"]["empty_float"])
+            f.create_dataset(
+                "empty_g2", data=edge_case_data["empty_arrays"]["empty_float"]
+            )
             f.attrs["analysis_type"] = "XPCS"
 
             # Minimal XPCS structure for recognition but preserve empty data errors
@@ -637,17 +655,23 @@ class TestDataConsistencyValidation:
             # ROI validation should catch invalid boundaries
             with pytest.raises((ValueError, IndexError)):
                 # Test proper ROI boundary validation by checking against detector dimensions
-                detector_shape = xf.saxs_2d.shape[-2:]  # Get last 2 dimensions (height, width)
+                detector_shape = xf.saxs_2d.shape[
+                    -2:
+                ]  # Get last 2 dimensions (height, width)
                 detector_height, detector_width = detector_shape
 
                 # Validate ROI boundaries against detector dimensions
-                if (invalid_roi["x_min"] < 0 or
-                    invalid_roi["x_max"] > detector_width or
-                    invalid_roi["y_min"] < 0 or
-                    invalid_roi["y_max"] > detector_height or
-                    invalid_roi["x_min"] >= invalid_roi["x_max"] or
-                    invalid_roi["y_min"] >= invalid_roi["y_max"]):
-                    raise ValueError("Invalid ROI boundaries exceed detector dimensions")
+                if (
+                    invalid_roi["x_min"] < 0
+                    or invalid_roi["x_max"] > detector_width
+                    or invalid_roi["y_min"] < 0
+                    or invalid_roi["y_max"] > detector_height
+                    or invalid_roi["x_min"] >= invalid_roi["x_max"]
+                    or invalid_roi["y_min"] >= invalid_roi["y_max"]
+                ):
+                    raise ValueError(
+                        "Invalid ROI boundaries exceed detector dimensions"
+                    )
 
         except Exception:
             # Expected - invalid ROI

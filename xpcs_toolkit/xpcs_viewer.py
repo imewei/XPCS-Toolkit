@@ -164,7 +164,9 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         self.pushButton_plot_saxs1d.clicked.connect(self.plot_saxs_1d)
         self.pushButton_plot_stability.clicked.connect(self.plot_stability)
         self.pushButton_plot_intt.clicked.connect(self.plot_intensity_t)
-        self.pushButton_8.clicked.connect(self.plot_diffusion)  # Diffusion "fit plot" button
+        self.pushButton_8.clicked.connect(
+            self.plot_diffusion
+        )  # Diffusion "fit plot" button
         # self.saxs1d_lb_type.currentIndexChanged.connect(self.switch_saxs1d_line)
 
         self.tabWidget.currentChanged.connect(self.update_plot)
@@ -337,7 +339,9 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
 
         # Handle info messages
         if isinstance(result, dict) and result.get("type") == "info":
-            logger.info(f"SAXS 2D plotting info: {result.get('message', 'Unknown info')}")
+            logger.info(
+                f"SAXS 2D plotting info: {result.get('message', 'Unknown info')}"
+            )
             return
 
         image_data = result["image_data"]
@@ -396,7 +400,9 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
                 )
                 logger.info("G2 plot applied successfully")
             else:
-                logger.warning("No files with G2 data (Multitau or Twotime) available for plotting")
+                logger.warning(
+                    "No files with G2 data (Multitau or Twotime) available for plotting"
+                )
 
         except Exception as e:
             logger.error(f"Failed to apply G2 result: {e}")
@@ -421,7 +427,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         new_qbin_labels = result["new_qbin_labels"]
 
         # Update the two-time plots using lazy loading
-        self.vk.get_module('twotime').plot_twotime_g2(self.mp_2t_hdls, c2_result)
+        self.vk.get_module("twotime").plot_twotime_g2(self.mp_2t_hdls, c2_result)
 
         if new_qbin_labels:
             logger.debug(
@@ -495,7 +501,9 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
                 # Use the viewer kernel method with lazy loading
                 # Filter out 'rows' from plot_params to avoid duplicate parameter
                 filtered_params = {k: v for k, v in plot_params.items() if k != "rows"}
-                self.vk.plot_intt(self.pg_intt, rows=self.get_selected_rows(), **filtered_params)
+                self.vk.plot_intt(
+                    self.pg_intt, rows=self.get_selected_rows(), **filtered_params
+                )
                 logger.info("Intensity plot applied successfully")
             else:
                 logger.warning("No files available for intensity plotting")
@@ -521,14 +529,16 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
 
         try:
             # Use the lazy-loaded stability module via viewer kernel
-            xf_obj = result["xf_obj"]
+            result["xf_obj"]
             plot_params = result["plot_params"]
 
             # Use the viewer kernel method with lazy loading
             # Filter out 'rows' from plot_params to avoid duplicate parameter
             filtered_params = {k: v for k, v in plot_params.items() if k != "rows"}
             if self.vk:
-                self.vk.plot_stability(self.mp_stab, rows=self.get_selected_rows(), **filtered_params)
+                self.vk.plot_stability(
+                    self.mp_stab, rows=self.get_selected_rows(), **filtered_params
+                )
             logger.info("Stability plot applied successfully")
 
         except Exception as e:
@@ -564,7 +574,9 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         # default to using all files for better user experience
         if not selected_row and self.vk and self.vk.target and len(self.vk.target) > 0:
             selected_row = list(range(len(self.vk.target)))
-            logger.debug(f"No specific rows selected, defaulting to all {len(selected_row)} files in target list")
+            logger.debug(
+                f"No specific rows selected, defaulting to all {len(selected_row)} files in target list"
+            )
 
         return selected_row
 
@@ -594,10 +606,17 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         # Check if files are selected before attempting to plot
         # Some tabs like diffusion should always update to show proper empty state
         tabs_requiring_files = [
-            "saxs_2d", "saxs_1d", "stability", "intensity_t", "g2", "twotime", "qmap"
+            "saxs_2d",
+            "saxs_1d",
+            "stability",
+            "intensity_t",
+            "g2",
+            "twotime",
+            "qmap",
         ]
-        if ((not self.vk or not self.vk.target or len(self.vk.target) == 0)
-            and tab_name in tabs_requiring_files):
+        if (
+            not self.vk or not self.vk.target or len(self.vk.target) == 0
+        ) and tab_name in tabs_requiring_files:
             logger.debug(
                 f"No files selected for {tab_name} plotting, "
                 f"clearing plot and skipping update"
@@ -658,26 +677,29 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         """Clear plot display for specified tab when no files are selected."""
         try:
             plot_handlers = {
-                "saxs_2d": self.pg_saxs if hasattr(self, 'pg_saxs') else None,
-                "saxs_1d": self.mp_saxs1d if hasattr(self, 'mp_saxs1d') else None,
-                "stability": self.mp_stab if hasattr(self, 'mp_stab') else None,
-                "intensity_t": self.pg_intt if hasattr(self, 'pg_intt') else None,
-                "g2": self.mp_g2 if hasattr(self, 'mp_g2') else None,
-                "twotime": self.mp_2t_hdls if hasattr(self, 'mp_2t_hdls') else None,
-                "qmap": self.pg_qmap if hasattr(self, 'pg_qmap') else None
+                "saxs_2d": self.pg_saxs if hasattr(self, "pg_saxs") else None,
+                "saxs_1d": self.mp_saxs1d if hasattr(self, "mp_saxs1d") else None,
+                "stability": self.mp_stab if hasattr(self, "mp_stab") else None,
+                "intensity_t": self.pg_intt if hasattr(self, "pg_intt") else None,
+                "g2": self.mp_g2 if hasattr(self, "mp_g2") else None,
+                "twotime": self.mp_2t_hdls if hasattr(self, "mp_2t_hdls") else None,
+                "qmap": self.pg_qmap if hasattr(self, "pg_qmap") else None,
             }
 
             handler = plot_handlers.get(tab_name)
             if handler:
-                if hasattr(handler, 'clear'):
+                if hasattr(handler, "clear"):
                     handler.clear()
-                elif hasattr(handler, 'setImage'):
+                elif hasattr(handler, "setImage"):
                     # For ImageView widgets, set empty image
                     empty_image = np.zeros((50, 50))
                     handler.setImage(empty_image)
                 logger.debug(f"Cleared plot for {tab_name}")
                 # Show status message to user for guidance
-                self.statusbar.showMessage(f"No files selected for {tab_name.replace('_', ' ').title()} - please select files from source list and click 'Add Target'", 5000)
+                self.statusbar.showMessage(
+                    f"No files selected for {tab_name.replace('_', ' ').title()} - please select files from source list and click 'Add Target'",
+                    5000,
+                )
         except Exception as e:
             logger.warning(f"Failed to clear plot for {tab_name}: {e}")
 
@@ -760,9 +782,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         if not xf_list:
             logger.warning("No files available for metadata display")
             # Clear the metadata display
-            empty_params = Parameter.create(
-                name="Settings", type="group", children=[]
-            )
+            empty_params = Parameter.create(name="Settings", type="group", children=[])
             self.hdf_info.setParameters(empty_params, showTop=True)
             return None
 
@@ -1056,7 +1076,9 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         logger.info(f"Selected rows for pre-plot: {rows}")
 
         # Debug mp_tauq_pre widget state
-        logger.info(f"mp_tauq_pre visible: {self.mp_tauq_pre.isVisible()}, size: {self.mp_tauq_pre.size()}")
+        logger.info(
+            f"mp_tauq_pre visible: {self.mp_tauq_pre.isVisible()}, size: {self.mp_tauq_pre.size()}"
+        )
         logger.info(f"mp_tauq_pre canvas: {self.mp_tauq_pre.hdl}")
 
         self.vk.plot_tauq_pre(hdl=self.mp_tauq_pre.hdl, rows=rows)
@@ -1099,7 +1121,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
 
             # Force fresh G2 fitting for all files to ensure fresh input data
             for xf in xf_list:
-                if hasattr(xf, 'fit_summary') and xf.fit_summary is not None:
+                if hasattr(xf, "fit_summary") and xf.fit_summary is not None:
                     # Get current G2 parameters from UI
                     g2_bounds, g2_fit_flag, g2_fit_func = self.check_g2_fitting_number()
                     g2_params = self.check_g2_number()
@@ -1107,8 +1129,17 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
                     g2_t_range = (g2_params[2], g2_params[3])
 
                     # Force fresh G2 fitting to provide fresh input for tau-q
-                    logger.info(f"Forcing fresh G2 fitting for {xf.label} before tau-q analysis")
-                    xf.fit_g2(g2_q_range, g2_t_range, g2_bounds, g2_fit_flag, g2_fit_func, force_refit=True)
+                    logger.info(
+                        f"Forcing fresh G2 fitting for {xf.label} before tau-q analysis"
+                    )
+                    xf.fit_g2(
+                        g2_q_range,
+                        g2_t_range,
+                        g2_bounds,
+                        g2_fit_flag,
+                        g2_fit_func,
+                        force_refit=True,
+                    )
 
             # Now force fresh tau-q fitting with the fresh G2 results
             kwargs["force_refit"] = True
@@ -1129,6 +1160,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         except Exception as e:
             logger.error(f"Error in plot_diffusion: {e}")
             import traceback
+
             traceback.print_exc()
             return None
 
@@ -1254,8 +1286,6 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
             self.statusbar.showMessage("this job is running.", 1000)
             return
 
-        # worker.signals.progress.connect(worker.update_plot)
-        # worker.signals.progress.connect(self.vk.update_avg_worker)
         worker.signals.values.connect(self.vk.update_avg_values)
         self.thread_pool.start(worker)
         self.vk.avg_worker_active[worker.jid] = None
@@ -1300,7 +1330,6 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
             return f"{x:.2e}"
 
         self.g2_bmin.setValue(t_min / 20)
-        # self.g2_bmax.setText(to_e(t_max * 10))
         self.g2_bmax.setValue(t_max * 10)
 
         if t_auto:
@@ -1359,7 +1388,6 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
             "subtract_baseline": self.g2_sub_baseline.isChecked(),
             "fit_func": fit_func,
             "robust_fitting": True,  # Always use robust sequential fitting for better reliability
-            # 'label_size': self.sb_g2_label_size.value(),
         }
         if kwargs["show_fit"] and sum(kwargs["fit_flag"]) == 0:
             self.statusbar.showMessage("nothing to fit, really?", 1000)
@@ -1416,7 +1444,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
 
         if kwargs["show_fit"] and sum(kwargs["fit_flag"]) == 0:
             self.statusbar.showMessage("nothing to fit, really?", 1000)
-            return None
+            return
 
         self.btn_g2_refit.setDisabled(True)
         self.btn_g2_refit.setText("refitting")
@@ -1447,41 +1475,71 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
 
             # Check if there are any files in the target list at all
             all_available_files = self.vk.get_xf_list()
-            logger.info(f"G2 export: Total files available in target list: {len(all_available_files)}")
+            logger.info(
+                f"G2 export: Total files available in target list: {len(all_available_files)}"
+            )
 
             if not rows:
                 if not all_available_files:
-                    self.statusbar.showMessage("No files loaded. Please add XPCS files to the target list first.", 5000)
-                    logger.warning("G2 export: No files in target list. User needs to load XPCS files first.")
+                    self.statusbar.showMessage(
+                        "No files loaded. Please add XPCS files to the target list first.",
+                        5000,
+                    )
+                    logger.warning(
+                        "G2 export: No files in target list. User needs to load XPCS files first."
+                    )
                 else:
                     # Show helpful message about file selection
                     multitau_available = self.vk.get_xf_list(filter_atype="Multitau")
                     if multitau_available:
-                        self.statusbar.showMessage(f"Please select files for export. {len(multitau_available)} Multitau files available in target list.", 5000)
-                        logger.warning(f"G2 export: No files selected. {len(multitau_available)} Multitau files available for export.")
+                        self.statusbar.showMessage(
+                            f"Please select files for export. {len(multitau_available)} Multitau files available in target list.",
+                            5000,
+                        )
+                        logger.warning(
+                            f"G2 export: No files selected. {len(multitau_available)} Multitau files available for export."
+                        )
                     else:
-                        self.statusbar.showMessage(f"No Multitau files found. G2 export requires Multitau analysis files.", 5000)
-                        logger.warning(f"G2 export: No Multitau files available. Found {len(all_available_files)} files but none are Multitau type.")
+                        self.statusbar.showMessage(
+                            "No Multitau files found. G2 export requires Multitau analysis files.",
+                            5000,
+                        )
+                        logger.warning(
+                            f"G2 export: No Multitau files available. Found {len(all_available_files)} files but none are Multitau type."
+                        )
                 return
 
             # Additional diagnostics
             all_files = self.vk.get_xf_list(rows=rows)
             multitau_files = self.vk.get_xf_list(rows=rows, filter_atype="Multitau")
             logger.info(f"G2 export: Total files from selection: {len(all_files)}")
-            logger.info(f"G2 export: Multitau files from selection: {len(multitau_files)}")
+            logger.info(
+                f"G2 export: Multitau files from selection: {len(multitau_files)}"
+            )
             for i, xf in enumerate(all_files):
-                logger.info(f"G2 export: File {i}: {xf.label} - atype: {getattr(xf, 'atype', 'unknown')}")
+                logger.info(
+                    f"G2 export: File {i}: {xf.label} - atype: {getattr(xf, 'atype', 'unknown')}"
+                )
 
             # Check if selected files include any Multitau files
             if not multitau_files:
                 # Check if there are any Multitau files available but not selected
                 all_multitau_available = self.vk.get_xf_list(filter_atype="Multitau")
                 if all_multitau_available:
-                    self.statusbar.showMessage(f"Selected files are not Multitau type. Please select from {len(all_multitau_available)} available Multitau files.", 5000)
-                    logger.warning(f"G2 export: Selected {len(all_files)} files but none are Multitau. {len(all_multitau_available)} Multitau files available.")
+                    self.statusbar.showMessage(
+                        f"Selected files are not Multitau type. Please select from {len(all_multitau_available)} available Multitau files.",
+                        5000,
+                    )
+                    logger.warning(
+                        f"G2 export: Selected {len(all_files)} files but none are Multitau. {len(all_multitau_available)} Multitau files available."
+                    )
                 else:
-                    self.statusbar.showMessage("No Multitau files available for G2 export.", 5000)
-                    logger.warning("G2 export: No Multitau files available in entire target list.")
+                    self.statusbar.showMessage(
+                        "No Multitau files available for G2 export.", 5000
+                    )
+                    logger.warning(
+                        "G2 export: No Multitau files available in entire target list."
+                    )
                 return
 
             self.vk.export_g2(folder, rows)
@@ -1489,19 +1547,29 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         except ValueError as e:
             # Handle data validation errors with specific guidance
             if "No files with G2 data found" in str(e):
-                self.statusbar.showMessage("No files with G2 correlation data found. Please select multitau analysis files.", 5000)
+                self.statusbar.showMessage(
+                    "No files with G2 correlation data found. Please select multitau analysis files.",
+                    5000,
+                )
             elif "No valid Q indices" in str(e):
-                self.statusbar.showMessage("Export failed: Q-range selection resulted in invalid indices. Try adjusting Q-range.", 5000)
+                self.statusbar.showMessage(
+                    "Export failed: Q-range selection resulted in invalid indices. Try adjusting Q-range.",
+                    5000,
+                )
             else:
                 self.statusbar.showMessage(f"Data validation error: {e}", 5000)
             logger.error(f"G2 export validation error: {e}")
         except (OSError, PermissionError) as e:
             # Handle file system errors
-            self.statusbar.showMessage(f"File system error: Cannot write to {folder}. Check permissions.", 5000)
+            self.statusbar.showMessage(
+                f"File system error: Cannot write to {folder}. Check permissions.", 5000
+            )
             logger.error(f"G2 export file system error: {e}")
         except Exception as e:
             # Handle unexpected errors
-            self.statusbar.showMessage(f"Export failed with unexpected error: {type(e).__name__}: {e}", 5000)
+            self.statusbar.showMessage(
+                f"Export failed with unexpected error: {type(e).__name__}: {e}", 5000
+            )
             logger.error(f"G2 export unexpected error: {e}", exc_info=True)
 
     def export_diffusion(self):
@@ -1520,23 +1588,35 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
                 return
 
             self.vk.export_diffusion(folder, rows)
-            self.statusbar.showMessage(f"Diffusion fitting results exported to {folder}", 5000)
+            self.statusbar.showMessage(
+                f"Diffusion fitting results exported to {folder}", 5000
+            )
         except ValueError as e:
             # Handle data validation errors with specific guidance
             if "No files with tau-q fitting results found" in str(e):
-                self.statusbar.showMessage("No files with tau-q fitting results found. Please select multitau analysis files.", 5000)
+                self.statusbar.showMessage(
+                    "No files with tau-q fitting results found. Please select multitau analysis files.",
+                    5000,
+                )
             elif "No files with tau-q power law fitting results found" in str(e):
-                self.statusbar.showMessage("No diffusion analysis results found. Please perform diffusion analysis first in the Diffusion tab.", 5000)
+                self.statusbar.showMessage(
+                    "No diffusion analysis results found. Please perform diffusion analysis first in the Diffusion tab.",
+                    5000,
+                )
             else:
                 self.statusbar.showMessage(f"Data validation error: {e}", 5000)
             logger.error(f"Diffusion export validation error: {e}")
         except (OSError, PermissionError) as e:
             # Handle file system errors
-            self.statusbar.showMessage(f"File system error: Cannot write to {folder}. Check permissions.", 5000)
+            self.statusbar.showMessage(
+                f"File system error: Cannot write to {folder}. Check permissions.", 5000
+            )
             logger.error(f"Diffusion export file system error: {e}")
         except Exception as e:
             # Handle unexpected errors
-            self.statusbar.showMessage(f"Export failed with unexpected error: {type(e).__name__}: {e}", 5000)
+            self.statusbar.showMessage(
+                f"Export failed with unexpected error: {type(e).__name__}: {e}", 5000
+            )
             logger.error(f"Diffusion export unexpected error: {e}", exc_info=True)
 
     def reload_source(self):
@@ -1607,18 +1687,17 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         # Trigger plot update to show proper empty states since no files are auto-added
         self.update_plot()
 
-
     def update_box(self, file_list, mode="source"):
         if file_list is None:
             return
         if mode == "source":
             self.list_view_source.setModel(file_list)
-            self.box_source.setTitle("Source: %5d" % len(file_list))
+            self.box_source.setTitle(f"Source: {len(file_list):5d}")
             self.box_source.parent().repaint()
             self.list_view_source.parent().repaint()
         elif mode == "target":
             self.list_view_target.setModel(file_list)
-            self.box_target.setTitle("Target: %5d" % (len(file_list)))
+            self.box_target.setTitle(f"Target: {len(file_list):5d}")
             # on macos, the target box doesn't seem to update; force it
             file_list.layoutChanged.emit()
             self.box_target.repaint()
@@ -1684,7 +1763,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
                 return
 
             for xf in xf_list:
-                if hasattr(xf, 'atype') and xf.atype:
+                if hasattr(xf, "atype") and xf.atype:
                     for atype in xf.atype:
                         file_formats.add(atype)
                         if atype == "Multitau":
@@ -1692,23 +1771,33 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
                         elif atype == "Twotime":
                             twotime_count += 1
 
-            logger.debug(f"File format analysis: {file_formats}, Multitau: {multitau_count}, Twotime: {twotime_count}")
+            logger.debug(
+                f"File format analysis: {file_formats}, Multitau: {multitau_count}, Twotime: {twotime_count}"
+            )
 
             # Determine tab availability based on formats
             if len(file_formats) == 0:
                 # No recognized formats, enable all tabs
                 self._enable_all_tabs()
-                self.statusbar.showMessage("Warning: File format not recognized - proceed with caution", 5000)
+                self.statusbar.showMessage(
+                    "Warning: File format not recognized - proceed with caution", 5000
+                )
 
             elif len(file_formats) == 1:
                 # Single format detected
-                format_type = list(file_formats)[0]
+                format_type = next(iter(file_formats))
                 if format_type == "Multitau":
                     self._configure_for_multitau()
-                    self.statusbar.showMessage(f"Multitau format detected - Two Time tab disabled ({multitau_count} files)", 5000)
+                    self.statusbar.showMessage(
+                        f"Multitau format detected - Two Time tab disabled ({multitau_count} files)",
+                        5000,
+                    )
                 elif format_type == "Twotime":
                     self._configure_for_twotime()
-                    self.statusbar.showMessage(f"Twotime format detected - G2 and Diffusion tabs disabled ({twotime_count} files)", 5000)
+                    self.statusbar.showMessage(
+                        f"Twotime format detected - G2 and Diffusion tabs disabled ({twotime_count} files)",
+                        5000,
+                    )
                 else:
                     self._enable_all_tabs()
 
@@ -1717,13 +1806,15 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
                 self._enable_all_tabs()
                 self.statusbar.showMessage(
                     f"Warning: Mixed formats detected (Multitau: {multitau_count}, Twotime: {twotime_count}) - use tabs carefully",
-                    8000
+                    8000,
                 )
 
         except Exception as e:
             logger.error(f"Error analyzing file formats for tab management: {e}")
             self._enable_all_tabs()
-            self.statusbar.showMessage("Error analyzing file formats - all tabs enabled", 5000)
+            self.statusbar.showMessage(
+                "Error analyzing file formats - all tabs enabled", 5000
+            )
 
     def _enable_all_tabs(self):
         """Enable all tabs."""
@@ -1740,7 +1831,10 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         # Disable Two Time tab (index 6)
         twotime_tab_index = 6
         self.tabWidget.setTabEnabled(twotime_tab_index, False)
-        self.tabWidget.setTabToolTip(twotime_tab_index, "Two Time analysis not available for multitau format files")
+        self.tabWidget.setTabToolTip(
+            twotime_tab_index,
+            "Two Time analysis not available for multitau format files",
+        )
 
         # If user is currently on Two Time tab, switch to G2 tab
         if self.tabWidget.currentIndex() == twotime_tab_index:
@@ -1759,8 +1853,13 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         diffusion_tab_index = 5
         self.tabWidget.setTabEnabled(g2_tab_index, False)
         self.tabWidget.setTabEnabled(diffusion_tab_index, False)
-        self.tabWidget.setTabToolTip(g2_tab_index, "G2 analysis not available for twotime format files")
-        self.tabWidget.setTabToolTip(diffusion_tab_index, "Diffusion analysis not available for twotime format files")
+        self.tabWidget.setTabToolTip(
+            g2_tab_index, "G2 analysis not available for twotime format files"
+        )
+        self.tabWidget.setTabToolTip(
+            diffusion_tab_index,
+            "Diffusion analysis not available for twotime format files",
+        )
 
         # If user is currently on disabled tab, switch to Two Time tab
         current_tab = self.tabWidget.currentIndex()
@@ -1768,7 +1867,9 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
             self.tabWidget.setCurrentIndex(6)  # Switch to Two Time tab
             logger.info("Switched from disabled tab to Two Time tab (twotime format)")
 
-        logger.debug("Configured tabs for twotime format: G2 and Diffusion tabs disabled")
+        logger.debug(
+            "Configured tabs for twotime format: G2 and Diffusion tabs disabled"
+        )
 
     def _clear_tab_tooltips(self):
         """Clear all tab tooltips."""
@@ -1829,7 +1930,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         # avoid searching when the filter lister is too short
         if len(val) < min_length:
             self.statusbar.showMessage(
-                "Please enter at least %d characters" % min_length, 1000
+                f"Please enter at least {min_length} characters", 1000
             )
             return
 
@@ -1867,7 +1968,6 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
                 vals[id1], vals[id2] = vals[id2], vals[id1]
 
         swap_min_max(0, 1)
-        # swap_min_max(2, 3, lambda x: '%.2e' % x)
         swap_min_max(4, 5)
 
         return vals
@@ -1918,7 +2018,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         )
         fit_flag = [x.isChecked() for x in fit_keys]
 
-        if fit_func == "single" or fit_func == "robust":
+        if fit_func in {"single", "robust"}:
             fit_flag = fit_flag[0:4]
             bounds = bounds[:, 0:4]
         bounds = bounds.tolist()
@@ -1948,7 +2048,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         title = [
             "g2 fitting with Single Exp:  y = a·exp[-2(x/b)^c]+d",
             "g2 fitting with Double Exp:  y = a·[f·exp[-(x/b)^c +"
-            + "(1-f)·exp[-(x/b2)^c2]^2+d"
+            + "(1-f)·exp[-(x/b2)^c2]^2+d",
         ]
         self.groupBox_2.setTitle(title[idx])
 

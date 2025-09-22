@@ -7,7 +7,7 @@ This directory contains the consolidated documentation for XPCS Toolkit developm
 ### [OPTIMIZATION_GUIDE.md](OPTIMIZATION_GUIDE.md) ⭐
 **Complete Performance Optimization Reference** - The definitive guide covering:
 - Threading system optimizations (25-40% performance improvement)
-- Memory management and caching systems (40-60% overhead reduction) 
+- Memory management and caching systems (40-60% overhead reduction)
 - I/O performance optimizations (connection pooling, batch processing)
 - Scientific computing optimizations (vectorized algorithms, parallel processing)
 - CPU optimization ecosystem (monitoring, profiling, testing)
@@ -20,7 +20,7 @@ This directory contains the consolidated documentation for XPCS Toolkit developm
 - Performance benchmarks and best practices
 - Troubleshooting and advanced features
 
-### [TESTING.md](TESTING.md) 
+### [TESTING.md](TESTING.md)
 **Testing Framework Guide** - Complete testing documentation:
 - Test execution strategies and commands
 - Property-based testing with Hypothesis

@@ -8,15 +8,16 @@ error context for better debugging and recovery.
 
 import logging
 import time
-from typing import Optional, Dict, Any, Tuple, List
+from typing import Any
+
 import numpy as np
 
 from .exceptions import XPCSValidationError, convert_exception
 from .reliability import (
-    validate_input,
     ValidationLevel,
-    get_validation_cache,
     ValidationResult,
+    get_validation_cache,
+    validate_input,
 )
 
 logger = logging.getLogger(__name__)
@@ -32,11 +33,11 @@ def get_file_label_safe(xf) -> str:
     Returns:
         str: The file label if available, otherwise 'unknown'
     """
-    return getattr(xf, 'label', 'unknown')
+    return getattr(xf, "label", "unknown")
 
 
 @validate_input(check_types=True, level=ValidationLevel.STANDARD, cache_results=True)
-def validate_xf_fit_summary(xf) -> Tuple[bool, Optional[Dict[str, Any]], Optional[str]]:
+def validate_xf_fit_summary(xf) -> tuple[bool, dict[str, Any] | None, str | None]:
     """
     Validate that an XPCS file object has a valid fit_summary with required fields.
     Enhanced with caching and detailed error context.
@@ -54,7 +55,7 @@ def validate_xf_fit_summary(xf) -> Tuple[bool, Optional[Dict[str, Any]], Optiona
 
     try:
         # Check if fit_summary exists
-        if not hasattr(xf, 'fit_summary') or xf.fit_summary is None:
+        if not hasattr(xf, "fit_summary") or xf.fit_summary is None:
             error_msg = f"File {file_label} missing fit_summary attribute"
             logger.debug(error_msg)
             return False, None, error_msg
@@ -63,7 +64,9 @@ def validate_xf_fit_summary(xf) -> Tuple[bool, Optional[Dict[str, Any]], Optiona
 
         # Enhanced validation with detailed field checking
         required_fields = ["q_val", "fit_val"]
-        missing_fields = [field for field in required_fields if field not in fit_summary]
+        missing_fields = [
+            field for field in required_fields if field not in fit_summary
+        ]
 
         if missing_fields:
             error_msg = f"File {file_label} missing required fields: {', '.join(missing_fields)}"
@@ -71,9 +74,13 @@ def validate_xf_fit_summary(xf) -> Tuple[bool, Optional[Dict[str, Any]], Optiona
 
             # Add recovery suggestion based on missing fields
             if "q_val" in missing_fields:
-                logger.debug(f"  - Suggestion: Ensure G2 fitting was completed for {file_label}")
+                logger.debug(
+                    f"  - Suggestion: Ensure G2 fitting was completed for {file_label}"
+                )
             if "fit_val" in missing_fields:
-                logger.debug(f"  - Suggestion: Re-run G2 fitting with proper parameters for {file_label}")
+                logger.debug(
+                    f"  - Suggestion: Re-run G2 fitting with proper parameters for {file_label}"
+                )
 
             return False, None, error_msg
 
@@ -81,12 +88,12 @@ def validate_xf_fit_summary(xf) -> Tuple[bool, Optional[Dict[str, Any]], Optiona
         q_val = fit_summary.get("q_val")
         fit_val = fit_summary.get("fit_val")
 
-        if q_val is not None and hasattr(q_val, '__len__') and len(q_val) == 0:
+        if q_val is not None and hasattr(q_val, "__len__") and len(q_val) == 0:
             error_msg = f"File {file_label} has empty q_val array"
             logger.debug(error_msg)
             return False, None, error_msg
 
-        if fit_val is not None and hasattr(fit_val, '__len__') and len(fit_val) == 0:
+        if fit_val is not None and hasattr(fit_val, "__len__") and len(fit_val) == 0:
             error_msg = f"File {file_label} has empty fit_val array"
             logger.debug(error_msg)
             return False, None, error_msg
@@ -101,7 +108,7 @@ def validate_xf_fit_summary(xf) -> Tuple[bool, Optional[Dict[str, Any]], Optiona
         return False, None, error_msg
 
 
-def validate_xf_has_fit_summary(xf) -> Tuple[bool, Optional[str]]:
+def validate_xf_has_fit_summary(xf) -> tuple[bool, str | None]:
     """
     Simple validation that an XPCS file object has a fit_summary attribute.
 
@@ -123,7 +130,9 @@ def validate_xf_has_fit_summary(xf) -> Tuple[bool, Optional[str]]:
     return True, None
 
 
-def validate_fit_summary_fields(fit_summary: Dict[str, Any], required_fields: list, file_label: str = "unknown") -> Tuple[bool, Optional[str]]:
+def validate_fit_summary_fields(
+    fit_summary: dict[str, Any], required_fields: list, file_label: str = "unknown"
+) -> tuple[bool, str | None]:
     """
     Validate that a fit_summary dictionary contains required fields.
 
@@ -140,14 +149,18 @@ def validate_fit_summary_fields(fit_summary: Dict[str, Any], required_fields: li
     missing_fields = [field for field in required_fields if field not in fit_summary]
 
     if missing_fields:
-        error_msg = f"Skipping file {file_label} - missing fields: {', '.join(missing_fields)}"
+        error_msg = (
+            f"Skipping file {file_label} - missing fields: {', '.join(missing_fields)}"
+        )
         logger.debug(error_msg)
         return False, error_msg
 
     return True, None
 
 
-def log_array_size_mismatch(file_label: str, array_info: Dict[str, int], min_length: int) -> None:
+def log_array_size_mismatch(
+    file_label: str, array_info: dict[str, int], min_length: int
+) -> None:
     """
     Log a standardized array size mismatch warning.
 
@@ -162,7 +175,9 @@ def log_array_size_mismatch(file_label: str, array_info: Dict[str, int], min_len
     )
 
 
-def validate_array_compatibility(*arrays, file_label: str = "unknown") -> Tuple[bool, int, Optional[str]]:
+def validate_array_compatibility(
+    *arrays, file_label: str = "unknown"
+) -> tuple[bool, int, str | None]:
     """
     Validate that arrays have compatible sizes and return the minimum length.
 
@@ -189,7 +204,9 @@ def validate_array_compatibility(*arrays, file_label: str = "unknown") -> Tuple[
 
     warning_msg = None
     if min_length != max_length:
-        array_info = {f"array_{i}": len(arr) for i, arr in enumerate(arrays) if arr is not None}
+        array_info = {
+            f"array_{i}": len(arr) for i, arr in enumerate(arrays) if arr is not None
+        }
         log_array_size_mismatch(file_label, array_info, min_length)
         warning_msg = f"Array sizes differ, trimmed to {min_length}"
 
@@ -200,8 +217,15 @@ def validate_array_compatibility(*arrays, file_label: str = "unknown") -> Tuple[
 
 
 # Enhanced validation functions for scientific data integrity
-@validate_input(check_types=True, check_values=True, level=ValidationLevel.STRICT, cache_results=True)
-def validate_hdf5_file_integrity(file_path: str, required_datasets: List[str] = None) -> ValidationResult:
+@validate_input(
+    check_types=True,
+    check_values=True,
+    level=ValidationLevel.STRICT,
+    cache_results=True,
+)
+def validate_hdf5_file_integrity(
+    file_path: str, required_datasets: list[str] | None = None
+) -> ValidationResult:
     """
     Comprehensive HDF5 file integrity validation with caching.
 
@@ -212,8 +236,9 @@ def validate_hdf5_file_integrity(file_path: str, required_datasets: List[str] = 
     Returns:
         ValidationResult with detailed validation information
     """
-    import h5py
     from pathlib import Path
+
+    import h5py
 
     start_time = time.time()
     errors = []
@@ -230,7 +255,7 @@ def validate_hdf5_file_integrity(file_path: str, required_datasets: List[str] = 
 
         # Try to open the file
         try:
-            with h5py.File(file_path, 'r') as f:
+            with h5py.File(file_path, "r") as f:
                 # Check file structure
                 if required_datasets:
                     for dataset_path in required_datasets:
@@ -238,17 +263,19 @@ def validate_hdf5_file_integrity(file_path: str, required_datasets: List[str] = 
                             errors.append(f"Missing required dataset: {dataset_path}")
 
                 # Check for common XPCS structure
-                xpcs_group = f.get('xpcs')
+                xpcs_group = f.get("xpcs")
                 if xpcs_group is None:
-                    warnings.append("No 'xpcs' group found - may not be valid XPCS data")
+                    warnings.append(
+                        "No 'xpcs' group found - may not be valid XPCS data"
+                    )
                 else:
                     # Validate XPCS structure
-                    common_datasets = ['scattering_2d', 'tau', 'q_values']
+                    common_datasets = ["scattering_2d", "tau", "q_values"]
                     for dataset in common_datasets:
                         if dataset not in xpcs_group:
                             warnings.append(f"Missing common XPCS dataset: {dataset}")
 
-        except (OSError, IOError) as e:
+        except OSError as e:
             raise XPCSValidationError(f"Cannot read HDF5 file: {e}")
 
         validation_time = time.time() - start_time
@@ -258,7 +285,7 @@ def validate_hdf5_file_integrity(file_path: str, required_datasets: List[str] = 
             is_valid=is_valid,
             error_message="; ".join(errors) if errors else None,
             warnings=warnings,
-            validation_time=validation_time
+            validation_time=validation_time,
         )
 
     except Exception as e:
@@ -272,20 +299,22 @@ def validate_hdf5_file_integrity(file_path: str, required_datasets: List[str] = 
             is_valid=False,
             error_message=error_msg,
             warnings=[],
-            validation_time=validation_time
+            validation_time=validation_time,
         )
 
 
-@validate_input(check_types=True, check_shapes=True, check_values=True, cache_results=True)
+@validate_input(
+    check_types=True, check_shapes=True, check_values=True, cache_results=True
+)
 def validate_scientific_array(
     array: np.ndarray,
     array_name: str = "data",
     min_dimensions: int = 1,
-    max_dimensions: Optional[int] = None,
-    expected_shape: Optional[Tuple[int, ...]] = None,
+    max_dimensions: int | None = None,
+    expected_shape: tuple[int, ...] | None = None,
     allow_nan: bool = False,
     allow_negative: bool = True,
-    finite_only: bool = True
+    finite_only: bool = True,
 ) -> ValidationResult:
     """
     Comprehensive scientific array validation with domain-specific checks.
@@ -314,14 +343,20 @@ def validate_scientific_array(
 
         # Dimension checks
         if array.ndim < min_dimensions:
-            errors.append(f"Array '{array_name}' has {array.ndim} dimensions, minimum {min_dimensions} required")
+            errors.append(
+                f"Array '{array_name}' has {array.ndim} dimensions, minimum {min_dimensions} required"
+            )
 
         if max_dimensions is not None and array.ndim > max_dimensions:
-            errors.append(f"Array '{array_name}' has {array.ndim} dimensions, maximum {max_dimensions} allowed")
+            errors.append(
+                f"Array '{array_name}' has {array.ndim} dimensions, maximum {max_dimensions} allowed"
+            )
 
         # Shape validation
         if expected_shape is not None and array.shape != expected_shape:
-            errors.append(f"Array '{array_name}' shape {array.shape} does not match expected {expected_shape}")
+            errors.append(
+                f"Array '{array_name}' shape {array.shape} does not match expected {expected_shape}"
+            )
 
         # Value validation for numerical arrays
         if np.issubdtype(array.dtype, np.number) and array.size > 0:
@@ -329,23 +364,33 @@ def validate_scientific_array(
             nan_count = np.sum(np.isnan(array))
             if nan_count > 0:
                 if not allow_nan:
-                    errors.append(f"Array '{array_name}' contains {nan_count} NaN values")
+                    errors.append(
+                        f"Array '{array_name}' contains {nan_count} NaN values"
+                    )
                 else:
-                    warnings.append(f"Array '{array_name}' contains {nan_count} NaN values")
+                    warnings.append(
+                        f"Array '{array_name}' contains {nan_count} NaN values"
+                    )
 
             # Infinity check
             inf_count = np.sum(np.isinf(array))
             if inf_count > 0:
                 if finite_only:
-                    errors.append(f"Array '{array_name}' contains {inf_count} infinite values")
+                    errors.append(
+                        f"Array '{array_name}' contains {inf_count} infinite values"
+                    )
                 else:
-                    warnings.append(f"Array '{array_name}' contains {inf_count} infinite values")
+                    warnings.append(
+                        f"Array '{array_name}' contains {inf_count} infinite values"
+                    )
 
             # Negative value check
             if not allow_negative:
                 negative_count = np.sum(array < 0)
                 if negative_count > 0:
-                    errors.append(f"Array '{array_name}' contains {negative_count} negative values")
+                    errors.append(
+                        f"Array '{array_name}' contains {negative_count} negative values"
+                    )
 
             # Memory usage check
             array_size_mb = array.nbytes / (1024 * 1024)
@@ -354,7 +399,9 @@ def validate_scientific_array(
 
         # Data type checks
         if array.dtype == np.object_:
-            warnings.append(f"Array '{array_name}' uses object dtype - may impact performance")
+            warnings.append(
+                f"Array '{array_name}' uses object dtype - may impact performance"
+            )
 
         validation_time = time.time() - start_time
         is_valid = len(errors) == 0
@@ -363,7 +410,7 @@ def validate_scientific_array(
             is_valid=is_valid,
             error_message="; ".join(errors) if errors else None,
             warnings=warnings,
-            validation_time=validation_time
+            validation_time=validation_time,
         )
 
     except Exception as e:
@@ -374,11 +421,13 @@ def validate_scientific_array(
             is_valid=False,
             error_message=error_msg,
             warnings=[],
-            validation_time=validation_time
+            validation_time=validation_time,
         )
 
 
-def validate_g2_data(g2_array: np.ndarray, tau_array: np.ndarray = None) -> ValidationResult:
+def validate_g2_data(
+    g2_array: np.ndarray, tau_array: np.ndarray = None
+) -> ValidationResult:
     """
     Specialized validation for G2 correlation data.
 
@@ -401,7 +450,7 @@ def validate_g2_data(g2_array: np.ndarray, tau_array: np.ndarray = None) -> Vali
             min_dimensions=1,
             max_dimensions=2,
             allow_negative=False,  # G2 should be positive
-            finite_only=True
+            finite_only=True,
         )
 
         if not g2_result.is_valid:
@@ -422,7 +471,9 @@ def validate_g2_data(g2_array: np.ndarray, tau_array: np.ndarray = None) -> Vali
                 final_values = g2_array[-5:]  # Last 5 points
                 final_mean = np.nanmean(final_values)
                 if not (0.8 <= final_mean <= 1.5):
-                    warnings.append(f"G2 baseline unusual: {final_mean:.3f} (expected ~1.0)")
+                    warnings.append(
+                        f"G2 baseline unusual: {final_mean:.3f} (expected ~1.0)"
+                    )
 
         # Validate tau array if provided
         if tau_array is not None:
@@ -432,7 +483,7 @@ def validate_g2_data(g2_array: np.ndarray, tau_array: np.ndarray = None) -> Vali
                 min_dimensions=1,
                 max_dimensions=1,
                 allow_negative=False,  # Time delays should be positive
-                finite_only=True
+                finite_only=True,
             )
 
             if not tau_result.is_valid:
@@ -441,12 +492,13 @@ def validate_g2_data(g2_array: np.ndarray, tau_array: np.ndarray = None) -> Vali
 
             # Check tau-G2 consistency
             if g2_array.ndim == 1 and len(tau_array) != len(g2_array):
-                errors.append(f"Tau array length ({len(tau_array)}) does not match G2 array length ({len(g2_array)})")
+                errors.append(
+                    f"Tau array length ({len(tau_array)}) does not match G2 array length ({len(g2_array)})"
+                )
 
             # Check for proper tau ordering (should be increasing)
-            if len(tau_array) > 1:
-                if not np.all(np.diff(tau_array) > 0):
-                    warnings.append("Tau values are not strictly increasing")
+            if len(tau_array) > 1 and not np.all(np.diff(tau_array) > 0):
+                warnings.append("Tau values are not strictly increasing")
 
         validation_time = time.time() - start_time
         is_valid = len(errors) == 0
@@ -455,7 +507,7 @@ def validate_g2_data(g2_array: np.ndarray, tau_array: np.ndarray = None) -> Vali
             is_valid=is_valid,
             error_message="; ".join(errors) if errors else None,
             warnings=warnings,
-            validation_time=validation_time
+            validation_time=validation_time,
         )
 
     except Exception as e:
@@ -466,11 +518,11 @@ def validate_g2_data(g2_array: np.ndarray, tau_array: np.ndarray = None) -> Vali
             is_valid=False,
             error_message=error_msg,
             warnings=[],
-            validation_time=validation_time
+            validation_time=validation_time,
         )
 
 
-def get_validation_statistics() -> Dict[str, Any]:
+def get_validation_statistics() -> dict[str, Any]:
     """
     Get comprehensive validation performance statistics.
 
@@ -485,7 +537,6 @@ def get_validation_statistics() -> Dict[str, Any]:
             return {"message": "No validation cache entries"}
 
         # Calculate cache hit rate and performance metrics
-        total_validations = total_entries
         cache_size_mb = total_entries * 0.001  # Rough estimate
 
         return {
@@ -493,5 +544,7 @@ def get_validation_statistics() -> Dict[str, Any]:
             "cache_size_estimate_mb": cache_size_mb,
             "max_cache_size": cache._max_size,
             "default_ttl_seconds": cache._default_ttl,
-            "performance_impact": "< 1% CPU overhead" if total_entries < 1000 else "< 2% CPU overhead"
+            "performance_impact": "< 1% CPU overhead"
+            if total_entries < 1000
+            else "< 2% CPU overhead",
         }

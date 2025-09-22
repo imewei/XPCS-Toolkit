@@ -7,11 +7,11 @@ that occur with PyQtGraph components, particularly QStyleHints warnings.
 
 import logging
 import warnings
+from collections.abc import Callable
 from contextlib import contextmanager
-from typing import Callable, Optional
 
 from PySide6 import QtWidgets
-from PySide6.QtCore import QObject, Signal, QMetaObject, Qt
+from PySide6.QtCore import QMetaObject, QObject, Qt, Signal
 
 from ..utils.logging_config import get_logger
 
@@ -40,15 +40,15 @@ class QtConnectionFixer:
         original_filters = warnings.filters.copy()
 
         # Suppress specific Qt warnings
-        warnings.filterwarnings('ignore', category=UserWarning, module='.*qt.*')
-        warnings.filterwarnings('ignore', message='.*QStyleHints.*')
-        warnings.filterwarnings('ignore', message='.*unique connections require.*')
-        warnings.filterwarnings('ignore', message='.*QObject::connect.*')
+        warnings.filterwarnings("ignore", category=UserWarning, module=".*qt.*")
+        warnings.filterwarnings("ignore", message=".*QStyleHints.*")
+        warnings.filterwarnings("ignore", message=".*unique connections require.*")
+        warnings.filterwarnings("ignore", message=".*QObject::connect.*")
 
         # Also suppress Qt logging messages temporarily
-        qt_logger = logging.getLogger('qt')
-        qt_core_logger = logging.getLogger('qt.core')
-        qt_qobject_logger = logging.getLogger('qt.core.qobject')
+        qt_logger = logging.getLogger("qt")
+        qt_core_logger = logging.getLogger("qt.core")
+        qt_qobject_logger = logging.getLogger("qt.core.qobject")
 
         original_level = qt_logger.level
         original_core_level = qt_core_logger.level
@@ -60,8 +60,9 @@ class QtConnectionFixer:
 
         # Set environment variable to suppress Qt debug output
         import os
-        original_qt_logging = os.environ.get('QT_LOGGING_RULES', '')
-        os.environ['QT_LOGGING_RULES'] = 'qt.core.qobject.connect=false'
+
+        original_qt_logging = os.environ.get("QT_LOGGING_RULES", "")
+        os.environ["QT_LOGGING_RULES"] = "qt.core.qobject.connect=false"
 
         try:
             yield
@@ -74,9 +75,9 @@ class QtConnectionFixer:
 
             # Restore Qt logging rules
             if original_qt_logging:
-                os.environ['QT_LOGGING_RULES'] = original_qt_logging
+                os.environ["QT_LOGGING_RULES"] = original_qt_logging
             else:
-                os.environ.pop('QT_LOGGING_RULES', None)
+                os.environ.pop("QT_LOGGING_RULES", None)
 
     @staticmethod
     def create_safe_imageview(*args, **kwargs):
@@ -107,8 +108,11 @@ class QtConnectionFixer:
             raise
 
     @staticmethod
-    def validate_signal_connection(signal: Signal, slot: Callable,
-                                 connection_type: Qt.ConnectionType = Qt.ConnectionType.AutoConnection) -> bool:
+    def validate_signal_connection(
+        signal: Signal,
+        slot: Callable,
+        connection_type: Qt.ConnectionType = Qt.ConnectionType.AutoConnection,
+    ) -> bool:
         """
         Validate and establish a Qt5+ compliant signal/slot connection.
 
@@ -122,7 +126,7 @@ class QtConnectionFixer:
         """
         try:
             # Validate signal
-            if not hasattr(signal, 'connect'):
+            if not hasattr(signal, "connect"):
                 logger.warning("Invalid signal object - missing connect method")
                 return False
 
@@ -133,12 +137,16 @@ class QtConnectionFixer:
 
             # Check for Qt4-style string connections (should be avoided)
             if isinstance(signal, str) or isinstance(slot, str):
-                logger.warning("Detected Qt4-style string-based connection - should be updated")
+                logger.warning(
+                    "Detected Qt4-style string-based connection - should be updated"
+                )
                 return False
 
             # Establish connection with Qt5+ syntax
             signal.connect(slot, connection_type)
-            logger.debug(f"Successfully connected signal to {slot.__name__ if hasattr(slot, '__name__') else 'slot'}")
+            logger.debug(
+                f"Successfully connected signal to {slot.__name__ if hasattr(slot, '__name__') else 'slot'}"
+            )
             return True
 
         except Exception as e:
@@ -146,8 +154,12 @@ class QtConnectionFixer:
             return False
 
     @staticmethod
-    def upgrade_qt4_connection(obj: QObject, signal_name: str, slot: Callable,
-                             signal_signature: Optional[str] = None) -> bool:
+    def upgrade_qt4_connection(
+        obj: QObject,
+        signal_name: str,
+        slot: Callable,
+        signal_signature: str | None = None,
+    ) -> bool:
         """
         Upgrade a Qt4-style connection to Qt5+ syntax.
 
@@ -172,7 +184,9 @@ class QtConnectionFixer:
             if signal_signature is not None:
                 # This handles cases like clicked["bool"] -> clicked
                 signal = signal  # In Qt5+, we typically use the base signal
-                logger.debug(f"Handling overloaded signal {signal_name} with signature {signal_signature}")
+                logger.debug(
+                    f"Handling overloaded signal {signal_name} with signature {signal_signature}"
+                )
 
             # Establish Qt5+ connection
             return QtConnectionFixer.validate_signal_connection(signal, slot)
@@ -185,11 +199,11 @@ class QtConnectionFixer:
 class PyQtGraphWrapper:
     """
     Wrapper for PyQtGraph components that minimizes Qt connection warnings.
-    
+
     This class provides static methods to create PyQtGraph widgets with proper
     Qt signal/slot connection handling, reducing or eliminating connection warnings
     that commonly occur with PyQtGraph components like ImageView widgets.
-    
+
     The wrapper uses the QtConnectionFixer context manager to suppress cosmetic
     Qt warnings during widget creation while maintaining full functionality.
     """
@@ -246,8 +260,11 @@ class PyQtGraphWrapper:
 
 
 # Utility functions for common signal/slot operations
-def safe_connect(signal: Signal, slot: Callable,
-                connection_type: Qt.ConnectionType = Qt.ConnectionType.AutoConnection) -> bool:
+def safe_connect(
+    signal: Signal,
+    slot: Callable,
+    connection_type: Qt.ConnectionType = Qt.ConnectionType.AutoConnection,
+) -> bool:
     """
     Safely connect a signal to a slot with validation.
 
@@ -262,7 +279,7 @@ def safe_connect(signal: Signal, slot: Callable,
     return QtConnectionFixer.validate_signal_connection(signal, slot, connection_type)
 
 
-def safe_disconnect(signal: Signal, slot: Optional[Callable] = None) -> bool:
+def safe_disconnect(signal: Signal, slot: Callable | None = None) -> bool:
     """
     Safely disconnect a signal from a slot.
 
@@ -325,25 +342,27 @@ def qt_connection_context():
 def suppress_qt_connection_warnings(func):
     """
     Decorator to suppress Qt connection warnings for widget creation functions.
-    
+
     This decorator wraps a function to suppress Qt connection warnings during
     execution, particularly useful for functions that create PyQtGraph widgets
     which may generate cosmetic QStyleHints warnings.
-    
+
     Args:
         func: The function to wrap with Qt warning suppression
-    
+
     Returns:
         Wrapped function that executes with Qt warnings suppressed
-    
+
     Usage:
         @suppress_qt_connection_warnings
         def create_widget():
             return pg.ImageView()
     """
+
     def wrapper(*args, **kwargs):
         with QtConnectionFixer.suppress_qt_warnings():
             return func(*args, **kwargs)
+
     return wrapper
 
 
@@ -362,15 +381,16 @@ def configure_pyqtgraph_for_qt_compatibility():
         None
     """
     try:
-        import pyqtgraph as pg
         import os
 
+        import pyqtgraph as pg
+
         # Set environment variable to suppress Qt connection warnings globally
-        os.environ['QT_LOGGING_RULES'] = 'qt.core.qobject.connect=false'
+        os.environ["QT_LOGGING_RULES"] = "qt.core.qobject.connect=false"
 
         # Set PyQtGraph configuration options that may reduce warnings
         pg.setConfigOptions(
-            imageAxisOrder='row-major',  # This was already set
+            imageAxisOrder="row-major",  # This was already set
             useNumba=False,  # Disable numba to avoid potential issues
             enableExperimental=False,  # Disable experimental features
         )
@@ -379,7 +399,9 @@ def configure_pyqtgraph_for_qt_compatibility():
         app = QtWidgets.QApplication.instance()
         if app is not None:
             # Set attributes that may reduce connection warnings
-            app.setAttribute(Qt.ApplicationAttribute.AA_DontCreateNativeWidgetSiblings, True)
+            app.setAttribute(
+                Qt.ApplicationAttribute.AA_DontCreateNativeWidgetSiblings, True
+            )
 
         logger.info("Configured PyQtGraph for Qt compatibility")
 
@@ -438,11 +460,11 @@ class LegacyConnectionDetector:
             Suggested modern syntax
         """
         suggestions = {
-            'clicked["bool"]': 'clicked',
-            'valueChanged["int"]': 'valueChanged',
-            'currentIndexChanged["int"]': 'currentIndexChanged',
-            'stateChanged["int"]': 'stateChanged',
-            'textChanged["QString"]': 'textChanged',
+            'clicked["bool"]': "clicked",
+            'valueChanged["int"]': "valueChanged",
+            'currentIndexChanged["int"]': "currentIndexChanged",
+            'stateChanged["int"]': "stateChanged",
+            'textChanged["QString"]': "textChanged",
         }
 
         return suggestions.get(legacy_pattern, legacy_pattern)

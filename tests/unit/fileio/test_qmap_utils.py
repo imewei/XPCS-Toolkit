@@ -423,7 +423,9 @@ class TestGetHashFunction:
 
         assert isinstance(hash_value, str)
         assert hash_value == "test_hash_value"
-        mock_connection_pool.get_connection.assert_called_once_with("/test/file.hdf", "r")
+        mock_connection_pool.get_connection.assert_called_once_with(
+            "/test/file.hdf", "r"
+        )
 
     @patch("os.path.getmtime")
     @patch("os.path.getsize")

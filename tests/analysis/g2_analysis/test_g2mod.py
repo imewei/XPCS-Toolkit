@@ -4,12 +4,16 @@ This module provides comprehensive unit tests for G2 correlation analysis,
 covering correlation calculation and fitting algorithms.
 """
 
+import inspect
 from unittest.mock import Mock, patch
 
 import numpy as np
+import pyqtgraph as pg
 import pytest
 
 from xpcs_toolkit.module import g2mod
+from xpcs_toolkit.module.g2mod import colors, symbols
+from xpcs_toolkit.plothandler.plot_constants import MATPLOTLIB_COLORS_RGB
 
 
 class TestG2ModConstants:
@@ -309,7 +313,6 @@ class TestPgPlotParameters:
 
     def test_pg_plot_parameter_names(self):
         """Test that pg_plot has expected parameter names."""
-        import inspect
 
         sig = inspect.signature(g2mod.pg_plot)
         param_names = list(sig.parameters.keys())
@@ -334,8 +337,6 @@ class TestModuleIntegration:
         # We can't easily test the actual config, but we can verify
         # the module imports and uses pg
         assert hasattr(g2mod, "pg")
-        import pyqtgraph as pg
-
         assert g2mod.pg is pg
 
     def test_module_imports(self):
@@ -347,9 +348,6 @@ class TestModuleIntegration:
     def test_module_constants_accessibility(self):
         """Test that module constants are accessible."""
         # Colors and symbols should be accessible from module
-        from xpcs_toolkit.module.g2mod import colors, symbols
-        from xpcs_toolkit.plothandler.plot_constants import MATPLOTLIB_COLORS_RGB
-
         assert colors == g2mod.colors
         assert symbols == g2mod.symbols
         # Verify colors come from centralized constants
@@ -410,9 +408,9 @@ class TestErrorHandling:
             result = g2mod.get_data(xf_list)
             # If successful, should return some reasonable result
             assert result is not None
-        except Exception:
+        except Exception as e:
             # Also acceptable - error propagated as expected
-            pass
+            pytest.skip(f"Exception raised as expected: {e}")
 
     def test_compute_geometry_empty_g2_list(self):
         """Test compute_geometry with empty g2 list."""

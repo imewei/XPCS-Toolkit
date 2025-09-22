@@ -6,7 +6,8 @@ across validation, error checking, and common operations in the XPCS toolkit.
 """
 
 import logging
-from typing import Any, List, Optional, Union, Tuple
+from typing import Any
+
 import numpy as np
 
 logger = logging.getLogger(__name__)
@@ -47,19 +48,18 @@ def is_empty_or_none(obj: Any) -> bool:
 
     # Handle different container types
     try:
-        if hasattr(obj, '__len__'):
+        if hasattr(obj, "__len__"):
             return len(obj) == 0
-        elif isinstance(obj, (str, bytes)):
+        if isinstance(obj, (str, bytes)):
             return len(obj) == 0
-        elif hasattr(obj, 'size'):  # NumPy arrays
+        if hasattr(obj, "size"):  # NumPy arrays
             return obj.size == 0
-        else:
-            return False
+        return False
     except:
         return False
 
 
-def safe_array_access(arr: Any, index: Union[int, slice], default: Any = None) -> Any:
+def safe_array_access(arr: Any, index: int | slice, default: Any = None) -> Any:
     """
     Safely access array elements with bounds checking.
 
@@ -77,7 +77,7 @@ def safe_array_access(arr: Any, index: Union[int, slice], default: Any = None) -
 
         # Check bounds for integer indices
         if isinstance(index, int):
-            if hasattr(arr, '__len__') and (index >= len(arr) or index < -len(arr)):
+            if hasattr(arr, "__len__") and (index >= len(arr) or index < -len(arr)):
                 return default
 
         return arr[index]
@@ -102,8 +102,12 @@ def safe_dict_access(d: dict, key: str, default: Any = None) -> Any:
     return d.get(key, default)
 
 
-def validate_numeric_range(value: Any, min_val: float = None, max_val: float = None,
-                         param_name: str = "value") -> Tuple[bool, Optional[str]]:
+def validate_numeric_range(
+    value: Any,
+    min_val: float | None = None,
+    max_val: float | None = None,
+    param_name: str = "value",
+) -> tuple[bool, str | None]:
     """
     Validate that a numeric value is within specified range.
 
@@ -119,7 +123,10 @@ def validate_numeric_range(value: Any, min_val: float = None, max_val: float = N
     try:
         num_value = float(value)
     except (TypeError, ValueError):
-        return False, f"{param_name} must be a numeric value, got {type(value).__name__}"
+        return (
+            False,
+            f"{param_name} must be a numeric value, got {type(value).__name__}",
+        )
 
     if not np.isfinite(num_value):
         return False, f"{param_name} must be finite, got {num_value}"
@@ -133,7 +140,7 @@ def validate_numeric_range(value: Any, min_val: float = None, max_val: float = N
     return True, None
 
 
-def ensure_list(obj: Any) -> List[Any]:
+def ensure_list(obj: Any) -> list[Any]:
     """
     Ensure object is a list, converting if necessary.
 
@@ -145,17 +152,18 @@ def ensure_list(obj: Any) -> List[Any]:
     """
     if obj is None:
         return []
-    elif isinstance(obj, list):
+    if isinstance(obj, list):
         return obj
-    elif isinstance(obj, (tuple, set)):
+    if isinstance(obj, (tuple, set)):
         return list(obj)
-    elif hasattr(obj, '__iter__') and not isinstance(obj, (str, bytes)):
+    if hasattr(obj, "__iter__") and not isinstance(obj, (str, bytes)):
         return list(obj)
-    else:
-        return [obj]
+    return [obj]
 
 
-def safe_min_max(values: List[Any], default_min: float = 0.0, default_max: float = 1.0) -> Tuple[float, float]:
+def safe_min_max(
+    values: list[Any], default_min: float = 0.0, default_max: float = 1.0
+) -> tuple[float, float]:
     """
     Safely compute min and max of a list with fallback defaults.
 
@@ -190,7 +198,9 @@ def safe_min_max(values: List[Any], default_min: float = 0.0, default_max: float
         return default_min, default_max
 
 
-def check_required_attributes(obj: Any, required_attrs: List[str], obj_name: str = "object") -> Tuple[bool, List[str]]:
+def check_required_attributes(
+    obj: Any, required_attrs: list[str], obj_name: str = "object"
+) -> tuple[bool, list[str]]:
     """
     Check if an object has all required attributes.
 
@@ -235,7 +245,7 @@ def log_validation_error(message: str, category: str = "validation") -> None:
     logger.error(f"[{category.upper()}] {message}")
 
 
-def standardize_file_rows(rows: Any) -> List[int]:
+def standardize_file_rows(rows: Any) -> list[int]:
     """
     Standardize file row selection to a list of integers.
 
@@ -247,9 +257,9 @@ def standardize_file_rows(rows: Any) -> List[int]:
     """
     if rows is None:
         return []
-    elif isinstance(rows, int):
+    if isinstance(rows, int):
         return [rows]
-    elif isinstance(rows, (list, tuple)):
+    if isinstance(rows, (list, tuple)):
         # Filter to valid integers
         valid_rows = []
         for row in rows:
@@ -258,12 +268,13 @@ def standardize_file_rows(rows: Any) -> List[int]:
             except (TypeError, ValueError):
                 log_validation_warning(f"Invalid row index: {row}, skipping")
         return valid_rows
-    else:
-        log_validation_warning(f"Unexpected rows type: {type(rows)}, returning empty list")
-        return []
+    log_validation_warning(f"Unexpected rows type: {type(rows)}, returning empty list")
+    return []
 
 
-def create_progress_steps(base_steps: List[str], prefix: str = None) -> List[str]:
+def create_progress_steps(
+    base_steps: list[str], prefix: str | None = None
+) -> list[str]:
     """
     Create standardized progress step descriptions.
 
@@ -284,5 +295,5 @@ COMMON_REQUIRED_FIELDS = {
     "fit_summary": ["q_val", "fit_val"],
     "saxs_data": ["intensity", "q_values"],
     "g2_data": ["time", "correlation", "error"],
-    "twotime_data": ["time_1", "time_2", "correlation"]
+    "twotime_data": ["time_1", "time_2", "correlation"],
 }

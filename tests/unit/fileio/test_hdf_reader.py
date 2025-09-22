@@ -568,9 +568,14 @@ class TestBatchReadFields:
             "field1": "path/to/field1",
             "field2": "path/to/field2",
         }
-        mock_get.return_value = {"field1": np.array([1, 2, 3]), "field2": np.array([4, 5, 6])}
+        mock_get.return_value = {
+            "field1": np.array([1, 2, 3]),
+            "field2": np.array([4, 5, 6]),
+        }
 
-        result = batch_read_fields("/test/file.hdf", ["field1", "field2"], use_pool=False)
+        result = batch_read_fields(
+            "/test/file.hdf", ["field1", "field2"], use_pool=False
+        )
 
         expected = {"field1": np.array([1, 2, 3]), "field2": np.array([4, 5, 6])}
 
@@ -692,13 +697,17 @@ class TestEdgeCases:
         mock_file = Mock()
         mock_file.__enter__ = Mock(return_value=mock_file)
         mock_file.__exit__ = Mock(return_value=False)
-        mock_file.__contains__ = Mock(side_effect=lambda key: key == "/xpcs/twotime/correlation_map")
+        mock_file.__contains__ = Mock(
+            side_effect=lambda key: key == "/xpcs/twotime/correlation_map"
+        )
         mock_h5py_file.return_value = mock_file
 
         result = get_analysis_type("/test/file.hdf", use_pool=False)
         assert result == ("Twotime",)
 
         # Test with Multitau analysis
-        mock_file.__contains__ = Mock(side_effect=lambda key: key == "/xpcs/multitau/normalized_g2")
+        mock_file.__contains__ = Mock(
+            side_effect=lambda key: key == "/xpcs/multitau/normalized_g2"
+        )
         result = get_analysis_type("/test/file.hdf", use_pool=False)
         assert result == ("Multitau",)

@@ -11,27 +11,39 @@ import threading
 import time
 from dataclasses import dataclass
 from enum import Enum
-from typing import Dict, Any, Optional, List
+from typing import Any
 
-from .health_monitor import get_health_monitor, HealthStatus, start_health_monitoring, stop_health_monitoring
-from .state_validator import get_state_validator, StateValidationLevel, start_state_monitoring, stop_state_monitoring
-from .reliability import ValidationLevel, get_validation_cache, get_fallback_manager
+from .health_monitor import (
+    HealthStatus,
+    get_health_monitor,
+    start_health_monitoring,
+    stop_health_monitoring,
+)
 from .logging_config import get_logger
+from .reliability import ValidationLevel, get_fallback_manager, get_validation_cache
+from .state_validator import (
+    StateValidationLevel,
+    get_state_validator,
+    start_state_monitoring,
+    stop_state_monitoring,
+)
 
 logger = get_logger(__name__)
 
 
 class ReliabilityProfile(Enum):
     """Predefined reliability profiles balancing safety vs performance."""
-    MINIMAL = "minimal"         # Maximum performance, minimal safety
-    BALANCED = "balanced"       # Good balance of performance and safety
-    STRICT = "strict"          # High safety, moderate performance impact
-    PARANOID = "paranoid"      # Maximum safety, accept performance cost
+
+    MINIMAL = "minimal"  # Maximum performance, minimal safety
+    BALANCED = "balanced"  # Good balance of performance and safety
+    STRICT = "strict"  # High safety, moderate performance impact
+    PARANOID = "paranoid"  # Maximum safety, accept performance cost
 
 
 @dataclass
 class ReliabilityConfig:
     """Configuration for reliability features."""
+
     profile: ReliabilityProfile = ReliabilityProfile.BALANCED
 
     # Exception handling
@@ -97,13 +109,13 @@ class XPCSReliabilityManager:
     performance characteristics.
     """
 
-    def __init__(self, config: Optional[ReliabilityConfig] = None):
+    def __init__(self, config: ReliabilityConfig | None = None):
         self.config = config or ReliabilityConfig()
         self.config.apply_profile()
 
         self._initialized = False
-        self._active_features: Dict[str, bool] = {}
-        self._performance_baseline: Optional[Dict[str, float]] = None
+        self._active_features: dict[str, bool] = {}
+        self._performance_baseline: dict[str, float] | None = None
         self._lock = threading.RLock()
 
         # Component references
@@ -114,7 +126,7 @@ class XPCSReliabilityManager:
 
         # Performance monitoring
         self._start_time = time.time()
-        self._performance_samples: List[Dict[str, float]] = []
+        self._performance_samples: list[dict[str, float]] = []
 
     def initialize(self, validate_performance: bool = True) -> bool:
         """
@@ -131,7 +143,9 @@ class XPCSReliabilityManager:
                 logger.debug("Reliability manager already initialized")
                 return True
 
-            logger.info(f"Initializing XPCS reliability features (profile: {self.config.profile.value})")
+            logger.info(
+                f"Initializing XPCS reliability features (profile: {self.config.profile.value})"
+            )
 
             try:
                 # Record baseline performance if requested
@@ -157,7 +171,9 @@ class XPCSReliabilityManager:
                 if validate_performance and self._performance_baseline:
                     performance_ok = self._validate_performance_impact()
                     if not performance_ok:
-                        logger.warning("Performance impact exceeded limits, disabling some features")
+                        logger.warning(
+                            "Performance impact exceeded limits, disabling some features"
+                        )
                         success = self._optimize_for_performance()
 
                 # Register cleanup
@@ -167,7 +183,9 @@ class XPCSReliabilityManager:
 
                 if success:
                     logger.info("XPCS reliability features initialized successfully")
-                    logger.info(f"Enabled features: {list(k for k, v in self._active_features.items() if v)}")
+                    logger.info(
+                        f"Enabled features: {[k for k, v in self._active_features.items() if v]}"
+                    )
                 else:
                     logger.error("Failed to initialize some reliability features")
 
@@ -184,39 +202,43 @@ class XPCSReliabilityManager:
             start_health_monitoring(self.config.health_monitoring_interval)
 
             # Register critical status callback
-            def critical_status_handler(status: HealthStatus, summary: Dict[str, Any]):
+            def critical_status_handler(status: HealthStatus, summary: dict[str, Any]):
                 if status == HealthStatus.CRITICAL:
                     logger.critical(f"Critical system status detected: {summary}")
                     if self.config.enable_automatic_recovery:
                         self._trigger_emergency_recovery()
 
-            self._health_monitor.register_health_callback(HealthStatus.CRITICAL, critical_status_handler)
+            self._health_monitor.register_health_callback(
+                HealthStatus.CRITICAL, critical_status_handler
+            )
 
-            self._active_features['health_monitoring'] = True
+            self._active_features["health_monitoring"] = True
             logger.debug("Health monitoring initialized")
             return True
 
         except Exception as e:
             logger.error(f"Failed to initialize health monitoring: {e}")
-            self._active_features['health_monitoring'] = False
+            self._active_features["health_monitoring"] = False
             return False
 
     def _initialize_state_validation(self) -> bool:
         """Initialize state validation component."""
         try:
-            self._state_validator = get_state_validator(self.config.state_validation_level)
-            start_state_monitoring(
-                self.config.state_monitoring_interval,
+            self._state_validator = get_state_validator(
                 self.config.state_validation_level
             )
+            start_state_monitoring(
+                self.config.state_monitoring_interval,
+                self.config.state_validation_level,
+            )
 
-            self._active_features['state_validation'] = True
+            self._active_features["state_validation"] = True
             logger.debug("State validation initialized")
             return True
 
         except Exception as e:
             logger.error(f"Failed to initialize state validation: {e}")
-            self._active_features['state_validation'] = False
+            self._active_features["state_validation"] = False
             return False
 
     def _initialize_validation_caching(self) -> bool:
@@ -226,13 +248,13 @@ class XPCSReliabilityManager:
             # Configure cache size limit
             self._validation_cache._max_size = self.config.cache_size_limit
 
-            self._active_features['validation_caching'] = True
+            self._active_features["validation_caching"] = True
             logger.debug("Validation caching initialized")
             return True
 
         except Exception as e:
             logger.error(f"Failed to initialize validation caching: {e}")
-            self._active_features['validation_caching'] = False
+            self._active_features["validation_caching"] = False
             return False
 
     def _initialize_fallback_strategies(self) -> bool:
@@ -240,16 +262,16 @@ class XPCSReliabilityManager:
         try:
             self._fallback_manager = get_fallback_manager()
 
-            self._active_features['fallback_strategies'] = True
+            self._active_features["fallback_strategies"] = True
             logger.debug("Fallback strategies initialized")
             return True
 
         except Exception as e:
             logger.error(f"Failed to initialize fallback strategies: {e}")
-            self._active_features['fallback_strategies'] = False
+            self._active_features["fallback_strategies"] = False
             return False
 
-    def _measure_baseline_performance(self) -> Dict[str, float]:
+    def _measure_baseline_performance(self) -> dict[str, float]:
         """Measure baseline performance before enabling reliability features."""
         import psutil
 
@@ -265,14 +287,14 @@ class XPCSReliabilityManager:
 
         # Simple computation benchmark
         computation_start = time.time()
-        result = sum(i**2 for i in range(10000))  # Simple CPU work
+        sum(i**2 for i in range(10000))  # Simple CPU work
         computation_time = time.time() - computation_start
 
         baseline = {
-            'cpu_percent': cpu_percent,
-            'memory_mb': memory_mb,
-            'computation_time': computation_time,
-            'timestamp': start_time
+            "cpu_percent": cpu_percent,
+            "memory_mb": memory_mb,
+            "computation_time": computation_time,
+            "timestamp": start_time,
         }
 
         logger.debug(f"Performance baseline: {baseline}")
@@ -289,23 +311,31 @@ class XPCSReliabilityManager:
             baseline = self._performance_baseline
 
             # Calculate overhead
-            cpu_overhead = current['cpu_percent'] - baseline['cpu_percent']
-            memory_overhead = current['memory_mb'] - baseline['memory_mb']
-            computation_overhead = ((current['computation_time'] - baseline['computation_time']) /
-                                 baseline['computation_time']) * 100
+            cpu_overhead = current["cpu_percent"] - baseline["cpu_percent"]
+            memory_overhead = current["memory_mb"] - baseline["memory_mb"]
+            computation_overhead = (
+                (current["computation_time"] - baseline["computation_time"])
+                / baseline["computation_time"]
+            ) * 100
 
             # Check against limits
             cpu_ok = cpu_overhead <= self.config.max_cpu_overhead_percent
             memory_ok = memory_overhead <= self.config.max_memory_overhead_mb
-            computation_ok = computation_overhead <= 10.0  # 10% max computation overhead
+            computation_ok = (
+                computation_overhead <= 10.0
+            )  # 10% max computation overhead
 
-            logger.debug(f"Performance impact: CPU={cpu_overhead:.1f}%, Memory={memory_overhead:.1f}MB, "
-                        f"Computation={computation_overhead:.1f}%")
+            logger.debug(
+                f"Performance impact: CPU={cpu_overhead:.1f}%, Memory={memory_overhead:.1f}MB, "
+                f"Computation={computation_overhead:.1f}%"
+            )
 
             if not (cpu_ok and memory_ok and computation_ok):
-                logger.warning(f"Performance impact exceeded limits: "
-                             f"CPU={cpu_overhead:.1f}%/{self.config.max_cpu_overhead_percent}%, "
-                             f"Memory={memory_overhead:.1f}MB/{self.config.max_memory_overhead_mb}MB")
+                logger.warning(
+                    f"Performance impact exceeded limits: "
+                    f"CPU={cpu_overhead:.1f}%/{self.config.max_cpu_overhead_percent}%, "
+                    f"Memory={memory_overhead:.1f}MB/{self.config.max_memory_overhead_mb}MB"
+                )
                 return False
 
             return True
@@ -319,12 +349,12 @@ class XPCSReliabilityManager:
         logger.info("Optimizing reliability configuration for performance")
 
         # Reduce monitoring frequency
-        if self._active_features.get('health_monitoring'):
+        if self._active_features.get("health_monitoring"):
             self.config.health_monitoring_interval *= 2
             stop_health_monitoring()
             start_health_monitoring(self.config.health_monitoring_interval)
 
-        if self._active_features.get('state_validation'):
+        if self._active_features.get("state_validation"):
             self.config.state_monitoring_interval *= 2
             stop_state_monitoring()
             start_state_monitoring(self.config.state_monitoring_interval)
@@ -350,6 +380,7 @@ class XPCSReliabilityManager:
         try:
             # Force garbage collection
             import gc
+
             collected = gc.collect()
             logger.debug(f"Emergency GC collected {collected} objects")
 
@@ -366,40 +397,42 @@ class XPCSReliabilityManager:
         except Exception as e:
             logger.error(f"Error during emergency recovery: {e}")
 
-    def get_status(self) -> Dict[str, Any]:
+    def get_status(self) -> dict[str, Any]:
         """Get comprehensive reliability system status."""
         with self._lock:
             status = {
-                'initialized': self._initialized,
-                'profile': self.config.profile.value,
-                'active_features': self._active_features.copy(),
-                'uptime_seconds': time.time() - self._start_time,
-                'performance_monitoring': self.config.enable_performance_monitoring
+                "initialized": self._initialized,
+                "profile": self.config.profile.value,
+                "active_features": self._active_features.copy(),
+                "uptime_seconds": time.time() - self._start_time,
+                "performance_monitoring": self.config.enable_performance_monitoring,
             }
 
             # Add component-specific status
             if self._health_monitor:
-                status['health_status'] = self._health_monitor.get_health_summary()
+                status["health_status"] = self._health_monitor.get_health_summary()
 
             if self._state_validator:
-                status['state_statistics'] = self._state_validator.get_statistics()
+                status["state_statistics"] = self._state_validator.get_statistics()
 
             if self._validation_cache:
                 with self._validation_cache._lock:
-                    status['validation_cache'] = {
-                        'entries': len(self._validation_cache._cache),
-                        'max_size': self._validation_cache._max_size,
-                        'hit_rate_estimate': 'N/A'  # Would need hit tracking for accurate rate
+                    status["validation_cache"] = {
+                        "entries": len(self._validation_cache._cache),
+                        "max_size": self._validation_cache._max_size,
+                        "hit_rate_estimate": "N/A",  # Would need hit tracking for accurate rate
                     }
 
             # Performance impact
             if self._performance_baseline and self.config.enable_performance_monitoring:
                 current_perf = self._measure_baseline_performance()
                 baseline = self._performance_baseline
-                status['performance_impact'] = {
-                    'cpu_overhead_percent': current_perf['cpu_percent'] - baseline['cpu_percent'],
-                    'memory_overhead_mb': current_perf['memory_mb'] - baseline['memory_mb'],
-                    'within_limits': self._validate_performance_impact()
+                status["performance_impact"] = {
+                    "cpu_overhead_percent": current_perf["cpu_percent"]
+                    - baseline["cpu_percent"],
+                    "memory_overhead_mb": current_perf["memory_mb"]
+                    - baseline["memory_mb"],
+                    "within_limits": self._validate_performance_impact(),
                 }
 
             return status
@@ -414,10 +447,10 @@ class XPCSReliabilityManager:
 
             try:
                 # Stop monitoring systems
-                if self._active_features.get('health_monitoring'):
+                if self._active_features.get("health_monitoring"):
                     stop_health_monitoring()
 
-                if self._active_features.get('state_validation'):
+                if self._active_features.get("state_validation"):
                     stop_state_monitoring()
 
                 # Clear caches
@@ -456,25 +489,35 @@ class XPCSReliabilityManager:
             return self.initialize()
 
     @classmethod
-    def create_from_environment(cls) -> 'XPCSReliabilityManager':
+    def create_from_environment(cls) -> "XPCSReliabilityManager":
         """Create reliability manager from environment variables."""
         config = ReliabilityConfig()
 
         # Read from environment
-        profile_name = os.environ.get('XPCS_RELIABILITY_PROFILE', 'balanced')
+        profile_name = os.environ.get("XPCS_RELIABILITY_PROFILE", "balanced")
         try:
             config.profile = ReliabilityProfile(profile_name.lower())
         except ValueError:
-            logger.warning(f"Invalid reliability profile '{profile_name}', using 'balanced'")
+            logger.warning(
+                f"Invalid reliability profile '{profile_name}', using 'balanced'"
+            )
             config.profile = ReliabilityProfile.BALANCED
 
         # Override specific settings from environment
-        config.enable_health_monitoring = os.environ.get('XPCS_ENABLE_HEALTH_MONITORING', 'true').lower() == 'true'
-        config.enable_state_validation = os.environ.get('XPCS_ENABLE_STATE_VALIDATION', 'true').lower() == 'true'
+        config.enable_health_monitoring = (
+            os.environ.get("XPCS_ENABLE_HEALTH_MONITORING", "true").lower() == "true"
+        )
+        config.enable_state_validation = (
+            os.environ.get("XPCS_ENABLE_STATE_VALIDATION", "true").lower() == "true"
+        )
 
         try:
-            config.health_monitoring_interval = float(os.environ.get('XPCS_HEALTH_MONITORING_INTERVAL', '30.0'))
-            config.max_cpu_overhead_percent = float(os.environ.get('XPCS_MAX_CPU_OVERHEAD_PERCENT', '2.0'))
+            config.health_monitoring_interval = float(
+                os.environ.get("XPCS_HEALTH_MONITORING_INTERVAL", "30.0")
+            )
+            config.max_cpu_overhead_percent = float(
+                os.environ.get("XPCS_MAX_CPU_OVERHEAD_PERCENT", "2.0")
+            )
         except ValueError as e:
             logger.warning(f"Invalid environment configuration: {e}")
 
@@ -483,7 +526,7 @@ class XPCSReliabilityManager:
 
 
 # Global reliability manager instance
-_reliability_manager: Optional[XPCSReliabilityManager] = None
+_reliability_manager: XPCSReliabilityManager | None = None
 _manager_lock = threading.Lock()
 
 
@@ -497,8 +540,10 @@ def get_reliability_manager() -> XPCSReliabilityManager:
     return _reliability_manager
 
 
-def initialize_reliability(profile: ReliabilityProfile = ReliabilityProfile.BALANCED,
-                         validate_performance: bool = True) -> bool:
+def initialize_reliability(
+    profile: ReliabilityProfile = ReliabilityProfile.BALANCED,
+    validate_performance: bool = True,
+) -> bool:
     """Initialize XPCS reliability features with specified profile."""
     config = ReliabilityConfig(profile=profile)
     config.apply_profile()
@@ -508,7 +553,7 @@ def initialize_reliability(profile: ReliabilityProfile = ReliabilityProfile.BALA
     return manager.initialize(validate_performance)
 
 
-def get_reliability_status() -> Dict[str, Any]:
+def get_reliability_status() -> dict[str, Any]:
     """Get current reliability system status."""
     manager = get_reliability_manager()
     return manager.get_status()
@@ -524,7 +569,9 @@ def shutdown_reliability() -> None:
 # Quick setup functions for common scenarios
 def enable_production_reliability() -> bool:
     """Enable reliability features optimized for production use."""
-    return initialize_reliability(ReliabilityProfile.BALANCED, validate_performance=True)
+    return initialize_reliability(
+        ReliabilityProfile.BALANCED, validate_performance=True
+    )
 
 
 def enable_development_reliability() -> bool:
@@ -539,4 +586,6 @@ def enable_minimal_reliability() -> bool:
 
 def enable_maximum_reliability() -> bool:
     """Enable maximum reliability features for critical applications."""
-    return initialize_reliability(ReliabilityProfile.PARANOID, validate_performance=False)
+    return initialize_reliability(
+        ReliabilityProfile.PARANOID, validate_performance=False
+    )

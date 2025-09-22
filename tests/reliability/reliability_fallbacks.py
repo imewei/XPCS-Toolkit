@@ -7,7 +7,6 @@ are not available, allowing tests to run successfully.
 
 import contextlib
 import enum
-from typing import Any, Dict, Optional, Callable
 
 
 class XPCSBaseError(Exception):
@@ -37,6 +36,7 @@ def convert_exception(exc):
 def handle_exceptions(exc_type):
     def decorator(func):
         return func
+
     return decorator
 
 
@@ -53,9 +53,11 @@ class ValidationLevel(enum.Enum):
 
 def validate_input(check_types=False, cache_results=False, level=ValidationLevel.BASIC):
     """Efficient fallback decorator for validate_input."""
+
     def decorator(func):
         # For performance tests, just return the original function unchanged
         return func
+
     return decorator
 
 
@@ -107,7 +109,7 @@ class HealthMonitor:
             "cpu_usage": 10.0,
             "memory_usage": 30.0,
             "disk_usage": 40.0,
-            "alerts": []
+            "alerts": [],
         }
 
 
@@ -157,12 +159,13 @@ class LockFreeStateValidator:
             "tracked_objects": len(self._tracked_objects),
             "total_transitions": self._total_transitions,
             "invalid_transitions": self._invalid_transitions,
-            "valid_transitions": self._valid_transitions
+            "valid_transitions": self._valid_transitions,
         }
 
 
 # Global validator instance for tracking
 _global_validator = None
+
 
 def get_state_validator():
     global _global_validator

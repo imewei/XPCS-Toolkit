@@ -43,6 +43,88 @@ class Colors:
     RESET = "\033[0m"
 
 
+class LoggingVisitor(ast.NodeVisitor):
+    """AST visitor for analyzing logging patterns in Python code."""
+
+    def __init__(self, validator, file_path):
+        self.validator = validator
+        self.file_path = file_path
+        self.logger_names = set()
+        self.has_logging_import = False
+        self.has_get_logger_call = False
+        self.functions_with_logging = set()
+        self.classes_with_logging = set()
+
+    def visit_Import(self, node):
+        for alias in node.names:
+            if alias.name == "logging":
+                self.has_logging_import = True
+        self.generic_visit(node)
+
+    def visit_ImportFrom(self, node):
+        if node.module and "logging_config" in node.module:
+            for alias in node.names:
+                if alias.name == "get_logger":
+                    self.has_logging_import = True
+        self.generic_visit(node)
+
+    def visit_Call(self, node):
+        self._check_get_logger_call(node)
+        self._check_print_call(node)
+        self.generic_visit(node)
+
+    def _check_get_logger_call(self, node):
+        """Check for get_logger calls."""
+        if isinstance(node.func, ast.Name) and node.func.id == "get_logger":
+            self.has_get_logger_call = True
+
+    def _check_print_call(self, node):
+        """Check for print calls that should be logging."""
+        if isinstance(node.func, ast.Name) and node.func.id == "print":
+            line_no = node.lineno
+            if not self._is_allowed_print_context():
+                self.validator.results["print_statements"].append(
+                    {
+                        "file": str(self.file_path),
+                        "line": line_no,
+                        "type": "print_call",
+                    }
+                )
+
+    def visit_Assign(self, node):
+        for target in node.targets:
+            if isinstance(target, ast.Name) and "logger" in target.id.lower():
+                self.logger_names.add(target.id)
+        self.generic_visit(node)
+
+    def visit_FunctionDef(self, node):
+        if self._has_logging_calls(node):
+            self.functions_with_logging.add(node.name)
+        self.generic_visit(node)
+
+    def visit_ClassDef(self, node):
+        if self._has_logging_calls(node):
+            self.classes_with_logging.add(node.name)
+        self.generic_visit(node)
+
+    def _has_logging_calls(self, node):
+        """Check if a node contains logging calls."""
+        logging_methods = ["debug", "info", "warning", "error", "critical", "exception"]
+        for child in ast.walk(node):
+            if (
+                isinstance(child, ast.Attribute)
+                and isinstance(child.value, ast.Name)
+                and "logger" in child.value.id.lower()
+                and child.attr in logging_methods
+            ):
+                return True
+        return False
+
+    def _is_allowed_print_context(self):
+        """Check if print statement is in allowed context."""
+        return False
+
+
 class LoggingValidator:
     """Main validator class for logging standards."""
 
@@ -138,7 +220,7 @@ class LoggingValidator:
             # Parse AST for detailed analysis
             try:
                 tree = ast.parse(content)
-                self._analyze_ast(file_path, tree, content)
+                self._analyze_ast(file_path, tree)
             except SyntaxError as e:
                 print(
                     f"{Colors.YELLOW}Warning: Syntax error in {file_path}: {e}{Colors.RESET}"
@@ -156,105 +238,15 @@ class LoggingValidator:
         except Exception as e:
             print(f"{Colors.RED}Error analyzing {file_path}: {e}{Colors.RESET}")
 
-    def _analyze_ast(self, file_path: Path, tree: ast.AST, content: str):
+    def _analyze_ast(self, file_path: Path, tree: ast.AST):
         """Analyze AST for logging patterns."""
-
-        class LoggingVisitor(ast.NodeVisitor):
-            def __init__(self, validator, file_path):
-                self.validator = validator
-                self.file_path = file_path
-                self.logger_names = set()
-                self.has_logging_import = False
-                self.has_get_logger_call = False
-                self.functions_with_logging = set()
-                self.classes_with_logging = set()
-
-            def visit_Import(self, node):
-                for alias in node.names:
-                    if alias.name == "logging":
-                        self.has_logging_import = True
-                self.generic_visit(node)
-
-            def visit_ImportFrom(self, node):
-                if node.module and "logging_config" in node.module:
-                    for alias in node.names:
-                        if alias.name == "get_logger":
-                            self.has_logging_import = True
-                self.generic_visit(node)
-
-            def visit_Call(self, node):
-                # Check for get_logger calls
-                if isinstance(node.func, ast.Name) and node.func.id == "get_logger":
-                    self.has_get_logger_call = True
-
-                # Check for print calls (shouldn't be many)
-                elif isinstance(node.func, ast.Name) and node.func.id == "print":
-                    line_no = node.lineno
-                    # Allow print in __main__ blocks and debug sections
-                    if not self._is_allowed_print_context(line_no):
-                        self.validator.results["print_statements"].append(
-                            {
-                                "file": str(self.file_path),
-                                "line": line_no,
-                                "type": "print_call",
-                            }
-                        )
-
-                self.generic_visit(node)
-
-            def visit_Assign(self, node):
-                # Check for logger assignments
-                for target in node.targets:
-                    if isinstance(target, ast.Name) and "logger" in target.id.lower():
-                        self.logger_names.add(target.id)
-                self.generic_visit(node)
-
-            def visit_FunctionDef(self, node):
-                # Check if function has any logging calls
-                has_logging = self._has_logging_calls(node)
-                if has_logging:
-                    self.functions_with_logging.add(node.name)
-                self.generic_visit(node)
-
-            def visit_ClassDef(self, node):
-                # Check if class has logging setup
-                has_logging = self._has_logging_calls(node)
-                if has_logging:
-                    self.classes_with_logging.add(node.name)
-                self.generic_visit(node)
-
-            def _has_logging_calls(self, node):
-                """Check if a node contains logging calls."""
-                for child in ast.walk(node):
-                    if isinstance(child, ast.Attribute) and (
-                        isinstance(child.value, ast.Name)
-                        and "logger" in child.value.id.lower()
-                        and child.attr
-                        in [
-                            "debug",
-                            "info",
-                            "warning",
-                            "error",
-                            "critical",
-                            "exception",
-                        ]
-                    ):
-                        return True
-                return False
-
-            def _is_allowed_print_context(self, line_no):
-                """Check if print statement is in allowed context."""
-                # This is a simplified check - in practice, you might want
-                # to analyze the surrounding context more carefully
-                return False
-
-        visitor = LoggingVisitor(self, file_path)
+        visitor = self._create_logging_visitor(file_path)
         visitor.visit(tree)
-
-        # Store analysis results
-
-        # Check for issues
         self._check_logger_naming(file_path, visitor.logger_names)
+
+    def _create_logging_visitor(self, file_path: Path):
+        """Create and configure the logging visitor."""
+        return LoggingVisitor(self, file_path)
 
     def _check_print_statements(self, file_path: Path, content: str):
         """Check for print statements that should be replaced with logging."""
@@ -547,8 +539,13 @@ class LoggingValidator:
 
     def _print_detailed_issues(self):
         """Print detailed issues by category."""
+        self._print_missing_imports()
+        self._print_print_statements()
+        self._print_improper_logger_names()
+        self._print_missing_exception_logging()
 
-        # Missing imports
+    def _print_missing_imports(self):
+        """Print missing import issues."""
         if self.results["missing_imports"]:
             print(f"{Colors.RED}{Colors.BOLD}Missing Logging Imports:{Colors.RESET}")
             for issue in self.results["missing_imports"]:
@@ -557,7 +554,8 @@ class LoggingValidator:
                 print(f"    Suggestion: {issue['suggestion']}")
             print()
 
-        # Print statements
+    def _print_print_statements(self):
+        """Print print statement issues."""
         if self.results["print_statements"]:
             print(f"{Colors.YELLOW}{Colors.BOLD}Print Statements Found:{Colors.RESET}")
             for issue in self.results["print_statements"]:
@@ -568,7 +566,8 @@ class LoggingValidator:
                     print(f"    Suggestion: {issue['suggestion']}")
             print()
 
-        # Improper logger names
+    def _print_improper_logger_names(self):
+        """Print improper logger name issues."""
         if self.results["improper_logger_names"]:
             print(f"{Colors.MAGENTA}{Colors.BOLD}Improper Logger Names:{Colors.RESET}")
             for issue in self.results["improper_logger_names"]:
@@ -577,7 +576,8 @@ class LoggingValidator:
                 print(f"    Suggestion: {issue['suggestion']}")
             print()
 
-        # Missing exception logging
+    def _print_missing_exception_logging(self):
+        """Print missing exception logging issues."""
         if self.results["missing_exception_logging"]:
             print(f"{Colors.BLUE}{Colors.BOLD}Missing Exception Logging:{Colors.RESET}")
             for issue in self.results["missing_exception_logging"]:

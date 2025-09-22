@@ -11,20 +11,36 @@ from unittest.mock import Mock, patch
 import h5py
 import numpy as np
 import pytest
+
 try:
     import h5py
+
     H5PY_AVAILABLE = True
 except ImportError:
     H5PY_AVAILABLE = False
+
     # Mock h5py for basic testing
     class MockH5pyFile:
-        def __init__(self, *args, **kwargs): pass
-        def __enter__(self): return self
-        def __exit__(self, *args): pass
-        def create_dataset(self, *args, **kwargs): pass
-        def create_group(self, *args, **kwargs): return self
-        def __getitem__(self, key): return self
-        def __setitem__(self, key, value): pass
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            pass
+
+        def create_dataset(self, *args, **kwargs):
+            pass
+
+        def create_group(self, *args, **kwargs):
+            return self
+
+        def __getitem__(self, key):
+            return self
+
+        def __setitem__(self, key, value):
+            pass
 
     class MockH5py:
         File = MockH5pyFile
@@ -193,7 +209,7 @@ def mock_xpcs_file(mock_hdf5_file):
         i_vals = np.random.poisson(1000, 50).astype(float)
         mock_file.saxs_1d = {
             "labels": ["q (nm⁻¹)", "I(q) (counts)"],
-            "data": np.column_stack([q_vals, i_vals])  # Proper 2D array for plotting
+            "data": np.column_stack([q_vals, i_vals]),  # Proper 2D array for plotting
         }
 
         # Ensure consistent array data for SAXS methods
@@ -201,30 +217,38 @@ def mock_xpcs_file(mock_hdf5_file):
         i_values = np.random.poisson(1000, 50).astype(float)
 
         # Add missing methods that tests expect (ensuring consistent array sizes)
-        mock_file.load_saxs_1d = Mock(return_value=(
-            q_values,  # q values - consistent size
-            i_values  # I(q) values - consistent size
-        ))
+        mock_file.load_saxs_1d = Mock(
+            return_value=(
+                q_values,  # q values - consistent size
+                i_values,  # I(q) values - consistent size
+            )
+        )
 
-        mock_file.get_saxs1d_data = Mock(return_value=(
-            q_values,  # q values - consistent size
-            i_values,  # I(q) values - consistent size
-            "q (nm⁻¹)",  # xlabel
-            "I(q) (counts)"  # ylabel
-        ))
+        mock_file.get_saxs1d_data = Mock(
+            return_value=(
+                q_values,  # q values - consistent size
+                i_values,  # I(q) values - consistent size
+                "q (nm⁻¹)",  # xlabel
+                "I(q) (counts)",  # ylabel
+            )
+        )
 
         # Add fitting methods that GUI tests expect
-        mock_file.fit_g2 = Mock(return_value={
-            "success": True,
-            "params": [1.5, 100.0, 1.0],
-            "errors": [0.1, 10.0, 0.05],
-            "r_squared": 0.95
-        })
+        mock_file.fit_g2 = Mock(
+            return_value={
+                "success": True,
+                "params": [1.5, 100.0, 1.0],
+                "errors": [0.1, 10.0, 0.05],
+                "r_squared": 0.95,
+            }
+        )
 
         # Add comprehensive missing attributes for GUI workflows
         mock_file.saxs_2d_log_data = Mock()
         mock_file.fit_summary = {"q_val": [1, 2, 3], "fit_val": [0.1, 0.2, 0.3]}
-        mock_file.Int_t = np.random.random(50)  # Make it subscriptable array instead of Mock
+        mock_file.Int_t = np.random.random(
+            50
+        )  # Make it subscriptable array instead of Mock
         mock_file.hdf_info = {"sample_name": "GUI_Test", "detector": "Lambda"}
         mock_file.tau = np.logspace(-6, 2, 50)
         mock_file.g2_t0 = 1.0
@@ -240,10 +264,12 @@ def mock_xpcs_file(mock_hdf5_file):
         mock_file.c2_g2 = np.random.random((100, 100))
 
         # Add qmap attributes for Q-space mapping - always override mock methods
-        mock_file.qmap.get_qbin_in_qrange = Mock(return_value=(
-            list(range(5)),  # qindex_selected
-            np.linspace(0.001, 0.1, 5)  # qvalues
-        ))
+        mock_file.qmap.get_qbin_in_qrange = Mock(
+            return_value=(
+                list(range(5)),  # qindex_selected
+                np.linspace(0.001, 0.1, 5),  # qvalues
+            )
+        )
         mock_file.qmap.get_qbin_label = Mock(side_effect=lambda i: f"q_{i}")
         mock_file.qmap.dqmap = np.random.random((516, 516))
         mock_file.dqmap = mock_file.qmap.dqmap
@@ -262,8 +288,11 @@ def temp_hdf5_files(tmp_path):
         # Create minimal HDF5 file structure for testing
         try:
             import h5py
+
             with h5py.File(file_path, "w") as f:
-                f.create_dataset("entry/data/intensities", data=np.random.poisson(100, (100, 100)))
+                f.create_dataset(
+                    "entry/data/intensities", data=np.random.poisson(100, (100, 100))
+                )
                 f.create_dataset("entry/metadata/detector_size", data=[100, 100])
                 f.attrs["sample_name"] = f"Test_Sample_{i}"
         except ImportError:
@@ -299,8 +328,10 @@ def mock_viewer_kernel(mock_xpcs_file):
         class MockAvgWorkerModel(QAbstractTableModel):
             def rowCount(self, parent=QModelIndex()):
                 return 0
+
             def columnCount(self, parent=QModelIndex()):
                 return 0
+
             def data(self, index, role):
                 return None
 
@@ -313,15 +344,24 @@ def mock_viewer_kernel(mock_xpcs_file):
         mock_kernel.load_files = Mock()  # Add missing method for multiple file loading
         mock_kernel.set_current_file = Mock()
         mock_kernel.build = Mock()  # Add build method to prevent FileNotFoundError
-        mock_kernel.get_xf_list = Mock(return_value=[mock_xpcs_file])  # Return non-empty list
-        mock_kernel._get_cached_dataset = Mock(return_value=mock_xpcs_file)  # Add missing cache method
+        mock_kernel.get_xf_list = Mock(
+            return_value=[mock_xpcs_file]
+        )  # Return non-empty list
+        mock_kernel._get_cached_dataset = Mock(
+            return_value=mock_xpcs_file
+        )  # Add missing cache method
 
         # Mock all plotting operations to prevent timeouts during tab switching
         # Return proper data structure: (qd, tel) where tel is list of time arrays
-        mock_kernel.plot_g2 = Mock(return_value=(
-            np.array([1, 2, 3]),  # qd - q values
-            [np.logspace(-6, 2, 50), np.logspace(-6, 2, 50)]  # tel - list of time arrays
-        ))
+        mock_kernel.plot_g2 = Mock(
+            return_value=(
+                np.array([1, 2, 3]),  # qd - q values
+                [
+                    np.logspace(-6, 2, 50),
+                    np.logspace(-6, 2, 50),
+                ],  # tel - list of time arrays
+            )
+        )
         mock_kernel.plot_saxs2d = Mock()
         mock_kernel.plot_saxs1d = Mock()
         mock_kernel.plot_qmap = Mock()
@@ -343,20 +383,42 @@ def mock_viewer_kernel(mock_xpcs_file):
 @pytest.fixture
 def gui_main_window(qapp, qtbot, mock_viewer_kernel):
     """Create main XPCS Viewer window for testing."""
-    # Fix PyQtGraph DataTreeWidget compatibility with PySide6
+    # Fix PyQtGraph compatibility issues with PySide6
     original_buildTree = None
+    original_getViewBox = None
     try:
+        # Fix DataTreeWidget issue
         import pyqtgraph.widgets.DataTreeWidget
+
         original_buildTree = pyqtgraph.widgets.DataTreeWidget.DataTreeWidget.buildTree
 
-        def fixed_buildTree(self, data, parent, name='', hideRoot=False, path=()):
+        def fixed_buildTree(self, data, parent, name="", hideRoot=False, path=()):
             """Fixed buildTree method that handles PySide6 compatibility."""
             if data is None:
                 # Skip building tree for None data to avoid AttributeError
-                return
+                return None
             return original_buildTree(self, data, parent, name, hideRoot, path)
 
         pyqtgraph.widgets.DataTreeWidget.DataTreeWidget.buildTree = fixed_buildTree
+
+        # Fix GraphicsItem getViewBox issue
+        import pyqtgraph.graphicsItems.GraphicsItem
+
+        original_getViewBox = (
+            pyqtgraph.graphicsItems.GraphicsItem.GraphicsItem.getViewBox
+        )
+
+        def fixed_getViewBox(self):
+            """Fixed getViewBox method that handles PySide6 compatibility."""
+            try:
+                return original_getViewBox(self)
+            except AttributeError as e:
+                if "'QWidgetItem' object has no attribute 'parentItem'" in str(e):
+                    # Return None for incompatible items to avoid crash
+                    return None
+                raise
+
+        pyqtgraph.graphicsItems.GraphicsItem.GraphicsItem.getViewBox = fixed_getViewBox
     except ImportError:
         pass  # PyQtGraph not available
 
@@ -374,7 +436,7 @@ def gui_main_window(qapp, qtbot, mock_viewer_kernel):
         # Mock expensive GUI operations that cause timeouts during tab switching
         # Be selective - mock only the operations that cause hangs, not core functionality
         window.update_plot_sync = Mock()  # Prevent expensive plot synchronization
-        window.init_diffusion = Mock()    # Prevent diffusion plot initialization
+        window.init_diffusion = Mock()  # Prevent diffusion plot initialization
         # Don't mock plot_g2 - it's needed for fitting workflow
         window.plot_saxs2d = Mock()
         window.plot_saxs1d = Mock()
@@ -392,11 +454,24 @@ def gui_main_window(qapp, qtbot, mock_viewer_kernel):
 
         # Comprehensive cleanup to prevent test state pollution
         try:
-            # Restore original PyQtGraph method if it was patched
+            # Restore original PyQtGraph methods if they were patched
             if original_buildTree is not None:
                 try:
                     import pyqtgraph.widgets.DataTreeWidget
-                    pyqtgraph.widgets.DataTreeWidget.DataTreeWidget.buildTree = original_buildTree
+
+                    pyqtgraph.widgets.DataTreeWidget.DataTreeWidget.buildTree = (
+                        original_buildTree
+                    )
+                except ImportError:
+                    pass
+
+            if original_getViewBox is not None:
+                try:
+                    import pyqtgraph.graphicsItems.GraphicsItem
+
+                    pyqtgraph.graphicsItems.GraphicsItem.GraphicsItem.getViewBox = (
+                        original_getViewBox
+                    )
                 except ImportError:
                     pass
 
@@ -430,6 +505,7 @@ def gui_main_window(qapp, qtbot, mock_viewer_kernel):
 
         # Clear any global Qt caches or state
         import gc
+
         gc.collect()  # Force garbage collection of Qt objects
 
 
@@ -751,11 +827,13 @@ def gui_state_validator():
             issues = []
 
             # Store current tab to restore later
-            original_tab = tab_widget.currentIndex()
+            tab_widget.currentIndex()
 
             for i in range(tab_widget.count()):
                 # Don't set current index - just check if widget exists
-                widget = tab_widget.widget(i)  # Use widget(i) instead of setting current
+                widget = tab_widget.widget(
+                    i
+                )  # Use widget(i) instead of setting current
 
                 if widget is None:
                     issues.append(f"Tab {i} has no widget")

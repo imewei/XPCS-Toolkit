@@ -147,7 +147,9 @@ def plot_line_with_marker(
 
     # Handle dimension mismatch
     if len(x) != len(y):
-        logger.warning(f"Dimension mismatch: x has {len(x)} elements, y has {len(y)} elements")
+        logger.warning(
+            f"Dimension mismatch: x has {len(x)} elements, y has {len(y)} elements"
+        )
         return  # Skip plotting if dimensions don't match
 
     # Vectorized data validation - single pass filtering

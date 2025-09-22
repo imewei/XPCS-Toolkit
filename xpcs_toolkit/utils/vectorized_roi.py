@@ -10,18 +10,19 @@ from abc import ABC, abstractmethod
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 import numpy as np
 
 from .logging_config import get_logger
-from .memory_manager import get_memory_manager, MemoryPressure
+from .memory_manager import MemoryPressure, get_memory_manager
 
 logger = get_logger(__name__)
 
 
 class ROIType(Enum):
     """Types of ROI calculations."""
+
     PIE = "pie"
     RING = "ring"
     PHI_RING = "phi_ring"
@@ -32,19 +33,21 @@ class ROIType(Enum):
 @dataclass
 class ROIParameters:
     """Parameters for ROI calculation."""
+
     roi_type: ROIType
-    parameters: Dict[str, Any]
+    parameters: dict[str, Any]
     label: str = ""
 
 
 @dataclass
 class ROIResult:
     """Result of ROI calculation."""
+
     x_values: np.ndarray
     roi_data: np.ndarray
     roi_type: ROIType
-    parameters: Dict[str, Any]
-    metadata: Dict[str, Any]
+    parameters: dict[str, Any]
+    metadata: dict[str, Any]
     processing_time: float
     memory_used_mb: float
 
@@ -57,19 +60,24 @@ class VectorizedROICalculator(ABC):
         self.memory_manager = get_memory_manager()
 
     @abstractmethod
-    def calculate_roi_mask(self, geometry_data: Dict[str, np.ndarray],
-                          roi_params: ROIParameters) -> np.ndarray:
+    def calculate_roi_mask(
+        self, geometry_data: dict[str, np.ndarray], roi_params: ROIParameters
+    ) -> np.ndarray:
         """Calculate the ROI mask for the given parameters."""
-        pass
 
     @abstractmethod
-    def process_roi_data(self, saxs_data: np.ndarray, roi_mask: np.ndarray,
-                        roi_params: ROIParameters) -> ROIResult:
+    def process_roi_data(
+        self, saxs_data: np.ndarray, roi_mask: np.ndarray, roi_params: ROIParameters
+    ) -> ROIResult:
         """Process SAXS data with the ROI mask."""
-        pass
 
-    def calculate_roi(self, saxs_data: np.ndarray, geometry_data: Dict[str, np.ndarray],
-                     roi_params: ROIParameters, use_streaming: bool = None) -> ROIResult:
+    def calculate_roi(
+        self,
+        saxs_data: np.ndarray,
+        geometry_data: dict[str, np.ndarray],
+        roi_params: ROIParameters,
+        use_streaming: bool | None = None,
+    ) -> ROIResult:
         """
         Main ROI calculation method with automatic streaming detection.
 
@@ -90,7 +98,7 @@ class VectorizedROICalculator(ABC):
             ROI calculation result
         """
         start_time = time.time()
-        memory_before_mb = self.memory_manager.get_cache_stats()['current_memory_mb']
+        memory_before_mb = self.memory_manager.get_cache_stats()["current_memory_mb"]
 
         # Calculate ROI mask
         roi_mask = self.calculate_roi_mask(geometry_data, roi_params)
@@ -101,25 +109,32 @@ class VectorizedROICalculator(ABC):
             use_streaming = data_size_mb > self.chunk_size_mb * 2
 
         if use_streaming:
-            logger.info(f"Using streaming ROI calculation for {roi_params.roi_type.value}")
+            logger.info(
+                f"Using streaming ROI calculation for {roi_params.roi_type.value}"
+            )
             result = self._process_roi_streaming(saxs_data, roi_mask, roi_params)
         else:
-            logger.debug(f"Using vectorized ROI calculation for {roi_params.roi_type.value}")
+            logger.debug(
+                f"Using vectorized ROI calculation for {roi_params.roi_type.value}"
+            )
             result = self.process_roi_data(saxs_data, roi_mask, roi_params)
 
         # Add timing and memory usage
         processing_time = time.time() - start_time
-        memory_after_mb = self.memory_manager.get_cache_stats()['current_memory_mb']
+        memory_after_mb = self.memory_manager.get_cache_stats()["current_memory_mb"]
         result.processing_time = processing_time
         result.memory_used_mb = memory_after_mb - memory_before_mb
 
-        logger.debug(f"ROI calculation completed: {processing_time:.3f}s, "
-                    f"{result.memory_used_mb:+.1f}MB memory")
+        logger.debug(
+            f"ROI calculation completed: {processing_time:.3f}s, "
+            f"{result.memory_used_mb:+.1f}MB memory"
+        )
 
         return result
 
-    def _process_roi_streaming(self, saxs_data: np.ndarray, roi_mask: np.ndarray,
-                              roi_params: ROIParameters) -> ROIResult:
+    def _process_roi_streaming(
+        self, saxs_data: np.ndarray, roi_mask: np.ndarray, roi_params: ROIParameters
+    ) -> ROIResult:
         """Process ROI calculation using streaming for memory efficiency."""
         from .streaming_processor import MemoryEfficientIterator
 
@@ -129,13 +144,13 @@ class VectorizedROICalculator(ABC):
         # Initialize accumulation arrays
         if roi_params.roi_type == ROIType.PIE:
             # For pie ROI, we accumulate binned q-values
-            qsize = roi_params.parameters.get('qsize', 1000)
+            qsize = roi_params.parameters.get("qsize", 1000)
             accumulated_data = np.zeros(qsize)
             normalization = np.zeros(qsize)
 
         elif roi_params.roi_type == ROIType.RING:
             # For ring ROI, we accumulate angular values
-            phi_num = roi_params.parameters.get('phi_num', 180)
+            phi_num = roi_params.parameters.get("phi_num", 180)
             accumulated_data = np.zeros(phi_num)
             normalization = np.zeros(phi_num)
 
@@ -157,11 +172,11 @@ class VectorizedROICalculator(ABC):
 
             # Accumulate results
             if isinstance(accumulated_data, np.ndarray):
-                accumulated_data += chunk_result['data']
-                normalization += chunk_result['norm']
+                accumulated_data += chunk_result["data"]
+                normalization += chunk_result["norm"]
             else:
-                accumulated_data += chunk_result['data']
-                normalization += chunk_result['norm']
+                accumulated_data += chunk_result["data"]
+                normalization += chunk_result["norm"]
 
         # Finalize results
         if isinstance(accumulated_data, np.ndarray) and normalization.sum() > 0:
@@ -177,40 +192,45 @@ class VectorizedROICalculator(ABC):
             roi_data=final_data,
             roi_type=roi_params.roi_type,
             parameters=roi_params.parameters,
-            metadata={'streaming_used': True, 'chunks_processed': len(iterator)},
+            metadata={"streaming_used": True, "chunks_processed": len(iterator)},
             processing_time=0.0,  # Will be set by caller
-            memory_used_mb=0.0    # Will be set by caller
+            memory_used_mb=0.0,  # Will be set by caller
         )
 
-    def _process_chunk_vectorized(self, chunk: np.ndarray, roi_mask: np.ndarray,
-                                 roi_params: ROIParameters, chunk_info) -> Dict[str, np.ndarray]:
+    def _process_chunk_vectorized(
+        self,
+        chunk: np.ndarray,
+        roi_mask: np.ndarray,
+        roi_params: ROIParameters,
+        chunk_info,
+    ) -> dict[str, np.ndarray]:
         """Process a single chunk with vectorized operations."""
         # Apply ROI mask using broadcasting
         masked_chunk = chunk * roi_mask[np.newaxis, ...]
 
         if roi_params.roi_type == ROIType.PIE:
             return self._process_pie_chunk(masked_chunk, roi_mask, roi_params)
-        elif roi_params.roi_type == ROIType.RING:
+        if roi_params.roi_type == ROIType.RING:
             return self._process_ring_chunk(masked_chunk, roi_mask, roi_params)
-        else:
-            # Generic processing
-            data = np.sum(masked_chunk)
-            norm = np.sum(roi_mask)
-            return {'data': data, 'norm': norm}
+        # Generic processing
+        data = np.sum(masked_chunk)
+        norm = np.sum(roi_mask)
+        return {"data": data, "norm": norm}
 
-    def _process_pie_chunk(self, masked_chunk: np.ndarray, roi_mask: np.ndarray,
-                          roi_params: ROIParameters) -> Dict[str, np.ndarray]:
+    def _process_pie_chunk(
+        self, masked_chunk: np.ndarray, roi_mask: np.ndarray, roi_params: ROIParameters
+    ) -> dict[str, np.ndarray]:
         """Process pie ROI chunk with q-value binning."""
-        qmap_idx = roi_params.parameters.get('qmap_idx')
-        qsize = roi_params.parameters.get('qsize', 1000)
+        qmap_idx = roi_params.parameters.get("qmap_idx")
+        qsize = roi_params.parameters.get("qsize", 1000)
 
         if qmap_idx is None:
             # Fallback to simple accumulation
-            return {'data': np.sum(masked_chunk), 'norm': np.sum(roi_mask)}
+            return {"data": np.sum(masked_chunk), "norm": np.sum(roi_mask)}
 
         # Vectorized binning using np.bincount
         flat_qmap = np.where(roi_mask, qmap_idx, 0).ravel()
-        flat_data = masked_chunk.ravel()
+        masked_chunk.ravel()
 
         # Process each time frame
         chunk_data = np.zeros(qsize)
@@ -219,21 +239,24 @@ class VectorizedROICalculator(ABC):
         for t in range(masked_chunk.shape[0]):
             frame_data = masked_chunk[t].ravel()
             binned_data = np.bincount(flat_qmap, frame_data, minlength=qsize + 1)[1:]
-            binned_norm = np.bincount(flat_qmap, roi_mask.ravel().astype(float), minlength=qsize + 1)[1:]
+            binned_norm = np.bincount(
+                flat_qmap, roi_mask.ravel().astype(float), minlength=qsize + 1
+            )[1:]
 
             chunk_data += binned_data
             chunk_norm += binned_norm
 
-        return {'data': chunk_data, 'norm': chunk_norm}
+        return {"data": chunk_data, "norm": chunk_norm}
 
-    def _process_ring_chunk(self, masked_chunk: np.ndarray, roi_mask: np.ndarray,
-                           roi_params: ROIParameters) -> Dict[str, np.ndarray]:
+    def _process_ring_chunk(
+        self, masked_chunk: np.ndarray, roi_mask: np.ndarray, roi_params: ROIParameters
+    ) -> dict[str, np.ndarray]:
         """Process ring ROI chunk with angular binning."""
-        phi_idx = roi_params.parameters.get('phi_idx')
-        phi_num = roi_params.parameters.get('phi_num', 180)
+        phi_idx = roi_params.parameters.get("phi_idx")
+        phi_num = roi_params.parameters.get("phi_num", 180)
 
         if phi_idx is None:
-            return {'data': np.sum(masked_chunk), 'norm': np.sum(roi_mask)}
+            return {"data": np.sum(masked_chunk), "norm": np.sum(roi_mask)}
 
         # Vectorized angular binning
         flat_phi = np.where(roi_mask, phi_idx, 0).ravel()
@@ -244,44 +267,46 @@ class VectorizedROICalculator(ABC):
         for t in range(masked_chunk.shape[0]):
             frame_data = masked_chunk[t].ravel()
             binned_data = np.bincount(flat_phi, frame_data, minlength=phi_num + 1)[1:]
-            binned_norm = np.bincount(flat_phi, roi_mask.ravel().astype(float), minlength=phi_num + 1)[1:]
+            binned_norm = np.bincount(
+                flat_phi, roi_mask.ravel().astype(float), minlength=phi_num + 1
+            )[1:]
 
             chunk_data += binned_data
             chunk_norm += binned_norm
 
-        return {'data': chunk_data, 'norm': chunk_norm}
+        return {"data": chunk_data, "norm": chunk_norm}
 
     def _generate_x_values(self, roi_params: ROIParameters) -> np.ndarray:
         """Generate x-axis values based on ROI type."""
         if roi_params.roi_type == ROIType.PIE:
             # Q-values for pie ROI
-            qmin = roi_params.parameters.get('qmin', 0.0)
-            qmax = roi_params.parameters.get('qmax', 1.0)
-            qsize = roi_params.parameters.get('qsize', 1000)
+            qmin = roi_params.parameters.get("qmin", 0.0)
+            qmax = roi_params.parameters.get("qmax", 1.0)
+            qsize = roi_params.parameters.get("qsize", 1000)
             return np.linspace(qmin, qmax, qsize)
 
-        elif roi_params.roi_type == ROIType.RING:
+        if roi_params.roi_type == ROIType.RING:
             # Angular values for ring ROI
-            phi_min = roi_params.parameters.get('phi_min', 0.0)
-            phi_max = roi_params.parameters.get('phi_max', 360.0)
-            phi_num = roi_params.parameters.get('phi_num', 180)
+            phi_min = roi_params.parameters.get("phi_min", 0.0)
+            phi_max = roi_params.parameters.get("phi_max", 360.0)
+            phi_num = roi_params.parameters.get("phi_num", 180)
             return np.linspace(phi_min, phi_max, phi_num)
 
-        else:
-            # Default x-values
-            return np.arange(len(roi_params.parameters.get('default_size', 100)))
+        # Default x-values
+        return np.arange(len(roi_params.parameters.get("default_size", 100)))
 
 
 class PieROICalculator(VectorizedROICalculator):
     """Optimized calculator for pie-shaped ROI."""
 
-    def calculate_roi_mask(self, geometry_data: Dict[str, np.ndarray],
-                          roi_params: ROIParameters) -> np.ndarray:
+    def calculate_roi_mask(
+        self, geometry_data: dict[str, np.ndarray], roi_params: ROIParameters
+    ) -> np.ndarray:
         """Calculate pie ROI mask using vectorized operations."""
-        pmap = geometry_data['pmap']
-        mask = geometry_data.get('mask', np.ones_like(pmap))
+        pmap = geometry_data["pmap"]
+        mask = geometry_data.get("mask", np.ones_like(pmap))
 
-        pmin, pmax = roi_params.parameters['angle_range']
+        pmin, pmax = roi_params.parameters["angle_range"]
 
         # Handle angle wraparound for pie ROI
         if pmin < pmax:
@@ -293,17 +318,20 @@ class PieROICalculator(VectorizedROICalculator):
         # Combine with detector mask
         roi_mask = angle_mask & (mask > 0)
 
-        logger.debug(f"Pie ROI mask: {np.sum(roi_mask)} pixels selected "
-                    f"({np.sum(roi_mask)/roi_mask.size*100:.1f}%)")
+        logger.debug(
+            f"Pie ROI mask: {np.sum(roi_mask)} pixels selected "
+            f"({np.sum(roi_mask) / roi_mask.size * 100:.1f}%)"
+        )
 
         return roi_mask
 
-    def process_roi_data(self, saxs_data: np.ndarray, roi_mask: np.ndarray,
-                        roi_params: ROIParameters) -> ROIResult:
+    def process_roi_data(
+        self, saxs_data: np.ndarray, roi_mask: np.ndarray, roi_params: ROIParameters
+    ) -> ROIResult:
         """Process pie ROI with optimized q-value binning."""
-        qmap_idx = roi_params.parameters['qmap_idx']
-        qsize = roi_params.parameters['qsize']
-        qspan = roi_params.parameters.get('qspan', np.arange(qsize + 1))
+        qmap_idx = roi_params.parameters["qmap_idx"]
+        qsize = roi_params.parameters["qsize"]
+        qspan = roi_params.parameters.get("qspan", np.arange(qsize + 1))
 
         # Vectorized binning for all time frames at once
         if saxs_data.ndim == 3:
@@ -332,9 +360,9 @@ class PieROICalculator(VectorizedROICalculator):
         x_values = qspan[:-1] if len(qspan) == qsize + 1 else np.arange(qsize)
 
         # Apply distance cutoff if specified
-        if 'dist' in roi_params.parameters:
-            dist = roi_params.parameters['dist']
-            qmax = roi_params.parameters.get('qmax')
+        if "dist" in roi_params.parameters:
+            roi_params.parameters["dist"]
+            qmax = roi_params.parameters.get("qmax")
             if qmax is not None:
                 qmax_idx = np.searchsorted(x_values, qmax)
                 final_roi_data[qmax_idx:] = np.nan
@@ -344,43 +372,47 @@ class PieROICalculator(VectorizedROICalculator):
             roi_data=final_roi_data,
             roi_type=roi_params.roi_type,
             parameters=roi_params.parameters,
-            metadata={'vectorized': True, 'qsize': qsize},
+            metadata={"vectorized": True, "qsize": qsize},
             processing_time=0.0,
-            memory_used_mb=0.0
+            memory_used_mb=0.0,
         )
 
 
 class RingROICalculator(VectorizedROICalculator):
     """Optimized calculator for ring-shaped ROI."""
 
-    def calculate_roi_mask(self, geometry_data: Dict[str, np.ndarray],
-                          roi_params: ROIParameters) -> np.ndarray:
+    def calculate_roi_mask(
+        self, geometry_data: dict[str, np.ndarray], roi_params: ROIParameters
+    ) -> np.ndarray:
         """Calculate ring ROI mask using vectorized operations."""
-        rmap = geometry_data['rmap']
-        mask = geometry_data.get('mask', np.ones_like(rmap))
+        rmap = geometry_data["rmap"]
+        mask = geometry_data.get("mask", np.ones_like(rmap))
 
-        rmin, rmax = roi_params.parameters['radius_range']
+        rmin, rmax = roi_params.parameters["radius_range"]
 
         # Vectorized ring mask calculation
         ring_mask = (rmap >= rmin) & (rmap < rmax) & (mask > 0)
 
-        logger.debug(f"Ring ROI mask: {np.sum(ring_mask)} pixels selected "
-                    f"({np.sum(ring_mask)/ring_mask.size*100:.1f}%)")
+        logger.debug(
+            f"Ring ROI mask: {np.sum(ring_mask)} pixels selected "
+            f"({np.sum(ring_mask) / ring_mask.size * 100:.1f}%)"
+        )
 
         return ring_mask
 
-    def process_roi_data(self, saxs_data: np.ndarray, roi_mask: np.ndarray,
-                        roi_params: ROIParameters) -> ROIResult:
+    def process_roi_data(
+        self, saxs_data: np.ndarray, roi_mask: np.ndarray, roi_params: ROIParameters
+    ) -> ROIResult:
         """Process ring ROI with optimized angular binning."""
-        pmap = roi_params.parameters['pmap']
-        phi_num = roi_params.parameters.get('phi_num', 180)
+        pmap = roi_params.parameters["pmap"]
+        phi_num = roi_params.parameters.get("phi_num", 180)
 
         # Calculate angular indices for binning
         pmap_roi = pmap[roi_mask]
         phi_min, phi_max = np.min(pmap_roi), np.max(pmap_roi)
-        phi_indices = np.floor(
-            (pmap - phi_min) / (phi_max - phi_min) * phi_num
-        ).astype(int)
+        phi_indices = np.floor((pmap - phi_min) / (phi_max - phi_min) * phi_num).astype(
+            int
+        )
         phi_indices = np.clip(phi_indices, 0, phi_num - 1)
 
         # Create angular binning mask
@@ -407,23 +439,30 @@ class RingROICalculator(VectorizedROICalculator):
             roi_data=final_roi_data,
             roi_type=roi_params.roi_type,
             parameters=roi_params.parameters,
-            metadata={'vectorized': True, 'phi_num': phi_num, 'phi_range': (phi_min, phi_max)},
+            metadata={
+                "vectorized": True,
+                "phi_num": phi_num,
+                "phi_range": (phi_min, phi_max),
+            },
             processing_time=0.0,
-            memory_used_mb=0.0
+            memory_used_mb=0.0,
         )
 
 
 class ParallelROIProcessor:
     """Process multiple ROIs in parallel for enhanced performance."""
 
-    def __init__(self, max_workers: Optional[int] = None):
+    def __init__(self, max_workers: int | None = None):
         self.max_workers = max_workers
         self.memory_manager = get_memory_manager()
 
-    def calculate_multiple_rois(self, saxs_data: np.ndarray,
-                               geometry_data: Dict[str, np.ndarray],
-                               roi_list: List[ROIParameters],
-                               use_parallel: bool = True) -> List[ROIResult]:
+    def calculate_multiple_rois(
+        self,
+        saxs_data: np.ndarray,
+        geometry_data: dict[str, np.ndarray],
+        roi_list: list[ROIParameters],
+        use_parallel: bool = True,
+    ) -> list[ROIResult]:
         """
         Calculate multiple ROIs with optional parallel processing.
 
@@ -449,19 +488,23 @@ class ParallelROIProcessor:
         # Check memory pressure
         pressure = self.memory_manager.get_memory_pressure()
         if pressure in [MemoryPressure.HIGH, MemoryPressure.CRITICAL]:
-            logger.warning("High memory pressure detected, using sequential ROI processing")
+            logger.warning(
+                "High memory pressure detected, using sequential ROI processing"
+            )
             use_parallel = False
 
         if not use_parallel or len(roi_list) < 2:
             # Sequential processing
             return self._calculate_sequential(saxs_data, geometry_data, roi_list)
-        else:
-            # Parallel processing
-            return self._calculate_parallel(saxs_data, geometry_data, roi_list)
+        # Parallel processing
+        return self._calculate_parallel(saxs_data, geometry_data, roi_list)
 
-    def _calculate_sequential(self, saxs_data: np.ndarray,
-                             geometry_data: Dict[str, np.ndarray],
-                             roi_list: List[ROIParameters]) -> List[ROIResult]:
+    def _calculate_sequential(
+        self,
+        saxs_data: np.ndarray,
+        geometry_data: dict[str, np.ndarray],
+        roi_list: list[ROIParameters],
+    ) -> list[ROIResult]:
         """Calculate ROIs sequentially."""
         results = []
         for roi_params in roi_list:
@@ -470,14 +513,20 @@ class ParallelROIProcessor:
             results.append(result)
         return results
 
-    def _calculate_parallel(self, saxs_data: np.ndarray,
-                           geometry_data: Dict[str, np.ndarray],
-                           roi_list: List[ROIParameters]) -> List[ROIResult]:
+    def _calculate_parallel(
+        self,
+        saxs_data: np.ndarray,
+        geometry_data: dict[str, np.ndarray],
+        roi_list: list[ROIParameters],
+    ) -> list[ROIResult]:
         """Calculate ROIs in parallel."""
         import os
+
         max_workers = self.max_workers or min(len(roi_list), os.cpu_count() or 1)
 
-        logger.info(f"Processing {len(roi_list)} ROIs in parallel with {max_workers} workers")
+        logger.info(
+            f"Processing {len(roi_list)} ROIs in parallel with {max_workers} workers"
+        )
 
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
             # Submit all ROI calculations
@@ -503,9 +552,9 @@ class ParallelROIProcessor:
                         roi_data=np.array([]),
                         roi_type=roi_list[index].roi_type,
                         parameters=roi_list[index].parameters,
-                        metadata={'error': str(e)},
+                        metadata={"error": str(e)},
                         processing_time=0.0,
-                        memory_used_mb=0.0
+                        memory_used_mb=0.0,
                     )
 
         return results
@@ -514,41 +563,48 @@ class ParallelROIProcessor:
         """Get appropriate calculator for ROI type."""
         if roi_type == ROIType.PIE:
             return PieROICalculator()
-        elif roi_type == ROIType.RING:
+        if roi_type == ROIType.RING:
             return RingROICalculator()
-        else:
-            # Default to pie calculator for unknown types
-            logger.warning(f"Unknown ROI type {roi_type}, using pie calculator")
-            return PieROICalculator()
+        # Default to pie calculator for unknown types
+        logger.warning(f"Unknown ROI type {roi_type}, using pie calculator")
+        return PieROICalculator()
 
 
 # Convenience functions for easy usage
-def calculate_pie_roi(saxs_data: np.ndarray, geometry_data: Dict[str, np.ndarray],
-                     angle_range: Tuple[float, float], **kwargs) -> ROIResult:
+def calculate_pie_roi(
+    saxs_data: np.ndarray,
+    geometry_data: dict[str, np.ndarray],
+    angle_range: tuple[float, float],
+    **kwargs,
+) -> ROIResult:
     """Convenience function for pie ROI calculation."""
     roi_params = ROIParameters(
-        roi_type=ROIType.PIE,
-        parameters={'angle_range': angle_range, **kwargs}
+        roi_type=ROIType.PIE, parameters={"angle_range": angle_range, **kwargs}
     )
     calculator = PieROICalculator()
     return calculator.calculate_roi(saxs_data, geometry_data, roi_params)
 
 
-def calculate_ring_roi(saxs_data: np.ndarray, geometry_data: Dict[str, np.ndarray],
-                      radius_range: Tuple[float, float], **kwargs) -> ROIResult:
+def calculate_ring_roi(
+    saxs_data: np.ndarray,
+    geometry_data: dict[str, np.ndarray],
+    radius_range: tuple[float, float],
+    **kwargs,
+) -> ROIResult:
     """Convenience function for ring ROI calculation."""
     roi_params = ROIParameters(
-        roi_type=ROIType.RING,
-        parameters={'radius_range': radius_range, **kwargs}
+        roi_type=ROIType.RING, parameters={"radius_range": radius_range, **kwargs}
     )
     calculator = RingROICalculator()
     return calculator.calculate_roi(saxs_data, geometry_data, roi_params)
 
 
-def calculate_multiple_rois_parallel(saxs_data: np.ndarray,
-                                   geometry_data: Dict[str, np.ndarray],
-                                   roi_list: List[ROIParameters],
-                                   max_workers: Optional[int] = None) -> List[ROIResult]:
+def calculate_multiple_rois_parallel(
+    saxs_data: np.ndarray,
+    geometry_data: dict[str, np.ndarray],
+    roi_list: list[ROIParameters],
+    max_workers: int | None = None,
+) -> list[ROIResult]:
     """Convenience function for parallel multiple ROI calculation."""
     processor = ParallelROIProcessor(max_workers=max_workers)
     return processor.calculate_multiple_rois(

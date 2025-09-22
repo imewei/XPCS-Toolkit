@@ -1,30 +1,27 @@
+import os
 import random
 import time
 
-import os
 # Set Qt API to PySide6 before importing matplotlib
-os.environ.setdefault('QT_API', 'PySide6')
+os.environ.setdefault("QT_API", "PySide6")
 
 import matplotlib
+
 # Set matplotlib backend to PySide6-compatible qtagg
-matplotlib.use('qtagg')
+matplotlib.use("qtagg")
 import matplotlib.pyplot as plt
 import numpy as np
 
 # Import from the PySide6-compatible backend
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg, NavigationToolbar2QT
-
 from matplotlib.figure import Figure
 from PySide6 import QtCore, QtWidgets
 from PySide6.QtWidgets import QHBoxLayout, QVBoxLayout, QWidget
 
 from xpcs_toolkit.utils.logging_config import get_logger
-from .plot_constants import (
-    MATPLOTLIB_COLORS_HEX as colors,
-    MATPLOTLIB_MARKERS as markers,
-    PYQTGRAPH_MARKERS as pg_markers,
-    get_color_marker
-)
+
+from .plot_constants import MATPLOTLIB_COLORS_HEX as colors
+from .plot_constants import get_color_marker
 
 logger = get_logger(__name__)
 

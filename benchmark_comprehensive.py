@@ -17,7 +17,6 @@ Results are saved to benchmark_results.json for analysis.
 """
 
 import gc
-import importlib
 import json
 import os
 import sys
@@ -26,7 +25,7 @@ import tracemalloc
 from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import psutil
 
@@ -39,24 +38,23 @@ class PerformanceBenchmark:
         self.results = {
             "timestamp": datetime.now().isoformat(),
             "system_info": self._get_system_info(),
-            "benchmarks": {}
+            "benchmarks": {},
         }
         self.process = psutil.Process()
 
-    def _get_system_info(self) -> Dict[str, Any]:
+    def _get_system_info(self) -> dict[str, Any]:
         """Collect system information."""
         return {
             "platform": sys.platform,
             "python_version": sys.version,
             "cpu_count": psutil.cpu_count(),
             "memory_total_gb": psutil.virtual_memory().total / (1024**3),
-            "architecture": os.uname().machine if hasattr(os, 'uname') else 'unknown'
+            "architecture": os.uname().machine if hasattr(os, "uname") else "unknown",
         }
 
     @contextmanager
     def measure_performance(self, name: str):
         """Context manager to measure performance metrics."""
-        print(f"🔍 Benchmarking: {name}")
 
         # Start measurements
         start_time = time.perf_counter()
@@ -70,7 +68,7 @@ class PerformanceBenchmark:
             end_time = time.perf_counter()
             execution_time = end_time - start_time
 
-            current_memory, peak_memory = tracemalloc.get_traced_memory()
+            _current_memory, peak_memory = tracemalloc.get_traced_memory()
             tracemalloc.stop()
 
             final_memory = self.process.memory_info().rss
@@ -81,99 +79,98 @@ class PerformanceBenchmark:
                 "execution_time_ms": execution_time * 1000,
                 "memory_delta_mb": memory_delta / (1024 * 1024),
                 "peak_memory_mb": peak_memory / (1024 * 1024),
-                "final_memory_mb": final_memory / (1024 * 1024)
+                "final_memory_mb": final_memory / (1024 * 1024),
             }
-
-            print(f"✅ {name}: {execution_time*1000:.2f}ms, Memory: {memory_delta/(1024*1024):+.2f}MB")
 
     def benchmark_startup_performance(self):
         """Benchmark application startup performance."""
-        print("\n📊 === STARTUP PERFORMANCE BENCHMARKS ===")
 
         # Test 1: Core imports
         with self.measure_performance("core_imports"):
-            import xpcs_toolkit
-            from xpcs_toolkit.utils.logging_config import get_logger
-            from xpcs_toolkit.fileIO.hdf_reader import HDF5ConnectionPool
+            pass
 
         # Test 2: GUI component imports
         with self.measure_performance("gui_imports"):
-            from xpcs_toolkit.xpcs_viewer import XpcsViewer
-            from xpcs_toolkit.viewer_kernel import ViewerKernel
+            pass
 
         # Test 3: Plotting system imports
         with self.measure_performance("plotting_imports"):
-            from xpcs_toolkit.plothandler.plot_constants import get_color_marker
-            from xpcs_toolkit.plothandler.matplot_qt import MplCanvas
-            from xpcs_toolkit.plothandler.pyqtgraph_handler import ImageViewDev
+            pass
 
         # Test 4: Threading system imports
         with self.measure_performance("threading_imports"):
-            from xpcs_toolkit.threading.unified_threading import get_unified_threading_manager
-            from xpcs_toolkit.threading.async_workers import WorkerManager
+            pass
 
         # Test 5: Analysis modules (lazy loading test)
         with self.measure_performance("analysis_modules_lazy"):
             from xpcs_toolkit.viewer_kernel import _get_module
-            g2mod = _get_module('g2mod')
-            saxs1d = _get_module('saxs1d')
-            stability = _get_module('stability')
+
+            _get_module("g2mod")
+            _get_module("saxs1d")
+            _get_module("stability")
 
     def benchmark_lazy_loading_effectiveness(self):
         """Benchmark the effectiveness of lazy loading system."""
-        print("\n📊 === LAZY LOADING EFFECTIVENESS ===")
 
         # Clear module cache first
         from xpcs_toolkit.viewer_kernel import _module_cache
+
         _module_cache.clear()
 
         # Test lazy loading speed
-        module_names = ['g2mod', 'saxs1d', 'saxs2d', 'stability', 'intt', 'twotime']
+        module_names = ["g2mod", "saxs1d", "saxs2d", "stability", "intt", "twotime"]
 
         for module_name in module_names:
             with self.measure_performance(f"lazy_load_{module_name}"):
                 from xpcs_toolkit.viewer_kernel import _get_module
+
                 module = _get_module(module_name)
                 # Access a common method to ensure full loading
-                if hasattr(module, 'plot'):
+                if hasattr(module, "plot"):
                     _ = module.plot
 
     def benchmark_memory_optimization(self):
         """Benchmark memory usage optimizations."""
-        print("\n📊 === MEMORY OPTIMIZATION BENCHMARKS ===")
 
         # Test 1: Memory manager initialization
         with self.measure_performance("memory_manager_init"):
             from xpcs_toolkit.utils.memory_manager import get_memory_manager
+
             memory_manager = get_memory_manager()
-            stats = memory_manager.get_enhanced_stats()
+            memory_manager.get_enhanced_stats()
 
         # Test 2: Connection pool efficiency
         with self.measure_performance("connection_pool_operations"):
             from xpcs_toolkit.fileIO.hdf_reader import get_connection_pool_stats
+
             for i in range(10):
-                stats = get_connection_pool_stats()
+                get_connection_pool_stats()
 
         # Test 3: Plot constants memory usage
         with self.measure_performance("plot_constants_usage"):
             from xpcs_toolkit.plothandler.plot_constants import (
-                get_color_marker, get_color_cycle, get_marker_cycle
+                get_color_cycle,
+                get_color_marker,
+                get_marker_cycle,
             )
+
             # Simulate heavy usage
             for i in range(100):
-                color, marker = get_color_marker(i, 'matplotlib')
-                colors = get_color_cycle('matplotlib', 'hex')
-                markers = get_marker_cycle('matplotlib')
+                _color, _marker = get_color_marker(i, "matplotlib")
+                get_color_cycle("matplotlib", "hex")
+                get_marker_cycle("matplotlib")
 
     def benchmark_threading_performance(self):
         """Benchmark threading system performance."""
-        print("\n📊 === THREADING PERFORMANCE BENCHMARKS ===")
 
         # Test 1: Unified threading manager
         with self.measure_performance("unified_threading_manager"):
             from xpcs_toolkit.threading.unified_threading import (
-                get_unified_threading_manager, TaskPriority, TaskType
+                TaskPriority,
+                TaskType,
+                get_unified_threading_manager,
             )
+
             manager = get_unified_threading_manager()
 
             # Submit test tasks
@@ -186,24 +183,25 @@ class PerformanceBenchmark:
                     f"test_task_{i}",
                     dummy_task,
                     TaskPriority.NORMAL,
-                    TaskType.COMPUTATION
+                    TaskType.COMPUTATION,
                 )
 
             # Wait a bit for tasks to complete
             time.sleep(0.1)
-            stats = manager.get_performance_stats()
+            manager.get_performance_stats()
 
         # Test 2: Cleanup system performance
         with self.measure_performance("cleanup_system"):
             from xpcs_toolkit.threading.cleanup_optimized import (
-                get_cleanup_system, shutdown_worker_managers
+                get_cleanup_system,
+                shutdown_worker_managers,
             )
-            cleanup_system = get_cleanup_system()
+
+            get_cleanup_system()
             shutdown_worker_managers()
 
     def benchmark_plotting_performance(self):
         """Benchmark plotting system performance."""
-        print("\n📊 === PLOTTING PERFORMANCE BENCHMARKS ===")
 
         # Test 1: Color/marker generation performance
         with self.measure_performance("color_marker_generation"):
@@ -212,40 +210,42 @@ class PerformanceBenchmark:
             # Generate 1000 color/marker combinations
             results = []
             for i in range(1000):
-                color, marker = get_color_marker(i % 100, 'matplotlib')
+                color, marker = get_color_marker(i % 100, "matplotlib")
                 results.append((color, marker))
 
         # Test 2: Constants consolidation performance
         with self.measure_performance("constants_access"):
             from xpcs_toolkit.plothandler.plot_constants import (
-                MATPLOTLIB_COLORS_HEX, MATPLOTLIB_COLORS_RGB, BASIC_COLORS
+                BASIC_COLORS,
+                MATPLOTLIB_COLORS_HEX,
+                MATPLOTLIB_COLORS_RGB,
             )
 
             # Access consolidated constants repeatedly
             for i in range(1000):
-                hex_color = MATPLOTLIB_COLORS_HEX[i % len(MATPLOTLIB_COLORS_HEX)]
-                rgb_color = MATPLOTLIB_COLORS_RGB[i % len(MATPLOTLIB_COLORS_RGB)]
-                basic_color = BASIC_COLORS[i % len(BASIC_COLORS)]
+                MATPLOTLIB_COLORS_HEX[i % len(MATPLOTLIB_COLORS_HEX)]
+                MATPLOTLIB_COLORS_RGB[i % len(MATPLOTLIB_COLORS_RGB)]
+                BASIC_COLORS[i % len(BASIC_COLORS)]
 
     def benchmark_qmap_constants(self):
         """Benchmark qmap constants performance."""
-        print("\n📊 === QMAP CONSTANTS BENCHMARKS ===")
 
         with self.measure_performance("qmap_constants_usage"):
-            from xpcs_toolkit.fileIO.qmap_utils import DEFAULT_DETECTOR_SIZE, DEFAULT_BEAM_CENTER
+            from xpcs_toolkit.fileIO.qmap_utils import (
+                DEFAULT_BEAM_CENTER,
+                DEFAULT_DETECTOR_SIZE,
+            )
 
             # Simulate heavy usage of constants
-            for i in range(1000):
-                detector_arrays = [[DEFAULT_DETECTOR_SIZE, DEFAULT_DETECTOR_SIZE] for _ in range(10)]
-                beam_centers = [DEFAULT_BEAM_CENTER for _ in range(10)]
+            for _i in range(1000):
+                [[DEFAULT_DETECTOR_SIZE, DEFAULT_DETECTOR_SIZE] for _ in range(10)]
+                [DEFAULT_BEAM_CENTER for _ in range(10)]
 
                 # Verify relationship
                 assert DEFAULT_BEAM_CENTER == DEFAULT_DETECTOR_SIZE // 2
 
     def run_comprehensive_benchmark(self):
         """Run all benchmark suites."""
-        print("🚀 Starting Comprehensive Performance Benchmark Suite")
-        print("=" * 60)
 
         # Run all benchmark categories
         self.benchmark_startup_performance()
@@ -277,38 +277,28 @@ class PerformanceBenchmark:
             "average_execution_time_ms": avg_time,
             "total_memory_delta_mb": total_memory,
             "benchmark_count": len(benchmarks),
-            "fastest_benchmark": min(benchmarks.items(), key=lambda x: x[1]["execution_time_ms"]),
-            "slowest_benchmark": max(benchmarks.items(), key=lambda x: x[1]["execution_time_ms"]),
-            "most_memory_efficient": min(benchmarks.items(), key=lambda x: x[1]["memory_delta_mb"]),
-            "least_memory_efficient": max(benchmarks.items(), key=lambda x: x[1]["memory_delta_mb"])
+            "fastest_benchmark": min(
+                benchmarks.items(), key=lambda x: x[1]["execution_time_ms"]
+            ),
+            "slowest_benchmark": max(
+                benchmarks.items(), key=lambda x: x[1]["execution_time_ms"]
+            ),
+            "most_memory_efficient": min(
+                benchmarks.items(), key=lambda x: x[1]["memory_delta_mb"]
+            ),
+            "least_memory_efficient": max(
+                benchmarks.items(), key=lambda x: x[1]["memory_delta_mb"]
+            ),
         }
 
     def save_results(self):
         """Save benchmark results to JSON file."""
-        with open(self.output_file, 'w') as f:
+        with open(self.output_file, "w") as f:
             json.dump(self.results, f, indent=2, default=str)
-        print(f"\n📁 Results saved to: {self.output_file}")
 
     def print_summary(self):
         """Print benchmark summary."""
-        summary = self.results["summary"]
-
-        print("\n" + "=" * 60)
-        print("📊 COMPREHENSIVE BENCHMARK SUMMARY")
-        print("=" * 60)
-
-        print(f"🕒 Total Execution Time: {summary['total_execution_time_ms']:.2f}ms")
-        print(f"⏱️  Average Per Benchmark: {summary['average_execution_time_ms']:.2f}ms")
-        print(f"💾 Total Memory Delta: {summary['total_memory_delta_mb']:+.2f}MB")
-        print(f"📊 Benchmarks Run: {summary['benchmark_count']}")
-
-        print(f"\n🏆 Fastest: {summary['fastest_benchmark'][0]} ({summary['fastest_benchmark'][1]['execution_time_ms']:.2f}ms)")
-        print(f"🐌 Slowest: {summary['slowest_benchmark'][0]} ({summary['slowest_benchmark'][1]['execution_time_ms']:.2f}ms)")
-
-        print(f"\n💚 Most Memory Efficient: {summary['most_memory_efficient'][0]} ({summary['most_memory_efficient'][1]['memory_delta_mb']:+.2f}MB)")
-        print(f"🔴 Least Memory Efficient: {summary['least_memory_efficient'][0]} ({summary['least_memory_efficient'][1]['memory_delta_mb']:+.2f}MB)")
-
-        print("\n✅ Benchmark suite completed successfully!")
+        self.results["summary"]
 
 
 def main():

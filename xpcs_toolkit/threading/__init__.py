@@ -46,40 +46,40 @@ from .unified_threading import (
 __all__ = [
     # Async components
     "AsyncDataPreloader",
+    # GUI integration
+    "AsyncMethodMixin",
     "AsyncViewerKernel",
     # Basic workers
     "BaseAsyncWorker",
     "ComputationWorker",
     "DataLoadWorker",
+    # Plot workers
+    "G2PlotWorker",
+    "IntensityPlotWorker",
     "PlotWorker",
+    # Progress management
+    "ProgressDialog",
+    "ProgressIndicator",
+    "ProgressManager",
+    "QMapPlotWorker",
+    "SaxsPlotWorker",
+    "StabilityPlotWorker",
+    # Unified threading
+    "TaskPriority",
+    "TaskType",
+    "ThreadingIntegrator",
+    "TwotimePlotWorker",
+    "UnifiedTask",
+    "UnifiedThreadingManager",
     "WorkerManager",
     "WorkerSignals",
-    # GUI integration
-    "AsyncMethodMixin",
-    "ThreadingIntegrator",
     "async_generate_g2_plot",
     "async_generate_saxs_plot",
     "async_load_xpcs_files",
     "create_completion_callback",
     "create_progress_callback",
+    "get_unified_threading_manager",
     "make_async",
     "setup_enhanced_threading",
-    # Plot workers
-    "G2PlotWorker",
-    "IntensityPlotWorker",
-    "QMapPlotWorker",
-    "SaxsPlotWorker",
-    "StabilityPlotWorker",
-    "TwotimePlotWorker",
-    # Progress management
-    "ProgressDialog",
-    "ProgressIndicator",
-    "ProgressManager",
-    # Unified threading
-    "TaskPriority",
-    "TaskType",
-    "UnifiedTask",
-    "UnifiedThreadingManager",
-    "get_unified_threading_manager",
     "shutdown_unified_threading",
 ]

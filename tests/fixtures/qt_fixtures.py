@@ -6,7 +6,7 @@ and Qt-specific testing utilities.
 
 import os
 import sys
-from typing import Optional, Any, Generator
+
 import pytest
 
 # Qt availability check
@@ -14,7 +14,7 @@ QT_AVAILABLE = True
 QT_ERROR = None
 
 try:
-    from PySide6 import QtWidgets, QtCore, QtTest
+    from PySide6 import QtCore, QtTest, QtWidgets
     from PySide6.QtCore import Qt, QTimer
     from PySide6.QtWidgets import QApplication
 except ImportError as e:
@@ -57,35 +57,52 @@ except ImportError as e:
             pass
 
     # Mock Qt modules
-    QtWidgets = type('MockQtWidgets', (), {
-        'QApplication': MockQApplication,
-        'QWidget': MockQWidget,
-        'QMainWindow': MockQWidget,
-        'QVBoxLayout': MockQWidget,
-        'QHBoxLayout': MockQWidget,
-        'QPushButton': MockQWidget,
-        'QLabel': MockQWidget,
-    })()
+    QtWidgets = type(
+        "MockQtWidgets",
+        (),
+        {
+            "QApplication": MockQApplication,
+            "QWidget": MockQWidget,
+            "QMainWindow": MockQWidget,
+            "QVBoxLayout": MockQWidget,
+            "QHBoxLayout": MockQWidget,
+            "QPushButton": MockQWidget,
+            "QLabel": MockQWidget,
+        },
+    )()
 
-    QtCore = type('MockQtCore', (), {
-        'Qt': MockQt(),
-        'QTimer': MockQWidget,
-        'QThread': MockQWidget,
-        'pyqtSignal': lambda *args, **kwargs: None,
-    })()
+    QtCore = type(
+        "MockQtCore",
+        (),
+        {
+            "Qt": MockQt(),
+            "QTimer": MockQWidget,
+            "QThread": MockQWidget,
+            "pyqtSignal": lambda *args, **kwargs: None,
+        },
+    )()
 
-    QtTest = type('MockQtTest', (), {
-        'QTest': type('QTest', (), {
-            'qWait': lambda x: None,
-            'mouseClick': lambda *args: None,
-            'keyClick': lambda *args: None,
-        })(),
-    })()
+    QtTest = type(
+        "MockQtTest",
+        (),
+        {
+            "QTest": type(
+                "QTest",
+                (),
+                {
+                    "qWait": lambda x: None,
+                    "mouseClick": lambda *args: None,
+                    "keyClick": lambda *args: None,
+                },
+            )(),
+        },
+    )()
 
 
 # ============================================================================
 # Qt Application Fixtures
 # ============================================================================
+
 
 @pytest.fixture(scope="session")
 def qt_application():
@@ -131,13 +148,17 @@ def qt_main_window(qt_application):
 # Qt Testing Utilities
 # ============================================================================
 
+
 @pytest.fixture(scope="function")
 def qt_wait():
     """Provide Qt event loop waiting utility."""
     if not QT_AVAILABLE:
+
         def mock_wait(ms):
             import time
+
             time.sleep(ms / 1000.0)
+
         return mock_wait
 
     def wait_func(milliseconds):
@@ -151,8 +172,10 @@ def qt_wait():
 def qt_click_helper():
     """Provide Qt widget clicking utility."""
     if not QT_AVAILABLE:
+
         def mock_click(widget, button=None):
             pass
+
         return mock_click
 
     def click_func(widget, button=QtCore.Qt.LeftButton):
@@ -166,8 +189,10 @@ def qt_click_helper():
 def qt_key_helper():
     """Provide Qt keyboard input utility."""
     if not QT_AVAILABLE:
+
         def mock_key(widget, key):
             pass
+
         return mock_key
 
     def key_func(widget, key):
@@ -180,6 +205,7 @@ def qt_key_helper():
 # ============================================================================
 # Qt Mock Objects for Testing
 # ============================================================================
+
 
 class MockQtSignal:
     """Mock Qt signal for testing without Qt."""
@@ -243,17 +269,14 @@ def mock_qt_thread():
 # Qt Error Testing Fixtures
 # ============================================================================
 
+
 @pytest.fixture(scope="function")
 def qt_error_catcher():
     """Fixture to catch Qt-related errors during testing."""
     errors = []
 
     def error_handler(msg_type, context, message):
-        errors.append({
-            "type": msg_type,
-            "context": context,
-            "message": message
-        })
+        errors.append({"type": msg_type, "context": context, "message": message})
 
     if QT_AVAILABLE:
         # Install Qt message handler
@@ -275,17 +298,13 @@ def qt_performance_monitor(qt_application):
 
     import time
 
-    metrics = {
-        "event_count": 0,
-        "processing_time": 0,
-        "start_time": time.time()
-    }
+    metrics = {"event_count": 0, "processing_time": 0, "start_time": time.time()}
 
     def count_events():
         metrics["event_count"] += 1
 
     # Connect to application's aboutToQuit signal if available
-    if hasattr(qt_application, 'aboutToQuit'):
+    if hasattr(qt_application, "aboutToQuit"):
         qt_application.aboutToQuit.connect(lambda: None)
 
     yield metrics
@@ -296,6 +315,7 @@ def qt_performance_monitor(qt_application):
 # ============================================================================
 # GUI Testing Helpers
 # ============================================================================
+
 
 @pytest.fixture(scope="function")
 def gui_test_helper(qt_application, qt_wait):
@@ -340,6 +360,7 @@ def gui_test_helper(qt_application, qt_wait):
 # ============================================================================
 # Qt Configuration
 # ============================================================================
+
 
 def configure_qt_for_testing():
     """Configure Qt environment for testing."""

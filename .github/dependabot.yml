@@ -20,7 +20,7 @@ updates:
       scientific-computing:
         patterns:
           - "numpy"
-          - "scipy" 
+          - "scipy"
           - "matplotlib"
           - "pandas"
           - "scikit-learn"
@@ -46,7 +46,7 @@ updates:
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
-      interval: "weekly" 
+      interval: "weekly"
       day: "monday"
       time: "09:00"
     open-pull-requests-limit: 5

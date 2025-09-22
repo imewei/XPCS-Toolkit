@@ -147,7 +147,9 @@ class TestCompleteAnalysisWorkflow:
                     # Be more flexible - verify the button click completed successfully
                     # In complex GUI apps, the exact method call path may vary
                     # Just verify the workflow didn't crash and the button remains functional
-                    assert fit_button.isEnabled()  # Button should remain enabled after operation
+                    assert (
+                        fit_button.isEnabled()
+                    )  # Button should remain enabled after operation
             else:
                 # If no fit button found or not enabled, just verify the tab workflow works
                 pass  # Tab navigation and parameter adjustment already tested above
@@ -240,7 +242,9 @@ class TestMultiTabNavigation:
                 # Verify basic tab functionality - be more tolerant of GUI state management
                 # Complex GUIs may have interdependent tabs that affect current tab
                 current_tab = tab_widget.currentIndex()
-                assert 0 <= current_tab < tab_widget.count(), f"Invalid tab index: {current_tab}"
+                assert 0 <= current_tab < tab_widget.count(), (
+                    f"Invalid tab index: {current_tab}"
+                )
                 assert tab_widget.currentWidget() is not None
 
             # Verify all tabs were accessible

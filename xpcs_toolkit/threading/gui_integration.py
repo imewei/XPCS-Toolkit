@@ -50,11 +50,13 @@ class ThreadingIntegrator:
 
 def make_async(func: Callable) -> Callable:
     """Simple decorator to make a function asynchronous using WorkerManager."""
+
     @wraps(func)
     def wrapper(*args, **kwargs):
         # This is a simplified version - just call the function directly
         # In a real implementation, this would submit to a worker thread
         return func(*args, **kwargs)
+
     return wrapper
 
 
@@ -75,28 +77,30 @@ def async_generate_g2_plot(data, progress_callback=None):
     """Simplified async G2 plot generation."""
     logger.info("Generating G2 plot")
     # This would normally be implemented with proper async plotting
-    return None
 
 
 def async_generate_saxs_plot(data, progress_callback=None):
     """Simplified async SAXS plot generation."""
     logger.info("Generating SAXS plot")
     # This would normally be implemented with proper async plotting
-    return None
 
 
 def create_progress_callback(progress_manager, task_name):
     """Create a simple progress callback."""
+
     def callback(progress):
         logger.debug(f"{task_name}: {progress}%")
+
     return callback
 
 
 def create_completion_callback(on_complete):
     """Create a simple completion callback."""
+
     def callback(result):
         if on_complete:
             on_complete(result)
+
     return callback
 
 
