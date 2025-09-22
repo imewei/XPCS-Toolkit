@@ -1540,15 +1540,56 @@ class XpcsFile:
         dqmap = np.copy(self.dqmap)
         saxs = self.saxs_2d_log if scale == "log" else self.saxs_2d
 
+        # Handle 3D SAXS data by taking the first frame if needed
+        if saxs.ndim == 3 and saxs.shape[0] == 1:
+            saxs = saxs[0]
+            logger.debug(f"Converted 3D SAXS data to 2D: new shape={saxs.shape}")
+
         if auto_crop:
             idx = np.nonzero(dqmap >= 1)
-            sl_v = slice(np.min(idx[0]), np.max(idx[0]) + 1)
-            sl_h = slice(np.min(idx[1]), np.max(idx[1]) + 1)
-            dqmap = dqmap[sl_v, sl_h]
-            saxs = saxs[sl_v, sl_h]
+            # Check if there are any valid indices before cropping
+            if len(idx[0]) > 0 and len(idx[1]) > 0:
+                sl_v = slice(np.min(idx[0]), np.max(idx[0]) + 1)
+                sl_h = slice(np.min(idx[1]), np.max(idx[1]) + 1)
+                dqmap_cropped = dqmap[sl_v, sl_h]
+                saxs_cropped = saxs[sl_v, sl_h]
+
+                # Validate that cropping didn't result in empty arrays
+                if dqmap_cropped.size > 0 and saxs_cropped.size > 0:
+                    dqmap = dqmap_cropped
+                    saxs = saxs_cropped
+                else:
+                    logger.warning(
+                        f"Auto-crop resulted in empty arrays for {self.label}, using original data"
+                    )
+            else:
+                logger.warning(
+                    f"No valid qmap data found for auto_crop in {self.label}"
+                )
+                # Use original data without cropping
+                pass
+
+        if saxs.size == 0:
+            logger.warning(f"SAXS data is empty for {self.label} after processing")
+        if dqmap.size == 0:
+            logger.warning(f"DQMAP data is empty for {self.label} after processing")
+
+        # Check for valid dqmap before computing max/unique operations
+        if dqmap.size == 0:
+            logger.warning(f"Cannot process empty dqmap for {self.label}")
+            return dqmap, saxs, None
 
         qindex_max = np.max(dqmap)
         dqlist = np.unique(dqmap)[1:]
+
+        # Validate dqlist is not empty
+        if len(dqlist) == 0:
+            logger.warning(f"No valid Q-bins found for {self.label}")
+            dqmap = dqmap.astype(np.float32)
+            dqmap[dqmap == 0] = np.nan
+            dqmap_disp = np.flipud(np.copy(dqmap))
+            return dqmap_disp, saxs, None
+
         dqmap = dqmap.astype(np.float32)
         dqmap[dqmap == 0] = np.nan
 
@@ -1559,13 +1600,17 @@ class XpcsFile:
             x, y = highlight_xy
             if x >= 0 and y >= 0 and x < dqmap.shape[1] and y < dqmap.shape[0]:
                 dq_bin = dqmap_disp[y, x]
-        elif selection is not None:
+        elif selection is not None and selection < len(dqlist):
             dq_bin = dqlist[selection]
 
         if dq_bin is not None and dq_bin != np.nan and dq_bin > 0:
             # highlight the selected qbin if it's valid
             dqmap_disp[dqmap_disp == dq_bin] = qindex_max + 1
-            selection = np.where(dqlist == dq_bin)[0][0]
+            matching_indices = np.where(dqlist == dq_bin)[0]
+            if len(matching_indices) > 0:
+                selection = matching_indices[0]
+            else:
+                selection = None
         else:
             selection = None
         return dqmap_disp, saxs, selection

@@ -162,6 +162,20 @@ def plot_twotime(
     if selection_xy is not None:
         selection = selection_xy
 
+    # Check if saxs data is empty before setting image
+    if saxs.size == 0:
+        logger.warning(
+            f"SAXS data is empty for {xfile.label}, cannot display twotime plot"
+        )
+        return
+
+    # Check if dqmap_disp data is empty before setting image
+    if dqmap_disp.size == 0:
+        logger.warning(
+            f"DQMAP data is empty for {xfile.label}, cannot display twotime plot"
+        )
+        return
+
     hdl["saxs"].setImage(np.flipud(saxs))
     hdl["dqmap"].setImage(dqmap_disp)
 
@@ -181,8 +195,18 @@ def plot_twotime(
     c2_memory_mb = MemoryMonitor.estimate_array_memory(c2.shape, c2.dtype)
     logger.debug(f"Loaded c2 data ({c2.shape}), estimated size: {c2_memory_mb:.1f}MB")
 
+    # Check if c2 data is empty or has zero size
+    if c2.size == 0:
+        logger.warning(f"C2 data is empty for {xfile.label}, selection={selection}")
+        return
+
     # ✅ FIX: Clean C2 data to remove NaN/inf values that cause white lines
     c2_clean = clean_c2_for_visualization(c2, method="nan_to_num")
+
+    # Additional check for empty array after cleaning
+    if c2_clean.size == 0:
+        logger.warning(f"C2 data became empty after cleaning for {xfile.label}")
+        return
 
     hdl["tt"].imageItem.setScale(delta_t)
     hdl["tt"].setImage(c2_clean, autoRange=True)  # Use cleaned data
