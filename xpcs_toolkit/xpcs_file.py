@@ -122,7 +122,7 @@ class MemoryMonitor:
     @staticmethod
     def is_memory_pressure_high(threshold: float = 0.85) -> bool:
         """Check if memory pressure is above threshold (static method for backward compatibility)."""
-        # Use psutil directly to avoid recursion
+        # Use psutil directly to avoid recursion issues and allow for mocking at the psutil level
         import psutil
         memory = psutil.virtual_memory()
         return (memory.percent / 100.0) > threshold
@@ -949,9 +949,7 @@ class XpcsFile:
                         self.saxs_2d_data = enhanced_reader.read_dataset(
                             self.fname,
                             saxs_path,
-                            cache_key=reader_key,
-                            access_pattern="full_scan",
-                            use_chunks=True
+                            enable_read_ahead=True
                         )
 
                     except Exception as enhanced_error:
@@ -979,8 +977,7 @@ class XpcsFile:
                         self.saxs_2d_data = enhanced_reader.read_dataset(
                             self.fname,
                             saxs_path,
-                            cache_key=reader_key,
-                            access_pattern="full_scan"
+                            enable_read_ahead=True
                         )
 
                     except Exception as enhanced_error:

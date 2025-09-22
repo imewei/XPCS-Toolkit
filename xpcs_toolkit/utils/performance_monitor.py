@@ -428,7 +428,7 @@ class XPCSBenchmarkSuite:
                 try:
                     data = enhanced_reader.read_dataset(
                         str(sample_path), "/xpcs/scattering_2d",
-                        cache_key="benchmark_test"
+                        enable_read_ahead=True
                     )
                     if hasattr(data, 'nbytes'):
                         profiler.input_size_mb = data.nbytes / (1024 * 1024)

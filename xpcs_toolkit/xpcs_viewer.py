@@ -335,6 +335,11 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
             logger.debug("No SAXS 2D data to plot")
             return
 
+        # Handle info messages
+        if isinstance(result, dict) and result.get("type") == "info":
+            logger.info(f"SAXS 2D plotting info: {result.get('message', 'Unknown info')}")
+            return
+
         image_data = result["image_data"]
         levels = result["levels"]
         result["cmap"]
@@ -522,7 +527,8 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
             # Use the viewer kernel method with lazy loading
             # Filter out 'rows' from plot_params to avoid duplicate parameter
             filtered_params = {k: v for k, v in plot_params.items() if k != "rows"}
-            self.vk.plot_stability(self.mp_stab, rows=self.get_selected_rows(), **filtered_params)
+            if self.vk:
+                self.vk.plot_stability(self.mp_stab, rows=self.get_selected_rows(), **filtered_params)
             logger.info("Stability plot applied successfully")
 
         except Exception as e:
@@ -553,6 +559,13 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         selected_row = [x.row() for x in selected_index]
         # the selected index is ordered;
         selected_row.sort()
+
+        # If no specific rows are selected but files exist in target list,
+        # default to using all files for better user experience
+        if not selected_row and self.vk and self.vk.target and len(self.vk.target) > 0:
+            selected_row = list(range(len(self.vk.target)))
+            logger.debug(f"No specific rows selected, defaulting to all {len(selected_row)} files in target list")
+
         return selected_row
 
     def update_plot(self):
@@ -583,7 +596,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         tabs_requiring_files = [
             "saxs_2d", "saxs_1d", "stability", "intensity_t", "g2", "twotime", "qmap"
         ]
-        if ((not self.vk.target or len(self.vk.target) == 0)
+        if ((not self.vk or not self.vk.target or len(self.vk.target) == 0)
             and tab_name in tabs_requiring_files):
             logger.debug(
                 f"No files selected for {tab_name} plotting, "
@@ -1021,7 +1034,8 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         }
         if dryrun:
             return kwargs
-        self.vk.plot_stability(self.mp_stab, **kwargs)
+        if self.vk:
+            self.vk.plot_stability(self.mp_stab, **kwargs)
         return None
 
     def plot_intensity_t(self, dryrun=False):
