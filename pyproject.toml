@@ -104,8 +104,7 @@ local_scheme = "node-and-timestamp"
 where = ["."]
 
 [tool.setuptools.package-data]
-"xpcs_toolkit" = ["configure/*.json", "ui/*.ui"]
-"xpcs_toolkit.ui.resources" = ["*.qrc", "*.png"]
+"xpcs_toolkit" = ["configure/*.json", "ui/*.ui", "ui/resources/*.qrc", "ui/resources/*.png"]
 "*" = ["*.md", "*.rst", "*.txt", "*.yaml", "*.yml"]
 
 # Mypy
@@ -166,7 +165,9 @@ markers = [
     "requires_display: Tests that require a graphical display",
     "numerical: Tests that verify numerical computation accuracy",
     "file_io: Tests for file input/output operations",
-    "plotting: Tests for visualization and plotting functionality"
+    "plotting: Tests for visualization and plotting functionality",
+    "qt_validation: Qt framework validation and compatibility tests",
+    "reliability: Reliability framework and robustness tests"
 ]
 filterwarnings = [
     "ignore::UserWarning",

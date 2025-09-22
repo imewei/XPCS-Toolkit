@@ -9,7 +9,6 @@ include CLAUDE.md
 
 # Configuration files
 include pyproject.toml
-include production_config.yaml
 
 # Include all test directories and files
 recursive-include tests *
@@ -30,7 +29,8 @@ recursive-include .github *.yml *.yaml
 
 # Include package data and UI resources
 recursive-include xpcs_toolkit/configure *.json
-recursive-include xpcs_toolkit/ui *.ui *.qrc *.png
+recursive-include xpcs_toolkit/ui *.ui
+recursive-include xpcs_toolkit/ui/resources *.qrc *.png
 
 # Exclude build, cache and temporary artifacts
 recursive-exclude * __pycache__
