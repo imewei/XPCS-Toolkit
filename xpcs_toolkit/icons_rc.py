@@ -362,13 +362,13 @@ qt_resource_struct = b"\
 "
 
 
-def qInitResources():
+def qInitResources() -> None:
     QtCore.qRegisterResourceData(
         0x03, qt_resource_struct, qt_resource_name, qt_resource_data
     )
 
 
-def qCleanupResources():
+def qCleanupResources() -> None:
     QtCore.qUnregisterResourceData(
         0x03, qt_resource_struct, qt_resource_name, qt_resource_data
     )

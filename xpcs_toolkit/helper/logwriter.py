@@ -18,7 +18,5 @@ class LoggerWriter:
 
     def flush(self) -> None:
         # create a flush method so things can be flushed when
-        # the system wants to. Not sure if simply 'printing'
-        # sys.stderr is the correct way to do it, but it seemed
-        # to work properly for me.
-        self.level(sys.stderr)
+        # the system wants to. Nothing needs to be logged during flush.
+        pass
