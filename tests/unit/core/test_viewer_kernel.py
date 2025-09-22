@@ -122,14 +122,17 @@ class TestViewerKernelMemoryManagement:
 class TestViewerKernelAverageToolbox:
     """Test suite for ViewerKernel average toolbox integration."""
 
-    @patch("xpcs_toolkit.viewer_kernel.AverageToolbox")
-    def test_average_toolbox_initialization(self, mock_avg_tb_class, temp_dir):
+    @patch("xpcs_toolkit.viewer_kernel._get_module")
+    def test_average_toolbox_initialization(self, mock_get_module, temp_dir):
         """Test AverageToolbox initialization."""
+        mock_avg_tb_class = Mock()
         mock_avg_tb = Mock()
         mock_avg_tb_class.return_value = mock_avg_tb
+        mock_get_module.return_value = mock_avg_tb_class
 
         kernel = ViewerKernel(temp_dir)
 
+        mock_get_module.assert_called_with('average_toolbox')
         mock_avg_tb_class.assert_called_once_with(temp_dir)
         assert kernel.avg_tb is mock_avg_tb
 
@@ -344,7 +347,7 @@ def test_path_variations(path_input, expected_behavior):
     """Test ViewerKernel with various path inputs."""
     with (
         patch("xpcs_toolkit.viewer_kernel.FileLocator.__init__") as mock_super,
-        patch("xpcs_toolkit.viewer_kernel.AverageToolbox"),
+        patch("xpcs_toolkit.module.average_toolbox.AverageToolbox"),
     ):
         kernel = ViewerKernel(path_input)
 
