@@ -464,13 +464,47 @@ def with_fallback(operation_name: str, strategies: List[Callable] = None):
     return decorator
 
 
-@contextmanager
-def reliability_context(
-    max_retries: int = 3,
-    retry_delay: float = 0.1,
-    exponential_backoff: bool = True,
-    acceptable_exceptions: Tuple[type, ...] = None
-):
+class ReliabilityContext:
+    """Context manager for enhanced reliability with retries and exponential backoff."""
+
+    def __init__(self, max_retries: int = 3, retry_delay: float = 0.1,
+                 exponential_backoff: bool = True, acceptable_exceptions: Tuple[type, ...] = None):
+        self.max_retries = max_retries
+        self.retry_delay = retry_delay
+        self.exponential_backoff = exponential_backoff
+        self.acceptable_exceptions = acceptable_exceptions or (OSError, IOError, TimeoutError, ConnectionError)
+        self.retry_count = 0
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if exc_type is None:
+            return False  # No exception, normal exit
+
+        if issubclass(exc_type, self.acceptable_exceptions):
+            self.retry_count += 1
+
+            if self.retry_count <= self.max_retries:
+                # Calculate delay with optional exponential backoff
+                if self.exponential_backoff:
+                    delay = self.retry_delay * (2 ** (self.retry_count - 1))
+                else:
+                    delay = self.retry_delay
+
+                logger.debug(f"Retry {self.retry_count}/{self.max_retries} after {delay:.2f}s delay: {exc_val}")
+                time.sleep(delay)
+                return True  # Suppress the exception to allow retry
+            else:
+                # Max retries exceeded, let exception propagate
+                return False
+        else:
+            # Non-retryable exception - let it propagate
+            return False
+
+
+def reliability_context(max_retries: int = 3, retry_delay: float = 0.1,
+                       exponential_backoff: bool = True, acceptable_exceptions: Tuple[type, ...] = None):
     """
     Context manager for enhanced reliability with retries and exponential backoff.
 
@@ -481,45 +515,18 @@ def reliability_context(
         acceptable_exceptions: Exception types that should be retried
 
     Example:
-        with reliability_context(max_retries=3, retry_delay=0.5):
-            risky_operation()
+        attempt = 0
+        while attempt <= max_retries:
+            try:
+                with reliability_context(max_retries=3, retry_delay=0.5):
+                    risky_operation()
+                break  # Success
+            except (OSError, ConnectionError) as e:
+                attempt += 1
+                if attempt > max_retries:
+                    raise
     """
-    if acceptable_exceptions is None:
-        acceptable_exceptions = (OSError, IOError, TimeoutError, ConnectionError)
-
-    retry_count = 0
-    last_exception = None
-
-    while retry_count <= max_retries:
-        try:
-            yield
-            return  # Success - exit the context
-        except acceptable_exceptions as e:
-            last_exception = e
-            retry_count += 1
-
-            if retry_count > max_retries:
-                break
-
-            # Calculate delay with optional exponential backoff
-            if exponential_backoff:
-                delay = retry_delay * (2 ** (retry_count - 1))
-            else:
-                delay = retry_delay
-
-            logger.debug(f"Retry {retry_count}/{max_retries} after {delay:.2f}s delay: {e}")
-            time.sleep(delay)
-
-        except Exception as e:
-            # Non-retryable exception - re-raise immediately
-            raise convert_exception(e, "Non-retryable error in reliability context")
-
-    # Max retries exceeded
-    if last_exception:
-        raise convert_exception(
-            last_exception,
-            f"Operation failed after {max_retries} retries"
-        )
+    return ReliabilityContext(max_retries, retry_delay, exponential_backoff, acceptable_exceptions)
 
 
 def get_validation_cache() -> ValidationCache:

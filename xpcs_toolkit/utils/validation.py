@@ -281,8 +281,8 @@ def validate_scientific_array(
     array: np.ndarray,
     array_name: str = "data",
     min_dimensions: int = 1,
-    max_dimensions: int = None,
-    expected_shape: Tuple[int, ...] = None,
+    max_dimensions: Optional[int] = None,
+    expected_shape: Optional[Tuple[int, ...]] = None,
     allow_nan: bool = False,
     allow_negative: bool = True,
     finite_only: bool = True

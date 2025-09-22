@@ -11,7 +11,8 @@ import time
 from collections import namedtuple
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set, Tuple, WeakSet
+from typing import Any, Dict, List, Optional, Set, Tuple
+from weakref import WeakSet
 import hashlib
 
 import numpy as np
