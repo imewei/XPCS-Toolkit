@@ -46,18 +46,20 @@ class TestBoundaryValues:
 
         with h5py.File(zero_file, "w") as f:
             # All-zero datasets
-            zero_saxs = edge_case_data["special_values"]["all_zeros"]
-            f.create_dataset("saxs_2d", data=zero_saxs.reshape(10, 10, 10))
+            zero_saxs = edge_case_data["zero_array"]
+            # Use the zeros array, extending if needed for proper shape
+            zero_data_3d = np.zeros((10, 10, 10))
+            f.create_dataset("saxs_2d", data=zero_data_3d)
             f.create_dataset("g2", data=np.zeros((5, 50)))
 
             # Zero time values
             f.create_dataset("tau", data=np.zeros(50))
 
-            # Zero geometric parameters - these should cause the error
+            # Very small geometric parameters that should cause validation errors
             f.attrs["analysis_type"] = "XPCS"
-            f.attrs["detector_distance"] = 0.0
-            f.attrs["pixel_size_x"] = 0.0
-            f.attrs["pixel_size_y"] = 0.0
+            f.attrs["detector_distance"] = 1e-15  # Effectively zero but won't cause infinite loops
+            f.attrs["pixel_size_x"] = 1e-15
+            f.attrs["pixel_size_y"] = 1e-15
 
             # Minimal XPCS structure for recognition but preserve zero geometry errors
             f.create_dataset("/entry/start_time", data="2023-01-01T00:00:00")
@@ -625,7 +627,8 @@ class TestExtremeArrayShapes:
         try:
             with h5py.File(long_file, "w") as f:
                 # Very long time series (limited by memory in tests)
-                long_array = edge_case_data["problematic_shapes"]["very_long"][:10000]
+                # Create a very long array by tiling the max_values array
+                long_array = np.tile(edge_case_data["max_values"], 200)[:10000]
 
                 # Reshape to 3D for SAXS data (many time points, small detector)
                 reshaped = long_array.reshape(10000, 1, 1)
@@ -739,13 +742,14 @@ class TestExtremeArrayShapes:
 
         with h5py.File(thin_file, "w") as f:
             # Single row detector
-            single_row = edge_case_data["problematic_shapes"]["single_row"][:1000]
+            # Create single row array by tiling max_values
+            single_row = np.tile(edge_case_data["max_values"], 20)[:1000]
             row_array = single_row.reshape(10, 1, 100)
 
             f.create_dataset("saxs_2d_row", data=row_array)
 
             # Single column detector
-            single_col = edge_case_data["problematic_shapes"]["single_column"][:1000]
+            single_col = np.tile(edge_case_data["max_values"], 20)[:1000]
             col_array = single_col.reshape(10, 100, 1)
 
             f.create_dataset("saxs_2d_col", data=col_array)

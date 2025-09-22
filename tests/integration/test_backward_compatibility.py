@@ -33,10 +33,25 @@ from xpcs_toolkit.helper.fitting import (
 )
 
 # Define robust_curve_fit as alias to scipy for backward compatibility testing
-def robust_curve_fit(*args, **kwargs):
+def robust_curve_fit(f, xdata, ydata, p0=None, sigma=None, bounds=(-np.inf, np.inf),
+                     method=None, jac=None, absolute_sigma=False, **kwargs):
     """Fallback to scipy curve_fit for backward compatibility tests."""
     from scipy.optimize import curve_fit
-    return curve_fit(*args, **kwargs)
+    import numpy as np
+
+    # Auto-select method based on bounds (scipy requirement)
+    if method is None:
+        bounded_problem = np.any((np.asarray(bounds[0]) > -np.inf) | (np.asarray(bounds[1]) < np.inf))
+        method = 'trf' if bounded_problem else 'lm'
+
+    try:
+        return curve_fit(f, xdata, ydata, p0=p0, sigma=sigma, bounds=bounds,
+                         method=method, jac=jac, absolute_sigma=absolute_sigma, **kwargs)
+    except TypeError as e:
+        # Convert scipy TypeError to ValueError for backward compatibility
+        if "func parameters" in str(e) and "data points" in str(e):
+            raise ValueError(f"Mismatched data dimensions: {e}") from e
+        raise
 
 # Mock RobustOptimizer for backward compatibility testing
 class RobustOptimizer:
@@ -45,8 +60,25 @@ class RobustOptimizer:
     def robust_curve_fit(self, *args, **kwargs):
         """Fallback to scipy curve_fit."""
         from scipy.optimize import curve_fit
+        import numpy as np
+
+        # Auto-select method based on bounds if method not specified or is 'lm' with bounds
+        if 'bounds' in kwargs and kwargs['bounds'] != (-np.inf, np.inf):
+            bounds = kwargs['bounds']
+            bounded_problem = np.any((np.asarray(bounds[0]) > -np.inf) | (np.asarray(bounds[1]) < np.inf))
+            if bounded_problem and kwargs.get('method', 'lm') == 'lm':
+                kwargs['method'] = 'trf'
+
         popt, pcov = curve_fit(*args, **kwargs)
-        return popt, pcov, {"method": "scipy"}
+
+        # Calculate R-squared for compatibility test
+        func, x, y = args[0], args[1], args[2]
+        y_pred = func(x, *popt)
+        ss_res = np.sum((y - y_pred) ** 2)
+        ss_tot = np.sum((y - np.mean(y)) ** 2)
+        r_squared = 1 - (ss_res / ss_tot) if ss_tot > 0 else 0.0
+
+        return popt, pcov, {"method": "scipy", "r_squared": r_squared}
 
 # Test scipy compatibility
 try:

@@ -348,9 +348,12 @@ class TestModuleIntegration:
         """Test that module constants are accessible."""
         # Colors and symbols should be accessible from module
         from xpcs_toolkit.module.g2mod import colors, symbols
+        from xpcs_toolkit.plothandler.plot_constants import MATPLOTLIB_COLORS_RGB
 
         assert colors == g2mod.colors
         assert symbols == g2mod.symbols
+        # Verify colors come from centralized constants
+        assert colors == MATPLOTLIB_COLORS_RGB
 
 
 class TestDataProcessingHelpers:

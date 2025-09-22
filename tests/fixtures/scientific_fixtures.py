@@ -235,12 +235,13 @@ def correlation_function_validator():
             assert initial_g2 > final_g2, "G2 should decay from initial to final tau"
 
         # If expected parameters provided, validate fit
-        if expected_params:
-            beta_expected = expected_params.get("beta", None)
-            if beta_expected:
-                measured_contrast = np.max(g2) - 1.0
-                assert abs(measured_contrast - beta_expected) < 0.1, \
-                    f"Measured contrast {measured_contrast:.3f} differs from expected {beta_expected:.3f}"
+        if expected_params is not None:
+            if isinstance(expected_params, dict):
+                beta_expected = expected_params.get("beta", None)
+                if beta_expected:
+                    measured_contrast = np.max(g2) - 1.0
+                    assert abs(measured_contrast - beta_expected) < 0.1, \
+                        f"Measured contrast {measured_contrast:.3f} differs from expected {beta_expected:.3f}"
 
         return True
 

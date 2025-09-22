@@ -33,6 +33,11 @@ from tests.fixtures import (
     synthetic_scattering_data,
     minimal_xpcs_hdf5,
 )
+from tests.fixtures.synthetic_data import (
+    create_synthetic_g2_data,
+    create_synthetic_saxs_data,
+    SyntheticXPCSGenerator,
+)
 
 
 @pytest.mark.unit

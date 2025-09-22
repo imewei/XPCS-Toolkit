@@ -231,7 +231,7 @@ class TestDataRangeValidation:
 
         with h5py.File(large_values_file, "w") as f:
             # Create data with extremely large values
-            extreme_data = numpy_error_scenarios["extreme_values"]
+            extreme_data = numpy_error_scenarios["overflow"]
             large_array = np.full((10, 10, 10), np.finfo(np.float64).max / 2)
 
             f.create_dataset("saxs_2d", data=large_array)
@@ -308,9 +308,9 @@ class TestDataRangeValidation:
         with h5py.File(empty_file, "w") as f:
             # Empty datasets
             f.create_dataset(
-                "empty_saxs", data=edge_case_data["empty_arrays"]["float64"]
+                "empty_saxs", data=edge_case_data["empty_arrays"]["empty_float"]
             )
-            f.create_dataset("empty_g2", data=edge_case_data["empty_arrays"]["float64"])
+            f.create_dataset("empty_g2", data=edge_case_data["empty_arrays"]["empty_float"])
             f.attrs["analysis_type"] = "XPCS"
 
             # Minimal XPCS structure for recognition but preserve empty data errors
@@ -326,7 +326,7 @@ class TestDataRangeValidation:
 
         with h5py.File(single_file, "w") as f:
             # Single element datasets
-            single_data = edge_case_data["single_element_arrays"]["normal"]
+            single_data = edge_case_data["single_element"]
             f.create_dataset("single_saxs", data=single_data)
             f.create_dataset("single_g2", data=single_data)
             f.attrs["analysis_type"] = "XPCS"

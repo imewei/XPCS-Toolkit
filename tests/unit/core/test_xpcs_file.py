@@ -42,17 +42,23 @@ class TestMemoryMonitor:
         assert pressure == 0.75
         mock_monitor.get_memory_status.assert_called_once()
 
-    @patch("xpcs_toolkit.xpcs_file.get_cached_memory_monitor")
-    def test_is_memory_pressure_high(self, mock_get_monitor):
+    @patch("psutil.virtual_memory")
+    def test_is_memory_pressure_high(self, mock_virtual_memory):
         """Test memory pressure threshold check."""
-        mock_monitor = Mock()
-        mock_monitor.is_memory_pressure_high.return_value = True
-        mock_get_monitor.return_value = mock_monitor
+        # Mock psutil.virtual_memory to return high memory usage
+        mock_memory = Mock()
+        mock_memory.percent = 90.0  # 90% memory usage
+        mock_virtual_memory.return_value = mock_memory
 
         is_high = MemoryMonitor.is_memory_pressure_high(0.85)
 
         assert is_high is True
-        mock_monitor.is_memory_pressure_high.assert_called_once_with(0.85)
+        mock_virtual_memory.assert_called_once()
+
+        # Test with low memory usage
+        mock_memory.percent = 70.0  # 70% memory usage
+        is_high = MemoryMonitor.is_memory_pressure_high(0.85)
+        assert is_high is False
 
     def test_estimate_array_memory(self):
         """Test array memory estimation."""
