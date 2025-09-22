@@ -58,6 +58,40 @@ class TestCoverageReporting(unittest.TestCase):
             regression_alerts=["Test coverage regression detected"],
         )
 
+    def tearDown(self):
+        """Clean up test environment and close database connections."""
+        # Clean up CoverageManager and all its database connections
+        if hasattr(self, "manager"):
+            # Force garbage collection of the manager
+            del self.manager
+
+        # Force close any lingering database connections
+        import gc
+        import sqlite3
+
+        # Close any lingering sqlite connections explicitly
+        try:
+            # Find all sqlite3.Connection objects and close them
+            for obj in gc.get_objects():
+                if isinstance(obj, sqlite3.Connection):
+                    try:
+                        obj.close()
+                    except Exception:
+                        pass  # Already closed or error closing
+        except Exception:
+            pass
+
+        # Force garbage collection to clear any remaining references
+        gc.collect()
+
+        # Clean up temporary directory
+        import shutil
+
+        try:
+            shutil.rmtree(self.temp_dir, ignore_errors=True)
+        except Exception:
+            pass
+
     def test_json_report_generation(self):
         """Test JSON report generation."""
         json_report = self.manager.generate_json_report(self.sample_report)

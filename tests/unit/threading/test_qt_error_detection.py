@@ -144,9 +144,10 @@ class QtThreadingValidator:
     @staticmethod
     def is_main_thread():
         """Check if running in main Qt thread."""
-        return (
-            QtCore.QThread.currentThread() == QtWidgets.QApplication.instance().thread()
-        )
+        app_instance = QtWidgets.QApplication.instance()
+        if app_instance is None:
+            return False  # No QApplication instance available
+        return QtCore.QThread.currentThread() == app_instance.thread()
 
     @staticmethod
     def validate_timer_creation(timer_obj):
@@ -155,7 +156,10 @@ class QtThreadingValidator:
             return False, "Object is not a QTimer"
 
         current_thread = QtCore.QThread.currentThread()
-        app_thread = QtWidgets.QApplication.instance().thread()
+        app_instance = QtWidgets.QApplication.instance()
+        if app_instance is None:
+            return False, "No QApplication instance available"
+        app_thread = app_instance.thread()
 
         # Timer should be in main thread or a QThread-started thread
         if current_thread == app_thread:
