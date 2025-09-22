@@ -343,6 +343,23 @@ def mock_viewer_kernel(mock_xpcs_file):
 @pytest.fixture
 def gui_main_window(qapp, qtbot, mock_viewer_kernel):
     """Create main XPCS Viewer window for testing."""
+    # Fix PyQtGraph DataTreeWidget compatibility with PySide6
+    original_buildTree = None
+    try:
+        import pyqtgraph.widgets.DataTreeWidget
+        original_buildTree = pyqtgraph.widgets.DataTreeWidget.DataTreeWidget.buildTree
+
+        def fixed_buildTree(self, data, parent, name='', hideRoot=False, path=()):
+            """Fixed buildTree method that handles PySide6 compatibility."""
+            if data is None:
+                # Skip building tree for None data to avoid AttributeError
+                return
+            return original_buildTree(self, data, parent, name, hideRoot, path)
+
+        pyqtgraph.widgets.DataTreeWidget.DataTreeWidget.buildTree = fixed_buildTree
+    except ImportError:
+        pass  # PyQtGraph not available
+
     # Mock the initialization to avoid actual file system operations
     with patch("xpcs_toolkit.xpcs_viewer.ViewerKernel") as mock_vk_class:
         mock_vk_class.return_value = mock_viewer_kernel
@@ -375,6 +392,14 @@ def gui_main_window(qapp, qtbot, mock_viewer_kernel):
 
         # Comprehensive cleanup to prevent test state pollution
         try:
+            # Restore original PyQtGraph method if it was patched
+            if original_buildTree is not None:
+                try:
+                    import pyqtgraph.widgets.DataTreeWidget
+                    pyqtgraph.widgets.DataTreeWidget.DataTreeWidget.buildTree = original_buildTree
+                except ImportError:
+                    pass
+
             # Clear all child widgets and their connections
             for child in window.findChildren(QtWidgets.QWidget):
                 child.setParent(None)
