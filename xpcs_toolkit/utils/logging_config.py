@@ -125,12 +125,12 @@ class LoggingConfig:
         self.app_version = self._get_app_version()
 
     def _get_app_version(self) -> str:
-        """Get application version."""
+        """Get application version using importlib.metadata to avoid circular imports."""
         try:
-            from xpcs_toolkit import __version__
+            from importlib.metadata import version
 
-            return __version__
-        except ImportError:
+            return version("xpcs-toolkit")
+        except Exception:
             return "unknown"
 
     def _configure_logging(self):

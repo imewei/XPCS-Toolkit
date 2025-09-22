@@ -13,17 +13,40 @@ from .log_formatters import (
     create_formatter,
 )
 
-# Core logging utilities - always imported
-from .logging_config import (
-    get_log_file_path,
-    get_logger,
-    get_logging_config,
-    initialize_logging,
-    log_system_info,
-    set_log_level,
-    setup_exception_logging,
-    setup_logging,
-)
+
+# Core logging utilities - lazy import to avoid initialization cascade
+def get_logger(name=None):
+    """Lazy import wrapper for get_logger to avoid circular imports."""
+    from .logging_config import get_logger as _get_logger
+
+    return _get_logger(name)
+
+
+def log_system_info():
+    """Lazy import wrapper for log_system_info to avoid circular imports."""
+    from .logging_config import log_system_info as _log_system_info
+
+    return _log_system_info()
+
+
+def setup_exception_logging():
+    """Lazy import wrapper for setup_exception_logging to avoid circular imports."""
+    from .logging_config import setup_exception_logging as _setup_exception_logging
+
+    return _setup_exception_logging()
+
+
+# Other logging utilities available via direct import from .logging_config
+# Commented out to avoid circular import cascade:
+# from .logging_config import (
+#     get_log_file_path,
+#     get_logging_config,
+#     initialize_logging,
+#     log_system_info,
+#     set_log_level,
+#     setup_exception_logging,
+#     setup_logging,
+# )
 
 # Define essential exports
 __all__ = [
@@ -32,15 +55,15 @@ __all__ = [
     "PerformanceFormatter",
     "StructuredFileFormatter",
     "create_formatter",
-    "get_log_file_path",
-    # Always available logging utilities
-    "get_logger",
-    "get_logging_config",
-    "initialize_logging",
-    "log_system_info",
-    "set_log_level",
-    "setup_exception_logging",
-    "setup_logging",
+    "get_logger",  # Available as lazy import wrapper
+    "log_system_info",  # Available as lazy import wrapper
+    "setup_exception_logging",  # Available as lazy import wrapper
+    # Other logging utilities available via direct import from .logging_config
+    # "get_log_file_path",
+    # "get_logging_config",
+    # "initialize_logging",
+    # "set_log_level",
+    # "setup_logging",
 ]
 
 
@@ -59,6 +82,9 @@ def setup_basic_utilities(log_level="INFO"):
     dict
         Dictionary containing initialized utilities
     """
+    # Import logging utilities on demand to avoid initialization cascade
+    from .logging_config import get_logger, initialize_logging, set_log_level
+
     # Initialize logging
     initialize_logging()
     set_log_level(log_level)
