@@ -50,18 +50,13 @@ logger = get_logger(__name__)
 
 
 class ViewerKernel(FileLocator):
-    """ViewerKernel with lazy-loaded analysis modules for improved startup performance"""
-
-    def get_module(self, module_name):
-        """Public interface to lazy load analysis modules"""
-        return _get_module(module_name)
     """
     Backend kernel for XPCS data processing and analysis coordination.
 
     ViewerKernel serves as the central coordinator between the GUI and various
     analysis modules. It manages file collections, handles data caching,
     coordinates background processing, and provides a unified interface
-    for all analysis operations.
+    for all analysis operations with lazy-loaded modules for improved startup performance.
 
     The kernel inherits from FileLocator to provide file management
     capabilities and extends it with advanced caching, memory management,
@@ -95,6 +90,10 @@ class ViewerKernel(FileLocator):
     >>> kernel = ViewerKernel("/path/to/data")
     >>> kernel.plot_saxs_2d(plot_handler, rows=[0, 1, 2])
     """
+
+    def get_module(self, module_name):
+        """Public interface to lazy load analysis modules"""
+        return _get_module(module_name)
 
     def __init__(self, path, statusbar=None):
         super().__init__(path)

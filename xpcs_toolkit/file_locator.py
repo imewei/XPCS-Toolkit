@@ -64,11 +64,9 @@ class FileLocator:
         else:
             selected = rows
 
-        # If rows was explicitly passed as an empty list, treat it the same as None
-        # This allows fallback to cached files when no GUI selection is made
+        # If rows was explicitly passed as an empty list, return empty result
         if rows is not None and len(selected) == 0:
-            # Don't return empty immediately - allow fallback to cache
-            pass
+            return []
 
         # If no target files are selected but we have cached files, use the cache as fallback
         # This handles cases where files are loaded but target list is temporarily empty

@@ -631,3 +631,93 @@ def fit_with_fixed_sequential(base_func, x, y, sigma, bounds, fit_flag, fit_x, p
     return fit_line, fit_val, fit_methods
 
 
+def vectorized_parameter_estimation(x, y, model_type="exponential"):
+    """
+    Stub function for vectorized parameter estimation.
+
+    This is a placeholder implementation for testing purposes.
+
+    Parameters
+    ----------
+    x : array_like
+        Independent variable data
+    y : array_like
+        Dependent variable data
+    model_type : str
+        Type of model to fit ("exponential" supported)
+
+    Returns
+    -------
+    tuple or None
+        Estimated parameters (tau, baseline, amplitude) for exponential model,
+        or None if fitting fails
+    """
+    try:
+        if model_type == "exponential":
+            # Use existing single_exp function with scipy curve_fit
+            from scipy.optimize import curve_fit
+
+            # Better initial guesses for exponential decay
+            y_min = np.min(y)
+            y_max = np.max(y)
+
+            # Estimate baseline as minimum value
+            baseline_guess = y_min
+
+            # Estimate amplitude as range
+            amplitude_guess = y_max - y_min
+
+            # Estimate tau from half-life approach
+            half_amp = y_min + (y_max - y_min) / np.e  # 1/e point
+            idx_half = np.argmin(np.abs(y - half_amp))
+            tau_guess = x[idx_half] if idx_half > 0 else x[len(x)//2]
+
+            p0 = [tau_guess, baseline_guess, amplitude_guess]
+
+            # More generous bounds for better convergence
+            bounds = (
+                [x[1]*0.1, -np.abs(y_max), amplitude_guess*0.1],  # Lower bounds
+                [x[-1]*10, y_max*1.1, amplitude_guess*10]  # Upper bounds
+            )
+
+            popt, _ = curve_fit(single_exp, x, y, p0=p0, bounds=bounds,
+                               method='trf', maxfev=5000)
+            return tuple(popt)
+
+    except Exception:
+        # Return None if fitting fails
+        return None
+
+    return None
+
+
+def vectorized_residual_analysis(x, y_true, y_pred):
+    """
+    Stub function for vectorized residual analysis.
+
+    This is a placeholder implementation for testing purposes.
+
+    Parameters
+    ----------
+    x : array_like
+        Independent variable data (not used in this stub)
+    y_true : array_like
+        True/observed values
+    y_pred : array_like
+        Predicted values
+
+    Returns
+    -------
+    dict
+        Dictionary with residual statistics
+    """
+    residuals = y_true - y_pred
+
+    return {
+        "mean_residual": np.mean(residuals),
+        "std_residual": np.std(residuals),
+        "rmse": np.sqrt(np.mean(residuals**2)),
+        "mae": np.mean(np.abs(residuals)),
+    }
+
+

@@ -141,11 +141,23 @@ def plot_line_with_marker(
     color_hex, marker = get_color_marker(index, backend="pyqtgraph")
     rgba = (*pg.mkColor(color_hex).getRgb()[:3], int(alpha_val * 255))
 
+    # Ensure arrays for consistent processing
+    x = np.atleast_1d(np.asarray(x))
+    y = np.atleast_1d(np.asarray(y))
+
+    # Handle dimension mismatch
+    if len(x) != len(y):
+        logger.warning(f"Dimension mismatch: x has {len(x)} elements, y has {len(y)} elements")
+        return  # Skip plotting if dimensions don't match
+
     # Vectorized data validation - single pass filtering
     if log_y:
         valid_mask = np.isfinite(x) & np.isfinite(y) & (x > 0) & (y > 0)
     else:
         valid_mask = np.isfinite(x) & np.isfinite(y) & (x > 0)
+
+    # Ensure valid_mask is always a 1D array to handle scalar inputs
+    valid_mask = np.atleast_1d(valid_mask)
 
     if not np.any(valid_mask):
         return  # Skip if no valid data
