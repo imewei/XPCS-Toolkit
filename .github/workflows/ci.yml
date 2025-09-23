@@ -77,8 +77,9 @@ jobs:
           pre-commit-${{ runner.os }}-
 
     - name: Fast quality checks
+      shell: bash  # CRITICAL: Force bash for conditional syntax on Windows
       run: |
-        echo "🔍 Running fast quality checks..."
+        echo "[INFO] Running fast quality checks..."
         # Quick ruff checks for immediate feedback
         ruff check --output-format=github .
         ruff format --check .
@@ -199,6 +200,7 @@ jobs:
         # Fix Unicode encoding issues on Windows
         PYTHONIOENCODING: utf-8
         PYTHONUTF8: 1
+      shell: bash  # CRITICAL: Force bash to prevent PowerShell syntax errors on Windows
       run: |
         # Start virtual display for GUI tests on Linux
         if [ "${{ matrix.os }}" = "ubuntu-latest" ]; then
@@ -275,8 +277,9 @@ jobs:
 
     - name: Generate test summary
       if: always()
+      shell: bash  # CRITICAL: Force bash to prevent PowerShell syntax errors on Windows
       run: |
-        echo "## 📊 Test Summary for ${{ matrix.os }} Python ${{ matrix.python-version }}" >> $GITHUB_STEP_SUMMARY
+        echo "## [SUMMARY] Test Summary for ${{ matrix.os }} Python ${{ matrix.python-version }}" >> $GITHUB_STEP_SUMMARY
         echo "- **OS**: ${{ matrix.os }}" >> $GITHUB_STEP_SUMMARY
         echo "- **Python**: ${{ matrix.python-version }}" >> $GITHUB_STEP_SUMMARY
         echo "- **Test Level**: ${{ steps.test-level.outputs.level }}" >> $GITHUB_STEP_SUMMARY
@@ -323,7 +326,7 @@ jobs:
         twine check dist/* --strict
 
         # Verify package contents
-        echo "📦 Package contents:"
+        echo "[INFO] Package contents:"
         ls -la dist/
 
         # Test wheel installation in clean environment
@@ -401,14 +404,15 @@ jobs:
 
     steps:
     - name: Check workflow status
+      shell: bash  # CRITICAL: Force bash for conditional syntax on Windows
       run: |
         echo "## 🎯 CI/CD Pipeline Status Report" >> $GITHUB_STEP_SUMMARY
         echo "| Job | Status | Duration |" >> $GITHUB_STEP_SUMMARY
         echo "|-----|--------|----------|" >> $GITHUB_STEP_SUMMARY
         echo "| [SMOKE] Tests | ${{ needs.smoke-test.result }} | Fast feedback |" >> $GITHUB_STEP_SUMMARY
         echo "| [MAIN] Tests | ${{ needs.test.result }} | Cross-platform |" >> $GITHUB_STEP_SUMMARY
-        echo "| 📦 Build | ${{ needs.build.result }} | Package validation |" >> $GITHUB_STEP_SUMMARY
-        echo "| 🔒 Security | ${{ needs.security.result }} | Vulnerability scan |" >> $GITHUB_STEP_SUMMARY
+        echo "| [BUILD] Build | ${{ needs.build.result }} | Package validation |" >> $GITHUB_STEP_SUMMARY
+        echo "| [SECURITY] Security | ${{ needs.security.result }} | Vulnerability scan |" >> $GITHUB_STEP_SUMMARY
 
         # Check critical paths
         if [ "${{ needs.smoke-test.result }}" = "failure" ]; then
@@ -425,6 +429,6 @@ jobs:
           exit 1
         else
           echo "[SUCCESS] All critical checks passed - ready for merge"
-          echo "🔍 Security scan: ${{ needs.security.result }}"
+          echo "[INFO] Security scan: ${{ needs.security.result }}"
           echo "::notice::CI/CD pipeline completed successfully"
         fi
