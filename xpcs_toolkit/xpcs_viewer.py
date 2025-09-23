@@ -697,7 +697,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
                 logger.debug(f"Cleared plot for {tab_name}")
                 # Show status message to user for guidance
                 self.statusbar.showMessage(
-                    f"No files selected for {tab_name.replace('_', ' ').title()} - please select files from source list and click 'Add Target'",
+                    f"No files selected for {tab_name.replace('_', ' ').title()} - please select files from source list and click 'Add Target'",  # nosec B608
                     5000,
                 )
         except Exception as e:
@@ -1525,7 +1525,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
                 all_multitau_available = self.vk.get_xf_list(filter_atype="Multitau")
                 if all_multitau_available:
                     self.statusbar.showMessage(
-                        f"Selected files are not Multitau type. Please select from {len(all_multitau_available)} available Multitau files.",
+                        f"Selected files are not Multitau type. Please select from {len(all_multitau_available)} available Multitau files.",  # nosec B608
                         5000,
                     )
                     logger.warning(

@@ -263,7 +263,8 @@ class LockFreeStateValidator:
                             obj.qmap.q_values.data
                             if hasattr(obj.qmap.q_values, "data")
                             else obj.qmap.q_values
-                        ).encode()
+                        ).encode(),
+                        usedforsecurity=False,
                     ).hexdigest()[:8]
 
             # Data integrity checks
@@ -280,7 +281,7 @@ class LockFreeStateValidator:
                             data.flat[sample_indices] if hasattr(data, "flat") else [0]
                         )
                         attributes["saxs_checksum"] = hashlib.md5(
-                            str(sample_data).encode()
+                            str(sample_data).encode(), usedforsecurity=False
                         ).hexdigest()[:8]
 
             if hasattr(obj, "fit_summary") and obj.fit_summary is not None:
@@ -308,7 +309,9 @@ class LockFreeStateValidator:
             }
 
             checksum_string = str(sorted(checksum_data.items()))
-            return hashlib.md5(checksum_string.encode()).hexdigest()[:16]
+            return hashlib.md5(
+                checksum_string.encode(), usedforsecurity=False
+            ).hexdigest()[:16]
 
         except Exception as e:
             logger.debug(f"Error calculating state checksum: {e}")

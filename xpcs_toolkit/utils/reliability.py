@@ -68,7 +68,7 @@ class ValidationCache:
             "kwargs": str(sorted(kwargs.items())),
         }
         key_string = str(key_data)
-        return hashlib.md5(key_string.encode()).hexdigest()
+        return hashlib.md5(key_string.encode(), usedforsecurity=False).hexdigest()
 
     def get(self, key: str) -> ValidationResult | None:
         """Get cached validation result if still valid."""

@@ -161,7 +161,7 @@ jobs:
         # Install package with dev dependencies
         pip install -e .[dev] --prefer-binary
         # Verify critical test dependencies
-        python -c "import pytest, pytest_xdist, pytest_cov; print('✅ Test dependencies installed')"
+        python -c "import pytest, xdist, pytest_cov; print('✅ Test dependencies installed')"
 
     - name: Cache test data
       uses: actions/cache@v4
