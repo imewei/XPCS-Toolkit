@@ -19,7 +19,6 @@ Quick Start
    :caption: User Guide
 
    user_guide/index
-   installation
    usage
 
 .. toctree::
@@ -27,7 +26,6 @@ Quick Start
    :caption: API Reference
 
    api/index
-   modules
 
 .. toctree::
    :maxdepth: 2

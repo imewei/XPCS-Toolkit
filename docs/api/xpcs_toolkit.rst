@@ -8,7 +8,7 @@ Main Package
    :members:
    :undoc-members:
    :show-inheritance:
-   :no-index:
+   :exclude-members: XpcsFile
 
 Core Classes
 ------------

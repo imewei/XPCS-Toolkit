@@ -44,9 +44,9 @@ def get_pyqtgraph_anchor_params(loc, padding=10):
 
     Returns:
         dict or None: A dictionary with keys 'itemPos', 'parentPos', and 'offset'
-                      suitable for unpacking into LegendItem.anchor(**params),
-                      or None if loc='best' (code 0) as it's not directly
-                      supported by pyqtgraph's deterministic anchoring.
+                      suitable for unpacking into LegendItem.anchor(\\*\\*params),
+                      or None if loc='best' (code 0) as it is not directly
+                      supported by pyqtgraph deterministic anchoring.
 
     Raises:
         ValueError: If the loc code or type is invalid.
@@ -59,9 +59,9 @@ def get_pyqtgraph_anchor_params(loc, padding=10):
         try:
             anchor_params = get_pyqtgraph_anchor_params('lower left', padding=15)
             if anchor_params:
-                legend.anchor(**anchor_params)
+                legend.anchor(\\*\\*anchor_params)
             else:
-                logger.info("Using default legend position for 'best' location")
+                logger.info("Using default legend position for best location")
         except ValueError as e:
             logger.warning(f"Error setting legend position: {e}")
 

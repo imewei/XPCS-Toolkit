@@ -41,10 +41,9 @@ xpcs\_toolkit.viewer\_kernel module
 xpcs\_toolkit.viewer\_ui module
 -------------------------------
 
-.. automodule:: xpcs_toolkit.viewer_ui
-   :members:
-   :undoc-members:
-   :show-inheritance:
+.. note::
+   The Viewer UI module is excluded from documentation due to Qt framework dependencies.
+   For usage information, see the user guide examples.
 
 xpcs\_toolkit.xpcs\_file module
 -------------------------------
@@ -57,10 +56,9 @@ xpcs\_toolkit.xpcs\_file module
 xpcs\_toolkit.xpcs\_viewer module
 ---------------------------------
 
-.. automodule:: xpcs_toolkit.xpcs_viewer
-   :members:
-   :undoc-members:
-   :show-inheritance:
+.. note::
+   The XPCS Viewer GUI module is excluded from documentation due to Qt framework dependencies.
+   For usage information, see the user guide examples.
 
 Module contents
 ---------------
@@ -69,3 +67,5 @@ Module contents
    :members:
    :undoc-members:
    :show-inheritance:
+   :exclude-members: XpcsFile, FileLocator, ViewerKernel, ViewerUI, XpcsViewer
+   :no-index:

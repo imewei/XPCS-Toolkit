@@ -12,6 +12,16 @@ API Reference
    utils
    gui
 
+.. toctree::
+   :maxdepth: 1
+   :caption: Complete Module Documentation
+   :hidden:
+
+   ../xpcs_toolkit
+   ../xpcs_toolkit.fileIO
+   ../xpcs_toolkit.module
+   ../xpcs_toolkit.utils
+
 Core Components
 ---------------
 

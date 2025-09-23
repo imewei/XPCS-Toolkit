@@ -36,6 +36,12 @@ class MockQtModule(mock.MagicMock):
         self.pyqtSignal = mock.MagicMock()
         self.Signal = mock.MagicMock()
 
+        # Mock common Qt classes that might have metaclass conflicts
+        self.QWidget = mock.MagicMock()
+        self.QMainWindow = mock.MagicMock()
+        self.QApplication = mock.MagicMock()
+        self.QObject = mock.MagicMock()
+
 
 # Mock heavy dependencies that may not be available in docs build environment
 MOCK_MODULES = [
@@ -48,6 +54,7 @@ MOCK_MODULES = [
     "pyqtgraph.Qt",
     "pyqtgraph.opengl",
     "pyqtgraph.console",
+    "pyqtgraph.parametertree",
     "joblib",
     "memory_profiler",
     "line_profiler",
@@ -79,6 +86,13 @@ print(f"Building documentation for XPCS Toolkit version {version}")
 import logging
 
 logging.getLogger("sphinx.ext.autodoc").setLevel(logging.ERROR)
+
+
+# Setup function for Sphinx extension
+def setup(app):
+    """Setup function for Sphinx extension."""
+    pass
+
 
 # -- General configuration ---------------------------------------------
 
@@ -189,11 +203,15 @@ autodoc_mock_imports = [
     "pyqtgraph.Qt",
     "pyqtgraph.opengl",
     "pyqtgraph.console",
+    "pyqtgraph.parametertree",
     "joblib",
     "memory_profiler",
     "line_profiler",
     "py_spy",
     "psutil",
+    # Scientific computing dependencies that might cause import issues
+    "matplotlib.backends.qt_compat",
+    "numpy.distutils",
 ]
 
 # Autosummary settings
