@@ -50,7 +50,7 @@ def extract_q_phi_from_label(label: str) -> Tuple[Optional[float], Optional[floa
     Extract q and phi values from qbin label string.
 
     Args:
-        label: Qbin label string (e.g., "qbin=5, q=0.0532, phi=45.2")
+        label: Qbin label string (e.g., "qbin=5, q=0.0532 Å⁻¹, φ=45.2 deg")
 
     Returns:
         Tuple of (q_value, phi_value) or (None, None) if not found
@@ -58,13 +58,13 @@ def extract_q_phi_from_label(label: str) -> Tuple[Optional[float], Optional[floa
     q_value = None
     phi_value = None
 
-    # Extract q value
-    q_match = re.search(r"q=([0-9.]+)", label)
+    # Extract q value - handle scientific notation and units like "Å⁻¹"
+    q_match = re.search(r"q=([0-9.eE+-]+)", label)
     if q_match:
         q_value = float(q_match.group(1))
 
-    # Extract phi value
-    phi_match = re.search(r"phi=([0-9.]+)", label)
+    # Extract phi value - handle both "phi=" and "φ=" (Greek phi) and units like "deg"
+    phi_match = re.search(r"(?:phi|φ)=([0-9.eE+-]+)", label)
     if phi_match:
         phi_value = float(phi_match.group(1))
 
@@ -72,60 +72,110 @@ def extract_q_phi_from_label(label: str) -> Tuple[Optional[float], Optional[floa
 
 
 def find_qbins_for_q(
-    xfile: XpcsFile, target_q: float, tolerance: float = 0.01
+    xfile: XpcsFile, target_q: float
 ) -> List[Tuple[int, str, float, float]]:
     """
-    Find all qbins matching a specific q-value across all phi angles.
+    Find all qbins with the closest q-value(s) across all phi angles.
 
     Args:
         xfile: XpcsFile instance
         target_q: Target q-value to match
-        tolerance: Tolerance for q-value matching
 
     Returns:
-        List of tuples (qbin_index, label, q_value, phi_value) for matching qbins
+        List of tuples (qbin_index, label, q_value, phi_value) for closest matching qbins
     """
     qbin_labels = xfile.get_twotime_qbin_labels()
-    matching_qbins = []
+    valid_qbins = []
 
+    # First pass: collect all valid qbins with their q/phi values
     for i, label in enumerate(qbin_labels):
         q_value, phi_value = extract_q_phi_from_label(label)
+        if q_value is not None and phi_value is not None:
+            valid_qbins.append((i, label, q_value, phi_value))
+        else:
+            logger.warning(f"Could not extract q/phi from qbin {i}: {label}")
 
-        if q_value is not None and abs(q_value - target_q) <= tolerance:
-            matching_qbins.append((i, label, q_value, phi_value))
+    if not valid_qbins:
+        logger.warning("No valid qbins found for q selection")
+        return []
+
+    # Find the closest q-value(s)
+    q_values = [qbin[2] for qbin in valid_qbins]
+    closest_q = min(q_values, key=lambda q: abs(q - target_q))
+    closest_q_diff = abs(closest_q - target_q)
+
+    # Get all qbins with the closest q-value
+    matching_qbins = [
+        (i, label, q_val, phi_val)
+        for i, label, q_val, phi_val in valid_qbins
+        if abs(q_val - closest_q) < 1e-10
+    ]  # Use tight tolerance for exact match
 
     logger.info(
-        f"Found {len(matching_qbins)} qbins matching q={target_q:.4f} (tolerance={tolerance})"
+        f"Found closest q={closest_q:.6f} (diff={closest_q_diff:.6f} from target {target_q:.6f})"
     )
+    logger.info(
+        f"Selected {len(matching_qbins)} qbins with q={closest_q:.6f} across different phi angles"
+    )
+
+    # Log the phi angles found
+    phi_angles = sorted([phi_val for _, _, _, phi_val in matching_qbins])
+    logger.info(f"Phi angles found: {phi_angles}")
+
     return matching_qbins
 
 
 def find_qbins_for_phi(
-    xfile: XpcsFile, target_phi: float, tolerance: float = 1.0
+    xfile: XpcsFile, target_phi: float
 ) -> List[Tuple[int, str, float, float]]:
     """
-    Find all qbins matching a specific phi-value across all q values.
+    Find all qbins with the closest phi-value(s) across all q values.
 
     Args:
         xfile: XpcsFile instance
         target_phi: Target phi-value to match
-        tolerance: Tolerance for phi-value matching (degrees)
 
     Returns:
-        List of tuples (qbin_index, label, q_value, phi_value) for matching qbins
+        List of tuples (qbin_index, label, q_value, phi_value) for closest matching qbins
     """
     qbin_labels = xfile.get_twotime_qbin_labels()
-    matching_qbins = []
+    valid_qbins = []
 
+    # First pass: collect all valid qbins with their q/phi values
     for i, label in enumerate(qbin_labels):
         q_value, phi_value = extract_q_phi_from_label(label)
+        if q_value is not None and phi_value is not None:
+            valid_qbins.append((i, label, q_value, phi_value))
+        else:
+            logger.warning(f"Could not extract q/phi from qbin {i}: {label}")
 
-        if phi_value is not None and abs(phi_value - target_phi) <= tolerance:
-            matching_qbins.append((i, label, q_value, phi_value))
+    if not valid_qbins:
+        logger.warning("No valid qbins found for phi selection")
+        return []
+
+    # Find the closest phi-value(s)
+    phi_values = [qbin[3] for qbin in valid_qbins]
+    closest_phi = min(phi_values, key=lambda phi: abs(phi - target_phi))
+    closest_phi_diff = abs(closest_phi - target_phi)
+
+    # Get all qbins with the closest phi-value
+    matching_qbins = [
+        (i, label, q_val, phi_val)
+        for i, label, q_val, phi_val in valid_qbins
+        if abs(phi_val - closest_phi) < 1e-10
+    ]  # Use tight tolerance for exact match
 
     logger.info(
-        f"Found {len(matching_qbins)} qbins matching phi={target_phi:.1f}° (tolerance={tolerance}°)"
+        f"Found closest phi={closest_phi:.2f}° (diff={closest_phi_diff:.2f}° from target {target_phi:.2f}°)"
     )
+    logger.info(
+        f"Selected {len(matching_qbins)} qbins with phi={closest_phi:.2f}° across different q values"
+    )
+
+    # Log the q values found
+    q_values = sorted([q_val for _, _, q_val, _ in matching_qbins])
+    logger.info(f"Q values found: {q_values}")
+
     return matching_qbins
 
 
@@ -133,48 +183,63 @@ def find_qbin_for_qphi(
     xfile: XpcsFile,
     target_q: float,
     target_phi: float,
-    q_tolerance: float = 0.01,
-    phi_tolerance: float = 1.0,
 ) -> Optional[Tuple[int, str, float, float]]:
     """
-    Find single qbin matching specific q-phi pair.
+    Find single qbin closest to specific q-phi pair.
 
     Args:
         xfile: XpcsFile instance
         target_q: Target q-value to match
         target_phi: Target phi-value to match
-        q_tolerance: Tolerance for q-value matching
-        phi_tolerance: Tolerance for phi-value matching (degrees)
 
     Returns:
-        Tuple (qbin_index, label, q_value, phi_value) for best matching qbin or None
+        Tuple (qbin_index, label, q_value, phi_value) for closest matching qbin or None
     """
     qbin_labels = xfile.get_twotime_qbin_labels()
+    valid_qbins = []
+
+    # First pass: collect all valid qbins with their q/phi values
+    for i, label in enumerate(qbin_labels):
+        q_value, phi_value = extract_q_phi_from_label(label)
+        if q_value is not None and phi_value is not None:
+            valid_qbins.append((i, label, q_value, phi_value))
+        else:
+            logger.warning(f"Could not extract q/phi from qbin {i}: {label}")
+
+    if not valid_qbins:
+        logger.warning("No valid qbins found for q-phi selection")
+        return None
+
+    # Find qbin with minimum combined distance
+    # Normalize distances to make them comparable
+    q_values = [qbin[2] for qbin in valid_qbins]
+    phi_values = [qbin[3] for qbin in valid_qbins]
+    q_range = max(q_values) - min(q_values) if len(set(q_values)) > 1 else 1.0
+    phi_range = max(phi_values) - min(phi_values) if len(set(phi_values)) > 1 else 1.0
+
     best_match = None
     best_distance = float("inf")
 
-    for i, label in enumerate(qbin_labels):
-        q_value, phi_value = extract_q_phi_from_label(label)
+    for i, label, q_value, phi_value in valid_qbins:
+        # Normalized euclidean distance
+        q_norm = abs(q_value - target_q) / q_range
+        phi_norm = abs(phi_value - target_phi) / phi_range
+        distance = (q_norm**2 + phi_norm**2) ** 0.5
 
-        if q_value is not None and phi_value is not None:
-            q_diff = abs(q_value - target_q)
-            phi_diff = abs(phi_value - target_phi)
-
-            if q_diff <= q_tolerance and phi_diff <= phi_tolerance:
-                # Calculate combined distance for best match
-                distance = (q_diff / q_tolerance) + (phi_diff / phi_tolerance)
-                if distance < best_distance:
-                    best_distance = distance
-                    best_match = (i, label, q_value, phi_value)
+        if distance < best_distance:
+            best_distance = distance
+            best_match = (i, label, q_value, phi_value)
 
     if best_match:
+        q_diff = abs(best_match[2] - target_q)
+        phi_diff = abs(best_match[3] - target_phi)
         logger.info(
-            f"Found qbin matching q={target_q:.4f}, phi={target_phi:.1f}°: {best_match[1]}"
+            f"Found closest qbin: q={best_match[2]:.6f} (diff={q_diff:.6f}), "
+            f"phi={best_match[3]:.2f}° (diff={phi_diff:.2f}°)"
         )
+        logger.info(f"Selected qbin: {best_match[1]}")
     else:
-        logger.warning(
-            f"No qbin found matching q={target_q:.4f}, phi={target_phi:.1f}°"
-        )
+        logger.warning(f"No qbin found for q={target_q:.4f}, phi={target_phi:.1f}°")
 
     return best_match
 
@@ -287,6 +352,16 @@ def process_single_file(file_path: str, args) -> int:
             )
             return 0
 
+        # Get all available qbins for debugging and summary
+        qbin_labels = xfile.get_twotime_qbin_labels()
+        logger.info(f"File contains {len(qbin_labels)} total qbins")
+
+        # Log all qbin labels for debugging
+        logger.debug("Available qbins:")
+        for i, label in enumerate(qbin_labels):
+            q_val, phi_val = extract_q_phi_from_label(label)
+            logger.debug(f"  Qbin {i}: {label} -> q={q_val}, phi={phi_val}")
+
         # Determine qbins to process based on selection mode
         qbins_to_process = []
 
@@ -330,27 +405,34 @@ def process_single_file(file_path: str, args) -> int:
 
                 # Generate plot
                 title = f"{Path(file_path).name} - {label}"
-                fig = create_twotime_plot_matplotlib(
-                    c2_matrix, delta_t, title, args.dpi
-                )
+                fig = None
+                try:
+                    fig = create_twotime_plot_matplotlib(
+                        c2_matrix, delta_t, title, args.dpi
+                    )
 
-                # Save image
-                output_filename = generate_output_filename(
-                    file_path, q_value, phi_value, args.format
-                )
-                output_path = os.path.join(args.output, output_filename)
+                    # Save image
+                    output_filename = generate_output_filename(
+                        file_path, q_value, phi_value, args.format
+                    )
+                    output_path = os.path.join(args.output, output_filename)
 
-                fig.savefig(output_path, dpi=args.dpi, bbox_inches="tight")
-                plt.close(fig)  # Free memory
-
-                logger.info(f"Saved image: {output_path}")
-                images_generated += 1
+                    fig.savefig(output_path, dpi=args.dpi, bbox_inches="tight")
+                    logger.info(f"Saved image: {output_path}")
+                    images_generated += 1
+                finally:
+                    if fig is not None:
+                        plt.close(fig)  # Always free memory
 
             except Exception as e:
                 logger.error(f"Error processing qbin {qbin_index}: {e}")
                 continue
 
-        logger.info(f"Generated {images_generated} images from {file_path}")
+        logger.info(f"\n--- PROCESSING SUMMARY FOR {Path(file_path).name} ---")
+        logger.info(f"Total qbins available: {len(qbin_labels)}")
+        logger.info(f"Qbins selected for processing: {len(qbins_to_process)}")
+        logger.info(f"Images successfully generated: {images_generated}")
+        logger.info(f"Processing completed for {file_path}")
         return images_generated
 
     except Exception as e:
@@ -434,8 +516,36 @@ def run_twotime_batch(args) -> int:
     logger.info("Starting twotime batch processing")
     logger.info(f"Input: {args.input}")
     logger.info(f"Output: {args.output}")
-    logger.info(f"Selection mode: q={args.q}, phi={args.phi}, q-phi={args.q_phi}")
+    logger.info(f"Selection mode: q={args.q}, phi={args.phi}, q_phi={args.q_phi}")
     logger.info(f"Image settings: format={args.format}, DPI={args.dpi}")
+
+    # Validate arguments
+    selection_count = sum(x is not None for x in [args.q, args.phi, args.q_phi])
+    if selection_count != 1:
+        logger.error(f"Exactly one selection argument required, got {selection_count}")
+        logger.error(f"Arguments: q={args.q}, phi={args.phi}, q_phi={args.q_phi}")
+        return 1
+
+    # Validate argument values
+    if args.q is not None and args.q <= 0:
+        logger.error(f"Q-value must be positive, got: {args.q}")
+        return 1
+
+    if args.phi is not None and not (0 <= args.phi <= 360):
+        logger.warning(f"Phi-value {args.phi}° is outside typical range [0, 360]°")
+
+    if args.q_phi is not None:
+        try:
+            q_val, phi_val = parse_q_phi_pair(args.q_phi)
+            if q_val <= 0:
+                logger.error(f"Q-value in q-phi pair must be positive, got: {q_val}")
+                return 1
+            logger.info(f"Validated q-phi pair: q={q_val}, phi={phi_val}")
+        except ValueError as e:
+            logger.error(f"Invalid q-phi pair format: {e}")
+            return 1
+
+    logger.info("Argument validation passed")
 
     try:
         # Validate input path
