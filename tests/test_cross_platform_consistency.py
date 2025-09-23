@@ -737,14 +737,29 @@ class TestCrossPlatformConsistency(unittest.TestCase):
         with tempfile.NamedTemporaryFile(
             mode="w", suffix=".json", delete=False
         ) as tmp_file:
-            self.validator.save_reference_results(tmp_file.name)
+            tmp_file_path = tmp_file.name
 
+        # Save and load after closing the file to avoid Windows permission issues
+        self.validator.save_reference_results(tmp_file_path)
+
+        try:
             # Load reference results
-            success = self.validator.load_reference_results(tmp_file.name)
+            success = self.validator.load_reference_results(tmp_file_path)
             self.assertTrue(success)
             self.assertGreater(len(self.validator.reference_results), 0)
+        finally:
+            # Clean up with error handling for Windows
+            try:
+                Path(tmp_file_path).unlink()
+            except PermissionError:
+                # On Windows, wait a bit and retry
+                import time
 
-            Path(tmp_file.name).unlink()  # Clean up
+                time.sleep(0.1)
+                try:
+                    Path(tmp_file_path).unlink()
+                except PermissionError:
+                    pass  # If still can't delete, let OS clean up later
 
     def test_report_generation(self):
         """Test platform report generation."""
@@ -761,17 +776,32 @@ class TestCrossPlatformConsistency(unittest.TestCase):
         with tempfile.NamedTemporaryFile(
             mode="w", suffix=".json", delete=False
         ) as tmp_file:
-            self.validator.export_platform_results(tmp_file.name)
+            tmp_file_path = tmp_file.name
 
-            # Verify file was created and contains valid JSON
-            with open(tmp_file.name) as f:
+        # Export after closing the file to avoid Windows permission issues
+        self.validator.export_platform_results(tmp_file_path)
+
+        # Verify file was created and contains valid JSON
+        try:
+            with open(tmp_file_path) as f:
                 data = json.load(f)
 
             self.assertIn("platform_info", data)
             self.assertIn("results", data)
             self.assertIn("summary", data)
+        finally:
+            # Clean up with error handling for Windows
+            try:
+                Path(tmp_file_path).unlink()
+            except PermissionError:
+                # On Windows, wait a bit and retry
+                import time
 
-            Path(tmp_file.name).unlink()  # Clean up
+                time.sleep(0.1)
+                try:
+                    Path(tmp_file_path).unlink()
+                except PermissionError:
+                    pass  # If still can't delete, let OS clean up later
 
 
 if __name__ == "__main__":

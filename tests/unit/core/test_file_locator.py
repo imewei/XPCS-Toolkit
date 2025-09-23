@@ -4,6 +4,7 @@ This module provides comprehensive unit tests for the FileLocator class,
 covering file discovery, dataset creation, and path management.
 """
 
+import os
 from unittest.mock import Mock, patch
 
 import pytest
@@ -245,11 +246,13 @@ class TestFileLocatorGetXfList:
 
         assert len(result) == 1
         assert result[0] is mock_xf
-        assert "/test/path/file1.hdf" in locator.cache
-        assert locator.cache["/test/path/file1.hdf"] is mock_xf
+        # Use normalized path for cross-platform compatibility
+        expected_path = os.path.normpath("/test/path/file1.hdf")
+        assert expected_path in locator.cache
+        assert locator.cache[expected_path] is mock_xf
 
         mock_create_dataset.assert_called_once_with(
-            "/test/path/file1.hdf", qmap_manager=locator.qmap_manager
+            expected_path, qmap_manager=locator.qmap_manager
         )
 
     @patch("xpcs_toolkit.file_locator.create_xpcs_dataset")
@@ -413,8 +416,9 @@ class TestFileLocatorCaching:
 
             locator.get_xf_list()
 
-            # Cache key should be full path
-            assert "/test/path/file1.hdf" in locator.cache
+            # Cache key should be full path (normalized for cross-platform compatibility)
+            expected_path = os.path.normpath("/test/path/file1.hdf")
+            assert expected_path in locator.cache
             assert "file1.hdf" not in locator.cache
 
 
