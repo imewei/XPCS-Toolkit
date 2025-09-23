@@ -231,7 +231,7 @@ timeout_method = "thread"
 # fast: -m "smoke or (unit and not slow)"
 # core: -m "(unit or integration) and not slow"
 # scientific: -m "scientific or numerical or validation"
-# ci_stable: -m "not (stress or flaky or system_dependent or requires_display)"
+# ci_stable: -m "not (stress or flaky or system_dependent or gui)"
 # performance: -m "performance and not stress"
 # full_validation: -m "not stress"
 

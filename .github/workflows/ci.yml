@@ -217,8 +217,8 @@ jobs:
               || (echo "[ERROR] Smoke tests failed" && exit 1)
             ;;
           "core")
-            echo "[INFO] Running core tests (unit + integration, non-slow)..."
-            pytest -m "(unit or integration) and not slow" \
+            echo "[INFO] Running core tests (unit + integration, non-slow, excluding GUI)..."
+            pytest -m "(unit or integration) and not slow and not gui" \
               --cov=xpcs_toolkit --cov-report=xml --cov-report=term-missing \
               --cov-context=test --tb=short --maxfail=5 --cov-fail-under=11 \
               -n auto --dist=worksteal \
@@ -231,8 +231,10 @@ jobs:
               || (echo "[ERROR] Performance tests failed" && exit 1)
             ;;
           *)
-            echo "[INFO] Running full test suite (excluding stress and system-dependent)..."
-            pytest -m "not (stress or system_dependent)" \
+            echo "[INFO] Running full test suite (excluding stress, system-dependent, and GUI tests)..."
+            # Note: GUI tests are excluded from CI due to Qt compatibility issues with parallel execution
+            # GUI tests can be run locally with: pytest -m "gui" --no-cov -x
+            pytest -m "not (stress or system_dependent or gui)" \
               --cov=xpcs_toolkit --cov-report=xml --cov-report=term-missing \
               --cov-context=test --tb=short --durations=10 --maxfail=10 --cov-fail-under=11 \
               -n auto --dist=worksteal \

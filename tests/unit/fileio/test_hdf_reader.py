@@ -652,7 +652,9 @@ class TestThreadSafety:
         assert all(conn is mock_file for conn in results)
         # Verify connection was cached
         assert len(pool._pool) == 1
-        assert "/test/file.hdf" in pool._pool
+        # Connection pool normalizes paths with abspath, so check the normalized version
+        expected_path = os.path.abspath("/test/file.hdf")
+        assert expected_path in pool._pool
 
 
 @pytest.mark.parametrize(

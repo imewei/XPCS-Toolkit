@@ -371,7 +371,8 @@ class TestFileLocatorGetHdfInfo:
 
         assert result == mock_hdf_info
         mock_create_dataset.assert_called_once_with(
-            "/test/path/test_file.hdf", qmap_manager=locator.qmap_manager
+            os.path.normpath("/test/path/test_file.hdf"),
+            qmap_manager=locator.qmap_manager,
         )
         mock_xf.get_hdf_info.assert_called_once_with(["entry"])
 
@@ -549,7 +550,9 @@ def test_get_xf_list_row_variations(rows_input, expected_behavior):
         mock_xf = Mock()
         mock_xf.fit_summary = None
         mock_xf.atype = "Multitau"
-        locator.cache[f"/test/path/{filename}"] = mock_xf
+        # Use normpath to ensure cross-platform compatibility
+        cache_key = os.path.normpath(os.path.join("/test/path", filename))
+        locator.cache[cache_key] = mock_xf
 
     result = locator.get_xf_list(rows=rows_input)
 
