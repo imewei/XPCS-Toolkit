@@ -226,7 +226,7 @@ def compare_with_standard_optimizer(generator, scenarios, bounds, n_samples=10):
                     # Simple success check
                     if info_robust["r_squared"] > 0.7:
                         robust_successes += 1
-                except:
+                except Exception:
                     robust_time = time.time() - start_time
                     robust_times.append(robust_time)
 
@@ -255,11 +255,11 @@ def compare_with_standard_optimizer(generator, scenarios, bounds, n_samples=10):
                     if r_squared > 0.7:
                         standard_successes += 1
 
-                except:
+                except Exception:
                     standard_time = time.time() - start_time
                     standard_times.append(standard_time)
 
-            except:
+            except Exception:
                 continue
 
     total_tests = len(scenarios[:5]) * n_samples

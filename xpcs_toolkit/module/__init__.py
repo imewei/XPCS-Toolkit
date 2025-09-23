@@ -36,12 +36,12 @@ else:
         pass
 
 __all__ = [
+    "average_toolbox",
     "g2mod",
     "intt",
     "saxs1d",
     "saxs2d",
     "stability",
-    "average_toolbox",
     "tauq",
     "twotime",
     "twotime_utils",

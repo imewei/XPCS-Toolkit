@@ -7,27 +7,17 @@ if os.environ.get("BUILDING_DOCS"):
     class XpcsFile:
         """Placeholder XpcsFile class for documentation builds."""
 
-        pass
-
     class FileLocator:
         """Placeholder FileLocator class for documentation builds."""
-
-        pass
 
     class ViewerKernel:
         """Placeholder ViewerKernel class for documentation builds."""
 
-        pass
-
     class ViewerUI:
         """Placeholder ViewerUI class for documentation builds."""
 
-        pass
-
     class XpcsViewer:
         """Placeholder XpcsViewer class for documentation builds."""
-
-        pass
 
     # Create module-like objects for subpackages
     module = type("module", (), {})()
@@ -47,27 +37,17 @@ else:
         class XpcsFile:
             """Placeholder XpcsFile class for documentation builds."""
 
-            pass
-
         class FileLocator:
             """Placeholder FileLocator class for documentation builds."""
-
-            pass
 
         class ViewerKernel:
             """Placeholder ViewerKernel class for documentation builds."""
 
-            pass
-
         class ViewerUI:
             """Placeholder ViewerUI class for documentation builds."""
 
-            pass
-
         class XpcsViewer:
             """Placeholder XpcsViewer class for documentation builds."""
-
-            pass
 
 
 # Version handling

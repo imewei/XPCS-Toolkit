@@ -17,13 +17,12 @@
 # relative to the documentation root, use os.path.abspath to make it
 # absolute, like shown here.
 #
+import logging
 import os
 import sys
+from unittest import mock
 
 sys.path.insert(0, os.path.abspath(".."))
-
-# Mock imports for Read the Docs build environment
-import unittest.mock as mock
 
 
 # Create a more sophisticated mock for Qt/GUI modules
@@ -83,15 +82,12 @@ except ImportError:
 print(f"Building documentation for XPCS Toolkit version {version}")
 
 # Monkey patch to suppress autodoc import warnings
-import logging
-
 logging.getLogger("sphinx.ext.autodoc").setLevel(logging.ERROR)
 
 
 # Setup function for Sphinx extension
 def setup(app):
     """Setup function for Sphinx extension."""
-    pass
 
 
 # -- General configuration ---------------------------------------------

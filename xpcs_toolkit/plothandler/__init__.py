@@ -45,8 +45,8 @@ __all__ = [
     "MplCanvasBarH",
     "MplCanvasBarV",
     "PlotWidgetDev",
-    "pyqtgraph_handler",
     "matplot_qt",
     "plot_constants",
+    "pyqtgraph_handler",
     "qt_signal_fixes",
 ]
