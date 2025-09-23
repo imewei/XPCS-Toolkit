@@ -79,7 +79,7 @@ except ImportError:
     version = "1.0.5"
 
 # Simple logger for docs build
-print(f"Building documentation for XPCS Toolkit version {version}")
+logging.info(f"Building documentation for XPCS Toolkit version {version}")
 
 # Monkey patch to suppress autodoc import warnings
 logging.getLogger("sphinx.ext.autodoc").setLevel(logging.ERROR)
@@ -127,7 +127,7 @@ author = "Miaoqi Chu"
 # the built documents.
 #
 # The short X.Y version.
-version = version
+# version is already set above from package metadata
 # The full version, including alpha/beta/rc tags.
 release = version
 

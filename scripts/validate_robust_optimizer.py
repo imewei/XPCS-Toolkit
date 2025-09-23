@@ -113,8 +113,6 @@ def validate_single_dataset(generator, scenario, bounds, verbose=False):
         )
 
         # Convert synthetic G2 parameters to single_exp parameters
-        # synthetic: baseline + beta * exp(-gamma * tau)
-        # single_exp: cts * exp(-2 * tau / tau_param) + bkg
         gamma_true = true_params["gamma"]
         baseline_true = true_params["baseline"]
         beta_true = true_params["beta"]
@@ -259,7 +257,8 @@ def compare_with_standard_optimizer(generator, scenarios, bounds, n_samples=10):
                     standard_time = time.time() - start_time
                     standard_times.append(standard_time)
 
-            except Exception:
+            except Exception as e:
+                print(f"Standard optimizer failed: {e}")
                 continue
 
     total_tests = len(scenarios[:5]) * n_samples
