@@ -280,7 +280,8 @@ omit = [
 branch = true
 parallel = true
 context = "test"
-dynamic_context = "test_function"
+# Note: dynamic_context removed to fix compatibility with pytest-xdist
+# Use --cov-context=test_function on command line if function-level context is needed
 concurrency = ["thread", "multiprocessing"]
 
 # Module-specific coverage targets

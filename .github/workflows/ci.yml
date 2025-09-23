@@ -214,7 +214,7 @@ jobs:
             echo "🧪 Running core tests (unit + integration, non-slow)..."
             pytest -m "(unit or integration) and not slow" \
               --cov=xpcs_toolkit --cov-report=xml --cov-report=term-missing \
-              --tb=short --maxfail=5 --cov-fail-under=11 \
+              --cov-context=test --tb=short --maxfail=5 --cov-fail-under=11 \
               -n auto --dist=worksteal \
               || (echo "❌ Core tests failed" && exit 1)
             ;;
@@ -228,7 +228,7 @@ jobs:
             echo "🔬 Running full test suite (excluding stress and system-dependent)..."
             pytest -m "not (stress or system_dependent)" \
               --cov=xpcs_toolkit --cov-report=xml --cov-report=term-missing \
-              --tb=short --durations=10 --maxfail=10 --cov-fail-under=11 \
+              --cov-context=test --tb=short --durations=10 --maxfail=10 --cov-fail-under=11 \
               -n auto --dist=worksteal \
               || (echo "❌ Full test suite failed" && exit 1)
             ;;
