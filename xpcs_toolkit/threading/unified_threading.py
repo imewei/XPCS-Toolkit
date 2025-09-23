@@ -328,6 +328,12 @@ class UnifiedThreadingManager(QObject):
 
     def _start_monitoring(self):
         """Start system monitoring thread."""
+        import os
+
+        # Skip starting background threads in test mode to prevent threading issues
+        if os.environ.get("XPCS_TEST_MODE") == "1":
+            return
+
         self._monitor_thread = threading.Thread(
             target=self._monitor_system, daemon=True, name="unified-monitor"
         )

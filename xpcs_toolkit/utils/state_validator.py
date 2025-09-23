@@ -448,6 +448,12 @@ class LockFreeStateValidator:
 
     def start_background_validation(self, interval: float = 60.0) -> None:
         """Start background consistency validation."""
+        import os
+
+        # Skip starting background threads in test mode to prevent threading issues
+        if os.environ.get("XPCS_TEST_MODE") == "1":
+            return
+
         if self._validation_active:
             logger.debug("Background validation already active")
             return

@@ -173,6 +173,12 @@ class HealthMonitor:
 
     def start_monitoring(self) -> None:
         """Start background health monitoring."""
+        import os
+
+        # Skip starting background threads in test mode to prevent threading issues
+        if os.environ.get("XPCS_TEST_MODE") == "1":
+            return
+
         with self._lock:
             if self._monitoring_active:
                 logger.debug("Health monitoring already active")

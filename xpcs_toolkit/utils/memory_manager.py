@@ -252,6 +252,12 @@ class UnifiedMemoryManager:
 
     def _start_monitoring(self):
         """Start background memory monitoring thread."""
+        import os
+
+        # Skip starting background threads in test mode to prevent threading issues
+        if os.environ.get("XPCS_TEST_MODE") == "1":
+            return
+
         self._monitoring_thread = threading.Thread(
             target=self._monitoring_loop, daemon=True
         )

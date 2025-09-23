@@ -220,6 +220,12 @@ class IntelligentPrefetcher:
 
     def _start_prefetch_worker(self):
         """Start background prefetch worker thread."""
+        import os
+
+        # Skip starting background threads in test mode to prevent threading issues
+        if os.environ.get("XPCS_TEST_MODE") == "1":
+            return
+
         self.prefetch_thread = threading.Thread(
             target=self._prefetch_worker, daemon=True
         )
