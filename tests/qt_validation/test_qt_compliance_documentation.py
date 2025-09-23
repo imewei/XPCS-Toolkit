@@ -344,12 +344,11 @@ class TestCodeExampleValidation:
                     lines = code_block.strip().split("\n")
 
                     # Skip function/method signatures without bodies
-                    if "expected ':'" in error_msg:
-                        if any(
-                            line.strip().startswith(("def ", "@", "class "))
-                            for line in lines
-                        ):
-                            continue
+                    if "expected ':'" in error_msg and any(
+                        line.strip().startswith(("def ", "@", "class "))
+                        for line in lines
+                    ):
+                        continue
 
                     # Skip pytest marker blocks (common in documentation)
                     if "invalid syntax" in error_msg and any(

@@ -6,6 +6,7 @@ This module validates the enhanced coverage reporting system with multiple
 output formats and trend analysis capabilities.
 """
 
+import contextlib
 import json
 import tempfile
 import unittest
@@ -87,10 +88,8 @@ class TestCoverageReporting(unittest.TestCase):
         # Clean up temporary directory
         import shutil
 
-        try:
+        with contextlib.suppress(Exception):
             shutil.rmtree(self.temp_dir, ignore_errors=True)
-        except Exception:
-            pass
 
     def test_json_report_generation(self):
         """Test JSON report generation."""

@@ -201,16 +201,17 @@ def validate_input(
                             validation_errors.append(error_msg)
 
                     # Range checking for numerical values
-                    if check_ranges and isinstance(
-                        param_value, (int, float, np.number)
+                    if (
+                        check_ranges
+                        and isinstance(param_value, (int, float, np.number))
+                        and not _validate_range(param_value, param_name)
                     ):
-                        if not _validate_range(param_value, param_name):
-                            error_msg = f"Parameter '{param_name}' outside valid range"
-                            if fast_fail:
-                                raise XPCSValidationError(
-                                    error_msg, field=param_name, value=param_value
-                                )
-                            validation_errors.append(error_msg)
+                        error_msg = f"Parameter '{param_name}' outside valid range"
+                        if fast_fail:
+                            raise XPCSValidationError(
+                                error_msg, field=param_name, value=param_value
+                            )
+                        validation_errors.append(error_msg)
 
                     # Array validation
                     if check_shapes and isinstance(param_value, np.ndarray):
@@ -369,21 +370,20 @@ def _validate_values(
             errors.append(f"Array '{param_name}' contains infinite values")
 
         # Check for reasonable value ranges
-        if np.issubdtype(value.dtype, np.number):
-            if value.size > 0:
-                min_val, max_val = np.min(value), np.max(value)
-                value_range = max_val - min_val
+        if np.issubdtype(value.dtype, np.number) and value.size > 0:
+            min_val, max_val = np.min(value), np.max(value)
+            value_range = max_val - min_val
 
-                if value_range == 0 and level in [
-                    ValidationLevel.STRICT,
-                    ValidationLevel.PARANOID,
-                ]:
-                    warnings.append(f"Array '{param_name}' has zero variance")
+            if value_range == 0 and level in [
+                ValidationLevel.STRICT,
+                ValidationLevel.PARANOID,
+            ]:
+                warnings.append(f"Array '{param_name}' has zero variance")
 
-                # Domain-specific value checks
-                if "intensity" in param_name.lower() or "saxs" in param_name.lower():
-                    if min_val < 0:
-                        warnings.append(f"Negative intensity values in '{param_name}'")
+            # Domain-specific value checks
+            if "intensity" in param_name.lower() or "saxs" in param_name.lower():
+                if min_val < 0:
+                    warnings.append(f"Negative intensity values in '{param_name}'")
 
     elif isinstance(value, (int, float, np.number)):
         if np.isnan(value):

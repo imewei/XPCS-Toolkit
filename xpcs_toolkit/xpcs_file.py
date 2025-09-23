@@ -1567,7 +1567,6 @@ class XpcsFile:
                     f"No valid qmap data found for auto_crop in {self.label}"
                 )
                 # Use original data without cropping
-                pass
 
         if saxs.size == 0:
             logger.warning(f"SAXS data is empty for {self.label} after processing")
@@ -1607,10 +1606,7 @@ class XpcsFile:
             # highlight the selected qbin if it's valid
             dqmap_disp[dqmap_disp == dq_bin] = qindex_max + 1
             matching_indices = np.where(dqlist == dq_bin)[0]
-            if len(matching_indices) > 0:
-                selection = matching_indices[0]
-            else:
-                selection = None
+            selection = matching_indices[0] if len(matching_indices) > 0 else None
         else:
             selection = None
         return dqmap_disp, saxs, selection

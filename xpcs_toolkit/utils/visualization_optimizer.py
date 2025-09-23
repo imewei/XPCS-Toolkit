@@ -8,9 +8,10 @@ matplotlib performance improvements, and intelligent plot handler selection.
 
 import importlib.util
 import time
+from collections.abc import Callable
 from contextlib import contextmanager
 from enum import Enum
-from typing import Any, Callable
+from typing import Any
 
 import numpy as np
 

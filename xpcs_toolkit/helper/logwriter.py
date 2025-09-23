@@ -1,4 +1,4 @@
-from typing import Callable
+from collections.abc import Callable
 
 
 # https://stackoverflow.com/questions/19425736
