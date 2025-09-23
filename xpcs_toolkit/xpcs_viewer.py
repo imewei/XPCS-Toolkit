@@ -917,7 +917,6 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         self.vk.export_saxs_1d(self.pg_saxs, folder)
 
     def init_twotime_plot_handler(self):
-        # self.mp_2t.setBackground('w')
         self.mp_2t_hdls = {}
         labels = ["saxs", "dqmap"]
         titles = ["scattering", "dynamic_qmap"]
@@ -955,7 +954,6 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
 
         self.mp_2t_hdls["dqmap"].mouseClickEvent = self.pick_twotime_index
         self.mp_2t_hdls["saxs"].mouseClickEvent = self.pick_twotime_index
-        # self.mp_2t.getView().setBackgroundColor('w')
         self.mp_2t.ui.graphicsView.setBackground("w")
         self.mp_2t_hdls["tt"] = self.mp_2t
         self.mp_2t_hdls["tt"].view.invertY(False)
