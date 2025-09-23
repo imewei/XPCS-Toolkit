@@ -201,8 +201,11 @@ class TestFileLocatorGetXfList:
         mock_xf2.fit_summary = None
         mock_xf2.atype = "Twotime"
 
-        locator.cache["/test/path/file1.hdf"] = mock_xf1
-        locator.cache["/test/path/file2.hdf"] = mock_xf2
+        # Use normalized paths for cross-platform compatibility
+        path1 = os.path.normpath("/test/path/file1.hdf")
+        path2 = os.path.normpath("/test/path/file2.hdf")
+        locator.cache[path1] = mock_xf1
+        locator.cache[path2] = mock_xf2
 
         result = locator.get_xf_list()
 
@@ -222,8 +225,11 @@ class TestFileLocatorGetXfList:
         mock_xf2.fit_summary = None
         mock_xf2.atype = "Twotime"
 
-        locator.cache["/test/path/file1.hdf"] = mock_xf1
-        locator.cache["/test/path/file2.hdf"] = mock_xf2
+        # Use normalized paths for cross-platform compatibility
+        path1 = os.path.normpath("/test/path/file1.hdf")
+        path2 = os.path.normpath("/test/path/file2.hdf")
+        locator.cache[path1] = mock_xf1
+        locator.cache[path2] = mock_xf2
 
         result = locator.get_xf_list(rows=[0, 1])
 
@@ -293,8 +299,11 @@ class TestFileLocatorGetXfList:
         mock_unfitted.fit_summary = None  # No fit results
         mock_unfitted.atype = "Multitau"
 
-        locator.cache["/test/path/fitted_file.hdf"] = mock_fitted
-        locator.cache["/test/path/unfitted_file.hdf"] = mock_unfitted
+        # Use normalized paths for cross-platform compatibility
+        fitted_path = os.path.normpath("/test/path/fitted_file.hdf")
+        unfitted_path = os.path.normpath("/test/path/unfitted_file.hdf")
+        locator.cache[fitted_path] = mock_fitted
+        locator.cache[unfitted_path] = mock_unfitted
 
         result = locator.get_xf_list(filter_fitted=True)
 
@@ -314,8 +323,11 @@ class TestFileLocatorGetXfList:
         mock_twotime.fit_summary = None
         mock_twotime.atype = "Twotime"
 
-        locator.cache["/test/path/multitau_file.hdf"] = mock_multitau
-        locator.cache["/test/path/twotime_file.hdf"] = mock_twotime
+        # Use normalized paths for cross-platform compatibility
+        multitau_path = os.path.normpath("/test/path/multitau_file.hdf")
+        twotime_path = os.path.normpath("/test/path/twotime_file.hdf")
+        locator.cache[multitau_path] = mock_multitau
+        locator.cache[twotime_path] = mock_twotime
 
         result = locator.get_xf_list(filter_atype="Multitau")
 
@@ -330,7 +342,9 @@ class TestFileLocatorGetXfList:
         mock_xf1 = Mock()
         mock_xf1.fit_summary = None
         mock_xf1.atype = "Multitau"
-        locator.cache["/test/path/file1.hdf"] = mock_xf1
+        # Use normalized paths for cross-platform compatibility
+        path1 = os.path.normpath("/test/path/file1.hdf")
+        locator.cache[path1] = mock_xf1
 
         # Include invalid indices
         result = locator.get_xf_list(rows=[-1, 0, 5, 10])
@@ -389,8 +403,9 @@ class TestFileLocatorCaching:
         mock_xf.fit_summary = None
         mock_xf.atype = "Multitau"
 
-        # Manually add to cache
-        locator.cache["/test/path/file1.hdf"] = mock_xf
+        # Manually add to cache with normalized path
+        path1 = os.path.normpath("/test/path/file1.hdf")
+        locator.cache[path1] = mock_xf
 
         # First call should use cache
         result1 = locator.get_xf_list()
