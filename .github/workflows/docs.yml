@@ -26,7 +26,7 @@ on:
         required: false
         default: 'Manual documentation testing'
       deploy:
-        description: 'Deploy to GitHub Pages'
+        description: 'Deploy to GitHub Pages (DISABLED - not configured)'
         required: false
         default: false
         type: boolean
