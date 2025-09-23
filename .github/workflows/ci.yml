@@ -161,7 +161,7 @@ jobs:
         # Install package with dev dependencies
         pip install -e .[dev] --prefer-binary
         # Verify critical test dependencies
-        python -c "import pytest, xdist, pytest_cov; print('✅ Test dependencies installed')"
+        python -c "import pytest, xdist, pytest_cov; print('[OK] Test dependencies installed')"
 
     - name: Cache test data
       uses: actions/cache@v4
@@ -195,6 +195,9 @@ jobs:
       env:
         QT_QPA_PLATFORM: offscreen
         DISPLAY: ":99"
+        # Fix Unicode encoding issues on Windows
+        PYTHONIOENCODING: utf-8
+        PYTHONUTF8: 1
       run: |
         # Start virtual display for GUI tests on Linux
         if [ "${{ matrix.os }}" = "ubuntu-latest" ]; then
@@ -205,36 +208,36 @@ jobs:
         # Run tests based on level with optimized settings
         case "${{ steps.test-level.outputs.level }}" in
           "smoke")
-            echo "🚀 Running smoke tests..."
+            echo "[INFO] Running smoke tests..."
             pytest -m "smoke" --tb=short -q --maxfail=3 \
               --disable-warnings --no-cov \
-              || (echo "❌ Smoke tests failed" && exit 1)
+              || (echo "[ERROR] Smoke tests failed" && exit 1)
             ;;
           "core")
-            echo "🧪 Running core tests (unit + integration, non-slow)..."
+            echo "[INFO] Running core tests (unit + integration, non-slow)..."
             pytest -m "(unit or integration) and not slow" \
               --cov=xpcs_toolkit --cov-report=xml --cov-report=term-missing \
               --cov-context=test --tb=short --maxfail=5 --cov-fail-under=11 \
               -n auto --dist=worksteal \
-              || (echo "❌ Core tests failed" && exit 1)
+              || (echo "[ERROR] Core tests failed" && exit 1)
             ;;
           "performance")
-            echo "⚡ Running performance tests..."
+            echo "[INFO] Running performance tests..."
             pytest -m "performance and not stress" --benchmark-only \
               --benchmark-warmup=on --benchmark-warmup-iterations=2 \
-              || (echo "❌ Performance tests failed" && exit 1)
+              || (echo "[ERROR] Performance tests failed" && exit 1)
             ;;
           *)
-            echo "🔬 Running full test suite (excluding stress and system-dependent)..."
+            echo "[INFO] Running full test suite (excluding stress and system-dependent)..."
             pytest -m "not (stress or system_dependent)" \
               --cov=xpcs_toolkit --cov-report=xml --cov-report=term-missing \
               --cov-context=test --tb=short --durations=10 --maxfail=10 --cov-fail-under=11 \
               -n auto --dist=worksteal \
-              || (echo "❌ Full test suite failed" && exit 1)
+              || (echo "[ERROR] Full test suite failed" && exit 1)
             ;;
         esac
 
-        echo "✅ Test execution completed successfully"
+        echo "[SUCCESS] Test execution completed successfully"
 
     - name: Upload coverage reports
       uses: codecov/codecov-action@v4
@@ -247,18 +250,22 @@ jobs:
 
     - name: Test package installation
       if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.13'
+      env:
+        # Fix Unicode encoding issues on Windows
+        PYTHONIOENCODING: utf-8
+        PYTHONUTF8: 1
       run: |
         # Quick installation test with error handling
         pip install -e . --force-reinstall --no-deps
         python -c "
         try:
             import xpcs_toolkit
-            print(f'✅ XPCS Toolkit {xpcs_toolkit.__version__} imported successfully')
+            print(f'[OK] XPCS Toolkit {xpcs_toolkit.__version__} imported successfully')
             # Test basic functionality
             from xpcs_toolkit.file_locator import FileLocator
-            print('✅ Core modules accessible')
+            print('[OK] Core modules accessible')
         except ImportError as e:
-            print(f'❌ Import failed: {e}')
+            print(f'[ERROR] Import failed: {e}')
             exit(1)
         except Exception as e:
             print(f'⚠️  Basic test failed: {e}')
@@ -315,7 +322,7 @@ jobs:
         python -m venv test_env
         source test_env/bin/activate
         pip install dist/*.whl
-        python -c "import xpcs_toolkit; print('✅ Wheel installs correctly')"
+        python -c "import xpcs_toolkit; print('[OK] Wheel installs correctly')"
         deactivate
         rm -rf test_env
 
@@ -385,26 +392,26 @@ jobs:
         echo "## 🎯 CI/CD Pipeline Status Report" >> $GITHUB_STEP_SUMMARY
         echo "| Job | Status | Duration |" >> $GITHUB_STEP_SUMMARY
         echo "|-----|--------|----------|" >> $GITHUB_STEP_SUMMARY
-        echo "| 🚀 Smoke Tests | ${{ needs.smoke-test.result }} | Fast feedback |" >> $GITHUB_STEP_SUMMARY
-        echo "| 🧪 Main Tests | ${{ needs.test.result }} | Cross-platform |" >> $GITHUB_STEP_SUMMARY
+        echo "| [SMOKE] Tests | ${{ needs.smoke-test.result }} | Fast feedback |" >> $GITHUB_STEP_SUMMARY
+        echo "| [MAIN] Tests | ${{ needs.test.result }} | Cross-platform |" >> $GITHUB_STEP_SUMMARY
         echo "| 📦 Build | ${{ needs.build.result }} | Package validation |" >> $GITHUB_STEP_SUMMARY
         echo "| 🔒 Security | ${{ needs.security.result }} | Vulnerability scan |" >> $GITHUB_STEP_SUMMARY
 
         # Check critical paths
         if [ "${{ needs.smoke-test.result }}" = "failure" ]; then
-          echo "❌ Smoke tests failed - blocking merge"
+          echo "[ERROR] Smoke tests failed - blocking merge"
           echo "::error::Smoke tests failed - critical path blocked"
           exit 1
         elif [ "${{ needs.test.result }}" = "failure" ]; then
-          echo "❌ Main tests failed - blocking merge"
+          echo "[ERROR] Main tests failed - blocking merge"
           echo "::error::Main test suite failed - merge blocked"
           exit 1
         elif [ "${{ needs.build.result }}" = "failure" ]; then
-          echo "❌ Build failed - blocking merge"
+          echo "[ERROR] Build failed - blocking merge"
           echo "::error::Package build failed - merge blocked"
           exit 1
         else
-          echo "✅ All critical checks passed - ready for merge"
+          echo "[SUCCESS] All critical checks passed - ready for merge"
           echo "🔍 Security scan: ${{ needs.security.result }}"
           echo "::notice::CI/CD pipeline completed successfully"
         fi
