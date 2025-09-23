@@ -1,20 +1,20 @@
 GUI Components
 ==============
 
-GUI components for the interactive XPCS data visualization application.
+Interactive XPCS data visualization interface.
+
+.. note::
+   For complete API documentation of all GUI modules, see :doc:`../xpcs_toolkit`.
 
 .. currentmodule:: xpcs_toolkit
 
 Main Application
 ----------------
 
-.. automodule:: xpcs_toolkit.xpcs_viewer
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 The main GUI application window built with PySide6. Provides tab-based
-interface for different analysis modes.
+interface for different analysis modes (SAXS 2D/1D, G2, stability, two-time).
+
+See :mod:`xpcs_toolkit.xpcs_viewer` for complete API documentation.
 
 .. note::
    The GUI components have limited automated testing due to their interactive
@@ -23,70 +23,23 @@ interface for different analysis modes.
 Viewer Kernel
 -------------
 
-.. automodule:: xpcs_toolkit.viewer_kernel
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 Backend kernel that bridges GUI and data processing operations.
+Manages file collections, averaging operations, and plot state.
+
+See :mod:`xpcs_toolkit.viewer_kernel` for complete API documentation.
 
 File Locator
 ------------
 
-.. automodule:: xpcs_toolkit.file_locator
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 File discovery and management utilities for XPCS datasets.
+Handles file system navigation and dataset validation.
 
-Helper Components
------------------
-
-Fitting
-~~~~~~~
-
-.. automodule:: xpcs_toolkit.helper.fitting
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-List Model
-~~~~~~~~~~
-
-.. automodule:: xpcs_toolkit.helper.listmodel
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-Log Writer
-~~~~~~~~~~
-
-.. automodule:: xpcs_toolkit.helper.logwriter
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-Utilities
-~~~~~~~~~
-
-.. automodule:: xpcs_toolkit.helper.utils
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-GUI Validation
---------------
-
-.. automodule:: xpcs_toolkit.gui.initialization_validator
-   :members:
-   :undoc-members:
-   :show-inheritance:
+See :mod:`xpcs_toolkit.file_locator` for complete API documentation.
 
 Command Line Interface
 ----------------------
 
-.. automodule:: xpcs_toolkit.cli
-   :members:
-   :undoc-members:
-   :show-inheritance:
+Command-line entry points for launching the GUI application.
+Supports various startup configurations and directory specifications.
+
+See :mod:`xpcs_toolkit.cli` for complete API documentation.

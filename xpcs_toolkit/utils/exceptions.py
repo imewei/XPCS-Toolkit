@@ -247,7 +247,8 @@ def chain_exception(
     """
     Chain exceptions to preserve full error context with zero overhead.
 
-    Usage:
+    Usage::
+
         try:
             risky_operation()
         except ValueError as e:
@@ -320,7 +321,8 @@ def handle_exceptions(
 
     Zero overhead when no exceptions occur.
 
-    Usage:
+    Usage::
+
         @handle_exceptions(XPCSDataError, add_context={"operation": "data_loading"})
         def load_data(file_path):
             # Function implementation

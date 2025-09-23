@@ -1,3 +1,5 @@
+:orphan:
+
 # Robust G2 Diffusion Fitting Integration Guide
 
 ## Overview
@@ -233,7 +235,7 @@ All optimizations preserve the scientific integrity required for publication-qua
 ## Support
 
 For questions or issues:
-1. Check the [troubleshooting section](#troubleshooting)
+1. Check the troubleshooting section
 2. Review test cases in `tests/unit/test_robust_fitting_integration.py`
 3. Enable debug logging for detailed diagnostic information
 4. Submit issues with complete error logs and data characteristics

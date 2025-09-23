@@ -1,3 +1,5 @@
+:orphan:
+
 # Qt Compliance System Developer Guide
 
 ## Welcome to Qt Compliance Development
@@ -6,15 +8,15 @@ This guide provides everything new developers need to understand, maintain, and 
 
 ## Table of Contents
 
-1. [Quick Start](#quick-start)
-2. [System Overview](#system-overview)
-3. [Development Environment Setup](#development-environment-setup)
-4. [Core Concepts](#core-concepts)
-5. [Common Development Tasks](#common-development-tasks)
-6. [Testing and Validation](#testing-and-validation)
-7. [Troubleshooting Guide](#troubleshooting-guide)
-8. [Best Practices](#best-practices)
-9. [Advanced Topics](#advanced-topics)
+- Quick Start
+- System Overview
+- Development Environment Setup
+- Core Concepts
+- Common Development Tasks
+- Testing and Validation
+- Troubleshooting Guide
+- Best Practices
+- Advanced Topics
 
 ## Quick Start
 

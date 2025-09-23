@@ -1,3 +1,5 @@
+:orphan:
+
 # Qt Compliance System Architecture
 
 ## Overview

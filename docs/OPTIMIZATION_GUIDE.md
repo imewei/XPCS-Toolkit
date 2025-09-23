@@ -1,17 +1,19 @@
+:orphan:
+
 # XPCS Toolkit Performance Optimization Guide
 
 ## Table of Contents
 
-1. [Overview](#overview)
-2. [Current Optimization Status](#current-optimization-status)
-3. [Threading System Optimizations](#threading-system-optimizations)
-4. [Memory Management Optimizations](#memory-management-optimizations)
-5. [I/O Performance Optimizations](#io-performance-optimizations)
-6. [Scientific Computing Optimizations](#scientific-computing-optimizations)
-7. [CPU Optimization Ecosystem](#cpu-optimization-ecosystem)
-8. [Usage Guidelines](#usage-guidelines)
-9. [Performance Monitoring](#performance-monitoring)
-10. [Troubleshooting](#troubleshooting)
+- Overview
+- Current Optimization Status
+- Threading System Optimizations
+- Memory Management Optimizations
+- I/O Performance Optimizations
+- Scientific Computing Optimizations
+- CPU Optimization Ecosystem
+- Usage Guidelines
+- Performance Monitoring
+- Troubleshooting
 
 ---
 

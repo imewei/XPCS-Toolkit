@@ -1,3 +1,5 @@
+:orphan:
+
 # Qt Compliance Quick Reference Card
 
 ## 🚨 Emergency Reference - Qt Compliance System

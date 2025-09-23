@@ -9,8 +9,8 @@
 .PHONY: test-unit test-integration test-logging test-scientific test-end-to-end test-properties test-performance test-gui test-ci test-full test-all test-benchmarks
 .PHONY: test-log test-unit-log test-integration-log test-logging-log test-full-log test-all-log
 .PHONY: coverage-html coverage-report coverage-logging
-.PHONY: docs-build docs-serve docs-clean
-.PHONY: dev-setup dev-install quality-check
+.PHONY: docs-build docs-serve docs-clean docs-autobuild docs-linkcheck docs-validate
+.PHONY: dev-setup dev-install quality-check pre-commit-install pre-commit-run
 
 .DEFAULT_GOAL := help
 
@@ -27,7 +27,7 @@ DOCS_DIR := docs
 
 # Test configuration
 PYTEST_OPTS := -v --tb=short
-PYTEST_COV_OPTS := --cov=$(SRC_DIR) --cov-report=html --cov-report=term-missing --cov-report=json
+PYTEST_COV_OPTS := --cov=$(SRC_DIR) --cov-report=html --cov-report=term-missing --cov-report=json --cov-fail-under=12
 PYTEST_BENCH_OPTS := --benchmark-only --benchmark-sort=mean
 
 # Browser helper for opening HTML files
@@ -75,6 +75,13 @@ help: ## show this help message with categorized commands
 dev-setup: ## setup complete development environment
 	pip install -e ".[dev,test,docs]"
 	pre-commit install || echo "pre-commit not available, skipping hook installation"
+
+pre-commit-install: ## install pre-commit hooks
+	pre-commit install
+	pre-commit install --hook-type commit-msg
+
+pre-commit-run: ## run pre-commit hooks on all files
+	pre-commit run --all-files
 
 dev-install: clean ## install package in development mode
 	pip install -e .
@@ -275,17 +282,25 @@ coverage-logging: ## focused coverage for logging system components
 docs: docs-build ## build and display documentation
 
 docs-build: docs-clean ## build Sphinx documentation
-	sphinx-apidoc -o $(DOCS_DIR)/ $(SRC_DIR)
-	$(MAKE) -C $(DOCS_DIR) clean
-	$(MAKE) -C $(DOCS_DIR) html
+	cd $(DOCS_DIR) && sphinx-build -b html . _build/html
 	$(BROWSER) $(DOCS_DIR)/_build/html/index.html
+
+docs-autobuild: docs-clean ## build docs with auto-reload (requires sphinx-autobuild)
+	cd $(DOCS_DIR) && sphinx-autobuild -b html . _build/html --host 0.0.0.0 --port 8000
 
 docs-serve: docs-build ## build docs and watch for changes (requires watchmedo)
 	watchmedo shell-command -p '*.rst;*.py' -c '$(MAKE) docs-build' -R -D .
 
+docs-linkcheck: ## check for broken links in documentation
+	cd $(DOCS_DIR) && sphinx-build -b linkcheck . _build/linkcheck
+
+docs-validate: docs-build docs-linkcheck ## validate documentation build and links
+	@echo "Documentation validation complete"
+
 docs-clean: ## clean documentation build artifacts
-	rm -f $(DOCS_DIR)/$(PACKAGE_NAME).rst $(DOCS_DIR)/modules.rst
-	$(MAKE) -C $(DOCS_DIR) clean || true
+	rm -rf $(DOCS_DIR)/_build/
+	find $(DOCS_DIR) -name '*.pyc' -delete || true
+	find $(DOCS_DIR) -name '__pycache__' -exec rm -rf {} + || true
 
 # =============================================================================
 # Package Distribution
@@ -329,7 +344,16 @@ check-deps: ## verify all dependencies are installed
 	@$(PYTHON) -c "import numpy; print('NumPy:', numpy.__version__)"
 	@$(PYTHON) -c "import scipy; print('SciPy:', scipy.__version__)"
 	@$(PYTHON) -c "import h5py; print('h5py:', h5py.version.version)"
+	@$(PYTHON) -c "import PySide6; print('PySide6:', PySide6.__version__)"
+	@$(PYTHON) -c "import pyqtgraph; print('PyQtGraph:', pyqtgraph.__version__)"
 	@echo "Core dependencies OK"
+
+check-docs-deps: ## verify documentation dependencies are installed
+	@echo "Checking documentation dependencies..."
+	@$(PYTHON) -c "import sphinx; print('Sphinx:', sphinx.__version__)"
+	@$(PYTHON) -c "import sphinx_rtd_theme; print('RTD Theme: installed')"
+	@$(PYTHON) -c "import myst_parser; print('MyST Parser: installed')"
+	@echo "Documentation dependencies OK"
 
 # =============================================================================
 # Aliases for Compatibility
@@ -339,3 +363,11 @@ check-deps: ## verify all dependencies are installed
 test-benchmarks: test-performance ## alias for test-performance (backward compatibility)
 lint/flake8: lint-flake8 ## alias for lint-flake8 (backward compatibility)
 servedocs: docs-serve ## alias for docs-serve (backward compatibility)
+livedocs: docs-autobuild ## alias for docs-autobuild (live reload)
+
+# Project status check
+status: debug-info check-deps ## comprehensive project status check
+	@echo "=== Test Suite Status ==="
+	@$(MAKE) test-fast --dry-run >/dev/null 2>&1 && echo "Test suite: READY" || echo "Test suite: ISSUES DETECTED"
+	@echo "=== Documentation Status ==="
+	@$(MAKE) docs-build --dry-run >/dev/null 2>&1 && echo "Documentation: READY" || echo "Documentation: ISSUES DETECTED"

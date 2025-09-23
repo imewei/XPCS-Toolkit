@@ -8,6 +8,7 @@ Main Package
    :members:
    :undoc-members:
    :show-inheritance:
+   :no-index:
 
 Core Classes
 ------------

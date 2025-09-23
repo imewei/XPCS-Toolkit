@@ -1,89 +1,57 @@
 Analysis Modules
 ================
 
-XPCS Toolkit provides specialized analysis modules for different types of
-X-ray photon correlation spectroscopy analysis.
+Specialized modules for XPCS analysis and data processing.
+
+.. note::
+   For complete API documentation of all analysis modules, see :doc:`../xpcs_toolkit.module`.
 
 .. currentmodule:: xpcs_toolkit.module
 
 G2 Correlation Analysis
 -----------------------
 
-.. automodule:: xpcs_toolkit.module.g2mod
-   :members:
-   :undoc-members:
-   :show-inheritance:
+Multi-tau correlation analysis with single and double exponential fitting.
+Core functionality for time correlation analysis in XPCS.
 
-Key Functions
-~~~~~~~~~~~~~
-
-.. autofunction:: get_data
-.. autofunction:: pg_plot
-.. autofunction:: compute_geometry
+See :mod:`xpcs_toolkit.module.g2mod` for complete API documentation.
 
 SAXS Analysis
 -------------
 
-SAXS 1D
-~~~~~~~
+Small-angle scattering analysis in both 1D and 2D formats.
 
-.. automodule:: xpcs_toolkit.module.saxs1d
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-SAXS 2D
-~~~~~~~
-
-.. automodule:: xpcs_toolkit.module.saxs2d
-   :members:
-   :undoc-members:
-   :show-inheritance:
+- **SAXS 1D**: Radial averaging and intensity profiles. See :mod:`xpcs_toolkit.module.saxs1d`.
+- **SAXS 2D**: 2D scattering pattern analysis. See :mod:`xpcs_toolkit.module.saxs2d`.
 
 Two-Time Correlation
 --------------------
 
-.. automodule:: xpcs_toolkit.module.twotime
-   :members:
-   :undoc-members:
-   :show-inheritance:
+Advanced two-time correlation analysis with multiprocessing support.
+Provides detailed temporal dynamics beyond traditional multi-tau analysis.
 
-Two-Time Utilities
-~~~~~~~~~~~~~~~~~~~
-
-.. automodule:: xpcs_toolkit.module.twotime_utils
-   :members:
-   :undoc-members:
-   :show-inheritance:
+See :mod:`xpcs_toolkit.module.twotime` and :mod:`xpcs_toolkit.module.twotime_utils` for complete API documentation.
 
 Stability Analysis
 ------------------
 
-.. automodule:: xpcs_toolkit.module.stability
-   :members:
-   :undoc-members:
-   :show-inheritance:
+Sample stability monitoring over time. Tracks intensity fluctuations
+and system stability during XPCS measurements.
+
+See :mod:`xpcs_toolkit.module.stability` for complete API documentation.
 
 Intensity vs Time
 -----------------
 
-.. automodule:: xpcs_toolkit.module.intt
-   :members:
-   :undoc-members:
-   :show-inheritance:
+Time series analysis of intensity fluctuations.
+Essential for understanding temporal dynamics in XPCS datasets.
 
-Tau-Q Analysis
---------------
-
-.. automodule:: xpcs_toolkit.module.tauq
-   :members:
-   :undoc-members:
-   :show-inheritance:
+See :mod:`xpcs_toolkit.module.intt` for complete API documentation.
 
 File Averaging
 --------------
 
-.. automodule:: xpcs_toolkit.module.average_toolbox
-   :members:
-   :undoc-members:
-   :show-inheritance:
+Parallel processing framework for averaging multiple XPCS datasets.
+Includes background subtraction and statistical analysis.
+
+See :mod:`xpcs_toolkit.module.average_toolbox` for complete API documentation.

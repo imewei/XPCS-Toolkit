@@ -1,3 +1,5 @@
+:orphan:
+
 # Qt Compliance System API Reference
 
 ## Overview
@@ -6,12 +8,12 @@ This document provides comprehensive API documentation for the Qt Compliance Sys
 
 ## Table of Contents
 
-1. [Signal/Slot Safety API](#signalslot-safety-api)
-2. [Thread Management API](#thread-management-api)
-3. [Worker Safety API](#worker-safety-api)
-4. [Health Monitoring API](#health-monitoring-api)
-5. [Utilities and Context Managers](#utilities-and-context-managers)
-6. [Examples and Usage Patterns](#examples-and-usage-patterns)
+- Signal/Slot Safety API
+- Thread Management API
+- Worker Safety API
+- Health Monitoring API
+- Utilities and Context Managers
+- Examples and Usage Patterns
 
 ## Signal/Slot Safety API
 

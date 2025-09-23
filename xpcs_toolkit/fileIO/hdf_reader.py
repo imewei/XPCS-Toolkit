@@ -711,10 +711,11 @@ def get(fname, fields, mode="raw", ret_type="dict", ftype="nexus", use_pool=True
     """
     get the values for the various keys listed in fields for a single
     file;
+
     :param fname:
     :param fields_raw: list of keys [key1, key2, ..., ]
     :param mode: ['raw' | 'alias']; alias is defined in .hdf_key
-                 otherwise the raw hdf key will be used
+        otherwise the raw hdf key will be used
     :param ret_type: return dictonary if 'dict', list if it is 'list'
     :param use_pool: whether to use connection pool for optimization
     :return: dictionary or dictionary;

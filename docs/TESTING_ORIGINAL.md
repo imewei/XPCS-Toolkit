@@ -1,15 +1,18 @@
+:orphan:
+
 # XPCS Toolkit Testing System
 
 This document provides comprehensive guidance for testing in XPCS Toolkit, including unit tests, property-based testing, performance benchmarks, and the validation framework.
 
 ## Table of Contents
-1. [Quick Start](#quick-start)
-2. [Test Commands](#test-commands)
-3. [Property-Based Testing](#property-based-testing)
-4. [Performance Benchmarks](#performance-benchmarks)
-5. [Validation Framework](#validation-framework)
-6. [Writing Tests](#writing-tests)
-7. [Best Practices](#best-practices)
+
+- Quick Start
+- Test Commands
+- Property-Based Testing
+- Performance Benchmarks
+- Validation Framework
+- Writing Tests
+- Best Practices
 
 ## Quick Start
 

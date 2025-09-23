@@ -1,8 +1,7 @@
-Plotting and Visualization
-==========================
+Plotting
+========
 
-The plotting subsystem provides both PyQtGraph-based real-time plotting
-and matplotlib integration for publication-quality figures.
+PyQtGraph real-time plotting and matplotlib integration.
 
 .. currentmodule:: xpcs_toolkit.plothandler
 
@@ -10,19 +9,6 @@ PyQtGraph Handler
 -----------------
 
 .. automodule:: xpcs_toolkit.plothandler.pyqtgraph_handler
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-Key Classes
-~~~~~~~~~~~
-
-.. autoclass:: PlotWidget
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-.. autoclass:: ImageWidget
    :members:
    :undoc-members:
    :show-inheritance:

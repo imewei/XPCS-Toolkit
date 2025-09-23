@@ -1,15 +1,18 @@
+:orphan:
+
 # XPCS Toolkit Logging System
 
 This document provides comprehensive guidance for using the logging system in XPCS Toolkit, designed specifically for scientific computing applications with demanding performance requirements.
 
 ## Table of Contents
-1. [Quick Start Guide](#quick-start-guide)
-2. [API Reference](#api-reference)
-3. [Configuration](#configuration)
-4. [Integration Patterns](#integration-patterns)
-5. [Performance and Benchmarks](#performance-and-benchmarks)
-6. [Best Practices](#best-practices)
-7. [Troubleshooting](#troubleshooting)
+
+- Quick Start Guide
+- API Reference
+- Configuration
+- Integration Patterns
+- Performance and Benchmarks
+- Best Practices
+- Troubleshooting
 
 ## Quick Start Guide
 

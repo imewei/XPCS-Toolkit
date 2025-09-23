@@ -1,16 +1,19 @@
+:orphan:
+
 # XPCS Toolkit Testing Developer Workflow Guide
 
 This guide provides step-by-step workflows for developers working with the XPCS Toolkit test suite, covering daily development practices, IDE integration, and testing workflows.
 
 ## Table of Contents
-1. [Daily Development Workflow](#daily-development-workflow)
-2. [IDE Setup and Integration](#ide-setup-and-integration)
-3. [Test-Driven Development Workflow](#test-driven-development-workflow)
-4. [Debugging Test Failures](#debugging-test-failures)
-5. [Performance Testing Workflow](#performance-testing-workflow)
-6. [Code Review Testing Checklist](#code-review-testing-checklist)
-7. [CI/CD Integration](#cicd-integration)
-8. [Team Collaboration](#team-collaboration)
+
+- Daily Development Workflow
+- IDE Setup and Integration
+- Test-Driven Development Workflow
+- Debugging Test Failures
+- Performance Testing Workflow
+- Code Review Testing Checklist
+- CI/CD Integration
+- Team Collaboration
 
 ## Daily Development Workflow
 

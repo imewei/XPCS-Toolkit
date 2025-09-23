@@ -353,7 +353,8 @@ def suppress_qt_connection_warnings(func):
     Returns:
         Wrapped function that executes with Qt warnings suppressed
 
-    Usage:
+    Usage::
+
         @suppress_qt_connection_warnings
         def create_widget():
             return pg.ImageView()

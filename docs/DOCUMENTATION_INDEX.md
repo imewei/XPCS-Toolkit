@@ -1,3 +1,5 @@
+:orphan:
+
 # XPCS Toolkit Documentation Index
 
 ## 📚 **Complete Documentation Guide**
@@ -60,14 +62,14 @@ setup_complete_optimization_ecosystem()  # One-line optimization setup
 
 ## 🛠️ **Development Documentation**
 
-### [**CLAUDE.md**](../CLAUDE.md)
+### **CLAUDE.md**
 **Development Guide for Claude Code**
 - Project architecture overview
 - Development commands and workflows
 - Code style guidelines and patterns
 - Integration with Claude Code assistant
 
-### [**README.rst**](../README.rst)
+### **README.rst**
 **Main Project Documentation**
 - Installation and setup instructions
 - Basic usage examples
@@ -103,14 +105,14 @@ XPCS-Toolkit/
 - **Profiling**: Workflow analysis and bottleneck detection
 
 ### **Development Setup**
-- **Environment Setup**: [CLAUDE.md](../CLAUDE.md) → Environment Setup section
-- **Installation**: [README.rst](../README.rst) → Installation section
-- **Testing**: [TESTING.md](TESTING.md) → Test execution strategies
+- **Environment Setup**: CLAUDE.md → Environment Setup section
+- **Installation**: README.rst → Installation section
+- **Testing**: TESTING.md → Test execution strategies
 
 ### **API Usage**
-- **Optimization APIs**: [OPTIMIZATION_GUIDE.md](OPTIMIZATION_GUIDE.md) → Usage Guidelines
-- **Logging APIs**: [LOGGING_SYSTEM.md](LOGGING_SYSTEM.md) → API reference
-- **Core APIs**: [CLAUDE.md](../CLAUDE.md) → Architecture Overview
+- **Optimization APIs**: OPTIMIZATION_GUIDE.md → Usage Guidelines
+- **Logging APIs**: LOGGING_SYSTEM.md → API reference
+- **Core APIs**: CLAUDE.md → Architecture Overview
 
 ### **Troubleshooting**
 - **Performance Issues**: [OPTIMIZATION_GUIDE.md](OPTIMIZATION_GUIDE.md) → Troubleshooting
@@ -140,7 +142,7 @@ The XPCS Toolkit is now **production-ready** with comprehensive optimizations:
 - **Integration Examples**: `src/xpcs_toolkit/utils/ecosystem_integration_example.py`
 - **Performance Testing**: `tests/cpu_performance_test_suite.py`  
 - **Issue Reporting**: `.github/ISSUE_TEMPLATE.md`
-- **Development Commands**: [CLAUDE.md](../CLAUDE.md) → Development Commands
+- **Development Commands**: CLAUDE.md → Development Commands
 
 ---
 

@@ -1,70 +1,48 @@
 File I/O
 ========
 
-The file I/O subsystem handles reading XPCS data from HDF5 files and provides
-utilities for Q-space mapping and detector geometry calculations.
+HDF5 data reading and Q-space mapping utilities for XPCS datasets.
+
+.. note::
+   For complete API documentation of all file I/O modules, see :doc:`../xpcs_toolkit.fileIO`.
 
 .. currentmodule:: xpcs_toolkit.fileIO
 
 HDF5 Reader
 -----------
 
-.. automodule:: xpcs_toolkit.fileIO.hdf_reader
-   :members:
-   :undoc-members:
-   :show-inheritance:
+Optimized HDF5 file reading with connection pooling and batch operations.
+Supports both synchronous and asynchronous reading patterns.
 
-Key Functions
-~~~~~~~~~~~~~
-
-.. autofunction:: get
-.. autofunction:: get_analysis_type
-.. autofunction:: get_file_info
-.. autofunction:: batch_read_fields
-
-HDF5 Connection Pool
-~~~~~~~~~~~~~~~~~~~~
-
-.. autoclass:: HDF5ConnectionPool
-   :members:
-   :undoc-members:
-   :show-inheritance:
+See :mod:`xpcs_toolkit.fileIO.hdf_reader` for complete API documentation.
 
 Enhanced HDF5 Reader
 --------------------
 
-.. automodule:: xpcs_toolkit.fileIO.hdf_reader_enhanced
-   :members:
-   :undoc-members:
-   :show-inheritance:
+Advanced HDF5 reader with additional caching and performance optimizations.
+Built on top of the base HDF5 reader with extended functionality.
+
+See :mod:`xpcs_toolkit.fileIO.hdf_reader_enhanced` for complete API documentation.
 
 Q-space Mapping
 ---------------
 
-.. automodule:: xpcs_toolkit.fileIO.qmap_utils
-   :members:
-   :undoc-members:
-   :show-inheritance:
+Detector geometry calculations and Q-space coordinate transformations.
+Essential for converting pixel coordinates to reciprocal space.
 
-Key Functions
-~~~~~~~~~~~~~
-
-.. autofunction:: get_qmap
-.. autofunction:: get_pixel_mask
-.. autofunction:: get_q_val_data
+See :mod:`xpcs_toolkit.fileIO.qmap_utils` for complete API documentation.
 
 APS 8-IDI Beamline Support
 --------------------------
 
-.. automodule:: xpcs_toolkit.fileIO.aps_8idi
-   :members:
-   :undoc-members:
-   :show-inheritance:
+Beamline-specific data structure definitions and format handlers.
+Supports both "nexus" and legacy data formats from APS-8IDI.
+
+See :mod:`xpcs_toolkit.fileIO.aps_8idi` for complete API documentation.
 
 File Type Utilities
 -------------------
 
-.. automodule:: xpcs_toolkit.fileIO.ftype_utils
-   :members:
-   :undoc-members:
-   :show-inheritance:
+File format detection and validation utilities for XPCS data files.
+
+See :mod:`xpcs_toolkit.fileIO.ftype_utils` for complete API documentation.

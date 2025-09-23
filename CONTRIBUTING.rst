@@ -1,132 +1,54 @@
-.. highlight:: shell
-
 ============
 Contributing
 ============
 
-Contributions are welcome, and they are greatly appreciated! Every little bit
-helps, and credit will always be given.
-
-You can contribute in many ways:
-
 Types of Contributions
 ----------------------
 
-Report Bugs
-~~~~~~~~~~~
+* Bug reports: https://github.com/imewei/XPCS-Toolkit/issues
+* Feature requests: https://github.com/imewei/XPCS-Toolkit/issues
+* Code contributions
+* Documentation improvements
 
-Report bugs at https://github.com/AZjk/xpcs-toolkit/issues.
+Development Setup
+-----------------
 
-If you are reporting a bug, please include:
+.. code-block:: bash
 
-* Your operating system name and version.
-* Any details about your local setup that might be helpful in troubleshooting.
-* Detailed steps to reproduce the bug.
+   # Fork and clone
+   git clone git@github.com:your_name_here/xpcs-toolkit.git
+   cd xpcs-toolkit
 
-Fix Bugs
-~~~~~~~~
+   # Install
+   pip install -e .[dev]
+   make dev-setup
 
-Look through the GitHub issues for bugs. Anything tagged with "bug" and "help
-wanted" is open to whoever wants to implement it.
+   # Create branch
+   git checkout -b your-feature-name
 
-Implement Features
-~~~~~~~~~~~~~~~~~~
+   # Test changes
+   make test
+   make lint
 
-Look through the GitHub issues for features. Anything tagged with "enhancement"
-and "help wanted" is open to whoever wants to implement it.
-
-Write Documentation
-~~~~~~~~~~~~~~~~~~~
-
-XPCS Toolkit could always use more documentation, whether as part of the
-official XPCS Toolkit docs, in docstrings, or even on the web in blog posts,
-articles, and such.
-
-Submit Feedback
-~~~~~~~~~~~~~~~
-
-The best way to send feedback is to file an issue at https://github.com/AZjk/xpcs-toolkit/issues.
-
-If you are proposing a feature:
-
-* Explain in detail how it would work.
-* Keep the scope as narrow as possible, to make it easier to implement.
-* Remember that this is a volunteer-driven project, and that contributions
-  are welcome :)
-
-Get Started!
-------------
-
-Ready to contribute? Here's how to set up `xpcs-toolkit` for local development.
-
-1. Fork the `xpcs-toolkit` repo on GitHub.
-2. Clone your fork locally::
-
-    $ git clone git@github.com:your_name_here/xpcs-toolkit.git
-
-3. Install your local copy into a virtualenv. Assuming you have virtualenvwrapper installed, this is how you set up your fork for local development::
-
-    $ mkvirtualenv xpcs-toolkit
-    $ cd xpcs-toolkit/
-    $ pip install -e .
-
-4. Create a branch for local development::
-
-    $ git checkout -b name-of-your-bugfix-or-feature
-
-   Now you can make your changes locally.
-
-5. When you're done making changes, check that your changes pass flake8 and the
-   tests, including testing other Python versions with tox::
-
-    $ make lint
-    $ make test
-    Or
-    $ make test-all
-
-   To get flake8 and tox, just pip install them into your virtualenv.
-
-6. Commit your changes and push your branch to GitHub::
-
-    $ git add .
-    $ git commit -m "Your detailed description of your changes."
-    $ git push origin name-of-your-bugfix-or-feature
-
-7. Submit a pull request through the GitHub website.
+   # Commit and push
+   git commit -m "Description"
+   git push origin your-feature-name
 
 Pull Request Guidelines
 -----------------------
 
-Before you submit a pull request, check that it meets these guidelines:
+* Include tests for new features
+* Update documentation for changes
+* Support Python 3.12 and 3.13
+* Pass all quality checks
 
-1. The pull request should include tests.
-2. If the pull request adds functionality, the docs should be updated. Put
-   your new functionality into a function with a docstring, and add the
-   feature to the list in README.rst.
-3. The pull request should work for Python 3.5, 3.6, 3.7 and 3.8, and for PyPy. Check
-   https://travis-ci.com/AZjk/xpcs-toolkit/pull_requests
-   and make sure that the tests pass for all supported Python versions.
+Code Standards
+--------------
 
-Tips
-----
-
-To run a subset of tests::
-
-
-    $ python -m unittest tests.test_xpcs_toolkit
-
-Deploying
----------
-
-A reminder for the maintainers on how to deploy.
-Make sure all your changes are committed (including an entry in HISTORY.rst).
-Then run::
-
-$ bump2version patch # possible: major / minor / patch
-$ git push
-$ git push --tags
-
-Travis will then deploy to PyPI if tests pass.
+* Use ruff for linting/formatting
+* Add type hints to functions
+* Write tests for new code
+* Add docstrings to public functions
 
 Code of Conduct
 ---------------

@@ -148,7 +148,8 @@ def validate_input(
         cache_results: Cache validation results for performance
         fast_fail: Fail immediately on first validation error
 
-    Example:
+    Example::
+
         @validate_input(check_ranges=True, level=ValidationLevel.STRICT)
         def process_data(data: np.ndarray, threshold: float = 0.1):
             # Function implementation
@@ -484,7 +485,8 @@ def with_fallback(operation_name: str, strategies: list[Callable] | None = None)
         operation_name: Name of the operation for strategy registration
         strategies: List of fallback functions (if not already registered)
 
-    Example:
+    Example::
+
         @with_fallback("data_loading", [load_enhanced, load_standard])
         def load_data(file_path):
             # Primary implementation - automatically falls back if it fails
@@ -576,7 +578,8 @@ def reliability_context(
         exponential_backoff: Use exponential backoff for delays
         acceptable_exceptions: Exception types that should be retried
 
-    Example:
+    Example::
+
         attempt = 0
         while attempt <= max_retries:
             try:

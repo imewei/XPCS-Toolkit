@@ -1,8 +1,7 @@
-Threading and Concurrency
-=========================
+Threading
+=========
 
-The threading subsystem provides asynchronous workers and thread management
-for GUI responsiveness and parallel processing.
+Asynchronous workers for GUI responsiveness and parallel processing.
 
 .. currentmodule:: xpcs_toolkit.threading
 
@@ -10,24 +9,6 @@ Async Workers
 -------------
 
 .. automodule:: xpcs_toolkit.threading.async_workers
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-Key Classes
-~~~~~~~~~~~
-
-.. autoclass:: BaseAsyncWorker
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-.. autoclass:: WorkerSignals
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-.. autoclass:: WorkerResult
    :members:
    :undoc-members:
    :show-inheritance:

@@ -1,24 +1,27 @@
+:orphan:
+
 # XPCS Toolkit Comprehensive Testing Framework
 
 This document provides complete guidance for testing in XPCS Toolkit, covering all aspects of the comprehensive test suite including architecture, best practices, quality standards, and developer workflows.
 
 ## Table of Contents
-1. [Overview and Philosophy](#overview-and-philosophy)
-2. [Test Architecture](#test-architecture)
-3. [Quick Start Guide](#quick-start-guide)
-4. [Test Categories and Commands](#test-categories-and-commands)
-5. [Writing Quality Tests](#writing-quality-tests)
-6. [Test Quality Standards](#test-quality-standards)
-7. [Scientific Testing Guidelines](#scientific-testing-guidelines)
-8. [Performance Testing](#performance-testing)
-9. [Property-Based Testing](#property-based-testing)
-10. [GUI Testing](#gui-testing)
-11. [Integration and End-to-End Testing](#integration-and-end-to-end-testing)
-12. [Test Utilities and Helpers](#test-utilities-and-helpers)
-13. [Debugging and Profiling](#debugging-and-profiling)
-14. [IDE Integration](#ide-integration)
-15. [Maintenance and Evolution](#maintenance-and-evolution)
-16. [Troubleshooting Guide](#troubleshooting-guide)
+
+- Overview and Philosophy
+- Test Architecture
+- Quick Start Guide
+- Test Categories and Commands
+- Writing Quality Tests
+- Test Quality Standards
+- Scientific Testing Guidelines
+- Performance Testing
+- Property-Based Testing
+- GUI Testing
+- Integration and End-to-End Testing
+- Test Utilities and Helpers
+- Debugging and Profiling
+- IDE Integration
+- Maintenance and Evolution
+- Troubleshooting Guide
 
 ## Overview and Philosophy
 

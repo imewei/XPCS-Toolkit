@@ -10,7 +10,7 @@ import importlib.util
 import time
 from contextlib import contextmanager
 from enum import Enum
-from typing import Any
+from typing import Any, Callable, Optional
 
 import numpy as np
 
@@ -352,7 +352,7 @@ class ProgressiveImageLoader:
         self.chunk_size_mb = chunk_size_mb
 
     def load_image_progressive(
-        self, image_loader_func, progress_callback: callable | None = None
+        self, image_loader_func, progress_callback: Callable | None = None
     ) -> np.ndarray:
         """
         Load image progressively with progress reporting.

@@ -1,3 +1,5 @@
+:orphan:
+
 # Robust Fitting GUI Integration Guide
 
 ## Overview

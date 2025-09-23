@@ -117,7 +117,7 @@ autodoc_default_options = {
 }
 autodoc_member_order = "bysource"
 autodoc_typehints = "description"
-autodoc_mock_imports = ["xpcs_toolkit.utils.visualization_optimizer"]
+autodoc_mock_imports = []
 
 # Autosummary settings
 autosummary_generate = True
@@ -160,7 +160,6 @@ html_theme = "sphinx_rtd_theme"
 # documentation.
 html_theme_options = {
     "logo_only": False,
-    "display_version": True,
     "prev_next_buttons_location": "bottom",
     "style_external_links": False,
     "collapse_navigation": False,

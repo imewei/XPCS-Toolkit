@@ -1,3 +1,5 @@
+:orphan:
+
 # XPCS Toolkit Documentation
 
 This directory contains the consolidated documentation for XPCS Toolkit development and optimization.
@@ -30,8 +32,8 @@ This directory contains the consolidated documentation for XPCS Toolkit developm
 ## Project Documentation
 
 **Root Directory Documentation:**
-- [`../CLAUDE.md`](../CLAUDE.md) - Development guidance for Claude Code integration
-- [`../README.rst`](../README.rst) - Main project documentation and installation guide
+- `../CLAUDE.md` - Development guidance for Claude Code integration
+- `../README.rst` - Main project documentation and installation guide
 
 ## Quick Start: Performance Optimizations
 

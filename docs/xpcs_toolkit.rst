@@ -8,11 +8,7 @@ Subpackages
    :maxdepth: 4
 
    xpcs_toolkit.fileIO
-   xpcs_toolkit.gui
-   xpcs_toolkit.helper
    xpcs_toolkit.module
-   xpcs_toolkit.plothandler
-   xpcs_toolkit.threading
    xpcs_toolkit.utils
 
 Submodules

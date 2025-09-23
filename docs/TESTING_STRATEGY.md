@@ -1,3 +1,5 @@
+:orphan:
+
 # Test Categorization and Management Strategy
 
 ## Overview

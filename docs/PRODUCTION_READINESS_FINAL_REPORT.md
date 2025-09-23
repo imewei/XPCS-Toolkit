@@ -1,3 +1,5 @@
+:orphan:
+
 # XPCS Toolkit Production Readiness - Final Assessment Report
 
 **Date**: 2025-09-12  
