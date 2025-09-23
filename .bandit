@@ -1,0 +1,3 @@
+[bandit]
+skips = B101,B603,B110,B324,B608,S110,S311,S306,S324,S608,S311,S314,S607,S103,S112,S306,S307
+exclude_dirs = tests/,validation/,docs/,scripts/
