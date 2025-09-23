@@ -182,6 +182,7 @@ jobs:
 
     - name: Determine test level
       id: test-level
+      shell: bash
       run: |
         if [ "${{ github.event_name }}" = "pull_request" ]; then
           echo "level=core" >> $GITHUB_OUTPUT
