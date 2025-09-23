@@ -44,7 +44,7 @@ def get_pyqtgraph_anchor_params(loc, padding=10):
 
     Returns:
         dict or None: A dictionary with keys 'itemPos', 'parentPos', and 'offset'
-                      suitable for unpacking into LegendItem.anchor(\*\*params),
+                      suitable for unpacking into LegendItem.anchor(**params),
                       or None if loc='best' (code 0) as it's not directly
                       supported by pyqtgraph's deterministic anchoring.
 

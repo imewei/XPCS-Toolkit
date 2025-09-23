@@ -2,9 +2,7 @@
 
 import os
 import re
-import sys
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
 
 import matplotlib
 import matplotlib.pyplot as plt
@@ -19,7 +17,7 @@ matplotlib.use("Agg")
 logger = get_logger(__name__)
 
 
-def parse_q_phi_pair(q_phi_str: str) -> Tuple[float, float]:
+def parse_q_phi_pair(q_phi_str: str) -> tuple[float, float]:
     """
     Parse q-phi pair string into q and phi values.
 
@@ -34,7 +32,8 @@ def parse_q_phi_pair(q_phi_str: str) -> Tuple[float, float]:
     """
     try:
         parts = q_phi_str.split(",")
-        if len(parts) != 2:
+        num_parts = 2
+        if len(parts) != num_parts:
             raise ValueError(f"Q-phi pair must be in format 'q,phi', got: {q_phi_str}")
 
         q_value = float(parts[0].strip())
@@ -42,10 +41,10 @@ def parse_q_phi_pair(q_phi_str: str) -> Tuple[float, float]:
 
         return q_value, phi_value
     except ValueError as e:
-        raise ValueError(f"Invalid q-phi pair format '{q_phi_str}': {e}")
+        raise ValueError(f"Invalid q-phi pair format '{q_phi_str}': {e}") from e
 
 
-def extract_q_phi_from_label(label: str) -> Tuple[Optional[float], Optional[float]]:
+def extract_q_phi_from_label(label: str) -> tuple[float | None, float | None]:
     """
     Extract q and phi values from qbin label string.
 
@@ -73,7 +72,7 @@ def extract_q_phi_from_label(label: str) -> Tuple[Optional[float], Optional[floa
 
 def find_qbins_for_q(
     xfile: XpcsFile, target_q: float
-) -> List[Tuple[int, str, float, float]]:
+) -> list[tuple[int, str, float, float]]:
     """
     Find all qbins with the closest q-value(s) across all phi angles.
 
@@ -82,7 +81,8 @@ def find_qbins_for_q(
         target_q: Target q-value to match
 
     Returns:
-        List of tuples (qbin_index, label, q_value, phi_value) for closest matching qbins
+        List of tuples (qbin_index, label, q_value, phi_value) for closest
+        matching qbins
     """
     qbin_labels = xfile.get_twotime_qbin_labels()
     valid_qbins = []
@@ -105,17 +105,20 @@ def find_qbins_for_q(
     closest_q_diff = abs(closest_q - target_q)
 
     # Get all qbins with the closest q-value
+    tolerance = 1e-10  # Use tight tolerance for exact match
     matching_qbins = [
         (i, label, q_val, phi_val)
         for i, label, q_val, phi_val in valid_qbins
-        if abs(q_val - closest_q) < 1e-10
-    ]  # Use tight tolerance for exact match
+        if abs(q_val - closest_q) < tolerance
+    ]
 
     logger.info(
-        f"Found closest q={closest_q:.6f} (diff={closest_q_diff:.6f} from target {target_q:.6f})"
+        f"Found closest q={closest_q:.6f} "
+        f"(diff={closest_q_diff:.6f} from target {target_q:.6f})"
     )
     logger.info(
-        f"Selected {len(matching_qbins)} qbins with q={closest_q:.6f} across different phi angles"
+        f"Selected {len(matching_qbins)} qbins with q={closest_q:.6f} "
+        f"across different phi angles"
     )
 
     # Log the phi angles found
@@ -127,7 +130,7 @@ def find_qbins_for_q(
 
 def find_qbins_for_phi(
     xfile: XpcsFile, target_phi: float
-) -> List[Tuple[int, str, float, float]]:
+) -> list[tuple[int, str, float, float]]:
     """
     Find all qbins with the closest phi-value(s) across all q values.
 
@@ -136,7 +139,8 @@ def find_qbins_for_phi(
         target_phi: Target phi-value to match
 
     Returns:
-        List of tuples (qbin_index, label, q_value, phi_value) for closest matching qbins
+        List of tuples (qbin_index, label, q_value, phi_value) for closest
+        matching qbins
     """
     qbin_labels = xfile.get_twotime_qbin_labels()
     valid_qbins = []
@@ -159,17 +163,20 @@ def find_qbins_for_phi(
     closest_phi_diff = abs(closest_phi - target_phi)
 
     # Get all qbins with the closest phi-value
+    phi_tolerance = 1e-10  # Use tight tolerance for exact match
     matching_qbins = [
         (i, label, q_val, phi_val)
         for i, label, q_val, phi_val in valid_qbins
-        if abs(phi_val - closest_phi) < 1e-10
-    ]  # Use tight tolerance for exact match
+        if abs(phi_val - closest_phi) < phi_tolerance
+    ]
 
     logger.info(
-        f"Found closest phi={closest_phi:.2f}° (diff={closest_phi_diff:.2f}° from target {target_phi:.2f}°)"
+        f"Found closest phi={closest_phi:.2f}° "
+        f"(diff={closest_phi_diff:.2f}° from target {target_phi:.2f}°)"
     )
     logger.info(
-        f"Selected {len(matching_qbins)} qbins with phi={closest_phi:.2f}° across different q values"
+        f"Selected {len(matching_qbins)} qbins with phi={closest_phi:.2f}° "
+        f"across different q values"
     )
 
     # Log the q values found
@@ -183,7 +190,7 @@ def find_qbin_for_qphi(
     xfile: XpcsFile,
     target_q: float,
     target_phi: float,
-) -> Optional[Tuple[int, str, float, float]]:
+) -> tuple[int, str, float, float] | None:
     """
     Find single qbin closest to specific q-phi pair.
 
@@ -348,7 +355,8 @@ def process_single_file(file_path: str, args) -> int:
         # Verify this is a twotime file
         if "Twotime" not in xfile.atype:
             logger.warning(
-                f"File {file_path} is not a twotime file (type: {xfile.atype}), skipping"
+                f"File {file_path} is not a twotime file "
+                f"(type: {xfile.atype}), skipping"
             )
             return 0
 
@@ -440,7 +448,7 @@ def process_single_file(file_path: str, args) -> int:
         return 0
 
 
-def find_hdf_files(directory: str) -> List[str]:
+def find_hdf_files(directory: str) -> list[str]:
     """
     Find all HDF files in directory recursively.
 
@@ -453,7 +461,7 @@ def find_hdf_files(directory: str) -> List[str]:
     hdf_extensions = [".h5", ".hdf5", ".hdf"]
     hdf_files = []
 
-    for root, dirs, files in os.walk(directory):
+    for root, _dirs, files in os.walk(directory):
         for file in files:
             if any(file.lower().endswith(ext) for ext in hdf_extensions):
                 hdf_files.append(os.path.join(root, file))
@@ -496,7 +504,8 @@ def process_directory(directory: str, args) -> int:
             logger.error(f"Failed to process file {file_path}: {e}")
 
     logger.info(
-        f"Directory processing complete: {successful_files}/{len(hdf_files)} files processed successfully"
+        f"Directory processing complete: {successful_files}/{len(hdf_files)} "
+        f"files processed successfully"
     )
     logger.info(f"Total images generated: {total_images}")
 
@@ -531,7 +540,8 @@ def run_twotime_batch(args) -> int:
         logger.error(f"Q-value must be positive, got: {args.q}")
         return 1
 
-    if args.phi is not None and not (0 <= args.phi <= 360):
+    max_phi = 360
+    if args.phi is not None and not (0 <= args.phi <= max_phi):
         logger.warning(f"Phi-value {args.phi}° is outside typical range [0, 360]°")
 
     if args.q_phi is not None:
@@ -567,7 +577,8 @@ def run_twotime_batch(args) -> int:
             return 1
 
         logger.info(
-            f"Batch processing completed successfully. Generated {images_generated} images."
+            f"Batch processing completed successfully. "
+            f"Generated {images_generated} images."
         )
         return 0
 

@@ -4,7 +4,6 @@ Simplified XPCS fitting utilities.
 Core fitting functions for G2 correlation analysis without over-engineering.
 """
 
-import logging
 from collections.abc import Callable
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor, as_completed
 from typing import Any
@@ -13,7 +12,9 @@ import numpy as np
 from numpy.typing import NDArray
 from scipy.optimize import curve_fit
 
-logger = logging.getLogger(__name__)
+from xpcs_toolkit.utils.logging_config import get_logger
+
+logger = get_logger(__name__)
 
 
 def single_exp(

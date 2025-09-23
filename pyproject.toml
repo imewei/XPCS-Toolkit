@@ -37,7 +37,7 @@ dependencies = [
     "scipy>=1.15.0",
     "h5py>=3.12.1",
     "matplotlib>=3.9.3",
-    "pyqtgraph>=0.13.8",
+    "pyqtgraph>=0.13.7",
     "pandas>=2.2.3",
     "scikit-learn>=1.6.0",
     "joblib>=1.4.2",
@@ -84,6 +84,35 @@ validation = [
 performance = [
     "pytest-benchmark>=4.0.0",
     "memory-profiler>=0.61.0",
+    "pympler>=0.9.0"
+]
+all = [
+    # Development tools
+    "coverage[toml]>=7.6.9",
+    "pytest>=8.3.4",
+    "pytest-cov>=6.0.0",
+    "pytest-xdist[psutil]>=3.6.1",
+    "pytest-benchmark>=4.0.0",
+    "pytest-mock>=3.14.0",
+    "pytest-timeout>=2.3.1",
+    "pytest-sugar>=1.0.0",
+    "pytest-html>=4.1.1",
+    "pytest-qt>=4.4.0",
+    "hypothesis>=6.115.6",
+    "mypy>=1.13.0",
+    "ruff>=0.8.4",
+    "bandit[toml]>=1.8.0",
+    "pre-commit>=4.0.1",
+    # Documentation tools
+    "sphinx>=8.1.3",
+    "sphinx-rtd-theme>=3.0.2",
+    "myst-parser>=4.0.0",
+    "sphinx-autodoc-typehints>=2.4.4",
+    "sphinx-copybutton>=0.5.2",
+    # Validation and profiling tools
+    "memory-profiler>=0.61.0",
+    "line-profiler>=4.1.0",
+    "py-spy>=0.3.0",
     "pympler>=0.9.0"
 ]
 

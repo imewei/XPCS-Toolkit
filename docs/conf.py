@@ -62,7 +62,7 @@ master_doc = "index"
 
 # General information about the project.
 project = "XPCS Toolkit"
-copyright = "2025, Miaoqi Chu"
+project_copyright = "2025, Miaoqi Chu"
 author = "Miaoqi Chu"
 
 # The version info for the project you're documenting, acts as replacement

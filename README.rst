@@ -28,11 +28,17 @@ Installation
 
 .. code-block:: bash
 
-   # Install
+   # Basic installation
    pip install xpcs-toolkit
 
-   # Install with development tools
-   pip install xpcs-toolkit[dev]
+   # Complete installation with all features and tools
+   pip install xpcs-toolkit[all]
+
+   # Install with specific optional dependencies
+   pip install xpcs-toolkit[dev]        # Development tools
+   pip install xpcs-toolkit[docs]       # Documentation building
+   pip install xpcs-toolkit[validation] # Profiling and validation tools
+   pip install xpcs-toolkit[performance] # Performance analysis tools
 
 Usage
 -----

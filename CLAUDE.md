@@ -14,8 +14,14 @@ XPCS Toolkit is an interactive Python-based visualization tool for X-ray Photon 
 conda create -n xpcs-toolkit python==3.10.16
 conda activate xpcs-toolkit
 
-# Install in development mode
-pip install -e .
+# Install in development mode with all dependencies
+pip install -e .[all]
+
+# Alternative: Install specific dependency groups
+pip install -e .[dev]        # Development tools only
+pip install -e .[docs]       # Documentation building tools
+pip install -e .[validation] # Profiling and validation tools
+pip install -e .[performance] # Performance analysis tools
 ```
 
 ### Building and Testing
