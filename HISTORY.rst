@@ -9,6 +9,7 @@ History
 * Windows CI test failures resolved with path normalization
 * Qt threading issues fixed - eliminated fatal Python errors
 * GitHub Actions workflow comprehensive fixes
+* Security scanning tools updated with current syntax
 * Performance test robustness with CI-aware thresholds
 * Enhanced HDF5 connection pooling and memory management
 * Test framework improvements with isolation and timeout protection
