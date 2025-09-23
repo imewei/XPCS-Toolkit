@@ -10,7 +10,7 @@ import importlib.util
 import time
 from contextlib import contextmanager
 from enum import Enum
-from typing import Any, Callable, Optional
+from typing import Any, Callable
 
 import numpy as np
 

@@ -5,11 +5,7 @@ import atexit
 import signal
 import sys
 
-from xpcs_toolkit.utils.exceptions import (
-    XPCSConfigurationError,
-    XPCSGUIError,
-    convert_exception,
-)
+from xpcs_toolkit.utils.exceptions import convert_exception
 from xpcs_toolkit.utils.logging_config import (
     get_logger,
     initialize_logging,
