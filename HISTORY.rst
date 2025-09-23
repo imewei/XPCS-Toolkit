@@ -2,6 +2,21 @@
 History
 =======
 
+1.0.5 (2025-09-23)
+------------------
+
+* CI/CD pipeline stabilization and cross-platform compatibility
+* Windows CI test failures resolved with path normalization
+* Qt threading issues fixed - eliminated fatal Python errors
+* GitHub Actions workflow comprehensive fixes
+* Performance test robustness with CI-aware thresholds
+* Enhanced HDF5 connection pooling and memory management
+* Test framework improvements with isolation and timeout protection
+* Scientific computing accuracy maintained across optimizations
+* Enhanced error handling and validation framework
+* Security analysis integration with bandit
+* Module consolidation and architecture improvements
+
 1.0.2+ (2025-09-22)
 -------------------
 
