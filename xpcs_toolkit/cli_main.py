@@ -149,6 +149,11 @@ def main():
 
         return main_gui(path, label_style)
 
+    def _run_twotime_batch(args):
+        from xpcs_toolkit.cli.twotime_batch import run_twotime_batch
+
+        return run_twotime_batch(args)
+
     argparser = argparse.ArgumentParser(
         description="XPCS Toolkit: a GUI tool for XPCS data analysis"
     )
@@ -157,6 +162,7 @@ def main():
         "--version", action="version", version=f"xpcs-toolkit: {_get_version()}"
     )
 
+    # Add GUI arguments to main parser for backward compatibility
     argparser.add_argument(
         "--path", type=str, help="path to the result folder", default="./"
     )
@@ -164,11 +170,77 @@ def main():
         "positional_path",
         nargs="?",
         default=None,
-        help="positional path to the result folder",
+        help="positional path to the result folder (default GUI mode)",
     )
-    # Determine the directory to monitor
     argparser.add_argument("--label_style", type=str, help="label style", default=None)
 
+    # Create subparsers for different commands (optional for backward compatibility)
+    subparsers = argparser.add_subparsers(
+        dest="command", help="Available commands", required=False
+    )
+
+    # GUI command (explicit)
+    gui_parser = subparsers.add_parser("gui", help="Launch GUI explicitly")
+    gui_parser.add_argument(
+        "--path", type=str, help="path to the result folder", default="./"
+    )
+    gui_parser.add_argument(
+        "positional_path",
+        nargs="?",
+        default=None,
+        help="positional path to the result folder",
+    )
+    gui_parser.add_argument("--label_style", type=str, help="label style", default=None)
+
+    # Twotime batch processing command
+    twotime_parser = subparsers.add_parser(
+        "twotime", help="Batch process twotime correlation data"
+    )
+    twotime_parser.add_argument(
+        "--input",
+        "-i",
+        type=str,
+        required=True,
+        help="HDF file path or directory containing HDF files",
+    )
+    twotime_parser.add_argument(
+        "--output",
+        "-o",
+        type=str,
+        required=True,
+        help="Output directory for generated images",
+    )
+
+    # Mutually exclusive group for q/phi selection
+    selection_group = twotime_parser.add_mutually_exclusive_group(required=True)
+    selection_group.add_argument(
+        "--q",
+        type=float,
+        help="Q-value to process (saves images at all phi angles for this q)",
+    )
+    selection_group.add_argument(
+        "--phi",
+        type=float,
+        help="Phi-value to process (saves images at this phi angle for all q values)",
+    )
+    selection_group.add_argument(
+        "--q-phi",
+        type=str,
+        help="Specific q-phi pair as 'q,phi' (saves single image for this exact combination)",
+    )
+
+    twotime_parser.add_argument(
+        "--dpi", type=int, default=300, help="Image resolution in DPI (default: 300)"
+    )
+    twotime_parser.add_argument(
+        "--format",
+        type=str,
+        default="png",
+        choices=["png", "jpg", "jpeg", "pdf", "svg"],
+        help="Image format (default: png)",
+    )
+
+    # Global arguments
     argparser.add_argument(
         "--log-level",
         type=str,
@@ -177,6 +249,10 @@ def main():
     )
 
     args = argparser.parse_args()
+
+    # Handle case where no subcommand is provided (default to GUI)
+    if args.command is None:
+        args.command = "gui"
 
     # Setup signal handlers for graceful shutdown
     signal.signal(signal.SIGTERM, signal_handler)
@@ -213,47 +289,62 @@ def main():
         logger.warning(f"Cleanup initialization error: {xpcs_error}")
 
     logger.info("XPCS Toolkit CLI started")
-    logger.debug(f"Arguments: path='{args.path}', label_style='{args.label_style}'")
-
-    if args.positional_path is not None:
-        args.path = args.positional_path
-        logger.debug(f"Using positional path: {args.path}")
-
-    try:
-        exit_code = _start_gui(args.path, args.label_style)
-        logger.info(f"XPCS Toolkit GUI exited with code: {exit_code}")
-        safe_shutdown()
-        sys.exit(exit_code)
-    except KeyboardInterrupt:
-        logger.info("Interrupted by user")
-        safe_shutdown()
-        sys.exit(0)
-    except (ImportError, ModuleNotFoundError) as e:
-        # Missing dependencies - provide helpful error message
-        logger.error(f"Missing required dependencies for GUI: {e}")
-        logger.error(
-            "Please ensure all required packages are installed: pip install -e ."
+    if args.command == "gui":
+        logger.debug(
+            f"GUI Arguments: path='{args.path}', label_style='{args.label_style}'"
         )
-        safe_shutdown()
-        sys.exit(2)  # Different exit code for dependency issues
-    except XPCSConfigurationError as e:
-        # Configuration issues - user can fix
-        logger.error(f"Configuration error: {e}")
-        if e.recovery_suggestions:
-            for suggestion in e.recovery_suggestions:
-                logger.error(f"  - {suggestion}")
-        safe_shutdown()
-        sys.exit(3)  # Different exit code for config issues
-    except XPCSGUIError as e:
-        # GUI-specific errors
-        logger.error(f"GUI initialization failed: {e}")
-        safe_shutdown()
-        sys.exit(4)  # Different exit code for GUI issues
-    except Exception as e:
-        # Unexpected critical errors - convert and provide context
-        xpcs_error = convert_exception(e, "Critical error starting XPCS Toolkit")
-        logger.error(f"Critical startup failure: {xpcs_error}", exc_info=True)
-        safe_shutdown()
+    elif args.command == "twotime":
+        logger.debug(f"Twotime Arguments: input='{args.input}', output='{args.output}'")
+
+    # Route to appropriate command handler
+    if args.command == "gui":
+        if hasattr(args, "positional_path") and args.positional_path is not None:
+            args.path = args.positional_path
+            logger.debug(f"Using positional path: {args.path}")
+
+        try:
+            exit_code = _start_gui(args.path, args.label_style)
+            logger.info(f"XPCS Toolkit GUI exited with code: {exit_code}")
+            safe_shutdown()
+            sys.exit(exit_code)
+        except KeyboardInterrupt:
+            logger.info("Interrupted by user")
+            safe_shutdown()
+            sys.exit(0)
+        except (ImportError, ModuleNotFoundError) as e:
+            # Missing dependencies - provide helpful error message
+            logger.error(f"Missing required dependencies for GUI: {e}")
+            logger.error(
+                "Please ensure all required packages are installed: pip install -e ."
+            )
+            safe_shutdown()
+            sys.exit(2)  # Different exit code for dependency issues
+        except Exception as e:
+            # Unexpected critical errors - convert and provide context
+            xpcs_error = convert_exception(e, "Critical error starting XPCS Toolkit")
+            logger.error(f"Critical startup failure: {xpcs_error}", exc_info=True)
+            safe_shutdown()
+            sys.exit(1)
+    elif args.command == "twotime":
+        try:
+            exit_code = _run_twotime_batch(args)
+            logger.info(
+                f"XPCS Toolkit twotime batch processing completed with code: {exit_code}"
+            )
+            safe_shutdown()
+            sys.exit(exit_code)
+        except KeyboardInterrupt:
+            logger.info("Interrupted by user")
+            safe_shutdown()
+            sys.exit(0)
+        except Exception as e:
+            # Handle twotime-specific errors
+            xpcs_error = convert_exception(e, "Error in twotime batch processing")
+            logger.error(f"Twotime processing failed: {xpcs_error}", exc_info=True)
+            safe_shutdown()
+            sys.exit(1)
+    else:
+        logger.error(f"Unknown command: {args.command}")
         sys.exit(1)
 
 
