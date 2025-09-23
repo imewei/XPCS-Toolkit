@@ -86,7 +86,7 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v6
       with:
-        python-version: "3.12"
+        python-version: "3.13"
         cache: 'pip'
 
     - name: Install build dependencies
@@ -140,10 +140,10 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        python-version: ["3.12"]  # Test only LTS version for releases
+        python-version: ["3.13"]  # Test latest stable version for releases
         include:
           - os: ubuntu-latest
-            python-version: "3.13"  # Test bleeding edge on Linux only
+            python-version: "3.12"  # Test LTS version on Linux only
 
     steps:
     - name: Set up Python ${{ matrix.python-version }}
