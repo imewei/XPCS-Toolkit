@@ -174,12 +174,16 @@ class TestPlotConstants(unittest.TestCase):
             _ = EXTENDED_MARKERS[i % len(EXTENDED_MARKERS)]
         end_time = time.perf_counter()
 
-        # Should be very fast (less than 10ms for 1000 accesses)
+        # Should be very fast (less than 50ms for 1000 accesses in CI, 10ms locally)
         elapsed_time = end_time - start_time
+        # Use more lenient threshold for CI environments
+        import os
+
+        max_time = 0.05 if os.environ.get("CI") else 0.01
         self.assertLess(
             elapsed_time,
-            0.01,
-            f"Constants access too slow: {elapsed_time:.3f}s for 1000 accesses",
+            max_time,
+            f"Constants access too slow: {elapsed_time:.3f}s for 1000 accesses (max: {max_time:.3f}s)",
         )
 
     def test_scientific_plot_compatibility(self):

@@ -86,7 +86,7 @@ class FileLocator:
         for n in selected:
             if n < 0 or n >= len(self.target):
                 continue
-            full_fname = os.path.join(self.path, self.target[n])
+            full_fname = os.path.normpath(os.path.join(self.path, self.target[n]))
             if full_fname not in self.cache:
                 xf_obj = create_xpcs_dataset(full_fname, qmap_manager=self.qmap_manager)
                 self.cache[full_fname] = xf_obj
@@ -114,7 +114,8 @@ class FileLocator:
         :return: list of strings that contains the hdf information;
         """
         xf_obj = create_xpcs_dataset(
-            os.path.join(self.path, fname), qmap_manager=self.qmap_manager
+            os.path.normpath(os.path.join(self.path, fname)),
+            qmap_manager=self.qmap_manager,
         )
         return xf_obj.get_hdf_info(filter_str)
 
@@ -126,7 +127,7 @@ class FileLocator:
             for fn in alist:
                 if fn in self.target:
                     continue
-                full_fname = os.path.join(self.path, fn)
+                full_fname = os.path.normpath(os.path.join(self.path, fn))
                 xf_obj = create_xpcs_dataset(full_fname, qmap_manager=self.qmap_manager)
                 if xf_obj is not None:
                     self.target.append(fn)
@@ -147,7 +148,7 @@ class FileLocator:
         for x in rlist:
             if x in self.target:
                 self.target.remove(x)
-            self.cache.pop(os.path.join(self.path, x), None)
+            self.cache.pop(os.path.normpath(os.path.join(self.path, x)), None)
         if not self.target:
             self.clear_target()
         self.timestamp = str(datetime.datetime.now())
@@ -191,7 +192,9 @@ class FileLocator:
         if sort_method.startswith("Filename"):
             flist.sort()
         elif sort_method.startswith("Time"):
-            flist.sort(key=lambda x: os.path.getmtime(os.path.join(path, x)))
+            flist.sort(
+                key=lambda x: os.path.getmtime(os.path.normpath(os.path.join(path, x)))
+            )
         elif sort_method.startswith("Index"):
             pass
 
