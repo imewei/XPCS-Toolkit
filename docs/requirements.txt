@@ -1,0 +1,20 @@
+# Documentation build requirements for XPCS Toolkit
+# These are the minimum requirements needed to build documentation
+
+# Core Sphinx dependencies
+sphinx>=7.0.0
+sphinx-rtd-theme>=2.0.0
+myst-parser>=2.0.0
+
+# Documentation extensions
+sphinx-autodoc-typehints>=1.25.0
+sphinx-copybutton>=0.5.2
+
+# Required for building API documentation
+numpy>=1.24.0
+scipy>=1.10.0
+matplotlib>=3.6.0
+h5py>=3.8.0
+
+# Mock heavy dependencies that aren't needed for docs
+# These will be mocked in conf.py if needed
