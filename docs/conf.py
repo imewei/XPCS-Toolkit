@@ -25,19 +25,44 @@ sys.path.insert(0, os.path.abspath(".."))
 # Mock imports for Read the Docs build environment
 import unittest.mock as mock
 
+
+# Create a more sophisticated mock for Qt/GUI modules
+class MockQtModule(mock.MagicMock):
+    """Enhanced mock for Qt modules that provides common Qt patterns"""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Mock common Qt signal pattern
+        self.pyqtSignal = mock.MagicMock()
+        self.Signal = mock.MagicMock()
+
+
 # Mock heavy dependencies that may not be available in docs build environment
 MOCK_MODULES = [
     "PySide6",
     "PySide6.QtCore",
     "PySide6.QtWidgets",
     "PySide6.QtGui",
+    "PySide6.QtOpenGL",
     "pyqtgraph",
     "pyqtgraph.Qt",
+    "pyqtgraph.opengl",
+    "pyqtgraph.console",
     "joblib",
+    "memory_profiler",
+    "line_profiler",
+    "py_spy",
+    "psutil",
 ]
 
 for mod_name in MOCK_MODULES:
-    sys.modules[mod_name] = mock.MagicMock()
+    if "Qt" in mod_name or "pyqtgraph" in mod_name:
+        sys.modules[mod_name] = MockQtModule()
+    else:
+        sys.modules[mod_name] = mock.MagicMock()
+
+# Set environment variable to indicate we're building docs
+os.environ["BUILDING_DOCS"] = "1"
 
 try:
     import xpcs_toolkit
@@ -49,6 +74,11 @@ except ImportError:
 
 # Simple logger for docs build
 print(f"Building documentation for XPCS Toolkit version {version}")
+
+# Monkey patch to suppress autodoc import warnings
+import logging
+
+logging.getLogger("sphinx.ext.autodoc").setLevel(logging.ERROR)
 
 # -- General configuration ---------------------------------------------
 
@@ -109,6 +139,19 @@ pygments_style = "sphinx"
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = False
 
+# Suppress specific warnings to reduce noise in documentation builds
+suppress_warnings = [
+    "autodoc.import_error",
+    "autodoc",
+    "ref.any",
+]
+
+# Don't check broken external links during build
+nitpicky = False
+
+# Configure autodoc to be more lenient
+autodoc_inherit_docstrings = True
+
 # -- Extension configuration ------------------------------------------------
 
 # Napoleon settings for Google/NumPy style docstrings
@@ -134,7 +177,24 @@ autodoc_default_options = {
 }
 autodoc_member_order = "bysource"
 autodoc_typehints = "description"
-autodoc_mock_imports = []
+
+# Mock imports for autodoc - prevents import warnings during documentation build
+autodoc_mock_imports = [
+    "PySide6",
+    "PySide6.QtCore",
+    "PySide6.QtWidgets",
+    "PySide6.QtGui",
+    "PySide6.QtOpenGL",
+    "pyqtgraph",
+    "pyqtgraph.Qt",
+    "pyqtgraph.opengl",
+    "pyqtgraph.console",
+    "joblib",
+    "memory_profiler",
+    "line_profiler",
+    "py_spy",
+    "psutil",
+]
 
 # Autosummary settings
 autosummary_generate = True

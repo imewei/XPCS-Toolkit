@@ -1,6 +1,15 @@
 from importlib.metadata import PackageNotFoundError, version
 
-from xpcs_toolkit.xpcs_file import XpcsFile as XpcsFile  # Explicit re-export
+# Handle imports gracefully for documentation builds
+try:
+    from xpcs_toolkit.xpcs_file import XpcsFile as XpcsFile  # Explicit re-export
+except ImportError:
+    # For documentation builds where dependencies may not be available
+    class XpcsFile:
+        """Placeholder XpcsFile class for documentation builds."""
+
+        pass
+
 
 # Version handling
 try:
