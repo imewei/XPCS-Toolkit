@@ -33,8 +33,8 @@ on:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
+  # pages: write      # Disabled - GitHub Pages not configured
+  # id-token: write   # Disabled - GitHub Pages not configured
 
 # Prevent multiple concurrent docs builds
 concurrency:
@@ -158,40 +158,40 @@ jobs:
         path: link-check-report.md
         retention-days: 7
 
-  # Deploy to GitHub Pages (only on main branch push or manual dispatch)
-  deploy:
-    runs-on: ubuntu-latest
-    needs: [build-docs, link-check]
-    if: (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main') && github.event_name == 'push' || github.event.inputs.deploy == 'true'
-    timeout-minutes: 10
-
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-
-    steps:
-    - name: Setup Pages
-      uses: actions/configure-pages@v4
-
-    - name: Download built docs
-      uses: actions/download-artifact@v5
-      with:
-        name: docs-build-${{ github.sha }}
-        path: _site
-
-    - name: Upload to GitHub Pages
-      uses: actions/upload-pages-artifact@v4
-      with:
-        path: _site
-
-    - name: Deploy to GitHub Pages
-      id: deployment
-      uses: actions/deploy-pages@v4
+  # Deploy to GitHub Pages - DISABLED (GitHub Pages not configured)
+  # deploy:
+  #   runs-on: ubuntu-latest
+  #   needs: [build-docs, link-check]
+  #   if: false  # Disabled - GitHub Pages not configured
+  #   timeout-minutes: 10
+  #
+  #   environment:
+  #     name: github-pages
+  #     url: ${{ steps.deployment.outputs.page_url }}
+  #
+  #   steps:
+  #   - name: Setup Pages
+  #     uses: actions/configure-pages@v4
+  #
+  #   - name: Download built docs
+  #     uses: actions/download-artifact@v5
+  #     with:
+  #       name: docs-build-${{ github.sha }}
+  #       path: _site
+  #
+  #   - name: Upload to GitHub Pages
+  #     uses: actions/upload-pages-artifact@v4
+  #     with:
+  #       path: _site
+  #
+  #   - name: Deploy to GitHub Pages
+  #     id: deployment
+  #     uses: actions/deploy-pages@v4
 
   # Status summary
   docs-status:
     runs-on: ubuntu-latest
-    needs: [build-docs, link-check, deploy]
+    needs: [build-docs, link-check]  # Removed deploy dependency
     if: always()
 
     steps:
@@ -201,7 +201,7 @@ jobs:
         echo "================================="
         echo "🏗️ Build: ${{ needs.build-docs.result }}"
         echo "🔗 Link Check: ${{ needs.link-check.result || 'skipped' }}"
-        echo "🚀 Deploy: ${{ needs.deploy.result || 'skipped' }}"
+        echo "🚀 Deploy: disabled (GitHub Pages not configured)"
 
         if [ "${{ needs.build-docs.result }}" = "failure" ]; then
           echo "❌ Documentation build failed"
