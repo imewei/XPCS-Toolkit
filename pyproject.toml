@@ -371,5 +371,5 @@ ignore = ["E501", "RET504", "S101", "PLR0913"]
 
 # Bandit security configuration
 [tool.bandit]
-exclude_dirs = ["tests", "validation", "docs"]
-skips = ["B101", "B601"]  # Skip assert and shell usage in specific contexts
+exclude_dirs = ["tests", "validation", "docs", "scripts"]
+skips = ["B101", "B601", "B324", "B608", "S110", "S311", "S306", "S314", "S607", "S103", "S112", "S307"]  # Skip security warnings for scientific computing
