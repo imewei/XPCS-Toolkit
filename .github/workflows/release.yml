@@ -56,11 +56,11 @@ jobs:
         # Check if a release already exists for this tag
         if gh release view "$VERSION" >/dev/null 2>&1; then
           echo "exists=true" >> $GITHUB_OUTPUT
-          echo "⚠️ Release $VERSION already exists - skipping automatic release workflow"
+          echo "[WARNING] Release $VERSION already exists - skipping automatic release workflow"
           exit 0
         else
           echo "exists=false" >> $GITHUB_OUTPUT
-          echo "✅ No existing release found for $VERSION"
+          echo "[OK] No existing release found for $VERSION"
         fi
       env:
         GH_TOKEN: ${{ github.token }}
@@ -84,15 +84,15 @@ jobs:
           echo "is_prerelease=false" >> $GITHUB_OUTPUT
         fi
 
-        echo "📦 Release version: $VERSION"
-        echo "🔖 Pre-release: $([ "${{ steps.version.outputs.is_prerelease }}" = "true" ] && echo "Yes" || echo "No")"
+        echo "[INFO] Release version: $VERSION"
+        echo "[INFO] Pre-release: $([ "${{ steps.version.outputs.is_prerelease }}" = "true" ] && echo "Yes" || echo "No")"
 
     - name: Check changelog
       run: |
         if [ -f "CHANGELOG.md" ] || [ -f "HISTORY.rst" ]; then
-          echo "✅ Changelog found"
+          echo "[OK] Changelog found"
         else
-          echo "⚠️ No changelog found (CHANGELOG.md or HISTORY.rst)"
+          echo "[WARNING] No changelog found (CHANGELOG.md or HISTORY.rst)"
         fi
 
   # Fast build and validation
@@ -128,15 +128,15 @@ jobs:
         twine check dist/* --strict
 
         # Check wheel contents
-        echo "📦 Wheel contents:"
+        echo "[INFO] Wheel contents:"
         python -m zipfile -l dist/*.whl | head -20
 
         # Verify metadata safely
-        echo "📦 Package files:"
+        echo "[INFO] Package files:"
         ls -la dist/
 
         # Check sdist contents safely
-        echo "📦 Source distribution contents:"
+        echo "[INFO] Source distribution contents:"
         tar -tzf dist/*.tar.gz | head -10
 
         # Test wheel installation in clean environment
@@ -144,7 +144,7 @@ jobs:
         source test_env/bin/activate
         pip install --upgrade pip
         pip install dist/*.whl
-        python -c "import xpcs_toolkit; print(f'✅ Version: {xpcs_toolkit.__version__}')"
+        python -c "import xpcs_toolkit; print(f'[OK] Version: {xpcs_toolkit.__version__}')"
         deactivate
         rm -rf test_env
 
@@ -192,15 +192,20 @@ jobs:
           xvfb
 
     - name: Test installation from wheel
+      env:
+        # Fix Unicode encoding issues on Windows
+        PYTHONIOENCODING: utf-8
+        PYTHONUTF8: 1
       run: |
         # Install from wheel
         pip install --find-links dist/ --prefer-binary xpcs-toolkit
-        python -c "import xpcs_toolkit; print(f'✅ XPCS Toolkit {xpcs_toolkit.__version__} installed successfully')"
+        python -c "import xpcs_toolkit; print(f'[OK] XPCS Toolkit {xpcs_toolkit.__version__} installed successfully')"
 
     - name: Test CLI commands
       env:
         QT_QPA_PLATFORM: offscreen
         DISPLAY: ":99"
+      shell: bash  # CRITICAL: Force bash to prevent PowerShell syntax errors
       run: |
         # Start virtual display for GUI tests on Linux
         if [ "${{ matrix.os }}" = "ubuntu-latest" ]; then
@@ -208,11 +213,11 @@ jobs:
           sleep 2
         fi
 
-        echo "🧪 Testing CLI commands..."
-        xpcs-toolkit --help || echo "⚠️ xpcs-toolkit command failed"
-        pyxpcsviewer --help || echo "⚠️ pyxpcsviewer command failed"
-        run_viewer --help || echo "⚠️ run_viewer command failed"
-        echo "✅ CLI command tests completed"
+        echo "[INFO] Testing CLI commands..."
+        xpcs-toolkit --help || echo "[WARNING] xpcs-toolkit command failed"
+        pyxpcsviewer --help || echo "[WARNING] pyxpcsviewer command failed"
+        run_viewer --help || echo "[WARNING] run_viewer command failed"
+        echo "[OK] CLI command tests completed"
 
     - name: Test basic import and functionality
       env:
@@ -222,8 +227,8 @@ jobs:
         import xpcs_toolkit
         from xpcs_toolkit.file_locator import FileLocator
         from xpcs_toolkit.viewer_kernel import ViewerKernel
-        print('✅ Core modules import successfully')
-        print(f'📦 Version: {xpcs_toolkit.__version__}')
+        print('[OK] Core modules import successfully')
+        print(f'[INFO] Version: {xpcs_toolkit.__version__}')
         "
 
   github-release:
@@ -317,7 +322,7 @@ jobs:
       run: |
         # Final verification before PyPI upload
         ls -la dist/
-        echo "📦 Package contents:"
+        echo "[INFO] Package contents:"
         for file in dist/*; do
           echo "  $(basename "$file"): $(stat -c%s "$file" | numfmt --to=iec)B"
         done
@@ -362,20 +367,21 @@ jobs:
 
     steps:
     - name: Release Summary
+      shell: bash  # CRITICAL: Force bash to prevent PowerShell syntax errors
       run: |
-        echo "🏁 Release Workflow Summary"
-        echo "=========================="
-        echo "📦 Version: ${{ needs.validate.outputs.version }}"
-        echo "🔖 Pre-release: ${{ needs.validate.outputs.is_prerelease }}"
-        echo "🏗️ Build: ${{ needs.build.result }}"
-        echo "🧪 Tests: ${{ needs.test-release.result }}"
-        echo "📝 GitHub Release: ${{ needs.github-release.result }}"
-        echo "🐍 PyPI: ${{ needs.pypi-publish.result || 'skipped' }}"
-        echo "🧪 Test PyPI: ${{ needs.test-pypi-publish.result || 'skipped' }}"
+        echo "[INFO] Release Workflow Summary"
+        echo "================================"
+        echo "[INFO] Version: ${{ needs.validate.outputs.version }}"
+        echo "[INFO] Pre-release: ${{ needs.validate.outputs.is_prerelease }}"
+        echo "[INFO] Build: ${{ needs.build.result }}"
+        echo "[INFO] Tests: ${{ needs.test-release.result }}"
+        echo "[INFO] GitHub Release: ${{ needs.github-release.result }}"
+        echo "[INFO] PyPI: ${{ needs.pypi-publish.result || 'skipped' }}"
+        echo "[INFO] Test PyPI: ${{ needs.test-pypi-publish.result || 'skipped' }}"
 
         if [ "${{ needs.build.result }}" = "failure" ] || [ "${{ needs.test-release.result }}" = "failure" ]; then
-          echo "❌ Release failed - check job logs"
+          echo "[ERROR] Release failed - check job logs"
           exit 1
         else
-          echo "✅ Release completed successfully!"
+          echo "[SUCCESS] Release completed successfully!"
         fi
