@@ -1188,7 +1188,6 @@ class Ui_mainWindow:
         self.g2_fitting_function = QComboBox(self.groupBox_2)
         self.g2_fitting_function.addItem("")
         self.g2_fitting_function.addItem("")
-        self.g2_fitting_function.addItem("")
         self.g2_fitting_function.setObjectName("g2_fitting_function")
 
         self.gridLayout_12.addWidget(self.g2_fitting_function, 0, 5, 1, 5)
@@ -2591,9 +2590,6 @@ class Ui_mainWindow:
         )
         self.g2_fitting_function.setItemText(
             1, QCoreApplication.translate("mainWindow", "Double Exponential", None)
-        )
-        self.g2_fitting_function.setItemText(
-            2, QCoreApplication.translate("mainWindow", "Robust", None)
         )
 
         self.label_67.setText(QCoreApplication.translate("mainWindow", "f", None))

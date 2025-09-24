@@ -2016,7 +2016,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         )
         fit_flag = [x.isChecked() for x in fit_keys]
 
-        if fit_func in {"single", "robust"}:
+        if fit_func == "single":
             fit_flag = fit_flag[0:4]
             bounds = bounds[:, 0:4]
         bounds = bounds.tolist()
