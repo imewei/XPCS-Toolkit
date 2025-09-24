@@ -305,7 +305,7 @@ jobs:
   pypi-publish:
     runs-on: ubuntu-latest
     needs: [validate, build, test-release, github-release]
-    if: needs.validate.outputs.release_exists != 'true' && startsWith(github.ref, 'refs/tags/') && needs.validate.outputs.is_prerelease == 'false' && github.event.inputs.dry_run != 'true'
+    if: needs.validate.outputs.release_exists != 'true' && startsWith(github.ref, 'refs/tags/') && needs.validate.outputs.is_prerelease == 'false' && github.event.inputs.dry_run != 'true' && github.repository_owner == 'AdvancedPhotonSource'
     environment:
       name: pypi
       url: https://pypi.org/p/xpcs-toolkit
@@ -334,11 +334,29 @@ jobs:
         verbose: true
         print-hash: true
 
+  # Fork-aware PyPI publishing notice
+  pypi-fork-notice:
+    runs-on: ubuntu-latest
+    needs: [validate, build, test-release, github-release]
+    if: needs.validate.outputs.release_exists != 'true' && startsWith(github.ref, 'refs/tags/') && github.repository_owner != 'AdvancedPhotonSource'
+
+    steps:
+    - name: PyPI Publishing Skipped for Fork
+      run: |
+        echo "[INFO] PyPI publishing skipped for fork repository"
+        echo "[INFO] Repository: ${{ github.repository }}"
+        echo "[INFO] Owner: ${{ github.repository_owner }}"
+        echo "[INFO] PyPI publishing is only enabled for the upstream repository: AdvancedPhotonSource/pyXpcsViewer"
+        echo "[INFO] GitHub release was created successfully and is available for download"
+        echo "[INFO] To enable PyPI publishing for this fork:"
+        echo "  1. Set up PyPI trusted publisher for repository: ${{ github.repository }}"
+        echo "  2. Or remove the repository_owner condition from the workflow"
+
   # Test PyPI for pre-releases and testing
   test-pypi-publish:
     runs-on: ubuntu-latest
     needs: [validate, build, test-release]
-    if: needs.validate.outputs.release_exists != 'true' && ((startsWith(github.ref, 'refs/tags/') && needs.validate.outputs.is_prerelease == 'true') || github.event.inputs.dry_run == 'true')
+    if: needs.validate.outputs.release_exists != 'true' && ((startsWith(github.ref, 'refs/tags/') && needs.validate.outputs.is_prerelease == 'true') || github.event.inputs.dry_run == 'true') && github.repository_owner == 'AdvancedPhotonSource'
     environment:
       name: testpypi
       url: https://test.pypi.org/p/xpcs-toolkit
@@ -362,7 +380,7 @@ jobs:
   # Final status summary
   release-status:
     runs-on: ubuntu-latest
-    needs: [validate, build, test-release, github-release, pypi-publish, test-pypi-publish]
+    needs: [validate, build, test-release, github-release, pypi-publish, pypi-fork-notice, test-pypi-publish]
     if: always()
 
     steps:
@@ -377,6 +395,7 @@ jobs:
         echo "[INFO] Tests: ${{ needs.test-release.result }}"
         echo "[INFO] GitHub Release: ${{ needs.github-release.result }}"
         echo "[INFO] PyPI: ${{ needs.pypi-publish.result || 'skipped' }}"
+        echo "[INFO] PyPI Fork Notice: ${{ needs.pypi-fork-notice.result || 'skipped' }}"
         echo "[INFO] Test PyPI: ${{ needs.test-pypi-publish.result || 'skipped' }}"
 
         if [ "${{ needs.build.result }}" = "failure" ] || [ "${{ needs.test-release.result }}" = "failure" ]; then
