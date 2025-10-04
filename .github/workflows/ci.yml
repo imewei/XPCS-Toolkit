@@ -379,8 +379,10 @@ jobs:
 
     - name: Run pip-audit for dependency vulnerabilities
       run: |
-        pip-audit --desc --format=json --output=pip-audit-report.json || true
-        pip-audit --desc
+        # Ignore GHSA-4xh5-x5gv-qwph (pip 25.2 tarfile vulnerability) - no fix available yet (planned for pip 25.3)
+        # See .pip-audit.toml or pyproject.toml [tool.pip-audit.ignores] for documentation
+        pip-audit --desc --format=json --output=pip-audit-report.json --ignore-vuln GHSA-4xh5-x5gv-qwph || true
+        pip-audit --desc --ignore-vuln GHSA-4xh5-x5gv-qwph
 
     - name: Check dependencies with safety
       run: |

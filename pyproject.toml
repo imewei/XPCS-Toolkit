@@ -374,3 +374,16 @@ ignore = ["E501", "RET504", "S101", "PLR0913"]
 [tool.bandit]
 exclude_dirs = ["tests", "validation", "docs", "scripts"]
 skips = ["B101", "B601", "B324", "B608", "S110", "S311", "S306", "S314", "S607", "S103", "S112", "S307"]  # Skip security warnings for scientific computing
+
+# pip-audit security configuration
+[tool.pip-audit]
+require-hashes = false
+local = false
+
+[[tool.pip-audit.ignores]]
+# pip 25.2 tarfile extraction vulnerability
+# Fix is planned for pip 25.3 but not yet released
+# https://github.com/pypa/pip/pull/13550
+id = "GHSA-4xh5-x5gv-qwph"
+reason = "No fix available yet - planned for pip 25.3. Mitigation: only install packages from trusted sources (PyPI)."
+expires = "2025-11-15"  # Review when pip 25.3 is expected to be released
