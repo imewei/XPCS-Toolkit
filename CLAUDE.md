@@ -105,6 +105,8 @@ make release
 - Lazy loading of large arrays (saxs_2d, saxs_2d_log) to manage memory
 - Built-in fitting capabilities for G2 analysis (single/double exponential)
 - ROI (Region of Interest) data extraction for custom analysis regions
+- Context manager support for automatic resource cleanup (`with XpcsFile(...) as xfile:`)
+- Explicit `close()` method for manual resource cleanup in batch processing
 
 **Backend Kernel (`viewer_kernel.py`)**
 - `ViewerKernel` class: Bridges GUI and data processing
@@ -139,6 +141,9 @@ The codebase includes recent performance optimizations:
 - LRU caching system for frequently accessed data
 - Memory pressure detection and automatic cleanup
 - Optimized array operations with minimal copying
+- Explicit resource cleanup in batch processing to prevent memory accumulation
+- Periodic garbage collection every 10 files in CLI batch operations
+- Connection pool cache clearing to prevent file descriptor exhaustion
 
 **Concurrency**
 - Async worker framework for GUI responsiveness
@@ -186,8 +191,16 @@ For detailed testing guidance, see `docs/TESTING.md`.
 ### Development Notes
 
 **Memory Considerations**: XPCS datasets can be several GB; always consider memory usage in new features
+- In batch processing, always use `XpcsFile` with context managers or explicit cleanup
+- Call `xfile.clear_cache()` and `del xfile` when done processing each file
+- The CLI batch processors implement try-finally blocks with automatic cleanup
+
 **GUI Threading**: Heavy computations must run in background threads to maintain responsiveness
 **Scientific Accuracy**: All optimizations must preserve numerical precision for scientific validity
 **Beamline Compatibility**: Changes to data format support require coordination with APS-8IDI beamline scientists
 **Qt Warnings**: Some Qt connection warnings from PyQtGraph are expected and cosmetic; they don't affect functionality
 **Logging System**: Comprehensive logging is integrated throughout the codebase - see `docs/LOGGING_SYSTEM.md` for usage guidelines
+**Resource Cleanup**: XpcsFile objects hold significant memory; always clean up in batch operations
+- Use context manager: `with XpcsFile(path) as xfile: ...`
+- Or explicit cleanup: `xfile.close()` or `xfile.clear_cache()` + `del xfile`
+- Batch processors automatically handle cleanup and periodic garbage collection
