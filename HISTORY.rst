@@ -2,6 +2,17 @@
 History
 =======
 
+1.0.9 (2025-10-04)
+------------------
+
+* Fixed critical memory leak in twotime CLI batch processing
+* Added context manager support to XpcsFile for automatic resource cleanup
+* Implemented explicit cleanup in batch processing with periodic garbage collection
+* Resolved pip-audit security job failures with documented vulnerability suppression
+* Enhanced memory management documentation and best practices
+* Updated security scanning configuration (pip-audit, authlib upgrade)
+* Improved CI/CD security job reliability
+
 1.0.5 (2025-09-23)
 ------------------
 
