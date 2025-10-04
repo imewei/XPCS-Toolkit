@@ -683,6 +683,61 @@ class XpcsFile:
         ans = "\n".join([ans, self.__str__()])
         return ans
 
+    def __enter__(self):
+        """
+        Enter context manager.
+
+        Returns:
+            self: The XpcsFile instance for use in with statement
+
+        Example:
+            >>> with XpcsFile("data.hdf5") as xfile:
+            ...     data = xfile.get_g2_data()
+        """
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """
+        Exit context manager, ensuring cleanup of resources.
+
+        Args:
+            exc_type: Exception type if an exception occurred
+            exc_val: Exception value if an exception occurred
+            exc_tb: Exception traceback if an exception occurred
+
+        Returns:
+            False: Don't suppress exceptions
+        """
+        self.close()
+        return False  # Don't suppress exceptions
+
+    def close(self):
+        """
+        Explicitly close and clean up all resources held by this XpcsFile.
+
+        This method clears all caches, releases large data arrays, and prepares
+        the object for garbage collection. Safe to call multiple times.
+
+        Note:
+            HDF5 file handles are managed by the global connection pool and
+            will be closed automatically when evicted from the pool.
+        """
+        try:
+            # Clear all internal caches
+            self.clear_cache()
+
+            # Release large data arrays
+            self._saxs_2d_data = None
+            self._saxs_2d_log_data = None
+            self._saxs_data_loaded = False
+
+            # Clear other cached data
+            self.c2_all_data = None
+
+            logger.debug(f"Closed XpcsFile: {self.fname}")
+        except Exception as e:
+            logger.warning(f"Error during XpcsFile cleanup: {e}")
+
     def get_hdf_info(self, fstr=None):
         """
         get a text representation of the xpcs file; the entries are organized

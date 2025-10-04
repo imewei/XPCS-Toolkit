@@ -1,5 +1,6 @@
 """Batch processing module for twotime correlation data."""
 
+import gc
 import os
 import re
 from pathlib import Path
@@ -8,6 +9,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 
+from xpcs_toolkit.fileIO.hdf_reader import clear_connection_pool
 from xpcs_toolkit.utils.logging_config import get_logger
 from xpcs_toolkit.xpcs_file import XpcsFile
 
@@ -348,6 +350,7 @@ def process_single_file(file_path: str, args) -> int:
     """
     logger.info(f"Processing file: {file_path}")
 
+    xfile = None  # Initialize outside try block for finally cleanup
     try:
         # Load XpcsFile
         xfile = XpcsFile(file_path)
@@ -446,6 +449,16 @@ def process_single_file(file_path: str, args) -> int:
     except Exception as e:
         logger.error(f"Error processing file {file_path}: {e}")
         return 0
+    finally:
+        # CRITICAL: Clean up XpcsFile resources to prevent memory accumulation
+        if xfile is not None:
+            try:
+                logger.debug(f"Cleaning up resources for {file_path}")
+                xfile.clear_cache()  # Clear internal caches and cached data
+            except Exception as cleanup_error:
+                logger.warning(f"Error during cache cleanup: {cleanup_error}")
+            finally:
+                del xfile  # Explicitly delete reference to allow garbage collection
 
 
 def find_hdf_files(directory: str) -> list[str]:
@@ -502,6 +515,12 @@ def process_directory(directory: str, args) -> int:
                 successful_files += 1
         except Exception as e:
             logger.error(f"Failed to process file {file_path}: {e}")
+
+        # Periodic cleanup to prevent memory accumulation in long batch jobs
+        if i % 10 == 0:
+            logger.debug(f"Performing periodic cleanup after {i} files")
+            gc.collect()  # Force garbage collection
+            clear_connection_pool()  # Clear HDF5 connection pool cache
 
     logger.info(
         f"Directory processing complete: {successful_files}/{len(hdf_files)} "
