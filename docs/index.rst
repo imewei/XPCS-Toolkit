@@ -14,6 +14,11 @@ Quick Start
    # Launch GUI
    xpcs-toolkit path/to/hdf/directory
 
+Note
+----
+
+The GUI launches maximized with a rectangular layout, uses only the menu bar for actions (no top quick-access toolbar), and keeps a sensible minimum size to avoid cramped controls.
+
 .. toctree::
    :maxdepth: 2
    :caption: User Guide
@@ -33,6 +38,13 @@ Quick Start
 
    developer/index
    contributing
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Additional Topics
+
+   ROBUST_FITTING_INTEGRATION
+   gui-review
 
 .. toctree::
    :maxdepth: 1

@@ -18,6 +18,12 @@ Python-based XPCS data analysis and visualization tool.
 * SAXS 1D/2D visualization
 * Two-time correlation analysis
 * HDF5 data support (NeXus format)
+
+UI notes
+--------
+
+* Menu-driven header (no quick-access toolbar); all actions live under the menus/shortcuts.
+* Starts maximized with a rectangular layout and a minimum-size floor to prevent cramped controls.
 * PySide6 GUI interface
 * Performance optimizations
 

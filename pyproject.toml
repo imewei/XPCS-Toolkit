@@ -69,6 +69,14 @@ dev = [
     "bandit[toml]>=1.8.0",
     "pre-commit>=4.0.1"
 ]
+test = [
+    "pytest>=8.3.4",
+    "pytest-qt>=4.4.0",
+    "pytest-xdist[psutil]>=3.6.1",
+    "pytest-timeout>=2.3.1",
+    "pytest-sugar>=1.0.0",
+    "pytest-mock>=3.14.0"
+]
 docs = [
     "sphinx>=8.1.3",
     "sphinx-rtd-theme>=3.0.2",
@@ -135,6 +143,22 @@ where = ["."]
 [tool.setuptools.package-data]
 "xpcs_toolkit" = ["configure/*.json", "ui/*.ui", "ui/resources/*.qrc", "ui/resources/*.png"]
 "*" = ["*.md", "*.rst", "*.txt", "*.yaml", "*.yml"]
+
+[tool.setuptools.data-files]
+"share/xpcs_toolkit/docs_images" = [
+  "docs/images/average.png",
+  "docs/images/diffusion.png",
+  "docs/images/g2mod.png",
+  "docs/images/hdf_info.png",
+  "docs/images/intt.png",
+  "docs/images/saxs1d.png",
+  "docs/images/saxs2d.png",
+  "docs/images/stability.png",
+  "docs/images/twotime.png"
+]
+"share/xpcs_toolkit/test_artifacts" = [
+  "tests/artifacts/offscreen_snap.png"
+]
 
 # Mypy
 [tool.mypy]

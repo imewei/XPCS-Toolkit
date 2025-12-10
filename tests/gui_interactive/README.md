@@ -207,6 +207,12 @@ Tests run in headless mode for CI environments:
 ```bash
 export QT_QPA_PLATFORM=offscreen
 python tests/gui_interactive/run_gui_tests.py ci
+python tests/gui_interactive/offscreen_snap.py --output tests/artifacts/offscreen_snap.png
+
+### Golden snapshot check
+- Test: `pytest tests/gui_interactive/test_offscreen_snapshot.py`
+- Golden: `tests/gui_interactive/goldens/offscreen_snap.png`
+- Refresh: `python tests/gui_interactive/offscreen_snap.py --output tests/gui_interactive/goldens/offscreen_snap.png`
 ```
 
 ### Test Markers

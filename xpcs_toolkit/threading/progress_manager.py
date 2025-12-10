@@ -306,7 +306,7 @@ class ProgressManager(QObject):
         description: str,
         total: int = 100,
         is_cancellable: bool = True,
-        show_in_statusbar: bool = False,
+        show_in_statusbar: bool = True,
     ) -> str:
         """
         Start tracking a new operation.
@@ -357,6 +357,18 @@ class ProgressManager(QObject):
         status: str = "",
     ):
         """Update progress for an operation."""
+        if operation_id not in self.active_operations:
+            # Auto-register missing operations so long tasks still surface progress
+            inferred_description = status or f"Operation {operation_id}"
+            inferred_total = total if total is not None else 100
+            self.start_operation(
+                operation_id,
+                inferred_description,
+                total=inferred_total,
+                is_cancellable=True,
+                show_in_statusbar=True,
+            )
+
         if operation_id not in self.active_operations:
             return
 

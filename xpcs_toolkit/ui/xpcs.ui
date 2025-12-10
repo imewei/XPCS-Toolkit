@@ -60,7 +60,7 @@
               </sizepolicy>
              </property>
              <property name="text">
-              <string>Path:</string>
+              <string>Data path:</string>
              </property>
             </widget>
            </item>
@@ -78,6 +78,18 @@
                <height>16777215</height>
               </size>
              </property>
+             <property name="toolTip">
+              <string>Select the folder containing XPCS runs to populate the source list.</string>
+             </property>
+             <property name="accessibleName">
+              <string>Data path</string>
+             </property>
+             <property name="accessibleDescription">
+              <string>Folder path used to load available runs into the source list.</string>
+             </property>
+             <property name="placeholderText">
+              <string>Choose a data folder...</string>
+             </property>
              <property name="clearButtonEnabled">
               <bool>true</bool>
              </property>
@@ -90,12 +102,21 @@
            <item>
             <widget class="QLabel" name="label_56">
              <property name="text">
-              <string>Sort:</string>
+              <string>Sort by:</string>
              </property>
             </widget>
            </item>
            <item>
             <widget class="QComboBox" name="sort_method">
+             <property name="toolTip">
+              <string>Ordering applied to the source file list.</string>
+             </property>
+             <property name="accessibleName">
+              <string>Source sort method</string>
+             </property>
+             <property name="accessibleDescription">
+              <string>Choose how files are ordered in the source list, such as by filename or acquisition time.</string>
+             </property>
              <item>
               <property name="text">
                <string>Filename</string>
@@ -136,8 +157,17 @@
                <verstretch>0</verstretch>
               </sizepolicy>
              </property>
+             <property name="toolTip">
+              <string>Reload files from the selected data path.</string>
+             </property>
+             <property name="accessibleName">
+              <string>Reload files</string>
+             </property>
+             <property name="accessibleDescription">
+              <string>Refresh the source list using the current data folder.</string>
+             </property>
              <property name="text">
-              <string>reload</string>
+              <string>Reload files</string>
              </property>
             </widget>
            </item>
@@ -149,8 +179,17 @@
                <verstretch>0</verstretch>
               </sizepolicy>
              </property>
+             <property name="toolTip">
+              <string>Browse to pick a data folder.</string>
+             </property>
+             <property name="accessibleName">
+              <string>Browse for data</string>
+             </property>
+             <property name="accessibleDescription">
+              <string>Opens a folder chooser to select the data directory.</string>
+             </property>
              <property name="text">
-              <string>browse</string>
+              <string>Browse...</string>
              </property>
             </widget>
            </item>
@@ -164,27 +203,45 @@
              <verstretch>0</verstretch>
             </sizepolicy>
            </property>
-           <property name="minimumSize">
-            <size>
-             <width>0</width>
-             <height>80</height>
-            </size>
-           </property>
-           <property name="maximumSize">
-            <size>
-             <width>16777215</width>
-             <height>16777215</height>
-            </size>
-           </property>
-           <property name="title">
-            <string>Source:</string>
-           </property>
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>80</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>16777215</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="toolTip">
+           <string>Files detected in the selected data folder. Empty until you browse and reload.</string>
+          </property>
+          <property name="accessibleName">
+           <string>Source files</string>
+          </property>
+          <property name="accessibleDescription">
+           <string>List of available XPCS files from the chosen directory.</string>
+          </property>
+          <property name="title">
+           <string>Source files</string>
+          </property>
            <layout class="QGridLayout" name="gridLayout_5">
-            <item row="0" column="0">
-             <widget class="QListView" name="list_view_source">
-              <property name="dragEnabled">
-               <bool>true</bool>
-              </property>
+           <item row="0" column="0">
+            <widget class="QListView" name="list_view_source">
+             <property name="toolTip">
+              <string>Available files. Select one or more, then add to the target list.</string>
+             </property>
+             <property name="accessibleName">
+              <string>Source file list</string>
+             </property>
+             <property name="accessibleDescription">
+              <string>Shows files found under the selected data path; empty until a folder is loaded.</string>
+             </property>
+             <property name="dragEnabled">
+              <bool>true</bool>
+             </property>
               <property name="alternatingRowColors">
                <bool>true</bool>
               </property>
@@ -203,7 +260,7 @@
          <item>
           <layout class="QHBoxLayout" name="horizontalLayout_3">
            <item>
-            <widget class="QComboBox" name="filter_type">
+           <widget class="QComboBox" name="filter_type">
              <item>
               <property name="text">
                <string>prefix is</string>
@@ -214,36 +271,54 @@
                <string>contains</string>
               </property>
              </item>
-            </widget>
-           </item>
-           <item>
-            <widget class="QLineEdit" name="filter_str">
+             <property name="toolTip">
+              <string>Select whether the filter matches a prefix or any substring.</string>
+             </property>
+             <property name="accessibleName">
+              <string>Filter mode</string>
+             </property>
+             <property name="accessibleDescription">
+              <string>Controls how the text filter is applied to the source filenames.</string>
+             </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLineEdit" name="filter_str">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                <horstretch>0</horstretch>
                <verstretch>0</verstretch>
               </sizepolicy>
              </property>
-             <property name="maximumSize">
-              <size>
-               <width>16777215</width>
-               <height>100</height>
-              </size>
-             </property>
-             <property name="placeholderText">
-              <string>filter, press enter to add files</string>
-             </property>
-             <property name="clearButtonEnabled">
-              <bool>true</bool>
-             </property>
-            </widget>
+            <property name="maximumSize">
+             <size>
+              <width>16777215</width>
+              <height>100</height>
+             </size>
+            </property>
+            <property name="toolTip">
+             <string>Type a prefix or substring to filter source files; press Enter to stage matching items.</string>
+            </property>
+            <property name="accessibleName">
+             <string>Filter text</string>
+            </property>
+            <property name="accessibleDescription">
+             <string>Filters filenames in the source list; press Enter to add matches to the target selection.</string>
+            </property>
+            <property name="placeholderText">
+             <string>Filter text, then press Enter to add matches</string>
+            </property>
+            <property name="clearButtonEnabled">
+             <bool>true</bool>
+            </property>
+           </widget>
            </item>
           </layout>
          </item>
          <item>
           <layout class="QHBoxLayout" name="horizontalLayout">
            <item>
-            <widget class="QPushButton" name="pushButton_2">
+           <widget class="QPushButton" name="pushButton_2">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                <horstretch>0</horstretch>
@@ -256,8 +331,17 @@
                <height>16777215</height>
               </size>
              </property>
+             <property name="toolTip">
+              <string>Add selected or filtered source files to the target list.</string>
+             </property>
+             <property name="accessibleName">
+              <string>Add to target</string>
+             </property>
+             <property name="accessibleDescription">
+              <string>Moves highlighted source items into the target selection for processing.</string>
+             </property>
              <property name="text">
-              <string>add</string>
+              <string>Add to target</string>
              </property>
             </widget>
            </item>
@@ -275,15 +359,24 @@
                <height>16777215</height>
               </size>
              </property>
+             <property name="toolTip">
+              <string>Remove the selected items from the target list.</string>
+             </property>
+             <property name="accessibleName">
+              <string>Remove from target</string>
+             </property>
+             <property name="accessibleDescription">
+              <string>Clears highlighted entries from the target selection.</string>
+             </property>
              <property name="text">
-              <string>remove</string>
+              <string>Remove from target</string>
              </property>
             </widget>
            </item>
           </layout>
          </item>
          <item>
-          <widget class="QGroupBox" name="box_target">
+         <widget class="QGroupBox" name="box_target">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
              <horstretch>0</horstretch>
@@ -296,36 +389,72 @@
              <height>120</height>
             </size>
            </property>
-           <property name="maximumSize">
-            <size>
-             <width>16777215</width>
-             <height>16777215</height>
-            </size>
-           </property>
-           <property name="title">
-            <string>Target:</string>
-           </property>
+          <property name="maximumSize">
+           <size>
+            <width>16777215</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="toolTip">
+           <string>Files queued for analysis. Starts empty until you add items.</string>
+          </property>
+          <property name="accessibleName">
+           <string>Selected files</string>
+          </property>
+          <property name="accessibleDescription">
+           <string>List of files chosen for processing.</string>
+          </property>
+          <property name="title">
+           <string>Selected files</string>
+          </property>
            <layout class="QGridLayout" name="gridLayout_4">
             <item row="1" column="0">
              <layout class="QHBoxLayout" name="horizontalLayout_7">
               <item>
-               <widget class="QPushButton" name="btn_deselect">
+                <widget class="QPushButton" name="btn_deselect">
+                <property name="toolTip">
+                 <string>Deselect any highlighted items in the selected files list.</string>
+                </property>
+                <property name="accessibleName">
+                 <string>Clear selection</string>
+                </property>
+                <property name="accessibleDescription">
+                 <string>Removes focus from currently highlighted target entries.</string>
+                </property>
                 <property name="text">
-                 <string>de-select</string>
+                 <string>Clear selection</string>
                 </property>
                </widget>
               </item>
               <item>
-               <widget class="QPushButton" name="btn_up">
+                <widget class="QPushButton" name="btn_up">
+                <property name="toolTip">
+                 <string>Move selected target items up.</string>
+                </property>
+                <property name="accessibleName">
+                 <string>Move up</string>
+                </property>
+                <property name="accessibleDescription">
+                 <string>Reorder the selected target items upward.</string>
+                </property>
                 <property name="text">
-                 <string>up</string>
+                 <string>Move up</string>
                 </property>
                </widget>
               </item>
               <item>
-               <widget class="QPushButton" name="btn_down">
+                <widget class="QPushButton" name="btn_down">
+                <property name="toolTip">
+                 <string>Move selected target items down.</string>
+                </property>
+                <property name="accessibleName">
+                 <string>Move down</string>
+                </property>
+                <property name="accessibleDescription">
+                 <string>Reorder the selected target items downward.</string>
+                </property>
                 <property name="text">
-                 <string>down</string>
+                 <string>Move down</string>
                 </property>
                </widget>
               </item>
@@ -333,6 +462,15 @@
             </item>
             <item row="0" column="0">
              <widget class="QListView" name="list_view_target">
+              <property name="toolTip">
+               <string>Files staged for analysis. Empty until you add items from the source list.</string>
+              </property>
+              <property name="accessibleName">
+               <string>Selected file list</string>
+              </property>
+              <property name="accessibleDescription">
+               <string>Displays files queued for processing; starts empty until items are added.</string>
+              </property>
               <property name="selectionMode">
                <enum>QAbstractItemView::SelectionMode::ExtendedSelection</enum>
               </property>
@@ -3292,10 +3430,23 @@
   </customwidget>
  </customwidgets>
  <tabstops>
+  <tabstop>work_dir</tabstop>
+  <tabstop>pushButton</tabstop>
+  <tabstop>pushButton_11</tabstop>
+  <tabstop>sort_method</tabstop>
+  <tabstop>list_view_source</tabstop>
+  <tabstop>filter_type</tabstop>
+  <tabstop>filter_str</tabstop>
+  <tabstop>pushButton_2</tabstop>
+  <tabstop>pushButton_3</tabstop>
+  <tabstop>list_view_target</tabstop>
+  <tabstop>btn_deselect</tabstop>
+  <tabstop>btn_up</tabstop>
+  <tabstop>btn_down</tabstop>
+  <tabstop>tabWidget</tabstop>
   <tabstop>cb_saxs2D_cmap</tabstop>
   <tabstop>g2_c2min</tabstop>
   <tabstop>cb_avg_chunk_size</tabstop>
-  <tabstop>list_view_target</tabstop>
   <tabstop>max_thread_count</tabstop>
   <tabstop>avg_qindex</tabstop>
   <tabstop>avg_window</tabstop>
@@ -3314,18 +3465,6 @@
   <tabstop>btn_avg_kill</tabstop>
   <tabstop>btn_start_avg_job</tabstop>
   <tabstop>avg_job_table</tabstop>
-  <tabstop>work_dir</tabstop>
-  <tabstop>sort_method</tabstop>
-  <tabstop>pushButton_11</tabstop>
-  <tabstop>pushButton</tabstop>
-  <tabstop>list_view_source</tabstop>
-  <tabstop>filter_type</tabstop>
-  <tabstop>filter_str</tabstop>
-  <tabstop>pushButton_2</tabstop>
-  <tabstop>pushButton_3</tabstop>
-  <tabstop>btn_deselect</tabstop>
-  <tabstop>btn_up</tabstop>
-  <tabstop>btn_down</tabstop>
   <tabstop>cb_saxs2D_type</tabstop>
   <tabstop>cb_saxs_type</tabstop>
   <tabstop>saxs1d_sampling</tabstop>
@@ -3352,7 +3491,6 @@
   <tabstop>g2_ymin</tabstop>
   <tabstop>g2_ymax</tabstop>
   <tabstop>g2_yauto</tabstop>
-  <tabstop>tabWidget</tabstop>
   <tabstop>g2_amin</tabstop>
   <tabstop>g2_amax</tabstop>
   <tabstop>g2_afit</tabstop>

@@ -6,7 +6,7 @@
 .PHONY: help clean install lint format test coverage docs dist release
 .PHONY: clean-all clean-build clean-cache clean-test
 .PHONY: lint-ruff lint-flake8 format-ruff format-black
-.PHONY: test-unit test-integration test-logging test-scientific test-end-to-end test-properties test-performance test-gui test-ci test-full test-all test-benchmarks
+.PHONY: test-unit test-integration test-logging test-scientific test-end-to-end test-properties test-performance test-gui test-gui-headless test-gui-snapshot test-ci test-full test-all test-benchmarks
 .PHONY: test-log test-unit-log test-integration-log test-logging-log test-full-log test-all-log
 .PHONY: coverage-html coverage-report coverage-logging
 .PHONY: docs-build docs-serve docs-clean docs-autobuild docs-linkcheck docs-validate
@@ -199,6 +199,12 @@ test-performance: ## run performance benchmarks and profiling tests
 
 test-gui: ## run GUI interactive tests (requires display)
 	$(PYTHON) -m pytest $(TESTS_DIR)/gui_interactive/ $(PYTEST_OPTS) -s
+
+test-gui-headless: ## run GUI quick suite in headless/offscreen mode
+	$(PYTHON) tests/gui_interactive/run_gui_tests.py quick --headless
+
+test-gui-snapshot: ## refresh the offscreen snapshot artifact
+	$(PYTHON) tests/gui_interactive/offscreen_snap.py --output tests/artifacts/offscreen_snap.png --wait 0.5
 
 # CI/CD optimized tests
 test-ci: ## run tests optimized for CI/CD environments

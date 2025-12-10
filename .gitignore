@@ -252,4 +252,5 @@ run_phase*_temp.py
 # Claude Code specific settings
 .claude/
 agent-os/
-.specify
+.specify/
+.code/

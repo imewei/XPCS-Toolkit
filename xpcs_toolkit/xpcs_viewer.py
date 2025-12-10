@@ -4,12 +4,14 @@ import os
 import shutil
 import time
 import traceback
+from pathlib import Path
 
 # Third-party imports
 import numpy as np
 import pyqtgraph as pg
 from pyqtgraph.parametertree import Parameter
-from PySide6 import QtCore, QtWidgets
+from PySide6 import QtCore, QtWidgets, QtGui
+from PySide6.QtGui import QAction, QDesktopServices, QKeySequence, QShortcut
 
 # Import async components
 from .threading.async_kernel import AsyncDataPreloader, AsyncViewerKernel
@@ -120,9 +122,6 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         self.home_dir = home_dir
         self.label_style = label_style
 
-        # Maximize the window at startup
-        self.showMaximized()
-
         self.tabWidget.setCurrentIndex(0)  # show scattering 2d
         self.plot_kwargs_record = {}
         for _, v in tab_mapping.items():
@@ -148,6 +147,11 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         # list widget models
         self.source_model = None
         self.target_model = None
+
+        # UI polish
+        self._init_spacing()
+        self._init_menus_and_toolbar()
+        self._register_shortcuts()
         self.timer = QtCore.QTimer()
 
         if path is not None:
@@ -159,6 +163,9 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
 
         self.start_wd = os.path.abspath(self.start_wd)
         logger.info(f"Start up directory is [{self.start_wd}]")
+
+        # Prompt for start path only after start_wd is defined
+        self._maybe_prompt_start_path()
 
         self.pushButton_plot_saxs2d.clicked.connect(self.plot_saxs_2d)
         self.pushButton_plot_saxs1d.clicked.connect(self.plot_saxs_1d)
@@ -216,6 +223,15 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         self.setup_progress_shortcut()
 
         self.load_default_setting()
+
+        # Prefer maximized startup on real displays; keep deterministic size offscreen
+        platform = os.environ.get("QT_QPA_PLATFORM", "").lower()
+        if platform not in {"offscreen", "minimal"}:
+            self.showMaximized()
+        else:
+            if getattr(self, "_default_size", None):
+                self.resize(*self._default_size)
+            # offscreen needs an explicit show after resize
         self.show()
 
     def load_default_setting(self):
@@ -235,8 +251,13 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
             config = json.load(f)
             if "window_size_h" in config:
                 new_size = (config["window_size_w"], config["window_size_h"])
-                logger.info("set mainwindow to size %s", new_size)
-                self.resize(*new_size)
+                self._default_size = new_size
+                # enforce a reasonable floor so controls are not squeezed pre-maximize
+                self.setMinimumSize(*new_size)
+            else:
+                # fallback default if config missing height/width
+                self._default_size = (1024, 800)
+                self.setMinimumSize(*self._default_size)
 
         cache_dir = os.path.join(
             os.path.expanduser("~"), ".xpcs_toolkit", "joblib/xpcs_toolkit"
@@ -248,6 +269,110 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         """Set up connections for async operations."""
         # Connect progress manager signals for operation cancellation
         self.progress_manager.operation_cancelled.connect(self.cancel_async_operation)
+
+    # ---- UI polish helpers -------------------------------------------------
+
+    def _init_spacing(self):
+        layout = self.centralwidget.layout()
+        if layout:
+            layout.setContentsMargins(8, 8, 8, 8)
+            layout.setSpacing(8)
+
+    def _init_menus_and_toolbar(self):
+        # File menu
+        menubar = self.menuBar()
+        file_menu = menubar.addMenu("&File")
+
+        self.action_open = QAction("&Open…", self)
+        self.action_open.setShortcut(QKeySequence("Ctrl+O"))
+        self.action_open.triggered.connect(lambda: self.load_path(None))
+        file_menu.addAction(self.action_open)
+
+        sample_dir = self._sample_data_path()
+        if sample_dir:
+            action_sample = QAction("Open &Sample Data", self)
+            action_sample.triggered.connect(lambda: self.load_path(str(sample_dir)))
+            file_menu.addAction(action_sample)
+
+        action_reload = QAction("&Reload", self)
+        action_reload.setShortcut(QKeySequence("Ctrl+R"))
+        action_reload.triggered.connect(self.reload_source)
+        file_menu.addAction(action_reload)
+
+        file_menu.addSeparator()
+        action_quit = QAction("E&xit", self)
+        action_quit.triggered.connect(QtWidgets.QApplication.instance().quit)
+        file_menu.addAction(action_quit)
+
+        # View/Help menu
+        view_menu = menubar.addMenu("&View")
+        action_progress = QAction("Show &Progress", self)
+        action_progress.setShortcut(QKeySequence("Ctrl+P"))
+        action_progress.triggered.connect(self.show_progress_dialog)
+        view_menu.addAction(action_progress)
+
+        help_menu = menubar.addMenu("&Help")
+        action_logs = QAction("View &Logs", self)
+        action_logs.setShortcut(QKeySequence("Ctrl+L"))
+        action_logs.triggered.connect(self._open_logs_dir)
+        help_menu.addAction(action_logs)
+
+    def _register_shortcuts(self):
+        # Add to target
+        QShortcut(QKeySequence("Ctrl+Shift+A"), self, activated=self.add_target)
+        # Clear target selection
+        QShortcut(QKeySequence("Esc"), self, activated=self.clear_target_selection)
+        # Show docs (opens README)
+        QShortcut(QKeySequence("F1"), self, activated=self._open_docs)
+
+    def _sample_data_path(self):
+        candidates = [
+            Path("tests/fixtures/reference_data"),
+            Path("tests/fixtures"),
+        ]
+        for c in candidates:
+            if c.exists() and c.is_dir():
+                return c.resolve()
+        return None
+
+    def _open_logs_dir(self):
+        log_dir = Path.home() / ".xpcs_toolkit" / "logs"
+        log_dir.mkdir(parents=True, exist_ok=True)
+        QDesktopServices.openUrl(QtCore.QUrl.fromLocalFile(str(log_dir)))
+
+    def _open_docs(self):
+        docs_path = Path(__file__).resolve().parent.parent / "docs" / "README.rst"
+        if docs_path.exists():
+            QDesktopServices.openUrl(QtCore.QUrl.fromLocalFile(str(docs_path)))
+
+    def _maybe_prompt_start_path(self):
+        # Skip in headless/offscreen runs
+        if os.environ.get("QT_QPA_PLATFORM") == "offscreen":
+            return
+
+        # Skip if a path was provided programmatically
+        if self.work_dir.text():
+            return
+
+        sample_dir = self._sample_data_path()
+        msg = QtWidgets.QMessageBox(self)
+        msg.setWindowTitle("Select Data")
+        msg.setText("Choose a data folder to start.")
+        browse_btn = msg.addButton("Browse…", QtWidgets.QMessageBox.AcceptRole)
+        sample_btn = None
+        if sample_dir:
+            sample_btn = msg.addButton("Open Sample", QtWidgets.QMessageBox.ActionRole)
+        skip_btn = msg.addButton("Skip", QtWidgets.QMessageBox.RejectRole)
+        msg.exec()
+
+        clicked = msg.clickedButton()
+        if clicked == browse_btn:
+            self.load_path(None)
+        elif sample_btn and clicked == sample_btn:
+            self.load_path(str(sample_dir))
+        else:
+            # leave as-is
+            return
 
     def setup_progress_shortcut(self):
         """Set up keyboard shortcut to show progress dialog."""
@@ -658,7 +783,18 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
 
         func = getattr(self, "plot_" + tab_name)
         try:
+            if not self.vk:
+                logger.debug(f"No viewer kernel; skipping {tab_name} update")
+                return
+
             kwargs = func(dryrun=True)
+            if not kwargs:
+                logger.info(
+                    "No parameters returned for %s (likely no target/fit); skipping update",
+                    tab_name,
+                )
+                return
+
             kwargs["target_timestamp"] = self.vk.timestamp
             if self.plot_kwargs_record[tab_name] != kwargs:
                 logger.debug(f"Plot parameters changed for {tab_name}")
@@ -703,6 +839,21 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         except Exception as e:
             logger.warning(f"Failed to clear plot for {tab_name}: {e}")
 
+    def _guard_no_data(self, tab_name: str) -> bool:
+        """Return False and show guidance when no target data is available."""
+        has_data = bool(self.vk and getattr(self.vk, "target", []))
+        if has_data:
+            return True
+
+        logger.info("Skipping %s plot because no target data is available", tab_name)
+        self._clear_plot_for_tab(tab_name)
+        if self.statusbar:
+            self.statusbar.showMessage(
+                f"No data for {tab_name.replace('_', ' ')}. Add files to the target list to plot.",
+                4000,
+            )
+        return False
+
     def update_plot_async(self, tab_name):
         """Asynchronous plot update with progress indication."""
         # Check if there's already an active operation for this plot type
@@ -714,7 +865,17 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         try:
             # Get plot parameters
             func = getattr(self, "plot_" + tab_name)
+            if not self.vk:
+                logger.debug(f"No viewer kernel; skipping async {tab_name} update")
+                return
+
             kwargs = func(dryrun=True)
+            if not kwargs:
+                logger.info(
+                    "No parameters for async %s (likely no target/fit); skipping", tab_name
+                )
+                return
+
             kwargs["target_timestamp"] = self.vk.timestamp
 
             # Check if parameters changed
@@ -774,6 +935,9 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
             self.update_plot_sync(tab_name)
 
     def plot_metadata(self, dryrun=False):
+        if not self.vk:
+            return None if dryrun else None
+
         kwargs = {"rows": self.get_selected_rows()}
         if dryrun:
             return kwargs
@@ -845,6 +1009,9 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         else:
             kwargs["rows"] = self.get_selected_rows()
 
+        if not dryrun and not self._guard_no_data("saxs_2d"):
+            return None
+
         if dryrun:
             return kwargs
         self.vk.plot_saxs_2d(pg_hdl=self.pg_saxs, **kwargs)
@@ -892,6 +1059,9 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         }
         if kwargs["qmin"] >= kwargs["qmax"]:
             self.statusbar.showMessage("check qmin and qmax")
+            return None
+
+        if not dryrun and not self._guard_no_data("saxs_1d"):
             return None
 
         if dryrun:
@@ -972,6 +1142,8 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
             "rows": self.get_selected_rows(),
             "target": self.comboBox_qmap_target.currentText(),
         }
+        if not dryrun and not self._guard_no_data("qmap"):
+            return None
         if dryrun:
             return kwargs
         self.vk.plot_qmap(self.pg_qmap, **kwargs)
@@ -998,6 +1170,9 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         logger.debug(f"Twotime plot kwargs: {kwargs}")
         if dryrun:
             return kwargs
+
+        if not self._guard_no_data("twotime"):
+            return None
 
         if self.mp_2t_hdls is None:
             self.init_twotime_plot_handler()
@@ -1050,6 +1225,8 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
             "rows": self.get_selected_rows(),
             "loc": self.stab_legend_loc.currentText(),
         }
+        if not dryrun and not self._guard_no_data("stability"):
+            return None
         if dryrun:
             return kwargs
         if self.vk:
@@ -1063,6 +1240,8 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
             "rows": self.get_selected_rows(),
             "xlabel": self.intt_xlabel.currentText(),
         }
+        if not dryrun and not self._guard_no_data("intensity_t"):
+            return None
         if dryrun:
             return kwargs
         self.vk.plot_intt(self.pg_intt, **kwargs)
@@ -1095,7 +1274,10 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
             if sum(fit_flag) == 0:
                 logger.warning("No fit flags selected")
                 self.statusbar.showMessage("nothing to fit, really?", 1000)
-                return None
+                return {} if dryrun else None
+
+            if not self._guard_no_data("diffusion"):
+                return {} if dryrun else None
 
             tauq = [self.tauq_qmin, self.tauq_qmax]
             q_range = [float(x.text()) for x in tauq]

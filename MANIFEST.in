@@ -10,6 +10,12 @@ include CLAUDE.md
 # Configuration files
 include pyproject.toml
 
+# Documentation assets
+recursive-include docs/images *.png
+
+# Test artifacts/snapshots
+include tests/artifacts/offscreen_snap.png
+
 # Include all test directories and files
 recursive-include tests *
 recursive-exclude tests __pycache__
