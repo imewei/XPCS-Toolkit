@@ -1,3 +1,4 @@
+# Packaging note: Python >=3.12; prefer uv for builds/installs (see pyproject [tool.uv]).
 # Core documentation files
 include AUTHORS.rst
 include CONTRIBUTING.rst

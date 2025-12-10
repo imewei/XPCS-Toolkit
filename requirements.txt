@@ -1,0 +1,5 @@
+# XPCS Toolkit installation helper
+# Python >=3.12 is required; prefer uv for reproducible installs.
+# Recommended: uv sync --dev --extra docs --extra test
+
+-e .[all]

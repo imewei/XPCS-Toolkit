@@ -72,8 +72,12 @@ help: ## show this help message with categorized commands
 # Environment Setup and Installation
 # =============================================================================
 
-dev-setup: ## setup complete development environment
-	pip install -e ".[dev,test,docs]"
+dev-setup: ## setup dev env (Python>=3.12, prefers uv sync --dev)
+	@if command -v uv >/dev/null 2>&1; then \
+		uv sync --dev --extra docs --extra test; \
+	else \
+		pip install -e ".[dev,test,docs]"; \
+	fi
 	pre-commit install || echo "pre-commit not available, skipping hook installation"
 
 pre-commit-install: ## install pre-commit hooks
@@ -83,11 +87,19 @@ pre-commit-install: ## install pre-commit hooks
 pre-commit-run: ## run pre-commit hooks on all files
 	pre-commit run --all-files
 
-dev-install: clean ## install package in development mode
-	pip install -e .
+dev-install: clean ## install package in development mode (prefers uv sync --dev)
+	@if command -v uv >/dev/null 2>&1; then \
+		uv sync --dev; \
+	else \
+		pip install -e .; \
+	fi
 
-install: clean ## install package for production use
-	pip install .
+install: clean ## install package for production use (prefers uv)
+	@if command -v uv >/dev/null 2>&1; then \
+		uv pip install .; \
+	else \
+		pip install .; \
+	fi
 
 # =============================================================================
 # Cleaning Operations

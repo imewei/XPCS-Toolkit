@@ -184,6 +184,8 @@ Thumbs.db
 *.bak
 RELEASE_GUIDE.md
 WARP.md
+CLAUDE.md
+AGENTS.md
 
 # Security reports
 bandit-report.json

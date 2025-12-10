@@ -1,5 +1,5 @@
 # Documentation build requirements for XPCS Toolkit
-# These are the minimum requirements needed to build documentation
+# Python >=3.12; prefer `uv sync --extra docs` locally, RTD uses pip.
 
 # Core Sphinx dependencies (kept in sync with pyproject [project.optional-dependencies].docs)
 sphinx>=8.1.3

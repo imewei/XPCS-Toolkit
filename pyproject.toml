@@ -124,6 +124,12 @@ all = [
     "pympler>=0.9.0"
 ]
 
+[tool.uv]
+# Prefer uv-managed Python to guarantee reproducible environments
+python = ">=3.12"
+python-preference = "managed"
+default-groups = ["dev", "docs", "test"]
+
 [project.urls]
 bugs = "https://github.com/imewei/XPCS-Toolkit/issues"
 changelog = "https://github.com/imewei/XPCS-Toolkit/blob/master/HISTORY.rst"
