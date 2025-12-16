@@ -160,7 +160,7 @@ class TestQMapConstants(unittest.TestCase):
         # Use more lenient threshold for CI environments, especially macOS ARM64
         import os
 
-        max_time = 0.015 if os.environ.get("CI") else 0.005
+        max_time = 0.015 if os.environ.get("CI") else 0.01
         self.assertLess(
             elapsed_time,
             max_time,

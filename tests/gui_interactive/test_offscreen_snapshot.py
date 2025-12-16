@@ -1,5 +1,6 @@
 import os
 import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -11,6 +12,10 @@ OUTPUT = ROOT / "tests" / "artifacts" / "offscreen_snap.png"
 
 
 @pytest.mark.gui
+@pytest.mark.skipif(
+    sys.platform == "win32",
+    reason="Golden image comparison skipped on Windows due to platform-specific rendering differences",
+)
 def test_offscreen_snapshot_matches_golden(tmp_path):
     """Generate an offscreen snapshot and compare it byte-for-byte to the golden."""
 
