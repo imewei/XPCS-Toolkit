@@ -3,7 +3,13 @@ Centralized plotting constants for consistent styling across all plot handlers.
 
 This module consolidates color schemes, markers, and styling constants that were
 previously duplicated across multiple modules (matplot_qt.py, g2mod.py, tauq.py).
+
+Also provides theme-aware plotting colors via get_theme_colors().
 """
+
+from typing import Literal
+
+ThemeName = Literal["light", "dark"]
 
 # Matplotlib default color cycle (10 colors) - the standard scientific palette
 MATPLOTLIB_COLORS_HEX = (
@@ -136,3 +142,77 @@ def get_marker_cycle(backend: str = "matplotlib") -> list[str] | tuple[str, ...]
     if backend == "extended":
         return EXTENDED_MARKERS
     raise ValueError(f"Unknown backend: {backend}")
+
+
+def get_theme_colors(theme: ThemeName | None = None) -> dict[str, str]:
+    """
+    Get plot colors for the specified theme.
+
+    If theme is None, attempts to get the current theme from ThemeManager.
+    Falls back to light theme if theme system is unavailable.
+
+    Parameters
+    ----------
+    theme : ThemeName or None
+        Either "light", "dark", or None (auto-detect from ThemeManager)
+
+    Returns
+    -------
+    dict[str, str]
+        Dictionary with keys: background, foreground, axis, grid, text, accent
+    """
+    if theme is None:
+        # Try to get from theme manager
+        try:
+            from xpcs_toolkit.gui.theme.plot_themes import get_plot_colors
+
+            # Try to get current theme from singleton or default
+            try:
+                from PySide6.QtWidgets import QApplication
+
+                app = QApplication.instance()
+                if app is not None:
+                    # Find ThemeManager in top-level widgets
+                    for widget in app.topLevelWidgets():
+                        if hasattr(widget, "theme_manager"):
+                            current_theme = widget.theme_manager.get_current_theme()
+                            return get_plot_colors(current_theme)
+            except Exception:
+                pass
+            # Default to light if no manager found
+            return get_plot_colors("light")
+        except ImportError:
+            # Fall back to hardcoded light theme colors
+            return {
+                "background": "#FFFFFF",
+                "foreground": "#1D1D1F",
+                "axis": "#3C3C43",
+                "grid": "#E5E5EA",
+                "text": "#1D1D1F",
+                "accent": "#007AFF",
+            }
+
+    # Direct theme specified
+    try:
+        from xpcs_toolkit.gui.theme.plot_themes import get_plot_colors
+
+        return get_plot_colors(theme)
+    except ImportError:
+        # Fall back to hardcoded colors
+        if theme == "dark":
+            return {
+                "background": "#1C1C1E",
+                "foreground": "#F5F5F7",
+                "axis": "#98989D",
+                "grid": "#38383A",
+                "text": "#F5F5F7",
+                "accent": "#0A84FF",
+            }
+        return {
+            "background": "#FFFFFF",
+            "foreground": "#1D1D1F",
+            "axis": "#3C3C43",
+            "grid": "#E5E5EA",
+            "text": "#1D1D1F",
+            "accent": "#007AFF",
+        }

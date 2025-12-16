@@ -62,6 +62,10 @@ class MplCanvasBarH(QtWidgets.QWidget):
         self.hdl.clear()
         self.hdl.draw()
 
+    def apply_theme(self, theme: str) -> None:
+        """Apply theme colors to the embedded canvas."""
+        self.hdl.apply_theme(theme)
+
 
 class MplCanvasBarV(QWidget):
     """
@@ -80,6 +84,10 @@ class MplCanvasBarV(QWidget):
     def clear(self):
         self.hdl.clear()
         self.hdl.draw()
+
+    def apply_theme(self, theme: str) -> None:
+        """Apply theme colors to the embedded canvas."""
+        self.hdl.apply_theme(theme)
 
 
 class MplCanvasBar(QWidget):
@@ -108,6 +116,38 @@ class MplCanvas(FigureCanvasQTAgg):
         self.obj = None
         self.line_builder = None
         self.cids = []
+
+    def apply_theme(self, theme: str) -> None:
+        """
+        Apply theme colors to this matplotlib canvas.
+
+        Parameters
+        ----------
+        theme : str
+            Either "light" or "dark"
+        """
+        from .plot_constants import get_theme_colors
+
+        colors = get_theme_colors(theme)
+
+        # Update figure background
+        self.fig.set_facecolor(colors["background"])
+
+        # Update axes if they exist
+        if self.axes is not None:
+            axes_list = (
+                np.array(self.axes).ravel() if self.shape != (1, 1) else [self.axes]
+            )
+            for ax in axes_list:
+                ax.set_facecolor(colors["background"])
+                ax.tick_params(colors=colors["axis"])
+                ax.xaxis.label.set_color(colors["text"])
+                ax.yaxis.label.set_color(colors["text"])
+                ax.title.set_color(colors["text"])
+                for spine in ax.spines.values():
+                    spine.set_edgecolor(colors["axis"])
+
+        self.draw()
 
     def link_line_builder(self, lb_type=None):
         if lb_type is None:
