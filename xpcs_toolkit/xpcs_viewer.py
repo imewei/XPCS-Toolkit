@@ -10,7 +10,7 @@ from pathlib import Path
 import numpy as np
 import pyqtgraph as pg
 from pyqtgraph.parametertree import Parameter
-from PySide6 import QtCore, QtWidgets, QtGui
+from PySide6 import QtCore, QtGui, QtWidgets
 from PySide6.QtGui import QAction, QDesktopServices, QKeySequence, QShortcut
 
 # Import async components
@@ -872,7 +872,8 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
             kwargs = func(dryrun=True)
             if not kwargs:
                 logger.info(
-                    "No parameters for async %s (likely no target/fit); skipping", tab_name
+                    "No parameters for async %s (likely no target/fit); skipping",
+                    tab_name,
                 )
                 return
 
