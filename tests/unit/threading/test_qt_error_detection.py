@@ -486,7 +486,9 @@ class TestQtConnectionErrors:
 class TestQtGuiInitialization:
     """Test Qt GUI initialization error detection."""
 
-    def test_application_creation_monitoring(self, qt_error_capture, mock_qt_environment):
+    def test_application_creation_monitoring(
+        self, qt_error_capture, mock_qt_environment
+    ):
         """Test monitoring of Qt application creation."""
         with qt_error_capture.capture_qt_warnings():
             # Test application state
