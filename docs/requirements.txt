@@ -2,22 +2,22 @@
 # Python >=3.12; prefer `uv sync --extra docs` locally, RTD uses pip.
 
 # Core Sphinx dependencies (kept in sync with pyproject [project.optional-dependencies].docs)
-sphinx>=8.1.3
+sphinx>=8.2.0
 sphinx-rtd-theme>=3.0.2
-myst-parser>=4.0.0
+myst-parser>=4.0.1
 
 # Documentation extensions
-sphinx-autodoc-typehints>=2.4.4
+sphinx-autodoc-typehints>=3.5.0
 sphinx-copybutton>=0.5.2
 
 # Required for building API documentation (match pyproject.toml)
-numpy>=2.2.0
-scipy>=1.15.0
-matplotlib>=3.9.3
-h5py>=3.12.1
+numpy>=2.3.0
+scipy>=1.16.0
+matplotlib>=3.10.0
+h5py>=3.15.0
 
 # PySide6 for GUI documentation
-pyside6>=6.8.1
+pyside6>=6.10.1
 
 # Mock heavy dependencies that aren't needed for docs
 # These will be mocked in conf.py if needed
