@@ -11,7 +11,29 @@ import numpy as np
 import pyqtgraph as pg
 from pyqtgraph.parametertree import Parameter
 from PySide6 import QtCore, QtGui, QtWidgets
-from PySide6.QtGui import QAction, QDesktopServices, QKeySequence, QShortcut
+from PySide6.QtGui import (
+    QAction,
+    QActionGroup,
+    QDesktopServices,
+    QKeySequence,
+    QShortcut,
+)
+
+from .gui.shortcuts.shortcut_manager import ShortcutManager
+
+# Import GUI components
+from .gui.state.recent_paths import RecentPathsManager
+from .gui.state.session_manager import (
+    AnalysisParameters,
+    FileEntry,
+    SessionManager,
+    SessionState,
+    WindowGeometry,
+)
+from .gui.theme.manager import ThemeManager
+from .gui.widgets.command_palette import CommandPalette
+from .gui.widgets.drag_drop_list import DragDropListView
+from .gui.widgets.toast_notification import ToastManager
 
 # Import async components
 from .threading.async_kernel import AsyncDataPreloader, AsyncViewerKernel
@@ -134,6 +156,24 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         self.progress_manager = ProgressManager(self)
         self.progress_manager.set_statusbar(self.statusbar)
 
+        # Initialize theme manager (applies saved theme preference on startup)
+        self.theme_manager = ThemeManager(parent=self)
+        # Connect theme changes to plot refresh
+        self.theme_manager.theme_changed.connect(self._on_theme_changed)
+
+        # Initialize session manager for workspace persistence
+        self.session_manager = SessionManager()
+
+        # Initialize recent paths manager
+        self.recent_paths_manager = RecentPathsManager()
+
+        # Initialize toast notification manager for user feedback
+        self.toast_manager = ToastManager(parent=self)
+
+        # Initialize command palette and shortcut manager
+        self.command_palette = CommandPalette(parent=self)
+        self.shortcut_manager = ShortcutManager(parent=self)
+
         self.vk = None
         self.async_vk = None  # Will be initialized when vk is ready
         self.data_preloader = None
@@ -152,6 +192,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         self._init_spacing()
         self._init_menus_and_toolbar()
         self._register_shortcuts()
+        self._setup_drag_drop_list()
         self.timer = QtCore.QTimer()
 
         if path is not None:
@@ -223,6 +264,9 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         self.setup_progress_shortcut()
 
         self.load_default_setting()
+
+        # Restore session state (window geometry, files, tab)
+        self._restore_session()
 
         # Prefer maximized startup on real displays; keep deterministic size offscreen
         platform = os.environ.get("QT_QPA_PLATFORM", "").lower()
@@ -299,6 +343,10 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         action_reload.triggered.connect(self.reload_source)
         file_menu.addAction(action_reload)
 
+        # Recent directories submenu
+        self.recent_menu = file_menu.addMenu("Recent &Directories")
+        self._populate_recent_directories_menu()
+
         file_menu.addSeparator()
         action_quit = QAction("E&xit", self)
         action_quit.triggered.connect(QtWidgets.QApplication.instance().quit)
@@ -306,8 +354,36 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
 
         # View/Help menu
         view_menu = menubar.addMenu("&View")
+
+        # Theme submenu
+        theme_menu = view_menu.addMenu("&Theme")
+        theme_group = QActionGroup(self)
+        theme_group.setExclusive(True)
+
+        self.action_theme_light = QAction("&Light Mode", self, checkable=True)
+        self.action_theme_light.triggered.connect(lambda: self._set_theme("light"))
+        theme_group.addAction(self.action_theme_light)
+        theme_menu.addAction(self.action_theme_light)
+
+        self.action_theme_dark = QAction("&Dark Mode", self, checkable=True)
+        self.action_theme_dark.triggered.connect(lambda: self._set_theme("dark"))
+        theme_group.addAction(self.action_theme_dark)
+        theme_menu.addAction(self.action_theme_dark)
+
+        theme_menu.addSeparator()
+
+        self.action_theme_system = QAction("&Follow System", self, checkable=True)
+        self.action_theme_system.triggered.connect(lambda: self._set_theme("system"))
+        theme_group.addAction(self.action_theme_system)
+        theme_menu.addAction(self.action_theme_system)
+
+        # Set initial check state based on current mode
+        self._update_theme_menu_state()
+
+        view_menu.addSeparator()
+
         action_progress = QAction("Show &Progress", self)
-        action_progress.setShortcut(QKeySequence("Ctrl+P"))
+        action_progress.setShortcut(QKeySequence("Ctrl+Shift+P"))
         action_progress.triggered.connect(self.show_progress_dialog)
         view_menu.addAction(action_progress)
 
@@ -325,6 +401,119 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         # Show docs (opens README)
         QShortcut(QKeySequence("F1"), self, activated=self._open_docs)
 
+        # Command palette (Ctrl+P)
+        self.shortcut_manager.register_shortcut(
+            "command_palette", "Ctrl+P", self._show_command_palette
+        )
+
+        # Tab navigation shortcuts
+        self.shortcut_manager.register_shortcut("next_tab", "Ctrl+Tab", self._next_tab)
+        self.shortcut_manager.register_shortcut(
+            "prev_tab", "Ctrl+Shift+Tab", self._prev_tab
+        )
+
+        # Register actions in command palette
+        self._register_command_palette_actions()
+
+    def _show_command_palette(self) -> None:
+        """Show the command palette dialog."""
+        self.command_palette.show()
+
+    def _next_tab(self) -> None:
+        """Switch to next tab."""
+        current = self.tabWidget.currentIndex()
+        count = self.tabWidget.count()
+        self.tabWidget.setCurrentIndex((current + 1) % count)
+
+    def _prev_tab(self) -> None:
+        """Switch to previous tab."""
+        current = self.tabWidget.currentIndex()
+        count = self.tabWidget.count()
+        self.tabWidget.setCurrentIndex((current - 1) % count)
+
+    def _register_command_palette_actions(self) -> None:
+        """Register actions in the command palette."""
+        # File actions
+        self.command_palette.register_action(
+            "file.open",
+            "Open Folder",
+            "File",
+            lambda: self.load_path(None),
+            shortcut="Ctrl+O",
+        )
+        self.command_palette.register_action(
+            "file.reload", "Reload", "File", self.reload_source, shortcut="Ctrl+R"
+        )
+
+        # View actions
+        self.command_palette.register_action(
+            "view.light_theme", "Light Theme", "View", lambda: self._set_theme("light")
+        )
+        self.command_palette.register_action(
+            "view.dark_theme", "Dark Theme", "View", lambda: self._set_theme("dark")
+        )
+        self.command_palette.register_action(
+            "view.system_theme",
+            "System Theme",
+            "View",
+            lambda: self._set_theme("system"),
+        )
+
+        # Tab navigation actions
+        for idx, name in tab_mapping.items():
+            display_name = name.replace("_", " ").title()
+            self.command_palette.register_action(
+                f"tab.{name}",
+                f"Go to {display_name}",
+                "Navigate",
+                lambda i=idx: self.tabWidget.setCurrentIndex(i),
+            )
+
+    def _populate_recent_directories_menu(self) -> None:
+        """Populate the Recent Directories submenu."""
+        self.recent_menu.clear()
+
+        recent_paths = self.recent_paths_manager.get_recent_paths()
+
+        if not recent_paths:
+            action = self.recent_menu.addAction("(No recent directories)")
+            action.setEnabled(False)
+            return
+
+        for recent in recent_paths:
+            path = recent.path
+            # Use basename for display, full path in status tip
+            display = os.path.basename(path) or path
+            action = self.recent_menu.addAction(display)
+            action.setStatusTip(path)
+            action.triggered.connect(
+                lambda checked=False, p=path: self._open_recent_directory(p)
+            )
+
+        self.recent_menu.addSeparator()
+        clear_action = self.recent_menu.addAction("Clear Recent")
+        clear_action.triggered.connect(self._clear_recent_directories)
+
+    def _open_recent_directory(self, path: str) -> None:
+        """Open a directory from the recent list.
+
+        Args:
+            path: Directory path to open
+        """
+        if os.path.isdir(path):
+            self.load_path(path)
+        else:
+            # Path no longer exists
+            self.toast_manager.show_warning(f"Directory not found: {path}")
+            self.recent_paths_manager.remove_invalid_path(path)
+            self._populate_recent_directories_menu()
+
+    def _clear_recent_directories(self) -> None:
+        """Clear all recent directories."""
+        self.recent_paths_manager.clear()
+        self._populate_recent_directories_menu()
+        self.toast_manager.show_info("Recent directories cleared")
+
     def _sample_data_path(self):
         candidates = [
             Path("tests/fixtures/reference_data"),
@@ -339,6 +528,234 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         log_dir = Path.home() / ".xpcs_toolkit" / "logs"
         log_dir.mkdir(parents=True, exist_ok=True)
         QDesktopServices.openUrl(QtCore.QUrl.fromLocalFile(str(log_dir)))
+
+    def _set_theme(self, mode: str) -> None:
+        """Set the application theme.
+
+        Args:
+            mode: One of "light", "dark", or "system"
+        """
+        self.theme_manager.set_theme(mode)
+        self._update_theme_menu_state()
+        logger.info(f"Theme changed to {mode}")
+
+    def _update_theme_menu_state(self) -> None:
+        """Update theme menu check states based on current mode."""
+        current_mode = self.theme_manager.get_current_mode()
+        self.action_theme_light.setChecked(current_mode == "light")
+        self.action_theme_dark.setChecked(current_mode == "dark")
+        self.action_theme_system.setChecked(current_mode == "system")
+
+    def _on_theme_changed(self, theme: str) -> None:
+        """Handle theme change signal.
+
+        Args:
+            theme: The new theme name ("light" or "dark")
+        """
+        logger.debug(f"Theme changed to {theme}, refreshing plots")
+        self._refresh_all_plots(theme)
+
+    def _refresh_all_plots(self, theme: str) -> None:
+        """Refresh all plot widgets with new theme colors.
+
+        This method updates backgrounds and colors for all plot widgets
+        (both PyQtGraph and Matplotlib) when the theme changes.
+
+        Args:
+            theme: The new theme name ("light" or "dark")
+        """
+        # Apply theme to PyQtGraph global config
+        self.theme_manager.apply_to_pyqtgraph()
+
+        # Update individual plot widgets that have apply_theme method
+        plot_widgets = [
+            # PyQtGraph widgets
+            getattr(self, "pg_saxs", None),  # SAXS 2D ImageView
+            getattr(self, "mp_saxs", None),  # SAXS 1D PlotWidget
+            getattr(self, "mp_stab", None),  # Stability PlotWidget
+            getattr(self, "pg_intt", None),  # Intensity PlotWidgetDev
+            getattr(self, "mp_g2", None),  # G2 PlotWidgetDev
+            getattr(self, "mp_2t", None),  # Two-time ImageView
+            getattr(self, "pg_qmap", None),  # Q-map ImageView
+            getattr(self, "mp_avg_g2", None),  # Average G2 PlotWidgetDev
+            # Matplotlib widgets
+            getattr(self, "mp_tauq", None),  # Diffusion MplCanvasBarV
+            getattr(self, "mp_tauq_pre", None),  # Diffusion preview MplCanvasBarV
+        ]
+
+        for widget in plot_widgets:
+            if widget is not None and hasattr(widget, "apply_theme"):
+                try:
+                    widget.apply_theme(theme)
+                except Exception as e:
+                    logger.warning(
+                        f"Failed to apply theme to {type(widget).__name__}: {e}"
+                    )
+
+        logger.debug(f"Refreshed all plots with {theme} theme")
+
+    def _setup_drag_drop_list(self) -> None:
+        """Replace the target list view with a drag-drop enabled version."""
+        # Get the parent (box_target) and its grid layout
+        parent = self.list_view_target.parent()
+
+        # Create new drag-drop list view with same parent
+        new_list_view = DragDropListView(parent)
+        new_list_view.setObjectName("list_view_target")
+
+        # Copy selection mode from old list view
+        new_list_view.setSelectionMode(self.list_view_target.selectionMode())
+
+        # Get the grid layout (gridLayout_4)
+        layout = self.gridLayout_4
+
+        # Remove old widget from layout
+        layout.removeWidget(self.list_view_target)
+        self.list_view_target.deleteLater()
+
+        # Add new widget at same grid position (row 0, col 0)
+        layout.addWidget(new_list_view, 0, 0, 1, 1)
+
+        # Replace reference
+        self.list_view_target = new_list_view
+
+        # Connect the items_reordered signal
+        self.list_view_target.items_reordered.connect(self._on_target_list_reordered)
+
+        logger.debug("Replaced target list with DragDropListView")
+
+    def _on_target_list_reordered(self, from_index: int, to_index: int) -> None:
+        """Handle drag-drop reordering in the target list.
+
+        Args:
+            from_index: Original position of the item
+            to_index: New position of the item
+        """
+        logger.info(f"Target list reordered: {from_index} -> {to_index}")
+        # The model has already been updated by the drag-drop operation
+        # Just update the kernel if needed
+        if self.vk is not None:
+            # Re-sync the file order with the viewer kernel
+            model = self.list_view_target.model()
+            if model is not None:
+                # Get all file paths in new order
+                paths = []
+                for row in range(model.rowCount()):
+                    item_text = model.data(model.index(row, 0))
+                    paths.append(item_text)
+                # Update any internal state that tracks file order
+                logger.debug(f"New file order: {paths}")
+
+    # ---- Session management -------------------------------------------------
+
+    def closeEvent(self, event: QtGui.QCloseEvent) -> None:
+        """Override close event to save session state.
+
+        Args:
+            event: The close event
+        """
+        try:
+            session = self._collect_session_state()
+            self.session_manager.save_session(session)
+            logger.debug("Session saved on close")
+        except Exception as e:
+            logger.warning(f"Failed to save session on close: {e}")
+
+        # Call parent implementation
+        super().closeEvent(event)
+
+    def _collect_session_state(self) -> SessionState:
+        """Collect current workspace state for session persistence.
+
+        Returns:
+            SessionState with current UI and file state
+        """
+        # Collect target files
+        target_files = []
+        if self.target_model is not None:
+            for row in range(self.target_model.rowCount()):
+                item = self.target_model.item(row)
+                if item is not None:
+                    path = item.text()
+                    target_files.append(FileEntry(path=path, order=row))
+
+        # Collect window geometry
+        geom = self.geometry()
+        window_geometry = WindowGeometry(
+            x=geom.x(),
+            y=geom.y(),
+            width=geom.width(),
+            height=geom.height(),
+            maximized=self.isMaximized(),
+        )
+
+        # Collect analysis parameters from UI widgets
+        analysis_params = AnalysisParameters(
+            saxs2d_colormap=getattr(self, "saxs2d_colormap", "viridis"),
+            saxs2d_auto_level=self.saxs2d_autolevel.isChecked()
+            if hasattr(self, "saxs2d_autolevel")
+            else True,
+            saxs2d_log_scale=getattr(self, "saxs2d_log_scale", False),
+            saxs1d_log_x=getattr(self, "saxs1d_log_x", False),
+            saxs1d_log_y=getattr(self, "saxs1d_log_y", True),
+            g2_fit_function=self.g2_fitting_function.currentText()
+            if hasattr(self, "g2_fitting_function")
+            else "single_exp",
+            g2_q_index=getattr(self, "g2_q_index", 0),
+            g2_show_fit=getattr(self, "g2_show_fit", True),
+            twotime_selected_q=self.comboBox_twotime_selection.currentIndex()
+            if hasattr(self, "comboBox_twotime_selection")
+            else 0,
+        )
+
+        return SessionState(
+            data_path=self.work_dir.text() if hasattr(self, "work_dir") else None,
+            target_files=target_files,
+            active_tab=self.tabWidget.currentIndex(),
+            window_geometry=window_geometry,
+            analysis_params=analysis_params,
+        )
+
+    def _restore_session(self) -> None:
+        """Restore workspace state from saved session."""
+        session = self.session_manager.load_session()
+        if session is None:
+            logger.debug("No session to restore")
+            return
+
+        # Show warnings for missing files as toast notifications
+        warnings = self.session_manager.get_warnings()
+        for warning in warnings:
+            logger.warning(warning)
+            self.toast_manager.show_warning(warning)
+
+        # Restore window geometry (but don't override maximized state)
+        if not session.window_geometry.maximized:
+            self.setGeometry(
+                session.window_geometry.x,
+                session.window_geometry.y,
+                session.window_geometry.width,
+                session.window_geometry.height,
+            )
+
+        # Restore data path if it still exists
+        if session.data_path and os.path.isdir(session.data_path):
+            self.load_path(session.data_path)
+
+        # Restore active tab
+        if 0 <= session.active_tab < self.tabWidget.count():
+            self.tabWidget.setCurrentIndex(session.active_tab)
+
+        # Restore analysis parameters
+        params = session.analysis_params
+        if hasattr(self, "saxs2d_autolevel"):
+            self.saxs2d_autolevel.setChecked(params.saxs2d_auto_level)
+        if hasattr(self, "g2_fitting_function"):
+            idx = self.g2_fitting_function.findText(params.g2_fit_function)
+            if idx >= 0:
+                self.g2_fitting_function.setCurrentIndex(idx)
+
+        logger.info("Session restored successfully")
 
     def _open_docs(self):
         docs_path = Path(__file__).resolve().parent.parent / "docs" / "README.rst"
@@ -433,12 +850,16 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
                 self.apply_qmap_result(result)
 
             self.progress_manager.complete_operation(operation_id, True)
+            self.toast_manager.show_success(
+                f"{plot_type.replace('_', ' ').title()} plot updated"
+            )
 
         except Exception as e:
             logger.error(f"Error applying {plot_type} plot result: {e}")
             self.progress_manager.complete_operation(
                 operation_id, False, f"Plot error: {e!s}"
             )
+            self.toast_manager.show_error(f"Plot error: {e!s}")
 
         # Clean up
         del self.active_plot_operations[operation_id]
@@ -451,6 +872,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         logger.debug(f"Traceback: {traceback_str}")
 
         self.progress_manager.complete_operation(operation_id, False, error_msg)
+        self.toast_manager.show_error(f"Operation failed: {error_msg}")
 
         # Clean up
         if operation_id in self.active_plot_operations:
@@ -1864,6 +2286,10 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         self.avg_job_table.setModel(self.vk.avg_worker)
         self.source_model = self.vk.source
         self.update_box(self.vk.source, mode="source")
+
+        # Update recent paths and menu
+        self.recent_paths_manager.add_path(folder)
+        self._populate_recent_directories_menu()
 
         # Trigger plot update to show proper empty states since no files are auto-added
         self.update_plot()
