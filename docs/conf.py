@@ -59,6 +59,14 @@ MOCK_MODULES = [
     "line_profiler",
     "py_spy",
     "psutil",
+    # GUI modernization modules that depend on Qt
+    "xpcs_toolkit.gui.theme.manager",
+    "xpcs_toolkit.gui.state.session_manager",
+    "xpcs_toolkit.gui.state.preferences",
+    "xpcs_toolkit.gui.shortcuts.shortcut_manager",
+    "xpcs_toolkit.gui.widgets.command_palette",
+    "xpcs_toolkit.gui.widgets.toast_notification",
+    "xpcs_toolkit.gui.widgets.drag_drop_list",
 ]
 
 for mod_name in MOCK_MODULES:
@@ -208,6 +216,14 @@ autodoc_mock_imports = [
     # Scientific computing dependencies that might cause import issues
     "matplotlib.backends.qt_compat",
     "numpy.distutils",
+    # GUI modernization modules that depend on Qt
+    "xpcs_toolkit.gui.theme.manager",
+    "xpcs_toolkit.gui.state.session_manager",
+    "xpcs_toolkit.gui.state.preferences",
+    "xpcs_toolkit.gui.shortcuts.shortcut_manager",
+    "xpcs_toolkit.gui.widgets.command_palette",
+    "xpcs_toolkit.gui.widgets.toast_notification",
+    "xpcs_toolkit.gui.widgets.drag_drop_list",
 ]
 
 # Autosummary settings

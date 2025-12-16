@@ -63,6 +63,16 @@ Features
 * HDF5 data support (NeXus format)
 * PySide6 GUI interface
 
+**New in v1.1.0:**
+
+* Light/dark theme support with system detection
+* Session persistence and preferences management
+* Command palette (Ctrl+Shift+P) for quick actions
+* Toast notifications for non-intrusive status updates
+* Keyboard shortcut management
+* Drag-and-drop file handling
+* Theme-aware plots (PyQtGraph & Matplotlib)
+
 Gallery
 -------
 

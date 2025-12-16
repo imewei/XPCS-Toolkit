@@ -19,12 +19,22 @@ Python-based XPCS data analysis and visualization tool.
 * Two-time correlation analysis
 * HDF5 data support (NeXus format)
 
+**New in v1.1.0 - GUI Modernization:**
+
+* Light/dark theme support with system detection
+* Session persistence (resume where you left off)
+* Command palette (Ctrl+Shift+P) for quick access
+* Toast notifications for status updates
+* Keyboard shortcut management
+* Drag-and-drop file handling
+* Theme-aware plots (PyQtGraph & Matplotlib)
+
 UI notes
 --------
 
 * Menu-driven header (no quick-access toolbar); all actions live under the menus/shortcuts.
 * Starts maximized with a rectangular layout and a minimum-size floor to prevent cramped controls.
-* PySide6 GUI interface
+* PySide6 GUI interface with modern theming
 * Performance optimizations
 
 Installation
@@ -112,8 +122,12 @@ Project Structure
    xpcs_toolkit/
    ├── module/            # Analysis modules
    ├── fileIO/            # HDF5 I/O
-   ├── gui/               # PySide6 GUI
-   ├── plothandler/       # Plotting
+   ├── gui/               # GUI modernization
+   │   ├── theme/         # Light/dark theming
+   │   ├── state/         # Session & preferences
+   │   ├── shortcuts/     # Keyboard shortcuts
+   │   └── widgets/       # Modern UI widgets
+   ├── plothandler/       # Theme-aware plotting
    ├── threading/         # Async workers
    ├── utils/             # Utilities
    └── xpcs_file.py       # Core data class
