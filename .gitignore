@@ -256,3 +256,5 @@ run_phase*_temp.py
 agent-os/
 .specify/
 .code/
+.gemini/
+.agent/

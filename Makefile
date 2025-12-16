@@ -3,7 +3,7 @@
 # Development Tools and Testing
 
 .PHONY: help install install-dev env-info \
-        test test-smoke test-fast test-ci test-full test-coverage test-integration \
+        test test-smoke test-fast test-ci test-full test-all test-coverage test-integration \
         test-parallel test-unit test-scientific test-gui test-gui-headless \
         clean clean-all clean-pyc clean-build clean-test clean-venv \
         format lint type-check check quick docs build publish info version \
@@ -96,8 +96,9 @@ help:
 	@echo "  $(CYAN)test-integration$(RESET) Run integration tests only"
 	@echo "  $(CYAN)test-scientific$(RESET)  Run scientific validation tests"
 	@echo "  $(CYAN)test-ci$(RESET)          Run CI test suite (matches GitHub Actions)"
-	@echo "  $(CYAN)test-full$(RESET)        Run comprehensive test suite"
-	@echo "  $(CYAN)test-parallel$(RESET)    Run tests in parallel (2-4x faster)"
+	@echo "  $(CYAN)test-full$(RESET)        Run comprehensive test suite (excl. GUI)"
+	@echo "  $(CYAN)test-all$(RESET)         Run ALL tests (parallel + GUI sequential)"
+	@echo "  $(CYAN)test-parallel$(RESET)    Run tests in parallel (excl. GUI, 2-4x faster)"
 	@echo "  $(CYAN)test-coverage$(RESET)    Run tests with coverage report"
 	@echo "  $(CYAN)test-gui$(RESET)         Run GUI tests (requires display)"
 	@echo "  $(CYAN)test-gui-headless$(RESET) Run GUI tests in headless mode"
@@ -197,21 +198,22 @@ endif
 # ===================
 test:
 	@echo "$(BOLD)$(BLUE)Running all tests...$(RESET)"
-	$(RUN_CMD) $(PYTEST)
+	@echo "$(YELLOW)Note: GUI tests excluded from parallel - run 'make test-gui' separately$(RESET)"
+	$(RUN_CMD) $(PYTEST) --ignore=$(TEST_DIR)/gui_interactive/ -n auto --dist=loadscope
 
 test-smoke:
 	@echo "$(BOLD)$(BLUE)Running smoke tests (~30s)...$(RESET)"
-	$(RUN_CMD) $(PYTEST) -m "smoke" -n auto
+	$(RUN_CMD) $(PYTEST) -m "smoke" -n auto --dist=loadscope
 	@echo "$(BOLD)$(GREEN)✓ Smoke tests passed!$(RESET)"
 
 test-fast:
 	@echo "$(BOLD)$(BLUE)Running fast tests (excluding slow tests)...$(RESET)"
-	$(RUN_CMD) $(PYTEST) -m "not slow" -n auto
+	$(RUN_CMD) $(PYTEST) -m "not slow" -n auto --dist=loadscope
 	@echo "$(BOLD)$(GREEN)✓ Fast tests passed!$(RESET)"
 
 test-unit:
 	@echo "$(BOLD)$(BLUE)Running unit tests...$(RESET)"
-	$(RUN_CMD) $(PYTEST) -m "unit" -n auto
+	$(RUN_CMD) $(PYTEST) -m "unit" -n auto --dist=loadscope
 
 test-integration:
 	@echo "$(BOLD)$(BLUE)Running integration tests...$(RESET)"
@@ -223,17 +225,26 @@ test-scientific:
 
 test-parallel:
 	@echo "$(BOLD)$(BLUE)Running tests in parallel (2-4x speedup)...$(RESET)"
-	$(RUN_CMD) $(PYTEST) -n auto
+	@echo "$(YELLOW)Note: GUI tests excluded - run 'make test-gui' separately$(RESET)"
+	$(RUN_CMD) $(PYTEST) --ignore=$(TEST_DIR)/gui_interactive/ -n auto --dist=loadscope
 
 test-ci:
 	@echo "$(BOLD)$(BLUE)Running CI test suite (matches GitHub Actions)...$(RESET)"
-	$(RUN_CMD) $(PYTEST) -m "not (slow or gui or stress or flaky)" -n auto --durations=10
+	$(RUN_CMD) $(PYTEST) -m "not (slow or gui or stress or flaky)" -n auto --dist=loadscope --durations=10
 	@echo "$(BOLD)$(GREEN)✓ CI test suite passed!$(RESET)"
 
 test-full:
 	@echo "$(BOLD)$(BLUE)Running comprehensive test suite...$(RESET)"
-	$(RUN_CMD) $(PYTEST) --ignore=$(TEST_DIR)/gui_interactive/
+	$(RUN_CMD) $(PYTEST) --ignore=$(TEST_DIR)/gui_interactive/ -n auto --dist=loadscope
 	@echo "$(BOLD)$(GREEN)✓ Full test suite passed!$(RESET)"
+
+test-all:
+	@echo "$(BOLD)$(BLUE)Running all tests (parallel + GUI sequential)...$(RESET)"
+	@echo "$(CYAN)Step 1/2: Running non-GUI tests in parallel...$(RESET)"
+	$(RUN_CMD) $(PYTEST) --ignore=$(TEST_DIR)/gui_interactive/ -n auto --dist=loadscope
+	@echo "$(CYAN)Step 2/2: Running GUI tests sequentially...$(RESET)"
+	$(RUN_CMD) $(PYTEST) $(TEST_DIR)/gui_interactive/ -p no:xdist
+	@echo "$(BOLD)$(GREEN)✓ All tests passed!$(RESET)"
 
 test-coverage:
 	@echo "$(BOLD)$(BLUE)Running tests with coverage report...$(RESET)"
@@ -243,7 +254,8 @@ test-coverage:
 
 test-gui:
 	@echo "$(BOLD)$(BLUE)Running GUI tests (requires display)...$(RESET)"
-	$(RUN_CMD) $(PYTEST) $(TEST_DIR)/gui_interactive/ -s
+	@echo "$(YELLOW)Note: GUI tests run sequentially (-p no:xdist) to prevent Qt segfaults$(RESET)"
+	$(RUN_CMD) $(PYTEST) $(TEST_DIR)/gui_interactive/ -s -p no:xdist
 
 test-gui-headless:
 	@echo "$(BOLD)$(BLUE)Running GUI tests in headless mode...$(RESET)"
@@ -388,7 +400,7 @@ clean-test:
 		-not -path "./venv/*" \
 		-not -path "./.claude/*" \
 		-exec rm -rf {} + 2>/dev/null || true
-	rm -rf .coverage coverage.xml coverage.json
+	rm -rf .coverage .coverage.* coverage.xml coverage.json
 	rm -rf test-artifacts/ test-reports/
 	find . -name '*.log' -path './tests/*' -delete 2>/dev/null || true
 	find . -name 'test_*.log' -delete 2>/dev/null || true

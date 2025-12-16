@@ -152,11 +152,12 @@ addopts = [
     "--cov-report=html",
     "--cov-report=xml",
     "--cov-fail-under=11",
-    "--dist=loadscope",
     "--maxfail=10",
     "--tb=short",
     "--durations=10",
 ]
+# Note: --dist=loadscope is added via Makefile when running parallel tests
+# to avoid conflicts when xdist is disabled (e.g., for GUI tests)
 python_files = ["test_*.py", "*_test.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]

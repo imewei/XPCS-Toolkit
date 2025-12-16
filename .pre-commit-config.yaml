@@ -73,7 +73,7 @@ repos:
 # Global configuration
 # Environment: Python >=3.12; prefer uv-managed envs (uv sync --dev) before running hooks
 default_language_version:
-  python: python3.12
+  python: python3
 
 fail_fast: false
 exclude: |
