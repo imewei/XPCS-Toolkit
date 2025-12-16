@@ -4,7 +4,6 @@ from pathlib import Path
 
 import pytest
 
-
 ROOT = Path(__file__).resolve().parents[2]
 SNAP_SCRIPT = ROOT / "tests" / "gui_interactive" / "offscreen_snap.py"
 GOLDEN = ROOT / "tests" / "gui_interactive" / "goldens" / "offscreen_snap.png"
@@ -33,4 +32,6 @@ def test_offscreen_snapshot_matches_golden(tmp_path):
     generated_bytes = out_path.read_bytes()
     golden_bytes = GOLDEN.read_bytes()
 
-    assert generated_bytes == golden_bytes, "Offscreen snapshot differs from golden image"
+    assert generated_bytes == golden_bytes, (
+        "Offscreen snapshot differs from golden image"
+    )

@@ -64,6 +64,15 @@ from xpcs_toolkit.xpcs_viewer import XpcsViewer
 
 def pytest_configure(config):
     """Configure GUI-specific test settings."""
+    # CRITICAL: Disable pytest-xdist parallel execution for GUI tests.
+    # Qt and pyqtgraph are not thread-safe, and parallel execution causes
+    # segmentation faults in ViewBox/ViewBoxMenu initialization when multiple
+    # workers try to create GUI components simultaneously.
+    if hasattr(config.option, "numprocesses"):
+        config.option.numprocesses = 0
+    if hasattr(config.option, "dist"):
+        config.option.dist = "no"
+
     # Ensure offscreen platform for headless testing
     os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
@@ -452,7 +461,8 @@ def gui_main_window(qapp, qtbot, mock_viewer_kernel):
 
         yield window
 
-        # Comprehensive cleanup to prevent test state pollution
+        # Minimal cleanup - avoid aggressive deletion that can corrupt Qt/pyqtgraph state
+        # The qtbot fixture will handle widget cleanup properly
         try:
             # Restore original PyQtGraph methods if they were patched
             if original_buildTree is not None:
@@ -475,38 +485,18 @@ def gui_main_window(qapp, qtbot, mock_viewer_kernel):
                 except ImportError:
                     pass
 
-            # Clear all child widgets and their connections
-            for child in window.findChildren(QtWidgets.QWidget):
-                child.setParent(None)
-                child.deleteLater()
-
-            # Close and delete the window
+            # Simply close the window - let Qt handle the rest
+            # Do NOT aggressively delete children as this corrupts pyqtgraph's internal state
             window.close()
-            window.setParent(None)
-            window.deleteLater()
 
-            # Force Qt event processing to complete deletions
-            qtbot.wait(50)
-
-            # Clear Qt application state
+            # Process events to allow Qt to clean up properly
             app = QtWidgets.QApplication.instance()
             if app:
-                app.processEvents()
-                # Clear any remaining widgets
-                for widget in app.allWidgets():
-                    if widget and not widget.parent():
-                        widget.close()
-                        widget.deleteLater()
                 app.processEvents()
 
         except Exception as e:
             # Don't let cleanup failures break tests
             print(f"Warning: GUI cleanup failed: {e}")
-
-        # Clear any global Qt caches or state
-        import gc
-
-        gc.collect()  # Force garbage collection of Qt objects
 
 
 @pytest.fixture
