@@ -119,8 +119,8 @@ master_doc = "index"
 
 # General information about the project.
 project = "XPCS Toolkit"
-project_copyright = "2025, Miaoqi Chu"
-author = "Miaoqi Chu"
+project_copyright = "2025, Miaoqi Chu & Wei Chen"
+author = "Miaoqi Chu & Wei Chen"
 
 # The version info for the project you're documenting, acts as replacement
 # for |version| and |release|, also used in various other places throughout
@@ -289,7 +289,7 @@ latex_documents = [
         master_doc,
         "xpcs_toolkit.tex",
         "XPCS Toolkit Documentation",
-        "Miaoqi Chu",
+        "Miaoqi Chu & Wei Chen",
         "manual",
     ),
 ]

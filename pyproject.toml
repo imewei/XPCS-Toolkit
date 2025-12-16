@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=75.6.0", "setuptools_scm[toml]>=8.2.0"]
+requires = ["setuptools>=75.6.0", "wheel", "setuptools-scm[toml]>=8.2.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -7,10 +7,13 @@ name = "xpcs-toolkit"
 dynamic = ["version"]
 description = "XPCS Toolkit: A python-based interactive tool to visualize and model XPCS dataset"
 readme = "README.rst"
-requires-python = ">=3.12"
-authors = [{name = "Miaoqi Chu", email = "mqichu@anl.gov"}]
-maintainers = [{name = "Miaoqi Chu", email = "mqichu@anl.gov"}]
-
+license = {file = "LICENSE"}
+authors = [
+    {name = "Miaoqi Chu & Wei Chen", email = "mqichu@anl.gov & wchen@anl.gov"},
+]
+maintainers = [
+    {name = "Miaoqi Chu & Wei Chen", email = "mqichu@anl.gov & wchen@anl.gov"},
+]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Science/Research",
@@ -25,10 +28,9 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Operating System :: OS Independent",
-    "Natural Language :: English"
+    "Natural Language :: English",
 ]
-
-license = {text = "MIT"}
+requires-python = ">=3.12"
 keywords = ["XPCS", "X-ray", "photon correlation spectroscopy", "synchrotron", "visualization", "science"]
 
 dependencies = [
@@ -43,13 +45,8 @@ dependencies = [
     "joblib>=1.4.2",
     "tqdm>=4.67.1",
     "psutil>=6.1.1",
-    "hdf5plugin>=4.5.0"
+    "hdf5plugin>=4.5.0",
 ]
-
-[project.scripts]
-xpcs-toolkit = "xpcs_toolkit.cli:main"
-pyxpcsviewer = "xpcs_toolkit.cli:main"
-run_viewer = "xpcs_toolkit.cli:main"
 
 [project.optional-dependencies]
 dev = [
@@ -67,7 +64,7 @@ dev = [
     "mypy>=1.13.0",
     "ruff>=0.8.4",
     "bandit[toml]>=1.8.0",
-    "pre-commit>=4.0.1"
+    "pre-commit>=4.0.1",
 ]
 test = [
     "pytest>=8.3.4",
@@ -75,54 +72,40 @@ test = [
     "pytest-xdist[psutil]>=3.6.1",
     "pytest-timeout>=2.3.1",
     "pytest-sugar>=1.0.0",
-    "pytest-mock>=3.14.0"
+    "pytest-mock>=3.14.0",
 ]
 docs = [
     "sphinx>=8.1.3",
     "sphinx-rtd-theme>=3.0.2",
     "myst-parser>=4.0.0",
     "sphinx-autodoc-typehints>=2.4.4",
-    "sphinx-copybutton>=0.5.2"
+    "sphinx-copybutton>=0.5.2",
 ]
 validation = [
     "memory-profiler>=0.61.0",
     "line-profiler>=4.1.0; sys_platform != 'win32'",
-    "py-spy>=0.3.0; sys_platform == 'linux'"
+    "py-spy>=0.3.0; sys_platform == 'linux'",
 ]
 performance = [
     "pytest-benchmark>=4.0.0",
     "memory-profiler>=0.61.0",
-    "pympler>=0.9.0"
+    "pympler>=0.9.0",
 ]
 all = [
-    # Development tools
-    "coverage[toml]>=7.6.9",
-    "pytest>=8.3.4",
-    "pytest-cov>=6.0.0",
-    "pytest-xdist[psutil]>=3.6.1",
-    "pytest-benchmark>=4.0.0",
-    "pytest-mock>=3.14.0",
-    "pytest-timeout>=2.3.1",
-    "pytest-sugar>=1.0.0",
-    "pytest-html>=4.1.1",
-    "pytest-qt>=4.4.0",
-    "hypothesis>=6.115.6",
-    "mypy>=1.13.0",
-    "ruff>=0.8.4",
-    "bandit[toml]>=1.8.0",
-    "pre-commit>=4.0.1",
-    # Documentation tools
-    "sphinx>=8.1.3",
-    "sphinx-rtd-theme>=3.0.2",
-    "myst-parser>=4.0.0",
-    "sphinx-autodoc-typehints>=2.4.4",
-    "sphinx-copybutton>=0.5.2",
-    # Validation and profiling tools
-    "memory-profiler>=0.61.0",
-    "line-profiler>=4.1.0; sys_platform != 'win32'",
-    "py-spy>=0.3.0; sys_platform == 'linux'",
-    "pympler>=0.9.0"
+    "xpcs-toolkit[dev,test,docs,validation,performance]",
 ]
+
+[project.scripts]
+xpcs-toolkit = "xpcs_toolkit.cli:main"
+pyxpcsviewer = "xpcs_toolkit.cli:main"
+run_viewer = "xpcs_toolkit.cli:main"
+
+[project.urls]
+"Homepage" = "https://github.com/imewei/XPCS-Toolkit"
+"Bug Tracker" = "https://github.com/imewei/XPCS-Toolkit/issues"
+"Documentation" = "https://github.com/imewei/XPCS-Toolkit/tree/master/docs"
+"Source Code" = "https://github.com/imewei/XPCS-Toolkit"
+"Changelog" = "https://github.com/imewei/XPCS-Toolkit/blob/master/HISTORY.rst"
 
 [tool.uv]
 # Prefer uv-managed Python to guarantee reproducible environments
@@ -130,59 +113,38 @@ python = ">=3.12"
 python-preference = "managed"
 default-groups = ["dev", "docs", "test"]
 
-[project.urls]
-bugs = "https://github.com/imewei/XPCS-Toolkit/issues"
-changelog = "https://github.com/imewei/XPCS-Toolkit/blob/master/HISTORY.rst"
-homepage = "https://github.com/imewei/XPCS-Toolkit"
-repository = "https://github.com/imewei/XPCS-Toolkit.git"
-documentation = "https://github.com/imewei/XPCS-Toolkit/tree/master/docs"
-
-[tool.setuptools]
-
 [tool.setuptools_scm]
 version_scheme = "post-release"
 local_scheme = "node-and-timestamp"
 
 [tool.setuptools.packages.find]
-where = ["."]
+include = ["xpcs_toolkit", "xpcs_toolkit.*"]
+exclude = ["tests*", "docs*", "validation*", "scripts*"]
 
 [tool.setuptools.package-data]
-"xpcs_toolkit" = ["configure/*.json", "ui/*.ui", "ui/resources/*.qrc", "ui/resources/*.png"]
-"*" = ["*.md", "*.rst", "*.txt", "*.yaml", "*.yml"]
+"xpcs_toolkit" = ["py.typed", "configure/*.json", "ui/*.ui", "ui/resources/*.qrc", "ui/resources/*.png"]
 
 [tool.setuptools.data-files]
 "share/xpcs_toolkit/docs_images" = [
-  "docs/images/average.png",
-  "docs/images/diffusion.png",
-  "docs/images/g2mod.png",
-  "docs/images/hdf_info.png",
-  "docs/images/intt.png",
-  "docs/images/saxs1d.png",
-  "docs/images/saxs2d.png",
-  "docs/images/stability.png",
-  "docs/images/twotime.png"
+    "docs/images/average.png",
+    "docs/images/diffusion.png",
+    "docs/images/g2mod.png",
+    "docs/images/hdf_info.png",
+    "docs/images/intt.png",
+    "docs/images/saxs1d.png",
+    "docs/images/saxs2d.png",
+    "docs/images/stability.png",
+    "docs/images/twotime.png",
 ]
 "share/xpcs_toolkit/test_artifacts" = [
-  "tests/artifacts/offscreen_snap.png"
+    "tests/artifacts/offscreen_snap.png",
 ]
 
-# Mypy
-[tool.mypy]
-files = "."
-strict = true
-warn_unreachable = true
-warn_no_return = true
-
-[[tool.mypy.overrides]]
-module = "tests.*"
-allow_untyped_defs = true
-disable_error_code = "attr-defined"
-
-# Pytest configuration
 [tool.pytest.ini_options]
-minversion = "6.0"
+minversion = "8.0"
+testpaths = ["tests"]
 addopts = [
-    "-ra",
+    "-v",
     "--strict-markers",
     "--strict-config",
     "--cov=xpcs_toolkit",
@@ -190,43 +152,61 @@ addopts = [
     "--cov-report=html",
     "--cov-report=xml",
     "--cov-fail-under=11",
+    "--dist=loadscope",
+    "--maxfail=10",
     "--tb=short",
-    "--durations=10"
+    "--durations=10",
 ]
-testpaths = ["tests"]
 python_files = ["test_*.py", "*_test.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
+cache_dir = ".pytest_cache"
+console_output_style = "progress"
 markers = [
+    # Test tier markers (for tiered CI strategy)
+    "smoke: Quick smoke tests for basic functionality (< 30 seconds)",
     "unit: Unit tests for individual components",
     "integration: Integration tests across multiple components",
-    "performance: Performance and benchmark tests",
-    "gui: GUI tests requiring display (may be interactive)",
-    "slow: Tests that take more than 1 second",
-    "scientific: Tests that verify scientific accuracy and algorithms",
-    "parametrize: Parametrized tests with multiple inputs",
-    "error_handling: Tests for error conditions and edge cases",
-    "end_to_end: Full workflow tests from file load to analysis",
-    "memory: Memory usage and leak detection tests",
-    "threading: Multithreading and async operation tests",
-    "logging: Logging system functionality tests",
-    "stress: Resource exhaustion and extreme load tests",
-    "edge_cases: Boundary conditions and extreme input tests",
-    "system_dependent: Tests that depend on system resources or environment",
-    "flaky: Tests that may fail intermittently due to external factors",
-    "data_integrity: Tests that verify data accuracy and corruption handling",
-    "regression: Regression tests for previously fixed bugs",
-    "compatibility: Cross-platform and version compatibility tests",
     "validation: Scientific validation against known results",
-    "smoke: Quick smoke tests for basic functionality",
+    "benchmark: Performance and benchmark tests",
+
+    # Execution characteristics
+    "slow: Tests that take more than 1 second",
+    "gpu: Tests that require GPU",
     "critical: Critical path tests that must always pass",
-    "requires_data: Tests that require external test data files",
-    "requires_display: Tests that require a graphical display",
+
+    # Domain-specific markers
+    "scientific: Tests that verify scientific accuracy and algorithms",
     "numerical: Tests that verify numerical computation accuracy",
+    "gui: GUI tests requiring display (may be interactive)",
     "file_io: Tests for file input/output operations",
     "plotting: Tests for visualization and plotting functionality",
+
+    # Resource requirements
+    "requires_data: Tests that require external test data files",
+    "requires_display: Tests that require a graphical display",
+    "memory: Memory usage and leak detection tests",
+    "threading: Multithreading and async operation tests",
+
+    # Test characteristics
+    "parametrize: Parametrized tests with multiple inputs",
+    "error_handling: Tests for error conditions and edge cases",
+    "edge_cases: Boundary conditions and extreme input tests",
+    "regression: Regression tests for previously fixed bugs",
+    "flaky: Tests that may fail intermittently due to external factors",
+
+    # System and compatibility
+    "system_dependent: Tests that depend on system resources or environment",
+    "compatibility: Cross-platform and version compatibility tests",
+    "end_to_end: Full workflow tests from file load to analysis",
+    "stress: Resource exhaustion and extreme load tests",
+
+    # Framework-specific
     "qt_validation: Qt framework validation and compatibility tests",
-    "reliability: Reliability framework and robustness tests"
+    "reliability: Reliability framework and robustness tests",
+    "logging: Logging system functionality tests",
+    "data_integrity: Tests that verify data accuracy and corruption handling",
+    "performance: Performance and benchmark tests",
 ]
 filterwarnings = [
     "ignore::UserWarning",
@@ -234,38 +214,110 @@ filterwarnings = [
     "ignore::PendingDeprecationWarning",
     "ignore::RuntimeWarning:numpy.*",
     "ignore::FutureWarning:pandas.*",
-    "ignore::UserWarning:matplotlib.*"
+    "ignore::UserWarning:matplotlib.*",
 ]
 timeout = 300
-
-# Test suite profiles and execution strategies
-# Development profiles:
-# pytest -m "smoke" - Quick smoke tests (< 30 seconds)
-# pytest -m "unit or integration" - Core tests for development (fast feedback)
-# pytest -m "critical" - Must-pass tests for any commit
-# pytest -m "scientific and not slow" - Fast scientific validation
-#
-# CI/CD profiles:
-# pytest -m "not (stress or flaky or system_dependent)" - Stable CI tests
-# pytest -m "performance" - Performance regression tests
-# pytest -m "compatibility" - Cross-platform compatibility tests
-#
-# Comprehensive profiles:
-# pytest -m "not stress" - All tests except stress tests
-# pytest - All tests including stress tests
 timeout_method = "thread"
 
-# Test execution groups for better organization
-# Usage: pytest -m "smoke or (unit and not slow)"
-# Available group expressions:
-# fast: -m "smoke or (unit and not slow)"
-# core: -m "(unit or integration) and not slow"
-# scientific: -m "scientific or numerical or validation"
-# ci_stable: -m "not (stress or flaky or system_dependent or gui)"
-# performance: -m "performance and not stress"
-# full_validation: -m "not stress"
+[tool.black]
+line-length = 88
+target-version = ['py312']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+    \.git
+  | \.eggs
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | _build
+  | buck-out
+  | build
+  | dist
+  | venv
+)/
+'''
 
-# Coverage configuration
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+exclude = [
+    ".bzr",
+    ".direnv",
+    ".eggs",
+    ".git",
+    ".hg",
+    ".mypy_cache",
+    ".nox",
+    ".pants.d",
+    ".pytype",
+    ".ruff_cache",
+    ".svn",
+    ".tox",
+    ".venv",
+    "__pypackages__",
+    "_build",
+    "buck-out",
+    "build",
+    "dist",
+    "node_modules",
+    "venv",
+]
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "C",   # flake8-comprehensions
+    "B",   # flake8-bugbear
+    "UP",  # pyupgrade
+    "S",   # flake8-bandit
+    "A",   # flake8-builtins
+    "C4",  # flake8-comprehensions
+    "PIE", # flake8-pie
+    "T20", # flake8-print
+    "RET", # flake8-return
+    "SIM", # flake8-simplify
+    "ARG", # flake8-unused-arguments
+    "PL",  # pylint
+    "RUF", # ruff-specific
+]
+ignore = [
+    "E501",    # line too long
+    "B008",    # do not perform function calls in argument defaults
+    "C901",    # too complex
+    "RET504",  # unnecessary variable assignment before return
+    "S101",    # use of assert
+    "PLR0913", # too many arguments
+]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401"]
+"tests/*" = ["B", "C", "E", "F", "W", "S101", "ARG", "PLR2004", "SLF001", "T201"]
+"validation/*" = ["T201", "S101"]
+"scripts/*" = ["T201"]
+
+[tool.mypy]
+python_version = "3.12"
+warn_return_any = false
+warn_unused_configs = true
+disallow_untyped_defs = false
+disallow_any_generics = false
+ignore_missing_imports = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_unreachable = true
+strict_equality = true
+
+[[tool.mypy.overrides]]
+module = "tests.*"
+allow_untyped_defs = true
+disable_error_code = ["attr-defined", "name-defined"]
+
 [tool.coverage.run]
 source = ["xpcs_toolkit"]
 omit = [
@@ -273,52 +325,44 @@ omit = [
     "*/test_*",
     "*/__pycache__/*",
     "*/site-packages/*",
-    "xpcs_toolkit/ui/*",  # GUI code hard to test
-    "xpcs_toolkit/icons_rc.py",  # Generated resource file
-    "*/validation/*",  # Validation scripts
-    "*/scripts/*",  # Utility scripts
-    "xpcs_toolkit/cli.py",  # CLI entry point (minimal logic)
-    "xpcs_toolkit/viewer_ui.py",  # Auto-generated UI code
-    "xpcs_toolkit/ui/resources/*",  # Resource files
-    "xpcs_toolkit/default_setting.py",  # Configuration constants only
-    "xpcs_toolkit/helper/logwriter.py",  # Simple utility class
-    "xpcs_toolkit/fileIO/ftype_utils.py",  # File type utilities - rarely used
-    "xpcs_toolkit/helper/utils.py",  # Helper utilities with minimal business logic
-    "xpcs_toolkit/module/tauq.py",  # Legacy tau-q analysis module
-    "xpcs_toolkit/utils/common_checks.py",  # Common validation utilities
-    "xpcs_toolkit/utils/performance_monitor.py",  # Performance monitoring utilities
-    "xpcs_toolkit/utils/reliability_manager.py",  # Reliability management utilities
-    "xpcs_toolkit/utils/startup_optimizer.py",  # Startup optimization utilities
-    "xpcs_toolkit/utils/visualization_optimizer.py",  # Visualization optimization utilities
-    "xpcs_toolkit/file_locator.py",  # File discovery utility
-    "xpcs_toolkit/helper/listmodel.py",  # Qt model utility
-    "xpcs_toolkit/module/average_toolbox.py",  # File averaging utilities
-    "xpcs_toolkit/threading/*",  # Threading infrastructure modules
-    "xpcs_toolkit/utils/health_monitor.py",  # Health monitoring utilities
-    "xpcs_toolkit/utils/reliability.py",  # Reliability framework
-    "xpcs_toolkit/utils/state_validator.py",  # State validation utilities
-    "xpcs_toolkit/utils/validation.py",  # General validation utilities
-    "xpcs_toolkit/utils/memory_manager.py",  # Memory management utilities
-    "xpcs_toolkit/utils/memory_predictor.py",  # Memory prediction utilities
-    "xpcs_toolkit/utils/streaming_processor.py",  # Streaming processing utilities
-    "xpcs_toolkit/utils/lazy_loader.py",  # Lazy loading utilities
-    "xpcs_toolkit/utils/vectorized_roi.py",  # ROI processing utilities
-    "xpcs_toolkit/xpcs_viewer.py",  # Main GUI application - hard to test
-    "xpcs_toolkit/viewer_kernel.py",  # Application kernel - GUI dependent
-    "xpcs_toolkit/plothandler/*",  # Plot handling modules - GUI dependent
+    "xpcs_toolkit/ui/*",
+    "xpcs_toolkit/icons_rc.py",
+    "*/validation/*",
+    "*/scripts/*",
+    "xpcs_toolkit/cli.py",
+    "xpcs_toolkit/viewer_ui.py",
+    "xpcs_toolkit/ui/resources/*",
+    "xpcs_toolkit/default_setting.py",
+    "xpcs_toolkit/helper/logwriter.py",
+    "xpcs_toolkit/fileIO/ftype_utils.py",
+    "xpcs_toolkit/helper/utils.py",
+    "xpcs_toolkit/module/tauq.py",
+    "xpcs_toolkit/utils/common_checks.py",
+    "xpcs_toolkit/utils/performance_monitor.py",
+    "xpcs_toolkit/utils/reliability_manager.py",
+    "xpcs_toolkit/utils/startup_optimizer.py",
+    "xpcs_toolkit/utils/visualization_optimizer.py",
+    "xpcs_toolkit/file_locator.py",
+    "xpcs_toolkit/helper/listmodel.py",
+    "xpcs_toolkit/module/average_toolbox.py",
+    "xpcs_toolkit/threading/*",
+    "xpcs_toolkit/utils/health_monitor.py",
+    "xpcs_toolkit/utils/reliability.py",
+    "xpcs_toolkit/utils/state_validator.py",
+    "xpcs_toolkit/utils/validation.py",
+    "xpcs_toolkit/utils/memory_manager.py",
+    "xpcs_toolkit/utils/memory_predictor.py",
+    "xpcs_toolkit/utils/streaming_processor.py",
+    "xpcs_toolkit/utils/lazy_loader.py",
+    "xpcs_toolkit/utils/vectorized_roi.py",
+    "xpcs_toolkit/xpcs_viewer.py",
+    "xpcs_toolkit/viewer_kernel.py",
+    "xpcs_toolkit/plothandler/*",
 ]
 branch = true
 parallel = true
 context = "test"
-# Note: dynamic_context removed to fix compatibility with pytest-xdist
-# Use --cov-context=test_function on command line if function-level context is needed
 concurrency = ["thread", "multiprocessing"]
-
-# Module-specific coverage targets
-# Critical scientific modules: 95% minimum
-# Core modules: 85% minimum
-# Supporting modules: 75% minimum
-# GUI modules: 50% minimum (hard to test)
 
 [tool.coverage.report]
 exclude_lines = [
@@ -339,22 +383,14 @@ exclude_lines = [
     "except ImportError:",
     "except ModuleNotFoundError:",
     "if TYPE_CHECKING:",
-    "# pragma: no cover",
-    "# coverage: ignore",
     "pass  # pragma: no cover",
-    "\\.\\.\\.",  # Ellipsis for abstract methods
-    "# Qt event loops - hard to test",
-    "# GUI initialization - platform specific",
+    "\\.\\.\\.",
     "app\\.exec\\(\\)",
     "app\\.exec_\\(\\)",
     "QApplication\\.exec\\(\\)",
     "sys\\.exit\\(",
-    "# Platform-specific code",
     "if platform\\.system\\(\\)",
-    "# Error handling - defensive programming",
     "except Exception as.*:",
-    "# Cleanup handlers",
-    "try:.*finally:",
 ]
 precision = 2
 show_missing = true
@@ -374,46 +410,15 @@ directory = "htmlcov"
 [tool.coverage.xml]
 output = "coverage.xml"
 
-# Ruff configuration
-[tool.ruff]
-line-length = 88
-target-version = "py312"
-
-[tool.ruff.lint]
-select = ["E", "F", "W", "C90", "I", "N", "UP", "S", "B", "A", "C4", "PIE", "T20", "RET", "SIM", "ARG", "ERA", "PL", "RUF"]
-ignore = ["E501", "RET504", "S101", "PLR0913"]
-
-[tool.ruff.lint.per-file-ignores]
-"tests/*" = [
-    "S101",    # Use of assert detected (OK in tests)
-    "ARG",     # Unused function args (fixtures)
-    "FBT",     # Boolean trap (OK in tests)
-    "PLR2004", # Magic value used in comparison (OK in tests)
-    "SLF001",  # Private member access (OK in tests)
-    "T201",    # Print statements (OK in tests)
-]
-"validation/*" = [
-    "T201",    # Print statements (OK in validation scripts)
-    "S101",    # Assert statements (OK in validation)
-]
-"scripts/*" = [
-    "T201",    # Print statements (OK in utility scripts)
-]
-
-# Bandit security configuration
 [tool.bandit]
 exclude_dirs = ["tests", "validation", "docs", "scripts"]
-skips = ["B101", "B601", "B324", "B608", "S110", "S311", "S306", "S314", "S607", "S103", "S112", "S307"]  # Skip security warnings for scientific computing
+skips = ["B101", "B601", "B324", "B608", "S110", "S311", "S306", "S314", "S607", "S103", "S112", "S307"]
 
-# pip-audit security configuration
 [tool.pip-audit]
 require-hashes = false
 local = false
 
 [[tool.pip-audit.ignores]]
-# pip 25.2 tarfile extraction vulnerability
-# Fix is planned for pip 25.3 but not yet released
-# https://github.com/pypa/pip/pull/13550
 id = "GHSA-4xh5-x5gv-qwph"
 reason = "No fix available yet - planned for pip 25.3. Mitigation: only install packages from trusted sources (PyPI)."
-expires = "2025-11-15"  # Review when pip 25.3 is expected to be released
+expires = "2025-11-15"
