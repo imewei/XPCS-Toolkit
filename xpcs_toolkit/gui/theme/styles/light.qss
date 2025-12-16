@@ -1,0 +1,110 @@
+/* Light theme overrides for XPCS-TOOLKIT
+   Applied after base.qss when light theme is active
+*/
+
+/* ========================================
+   Light-specific refinements
+   ======================================== */
+
+/* Subtle shadow effects for elevated elements */
+QMenu {
+    /* Light theme can use subtle shadows */
+}
+
+QToolTip {
+    /* Slightly darker border for better visibility on light */
+    border-color: #C5C5C9;
+}
+
+/* Improve contrast for disabled states */
+QPushButton:disabled {
+    background-color: #D1D1D6;
+    color: #8E8E93;
+}
+
+/* Light theme scrollbar tweaks */
+QScrollBar::handle:vertical,
+QScrollBar::handle:horizontal {
+    /* Slightly more visible handles in light mode */
+    background-color: #C5C5C9;
+}
+
+QScrollBar::handle:vertical:hover,
+QScrollBar::handle:horizontal:hover {
+    background-color: #8E8E93;
+}
+
+/* List views with clearer alternating rows */
+QListView::item:alternate {
+    background-color: #F5F5F7;
+}
+
+/* Enhance QGroupBox title visibility */
+QGroupBox::title {
+    color: #6E6E73;
+}
+
+/* Input placeholders slightly darker for readability */
+QLineEdit::placeholder {
+    color: #8E8E93;
+}
+
+/* Tab widget refinements */
+QTabBar::tab:selected {
+    background-color: #FFFFFF;
+    color: #1D1D1F;
+}
+
+QTabBar::tab:!selected {
+    color: #6E6E73;
+}
+
+/* Progress bar chunk refinement */
+QProgressBar::chunk {
+    background-color: #007AFF;
+}
+
+/* Spin box buttons */
+QSpinBox::up-button, QDoubleSpinBox::up-button,
+QSpinBox::down-button, QDoubleSpinBox::down-button {
+    background-color: #F5F5F7;
+}
+
+QSpinBox::up-button:hover, QDoubleSpinBox::up-button:hover,
+QSpinBox::down-button:hover, QDoubleSpinBox::down-button:hover {
+    background-color: #E5E5EA;
+}
+
+/* Slider groove refinement */
+QSlider::groove:horizontal {
+    background-color: #E5E5EA;
+}
+
+/* TreeView branch indicators */
+QTreeView::branch:has-children:open,
+QTreeView::branch:has-children:closed {
+    border-image: none;
+    image: none;
+}
+
+/* Horizontal header in tables */
+QHeaderView::section {
+    background-color: #F5F5F7;
+    color: #1D1D1F;
+    border: none;
+    border-bottom: 1px solid #D1D1D6;
+    padding: 6px 8px;
+    font-weight: 500;
+}
+
+QHeaderView::section:hover {
+    background-color: #EBEBEF;
+}
+
+/* Table corner button */
+QTableView QTableCornerButton::section {
+    background-color: #F5F5F7;
+    border: none;
+    border-bottom: 1px solid #D1D1D6;
+    border-right: 1px solid #D1D1D6;
+}
