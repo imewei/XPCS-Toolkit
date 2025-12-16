@@ -33,6 +33,21 @@ class ImageViewDev(ImageView):
         self.roi_idx = 0
         logger.debug("ImageViewDev initialized")
 
+    def apply_theme(self, theme: str) -> None:
+        """
+        Apply theme colors to this image view.
+
+        Parameters
+        ----------
+        theme : str
+            Either "light" or "dark"
+        """
+        from .plot_constants import get_theme_colors
+
+        colors = get_theme_colors(theme)
+        # Set background color on the view
+        self.view.setBackgroundColor(colors["background"])
+
     def reset_limits(self):
         """
         reset the viewbox's limits so updating image won't break the layout;
@@ -282,6 +297,20 @@ class PlotWidgetDev(GraphicsLayoutWidget):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.setBackground("w")
+
+    def apply_theme(self, theme: str) -> None:
+        """
+        Apply theme colors to this plot widget.
+
+        Parameters
+        ----------
+        theme : str
+            Either "light" or "dark"
+        """
+        from .plot_constants import get_theme_colors
+
+        colors = get_theme_colors(theme)
+        self.setBackground(colors["background"])
 
     def adjust_canvas_size(self, num_col, num_row):
         t = self.parent().parent().parent()
