@@ -39,6 +39,9 @@ recursive-include xpcs_toolkit/configure *.json
 recursive-include xpcs_toolkit/ui *.ui
 recursive-include xpcs_toolkit/ui/resources *.qrc *.png
 
+# Include GUI modernization module (theme styles, widgets, etc.)
+recursive-include xpcs_toolkit/gui *.py *.qss
+
 # Exclude build, cache and temporary artifacts
 recursive-exclude * __pycache__
 recursive-exclude * *.py[co]

@@ -10,11 +10,14 @@ myst-parser>=4.0.0
 sphinx-autodoc-typehints>=2.4.4
 sphinx-copybutton>=0.5.2
 
-# Required for building API documentation
-numpy>=1.24.0
-scipy>=1.10.0
-matplotlib>=3.6.0
-h5py>=3.8.0
+# Required for building API documentation (match pyproject.toml)
+numpy>=2.2.0
+scipy>=1.15.0
+matplotlib>=3.9.3
+h5py>=3.12.1
+
+# PySide6 for GUI documentation
+pyside6>=6.8.1
 
 # Mock heavy dependencies that aren't needed for docs
 # These will be mocked in conf.py if needed

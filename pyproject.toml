@@ -122,7 +122,14 @@ include = ["xpcs_toolkit", "xpcs_toolkit.*"]
 exclude = ["tests*", "docs*", "validation*", "scripts*"]
 
 [tool.setuptools.package-data]
-"xpcs_toolkit" = ["py.typed", "configure/*.json", "ui/*.ui", "ui/resources/*.qrc", "ui/resources/*.png"]
+"xpcs_toolkit" = [
+    "py.typed",
+    "configure/*.json",
+    "ui/*.ui",
+    "ui/resources/*.qrc",
+    "ui/resources/*.png",
+    "gui/theme/styles/*.qss",
+]
 
 [tool.setuptools.data-files]
 "share/xpcs_toolkit/docs_images" = [
@@ -358,6 +365,7 @@ omit = [
     "xpcs_toolkit/xpcs_viewer.py",
     "xpcs_toolkit/viewer_kernel.py",
     "xpcs_toolkit/plothandler/*",
+    "xpcs_toolkit/gui/*",
 ]
 branch = true
 parallel = true
@@ -412,6 +420,7 @@ require-hashes = false
 local = false
 
 [[tool.pip-audit.ignores]]
+# pip 25.2 tarfile extraction vulnerability - fix planned for pip 25.3+
 id = "GHSA-4xh5-x5gv-qwph"
 reason = "No fix available yet - planned for pip 25.3. Mitigation: only install packages from trusted sources (PyPI)."
-expires = "2026-03-15"
+expires = "2026-03-15"  # Extended review date for pip 25.3 release
