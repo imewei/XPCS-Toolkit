@@ -84,7 +84,7 @@ try:
     version = xpcs_toolkit.__version__
 except ImportError:
     # Fallback version if package can't be imported
-    version = "1.0.5"
+    version = "1.1.0"
 
 # Simple logger for docs build
 logging.info(f"Building documentation for XPCS Toolkit version {version}")

@@ -2,6 +2,24 @@
 History
 =======
 
+1.1.0 (2025-12-16)
+------------------
+
+**GUI Modernization Release**
+
+* Added light/dark theme support with automatic system detection
+* Implemented session persistence - resume work where you left off
+* Added command palette (Ctrl+Shift+P) for quick access to all commands
+* Added toast notifications for non-intrusive status updates
+* Implemented keyboard shortcut manager with customizable keybindings
+* Added drag-and-drop file handling with visual feedback
+* Integrated theme support for PyQtGraph and Matplotlib plot backends
+* Added preferences management with type-safe access
+* Added recent files tracking with validation
+* Updated all dependencies to latest versions
+* Comprehensive test coverage for GUI modules
+* Updated documentation with GUI modernization features
+
 1.0.9 (2025-10-04)
 ------------------
 
