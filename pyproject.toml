@@ -9,10 +9,12 @@ description = "XPCS Toolkit: A python-based interactive tool to visualize and mo
 readme = "README.rst"
 license = {file = "LICENSE"}
 authors = [
-    {name = "Miaoqi Chu & Wei Chen", email = "mqichu@anl.gov & wchen@anl.gov"},
+    {name = "Miaoqi Chu", email = "mqichu@anl.gov"},
+    {name = "Wei Chen", email = "wchen@anl.gov"},
 ]
 maintainers = [
-    {name = "Miaoqi Chu & Wei Chen", email = "mqichu@anl.gov & wchen@anl.gov"},
+    {name = "Miaoqi Chu", email = "mqichu@anl.gov"},
+    {name = "Wei Chen", email = "wchen@anl.gov"},
 ]
 classifiers = [
     "Development Status :: 4 - Beta",
@@ -109,9 +111,7 @@ run_viewer = "xpcs_toolkit.cli:main"
 
 [tool.uv]
 # Prefer uv-managed Python to guarantee reproducible environments
-python = ">=3.12"
 python-preference = "managed"
-default-groups = ["dev", "docs", "test"]
 
 [tool.setuptools_scm]
 version_scheme = "post-release"
@@ -271,7 +271,6 @@ select = [
     "W",   # pycodestyle warnings
     "F",   # pyflakes
     "I",   # isort
-    "C",   # flake8-comprehensions
     "B",   # flake8-bugbear
     "UP",  # pyupgrade
     "S",   # flake8-bandit
@@ -396,13 +395,6 @@ precision = 2
 show_missing = true
 skip_covered = false
 sort = "Cover"
-exclude_also = [
-    "def __repr__",
-    "if __name__ == .__main__.:",
-    "if TYPE_CHECKING:",
-    "class .*\\bProtocol\\):",
-    "@(abc\\.)?abstractmethod",
-]
 
 [tool.coverage.html]
 directory = "htmlcov"
@@ -412,7 +404,7 @@ output = "coverage.xml"
 
 [tool.bandit]
 exclude_dirs = ["tests", "validation", "docs", "scripts"]
-skips = ["B101", "B601", "B324", "B608", "S110", "S311", "S306", "S314", "S607", "S103", "S112", "S307"]
+skips = ["B101", "B601", "B324", "B608"]
 
 [tool.pip-audit]
 require-hashes = false
@@ -421,4 +413,4 @@ local = false
 [[tool.pip-audit.ignores]]
 id = "GHSA-4xh5-x5gv-qwph"
 reason = "No fix available yet - planned for pip 25.3. Mitigation: only install packages from trusted sources (PyPI)."
-expires = "2025-11-15"
+expires = "2026-03-15"
