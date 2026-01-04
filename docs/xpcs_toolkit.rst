@@ -7,12 +7,20 @@ Subpackages
 .. toctree::
    :maxdepth: 4
 
-   xpcsviewer.fileIO
-   xpcsviewer.module
-   xpcsviewer.utils
+   xpcs_toolkit.fileIO
+   xpcs_toolkit.module
+   xpcs_toolkit.utils
 
 Submodules
 ----------
+
+xpcs\_toolkit.cli\_main module
+------------------------------
+
+.. automodule:: xpcsviewer.cli_main
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
 xpcs\_toolkit.cli module
 ------------------------

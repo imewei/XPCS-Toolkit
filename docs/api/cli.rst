@@ -15,41 +15,38 @@ GUI Entry Point
 
 Launch the graphical interface with ``xpcsviewer-gui``.
 
-.. autofunction:: xpcsviewer.cli_main.main_gui
+The ``main_gui()`` function is the primary GUI entry point that provides
+interactive XPCS data analysis.
 
-   The primary GUI entry point that provides interactive XPCS data analysis.
+**Usage:**
 
-   **Usage:**
+.. code-block:: bash
 
-   .. code-block:: bash
+   # Launch GUI in current directory
+   xpcsviewer-gui
 
-      # Launch GUI in current directory
-      xpcsviewer-gui
+   # Launch with data path
+   xpcsviewer-gui /path/to/hdf/data
 
-      # Launch with data path
-      xpcsviewer-gui /path/to/hdf/data
-
-      # With debug logging
-      xpcsviewer-gui --log-level DEBUG
+   # With debug logging
+   xpcsviewer-gui --log-level DEBUG
 
 CLI Entry Point
 ~~~~~~~~~~~~~~~
 
 Access batch processing commands with ``xpcsviewer``.
 
-.. autofunction:: xpcsviewer.cli_main.main
+The ``main()`` function is the CLI entry point for batch processing operations.
 
-   The CLI entry point for batch processing operations.
+**Usage:**
 
-   **Usage:**
+.. code-block:: bash
 
-   .. code-block:: bash
+   # Show available commands
+   xpcsviewer --help
 
-      # Show available commands
-      xpcsviewer --help
-
-      # Run twotime batch processing
-      xpcsviewer twotime --input /data --output /results --q 0.05
+   # Run twotime batch processing
+   xpcsviewer twotime --input /data --output /results --q 0.05
 
 Available Commands
 ------------------
@@ -117,10 +114,14 @@ For backward compatibility, the following aliases are available:
 Utility Functions
 -----------------
 
-.. autofunction:: xpcsviewer.cli_main.safe_shutdown
+safe_shutdown
+~~~~~~~~~~~~~
 
-   Gracefully shuts down the application, cleaning up resources and thread pools.
+Gracefully shuts down the application, cleaning up resources and thread pools.
+Called automatically on exit or when handling termination signals.
 
-.. autofunction:: xpcsviewer.cli_main.signal_handler
+signal_handler
+~~~~~~~~~~~~~~
 
-   Handles termination signals (SIGTERM, SIGINT) for graceful shutdown.
+Handles termination signals (SIGTERM, SIGINT) for graceful shutdown.
+Registered automatically when the CLI or GUI starts.

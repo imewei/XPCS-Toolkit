@@ -59,6 +59,11 @@ The GUI launches maximized with a rectangular layout, uses only the menu bar for
    authors
    history
 
+.. toctree::
+   :hidden:
+
+   xpcs_toolkit
+
 Features
 --------
 

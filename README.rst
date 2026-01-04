@@ -59,13 +59,31 @@ Installation
 Usage
 -----
 
+**GUI (Interactive):**
+
 .. code-block:: bash
 
-   # Launch GUI
-   xpcsviewer path_to_hdf_directory
+   # Launch GUI with data path
+   xpcsviewer-gui /path/to/hdf/data
 
    # Launch from current directory
-   xpcsviewer
+   xpcsviewer-gui
+
+   # With debug logging
+   xpcsviewer-gui --log-level DEBUG
+
+**CLI (Batch Processing):**
+
+.. code-block:: bash
+
+   # Show available commands
+   xpcsviewer --help
+
+   # Generate twotime plots for all phi angles at q=0.05
+   xpcsviewer twotime --input /data --output /results --q 0.05
+
+   # Generate high-resolution PDF plots
+   xpcsviewer twotime -i /data -o /results --phi 45 --dpi 300 --format pdf
 
 Citation
 --------

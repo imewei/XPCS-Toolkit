@@ -1,3 +1,24 @@
+"""XPCS Viewer - X-ray Photon Correlation Spectroscopy data analysis tool.
+
+This package provides both a graphical user interface (GUI) and command-line
+interface (CLI) for analyzing XPCS data stored in HDF5/NeXus format.
+
+Main Components:
+    XpcsFile: Core data container for XPCS datasets with lazy loading
+    XpcsViewer: PySide6-based GUI for interactive analysis
+    ViewerKernel: Backend for data processing and plot management
+    FileLocator: File discovery and management utilities
+
+Entry Points:
+    xpcsviewer-gui: Launch the graphical interface
+    xpcsviewer: CLI for batch processing (e.g., twotime analysis)
+
+Example:
+    >>> from xpcsviewer import XpcsFile
+    >>> xf = XpcsFile('data.h5')
+    >>> print(f"Analysis type: {xf.atype}")
+"""
+
 # Handle imports gracefully for documentation builds
 import os
 from importlib.metadata import PackageNotFoundError, version

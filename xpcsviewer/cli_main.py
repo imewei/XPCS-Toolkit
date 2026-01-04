@@ -1,4 +1,22 @@
-"""Console script for xpcs-toolkit."""
+"""Command-line interface entry points for XPCS Viewer.
+
+This module provides the main entry points for both the GUI and CLI:
+
+    main_gui(): Launch the graphical interface (xpcsviewer-gui command)
+    main(): CLI entry point with subcommands (xpcsviewer command)
+
+The CLI supports batch processing operations like twotime correlation analysis,
+while the GUI provides interactive visualization and analysis.
+
+Example:
+    Launch GUI::
+
+        $ xpcsviewer-gui /path/to/data
+
+    Run twotime batch processing::
+
+        $ xpcsviewer twotime --input /data --output /results --q 0.05
+"""
 
 import argparse
 import atexit
@@ -225,7 +243,9 @@ def main_gui():
         sys.exit(0)
     except (ImportError, ModuleNotFoundError) as e:
         logger.error(f"Missing required dependencies for GUI: {e}")
-        logger.error("Please ensure all required packages are installed: pip install -e .")
+        logger.error(
+            "Please ensure all required packages are installed: pip install -e ."
+        )
         safe_shutdown()
         sys.exit(2)
     except Exception as e:

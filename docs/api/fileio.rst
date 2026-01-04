@@ -4,7 +4,7 @@ File I/O
 HDF5 data reading and Q-space mapping utilities for XPCS datasets.
 
 .. note::
-   For complete API documentation of all file I/O modules, see :doc:`../xpcsviewer.fileIO`.
+   For complete API documentation of all file I/O modules, see :doc:`../xpcs_toolkit.fileIO`.
 
 .. currentmodule:: xpcsviewer.fileIO
 
