@@ -301,9 +301,9 @@ jobs:
         echo "[INFO] Package contents:"
         ls -la dist/
 
-        # Test wheel installation in clean environment
+        # Test wheel installation in clean environment (override UV_SYSTEM_PYTHON)
         uv venv test_env
-        VIRTUAL_ENV=test_env uv pip install dist/*.whl
+        UV_SYSTEM_PYTHON=0 uv pip install --python test_env/bin/python dist/*.whl
         export QT_QPA_PLATFORM=offscreen
         export DISPLAY=:99
         export PYXPCS_SUPPRESS_QT_WARNINGS=1
