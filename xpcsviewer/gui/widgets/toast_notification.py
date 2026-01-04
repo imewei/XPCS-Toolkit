@@ -9,13 +9,11 @@ from enum import Enum
 
 from PySide6.QtCore import (
     Property,
-    QEasingCurve,
     QPoint,
-    QPropertyAnimation,
     Qt,
     QTimer,
 )
-from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QWidget
 
 
 class ToastType(Enum):

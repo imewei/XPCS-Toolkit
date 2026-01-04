@@ -11,8 +11,6 @@ from __future__ import annotations
 import os
 import pathlib
 import sys
-import time
-from typing import Optional
 
 from PySide6 import QtCore, QtWidgets
 
@@ -24,7 +22,7 @@ def ensure_offscreen() -> None:
     os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 
-def find_sample_dir() -> Optional[pathlib.Path]:
+def find_sample_dir() -> pathlib.Path | None:
     """Return a plausible sample data directory, if one exists."""
     candidates = [
         pathlib.Path("tests/fixtures/reference_data"),
@@ -62,12 +60,12 @@ def main() -> int:
     snap(viewer, "00_initial", outdir)
 
     sample_dir = find_sample_dir()
-    load_error: Optional[str] = None
+    load_error: str | None = None
     if sample_dir:
         try:
             viewer.load_path(str(sample_dir))
             process(app, 200)
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             load_error = f"load_path failed: {type(exc).__name__}: {exc}"
             print(load_error)
     else:

@@ -22,14 +22,14 @@ from xpcsviewer.gui.state.session_manager import (
 )
 
 __all__ = [
+    "AnalysisParameters",
+    "FileEntry",
+    "RecentPath",
+    "RecentPathsManager",
     "SessionManager",
     "SessionState",
-    "FileEntry",
-    "WindowGeometry",
-    "AnalysisParameters",
     "UserPreferences",
+    "WindowGeometry",
     "load_preferences",
     "save_preferences",
-    "RecentPathsManager",
-    "RecentPath",
 ]

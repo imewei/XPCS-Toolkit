@@ -27,18 +27,18 @@ from xpcsviewer.gui.theme.tokens import (
 )
 
 __all__ = [
-    "ThemeManager",
+    "DARK_TOKENS",
+    "LIGHT_TOKENS",
+    "MATPLOTLIB_DARK",
+    "MATPLOTLIB_LIGHT",
     "ColorTokens",
     "SpacingTokens",
-    "TypographyTokens",
     "ThemeDefinition",
-    "LIGHT_TOKENS",
-    "DARK_TOKENS",
-    "MATPLOTLIB_LIGHT",
-    "MATPLOTLIB_DARK",
+    "ThemeManager",
+    "TypographyTokens",
+    "apply_matplotlib_theme",
+    "apply_pyqtgraph_theme",
     "get_matplotlib_params",
     "get_plot_colors",
     "get_pyqtgraph_options",
-    "apply_matplotlib_theme",
-    "apply_pyqtgraph_theme",
 ]

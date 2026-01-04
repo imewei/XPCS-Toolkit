@@ -7,7 +7,7 @@ This module handles loading, saving, and validating user preferences.
 import json
 import logging
 import os
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Literal
 
@@ -117,7 +117,7 @@ def load_preferences() -> UserPreferences:
     except json.JSONDecodeError as e:
         logger.warning(f"Failed to parse preferences.json: {e}")
         return UserPreferences()
-    except (OSError, IOError) as e:
+    except OSError as e:
         logger.warning(f"Failed to read preferences.json: {e}")
         return UserPreferences()
 
@@ -147,6 +147,6 @@ def save_preferences(prefs: UserPreferences) -> bool:
         logger.debug("Saved user preferences successfully")
         return True
 
-    except (OSError, IOError) as e:
+    except OSError as e:
         logger.error(f"Failed to save preferences.json: {e}")
         return False

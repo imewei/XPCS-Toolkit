@@ -12,9 +12,9 @@ from xpcsviewer.gui.widgets.drag_drop_list import DragDropListView
 from xpcsviewer.gui.widgets.toast_notification import ToastManager, ToastType
 
 __all__ = [
+    "CommandAction",
+    "CommandPalette",
     "DragDropListView",
     "ToastManager",
     "ToastType",
-    "CommandPalette",
-    "CommandAction",
 ]

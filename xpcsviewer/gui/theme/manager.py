@@ -14,7 +14,6 @@ from PySide6.QtGui import QGuiApplication
 from PySide6.QtWidgets import QApplication
 
 from xpcsviewer.gui.state.preferences import (
-    UserPreferences,
     load_preferences,
     save_preferences,
 )
@@ -193,7 +192,7 @@ class ThemeManager(QObject):
         try:
             with open(file_path, encoding="utf-8") as f:
                 return f.read()
-        except (OSError, IOError) as e:
+        except OSError as e:
             logger.warning(f"Failed to load {filename}: {e}")
             return ""
 

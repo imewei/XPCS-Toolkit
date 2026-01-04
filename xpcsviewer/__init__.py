@@ -26,7 +26,7 @@ if os.environ.get("BUILDING_DOCS"):
 
 else:
     try:
-        from xpcsviewer import module, plothandler, utils  # noqa: F401
+        from xpcsviewer import module, plothandler, utils
         from xpcsviewer.file_locator import FileLocator
         from xpcsviewer.viewer_kernel import ViewerKernel
         from xpcsviewer.viewer_ui import ViewerUI

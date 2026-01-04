@@ -8,7 +8,7 @@ import json
 import logging
 import os
 from dataclasses import asdict, dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 logger = logging.getLogger(__name__)
@@ -86,7 +86,7 @@ class RecentPathsManager:
             )
             logger.debug(f"Loaded {len(paths)} recent paths")
 
-        except (json.JSONDecodeError, OSError, IOError) as e:
+        except (json.JSONDecodeError, OSError) as e:
             logger.warning(f"Failed to load recent paths: {e}")
             self._state = RecentPathsState(max_entries=self._max_entries)
 
@@ -110,7 +110,7 @@ class RecentPathsManager:
             logger.debug("Recent paths saved")
             return True
 
-        except (OSError, IOError) as e:
+        except OSError as e:
             logger.error(f"Failed to save recent paths: {e}")
             return False
 
@@ -126,7 +126,7 @@ class RecentPathsManager:
 
         # Normalize path
         path = str(Path(path).resolve())
-        now = datetime.now(timezone.utc).isoformat()
+        now = datetime.now(UTC).isoformat()
 
         # Check if path already exists
         for existing in self._state.paths:

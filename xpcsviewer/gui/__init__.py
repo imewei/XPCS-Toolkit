@@ -11,8 +11,8 @@ Submodules:
 from xpcsviewer.gui import shortcuts, state, theme, widgets
 
 __all__ = [
-    "theme",
-    "state",
-    "widgets",
     "shortcuts",
+    "state",
+    "theme",
+    "widgets",
 ]

@@ -8,7 +8,7 @@ import json
 import logging
 import os
 from dataclasses import asdict, dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 logger = logging.getLogger(__name__)
@@ -123,7 +123,7 @@ class SessionManager:
 
         try:
             # Update timestamp
-            session.timestamp = datetime.now(timezone.utc).isoformat()
+            session.timestamp = datetime.now(UTC).isoformat()
 
             # Convert to dict for JSON serialization
             data = {
@@ -144,7 +144,7 @@ class SessionManager:
             logger.debug("Session saved successfully")
             return True
 
-        except (OSError, IOError) as e:
+        except OSError as e:
             logger.error(f"Failed to save session: {e}")
             return False
 
@@ -237,7 +237,7 @@ class SessionManager:
             logger.warning(f"Failed to parse session.json: {e}")
             self._warnings.append(f"Session file corrupted: {e}")
             return None
-        except (OSError, IOError) as e:
+        except OSError as e:
             logger.warning(f"Failed to read session.json: {e}")
             self._warnings.append(f"Cannot read session file: {e}")
             return None
@@ -263,7 +263,7 @@ class SessionManager:
             try:
                 session_path.unlink()
                 logger.debug("Session cleared")
-            except (OSError, IOError) as e:
+            except OSError as e:
                 logger.warning(f"Failed to clear session: {e}")
 
     def has_saved_session(self) -> bool:

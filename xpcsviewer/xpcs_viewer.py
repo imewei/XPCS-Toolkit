@@ -272,9 +272,8 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         platform = os.environ.get("QT_QPA_PLATFORM", "").lower()
         if platform not in {"offscreen", "minimal"}:
             self.showMaximized()
-        else:
-            if getattr(self, "_default_size", None):
-                self.resize(*self._default_size)
+        elif getattr(self, "_default_size", None):
+            self.resize(*self._default_size)
             # offscreen needs an explicit show after resize
         self.show()
 

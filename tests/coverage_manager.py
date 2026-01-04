@@ -124,9 +124,7 @@ class CoverageManager:
             CoverageTarget(
                 "xpcsviewer/viewer_kernel.py", 85.0, True, "Application kernel"
             ),
-            CoverageTarget(
-                "xpcsviewer/threading/", 85.0, False, "Threading subsystem"
-            ),
+            CoverageTarget("xpcsviewer/threading/", 85.0, False, "Threading subsystem"),
             CoverageTarget("xpcsviewer/utils/", 85.0, False, "Utility modules"),
             # Supporting modules (75% minimum)
             CoverageTarget(
