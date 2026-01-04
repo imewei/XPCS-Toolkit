@@ -359,7 +359,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
 
         # Theme toggle button
         self.theme_toggle_btn = QToolButton()
-        self.theme_toggle_btn.setText("🌙")
+        self.theme_toggle_btn.setText("Dark")
         self.theme_toggle_btn.setToolTip("Toggle dark/light theme")
         self.theme_toggle_btn.clicked.connect(self._toggle_theme)
         toolbar.addWidget(self.theme_toggle_btn)
@@ -405,10 +405,10 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         if hasattr(self, "theme_toggle_btn"):
             current = self.theme_manager.get_current_theme()
             if current == "dark":
-                self.theme_toggle_btn.setText("☀️")
+                self.theme_toggle_btn.setText("Light")
                 self.theme_toggle_btn.setToolTip("Switch to light theme")
             else:
-                self.theme_toggle_btn.setText("🌙")
+                self.theme_toggle_btn.setText("Dark")
                 self.theme_toggle_btn.setToolTip("Switch to dark theme")
 
     def _init_menus_and_toolbar(self):
