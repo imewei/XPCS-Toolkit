@@ -13,12 +13,20 @@ from xpcsviewer.gui.widgets.empty_state import (
     NoFilesLoadedState,
     NoFilesSelectedState,
 )
+from xpcsviewer.gui.widgets.error_dialog import (
+    ErrorDialog,
+    show_connection_error,
+    show_data_error,
+    show_file_error,
+    show_plot_error,
+)
 from xpcsviewer.gui.widgets.toast_notification import ToastManager, ToastType, ToastWidget
 
 __all__ = [
     "CommandPalette",
     "DragDropListView",
     "EmptyStateWidget",
+    "ErrorDialog",
     "FeatureNotAvailableState",
     "NoDataToPlotState",
     "NoFilesLoadedState",
@@ -26,5 +34,10 @@ __all__ = [
     "ToastManager",
     "ToastType",
     "ToastWidget",
+    "show_connection_error",
+    "show_data_error",
+    "show_file_error",
+    "show_plot_error",
 ]
+
 
