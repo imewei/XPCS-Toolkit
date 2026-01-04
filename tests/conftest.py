@@ -416,6 +416,11 @@ def error_injector():
                 self.active_errors[operation] = error_type_or_probability
             self.error_count += 1
 
+        def inject_memory_error(self, operation, probability=1.0):
+            """Inject memory errors for testing."""
+            self.active_errors[f"memory:{operation}"] = probability
+            self.error_count += 1
+
         def should_fail(self, operation):
             """Check if operation should fail."""
             import random

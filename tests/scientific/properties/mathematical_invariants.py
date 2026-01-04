@@ -471,8 +471,8 @@ def verify_conservation_laws(
 
     elif conservation_type == "area":
         # Assume equal spacing for area calculation
-        input_total = np.trapz(input_data)
-        output_total = np.trapz(output_data)
+        input_total = np.trapezoid(input_data)
+        output_total = np.trapezoid(output_data)
 
     else:
         return False, f"Unknown conservation type: {conservation_type}"

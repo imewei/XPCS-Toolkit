@@ -466,7 +466,7 @@ class TestSAXSVectorizedOperations(unittest.TestCase):
 
             elif method == "area":
                 # Test that area under curve is 1
-                area = np.trapz(normalized, self.q_values)
+                area = np.trapezoid(normalized, self.q_values)
                 self.assertAlmostEqual(
                     area, 1.0, places=6, msg="Area normalization should give unit area"
                 )

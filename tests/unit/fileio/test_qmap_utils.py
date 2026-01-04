@@ -249,7 +249,17 @@ class TestQMapLoadDataset:
         mock_pool.get_connection.return_value.__enter__ = Mock(return_value=mock_file)
         mock_pool.get_connection.return_value.__exit__ = Mock(return_value=None)
 
-        mock_get_default.return_value = np.array([0])
+        # Mock _get_default_value to return appropriate types based on key
+        def get_default_side_effect(key):
+            scalar_keys = {"bcx", "bcy", "X_energy", "pixel_size", "det_dist"}
+            list_keys = {"map_names", "map_units"}
+            if key in scalar_keys:
+                return 0.0
+            if key in list_keys:
+                return ["q", "phi"] if key == "map_names" else ["1/A", "degree"]
+            return np.array([0])
+
+        mock_get_default.side_effect = get_default_side_effect
 
         qmap = QMap.__new__(QMap)
         qmap.fname = "/test/file.hdf"

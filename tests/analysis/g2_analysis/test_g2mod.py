@@ -408,9 +408,9 @@ class TestErrorHandling:
             result = g2mod.get_data(xf_list)
             # If successful, should return some reasonable result
             assert result is not None
-        except Exception as e:
+        except Exception:
             # Also acceptable - error propagated as expected
-            pytest.skip(f"Exception raised as expected: {e}")
+            pass
 
     def test_compute_geometry_empty_g2_list(self):
         """Test compute_geometry with empty g2 list."""
