@@ -13,10 +13,7 @@ from PySide6.QtCore import QObject, Signal
 from PySide6.QtGui import QGuiApplication
 from PySide6.QtWidgets import QApplication
 
-from xpcsviewer.gui.state.preferences import (
-    load_preferences,
-    save_preferences,
-)
+from xpcsviewer.gui.state.preferences import load_preferences, save_preferences
 from xpcsviewer.gui.theme.tokens import (
     DARK_TOKENS,
     LIGHT_TOKENS,

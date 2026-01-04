@@ -7,12 +7,7 @@ operation feedback, errors, and warnings.
 
 from enum import Enum
 
-from PySide6.QtCore import (
-    Property,
-    QPoint,
-    Qt,
-    QTimer,
-)
+from PySide6.QtCore import Property, QPoint, Qt, QTimer
 from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QWidget
 
 
