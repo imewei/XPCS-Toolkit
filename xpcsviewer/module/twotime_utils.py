@@ -45,7 +45,7 @@ def get_process_pool(num_workers: int | None = None) -> ProcessPoolExecutor:
     Returns:
         ProcessPoolExecutor instance
     """
-    global _process_pool, _pool_size
+    global _process_pool, _pool_size  # noqa: PLW0603 - intentional for process pool reuse
 
     if num_workers is None:
         num_workers = get_optimal_worker_count()
@@ -64,7 +64,7 @@ def get_process_pool(num_workers: int | None = None) -> ProcessPoolExecutor:
 
 def shutdown_process_pool():
     """Shutdown the global process pool."""
-    global _process_pool, _pool_size
+    global _process_pool, _pool_size  # noqa: PLW0603 - intentional for process pool cleanup
     if _process_pool is not None:
         _process_pool.shutdown(wait=True)
         _process_pool = None

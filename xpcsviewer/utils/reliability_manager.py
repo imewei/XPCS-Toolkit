@@ -532,7 +532,7 @@ _manager_lock = threading.Lock()
 
 def get_reliability_manager() -> XPCSReliabilityManager:
     """Get or create the global reliability manager."""
-    global _reliability_manager
+    global _reliability_manager  # noqa: PLW0603 - intentional singleton pattern
     if _reliability_manager is None:
         with _manager_lock:
             if _reliability_manager is None:

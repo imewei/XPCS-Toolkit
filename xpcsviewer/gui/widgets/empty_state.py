@@ -5,7 +5,7 @@ Displays informative messages when no data is available for display,
 with optional action buttons to guide users.
 """
 
-from typing import Callable
+from collections.abc import Callable
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
@@ -146,7 +146,9 @@ class EmptyStateWidget(QFrame):
 class NoFilesLoadedState(EmptyStateWidget):
     """Empty state for when no files are loaded."""
 
-    def __init__(self, browse_callback: Callable | None = None, parent: QWidget | None = None):
+    def __init__(
+        self, browse_callback: Callable | None = None, parent: QWidget | None = None
+    ):
         super().__init__(
             message="No data loaded",
             description="Browse to a folder containing XPCS data files to get started.",

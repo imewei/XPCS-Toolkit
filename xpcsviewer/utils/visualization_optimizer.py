@@ -23,6 +23,18 @@ if PYQTGRAPH_AVAILABLE:
 # Check Matplotlib availability
 MATPLOTLIB_AVAILABLE = importlib.util.find_spec("matplotlib") is not None
 
+from xpcsviewer.constants import (
+    DECIMATION_FACTOR_THRESHOLD,
+    MEMORY_EFFICIENCY_LOW,
+    MEMORY_EFFICIENCY_MEDIUM,
+    MIN_DISPLAY_POINTS,
+    MIN_DOWNSAMPLE_POINTS,
+    NDIM_2D,
+    NDIM_3D,
+    POINTS_THRESHOLD_HIGH,
+    POINTS_THRESHOLD_MEDIUM,
+)
+
 from .logging_config import get_logger
 from .memory_manager import MemoryPressure, get_memory_manager
 
@@ -132,7 +144,7 @@ class ImageDisplayOptimizer:
         width_factor = width / target_width
         downsample_factor = max(height_factor, width_factor)
 
-        if downsample_factor <= 1.5:
+        if downsample_factor <= DECIMATION_FACTOR_THRESHOLD:
             # Minor size difference, no downsampling
             return image
 
@@ -145,10 +157,10 @@ class ImageDisplayOptimizer:
         new_height = int(height / downsample_factor)
         new_width = int(width / downsample_factor)
 
-        if len(image.shape) == 2:
+        if len(image.shape) == NDIM_2D:
             # 2D image
             downsampled = self._downsample_2d(image, (new_height, new_width))
-        elif len(image.shape) == 3:
+        elif len(image.shape) == NDIM_3D:
             # 3D image (e.g., time series)
             downsampled = np.zeros(
                 (image.shape[0], new_height, new_width), dtype=image.dtype
@@ -214,7 +226,7 @@ class PlotPerformanceOptimizer:
 
         # Decision matrix based on plot characteristics
         if plot_type in ["image", "saxs_2d"]:
-            if data_size_mb > 50 or memory_pressure in [
+            if data_size_mb > MIN_DOWNSAMPLE_POINTS or memory_pressure in [
                 MemoryPressure.HIGH,
                 MemoryPressure.CRITICAL,
             ]:
@@ -227,7 +239,7 @@ class PlotPerformanceOptimizer:
             if complexity in [PlotComplexity.COMPLEX, PlotComplexity.VERY_COMPLEX]:
                 # Complex plots with many series: PyQtGraph for performance
                 return PlotBackend.PYQTGRAPH
-            if data_size_mb < 10:
+            if data_size_mb < MIN_DISPLAY_POINTS:
                 # Small datasets: matplotlib for quality
                 return PlotBackend.MATPLOTLIB
             # Medium datasets: PyQtGraph for speed
@@ -269,7 +281,7 @@ class PlotPerformanceOptimizer:
                         optimizations["opengl_enabled"] = True
 
             # Optimize image data
-            if data.size > 1e6:  # > 1M pixels
+            if data.size > POINTS_THRESHOLD_HIGH:  # > 1M pixels
                 optimized_data = self.image_optimizer.optimize_image_for_display(data)
                 optimizations["image_downsampled"] = data.shape != optimized_data.shape
                 optimizations["original_size"] = data.shape
@@ -280,7 +292,7 @@ class PlotPerformanceOptimizer:
             # Line/scatter plot optimizations
             if hasattr(plot_widget, "setDownsampling"):
                 # Enable automatic downsampling for large datasets
-                if data.size > 1e5:  # > 100k points
+                if data.size > POINTS_THRESHOLD_MEDIUM:  # > 100k points
                     plot_widget.setDownsampling(auto=True, mode="peak")
                     optimizations["downsampling_enabled"] = True
 
@@ -322,7 +334,7 @@ class PlotPerformanceOptimizer:
 
         if plot_type == "image":
             # Image-specific optimizations
-            if data.size > 1e6:  # > 1M pixels
+            if data.size > POINTS_THRESHOLD_HIGH:  # > 1M pixels
                 optimized_data = self.image_optimizer.optimize_image_for_display(data)
                 optimizations["image_downsampled"] = data.shape != optimized_data.shape
                 data = optimized_data
@@ -333,12 +345,12 @@ class PlotPerformanceOptimizer:
 
         elif plot_type in ["line", "scatter"]:
             # Line/scatter optimizations
-            if data.size > 1e5:  # > 100k points
+            if data.size > POINTS_THRESHOLD_MEDIUM:  # > 100k points
                 # Downsample data for matplotlib
                 downsample_factor = int(np.ceil(data.size / 1e4))  # Target ~10k points
                 if len(data.shape) == 1:
                     data = data[::downsample_factor]
-                elif len(data.shape) == 2:
+                elif len(data.shape) == NDIM_2D:
                     data = data[::downsample_factor, :]
                 optimizations["data_downsampled"] = True
                 optimizations["downsample_factor"] = downsample_factor
@@ -386,7 +398,7 @@ class ProgressiveImageLoader:
                 progress_callback(50, 100, "Processing image data...")
 
             # Apply any necessary post-processing
-            if hasattr(image_data, "shape") and len(image_data.shape) > 2:
+            if hasattr(image_data, "shape") and len(image_data.shape) > NDIM_2D:
                 # Multi-dimensional data - may need chunked processing
                 pass
 
@@ -481,7 +493,7 @@ _plot_cache_manager = None
 
 def get_plot_optimizer() -> PlotPerformanceOptimizer:
     """Get global plot optimizer instance."""
-    global _plot_optimizer
+    global _plot_optimizer  # noqa: PLW0603 - intentional singleton pattern
     if _plot_optimizer is None:
         _plot_optimizer = PlotPerformanceOptimizer()
     return _plot_optimizer
@@ -489,7 +501,7 @@ def get_plot_optimizer() -> PlotPerformanceOptimizer:
 
 def get_plot_cache_manager() -> PlotCacheManager:
     """Get global plot cache manager instance."""
-    global _plot_cache_manager
+    global _plot_cache_manager  # noqa: PLW0603 - intentional singleton pattern
     if _plot_cache_manager is None:
         _plot_cache_manager = PlotCacheManager()
     return _plot_cache_manager
@@ -607,13 +619,14 @@ class AdvancedGUIRenderer:
             quality_factor = self._current_quality
 
             pg.setConfigOptions(
-                antialias=quality_factor > 0.7,  # Disable AA below 70% quality
+                antialias=quality_factor
+                > MEMORY_EFFICIENCY_LOW,  # Disable AA below 70% quality
                 useOpenGL=True,  # Always use OpenGL for better performance
                 enableExperimental=True,  # Enable performance features
             )
 
             # Reduce update frequency for complex scenes
-            if quality_factor < 0.6:
+            if quality_factor < MEMORY_EFFICIENCY_MEDIUM:
                 pg.setConfigOption("crashWarning", False)
 
         return original_settings
@@ -633,7 +646,7 @@ class AdvancedGUIRenderer:
             self._frame_times.pop(0)
 
         # Adaptive quality adjustment
-        if self.quality_auto_adjust and len(self._frame_times) >= 10:
+        if self.quality_auto_adjust and len(self._frame_times) >= MIN_DISPLAY_POINTS:
             avg_frame_time = sum(self._frame_times[-10:]) / 10
             self._adjust_quality_based_on_performance(avg_frame_time)
 
@@ -727,7 +740,7 @@ class AdvancedGUIRenderer:
             downsample_factor = max(1, data.size // max_points)
             return self._peak_preserving_downsample(data, downsample_factor)
 
-        if len(data.shape) == 2:
+        if len(data.shape) == NDIM_2D:
             # 2D data: use area-based downsampling
             total_pixels = data.shape[0] * data.shape[1]
             if total_pixels > max_points:
@@ -803,7 +816,7 @@ _advanced_gui_renderer = None
 
 def get_advanced_gui_renderer() -> AdvancedGUIRenderer:
     """Get global advanced GUI renderer instance."""
-    global _advanced_gui_renderer
+    global _advanced_gui_renderer  # noqa: PLW0603 - intentional singleton pattern
     if _advanced_gui_renderer is None:
         _advanced_gui_renderer = AdvancedGUIRenderer()
     return _advanced_gui_renderer

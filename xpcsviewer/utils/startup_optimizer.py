@@ -604,7 +604,7 @@ _config_manager = None
 
 def get_lazy_import_manager() -> LazyImportManager:
     """Get global lazy import manager."""
-    global _lazy_import_manager
+    global _lazy_import_manager  # noqa: PLW0603 - intentional singleton pattern
     if _lazy_import_manager is None:
         _lazy_import_manager = LazyImportManager()
     return _lazy_import_manager
@@ -612,7 +612,7 @@ def get_lazy_import_manager() -> LazyImportManager:
 
 def get_startup_manager() -> ParallelStartupManager:
     """Get global startup manager."""
-    global _startup_manager
+    global _startup_manager  # noqa: PLW0603 - intentional singleton pattern
     if _startup_manager is None:
         _startup_manager = ParallelStartupManager()
     return _startup_manager
@@ -620,7 +620,7 @@ def get_startup_manager() -> ParallelStartupManager:
 
 def get_config_manager() -> ConfigurationManager:
     """Get global configuration manager."""
-    global _config_manager
+    global _config_manager  # noqa: PLW0603 - intentional singleton pattern
     if _config_manager is None:
         _config_manager = ConfigurationManager()
         _config_manager.load_config()

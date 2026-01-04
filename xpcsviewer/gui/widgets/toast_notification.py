@@ -177,8 +177,13 @@ class ToastManager:
         """Dismiss a specific toast."""
         if toast in self._toasts:
             self._toasts.remove(toast)
-            toast.close()
-            toast.deleteLater()
+            # Check if the C++ object is still valid before operating on it
+            try:
+                toast.close()
+                toast.deleteLater()
+            except RuntimeError:
+                # C++ object already deleted (e.g., parent window closed)
+                pass
             self._position_toasts()
 
     def _position_toasts(self) -> None:
@@ -186,7 +191,11 @@ class ToastManager:
         if not self._parent:
             return
 
-        parent_rect = self._parent.rect()
+        try:
+            parent_rect = self._parent.rect()
+        except RuntimeError:
+            # Parent C++ object already deleted
+            return
         y_offset = self._margin
 
         for toast in reversed(self._toasts):

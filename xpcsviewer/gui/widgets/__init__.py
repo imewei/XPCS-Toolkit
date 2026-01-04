@@ -20,7 +20,11 @@ from xpcsviewer.gui.widgets.error_dialog import (
     show_file_error,
     show_plot_error,
 )
-from xpcsviewer.gui.widgets.toast_notification import ToastManager, ToastType, ToastWidget
+from xpcsviewer.gui.widgets.toast_notification import (
+    ToastManager,
+    ToastType,
+    ToastWidget,
+)
 
 __all__ = [
     "CommandPalette",
@@ -39,5 +43,3 @@ __all__ = [
     "show_file_error",
     "show_plot_error",
 ]
-
-

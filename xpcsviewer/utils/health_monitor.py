@@ -20,6 +20,8 @@ from typing import Any
 import numpy as np
 import psutil
 
+from xpcsviewer.constants import MIN_DISPLAY_POINTS, NDIM_2D
+
 from .logging_config import get_logger
 
 logger = get_logger(__name__)
@@ -74,13 +76,13 @@ class HealthMetric:
 
     def get_trend(self, window_minutes: float = 5.0) -> str:
         """Get trend over specified time window."""
-        if len(self.history) < 2:
+        if len(self.history) < NDIM_2D:
             return "insufficient_data"
 
         cutoff_time = time.time() - (window_minutes * 60)
         recent_values = [val for ts, val in self.history if ts >= cutoff_time]
 
-        if len(recent_values) < 2:
+        if len(recent_values) < NDIM_2D:
             return "insufficient_data"
 
         # Simple linear trend
@@ -549,7 +551,7 @@ _monitor_lock = threading.Lock()
 
 def get_health_monitor() -> HealthMonitor:
     """Get or create the global health monitor instance."""
-    global _health_monitor
+    global _health_monitor  # noqa: PLW0603 - intentional singleton pattern
     if _health_monitor is None:
         with _monitor_lock:
             if _health_monitor is None:
@@ -619,7 +621,7 @@ class health_monitoring_context:
                     / max(start_value, 1.0)
                     * 100
                 )
-                if change_percent > 10:  # > 10% change
+                if change_percent > MIN_DISPLAY_POINTS:  # > 10% change
                     significant_changes.append(
                         f"{name}: {start_value:.1f} -> {current_metric.current_value:.1f}"
                     )

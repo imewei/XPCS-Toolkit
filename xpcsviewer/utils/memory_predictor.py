@@ -12,6 +12,17 @@ from dataclasses import dataclass
 import numpy as np
 import psutil
 
+from xpcsviewer.constants import (
+    LOW_CONFIDENCE_THRESHOLD,
+    MAX_HISTORY_ENTRIES,
+    MEMORY_PRESSURE_CRITICAL,
+    MEMORY_PRESSURE_HIGH,
+    MEMORY_PRESSURE_MODERATE,
+    MEMORY_WARNING_THRESHOLD_MB,
+    MIN_HISTORY_SAMPLES,
+    MIN_LEARNING_SAMPLES,
+)
+
 from .logging_config import get_logger
 from .memory_manager import MemoryPressure, get_memory_manager
 
@@ -145,7 +156,9 @@ class XPCSMemoryPredictor:
             )
 
             # Update size correlation if we have meaningful input size
-            if input_size_mb > 10:  # Only for operations with significant data
+            if (
+                input_size_mb > MIN_LEARNING_SAMPLES
+            ):  # Only for operations with significant data
                 size_correlation = abs(memory_delta) / input_size_mb
                 profile.input_size_correlation = (
                     alpha * size_correlation
@@ -192,7 +205,7 @@ class XPCSMemoryPredictor:
             base_prediction = profile.avg_memory_mb
 
             # Scale by input size if relevant
-            if input_size_mb > 10:
+            if input_size_mb > MIN_LEARNING_SAMPLES:
                 size_scaling = input_size_mb * profile.input_size_correlation
                 predicted_mb = base_prediction + size_scaling
             else:
@@ -219,11 +232,11 @@ class XPCSMemoryPredictor:
         memory_total_mb = current_memory.total / (1024 * 1024)
         pressure_ratio = predicted_total_mb / memory_total_mb
 
-        if pressure_ratio >= 0.9:
+        if pressure_ratio >= MEMORY_PRESSURE_CRITICAL:
             pressure_level = MemoryPressure.CRITICAL
-        elif pressure_ratio >= 0.8:
+        elif pressure_ratio >= MEMORY_PRESSURE_HIGH:
             pressure_level = MemoryPressure.HIGH
-        elif pressure_ratio >= 0.65:
+        elif pressure_ratio >= MEMORY_PRESSURE_MODERATE:
             pressure_level = MemoryPressure.MODERATE
         else:
             pressure_level = MemoryPressure.LOW
@@ -281,10 +294,13 @@ class XPCSMemoryPredictor:
             )
 
         # Operation-specific recommendations
-        if operation_type == "load_saxs_2d" and predicted_mb > 200:
+        if (
+            operation_type == "load_saxs_2d"
+            and predicted_mb > MEMORY_WARNING_THRESHOLD_MB
+        ):
             recommendations.append("Consider using memory-mapped file access")
 
-        elif operation_type == "fit_g2" and predicted_mb > 100:
+        elif operation_type == "fit_g2" and predicted_mb > MAX_HISTORY_ENTRIES:
             recommendations.append(
                 "Consider using sequential fitting instead of parallel"
             )
@@ -314,7 +330,7 @@ class XPCSMemoryPredictor:
         memory_values = [sample["memory_mb"] for sample in recent_samples]
 
         # Calculate trend using linear regression
-        if len(memory_values) >= 3:
+        if len(memory_values) >= MIN_HISTORY_SAMPLES:
             # Simple linear regression
             x = np.array(timestamps) - timestamps[0]  # Relative time
             y = np.array(memory_values)
@@ -355,7 +371,9 @@ class XPCSMemoryPredictor:
         reasons = []
 
         # Check for rapid memory growth
-        if trends["growth_rate_mb_per_hour"] > 100:  # Growing > 100MB/hour
+        if (
+            trends["growth_rate_mb_per_hour"] > MAX_HISTORY_ENTRIES
+        ):  # Growing > 100MB/hour
             cleanup_needed = True
             reasons.append(
                 f"Rapid memory growth: {trends['growth_rate_mb_per_hour']:.0f}MB/hour"
@@ -373,7 +391,9 @@ class XPCSMemoryPredictor:
 
         # Check cache efficiency
         cache_stats = self.memory_manager.get_cache_stats()
-        if cache_stats.get("cache_efficiency", 1.0) < 0.3:  # Low hit rate
+        if (
+            cache_stats.get("cache_efficiency", 1.0) < LOW_CONFIDENCE_THRESHOLD
+        ):  # Low hit rate
             cleanup_needed = True
             reasons.append("Low cache efficiency suggests wasted memory")
 
@@ -424,7 +444,7 @@ _global_predictor: XPCSMemoryPredictor | None = None
 
 def get_memory_predictor() -> XPCSMemoryPredictor:
     """Get or create the global memory predictor instance."""
-    global _global_predictor
+    global _global_predictor  # noqa: PLW0603 - intentional singleton pattern
     if _global_predictor is None:
         _global_predictor = XPCSMemoryPredictor()
     return _global_predictor

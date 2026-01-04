@@ -5,9 +5,8 @@ Provides actionable error dialogs with cause/remedy information,
 retry buttons, and log access links.
 """
 
-from typing import Callable
+from collections.abc import Callable
 
-from PySide6.QtCore import Qt
 from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import (
     QDialog,
@@ -67,9 +66,7 @@ class ErrorDialog(QDialog):
 
         self._setup_ui(message, cause, remedy, details)
 
-    def _setup_ui(
-        self, message: str, cause: str, remedy: str, details: str
-    ) -> None:
+    def _setup_ui(self, message: str, cause: str, remedy: str, details: str) -> None:
         """Set up the dialog UI."""
         layout = QVBoxLayout(self)
         layout.setSpacing(16)

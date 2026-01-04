@@ -216,11 +216,13 @@ class TestWindowStateManagement:
         assert tab_widget.currentIndex() == initial_tab
 
     @pytest.mark.gui
-    def test_window_close_behavior(self, qapp, qtbot):
+    def test_window_close_behavior(self, qapp, qtbot, mock_viewer_kernel):
         """Test window closing behavior."""
         # Create a temporary window for close testing
-        with patch("xpcsviewer.xpcs_viewer.ViewerKernel"):
+        with patch("xpcsviewer.xpcs_viewer.ViewerKernel") as mock_vk_class:
+            mock_vk_class.return_value = mock_viewer_kernel
             window = XpcsViewer(path=None)
+            window.vk = mock_viewer_kernel
             qtbot.addWidget(window)
             window.show()
             qtbot.wait(50)
@@ -233,15 +235,17 @@ class TestWindowStateManagement:
             assert not window.isVisible()
 
     @pytest.mark.gui
-    def test_multiple_window_instances(self, qapp, qtbot):
+    def test_multiple_window_instances(self, qapp, qtbot, mock_viewer_kernel):
         """Test behavior with multiple window instances."""
         windows = []
 
         try:
             # Create multiple windows
             for _i in range(2):
-                with patch("xpcsviewer.xpcs_viewer.ViewerKernel"):
+                with patch("xpcsviewer.xpcs_viewer.ViewerKernel") as mock_vk_class:
+                    mock_vk_class.return_value = mock_viewer_kernel
                     window = XpcsViewer(path=None)
+                    window.vk = mock_viewer_kernel
                     qtbot.addWidget(window)
                     window.show()
                     windows.append(window)

@@ -268,7 +268,7 @@ _config_lock = threading.Lock()
 
 def initialize_logging() -> LoggingConfig:
     """Initialize the logging configuration (called automatically on first use)."""
-    global _config
+    global _config  # noqa: PLW0603 - intentional config singleton
     if _config is None:
         with _config_lock:
             if _config is None:
@@ -333,7 +333,7 @@ def get_log_directory() -> Path:
 
 def reset_logging_config():
     """Reset the logging configuration singleton for testing purposes."""
-    global _config
+    global _config  # noqa: PLW0603 - intentional config singleton
     with _config_lock:
         if _config is not None:
             # Clean up existing handlers

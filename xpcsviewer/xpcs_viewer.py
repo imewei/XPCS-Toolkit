@@ -19,6 +19,8 @@ from PySide6.QtGui import (
     QShortcut,
 )
 
+# Import async components
+from .constants import MIN_AVERAGING_FILES
 from .gui.shortcuts.shortcut_manager import ShortcutManager
 
 # Import GUI components
@@ -34,8 +36,6 @@ from .gui.theme.manager import ThemeManager
 from .gui.widgets.command_palette import CommandPalette
 from .gui.widgets.drag_drop_list import DragDropListView
 from .gui.widgets.toast_notification import ToastManager
-
-# Import async components
 from .threading.async_kernel import AsyncDataPreloader, AsyncViewerKernel
 from .threading.progress_manager import ProgressManager
 
@@ -349,9 +349,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         toolbar.addSeparator()
 
         # Plot current tab action
-        action_plot = toolbar.addAction(
-            style.standardIcon(QStyle.SP_MediaPlay), "Plot"
-        )
+        action_plot = toolbar.addAction(style.standardIcon(QStyle.SP_MediaPlay), "Plot")
         action_plot.setToolTip("Plot current tab")
         action_plot.triggered.connect(self._plot_current_tab)
 
@@ -948,6 +946,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
 
         # If recent paths exist, add "Open Selected" button
         if recent_paths:
+
             def open_selected():
                 items = recent_list.selectedItems()
                 if items:
@@ -957,7 +956,9 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
             open_selected_btn = QtWidgets.QPushButton("Open Selected")
             open_selected_btn.setEnabled(False)
             recent_list.itemSelectionChanged.connect(
-                lambda: open_selected_btn.setEnabled(len(recent_list.selectedItems()) > 0)
+                lambda: open_selected_btn.setEnabled(
+                    len(recent_list.selectedItems()) > 0
+                )
             )
             open_selected_btn.clicked.connect(open_selected)
             button_layout.insertWidget(1, open_selected_btn)
@@ -1980,7 +1981,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
             self.avg_save_name.setText(save_name)
 
     def submit_job(self):
-        if len(self.vk.target) < 2:
+        if len(self.vk.target) < MIN_AVERAGING_FILES:
             self.statusbar.showMessage("select at least 2 files for averaging", 1000)
             return
 

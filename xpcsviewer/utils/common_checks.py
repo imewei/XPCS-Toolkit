@@ -55,7 +55,7 @@ def is_empty_or_none(obj: Any) -> bool:
         if hasattr(obj, "size"):  # NumPy arrays
             return obj.size == 0
         return False
-    except:
+    except (TypeError, AttributeError):
         return False
 
 

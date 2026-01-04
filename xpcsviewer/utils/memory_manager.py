@@ -17,6 +17,7 @@ from typing import Any
 import numpy as np
 import psutil
 
+from xpcsviewer.constants import CACHE_LONG_EXPIRY, MIN_CACHE_ENTRIES
 from xpcsviewer.utils.logging_config import get_logger
 
 logger = get_logger(__name__)
@@ -319,7 +320,7 @@ class UnifiedMemoryManager:
                     # Age out old entries
                     aged_keys = []
                     for key, entry in cache.items():
-                        if entry.time_since_access() > 1800:  # 30 minutes
+                        if entry.time_since_access() > CACHE_LONG_EXPIRY:  # 30 minutes
                             aged_keys.append(key)
 
                     for key in aged_keys:
@@ -665,7 +666,7 @@ _global_memory_manager: UnifiedMemoryManager | None = None
 
 def get_memory_manager() -> UnifiedMemoryManager:
     """Get or create the global memory manager instance."""
-    global _global_memory_manager
+    global _global_memory_manager  # noqa: PLW0603 - intentional singleton pattern
     if _global_memory_manager is None:
         _global_memory_manager = UnifiedMemoryManager()
     return _global_memory_manager
@@ -673,7 +674,7 @@ def get_memory_manager() -> UnifiedMemoryManager:
 
 def shutdown_memory_manager():
     """Shutdown the global memory manager."""
-    global _global_memory_manager
+    global _global_memory_manager  # noqa: PLW0603 - intentional singleton pattern
     if _global_memory_manager:
         _global_memory_manager.shutdown()
         _global_memory_manager = None
@@ -719,5 +720,5 @@ def memory_pressure_monitor():
             )
 
         memory_delta = final_memory - initial_memory
-        if abs(memory_delta) > 50:  # 50MB threshold
+        if abs(memory_delta) > MIN_CACHE_ENTRIES:  # 50MB threshold
             logger.info(f"Significant memory change: {memory_delta:+.1f}MB")

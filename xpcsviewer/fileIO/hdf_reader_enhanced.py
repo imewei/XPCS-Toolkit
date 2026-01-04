@@ -17,6 +17,8 @@ from typing import Any
 import h5py
 import numpy as np
 
+from xpcsviewer.constants import MIN_HISTORY_SAMPLES, NDIM_2D, STREAMING_CHUNK_SIZE_MB
+
 from ..utils.logging_config import get_logger
 from ..utils.memory_manager import MemoryPressure, get_memory_manager
 
@@ -92,7 +94,7 @@ class IntelligentChunker:
         AccessPattern
             Detected access pattern
         """
-        if len(recent_accesses) < 3:
+        if len(recent_accesses) < MIN_HISTORY_SAMPLES:
             return AccessPattern.RANDOM
 
         # Analyze for sequential pattern
@@ -111,7 +113,7 @@ class IntelligentChunker:
 
     def _is_sequential_pattern(self, accesses: list[tuple[slice, ...]]) -> bool:
         """Check if accesses follow sequential pattern."""
-        if len(accesses) < 3:
+        if len(accesses) < MIN_HISTORY_SAMPLES:
             return False
 
         # Extract start positions for first dimension
@@ -120,7 +122,7 @@ class IntelligentChunker:
             if len(access) > 0 and isinstance(access[0], slice):
                 starts.append(access[0].start or 0)
 
-        if len(starts) < 3:
+        if len(starts) < MIN_HISTORY_SAMPLES:
             return False
 
         # Check if positions are increasing with regular intervals
@@ -140,7 +142,7 @@ class IntelligentChunker:
                 size = (access[0].stop or 1) - (access[0].start or 0)
                 block_sizes.append(size)
 
-        if len(block_sizes) < 3:
+        if len(block_sizes) < MIN_HISTORY_SAMPLES:
             return False
 
         # Consistent block sizes suggest block pattern
@@ -149,7 +151,7 @@ class IntelligentChunker:
     def _is_sparse_pattern(self, accesses: list[tuple[slice, ...]]) -> bool:
         """Check if accesses follow sparse pattern."""
         # Sparse pattern: non-contiguous, irregular access
-        if len(accesses) < 3:
+        if len(accesses) < MIN_HISTORY_SAMPLES:
             return False
 
         # Check for large gaps between accesses
@@ -158,7 +160,7 @@ class IntelligentChunker:
             if len(access) > 0 and isinstance(access[0], slice):
                 starts.append(access[0].start or 0)
 
-        if len(starts) < 3:
+        if len(starts) < MIN_HISTORY_SAMPLES:
             return False
 
         diffs = np.diff(sorted(starts))
@@ -260,7 +262,7 @@ class ReadAheadCache:
         with self._lock:
             self.access_patterns[key].append((time.time(), slice_info))
             # Keep only recent accesses
-            if len(self.access_patterns[key]) > 20:
+            if len(self.access_patterns[key]) > STREAMING_CHUNK_SIZE_MB:
                 self.access_patterns[key].popleft()
 
     def predict_next_access(
@@ -287,7 +289,10 @@ class ReadAheadCache:
         predictions = []
 
         with self._lock:
-            if key not in self.access_patterns or len(self.access_patterns[key]) < 2:
+            if (
+                key not in self.access_patterns
+                or len(self.access_patterns[key]) < NDIM_2D
+            ):
                 return predictions
 
             recent_accesses = list(self.access_patterns[key])[-5:]
@@ -304,7 +309,7 @@ class ReadAheadCache:
         self, accesses: list[tuple[float, tuple[slice, ...]]]
     ) -> bool:
         """Check if recent accesses show sequential pattern."""
-        if len(accesses) < 3:
+        if len(accesses) < MIN_HISTORY_SAMPLES:
             return False
 
         slice_starts = []
@@ -312,7 +317,7 @@ class ReadAheadCache:
             if slice_info and len(slice_info) > 0 and isinstance(slice_info[0], slice):
                 slice_starts.append(slice_info[0].start or 0)
 
-        if len(slice_starts) < 3:
+        if len(slice_starts) < MIN_HISTORY_SAMPLES:
             return False
 
         # Check for increasing sequence
@@ -323,7 +328,7 @@ class ReadAheadCache:
         self, accesses: list[tuple[float, tuple[slice, ...]]]
     ) -> bool:
         """Check if accesses show sliding window pattern."""
-        if len(accesses) < 3:
+        if len(accesses) < MIN_HISTORY_SAMPLES:
             return False
 
         # Check for overlapping slices
@@ -334,7 +339,7 @@ class ReadAheadCache:
                 stop = slice_info[0].stop or start + 1
                 slice_ranges.append((start, stop))
 
-        if len(slice_ranges) < 3:
+        if len(slice_ranges) < MIN_HISTORY_SAMPLES:
             return False
 
         # Check for overlapping ranges
@@ -802,7 +807,7 @@ _global_enhanced_reader: EnhancedHDF5Reader | None = None
 
 def get_enhanced_hdf5_reader() -> EnhancedHDF5Reader:
     """Get or create the global enhanced HDF5 reader."""
-    global _global_enhanced_reader
+    global _global_enhanced_reader  # noqa: PLW0603 - intentional singleton pattern
     if _global_enhanced_reader is None:
         _global_enhanced_reader = EnhancedHDF5Reader()
     return _global_enhanced_reader

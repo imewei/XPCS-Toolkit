@@ -766,7 +766,7 @@ def profile_performance(
                     for arg in args:
                         if hasattr(arg, "nbytes"):
                             input_size_mb += arg.nbytes / (1024 * 1024)
-                except:
+                except (TypeError, AttributeError):
                     pass
 
             # Profile the function execution

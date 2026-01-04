@@ -191,7 +191,7 @@ _cleanup_system: OptimizedCleanupSystem | None = None
 
 def get_cleanup_system() -> OptimizedCleanupSystem:
     """Get or create the global cleanup system instance."""
-    global _cleanup_system
+    global _cleanup_system  # noqa: PLW0603 - intentional singleton pattern
     if _cleanup_system is None:
         _cleanup_system = OptimizedCleanupSystem()
     return _cleanup_system
@@ -230,7 +230,7 @@ def smart_garbage_collection():
 
 def cleanup_system_shutdown(timeout: float = 5.0):
     """Shutdown the cleanup system."""
-    global _cleanup_system
+    global _cleanup_system  # noqa: PLW0603 - intentional singleton pattern
     try:
         if _cleanup_system is not None:
             _cleanup_system.shutdown(timeout)
@@ -244,7 +244,7 @@ def cleanup_system_shutdown(timeout: float = 5.0):
 
 def get_object_registry() -> ObjectRegistry:
     """Get or create the global object registry."""
-    global _object_registry
+    global _object_registry  # noqa: PLW0603 - intentional singleton pattern
     if _object_registry is None:
         _object_registry = ObjectRegistry()
     return _object_registry

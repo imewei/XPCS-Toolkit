@@ -567,7 +567,7 @@ def get_state_validator(
     level: StateValidationLevel = StateValidationLevel.STANDARD,
 ) -> LockFreeStateValidator:
     """Get or create the global state validator instance."""
-    global _state_validator
+    global _state_validator  # noqa: PLW0603 - intentional singleton pattern
     if _state_validator is None:
         with _validator_lock:
             if _state_validator is None:

@@ -36,6 +36,15 @@ MEMORY_PRESSURE_CRITICAL = 0.90  # 90% - Critical memory pressure
 MEMORY_PRESSURE_HIGH = 0.80  # 80% - High memory pressure
 MEMORY_PRESSURE_MODERATE = 0.70  # 70% - Moderate memory pressure
 
+# Import additional constants for magic value replacement
+from xpcsviewer.constants import (
+    CACHE_ENTRY_TIMEOUT,
+    DIRECT_READ_LIMIT_MB,
+    LARGE_DATASET_THRESHOLD_MB,
+    NDIM_2D,
+    NDIM_3D,
+)
+
 
 class PooledConnection:
     """Wrapper for pooled HDF5 connections with metadata."""
@@ -542,7 +551,7 @@ class HDF5ConnectionPool:
                 if fname in self._read_cache and cache_key in self._read_cache[fname]:
                     cached_result = self._read_cache[fname][cache_key]
                     # Check if cache entry is recent (within 5 minutes)
-                    if time.time() - cached_result["timestamp"] < 300:
+                    if time.time() - cached_result["timestamp"] < CACHE_ENTRY_TIMEOUT:
                         logger.debug(
                             f"Using cached batch read for {len(dataset_paths)} datasets from {fname}"
                         )
@@ -749,7 +758,9 @@ def get(fname, fields, mode="raw", ret_type="dict", ftype="nexus", use_pool=True
                 logger.error("path to field not found: %s", path)
                 raise ValueError("key not found: %s:%s", key, path)
             val = hdf_result.get(path)[()]
-            if key in ["saxs_2d"] and val.ndim == 3:  # saxs_2d is in [1xNxM] format
+            if (
+                key in ["saxs_2d"] and val.ndim == NDIM_3D
+            ):  # saxs_2d is in [1xNxM] format
                 val = val[0]
             # converts bytes to unicode;
             if type(val) in [np.bytes_, bytes]:
@@ -881,7 +892,7 @@ def batch_read_fields(
             raise ValueError(f"Key not found: {field}:{path}")
 
         # Apply same processing as original get() function
-        if field == "saxs_2d" and isinstance(val, np.ndarray) and val.ndim == 3:
+        if field == "saxs_2d" and isinstance(val, np.ndarray) and val.ndim == NDIM_3D:
             val = val[0]  # saxs_2d is in [1xNxM] format
 
         if isinstance(val, np.ndarray) and val.shape == (1, 1):
@@ -929,7 +940,7 @@ def get_file_info(fname: str, use_pool: bool = True) -> dict[str, Any]:
                 info["estimated_datasets"] += 1
                 # Track large datasets (>10MB estimated)
                 estimated_size = obj.size * obj.dtype.itemsize / (1024 * 1024)
-                if estimated_size > 10:
+                if estimated_size > LARGE_DATASET_THRESHOLD_MB:
                     info["large_datasets"].append(
                         {
                             "path": name,
@@ -1009,7 +1020,7 @@ def get_chunked_dataset(
 
         # For small datasets, read directly
         estimated_size_mb = dataset.size * dataset.dtype.itemsize / (1024 * 1024)
-        if estimated_size_mb < 100:  # Less than 100MB, read directly
+        if estimated_size_mb < DIRECT_READ_LIMIT_MB:  # Less than 100MB, read directly
             logger.debug(
                 f"Reading small dataset {dataset_path} directly ({estimated_size_mb:.1f}MB)"
             )
@@ -1025,7 +1036,7 @@ def get_chunked_dataset(
             logger.debug(f"Using native chunking: {chunk_size}")
         elif chunk_size is None:
             # Default chunking strategy for 2D data
-            if len(dataset.shape) == 2:
+            if len(dataset.shape) == NDIM_2D:
                 # Aim for ~10MB chunks
                 target_elements = 10 * 1024 * 1024 // dataset.dtype.itemsize
                 chunk_rows = min(

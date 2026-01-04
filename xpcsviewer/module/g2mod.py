@@ -256,65 +256,66 @@ def pg_plot(
                         fit_summary.get("fit_val") is not None
                         and n < fit_summary["fit_val"].shape[0]
                     ):
-                        fit_val = fit_summary["fit_val"][
-                            n
-                        ]  # [2, n_params] - values and errors
+                        _add_fit_param_annotation(
+                            ax, fit_summary["fit_val"][n], fit_func, color
+                        )
 
-                        # Format parameters based on fit function
-                        if fit_func == "single":
-                            param_names = ["τ", "bkg", "cts", "d"]
-                        else:  # double exponential
-                            param_names = ["τ1", "bkg", "cts1", "τ2", "cts2"]
 
-                        # Create parameter text
-                        param_text_lines = []
-                        for p_idx in range(min(len(param_names), fit_val.shape[1])):
-                            value = fit_val[0, p_idx]  # fitted value
-                            error = fit_val[1, p_idx]  # error estimate
+def _add_fit_param_annotation(ax, fit_val, fit_func, color):
+    """Add fitted parameter text annotation to plot.
 
-                            # Format error gracefully
-                            if np.isfinite(error) and error > 0:
-                                if (
-                                    param_names[p_idx] == "τ"
-                                    or param_names[p_idx] == "τ1"
-                                ):
-                                    param_text_lines.append(
-                                        f"{param_names[p_idx]} = {value:.3e} ± {error:.2e}"
-                                    )
-                                else:
-                                    param_text_lines.append(
-                                        f"{param_names[p_idx]} = {value:.3f} ± {error:.3f}"
-                                    )
-                            elif (
-                                param_names[p_idx] == "τ" or param_names[p_idx] == "τ1"
-                            ):
-                                param_text_lines.append(
-                                    f"{param_names[p_idx]} = {value:.3e} ± --"
-                                )
-                            else:
-                                param_text_lines.append(
-                                    f"{param_names[p_idx]} = {value:.3f} ± --"
-                                )
+    Args:
+        ax: PyQtGraph plot axis
+        fit_val: Fitted values array [2, n_params] - values and errors
+        fit_func: Fitting function type ('single' or 'double')
+        color: Color for the text
+    """
+    # Format parameters based on fit function
+    if fit_func == "single":
+        param_names = ["τ", "bkg", "cts", "d"]
+    else:  # double exponential
+        param_names = ["τ1", "bkg", "cts1", "τ2", "cts2"]
 
-                        param_text = "\n".join(param_text_lines)
+    # Create parameter text
+    param_text_lines = []
+    for p_idx in range(min(len(param_names), fit_val.shape[1])):
+        value = fit_val[0, p_idx]  # fitted value
+        error = fit_val[1, p_idx]  # error estimate
 
-                        # Add text item to plot
-                        text_item = pg.TextItem(param_text, anchor=(0, 1), color=color)
+        # Format error gracefully
+        if np.isfinite(error) and error > 0:
+            if param_names[p_idx] == "τ" or param_names[p_idx] == "τ1":
+                param_text_lines.append(
+                    f"{param_names[p_idx]} = {value:.3e} ± {error:.2e}"
+                )
+            else:
+                param_text_lines.append(
+                    f"{param_names[p_idx]} = {value:.3f} ± {error:.3f}"
+                )
+        elif param_names[p_idx] == "τ" or param_names[p_idx] == "τ1":
+            param_text_lines.append(f"{param_names[p_idx]} = {value:.3e} ± --")
+        else:
+            param_text_lines.append(f"{param_names[p_idx]} = {value:.3f} ± --")
 
-                        # Position text in data coordinates (top-left of visible area)
-                        viewbox = ax.getViewBox()
-                        if viewbox is not None:
-                            # Get current view range
-                            [[xmin, xmax], [ymin, ymax]] = viewbox.viewRange()
-                            # Position at 5% from left edge, 95% from bottom (top area)
-                            text_x = xmin + 0.05 * (xmax - xmin)
-                            text_y = ymin + 0.95 * (ymax - ymin)
-                            text_item.setPos(text_x, text_y)
-                        else:
-                            # Fallback position
-                            text_item.setPos(-5, 1.5)
+    param_text = "\n".join(param_text_lines)
 
-                        ax.addItem(text_item)
+    # Add text item to plot
+    text_item = pg.TextItem(param_text, anchor=(0, 1), color=color)
+
+    # Position text in data coordinates (top-left of visible area)
+    viewbox = ax.getViewBox()
+    if viewbox is not None:
+        # Get current view range
+        [[xmin, xmax], [ymin, ymax]] = viewbox.viewRange()
+        # Position at 5% from left edge, 95% from bottom (top area)
+        text_x = xmin + 0.05 * (xmax - xmin)
+        text_y = ymin + 0.95 * (ymax - ymin)
+        text_item.setPos(text_x, text_y)
+    else:
+        # Fallback position
+        text_item.setPos(-5, 1.5)
+
+    ax.addItem(text_item)
 
 
 def pg_plot_one_g2(ax, x, y, dy, color, label, symbol, symbol_size=5):

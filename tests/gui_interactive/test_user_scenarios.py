@@ -490,11 +490,18 @@ class TestDataVisualizationScenarios:
 
                         qtbot.wait(50)
 
-                        # Test selection change
-                        if hasattr(control, "setCurrentIndex") and control.count() > 1:
-                            control.setCurrentIndex(1)
-                            qtbot.wait(100)
-                            assert control.currentIndex() == 1
+                        # Test selection change - use appropriate method for widget type
+                        if control.count() > 1:
+                            if isinstance(control, QtWidgets.QListWidget):
+                                # QListWidget uses setCurrentRow for integer index
+                                control.setCurrentRow(1)
+                                qtbot.wait(100)
+                                assert control.currentRow() == 1
+                            elif isinstance(control, QtWidgets.QComboBox):
+                                # QComboBox uses setCurrentIndex for integer index
+                                control.setCurrentIndex(1)
+                                qtbot.wait(100)
+                                assert control.currentIndex() == 1
 
 
 class TestErrorRecoveryScenarios:

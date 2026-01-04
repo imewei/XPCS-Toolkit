@@ -543,7 +543,7 @@ def sequential_fitting(
                     else:
                         residuals = y - y_pred
                     return np.sum(residuals**2)
-                except:
+                except (ValueError, FloatingPointError, OverflowError):
                     return np.inf
 
             result = differential_evolution(
@@ -577,7 +577,7 @@ def sequential_fitting(
 
                     pcov = np.linalg.inv(jac_weighted.T @ jac_weighted)
 
-                except:
+                except (np.linalg.LinAlgError, ValueError):
                     # Fallback: identity matrix scaled by parameter magnitude
                     pcov = np.eye(len(popt)) * (np.abs(popt) + 1e-10)
 

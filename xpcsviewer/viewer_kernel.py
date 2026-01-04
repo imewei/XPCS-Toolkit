@@ -9,6 +9,7 @@ import numpy as np
 import pyqtgraph as pg
 
 # Local imports
+from .constants import MEMORY_CLEANUP_TIMEOUT_S
 from .file_locator import FileLocator
 from .helper.listmodel import TableDataModel
 from .utils.logging_config import get_logger
@@ -240,7 +241,7 @@ class ViewerKernel(FileLocator):
                         obj.clear_cache()
                         cleared_count += 1
                     # Prevent excessive blocking
-                    if time.time() - start_time > 0.050:  # 50ms limit
+                    if time.time() - start_time > MEMORY_CLEANUP_TIMEOUT_S:
                         logger.warning("Memory cleanup timeout, stopped early")
                         break
                 logger.debug(

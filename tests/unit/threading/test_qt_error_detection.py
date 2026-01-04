@@ -15,7 +15,7 @@ import time
 
 import pytest
 from PySide6 import QtCore, QtWidgets
-from PySide6.QtCore import QObject, QThread, QTimer, Signal
+from PySide6.QtCore import QObject, Qt, QThread, QTimer, Signal
 
 # Mark all tests in this module as GUI tests to prevent parallel execution
 # These tests are fundamentally incompatible with CI environments due to Qt threading issues
@@ -301,8 +301,10 @@ class BackgroundCleanupTester:
             nonlocal error_message
             error_message = msg
 
-        worker.cleanup_completed.connect(on_cleanup_done)
-        worker.error_occurred.connect(on_error)
+        # Use Qt.DirectConnection to ensure signals are delivered synchronously
+        # when emitted from the worker thread (bypasses event loop requirement)
+        worker.cleanup_completed.connect(on_cleanup_done, Qt.DirectConnection)
+        worker.error_occurred.connect(on_error, Qt.DirectConnection)
         worker.start()
 
         # Wait for the thread to complete

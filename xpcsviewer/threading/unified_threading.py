@@ -467,7 +467,7 @@ _global_threading_manager: UnifiedThreadingManager | None = None
 
 def get_unified_threading_manager() -> UnifiedThreadingManager:
     """Get or create the global unified threading manager."""
-    global _global_threading_manager
+    global _global_threading_manager  # noqa: PLW0603 - intentional singleton pattern
     if _global_threading_manager is None:
         _global_threading_manager = UnifiedThreadingManager()
     return _global_threading_manager
@@ -475,7 +475,7 @@ def get_unified_threading_manager() -> UnifiedThreadingManager:
 
 def shutdown_unified_threading():
     """Shutdown the global threading manager."""
-    global _global_threading_manager
+    global _global_threading_manager  # noqa: PLW0603 - intentional singleton pattern
     if _global_threading_manager:
         _global_threading_manager.shutdown()
         _global_threading_manager = None

@@ -513,7 +513,7 @@ _global_lazy_loader: IntelligentLazyLoader | None = None
 
 def get_lazy_loader() -> IntelligentLazyLoader:
     """Get or create the global lazy loader instance."""
-    global _global_lazy_loader
+    global _global_lazy_loader  # noqa: PLW0603 - intentional singleton pattern
     if _global_lazy_loader is None:
         _global_lazy_loader = IntelligentLazyLoader()
     return _global_lazy_loader
@@ -530,7 +530,7 @@ def register_lazy_hdf5(
 
 def shutdown_lazy_loader():
     """Shutdown the global lazy loader."""
-    global _global_lazy_loader
+    global _global_lazy_loader  # noqa: PLW0603 - intentional singleton pattern
     if _global_lazy_loader:
         _global_lazy_loader.shutdown()
         _global_lazy_loader = None

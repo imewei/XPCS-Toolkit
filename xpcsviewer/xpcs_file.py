@@ -15,17 +15,34 @@ from __future__ import annotations
 # Standard library imports
 import os
 import re
-import sys
-import threading
 import time
 import warnings
-from collections import OrderedDict
-from typing import Any
 
 # Third-party imports
 import numpy as np
-import psutil
 import pyqtgraph as pg
+
+from xpcsviewer.constants import (
+    DOUBLE_EXP_PARAMS,
+    MAX_PARALLEL_WORKERS,
+    MEMORY_EFFICIENCY_HIGH,
+    MEMORY_EFFICIENCY_LOW,
+    MEMORY_EFFICIENCY_MEDIUM,
+    MIN_DISPLAY_POINTS,
+    MIN_DOWNSAMPLE_POINTS,
+    MIN_PARALLEL_BATCH,
+    NDIM_3D,
+    SINGLE_EXP_PARAMS,
+    WORKER_THRESHOLD_LARGE,
+    WORKER_THRESHOLD_MEDIUM,
+)
+
+# Note: single_exp_all, double_exp_all, power_law are imported from xpcs_file.fitting
+# but also defined here for backward compatibility with code that imports from xpcs_file directly
+from xpcsviewer.xpcs_file.fitting import double_exp_all, power_law, single_exp_all
+
+# Import extracted utilities from xpcs_file package
+from xpcsviewer.xpcs_file.memory import MemoryMonitor
 
 # Local imports
 from .fileIO.hdf_reader import (
@@ -65,452 +82,6 @@ from .utils.vectorized_roi import (
 logger = get_logger(__name__)
 
 
-class MemoryStatus:
-    """Container for memory status information."""
-
-    def __init__(self, percent_used: float):
-        self.percent_used = percent_used
-
-
-class MemoryMonitor:
-    """Simple memory monitoring utilities using psutil."""
-
-    def get_memory_info(self) -> tuple[float, float, float]:
-        """Get current memory usage information.
-
-        Returns
-        -------
-        tuple[float, float, float]
-            (used_mb, available_mb, pressure_ratio)
-        """
-        memory = psutil.virtual_memory()
-        used_mb = (memory.total - memory.available) / 1024 / 1024
-        available_mb = memory.available / 1024 / 1024
-        pressure_ratio = memory.percent / 100.0
-        return used_mb, available_mb, pressure_ratio
-
-    def get_memory_status(self) -> MemoryStatus:
-        """Get memory status object.
-
-        Returns
-        -------
-        MemoryStatus
-            Object containing percent_used attribute
-        """
-        memory = psutil.virtual_memory()
-        return MemoryStatus(memory.percent / 100.0)
-
-    def is_memory_pressure_high(self, threshold: float = 0.85) -> bool:
-        """Check if memory pressure is above threshold.
-
-        Parameters
-        ----------
-        threshold : float, optional
-            Memory pressure threshold (0-1), by default 0.85
-
-        Returns
-        -------
-        bool
-            True if memory pressure exceeds threshold
-        """
-        memory = psutil.virtual_memory()
-        return (memory.percent / 100.0) > threshold
-
-    @staticmethod
-    def get_memory_usage() -> tuple[float, float]:
-        """Get current memory usage in MB (static method for backward compatibility)."""
-        monitor = get_cached_memory_monitor()
-        used_mb, available_mb, _ = monitor.get_memory_info()
-        return used_mb, available_mb
-
-    @staticmethod
-    def get_memory_pressure() -> float:
-        """Calculate memory pressure as a percentage (0-1) (static method for backward compatibility)."""
-        monitor = get_cached_memory_monitor()
-        status = monitor.get_memory_status()
-        return status.percent_used
-
-    @staticmethod
-    def is_memory_pressure_high(threshold: float = 0.85) -> bool:
-        """Check if memory pressure is above threshold (static method for backward compatibility)."""
-        # Use psutil directly to avoid recursion issues and allow for mocking at the psutil level
-        import psutil
-
-        memory = psutil.virtual_memory()
-        return (memory.percent / 100.0) > threshold
-
-    @staticmethod
-    def estimate_array_memory(shape: tuple, dtype: np.dtype) -> float:
-        """Estimate memory usage of a numpy array in MB.
-
-        Parameters
-        ----------
-        shape : tuple
-            Array shape
-        dtype : np.dtype
-            Array data type
-
-        Returns
-        -------
-        float
-            Estimated memory usage in MB
-        """
-        elements = np.prod(shape)
-        bytes_per_element = np.dtype(dtype).itemsize
-        total_bytes = elements * bytes_per_element
-        return total_bytes / (1024 * 1024)
-
-
-# Global memory monitor instance
-_memory_monitor = None
-
-
-def get_cached_memory_monitor() -> MemoryMonitor:
-    """Get or create a cached memory monitor instance.
-
-    Returns
-    -------
-    MemoryMonitor
-        Singleton memory monitor instance
-    """
-    global _memory_monitor
-    if _memory_monitor is None:
-        _memory_monitor = MemoryMonitor()
-    return _memory_monitor
-
-
-class CacheItem:
-    """Individual cache item with metadata."""
-
-    def __init__(self, data: Any, size_mb: float):
-        self.data = data
-        self.size_mb = size_mb
-        self.access_count = 0
-        self.last_accessed = 0
-        self.created_at = 0
-        self._update_access_time()
-
-    def _update_access_time(self):
-        """Update access timestamp and increment access count."""
-        self.last_accessed = time.time()
-        self.access_count += 1
-        if self.created_at == 0:
-            self.created_at = self.last_accessed
-
-    def touch(self):
-        """Mark item as accessed."""
-        self._update_access_time()
-
-
-class DataCache:
-    """
-    LRU cache with memory limit and automatic cleanup for XPCS data.
-
-    Features:
-    - LRU eviction policy
-    - Memory limit enforcement (default 500MB)
-    - Automatic cleanup on memory pressure
-    - Memory usage tracking per item
-    - Thread-safe operations
-    """
-
-    def __init__(
-        self, max_memory_mb: float = 500.0, memory_pressure_threshold: float = 0.85
-    ):
-        self.max_memory_mb = max_memory_mb
-        self.memory_pressure_threshold = memory_pressure_threshold
-        self._cache: OrderedDict[str, CacheItem] = OrderedDict()
-        self._current_memory_mb = 0.0
-        self._lock = threading.RLock()
-        self._cleanup_in_progress = False
-
-        logger.info(f"DataCache initialized with {max_memory_mb}MB limit")
-
-    def _generate_key(self, file_path: str, data_type: str) -> str:
-        """Generate cache key from file path and data type."""
-        return f"{file_path}:{data_type}"
-
-    def _evict_lru_items(self, required_memory_mb: float = 0) -> float:
-        """
-        Evict least recently used items to free memory.
-
-        Parameters
-        ----------
-        required_memory_mb : float
-            Minimum memory to free
-
-        Returns
-        -------
-        float
-            Amount of memory freed in MB
-        """
-        freed_memory = 0.0
-        items_to_remove = []
-
-        # Sort by last access time (oldest first)
-        sorted_items = sorted(self._cache.items(), key=lambda x: x[1].last_accessed)
-
-        for key, item in sorted_items:
-            if (
-                freed_memory >= required_memory_mb
-                and self._current_memory_mb <= self.max_memory_mb
-            ):
-                break
-
-            items_to_remove.append(key)
-            freed_memory += item.size_mb
-            self._current_memory_mb -= item.size_mb
-
-            logger.debug(f"Evicting cache item {key}, size: {item.size_mb:.2f}MB")
-
-        # Remove items from cache
-        for key in items_to_remove:
-            del self._cache[key]
-
-        return freed_memory
-
-    def _cleanup_on_memory_pressure(self):
-        """Perform cleanup when system memory pressure is high."""
-        if self._cleanup_in_progress:
-            return
-
-        self._cleanup_in_progress = True
-        try:
-            if MemoryMonitor.is_memory_pressure_high(self.memory_pressure_threshold):
-                # Aggressive cleanup: remove 50% of cache
-                target_memory = self.max_memory_mb * 0.5
-                freed = self._evict_lru_items(self._current_memory_mb - target_memory)
-                logger.info(f"Memory pressure cleanup: freed {freed:.2f}MB")
-        finally:
-            self._cleanup_in_progress = False
-
-    def put(self, file_path: str, data_type: str, data: Any) -> bool:
-        """
-        Store data in cache.
-
-        Parameters
-        ----------
-        file_path : str
-            File path identifier
-        data_type : str
-            Type of data ('saxs_2d', 'saxs_2d_log', etc.)
-        data : Any
-            Data to cache
-
-        Returns
-        -------
-        bool
-            True if successfully cached
-        """
-        with self._lock:
-            key = self._generate_key(file_path, data_type)
-
-            # Estimate memory usage
-            if isinstance(data, np.ndarray):
-                size_mb = MemoryMonitor.estimate_array_memory(data.shape, data.dtype)
-            else:
-                # Rough estimate for other data types
-                size_mb = sys.getsizeof(data) / (1024 * 1024)
-
-            # Check if data is too large for cache
-            if size_mb > self.max_memory_mb * 0.8:
-                logger.warning(
-                    f"Data too large for cache: {size_mb:.2f}MB > {self.max_memory_mb * 0.8:.2f}MB"
-                )
-                return False
-
-            # Evict items if necessary
-            required_memory = size_mb
-            if self._current_memory_mb + required_memory > self.max_memory_mb:
-                self._evict_lru_items(required_memory)
-
-            # Remove existing item if it exists
-            if key in self._cache:
-                old_item = self._cache[key]
-                self._current_memory_mb -= old_item.size_mb
-                del self._cache[key]
-
-            # Add new item
-            cache_item = CacheItem(data, size_mb)
-            self._cache[key] = cache_item
-            self._current_memory_mb += size_mb
-
-            # Check for memory pressure
-            self._cleanup_on_memory_pressure()
-
-            logger.debug(
-                f"Cached {key}, size: {size_mb:.2f}MB, total: {self._current_memory_mb:.2f}MB"
-            )
-            return True
-
-    def get(self, file_path: str, data_type: str) -> Any | None:
-        """
-        Retrieve data from cache.
-
-        Parameters
-        ----------
-        file_path : str
-            File path identifier
-        data_type : str
-            Type of data
-
-        Returns
-        -------
-        Any or None
-            Cached data or None if not found
-        """
-        with self._lock:
-            key = self._generate_key(file_path, data_type)
-
-            if key in self._cache:
-                item = self._cache[key]
-                item.touch()
-                # Move to end (most recently used)
-                self._cache.move_to_end(key)
-                logger.debug(f"Cache hit for {key}")
-                return item.data
-
-            logger.debug(f"Cache miss for {key}")
-            return None
-
-    def clear(self):
-        """Clear all cached data."""
-        with self._lock:
-            self._cache.clear()
-            self._current_memory_mb = 0.0
-            logger.info("Cache cleared")
-
-    def clear_file(self, file_path: str):
-        """Clear all cached data for a specific file."""
-        with self._lock:
-            keys_to_remove = [
-                key for key in self._cache if key.startswith(f"{file_path}:")
-            ]
-            freed_memory = 0.0
-
-            for key in keys_to_remove:
-                item = self._cache[key]
-                freed_memory += item.size_mb
-                self._current_memory_mb -= item.size_mb
-                del self._cache[key]
-
-            if freed_memory > 0:
-                logger.debug(
-                    f"Cleared {len(keys_to_remove)} items for {file_path}, freed {freed_memory:.2f}MB"
-                )
-
-    def get_stats(self) -> dict[str, Any]:
-        """Get cache statistics."""
-        with self._lock:
-            used_mb, available_mb = MemoryMonitor.get_memory_usage()
-            pressure = MemoryMonitor.get_memory_pressure()
-
-            return {
-                "cache_items": len(self._cache),
-                "cache_memory_mb": self._current_memory_mb,
-                "cache_limit_mb": self.max_memory_mb,
-                "cache_utilization": self._current_memory_mb / self.max_memory_mb,
-                "system_memory_used_mb": used_mb,
-                "system_memory_available_mb": available_mb,
-                "system_memory_pressure": pressure,
-                "items_by_type": {},
-            }
-
-    def force_cleanup(self, target_memory_mb: float | None = None):
-        """Force cleanup to target memory usage."""
-        with self._lock:
-            if target_memory_mb is None:
-                target_memory_mb = self.max_memory_mb * 0.5
-
-            if self._current_memory_mb > target_memory_mb:
-                freed = self._evict_lru_items(
-                    self._current_memory_mb - target_memory_mb
-                )
-                logger.info(f"Forced cleanup: freed {freed:.2f}MB")
-
-
-# Note: Global cache replaced by unified memory manager
-
-
-def single_exp_all(x, a, b, c, d):
-    """
-    Single exponential fitting for XPCS-multitau analysis.
-
-    Parameters
-    ----------
-    x : float or ndarray
-        Delay in seconds.
-    a : float
-        Contrast.
-    b : float
-        Characteristic time (tau).
-    c : float
-        Restriction factor.
-    d : float
-        Baseline offset.
-
-    Returns
-    -------
-    float or ndarray
-        Computed value of the single exponential model.
-    """
-    return a * np.exp(-2 * (x / b) ** c) + d
-
-
-def double_exp_all(x, a, b1, c1, d, b2, c2, f):
-    """
-    Double exponential fitting for XPCS-multitau analysis.
-
-    Parameters
-    ----------
-    x : float or ndarray
-        Delay in seconds.
-    a : float
-        Contrast.
-    b1 : float
-        Characteristic time (tau) of the first exponential component.
-    c1 : float
-        Restriction factor for the first component.
-    d : float
-        Baseline offset.
-    b2 : float
-        Characteristic time (tau) of the second exponential component.
-    c2 : float
-        Restriction factor for the second component.
-    f : float
-        Fractional contribution of the first exponential component (0 ≤ f ≤ 1).
-
-    Returns
-    -------
-    float or ndarray
-        Computed value of the double exponential model.
-    """
-    t1 = np.exp(-1 * (x / b1) ** c1) * f
-    t2 = np.exp(-1 * (x / b2) ** c2) * (1 - f)
-    return a * (t1 + t2) ** 2 + d
-
-
-def power_law(x, a, b):
-    """
-    Power-law fitting for diffusion behavior.
-
-    Parameters
-    ----------
-    x : float or ndarray
-        Independent variable, typically time delay (tau).
-    a : float
-        Scaling factor.
-    b : float
-        Power exponent.
-
-    Returns
-    -------
-    float or ndarray
-        Computed value based on the power-law model.
-    """
-    return a * x**b
-
-
 def create_id(fname, label_style=None, simplify_flag=True):
     """
     Generate a simplified or customized ID string from a filename.
@@ -537,7 +108,7 @@ def create_id(fname, label_style=None, simplify_flag=True):
         # Remove trailing _results and file extension
         fname = re.sub(r"(_results)?\.hdf$", "", fname, flags=re.IGNORECASE)
 
-    if len(fname) < 10 or not label_style:
+    if len(fname) < MIN_DISPLAY_POINTS or not label_style:
         return fname
 
     try:
@@ -909,7 +480,7 @@ class XpcsFile:
         memory_before_mb, _available_mb = MemoryMonitor.get_memory_usage()
         memory_pressure = MemoryMonitor.get_memory_pressure()
 
-        if memory_pressure > 0.85:
+        if memory_pressure > MEMORY_EFFICIENCY_HIGH:
             logger.warning(
                 f"High memory pressure ({memory_pressure * 100:.1f}%) before loading SAXS data"
             )
@@ -944,12 +515,16 @@ class XpcsFile:
         if use_memory_mapping is None:
             # Use memory mapping for very large files (>1GB) when memory pressure is high
             use_memory_mapping = (
-                estimated_saxs_size_mb > 1000 and memory_pressure > 0.70
+                estimated_saxs_size_mb > WORKER_THRESHOLD_LARGE
+                and memory_pressure > MEMORY_EFFICIENCY_LOW
             )
 
         if chunk_processing is None:
             # Use chunk processing for large files or when memory pressure is high
-            chunk_processing = estimated_saxs_size_mb > 500 or memory_pressure > 0.75
+            chunk_processing = (
+                estimated_saxs_size_mb > WORKER_THRESHOLD_MEDIUM
+                or memory_pressure > MEMORY_EFFICIENCY_MEDIUM
+            )
 
         # Predictive memory management before loading
         memory_before_mb, _ = MemoryMonitor.get_memory_usage()
@@ -1078,7 +653,9 @@ class XpcsFile:
                         self.saxs_2d_data = ret["saxs_2d"]
 
                 # Cache the loaded data using unified memory manager
-                if estimated_saxs_size_mb < 800:  # Only cache if less than 800MB
+                if (
+                    estimated_saxs_size_mb < MAX_PARALLEL_WORKERS
+                ):  # Only cache if less than 800MB
                     self._memory_manager.cache_put(
                         cache_key, self.saxs_2d_data, CacheType.ARRAY_DATA
                     )
@@ -1113,7 +690,9 @@ class XpcsFile:
                 )
 
             # Cache log data using unified memory manager if reasonable size
-            if estimated_saxs_size_mb < 400:  # Log data is typically smaller
+            if (
+                estimated_saxs_size_mb < MIN_PARALLEL_BATCH
+            ):  # Log data is typically smaller
                 self._memory_manager.cache_put(
                     log_cache_key, self.saxs_2d_log_data, CacheType.ARRAY_DATA
                 )
@@ -1122,14 +701,14 @@ class XpcsFile:
         memory_after_mb, _ = MemoryMonitor.get_memory_usage()
         memory_used = memory_after_mb - memory_before_mb
 
-        if memory_used > 50:  # Log significant memory usage
+        if memory_used > MIN_DOWNSAMPLE_POINTS:  # Log significant memory usage
             logger.info(
                 f"SAXS 2D data loaded: {memory_used:.1f}MB memory used (strategy: {'memory_mapped' if use_memory_mapping else 'chunked' if chunk_processing else 'standard'})"
             )
 
         # Check for memory pressure after loading
         final_memory_pressure = MemoryMonitor.get_memory_pressure()
-        if final_memory_pressure > 0.85:
+        if final_memory_pressure > MEMORY_EFFICIENCY_HIGH:
             logger.warning(
                 f"High memory pressure after SAXS data loading: {final_memory_pressure * 100:.1f}%"
             )
@@ -1608,7 +1187,7 @@ class XpcsFile:
         saxs = self.saxs_2d_log if scale == "log" else self.saxs_2d
 
         # Handle 3D SAXS data by taking the first frame if needed
-        if saxs.ndim == 3 and saxs.shape[0] == 1:
+        if saxs.ndim == NDIM_3D and saxs.shape[0] == 1:
             saxs = saxs[0]
             logger.debug(f"Converted 3D SAXS data to 2D: new shape={saxs.shape}")
 
@@ -1897,18 +1476,18 @@ class XpcsFile:
 
         assert len(bounds) == 2
         if fit_func == "single":
-            assert len(bounds[0]) == 4, (
+            assert len(bounds[0]) == SINGLE_EXP_PARAMS, (
                 "for single exp, the shape of bounds must be (2, 4)"
             )
             if fit_flag is None:
-                fit_flag = [True for _ in range(4)]
+                fit_flag = [True for _ in range(SINGLE_EXP_PARAMS)]
             func = single_exp_all
         else:
-            assert len(bounds[0]) == 7, (
+            assert len(bounds[0]) == DOUBLE_EXP_PARAMS, (
                 "for double exp, the shape of bounds must be (2, 7)"
             )
             if fit_flag is None:
-                fit_flag = [True for _ in range(7)]
+                fit_flag = [True for _ in range(DOUBLE_EXP_PARAMS)]
             func = double_exp_all
 
         # Use optimized get_g2_data (which now has caching)
@@ -1964,7 +1543,8 @@ class XpcsFile:
             num_qvals = g2.shape[1] if g2.ndim > 1 else 1
             use_parallel_actual = (
                 use_parallel
-                and num_qvals > 4  # Only use parallel for multiple q-values
+                and num_qvals
+                > SINGLE_EXP_PARAMS  # Only use parallel for multiple q-values
                 and prediction.pressure_level
                 != MemoryPressure.CRITICAL  # Avoid parallel if memory critical
             )
@@ -2239,7 +1819,7 @@ class XpcsFile:
                     func = double_exp_all
                 else:
                     raise ValueError(f"Unknown fit function: {fit_func}")
-            except:
+            except ValueError:
                 logger.warning(f"Unknown fit function {fit_func}, using single_exp")
                 func = single_exp
 

@@ -489,7 +489,10 @@ def vectorized_intensity_normalization(
     elif method == "area":
         # Vectorized area normalization for multiple curves
         areas = np.array(
-            [np.trapezoid(intensities[i], q_values) for i in range(intensities.shape[0])]
+            [
+                np.trapezoid(intensities[i], q_values)
+                for i in range(intensities.shape[0])
+            ]
         )
         return intensities / areas[:, np.newaxis]
 
