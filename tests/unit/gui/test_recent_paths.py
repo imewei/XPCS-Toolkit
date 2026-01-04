@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from xpcs_toolkit.gui.state.recent_paths import (
+from xpcsviewer.gui.state.recent_paths import (
     RecentPath,
     RecentPathsManager,
     RecentPathsState,
@@ -75,11 +75,11 @@ class TestGetRecentPathsFile:
 
         assert isinstance(path, Path)
 
-    def test_path_in_xpcs_toolkit_directory(self):
-        """Recent paths file should be in .xpcs_toolkit directory."""
+    def test_path_in_xpcsviewer_directory(self):
+        """Recent paths file should be in .xpcsviewer directory."""
         path = get_recent_paths_file()
 
-        assert ".xpcs_toolkit" in str(path)
+        assert ".xpcsviewer" in str(path)
         assert path.name == "recent_paths.json"
 
 
@@ -90,7 +90,7 @@ class TestRecentPathsManagerInit:
         """RecentPathsManager should be created."""
         file_path = tmp_path / "recent_paths.json"
         monkeypatch.setattr(
-            "xpcs_toolkit.gui.state.recent_paths.get_recent_paths_file",
+            "xpcsviewer.gui.state.recent_paths.get_recent_paths_file",
             lambda: file_path,
         )
 
@@ -102,7 +102,7 @@ class TestRecentPathsManagerInit:
         """RecentPathsManager should have default max_entries=10."""
         file_path = tmp_path / "recent_paths.json"
         monkeypatch.setattr(
-            "xpcs_toolkit.gui.state.recent_paths.get_recent_paths_file",
+            "xpcsviewer.gui.state.recent_paths.get_recent_paths_file",
             lambda: file_path,
         )
 
@@ -114,7 +114,7 @@ class TestRecentPathsManagerInit:
         """RecentPathsManager should accept custom max_entries."""
         file_path = tmp_path / "recent_paths.json"
         monkeypatch.setattr(
-            "xpcs_toolkit.gui.state.recent_paths.get_recent_paths_file",
+            "xpcsviewer.gui.state.recent_paths.get_recent_paths_file",
             lambda: file_path,
         )
 
@@ -131,7 +131,7 @@ class TestRecentPathsManagerAddPath:
         """Create manager with temporary storage."""
         file_path = tmp_path / "recent_paths.json"
         monkeypatch.setattr(
-            "xpcs_toolkit.gui.state.recent_paths.get_recent_paths_file",
+            "xpcsviewer.gui.state.recent_paths.get_recent_paths_file",
             lambda: file_path,
         )
         return RecentPathsManager()
@@ -177,7 +177,7 @@ class TestRecentPathsManagerAddPath:
         """add_path should trim list to max_entries."""
         file_path = tmp_path / "recent_paths.json"
         monkeypatch.setattr(
-            "xpcs_toolkit.gui.state.recent_paths.get_recent_paths_file",
+            "xpcsviewer.gui.state.recent_paths.get_recent_paths_file",
             lambda: file_path,
         )
 
@@ -199,7 +199,7 @@ class TestRecentPathsManagerGetPaths:
         """get_recent_paths should return empty list initially."""
         file_path = tmp_path / "recent_paths.json"
         monkeypatch.setattr(
-            "xpcs_toolkit.gui.state.recent_paths.get_recent_paths_file",
+            "xpcsviewer.gui.state.recent_paths.get_recent_paths_file",
             lambda: file_path,
         )
 
@@ -212,7 +212,7 @@ class TestRecentPathsManagerGetPaths:
         """get_recent_paths should return a copy."""
         file_path = tmp_path / "recent_paths.json"
         monkeypatch.setattr(
-            "xpcs_toolkit.gui.state.recent_paths.get_recent_paths_file",
+            "xpcsviewer.gui.state.recent_paths.get_recent_paths_file",
             lambda: file_path,
         )
 
@@ -234,7 +234,7 @@ class TestRecentPathsManagerRemoveInvalid:
         """remove_invalid_path should remove the path."""
         file_path = tmp_path / "recent_paths.json"
         monkeypatch.setattr(
-            "xpcs_toolkit.gui.state.recent_paths.get_recent_paths_file",
+            "xpcsviewer.gui.state.recent_paths.get_recent_paths_file",
             lambda: file_path,
         )
 
@@ -252,7 +252,7 @@ class TestRecentPathsManagerRemoveInvalid:
         """remove_invalid_path should return False for unknown path."""
         file_path = tmp_path / "recent_paths.json"
         monkeypatch.setattr(
-            "xpcs_toolkit.gui.state.recent_paths.get_recent_paths_file",
+            "xpcsviewer.gui.state.recent_paths.get_recent_paths_file",
             lambda: file_path,
         )
 
@@ -270,7 +270,7 @@ class TestRecentPathsManagerClear:
         """clear should remove all paths."""
         file_path = tmp_path / "recent_paths.json"
         monkeypatch.setattr(
-            "xpcs_toolkit.gui.state.recent_paths.get_recent_paths_file",
+            "xpcsviewer.gui.state.recent_paths.get_recent_paths_file",
             lambda: file_path,
         )
 
@@ -291,7 +291,7 @@ class TestRecentPathsManagerPersistence:
         """Manager should load existing recent_paths.json."""
         file_path = tmp_path / "recent_paths.json"
         monkeypatch.setattr(
-            "xpcs_toolkit.gui.state.recent_paths.get_recent_paths_file",
+            "xpcsviewer.gui.state.recent_paths.get_recent_paths_file",
             lambda: file_path,
         )
 
@@ -321,7 +321,7 @@ class TestRecentPathsManagerPersistence:
         """Manager should persist data to file."""
         file_path = tmp_path / "recent_paths.json"
         monkeypatch.setattr(
-            "xpcs_toolkit.gui.state.recent_paths.get_recent_paths_file",
+            "xpcsviewer.gui.state.recent_paths.get_recent_paths_file",
             lambda: file_path,
         )
 
@@ -344,7 +344,7 @@ class TestRecentPathsManagerPersistence:
         file_path = tmp_path / "recent_paths.json"
         file_path.write_text("{ invalid json }")
         monkeypatch.setattr(
-            "xpcs_toolkit.gui.state.recent_paths.get_recent_paths_file",
+            "xpcsviewer.gui.state.recent_paths.get_recent_paths_file",
             lambda: file_path,
         )
 

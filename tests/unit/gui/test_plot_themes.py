@@ -10,7 +10,7 @@ class TestMatplotlibParams:
         """Light theme should return light-colored matplotlib params."""
         monkeypatch.setenv("HOME", str(tmp_path))
 
-        from xpcs_toolkit.gui.theme.manager import ThemeManager
+        from xpcsviewer.gui.theme.manager import ThemeManager
 
         manager = ThemeManager()
         manager.set_theme("light")
@@ -27,7 +27,7 @@ class TestMatplotlibParams:
         """Dark theme should return dark-colored matplotlib params."""
         monkeypatch.setenv("HOME", str(tmp_path))
 
-        from xpcs_toolkit.gui.theme.manager import ThemeManager
+        from xpcsviewer.gui.theme.manager import ThemeManager
 
         manager = ThemeManager()
         manager.set_theme("dark")
@@ -44,7 +44,7 @@ class TestMatplotlibParams:
         """Matplotlib params should have all required rcParams keys."""
         monkeypatch.setenv("HOME", str(tmp_path))
 
-        from xpcs_toolkit.gui.theme.manager import ThemeManager
+        from xpcsviewer.gui.theme.manager import ThemeManager
 
         manager = ThemeManager()
         params = manager.get_matplotlib_params()
@@ -69,7 +69,7 @@ class TestMatplotlibParams:
         """All matplotlib param values should be valid hex colors."""
         monkeypatch.setenv("HOME", str(tmp_path))
 
-        from xpcs_toolkit.gui.theme.manager import ThemeManager
+        from xpcsviewer.gui.theme.manager import ThemeManager
 
         manager = ThemeManager()
         params = manager.get_matplotlib_params()
@@ -88,7 +88,7 @@ class TestPyQtGraphIntegration:
         """apply_to_pyqtgraph should not raise any errors."""
         monkeypatch.setenv("HOME", str(tmp_path))
 
-        from xpcs_toolkit.gui.theme.manager import ThemeManager
+        from xpcsviewer.gui.theme.manager import ThemeManager
 
         manager = ThemeManager()
 
@@ -101,7 +101,7 @@ class TestPyQtGraphIntegration:
 
         import pyqtgraph as pg
 
-        from xpcs_toolkit.gui.theme.manager import ThemeManager
+        from xpcsviewer.gui.theme.manager import ThemeManager
 
         manager = ThemeManager()
         manager.set_theme("dark")
@@ -121,7 +121,7 @@ class TestPlotThemesModule:
 
     def test_matplotlib_light_dict_exists(self):
         """MATPLOTLIB_LIGHT dict should exist and have proper structure."""
-        from xpcs_toolkit.gui.theme.plot_themes import MATPLOTLIB_LIGHT
+        from xpcsviewer.gui.theme.plot_themes import MATPLOTLIB_LIGHT
 
         assert isinstance(MATPLOTLIB_LIGHT, dict)
         assert "figure.facecolor" in MATPLOTLIB_LIGHT
@@ -129,7 +129,7 @@ class TestPlotThemesModule:
 
     def test_matplotlib_dark_dict_exists(self):
         """MATPLOTLIB_DARK dict should exist and have proper structure."""
-        from xpcs_toolkit.gui.theme.plot_themes import MATPLOTLIB_DARK
+        from xpcsviewer.gui.theme.plot_themes import MATPLOTLIB_DARK
 
         assert isinstance(MATPLOTLIB_DARK, dict)
         assert "figure.facecolor" in MATPLOTLIB_DARK
@@ -137,7 +137,7 @@ class TestPlotThemesModule:
 
     def test_light_dark_params_differ(self):
         """Light and dark params should have different values."""
-        from xpcs_toolkit.gui.theme.plot_themes import MATPLOTLIB_DARK, MATPLOTLIB_LIGHT
+        from xpcsviewer.gui.theme.plot_themes import MATPLOTLIB_DARK, MATPLOTLIB_LIGHT
 
         assert (
             MATPLOTLIB_LIGHT["figure.facecolor"] != MATPLOTLIB_DARK["figure.facecolor"]
@@ -148,7 +148,7 @@ class TestPlotThemesModule:
         """get_plot_colors should return colors dict for light theme."""
         monkeypatch.setenv("HOME", str(tmp_path))
 
-        from xpcs_toolkit.gui.theme.plot_themes import get_plot_colors
+        from xpcsviewer.gui.theme.plot_themes import get_plot_colors
 
         colors = get_plot_colors("light")
 
@@ -162,7 +162,7 @@ class TestPlotThemesModule:
         """get_plot_colors should return colors dict for dark theme."""
         monkeypatch.setenv("HOME", str(tmp_path))
 
-        from xpcs_toolkit.gui.theme.plot_themes import get_plot_colors
+        from xpcsviewer.gui.theme.plot_themes import get_plot_colors
 
         colors = get_plot_colors("dark")
 
@@ -177,7 +177,7 @@ class TestPlotThemesModule:
         """get_pyqtgraph_options should return config dict."""
         monkeypatch.setenv("HOME", str(tmp_path))
 
-        from xpcs_toolkit.gui.theme.plot_themes import get_pyqtgraph_options
+        from xpcsviewer.gui.theme.plot_themes import get_pyqtgraph_options
 
         options = get_pyqtgraph_options("light")
 

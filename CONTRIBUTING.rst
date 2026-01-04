@@ -5,8 +5,8 @@ Contributing
 Types of Contributions
 ----------------------
 
-* Bug reports: https://github.com/imewei/XPCS-Toolkit/issues
-* Feature requests: https://github.com/imewei/XPCS-Toolkit/issues
+* Bug reports: https://github.com/imewei/XPCSViewer/issues
+* Feature requests: https://github.com/imewei/XPCSViewer/issues
 * Code contributions
 * Documentation improvements
 
@@ -16,8 +16,8 @@ Development Setup
 .. code-block:: bash
 
    # Fork and clone
-   git clone git@github.com:your_name_here/xpcs-toolkit.git
-   cd xpcs-toolkit
+   git clone git@github.com:your_name_here/xpcsviewer.git
+   cd xpcsviewer
 
    # Install
    pip install -e .[dev]

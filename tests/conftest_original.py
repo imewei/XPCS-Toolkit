@@ -31,7 +31,7 @@ except ImportError:
 
     h5py = MockH5py()
 
-from xpcs_toolkit.utils.logging_config import get_logger, setup_logging
+from xpcsviewer.utils.logging_config import get_logger, setup_logging
 
 # Import reliability and isolation frameworks
 try:

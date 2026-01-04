@@ -22,7 +22,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy.optimize import curve_fit
 
-from xpcs_toolkit.helper.fitting import (
+from xpcsviewer.helper.fitting import (
     RobustOptimizer,
     SyntheticG2DataGenerator,
     single_exp,

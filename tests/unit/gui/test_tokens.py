@@ -2,7 +2,7 @@
 
 import pytest
 
-from xpcs_toolkit.gui.theme.tokens import (
+from xpcsviewer.gui.theme.tokens import (
     DARK_COLORS,
     DARK_TOKENS,
     LIGHT_COLORS,

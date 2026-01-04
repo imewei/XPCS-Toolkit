@@ -15,7 +15,7 @@ import numpy as np
 import pytest
 
 try:
-    from xpcs_toolkit.utils.exceptions import (
+    from xpcsviewer.utils.exceptions import (
         XPCSBaseError,
         XPCSDataError,
         XPCSFileError,
@@ -25,13 +25,13 @@ try:
         exception_context,
         handle_exceptions,
     )
-    from xpcs_toolkit.utils.health_monitor import (
+    from xpcsviewer.utils.health_monitor import (
         HealthMonitor,
         HealthStatus,
         get_health_monitor,
         health_monitoring_context,
     )
-    from xpcs_toolkit.utils.reliability import (
+    from xpcsviewer.utils.reliability import (
         SmartFallbackManager,
         ValidationLevel,
         get_fallback_manager,
@@ -39,7 +39,7 @@ try:
         reliability_context,
         validate_input,
     )
-    from xpcs_toolkit.utils.state_validator import (
+    from xpcsviewer.utils.state_validator import (
         LockFreeStateValidator,
         StateTransition,
         StateValidationLevel,
@@ -49,7 +49,7 @@ try:
         update_object_state,
         validate_object_state,
     )
-    from xpcs_toolkit.utils.validation import (
+    from xpcsviewer.utils.validation import (
         get_validation_statistics,
         validate_g2_data,
         validate_hdf5_file_integrity,

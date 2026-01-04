@@ -146,8 +146,8 @@ class LoggingValidator:
 
         # Expected logging imports
         self.expected_imports = [
-            "from xpcs_toolkit.utils.logging_config import get_logger",
-            "from xpcs_toolkit.utils.log_templates import",
+            "from xpcsviewer.utils.logging_config import get_logger",
+            "from xpcsviewer.utils.log_templates import",
         ]
 
         # Results storage
@@ -306,7 +306,7 @@ class LoggingValidator:
             return
 
         has_get_logger_import = (
-            "from xpcs_toolkit.utils.logging_config import get_logger" in content
+            "from xpcsviewer.utils.logging_config import get_logger" in content
         )
         has_logger_usage = re.search(
             r"logger\.(debug|info|warning|error|critical|exception)", content
@@ -317,7 +317,7 @@ class LoggingValidator:
                 "file": str(file_path),
                 "type": "missing_import",
                 "message": "File uses logger but missing get_logger import",
-                "suggestion": "Add: from xpcs_toolkit.utils.logging_config import get_logger",
+                "suggestion": "Add: from xpcsviewer.utils.logging_config import get_logger",
             }
 
             self.results["missing_imports"].append(issue)
@@ -347,7 +347,7 @@ class LoggingValidator:
         insert_index = self._find_import_insertion_point(lines)
 
         # Insert the import
-        new_import = "from xpcs_toolkit.utils.logging_config import get_logger"
+        new_import = "from xpcsviewer.utils.logging_config import get_logger"
         lines.insert(insert_index, new_import)
 
         # Also add logger initialization if not present

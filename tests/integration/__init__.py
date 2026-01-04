@@ -36,7 +36,7 @@ logging.basicConfig(
 )
 
 # Add XPCS Toolkit to path if needed
-toolkit_path = Path(__file__).parent.parent.parent / "xpcs_toolkit"
+toolkit_path = Path(__file__).parent.parent.parent / "xpcsviewer"
 if toolkit_path.exists() and str(toolkit_path) not in sys.path:
     sys.path.insert(0, str(toolkit_path))
 

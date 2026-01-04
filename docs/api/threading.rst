@@ -3,12 +3,12 @@ Threading
 
 Asynchronous workers for GUI responsiveness and parallel processing.
 
-.. currentmodule:: xpcs_toolkit.threading
+.. currentmodule:: xpcsviewer.threading
 
 Async Workers
 -------------
 
-.. automodule:: xpcs_toolkit.threading.async_workers
+.. automodule:: xpcsviewer.threading.async_workers
    :members:
    :undoc-members:
    :show-inheritance:
@@ -16,7 +16,7 @@ Async Workers
 Async Kernel
 ------------
 
-.. automodule:: xpcs_toolkit.threading.async_kernel
+.. automodule:: xpcsviewer.threading.async_kernel
    :members:
    :undoc-members:
    :show-inheritance:
@@ -24,7 +24,7 @@ Async Kernel
 Plot Workers
 ------------
 
-.. automodule:: xpcs_toolkit.threading.plot_workers
+.. automodule:: xpcsviewer.threading.plot_workers
    :members:
    :undoc-members:
    :show-inheritance:
@@ -32,7 +32,7 @@ Plot Workers
 Base Plot Worker
 ~~~~~~~~~~~~~~~~
 
-.. automodule:: xpcs_toolkit.threading.base_plot_worker
+.. automodule:: xpcsviewer.threading.base_plot_worker
    :members:
    :undoc-members:
    :show-inheritance:
@@ -40,7 +40,7 @@ Base Plot Worker
 GUI Integration
 ---------------
 
-.. automodule:: xpcs_toolkit.threading.gui_integration
+.. automodule:: xpcsviewer.threading.gui_integration
    :members:
    :undoc-members:
    :show-inheritance:
@@ -48,7 +48,7 @@ GUI Integration
 Unified Threading
 -----------------
 
-.. automodule:: xpcs_toolkit.threading.unified_threading
+.. automodule:: xpcsviewer.threading.unified_threading
    :members:
    :undoc-members:
    :show-inheritance:
@@ -56,7 +56,7 @@ Unified Threading
 Cleanup Optimization
 --------------------
 
-.. automodule:: xpcs_toolkit.threading.cleanup_optimized
+.. automodule:: xpcsviewer.threading.cleanup_optimized
    :members:
    :undoc-members:
    :show-inheritance:
@@ -64,7 +64,7 @@ Cleanup Optimization
 Progress Management
 -------------------
 
-.. automodule:: xpcs_toolkit.threading.progress_manager
+.. automodule:: xpcsviewer.threading.progress_manager
    :members:
    :undoc-members:
    :show-inheritance:

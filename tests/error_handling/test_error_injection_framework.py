@@ -52,7 +52,7 @@ except ImportError:
 
     h5py = MockH5py()
 
-from xpcs_toolkit.viewer_kernel import ViewerKernel
+from xpcsviewer.viewer_kernel import ViewerKernel
 
 
 @dataclass

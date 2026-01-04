@@ -24,7 +24,7 @@ from scipy import optimize
 from tests.scientific.constants import SCIENTIFIC_CONSTANTS, VALIDATION_CONFIG
 
 # Import XPCS modules
-from xpcs_toolkit.module.g2mod import (
+from xpcsviewer.module.g2mod import (
     batch_g2_normalization,
     compute_g2_ensemble_statistics,
     optimize_g2_error_propagation,

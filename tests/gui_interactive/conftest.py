@@ -51,11 +51,11 @@ from PySide6 import QtCore, QtGui, QtWidgets
 # Import pytest-qt for GUI testing
 pytest_qt = pytest.importorskip("pytestqt", reason="PySide6/Qt tests require pytest-qt")
 
-from xpcs_toolkit.viewer_kernel import ViewerKernel
-from xpcs_toolkit.xpcs_file import XpcsFile
+from xpcsviewer.viewer_kernel import ViewerKernel
+from xpcsviewer.xpcs_file import XpcsFile
 
 # Local imports
-from xpcs_toolkit.xpcs_viewer import XpcsViewer
+from xpcsviewer.xpcs_viewer import XpcsViewer
 
 # ============================================================================
 # GUI Test Configuration
@@ -174,7 +174,7 @@ def mock_hdf5_file(tmp_path, mock_xpcs_data):
 @pytest.fixture
 def mock_xpcs_file(mock_hdf5_file):
     """Create a mock XpcsFile instance."""
-    with patch("xpcs_toolkit.xpcs_file.XpcsFile.__init__", return_value=None):
+    with patch("xpcsviewer.xpcs_file.XpcsFile.__init__", return_value=None):
         mock_file = XpcsFile.__new__(XpcsFile)
         mock_file.fname = mock_hdf5_file
         mock_file.ftype = "nexus"
@@ -316,13 +316,13 @@ def temp_hdf5_files(tmp_path):
 @pytest.fixture
 def mock_viewer_kernel(mock_xpcs_file):
     """Create a mock ViewerKernel instance."""
-    with patch("xpcs_toolkit.viewer_kernel.ViewerKernel.__init__", return_value=None):
+    with patch("xpcsviewer.viewer_kernel.ViewerKernel.__init__", return_value=None):
         mock_kernel = ViewerKernel.__new__(ViewerKernel)
         mock_kernel.flist = [mock_xpcs_file]
         mock_kernel.current_file = mock_xpcs_file  # This will allow tests to patch it
         mock_kernel.path = str(Path(mock_xpcs_file.fname).parent)
         # Import ListDataModel for proper Qt model compatibility
-        from xpcs_toolkit.helper.listmodel import ListDataModel
+        from xpcsviewer.helper.listmodel import ListDataModel
 
         # Create proper Qt models instead of Python lists
         mock_kernel.target = ListDataModel([mock_xpcs_file])
@@ -432,7 +432,7 @@ def gui_main_window(qapp, qtbot, mock_viewer_kernel):
         pass  # PyQtGraph not available
 
     # Mock the initialization to avoid actual file system operations
-    with patch("xpcs_toolkit.xpcs_viewer.ViewerKernel") as mock_vk_class:
+    with patch("xpcsviewer.xpcs_viewer.ViewerKernel") as mock_vk_class:
         mock_vk_class.return_value = mock_viewer_kernel
 
         # Create the main window

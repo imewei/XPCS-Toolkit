@@ -1,6 +1,6 @@
 :orphan:
 
-# XPCS Toolkit Performance Optimization Guide
+# XPCS Viewer Performance Optimization Guide
 
 ## Table of Contents
 
@@ -19,12 +19,12 @@
 
 ## Overview
 
-The XPCS Toolkit has been comprehensively optimized through a multi-phase approach targeting all major performance bottlenecks in scientific data processing workflows. This guide provides a complete reference for understanding, using, and maintaining these optimizations.
+The XPCS Viewer has been comprehensively optimized through a multi-phase approach targeting all major performance bottlenecks in scientific data processing workflows. This guide provides a complete reference for understanding, using, and maintaining these optimizations.
 
 ### Optimization Architecture
 
 ```
-XPCS Toolkit Performance Architecture
+XPCS Viewer Performance Architecture
 ├── Core Optimizations (Always Active)
 │   ├── Threading System (25-40% improvement)
 │   ├── Memory Management (40-60% reduction in overhead)
@@ -83,7 +83,7 @@ XPCS Toolkit Performance Architecture
 
 **Usage:**
 ```python
-from xpcs_toolkit.threading import (
+from xpcsviewer.threading import (
     initialize_signal_optimization,
     create_optimized_worker,
     submit_optimized_worker
@@ -114,7 +114,7 @@ submit_optimized_worker(worker, priority=3)
 
 **Configuration:**
 ```python
-from xpcs_toolkit.threading import get_thread_pool_manager
+from xpcsviewer.threading import get_thread_pool_manager
 
 manager = get_thread_pool_manager()
 
@@ -135,7 +135,7 @@ plot_pool.set_resource_limits(max_memory_mb=1024, max_cpu_percent=80)
 - Cache hit rates and memory usage
 
 ```python
-from xpcs_toolkit.threading import get_performance_monitor
+from xpcsviewer.threading import get_performance_monitor
 
 monitor = get_performance_monitor()
 snapshot = monitor.get_current_snapshot()
@@ -159,7 +159,7 @@ print(f"Cache hit rate: {snapshot.attribute_cache_stats['hit_ratio']:.1%}")
 
 **Integration:**
 ```python
-from xpcs_toolkit.utils.memory_utils import get_cached_memory_monitor
+from xpcsviewer.utils.memory_utils import get_cached_memory_monitor
 
 # Get cached memory monitor (automatic singleton)
 monitor = get_cached_memory_monitor(
@@ -178,7 +178,7 @@ print(f"Is high pressure: {monitor.is_memory_pressure_high()}")
 
 **Multi-Level Cache Architecture:**
 ```python
-from xpcs_toolkit.utils import (
+from xpcsviewer.utils import (
     get_global_cache,
     get_computation_cache,
     get_metadata_cache,
@@ -210,7 +210,7 @@ result = computation_cache.get_or_compute_g2_fit(
 - **Type-specific cleanup**: Targeted cleanup for specific object types
 
 ```python
-from xpcs_toolkit.threading.cleanup_optimized import (
+from xpcsviewer.threading.cleanup_optimized import (
     register_for_cleanup,
     schedule_type_cleanup,
     smart_gc_collect
@@ -239,7 +239,7 @@ smart_gc_collect(force_full_gc=False)
 - **Performance Statistics**: Detailed I/O performance tracking
 
 ```python
-from xpcs_toolkit.fileIO.hdf_reader import HDF5ConnectionPool
+from xpcsviewer.fileIO.hdf_reader import HDF5ConnectionPool
 
 # Get optimized connection pool
 pool = HDF5ConnectionPool.get_instance()
@@ -262,7 +262,7 @@ print(f"Average I/O time: {stats['avg_io_time']:.3f}s")
 - **Metadata caching**: Cached file metadata and structure information
 
 ```python
-from xpcs_toolkit.fileIO.hdf_reader import batch_read_fields
+from xpcsviewer.fileIO.hdf_reader import batch_read_fields
 
 # Batch read multiple fields efficiently
 fields_to_read = ['saxs_2d', 'Int_t', 'tau']
@@ -285,7 +285,7 @@ for field_name, data in results.items():
 - **Fitting Operations**: Cached fitting with optimized parameter estimation
 
 ```python
-from xpcs_toolkit.module import g2mod, saxs1d
+from xpcsviewer.module import g2mod, saxs1d
 
 # Optimized G2 analysis with caching
 g2_results = g2mod.compute_g2_optimized(
@@ -311,7 +311,7 @@ saxs_results = saxs1d.compute_saxs1d_vectorized(
 - **Async Operations**: Non-blocking GUI operations with background processing
 
 ```python
-from xpcs_toolkit.module.average_toolbox import AverageToolbox
+from xpcsviewer.module.average_toolbox import AverageToolbox
 
 # Optimized file averaging with multiprocessing
 toolbox = AverageToolbox(
@@ -335,7 +335,7 @@ The CPU Optimization Ecosystem provides continuous monitoring, profiling, and pe
 
 #### **Subagent 1: Monitoring & Maintenance**
 ```python
-from xpcs_toolkit.utils import setup_complete_optimization_ecosystem
+from xpcsviewer.utils import setup_complete_optimization_ecosystem
 
 # Start complete ecosystem
 success = setup_complete_optimization_ecosystem(
@@ -351,7 +351,7 @@ if success:
 
 #### **Subagent 2: Workflow Profiling**
 ```python
-from xpcs_toolkit.utils import get_workflow_profiler
+from xpcsviewer.utils import get_workflow_profiler
 
 profiler = get_workflow_profiler()
 
@@ -368,7 +368,7 @@ with profiler.profile_workflow("g2_analysis") as workflow_id:
 
 #### **Subagent 3: Performance Testing**
 ```python
-from xpcs_toolkit.utils import analyze_ecosystem_performance
+from xpcsviewer.utils import analyze_ecosystem_performance
 
 # Get comprehensive performance analysis
 analysis = analyze_ecosystem_performance()
@@ -389,7 +389,7 @@ for rec in analysis.get('recommendations', []):
 **Minimal Integration Approach:**
 ```python
 # 1. Import optimization utilities
-from xpcs_toolkit.utils import setup_complete_optimization_ecosystem
+from xpcsviewer.utils import setup_complete_optimization_ecosystem
 
 # 2. Start ecosystem at application startup
 def initialize_xpcs_app():
@@ -400,14 +400,14 @@ def initialize_xpcs_app():
     app = create_xpcs_viewer()
     return app
 
-# 3. Use existing XPCS Toolkit APIs - optimizations are automatic
+# 3. Use existing XPCS Viewer APIs - optimizations are automatic
 xpcs_file = XpcsFile('/path/to/data.h5')  # Automatically uses optimized I/O
 results = xpcs_file.analyze_g2()  # Automatically uses optimized analysis
 ```
 
 **Enhanced Integration with Profiling:**
 ```python
-from xpcs_toolkit.utils import get_workflow_profiler
+from xpcsviewer.utils import get_workflow_profiler
 
 class OptimizedXpcsAnalysis:
     def __init__(self):
@@ -485,7 +485,7 @@ optimization:
 
 **Performance Dashboard Integration:**
 ```python
-from xpcs_toolkit.utils import create_performance_dashboard
+from xpcsviewer.utils import create_performance_dashboard
 
 # Create performance dashboard widget
 dashboard = create_performance_dashboard()
@@ -499,7 +499,7 @@ main_window.add_dock_widget(dashboard, "Performance Monitor")
 
 **Generate Performance Reports:**
 ```python
-from xpcs_toolkit.utils import generate_ecosystem_report
+from xpcsviewer.utils import generate_ecosystem_report
 
 # Generate comprehensive report
 report = generate_ecosystem_report(
@@ -532,7 +532,7 @@ print(f"Active optimizations: {len(report['active_optimizations'])}")
 
 #### 1. **High Memory Usage**
 ```python
-from xpcs_toolkit.utils import get_optimization_status_summary, run_ecosystem_maintenance
+from xpcsviewer.utils import get_optimization_status_summary, run_ecosystem_maintenance
 
 # Check optimization status
 status = get_optimization_status_summary()
@@ -546,7 +546,7 @@ if status['critical_issues'] > 0:
 
 #### 2. **Threading Performance Issues**
 ```python
-from xpcs_toolkit.threading import get_thread_pool_manager
+from xpcsviewer.threading import get_thread_pool_manager
 
 manager = get_thread_pool_manager()
 stats = manager.get_global_statistics()
@@ -561,7 +561,7 @@ if stats['average_efficiency'] < 0.7:
 
 #### 3. **I/O Performance Problems**
 ```python
-from xpcs_toolkit.fileIO.hdf_reader import HDF5ConnectionPool
+from xpcsviewer.fileIO.hdf_reader import HDF5ConnectionPool
 
 pool = HDF5ConnectionPool.get_instance()
 stats = pool.get_connection_statistics()
@@ -579,7 +579,7 @@ if stats['average_connection_time'] > 0.1:
 **Automated Regression Checking:**
 ```python
 # This would typically run in CI/CD
-from xpcs_toolkit.utils import analyze_ecosystem_performance
+from xpcsviewer.utils import analyze_ecosystem_performance
 
 def check_performance_regression():
     analysis = analyze_ecosystem_performance()
@@ -603,21 +603,21 @@ check_performance_regression()
 **Enable Detailed Logging:**
 ```python
 import logging
-from xpcs_toolkit.utils.logging_config import setup_logging
+from xpcsviewer.utils.logging_config import setup_logging
 
 # Enable debug logging for optimization components
 setup_logging(log_level=logging.DEBUG)
 
 # Enable performance profiling
-logging.getLogger('xpcs_toolkit.threading').setLevel(logging.DEBUG)
-logging.getLogger('xpcs_toolkit.utils.memory_utils').setLevel(logging.DEBUG)
+logging.getLogger('xpcsviewer.threading').setLevel(logging.DEBUG)
+logging.getLogger('xpcsviewer.utils.memory_utils').setLevel(logging.DEBUG)
 ```
 
 ---
 
 ## Conclusion
 
-The XPCS Toolkit optimization system represents a comprehensive, production-ready performance enhancement framework that delivers:
+The XPCS Viewer optimization system represents a comprehensive, production-ready performance enhancement framework that delivers:
 
 - **25-40% overall system performance improvement**
 - **Automated monitoring and maintenance** for sustained performance
@@ -637,7 +637,7 @@ For ongoing support and optimization recommendations, the ecosystem provides con
 
 ## Additional Resources
 
-- **Integration Examples**: `src/xpcs_toolkit/utils/ecosystem_integration_example.py`
+- **Integration Examples**: `src/xpcsviewer/utils/ecosystem_integration_example.py`
 - **Performance Testing**: `tests/cpu_performance_test_suite.py`
 - **Configuration Guide**: Environment variables and YAML configuration options above
 - **API Documentation**: Complete API documentation available through Python `help()` function

@@ -7,17 +7,17 @@ Launch GUI
 .. code-block:: bash
 
    # From HDF directory
-   xpcs-toolkit /path/to/data
+   xpcsviewer /path/to/data
 
    # From current directory
-   xpcs-toolkit
+   xpcsviewer
 
 Load Data
 ---------
 
 .. code-block:: python
 
-   from xpcs_toolkit import XpcsFile
+   from xpcsviewer import XpcsFile
 
    # Load XPCS dataset
    xf = XpcsFile('data.hdf')
@@ -31,7 +31,7 @@ G2 Correlation
 
 .. code-block:: python
 
-   from xpcs_toolkit.module import g2mod
+   from xpcsviewer.module import g2mod
 
    # Get G2 data
    success, g2_data, tau_data, q_data, labels = g2mod.get_data(
@@ -43,7 +43,7 @@ SAXS Plot
 
 .. code-block:: python
 
-   from xpcs_toolkit.module import saxs1d
+   from xpcsviewer.module import saxs1d
 
    # Plot SAXS data
    saxs1d.pg_plot(plot_handle, [xf], plot_type='single')

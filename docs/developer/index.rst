@@ -11,8 +11,8 @@ Setup
 
 .. code-block:: bash
 
-   git clone https://github.com/imewei/XPCS-Toolkit.git
-   cd XPCS-Toolkit
+   git clone https://github.com/imewei/XPCSViewer.git
+   cd XPCSViewer
    pip install -e .
 
 Development

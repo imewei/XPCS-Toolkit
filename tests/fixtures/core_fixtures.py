@@ -14,7 +14,7 @@ from pathlib import Path
 
 import pytest
 
-from xpcs_toolkit.utils.logging_config import get_logger
+from xpcsviewer.utils.logging_config import get_logger
 
 # ============================================================================
 # Temporary Directory and File Fixtures
@@ -67,7 +67,7 @@ def capture_logs() -> Generator[list, None, None]:
             log_messages.append(record)
 
     handler = TestLogHandler()
-    logger = logging.getLogger("xpcs_toolkit")
+    logger = logging.getLogger("xpcsviewer")
     logger.addHandler(handler)
     logger.setLevel(logging.DEBUG)
 

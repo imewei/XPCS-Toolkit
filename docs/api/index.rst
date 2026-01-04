@@ -4,7 +4,7 @@ API Reference
 .. toctree::
    :maxdepth: 2
 
-   xpcs_toolkit
+   xpcsviewer
    fileio
    modules
    plotting
@@ -17,10 +17,10 @@ API Reference
    :caption: Complete Module Documentation
    :hidden:
 
-   ../xpcs_toolkit
-   ../xpcs_toolkit.fileIO
-   ../xpcs_toolkit.module
-   ../xpcs_toolkit.utils
+   ../xpcsviewer
+   ../xpcsviewer.fileIO
+   ../xpcsviewer.module
+   ../xpcsviewer.utils
 
 Core Components
 ---------------

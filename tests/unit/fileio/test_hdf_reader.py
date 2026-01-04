@@ -11,7 +11,7 @@ from unittest.mock import Mock, patch
 import numpy as np
 import pytest
 
-from xpcs_toolkit.fileIO.hdf_reader import (
+from xpcsviewer.fileIO.hdf_reader import (
     ConnectionStats,
     HDF5ConnectionPool,
     PooledConnection,
@@ -469,7 +469,7 @@ class TestHDF5ConnectionPoolHealthManagement:
 class TestGetFunction:
     """Test suite for get() function."""
 
-    @patch("xpcs_toolkit.fileIO.hdf_reader._connection_pool")
+    @patch("xpcsviewer.fileIO.hdf_reader._connection_pool")
     def test_get_simple_field(self, mock_pool):
         """Test getting simple field from HDF5 file."""
         # Setup mocks for context manager
@@ -495,7 +495,7 @@ class TestGetFunction:
         mock_pool.get_connection.assert_called_once_with("/test/file.hdf", "r")
         mock_file.get.assert_called_once_with("test_field")
 
-    @patch("xpcs_toolkit.fileIO.hdf_reader._connection_pool")
+    @patch("xpcsviewer.fileIO.hdf_reader._connection_pool")
     def test_get_with_slice(self, mock_pool):
         """Test getting field with slice."""
         # Setup mocks for context manager
@@ -524,7 +524,7 @@ class TestGetFunction:
 class TestGetAnalysisType:
     """Test suite for get_analysis_type() function."""
 
-    @patch("xpcs_toolkit.fileIO.hdf_reader._connection_pool")
+    @patch("xpcsviewer.fileIO.hdf_reader._connection_pool")
     def test_get_analysis_type_success(self, mock_pool):
         """Test successful analysis type retrieval."""
         mock_connection = Mock()
@@ -542,7 +542,7 @@ class TestGetAnalysisType:
         assert "Multitau" in result
         assert "Twotime" in result
 
-    @patch("xpcs_toolkit.fileIO.hdf_reader._connection_pool")
+    @patch("xpcsviewer.fileIO.hdf_reader._connection_pool")
     def test_get_analysis_type_exception(self, mock_pool):
         """Test analysis type retrieval with exception."""
         mock_connection = Mock()
@@ -559,8 +559,8 @@ class TestGetAnalysisType:
 class TestBatchReadFields:
     """Test suite for batch_read_fields() function."""
 
-    @patch("xpcs_toolkit.fileIO.hdf_reader.get")
-    @patch("xpcs_toolkit.fileIO.hdf_reader.hdf_key")
+    @patch("xpcsviewer.fileIO.hdf_reader.get")
+    @patch("xpcsviewer.fileIO.hdf_reader.hdf_key")
     def test_batch_read_fields_basic(self, mock_hdf_key, mock_get):
         """Test basic batch reading of fields."""
         # Setup mocks
@@ -583,8 +583,8 @@ class TestBatchReadFields:
         np.testing.assert_array_equal(result["field1"], expected["field1"])
         np.testing.assert_array_equal(result["field2"], expected["field2"])
 
-    @patch("xpcs_toolkit.fileIO.hdf_reader.get")
-    @patch("xpcs_toolkit.fileIO.hdf_reader.hdf_key")
+    @patch("xpcsviewer.fileIO.hdf_reader.get")
+    @patch("xpcsviewer.fileIO.hdf_reader.hdf_key")
     def test_batch_read_fields_missing_field(self, mock_hdf_key, mock_get):
         """Test batch reading with missing field."""
         mock_hdf_key.return_value = {
@@ -601,8 +601,8 @@ class TestBatchReadFields:
 class TestPerformanceIntegration:
     """Test suite for performance monitoring integration."""
 
-    @patch("xpcs_toolkit.fileIO.hdf_reader._perf_monitor")
-    @patch("xpcs_toolkit.fileIO.hdf_reader.HDF5ConnectionPool")
+    @patch("xpcsviewer.fileIO.hdf_reader._perf_monitor")
+    @patch("xpcsviewer.fileIO.hdf_reader.HDF5ConnectionPool")
     def test_performance_monitoring(self, mock_pool_class, mock_perf_monitor):
         """Test that performance monitoring is integrated."""
         # This test ensures performance monitoring objects are created

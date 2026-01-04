@@ -4,7 +4,7 @@ import pytest
 from PySide6.QtCore import QStringListModel, Qt
 from PySide6.QtWidgets import QAbstractItemView
 
-from xpcs_toolkit.gui.widgets.drag_drop_list import DragDropListView
+from xpcsviewer.gui.widgets.drag_drop_list import DragDropListView
 
 
 class TestDragDropListViewInit:

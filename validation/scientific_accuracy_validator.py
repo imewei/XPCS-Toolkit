@@ -37,12 +37,12 @@ from scipy.optimize import curve_fit
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 try:
-    from xpcs_toolkit.fileIO.qmap_utils import QMapCalculator
-    from xpcs_toolkit.module.g2mod import G2Calculator
-    from xpcs_toolkit.module.saxs1d import SAXS1DProcessor
-    from xpcs_toolkit.module.saxs2d import SAXS2DProcessor
-    from xpcs_toolkit.module.twotime import TwoTimeProcessor
-    from xpcs_toolkit.xpcs_file import XpcsFile
+    from xpcsviewer.fileIO.qmap_utils import QMapCalculator
+    from xpcsviewer.module.g2mod import G2Calculator
+    from xpcsviewer.module.saxs1d import SAXS1DProcessor
+    from xpcsviewer.module.saxs2d import SAXS2DProcessor
+    from xpcsviewer.module.twotime import TwoTimeProcessor
+    from xpcsviewer.xpcs_file import XpcsFile
 except ImportError as e:
     print(f"Warning: Could not import XPCS modules: {e}")
     print("Running in compatibility mode with reference implementations")

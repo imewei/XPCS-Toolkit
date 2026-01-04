@@ -9,10 +9,7 @@ import time
 import unittest
 
 try:
-    from xpcs_toolkit.fileIO.qmap_utils import (
-        DEFAULT_BEAM_CENTER,
-        DEFAULT_DETECTOR_SIZE,
-    )
+    from xpcsviewer.fileIO.qmap_utils import DEFAULT_BEAM_CENTER, DEFAULT_DETECTOR_SIZE
 
     QMAP_CONSTANTS_AVAILABLE = True
 except ImportError:

@@ -146,7 +146,7 @@ def run_coverage_tests():
         "tests/gui_interactive/",
         "-m",
         "gui and not slow",
-        "--cov=xpcs_toolkit",
+        "--cov=xpcsviewer",
         "--cov-report=html:htmlcov_gui",
         "--cov-report=term-missing",
         "--tb=short",

@@ -1,8 +1,8 @@
 :orphan:
 
-# XPCS Toolkit Logging System
+# XPCS Viewer Logging System
 
-This document provides comprehensive guidance for using the logging system in XPCS Toolkit, designed specifically for scientific computing applications with demanding performance requirements.
+This document provides comprehensive guidance for using the logging system in XPCS Viewer, designed specifically for scientific computing applications with demanding performance requirements.
 
 ## Table of Contents
 
@@ -20,7 +20,7 @@ This document provides comprehensive guidance for using the logging system in XP
 
 ```python
 # At the top of any module
-from xpcs_toolkit.utils.logging_config import get_logger
+from xpcsviewer.utils.logging_config import get_logger
 
 # Get a logger for your module
 logger = get_logger(__name__)
@@ -49,7 +49,7 @@ import numpy as np
 from typing import Optional, Dict, Any
 
 # Import logging at the top
-from xpcs_toolkit.utils.logging_config import get_logger
+from xpcsviewer.utils.logging_config import get_logger
 
 # Create module logger
 logger = get_logger(__name__)
@@ -109,7 +109,7 @@ Set the global logging level.
 
 **Example:**
 ```python
-from xpcs_toolkit.utils.logging_config import set_log_level
+from xpcsviewer.utils.logging_config import set_log_level
 set_log_level('DEBUG')  # Enable debug logging
 ```
 
@@ -155,8 +155,8 @@ The logging system is configured via environment variables:
 | Variable | Description | Default | Options |
 |----------|-------------|---------|---------|
 | `PYXPCS_LOG_LEVEL` | Logging level | `INFO` | `DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL` |
-| `PYXPCS_LOG_FILE` | Custom log file path | `~/.xpcs_toolkit/logs/xpcs_toolkit.log` | Any valid file path |
-| `PYXPCS_LOG_DIR` | Log directory | `~/.xpcs_toolkit/logs` | Any valid directory path |
+| `PYXPCS_LOG_FILE` | Custom log file path | `~/.xpcsviewer/logs/xpcsviewer.log` | Any valid file path |
+| `PYXPCS_LOG_DIR` | Log directory | `~/.xpcsviewer/logs` | Any valid directory path |
 | `PYXPCS_LOG_FORMAT` | Log format type | `TEXT` | `TEXT`, `JSON` |
 | `PYXPCS_LOG_MAX_SIZE` | Max log file size (MB) | `10` | Any positive integer |
 | `PYXPCS_LOG_BACKUP_COUNT` | Number of backup files | `5` | Any positive integer |
@@ -181,7 +181,7 @@ export PYXPCS_SUPPRESS_QT_WARNINGS=1
 ### Runtime Configuration
 
 ```python
-from xpcs_toolkit.utils.logging_config import get_logging_config, set_log_level
+from xpcsviewer.utils.logging_config import get_logging_config, set_log_level
 
 # Get current configuration
 config = get_logging_config()
@@ -199,7 +199,7 @@ set_log_level('DEBUG')
 
 1. **Import logging at the top of your module:**
 ```python
-from xpcs_toolkit.utils.logging_config import get_logger
+from xpcsviewer.utils.logging_config import get_logger
 logger = get_logger(__name__)
 ```
 
@@ -233,7 +233,7 @@ except Exception as e:
 
 ```python
 from PySide6.QtWidgets import QWidget
-from xpcs_toolkit.utils.logging_config import get_logger
+from xpcsviewer.utils.logging_config import get_logger
 
 class MyWidget(QWidget):
     def __init__(self):
@@ -256,7 +256,7 @@ class MyWidget(QWidget):
 
 ```python
 import pytest
-from xpcs_toolkit.utils.logging_config import get_logger, set_log_level
+from xpcsviewer.utils.logging_config import get_logger, set_log_level
 
 logger = get_logger(__name__)
 
@@ -280,7 +280,7 @@ class TestMyModule:
 Use the performance logging utilities for timing operations:
 
 ```python
-from xpcs_toolkit.utils.log_templates import log_performance
+from xpcsviewer.utils.log_templates import log_performance
 import time
 
 @log_performance
@@ -398,12 +398,12 @@ logger.info("Analysis completed", extra={'operation': 'analysis', 'status': 'suc
 **Solutions**:
 ```python
 # Check current log level
-from xpcs_toolkit.utils.logging_config import get_logging_config
+from xpcsviewer.utils.logging_config import get_logging_config
 config = get_logging_config()
 print(config.get_logger_info())
 
 # Set more verbose level
-from xpcs_toolkit.utils.logging_config import set_log_level
+from xpcsviewer.utils.logging_config import set_log_level
 set_log_level('DEBUG')
 ```
 
@@ -416,7 +416,7 @@ set_log_level('DEBUG')
 
 ```python
 # Check log file path
-from xpcs_toolkit.utils.logging_config import get_log_file_path
+from xpcsviewer.utils.logging_config import get_log_file_path
 print(f"Log file: {get_log_file_path()}")
 
 # Check if directory exists
@@ -453,7 +453,7 @@ Enable verbose logging configuration:
 
 ```python
 import logging
-logging.getLogger('xpcs_toolkit.utils.logging_config').setLevel(logging.DEBUG)
+logging.getLogger('xpcsviewer.utils.logging_config').setLevel(logging.DEBUG)
 ```
 
 Check handler configuration:
@@ -489,7 +489,7 @@ class WebhookHandler(logging.Handler):
 ### Custom Formatters
 
 ```python
-from xpcs_toolkit.utils.log_formatters import create_formatter
+from xpcsviewer.utils.log_formatters import create_formatter
 
 # Create a custom performance formatter
 perf_formatter = create_formatter('performance')
@@ -504,7 +504,7 @@ perf_logger.addHandler(handler)
 ### Context Managers
 
 ```python
-from xpcs_toolkit.utils.log_templates import log_context
+from xpcsviewer.utils.log_templates import log_context
 
 with log_context("Processing batch of files", logger=logger) as ctx:
     for filename in filenames:

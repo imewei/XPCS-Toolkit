@@ -2,16 +2,16 @@
 
 ## Overview
 
-This document outlines the integration status and completion of robust fitting algorithms in the XPCS Toolkit.
+This document outlines the integration status and completion of robust fitting algorithms in the XPCS Viewer.
 
 ## Integration Status
 
-✅ **Core Fitting Framework**: Integrated in `xpcs_toolkit/helper/fitting.py`
+✅ **Core Fitting Framework**: Integrated in `xpcsviewer/helper/fitting.py`
 - Exponential fitting algorithms implemented
 - Error handling and validation in place
 - Mathematical robustness verified
 
-✅ **G2 Analysis Module**: Integration complete in `xpcs_toolkit/module/g2mod.py`
+✅ **G2 Analysis Module**: Integration complete in `xpcsviewer/module/g2mod.py`
 - Single and double exponential fitting
 - Robust parameter estimation
 - Statistical validation implemented
@@ -60,8 +60,8 @@ This document outlines the integration status and completion of robust fitting a
 The robust fitting functionality is accessible through the following interfaces:
 
 ```python
-from xpcs_toolkit.module import g2mod
-from xpcs_toolkit.helper.fitting import robust_fit
+from xpcsviewer.module import g2mod
+from xpcsviewer.helper.fitting import robust_fit
 
 # G2 analysis with robust fitting
 success, g2_data, tau_data, q_data, labels = g2mod.get_data(
@@ -88,4 +88,4 @@ result = robust_fit(data, model, initial_params)
 
 ---
 
-*This integration represents a significant enhancement to the XPCS Toolkit's analytical capabilities, providing researchers with robust and reliable parameter estimation tools.*
+*This integration represents a significant enhancement to the XPCS Viewer's analytical capabilities, providing researchers with robust and reliable parameter estimation tools.*

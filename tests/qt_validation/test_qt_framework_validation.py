@@ -466,7 +466,7 @@ class TestXpcsSpecificTestRunner:
         runner.setup_qt_application()
 
         # Mock the XPCS viewer to avoid actual initialization
-        with patch("xpcs_toolkit.xpcs_viewer.XpcsViewer") as mock_viewer:
+        with patch("xpcsviewer.xpcs_viewer.XpcsViewer") as mock_viewer:
             mock_instance = MagicMock()
             mock_viewer.return_value = mock_instance
 
@@ -486,7 +486,7 @@ class TestXpcsSpecificTestRunner:
         # Mock the background cleanup manager (handle case where module doesn't exist)
         try:
             with patch(
-                "xpcs_toolkit.threading.cleanup_ops.BackgroundCleanupManager"
+                "xpcsviewer.threading.cleanup_ops.BackgroundCleanupManager"
             ) as mock_cleanup:
                 mock_instance = MagicMock()
                 mock_cleanup.return_value = mock_instance
@@ -506,7 +506,7 @@ class TestXpcsSpecificTestRunner:
         runner.setup_qt_application()
 
         # Mock the plot handler
-        with patch("xpcs_toolkit.plothandler.ImageViewDev") as mock_plot:
+        with patch("xpcsviewer.plothandler.ImageViewDev") as mock_plot:
             mock_instance = MagicMock()
             mock_plot.return_value = mock_instance
 

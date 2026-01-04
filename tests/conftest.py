@@ -28,7 +28,7 @@ import contextlib
 from tests.fixtures.core_fixtures import *
 from tests.fixtures.qt_fixtures import *
 from tests.fixtures.scientific_fixtures import *
-from xpcs_toolkit.utils.logging_config import setup_logging
+from xpcsviewer.utils.logging_config import setup_logging
 
 # Import optional framework utilities
 try:
@@ -207,7 +207,7 @@ def pytest_collection_modifyitems(config, items):
 def test_session_setup():
     """Set up test session with proper initialization."""
     # Initialize logging
-    logger = logging.getLogger("xpcs_toolkit")
+    logger = logging.getLogger("xpcsviewer")
     logger.setLevel(logging.WARNING)
 
     # Create test directories if needed

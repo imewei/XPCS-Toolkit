@@ -25,12 +25,12 @@ class DocumentationValidator:
     def __init__(self):
         # All potential Qt compliance modules
         all_qt_modules = [
-            "xpcs_toolkit.threading.qt_compliant_thread_manager",
-            "xpcs_toolkit.threading.enhanced_worker_safety",
-            "xpcs_toolkit.threading.thread_pool_integration_validator",
-            "xpcs_toolkit.plothandler.qt_signal_fixes",
-            "xpcs_toolkit.threading.cleanup_optimized",
-            "xpcs_toolkit.gui.initialization_validator",
+            "xpcsviewer.threading.qt_compliant_thread_manager",
+            "xpcsviewer.threading.enhanced_worker_safety",
+            "xpcsviewer.threading.thread_pool_integration_validator",
+            "xpcsviewer.plothandler.qt_signal_fixes",
+            "xpcsviewer.threading.cleanup_optimized",
+            "xpcsviewer.gui.initialization_validator",
         ]
 
         # Filter to only include modules that actually exist
@@ -121,7 +121,7 @@ class DocumentationValidator:
             }
         except (ImportError, AttributeError):
             # For missing modules, return mock documentation quality for testing
-            if module_name == "xpcs_toolkit.threading.enhanced_worker_safety":
+            if module_name == "xpcsviewer.threading.enhanced_worker_safety":
                 return {
                     "exists": True,
                     "has_description": True,
@@ -159,20 +159,20 @@ class TestModuleDocumentation:
     def test_key_classes_documented(self, doc_validator):
         """Test that key classes have comprehensive documentation."""
         key_classes = {
-            "xpcs_toolkit.threading.qt_compliant_thread_manager": [
+            "xpcsviewer.threading.qt_compliant_thread_manager": [
                 "QtCompliantThreadManager",
                 "QtThreadSafetyValidator",
                 "QtCompliantTimerManager",
             ],
-            "xpcs_toolkit.threading.enhanced_worker_safety": [
+            "xpcsviewer.threading.enhanced_worker_safety": [
                 "SafeWorkerBase",
                 "SafeWorkerPool",
             ],
-            "xpcs_toolkit.threading.thread_pool_integration_validator": [
+            "xpcsviewer.threading.thread_pool_integration_validator": [
                 "ThreadPoolIntegrationValidator",
                 "ThreadPoolHealthMetrics",
             ],
-            "xpcs_toolkit.plothandler.qt_signal_fixes": [
+            "xpcsviewer.plothandler.qt_signal_fixes": [
                 "QtConnectionFixer",
                 "PyQtGraphWrapper",
             ],
@@ -215,7 +215,7 @@ class TestAPIDocumentation:
 
     def test_qt_signal_fixes_api_coverage(self, doc_validator):
         """Test Qt signal fixes API documentation."""
-        module = "xpcs_toolkit.plothandler.qt_signal_fixes"
+        module = "xpcsviewer.plothandler.qt_signal_fixes"
 
         # Key APIs that must be documented
         key_apis = [
@@ -233,7 +233,7 @@ class TestAPIDocumentation:
 
     def test_thread_manager_api_coverage(self, doc_validator):
         """Test thread manager API documentation."""
-        module = "xpcs_toolkit.threading.qt_compliant_thread_manager"
+        module = "xpcsviewer.threading.qt_compliant_thread_manager"
 
         # Check QtCompliantThreadManager methods
         methods = doc_validator.get_class_methods(module, "QtCompliantThreadManager")
@@ -255,7 +255,7 @@ class TestAPIDocumentation:
 
     def test_worker_safety_api_coverage(self, doc_validator):
         """Test worker safety API documentation."""
-        module = "xpcs_toolkit.threading.enhanced_worker_safety"
+        module = "xpcsviewer.threading.enhanced_worker_safety"
 
         # Check SafeWorkerBase methods
 
@@ -402,7 +402,7 @@ class TestDocumentationCompleteness:
         for test_file in test_files:
             try:
                 content = test_file.read_text()
-                if "from xpcs_toolkit" in content and len(content) > 500:
+                if "from xpcsviewer" in content and len(content) > 500:
                     usage_examples_found = True
                     break
             except (OSError, UnicodeDecodeError):

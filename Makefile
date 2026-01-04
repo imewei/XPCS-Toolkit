@@ -1,4 +1,4 @@
-# XPCS-Toolkit Package Makefile
+# XPCSViewer Package Makefile
 # ==============================
 # Development Tools and Testing
 
@@ -12,8 +12,8 @@
 # Configuration
 PYTHON := python
 PYTEST := pytest
-PACKAGE_NAME := xpcs_toolkit
-SRC_DIR := xpcs_toolkit
+PACKAGE_NAME := xpcsviewer
+SRC_DIR := xpcsviewer
 TEST_DIR := tests
 DOCS_DIR := docs
 VENV := .venv
@@ -74,7 +74,7 @@ CYAN := \033[36m
 # Help target
 # ===================
 help:
-	@echo "$(BOLD)$(BLUE)XPCS-Toolkit Development Commands$(RESET)"
+	@echo "$(BOLD)$(BLUE)XPCSViewer Development Commands$(RESET)"
 	@echo ""
 	@echo "$(BOLD)Usage:$(RESET) make $(CYAN)<target>$(RESET)"
 	@echo ""

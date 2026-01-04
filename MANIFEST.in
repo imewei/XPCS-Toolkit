@@ -35,12 +35,12 @@ recursive-include docs *.rst *.md *.py conf.py Makefile make.bat *.jpg *.png *.g
 recursive-include .github *.yml *.yaml
 
 # Include package data and UI resources
-recursive-include xpcs_toolkit/configure *.json
-recursive-include xpcs_toolkit/ui *.ui
-recursive-include xpcs_toolkit/ui/resources *.qrc *.png
+recursive-include xpcsviewer/configure *.json
+recursive-include xpcsviewer/ui *.ui
+recursive-include xpcsviewer/ui/resources *.qrc *.png
 
 # Include GUI modernization module (theme styles, widgets, etc.)
-recursive-include xpcs_toolkit/gui *.py *.qss
+recursive-include xpcsviewer/gui *.py *.qss
 
 # Exclude build, cache and temporary artifacts
 recursive-exclude * __pycache__

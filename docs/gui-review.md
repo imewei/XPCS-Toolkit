@@ -1,4 +1,4 @@
-# GUI Review – XPCS Toolkit
+# GUI Review – XPCS Viewer
 
 ## Evidence
 - Offscreen harness: `QT_QPA_PLATFORM=offscreen python3 scripts/offscreen_snap.py`

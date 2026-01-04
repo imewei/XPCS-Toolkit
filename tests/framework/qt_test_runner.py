@@ -418,7 +418,7 @@ class XpcsQtTestRunner(QtTestRunner):
 
         def xpcs_viewer_test():
             try:
-                from xpcs_toolkit.xpcs_viewer import XpcsViewer
+                from xpcsviewer.xpcs_viewer import XpcsViewer
 
                 viewer = XpcsViewer(path=test_path, **kwargs)
                 # Let the application process events
@@ -436,7 +436,7 @@ class XpcsQtTestRunner(QtTestRunner):
 
         def background_cleanup_test():
             try:
-                from xpcs_toolkit.threading.cleanup_ops import BackgroundCleanupManager
+                from xpcsviewer.threading.cleanup_ops import BackgroundCleanupManager
 
                 # This might trigger timer threading warnings
                 cleanup_manager = BackgroundCleanupManager()
@@ -455,7 +455,7 @@ class XpcsQtTestRunner(QtTestRunner):
 
         def plot_handler_test():
             try:
-                from xpcs_toolkit.plothandler import ImageViewDev
+                from xpcsviewer.plothandler import ImageViewDev
 
                 # This might trigger QStyleHints connection warnings
                 plot_handler = ImageViewDev()

@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from xpcs_toolkit.gui.state.session_manager import (
+from xpcsviewer.gui.state.session_manager import (
     AnalysisParameters,
     FileEntry,
     SessionManager,
@@ -21,10 +21,10 @@ class TestSessionPersistenceIntegration:
     @pytest.fixture
     def session_manager(self, tmp_path, monkeypatch):
         """Create SessionManager with temporary storage."""
-        session_file = tmp_path / ".xpcs_toolkit" / "session.json"
+        session_file = tmp_path / ".xpcsviewer" / "session.json"
         session_file.parent.mkdir(parents=True, exist_ok=True)
         monkeypatch.setattr(
-            "xpcs_toolkit.gui.state.session_manager.get_session_path",
+            "xpcsviewer.gui.state.session_manager.get_session_path",
             lambda: session_file,
         )
         return SessionManager()
@@ -97,10 +97,10 @@ class TestSessionPersistenceIntegration:
 
     def test_missing_file_warnings(self, tmp_path, monkeypatch):
         """Session with missing files should generate warnings."""
-        session_file = tmp_path / ".xpcs_toolkit" / "session.json"
+        session_file = tmp_path / ".xpcsviewer" / "session.json"
         session_file.parent.mkdir(parents=True, exist_ok=True)
         monkeypatch.setattr(
-            "xpcs_toolkit.gui.state.session_manager.get_session_path",
+            "xpcsviewer.gui.state.session_manager.get_session_path",
             lambda: session_file,
         )
 
@@ -138,12 +138,12 @@ class TestSessionPersistenceIntegration:
 
     def test_corrupted_session_handled(self, tmp_path, monkeypatch):
         """Corrupted session file should not crash application."""
-        session_file = tmp_path / ".xpcs_toolkit" / "session.json"
+        session_file = tmp_path / ".xpcsviewer" / "session.json"
         session_file.parent.mkdir(parents=True, exist_ok=True)
         session_file.write_text("{ invalid json }")
 
         monkeypatch.setattr(
-            "xpcs_toolkit.gui.state.session_manager.get_session_path",
+            "xpcsviewer.gui.state.session_manager.get_session_path",
             lambda: session_file,
         )
 
@@ -155,12 +155,12 @@ class TestSessionPersistenceIntegration:
 
     def test_empty_session_file_handled(self, tmp_path, monkeypatch):
         """Empty session file should be handled gracefully."""
-        session_file = tmp_path / ".xpcs_toolkit" / "session.json"
+        session_file = tmp_path / ".xpcsviewer" / "session.json"
         session_file.parent.mkdir(parents=True, exist_ok=True)
         session_file.write_text("")
 
         monkeypatch.setattr(
-            "xpcs_toolkit.gui.state.session_manager.get_session_path",
+            "xpcsviewer.gui.state.session_manager.get_session_path",
             lambda: session_file,
         )
 
@@ -171,10 +171,10 @@ class TestSessionPersistenceIntegration:
 
     def test_session_restore_performance(self, tmp_path, monkeypatch):
         """Session restore should complete within 3 seconds for 20 files."""
-        session_file = tmp_path / ".xpcs_toolkit" / "session.json"
+        session_file = tmp_path / ".xpcsviewer" / "session.json"
         session_file.parent.mkdir(parents=True, exist_ok=True)
         monkeypatch.setattr(
-            "xpcs_toolkit.gui.state.session_manager.get_session_path",
+            "xpcsviewer.gui.state.session_manager.get_session_path",
             lambda: session_file,
         )
 
@@ -207,10 +207,10 @@ class TestSessionPersistenceIntegration:
 
     def test_clear_session_removes_file(self, tmp_path, monkeypatch):
         """Clearing session should remove session file."""
-        session_file = tmp_path / ".xpcs_toolkit" / "session.json"
+        session_file = tmp_path / ".xpcsviewer" / "session.json"
         session_file.parent.mkdir(parents=True, exist_ok=True)
         monkeypatch.setattr(
-            "xpcs_toolkit.gui.state.session_manager.get_session_path",
+            "xpcsviewer.gui.state.session_manager.get_session_path",
             lambda: session_file,
         )
 

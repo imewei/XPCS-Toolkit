@@ -9,10 +9,10 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from xpcs_toolkit.file_locator import FileLocator
-from xpcs_toolkit.helper.listmodel import TableDataModel
-from xpcs_toolkit.module.average_toolbox import AverageToolbox
-from xpcs_toolkit.viewer_kernel import ViewerKernel
+from xpcsviewer.file_locator import FileLocator
+from xpcsviewer.helper.listmodel import TableDataModel
+from xpcsviewer.module.average_toolbox import AverageToolbox
+from xpcsviewer.viewer_kernel import ViewerKernel
 
 
 class TestViewerKernelInit:
@@ -122,7 +122,7 @@ class TestViewerKernelMemoryManagement:
 class TestViewerKernelAverageToolbox:
     """Test suite for ViewerKernel average toolbox integration."""
 
-    @patch("xpcs_toolkit.viewer_kernel._get_module")
+    @patch("xpcsviewer.viewer_kernel._get_module")
     def test_average_toolbox_initialization(self, mock_get_module, temp_dir):
         """Test AverageToolbox initialization."""
         mock_avg_tb_class = Mock()
@@ -136,7 +136,7 @@ class TestViewerKernelAverageToolbox:
         mock_avg_tb_class.assert_called_once_with(temp_dir)
         assert kernel.avg_tb is mock_avg_tb
 
-    @patch("xpcs_toolkit.viewer_kernel.TableDataModel")
+    @patch("xpcsviewer.viewer_kernel.TableDataModel")
     def test_avg_worker_initialization(self, mock_table_model_class, temp_dir):
         """Test average worker model initialization."""
         mock_model = Mock()
@@ -160,7 +160,7 @@ class TestViewerKernelInheritance:
         assert isinstance(kernel, FileLocator)
         assert hasattr(kernel, "path")  # FileLocator attribute
 
-    @patch("xpcs_toolkit.viewer_kernel.FileLocator.__init__")
+    @patch("xpcsviewer.viewer_kernel.FileLocator.__init__")
     def test_calls_super_init(self, mock_super_init, temp_dir):
         """Test that ViewerKernel calls parent __init__."""
         ViewerKernel(temp_dir)
@@ -285,7 +285,7 @@ class TestViewerKernelEdgeCases:
 
     def test_empty_path_handling(self):
         """Test handling of empty path."""
-        with patch("xpcs_toolkit.viewer_kernel.FileLocator.__init__"):
+        with patch("xpcsviewer.viewer_kernel.FileLocator.__init__"):
             kernel = ViewerKernel("")
             assert kernel.path == ""
 
@@ -299,7 +299,7 @@ class TestViewerKernelEdgeCases:
         nonexistent_path = "/nonexistent/path/that/should/not/exist"
 
         # Should not raise exception during initialization
-        with patch("xpcs_toolkit.viewer_kernel.FileLocator.__init__"):
+        with patch("xpcsviewer.viewer_kernel.FileLocator.__init__"):
             kernel = ViewerKernel(nonexistent_path)
             assert kernel.path == nonexistent_path
 
@@ -307,14 +307,14 @@ class TestViewerKernelEdgeCases:
 class TestViewerKernelMemoryIntegration:
     """Test suite for ViewerKernel memory management integration."""
 
-    @patch("xpcs_toolkit.viewer_kernel.MemoryMonitor")
+    @patch("xpcsviewer.viewer_kernel.MemoryMonitor")
     def test_memory_monitor_integration(self, mock_memory_monitor, temp_dir):
         """Test integration with MemoryMonitor."""
         ViewerKernel(temp_dir)
 
         # Kernel should have access to MemoryMonitor through import
         # This tests that the import is successful and accessible
-        from xpcs_toolkit.viewer_kernel import MemoryMonitor as ImportedMemoryMonitor
+        from xpcsviewer.viewer_kernel import MemoryMonitor as ImportedMemoryMonitor
 
         assert ImportedMemoryMonitor is not None
 
@@ -346,8 +346,8 @@ class TestViewerKernelMemoryIntegration:
 def test_path_variations(path_input, expected_behavior):
     """Test ViewerKernel with various path inputs."""
     with (
-        patch("xpcs_toolkit.viewer_kernel.FileLocator.__init__") as mock_super,
-        patch("xpcs_toolkit.module.average_toolbox.AverageToolbox"),
+        patch("xpcsviewer.viewer_kernel.FileLocator.__init__") as mock_super,
+        patch("xpcsviewer.module.average_toolbox.AverageToolbox"),
     ):
         kernel = ViewerKernel(path_input)
 
@@ -373,7 +373,7 @@ def test_path_variations(path_input, expected_behavior):
 )
 def test_statusbar_variations(statusbar_input, temp_dir):
     """Test ViewerKernel with various statusbar inputs."""
-    with patch("xpcs_toolkit.viewer_kernel.FileLocator.__init__"):
+    with patch("xpcsviewer.viewer_kernel.FileLocator.__init__"):
         kernel = ViewerKernel(temp_dir, statusbar=statusbar_input)
 
         assert kernel.statusbar is statusbar_input

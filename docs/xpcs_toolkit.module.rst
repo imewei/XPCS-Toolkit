@@ -7,7 +7,7 @@ Submodules
 xpcs\_toolkit.module.average\_toolbox module
 --------------------------------------------
 
-.. automodule:: xpcs_toolkit.module.average_toolbox
+.. automodule:: xpcsviewer.module.average_toolbox
    :members:
    :undoc-members:
    :show-inheritance:
@@ -15,7 +15,7 @@ xpcs\_toolkit.module.average\_toolbox module
 xpcs\_toolkit.module.g2mod module
 ---------------------------------
 
-.. automodule:: xpcs_toolkit.module.g2mod
+.. automodule:: xpcsviewer.module.g2mod
    :members:
    :undoc-members:
    :show-inheritance:
@@ -23,7 +23,7 @@ xpcs\_toolkit.module.g2mod module
 xpcs\_toolkit.module.intt module
 --------------------------------
 
-.. automodule:: xpcs_toolkit.module.intt
+.. automodule:: xpcsviewer.module.intt
    :members:
    :undoc-members:
    :show-inheritance:
@@ -31,7 +31,7 @@ xpcs\_toolkit.module.intt module
 xpcs\_toolkit.module.saxs1d module
 ----------------------------------
 
-.. automodule:: xpcs_toolkit.module.saxs1d
+.. automodule:: xpcsviewer.module.saxs1d
    :members:
    :undoc-members:
    :show-inheritance:
@@ -39,7 +39,7 @@ xpcs\_toolkit.module.saxs1d module
 xpcs\_toolkit.module.saxs2d module
 ----------------------------------
 
-.. automodule:: xpcs_toolkit.module.saxs2d
+.. automodule:: xpcsviewer.module.saxs2d
    :members:
    :undoc-members:
    :show-inheritance:
@@ -47,7 +47,7 @@ xpcs\_toolkit.module.saxs2d module
 xpcs\_toolkit.module.stability module
 -------------------------------------
 
-.. automodule:: xpcs_toolkit.module.stability
+.. automodule:: xpcsviewer.module.stability
    :members:
    :undoc-members:
    :show-inheritance:
@@ -55,7 +55,7 @@ xpcs\_toolkit.module.stability module
 xpcs\_toolkit.module.tauq module
 --------------------------------
 
-.. automodule:: xpcs_toolkit.module.tauq
+.. automodule:: xpcsviewer.module.tauq
    :members:
    :undoc-members:
    :show-inheritance:
@@ -63,7 +63,7 @@ xpcs\_toolkit.module.tauq module
 xpcs\_toolkit.module.twotime module
 -----------------------------------
 
-.. automodule:: xpcs_toolkit.module.twotime
+.. automodule:: xpcsviewer.module.twotime
    :members:
    :undoc-members:
    :show-inheritance:
@@ -71,7 +71,7 @@ xpcs\_toolkit.module.twotime module
 xpcs\_toolkit.module.twotime\_utils module
 ------------------------------------------
 
-.. automodule:: xpcs_toolkit.module.twotime_utils
+.. automodule:: xpcsviewer.module.twotime_utils
    :members:
    :undoc-members:
    :show-inheritance:
@@ -79,7 +79,7 @@ xpcs\_toolkit.module.twotime\_utils module
 Module contents
 ---------------
 
-.. automodule:: xpcs_toolkit.module
+.. automodule:: xpcsviewer.module
    :members:
    :undoc-members:
    :show-inheritance:

@@ -24,7 +24,7 @@ from hypothesis import strategies as st
 from tests.scientific.constants import SCIENTIFIC_CONSTANTS
 
 # Import XPCS modules
-from xpcs_toolkit.module.saxs1d import (
+from xpcsviewer.module.saxs1d import (
     batch_saxs_analysis,
     optimize_roi_extraction,
     vectorized_background_subtraction,

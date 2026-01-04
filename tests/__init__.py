@@ -1,7 +1,7 @@
-"""Unit test package for xpcs_toolkit."""
+"""Unit test package for xpcsviewer."""
 
-from xpcs_toolkit.utils.logging_config import get_logger
+from xpcsviewer.utils.logging_config import get_logger
 
 # Initialize test package logger
 logger = get_logger(__name__)
-logger.info("XPCS Toolkit test package initialized")
+logger.info("XPCS Viewer test package initialized")

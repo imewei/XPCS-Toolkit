@@ -12,7 +12,7 @@ import time
 import unittest
 
 try:
-    from xpcs_toolkit.viewer_kernel import ViewerKernel, _get_module, _module_cache
+    from xpcsviewer.viewer_kernel import ViewerKernel, _get_module, _module_cache
 
     LAZY_LOADING_AVAILABLE = True
 except ImportError:

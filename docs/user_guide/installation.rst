@@ -12,15 +12,15 @@ Install
 
 .. code-block:: bash
 
-   pip install xpcs-toolkit
+   pip install xpcsviewer
 
 Development Install
 -------------------
 
 .. code-block:: bash
 
-   git clone https://github.com/imewei/XPCS-Toolkit.git
-   cd XPCS-Toolkit
+   git clone https://github.com/imewei/XPCSViewer.git
+   cd XPCSViewer
    pip install -e .
 
 Verify
@@ -28,5 +28,5 @@ Verify
 
 .. code-block:: python
 
-   import xpcs_toolkit
-   print(xpcs_toolkit.__version__)
+   import xpcsviewer
+   print(xpcsviewer.__version__)

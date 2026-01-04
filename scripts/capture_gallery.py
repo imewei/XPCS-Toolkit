@@ -14,7 +14,7 @@ from pathlib import Path
 
 from PySide6 import QtWidgets
 
-from xpcs_toolkit.xpcs_viewer import XpcsViewer, tab_mapping
+from xpcsviewer.xpcs_viewer import XpcsViewer, tab_mapping
 
 
 def main():

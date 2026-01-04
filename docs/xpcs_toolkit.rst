@@ -7,9 +7,9 @@ Subpackages
 .. toctree::
    :maxdepth: 4
 
-   xpcs_toolkit.fileIO
-   xpcs_toolkit.module
-   xpcs_toolkit.utils
+   xpcsviewer.fileIO
+   xpcsviewer.module
+   xpcsviewer.utils
 
 Submodules
 ----------
@@ -17,7 +17,7 @@ Submodules
 xpcs\_toolkit.cli module
 ------------------------
 
-.. automodule:: xpcs_toolkit.cli
+.. automodule:: xpcsviewer.cli
    :members:
    :undoc-members:
    :show-inheritance:
@@ -25,7 +25,7 @@ xpcs\_toolkit.cli module
 xpcs\_toolkit.file\_locator module
 ----------------------------------
 
-.. automodule:: xpcs_toolkit.file_locator
+.. automodule:: xpcsviewer.file_locator
    :members:
    :undoc-members:
    :show-inheritance:
@@ -33,7 +33,7 @@ xpcs\_toolkit.file\_locator module
 xpcs\_toolkit.viewer\_kernel module
 -----------------------------------
 
-.. automodule:: xpcs_toolkit.viewer_kernel
+.. automodule:: xpcsviewer.viewer_kernel
    :members:
    :undoc-members:
    :show-inheritance:
@@ -48,7 +48,7 @@ xpcs\_toolkit.viewer\_ui module
 xpcs\_toolkit.xpcs\_file module
 -------------------------------
 
-.. automodule:: xpcs_toolkit.xpcs_file
+.. automodule:: xpcsviewer.xpcs_file
    :members:
    :undoc-members:
    :show-inheritance:
@@ -63,7 +63,7 @@ xpcs\_toolkit.xpcs\_viewer module
 Module contents
 ---------------
 
-.. automodule:: xpcs_toolkit
+.. automodule:: xpcsviewer
    :members:
    :undoc-members:
    :show-inheritance:

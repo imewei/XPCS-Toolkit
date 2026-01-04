@@ -9,7 +9,7 @@ import time
 import unittest
 
 try:
-    from xpcs_toolkit.plothandler.plot_constants import (
+    from xpcsviewer.plothandler.plot_constants import (
         BASIC_COLORS,
         EXTENDED_MARKERS,
         MATPLOTLIB_COLORS_HEX,
@@ -106,7 +106,7 @@ class TestPlotConstants(unittest.TestCase):
         self.assertEqual(color1, color2, "Colors should cycle properly")
 
         # Test marker cycling with correct marker set for matplotlib backend
-        from xpcs_toolkit.plothandler.plot_constants import MATPLOTLIB_MARKERS
+        from xpcsviewer.plothandler.plot_constants import MATPLOTLIB_MARKERS
 
         marker1_cycle = get_color_marker(0, "matplotlib")[1]
         marker2_cycle = get_color_marker(len(MATPLOTLIB_MARKERS), "matplotlib")[1]
@@ -135,7 +135,7 @@ class TestPlotConstants(unittest.TestCase):
 
     def test_get_marker_cycle_function(self):
         """Test the get_marker_cycle function."""
-        from xpcs_toolkit.plothandler.plot_constants import MATPLOTLIB_MARKERS
+        from xpcsviewer.plothandler.plot_constants import MATPLOTLIB_MARKERS
 
         # Test matplotlib backend
         markers = get_marker_cycle("matplotlib")

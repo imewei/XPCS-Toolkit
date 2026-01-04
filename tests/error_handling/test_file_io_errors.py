@@ -46,10 +46,10 @@ except ImportError:
 
     h5py = MockH5py()
 
-from xpcs_toolkit.file_locator import FileLocator
-from xpcs_toolkit.fileIO import hdf_reader
-from xpcs_toolkit.fileIO.hdf_reader import HDF5ConnectionPool, PooledConnection
-from xpcs_toolkit.xpcs_file import XpcsFile
+from xpcsviewer.file_locator import FileLocator
+from xpcsviewer.fileIO import hdf_reader
+from xpcsviewer.fileIO.hdf_reader import HDF5ConnectionPool, PooledConnection
+from xpcsviewer.xpcs_file import XpcsFile
 
 
 class TestFileIOErrors:
@@ -534,7 +534,7 @@ class TestErrorRecoveryAndCleanup:
     def test_memory_cleanup_after_allocation_failure(self, memory_limited_environment):
         """Test memory cleanup after allocation failures."""
         # Import the memory monitoring utilities
-        from xpcs_toolkit.xpcs_file import MemoryMonitor
+        from xpcsviewer.xpcs_file import MemoryMonitor
 
         # Test that memory monitoring works under pressure
         used, available = MemoryMonitor.get_memory_usage()

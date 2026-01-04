@@ -4,7 +4,7 @@ import pytest
 from PySide6.QtGui import QKeySequence
 from PySide6.QtWidgets import QMainWindow
 
-from xpcs_toolkit.gui.shortcuts.shortcut_manager import ShortcutManager
+from xpcsviewer.gui.shortcuts.shortcut_manager import ShortcutManager
 
 
 class TestShortcutManagerInit:

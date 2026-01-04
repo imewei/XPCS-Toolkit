@@ -6,7 +6,7 @@ covering progress management and thread coordination.
 
 import pytest
 
-from xpcs_toolkit.threading.async_workers import (
+from xpcsviewer.threading.async_workers import (
     BaseAsyncWorker,
     WorkerResult,
     WorkerSignals,

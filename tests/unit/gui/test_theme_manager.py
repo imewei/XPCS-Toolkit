@@ -2,8 +2,8 @@
 
 import pytest
 
-from xpcs_toolkit.gui.theme.manager import ThemeManager
-from xpcs_toolkit.gui.theme.tokens import DARK_TOKENS, LIGHT_TOKENS
+from xpcsviewer.gui.theme.manager import ThemeManager
+from xpcsviewer.gui.theme.tokens import DARK_TOKENS, LIGHT_TOKENS
 
 
 class TestThemeManagerBasics:

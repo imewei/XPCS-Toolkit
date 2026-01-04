@@ -9,7 +9,7 @@ from unittest.mock import Mock, patch
 import numpy as np
 import pytest
 
-from xpcs_toolkit.fileIO.qmap_utils import QMap, QMapManager, get_hash, get_qmap
+from xpcsviewer.fileIO.qmap_utils import QMap, QMapManager, get_hash, get_qmap
 
 
 class TestQMapManager:
@@ -23,8 +23,8 @@ class TestQMapManager:
         assert isinstance(manager.db, dict)
         assert len(manager.db) == 0
 
-    @patch("xpcs_toolkit.fileIO.qmap_utils.get_hash")
-    @patch("xpcs_toolkit.fileIO.qmap_utils.QMap")
+    @patch("xpcsviewer.fileIO.qmap_utils.get_hash")
+    @patch("xpcsviewer.fileIO.qmap_utils.QMap")
     def test_get_qmap_new(self, mock_qmap_class, mock_get_hash):
         """Test getting new QMap."""
         mock_get_hash.return_value = "test_hash_123"
@@ -41,8 +41,8 @@ class TestQMapManager:
         mock_get_hash.assert_called_once_with("/test/file.hdf")
         mock_qmap_class.assert_called_once_with(fname="/test/file.hdf")
 
-    @patch("xpcs_toolkit.fileIO.qmap_utils.get_hash")
-    @patch("xpcs_toolkit.fileIO.qmap_utils.QMap")
+    @patch("xpcsviewer.fileIO.qmap_utils.get_hash")
+    @patch("xpcsviewer.fileIO.qmap_utils.QMap")
     def test_get_qmap_cached(self, mock_qmap_class, mock_get_hash):
         """Test getting cached QMap."""
         mock_get_hash.return_value = "test_hash_123"
@@ -58,14 +58,14 @@ class TestQMapManager:
         # QMap constructor should not be called for cached entry
         mock_qmap_class.assert_not_called()
 
-    @patch("xpcs_toolkit.fileIO.qmap_utils.get_hash")
+    @patch("xpcsviewer.fileIO.qmap_utils.get_hash")
     def test_get_qmap_different_files(self, mock_get_hash):
         """Test getting QMaps for different files."""
         mock_get_hash.side_effect = ["hash1", "hash2", "hash1"]  # Same hash for file1
 
         manager = QMapManager()
 
-        with patch("xpcs_toolkit.fileIO.qmap_utils.QMap") as mock_qmap_class:
+        with patch("xpcsviewer.fileIO.qmap_utils.QMap") as mock_qmap_class:
             mock_qmap1 = Mock()
             mock_qmap2 = Mock()
             mock_qmap_class.side_effect = [mock_qmap1, mock_qmap2]
@@ -84,10 +84,10 @@ class TestQMapManager:
 class TestQMapInit:
     """Test suite for QMap initialization."""
 
-    @patch("xpcs_toolkit.fileIO.qmap_utils.QMap.load_dataset")
-    @patch("xpcs_toolkit.fileIO.qmap_utils.QMap.get_detector_extent")
-    @patch("xpcs_toolkit.fileIO.qmap_utils.QMap.compute_qmap")
-    @patch("xpcs_toolkit.fileIO.qmap_utils.QMap.create_qbin_labels")
+    @patch("xpcsviewer.fileIO.qmap_utils.QMap.load_dataset")
+    @patch("xpcsviewer.fileIO.qmap_utils.QMap.get_detector_extent")
+    @patch("xpcsviewer.fileIO.qmap_utils.QMap.compute_qmap")
+    @patch("xpcsviewer.fileIO.qmap_utils.QMap.create_qbin_labels")
     def test_init_success(
         self, mock_create_labels, mock_compute_qmap, mock_get_extent, mock_load_dataset
     ):
@@ -112,8 +112,8 @@ class TestQMapInit:
         mock_compute_qmap.assert_called_once()
         mock_create_labels.assert_called_once()
 
-    @patch("xpcs_toolkit.fileIO.qmap_utils.QMap.load_dataset")
-    @patch("xpcs_toolkit.fileIO.qmap_utils.QMap._create_minimal_fallback")
+    @patch("xpcsviewer.fileIO.qmap_utils.QMap.load_dataset")
+    @patch("xpcsviewer.fileIO.qmap_utils.QMap._create_minimal_fallback")
     def test_init_with_exception(self, mock_fallback, mock_load_dataset):
         """Test QMap initialization with exception."""
         mock_load_dataset.side_effect = Exception("Test error")
@@ -125,17 +125,17 @@ class TestQMapInit:
     def test_init_default_params(self):
         """Test QMap initialization with default parameters."""
         with (
-            patch("xpcs_toolkit.fileIO.qmap_utils.QMap.load_dataset"),
+            patch("xpcsviewer.fileIO.qmap_utils.QMap.load_dataset"),
             patch(
-                "xpcs_toolkit.fileIO.qmap_utils.QMap.get_detector_extent",
+                "xpcsviewer.fileIO.qmap_utils.QMap.get_detector_extent",
                 return_value=(0, 0, 100, 100),
             ),
             patch(
-                "xpcs_toolkit.fileIO.qmap_utils.QMap.compute_qmap",
+                "xpcsviewer.fileIO.qmap_utils.QMap.compute_qmap",
                 return_value=({}, {}),
             ),
             patch(
-                "xpcs_toolkit.fileIO.qmap_utils.QMap.create_qbin_labels",
+                "xpcsviewer.fileIO.qmap_utils.QMap.create_qbin_labels",
                 return_value=[],
             ),
         ):
@@ -151,8 +151,8 @@ class TestQMapInit:
 class TestQMapLoadDataset:
     """Test suite for QMap load_dataset method."""
 
-    @patch("xpcs_toolkit.fileIO.qmap_utils._connection_pool")
-    @patch("xpcs_toolkit.fileIO.qmap_utils.key_map")
+    @patch("xpcsviewer.fileIO.qmap_utils._connection_pool")
+    @patch("xpcsviewer.fileIO.qmap_utils.key_map")
     def test_load_dataset_success(self, mock_key_map, mock_pool):
         """Test successful dataset loading."""
         # Setup key mappings
@@ -201,9 +201,9 @@ class TestQMapLoadDataset:
         # Verify file was accessed
         mock_pool.get_connection.assert_called_once_with("/test/file.hdf", "r")
 
-    @patch("xpcs_toolkit.fileIO.qmap_utils._connection_pool")
-    @patch("xpcs_toolkit.fileIO.qmap_utils.key_map")
-    @patch("xpcs_toolkit.fileIO.qmap_utils.QMap._create_default_qmap")
+    @patch("xpcsviewer.fileIO.qmap_utils._connection_pool")
+    @patch("xpcsviewer.fileIO.qmap_utils.key_map")
+    @patch("xpcsviewer.fileIO.qmap_utils.QMap._create_default_qmap")
     def test_load_dataset_missing_qmap_group(
         self, mock_create_default, mock_key_map, mock_pool
     ):
@@ -229,9 +229,9 @@ class TestQMapLoadDataset:
 
         mock_create_default.assert_called_once()
 
-    @patch("xpcs_toolkit.fileIO.qmap_utils._connection_pool")
-    @patch("xpcs_toolkit.fileIO.qmap_utils.key_map")
-    @patch("xpcs_toolkit.fileIO.qmap_utils.QMap._get_default_value")
+    @patch("xpcsviewer.fileIO.qmap_utils._connection_pool")
+    @patch("xpcsviewer.fileIO.qmap_utils.key_map")
+    @patch("xpcsviewer.fileIO.qmap_utils.QMap._get_default_value")
     def test_load_dataset_missing_keys(self, mock_get_default, mock_key_map, mock_pool):
         """Test loading dataset with missing keys."""
         mock_key_map.__getitem__.side_effect = lambda x: {
@@ -289,7 +289,7 @@ class TestQMapUtilityMethods:
         assert len(unknown_default) == 1
         assert unknown_default[0] == 0
 
-    @patch("xpcs_toolkit.fileIO.qmap_utils.QMap.load_dataset")
+    @patch("xpcsviewer.fileIO.qmap_utils.QMap.load_dataset")
     def test_create_minimal_fallback(self, mock_load_dataset):
         """Test _create_minimal_fallback method."""
         qmap = QMap.__new__(QMap)
@@ -405,7 +405,7 @@ class TestQMapCreateQbinLabels:
 class TestGetHashFunction:
     """Test suite for get_hash function."""
 
-    @patch("xpcs_toolkit.fileIO.qmap_utils._connection_pool")
+    @patch("xpcsviewer.fileIO.qmap_utils._connection_pool")
     def test_get_hash_basic(self, mock_connection_pool):
         """Test basic hash generation."""
         # Mock the HDF5 file and connection
@@ -472,7 +472,7 @@ class TestGetHashFunction:
 class TestGetQmapFunction:
     """Test suite for get_qmap function."""
 
-    @patch("xpcs_toolkit.fileIO.qmap_utils.QMap")
+    @patch("xpcsviewer.fileIO.qmap_utils.QMap")
     def test_get_qmap_function(self, mock_qmap_class):
         """Test get_qmap function."""
         mock_qmap_instance = Mock()
@@ -490,17 +490,17 @@ class TestQMapCaching:
     def test_qmap_cache_initialization(self):
         """Test that caching structures are properly initialized."""
         with (
-            patch("xpcs_toolkit.fileIO.qmap_utils.QMap.load_dataset"),
+            patch("xpcsviewer.fileIO.qmap_utils.QMap.load_dataset"),
             patch(
-                "xpcs_toolkit.fileIO.qmap_utils.QMap.get_detector_extent",
+                "xpcsviewer.fileIO.qmap_utils.QMap.get_detector_extent",
                 return_value=(0, 0, 100, 100),
             ),
             patch(
-                "xpcs_toolkit.fileIO.qmap_utils.QMap.compute_qmap",
+                "xpcsviewer.fileIO.qmap_utils.QMap.compute_qmap",
                 return_value=({}, {}),
             ),
             patch(
-                "xpcs_toolkit.fileIO.qmap_utils.QMap.create_qbin_labels",
+                "xpcsviewer.fileIO.qmap_utils.QMap.create_qbin_labels",
                 return_value=[],
             ),
         ):
@@ -518,17 +518,17 @@ class TestQMapPerformance:
     def test_qmap_initialization_time(self, performance_timer):
         """Test QMap initialization performance."""
         with (
-            patch("xpcs_toolkit.fileIO.qmap_utils.QMap.load_dataset"),
+            patch("xpcsviewer.fileIO.qmap_utils.QMap.load_dataset"),
             patch(
-                "xpcs_toolkit.fileIO.qmap_utils.QMap.get_detector_extent",
+                "xpcsviewer.fileIO.qmap_utils.QMap.get_detector_extent",
                 return_value=(0, 0, 100, 100),
             ),
             patch(
-                "xpcs_toolkit.fileIO.qmap_utils.QMap.compute_qmap",
+                "xpcsviewer.fileIO.qmap_utils.QMap.compute_qmap",
                 return_value=({}, {}),
             ),
             patch(
-                "xpcs_toolkit.fileIO.qmap_utils.QMap.create_qbin_labels",
+                "xpcsviewer.fileIO.qmap_utils.QMap.create_qbin_labels",
                 return_value=[],
             ),
         ):
@@ -547,17 +547,17 @@ class TestQMapEdgeCases:
     def test_qmap_with_none_filename(self):
         """Test QMap with None filename."""
         with (
-            patch("xpcs_toolkit.fileIO.qmap_utils.QMap.load_dataset"),
+            patch("xpcsviewer.fileIO.qmap_utils.QMap.load_dataset"),
             patch(
-                "xpcs_toolkit.fileIO.qmap_utils.QMap.get_detector_extent",
+                "xpcsviewer.fileIO.qmap_utils.QMap.get_detector_extent",
                 return_value=(0, 0, 100, 100),
             ),
             patch(
-                "xpcs_toolkit.fileIO.qmap_utils.QMap.compute_qmap",
+                "xpcsviewer.fileIO.qmap_utils.QMap.compute_qmap",
                 return_value=({}, {}),
             ),
             patch(
-                "xpcs_toolkit.fileIO.qmap_utils.QMap.create_qbin_labels",
+                "xpcsviewer.fileIO.qmap_utils.QMap.create_qbin_labels",
                 return_value=[],
             ),
         ):
@@ -569,17 +569,17 @@ class TestQMapEdgeCases:
     def test_qmap_empty_root_key(self):
         """Test QMap with empty root key."""
         with (
-            patch("xpcs_toolkit.fileIO.qmap_utils.QMap.load_dataset"),
+            patch("xpcsviewer.fileIO.qmap_utils.QMap.load_dataset"),
             patch(
-                "xpcs_toolkit.fileIO.qmap_utils.QMap.get_detector_extent",
+                "xpcsviewer.fileIO.qmap_utils.QMap.get_detector_extent",
                 return_value=(0, 0, 100, 100),
             ),
             patch(
-                "xpcs_toolkit.fileIO.qmap_utils.QMap.compute_qmap",
+                "xpcsviewer.fileIO.qmap_utils.QMap.compute_qmap",
                 return_value=({}, {}),
             ),
             patch(
-                "xpcs_toolkit.fileIO.qmap_utils.QMap.create_qbin_labels",
+                "xpcsviewer.fileIO.qmap_utils.QMap.create_qbin_labels",
                 return_value=[],
             ),
         ):
@@ -600,7 +600,7 @@ class TestQMapEdgeCases:
 )
 def test_get_hash_path_variations(hash_input, expected_type):
     """Test get_hash with various path formats."""
-    with patch("xpcs_toolkit.fileIO.qmap_utils._connection_pool") as mock_pool:
+    with patch("xpcsviewer.fileIO.qmap_utils._connection_pool") as mock_pool:
         # Mock the HDF5 file access to fail, so it returns the filename
         mock_pool.get_connection.side_effect = Exception("File not found")
 

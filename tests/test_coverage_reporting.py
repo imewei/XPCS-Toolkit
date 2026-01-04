@@ -28,7 +28,7 @@ class TestCoverageReporting(unittest.TestCase):
         # Create sample coverage data
         self.sample_metrics = [
             CoverageMetrics(
-                module_name="xpcs_toolkit/module/g2mod.py",
+                module_name="xpcsviewer/module/g2mod.py",
                 statements=150,
                 missing=20,
                 branches=30,
@@ -37,7 +37,7 @@ class TestCoverageReporting(unittest.TestCase):
                 branch_coverage_percentage=83.3,
             ),
             CoverageMetrics(
-                module_name="xpcs_toolkit/xpcs_file.py",
+                module_name="xpcsviewer/xpcs_file.py",
                 statements=200,
                 missing=40,
                 branches=50,
@@ -139,8 +139,8 @@ class TestCoverageReporting(unittest.TestCase):
 
         # Check for module table
         self.assertIn('<table class="module-table">', html_report)
-        self.assertIn("xpcs_toolkit/module/g2mod.py", html_report)
-        self.assertIn("xpcs_toolkit/xpcs_file.py", html_report)
+        self.assertIn("xpcsviewer/module/g2mod.py", html_report)
+        self.assertIn("xpcsviewer/xpcs_file.py", html_report)
 
         # Check for regression alerts
         self.assertIn("Regression Alerts", html_report)
@@ -257,12 +257,12 @@ class TestCoverageReporting(unittest.TestCase):
 
         # Check that modules have target information
         for module in report_data["module_metrics"]:
-            if module["module_name"] == "xpcs_toolkit/module/g2mod.py":
+            if module["module_name"] == "xpcsviewer/module/g2mod.py":
                 target_info = module["target_info"]
                 self.assertIsNotNone(target_info)
                 self.assertEqual(target_info["target_percentage"], 95.0)
                 self.assertTrue(target_info["critical"])
-            elif module["module_name"] == "xpcs_toolkit/xpcs_file.py":
+            elif module["module_name"] == "xpcsviewer/xpcs_file.py":
                 target_info = module["target_info"]
                 self.assertIsNotNone(target_info)
                 self.assertEqual(target_info["target_percentage"], 85.0)

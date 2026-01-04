@@ -1,5 +1,5 @@
 ============
-XPCS Toolkit
+XPCS Viewer
 ============
 
 Python-based XPCS data analysis and visualization tool.
@@ -45,16 +45,16 @@ Installation
 .. code-block:: bash
 
    # Basic installation
-   pip install xpcs-toolkit
+   pip install xpcsviewer
 
    # Complete installation with all features and tools
-   pip install xpcs-toolkit[all]
+   pip install xpcsviewer[all]
 
    # Install with specific optional dependencies
-   pip install xpcs-toolkit[dev]        # Development tools
-   pip install xpcs-toolkit[docs]       # Documentation building
-   pip install xpcs-toolkit[validation] # Profiling and validation tools
-   pip install xpcs-toolkit[performance] # Performance analysis tools
+   pip install xpcsviewer[dev]        # Development tools
+   pip install xpcsviewer[docs]       # Documentation building
+   pip install xpcsviewer[validation] # Profiling and validation tools
+   pip install xpcsviewer[performance] # Performance analysis tools
 
 Usage
 -----
@@ -62,10 +62,10 @@ Usage
 .. code-block:: bash
 
    # Launch GUI
-   xpcs-toolkit path_to_hdf_directory
+   xpcsviewer path_to_hdf_directory
 
    # Launch from current directory
-   xpcs-toolkit
+   xpcsviewer
 
 Citation
 --------
@@ -78,8 +78,8 @@ Development
 .. code-block:: bash
 
    # Clone and install
-   git clone https://github.com/imewei/XPCS-Toolkit.git
-   cd XPCS-Toolkit
+   git clone https://github.com/imewei/XPCSViewer.git
+   cd XPCSViewer
    pip install -e .[dev]
 
    # Run tests
@@ -119,7 +119,7 @@ Project Structure
 
 .. code-block::
 
-   xpcs_toolkit/
+   xpcsviewer/
    ├── module/            # Analysis modules
    ├── fileIO/            # HDF5 I/O
    ├── gui/               # GUI modernization
@@ -149,47 +149,47 @@ Gallery
 
 1. **Integrated 2D Scattering Pattern**
 
-   .. image:: https://raw.githubusercontent.com/imewei/XPCS-Toolkit/master/docs/images/saxs2d.png
+   .. image:: https://raw.githubusercontent.com/imewei/XPCSViewer/master/docs/images/saxs2d.png
       :alt: 2D SAXS pattern visualization
 
 2. **1D SAXS Reduction and Analysis**
 
-   .. image:: https://raw.githubusercontent.com/imewei/XPCS-Toolkit/master/docs/images/saxs1d.png
+   .. image:: https://raw.githubusercontent.com/imewei/XPCSViewer/master/docs/images/saxs1d.png
       :alt: Radially averaged 1D SAXS data
 
 3. **Sample Stability Assessment**
 
-   .. image:: https://raw.githubusercontent.com/imewei/XPCS-Toolkit/master/docs/images/stability.png
+   .. image:: https://raw.githubusercontent.com/imewei/XPCSViewer/master/docs/images/stability.png
       :alt: Temporal stability analysis across 10 time sections
 
 4. **Intensity vs Time Series**
 
-   .. image:: https://raw.githubusercontent.com/imewei/XPCS-Toolkit/master/docs/images/intt.png
+   .. image:: https://raw.githubusercontent.com/imewei/XPCSViewer/master/docs/images/intt.png
       :alt: Intensity fluctuation monitoring
 
 5. **File Averaging Toolbox**
 
-   .. image:: https://raw.githubusercontent.com/imewei/XPCS-Toolkit/master/docs/images/average.png
+   .. image:: https://raw.githubusercontent.com/imewei/XPCSViewer/master/docs/images/average.png
       :alt: Advanced file averaging capabilities
 
 6. **G2 Correlation Analysis**
 
-   .. image:: https://raw.githubusercontent.com/imewei/XPCS-Toolkit/master/docs/images/g2mod.png
+   .. image:: https://raw.githubusercontent.com/imewei/XPCSViewer/master/docs/images/g2mod.png
       :alt: Multi-tau correlation function fitting
 
 7. **Diffusion Characterization**
 
-   .. image:: https://raw.githubusercontent.com/imewei/XPCS-Toolkit/master/docs/images/diffusion.png
+   .. image:: https://raw.githubusercontent.com/imewei/XPCSViewer/master/docs/images/diffusion.png
       :alt: τ vs q analysis for diffusion coefficients
 
 8. **Two-time Correlation Maps**
 
-   .. image:: https://raw.githubusercontent.com/imewei/XPCS-Toolkit/master/docs/images/twotime.png
+   .. image:: https://raw.githubusercontent.com/imewei/XPCSViewer/master/docs/images/twotime.png
       :alt: Interactive two-time correlation analysis
 
 9. **HDF5 Metadata Explorer**
 
-   .. image:: https://raw.githubusercontent.com/imewei/XPCS-Toolkit/master/docs/images/hdf_info.png
+   .. image:: https://raw.githubusercontent.com/imewei/XPCSViewer/master/docs/images/hdf_info.png
       :alt: File structure and metadata viewer
 
 License

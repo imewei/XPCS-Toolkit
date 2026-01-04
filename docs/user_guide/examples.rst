@@ -6,8 +6,8 @@ G2 Analysis
 
 .. code-block:: python
 
-   from xpcs_toolkit import XpcsFile
-   from xpcs_toolkit.module import g2mod
+   from xpcsviewer import XpcsFile
+   from xpcsviewer.module import g2mod
 
    # Load data
    xf = XpcsFile('data.hdf')
@@ -22,7 +22,7 @@ SAXS Processing
 
 .. code-block:: python
 
-   from xpcs_toolkit import XpcsFile
+   from xpcsviewer import XpcsFile
 
    # Load SAXS data
    xf = XpcsFile('saxs_data.hdf')
@@ -34,7 +34,7 @@ Batch Processing
 .. code-block:: python
 
    from pathlib import Path
-   from xpcs_toolkit import XpcsFile
+   from xpcsviewer import XpcsFile
 
    # Process multiple files
    data_dir = Path('/path/to/data')

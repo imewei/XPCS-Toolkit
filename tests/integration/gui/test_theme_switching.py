@@ -5,13 +5,13 @@ import time
 import pytest
 from PySide6.QtWidgets import QApplication
 
-from xpcs_toolkit.gui.state.preferences import (
+from xpcsviewer.gui.state.preferences import (
     UserPreferences,
     get_preferences_path,
     load_preferences,
     save_preferences,
 )
-from xpcs_toolkit.gui.theme.manager import ThemeManager
+from xpcsviewer.gui.theme.manager import ThemeManager
 
 
 class TestThemeSwitchingIntegration:
@@ -20,10 +20,10 @@ class TestThemeSwitchingIntegration:
     @pytest.fixture
     def theme_manager(self, qtbot, tmp_path, monkeypatch):
         """Create a ThemeManager with temporary preferences."""
-        prefs_file = tmp_path / ".xpcs_toolkit" / "preferences.json"
+        prefs_file = tmp_path / ".xpcsviewer" / "preferences.json"
         prefs_file.parent.mkdir(parents=True, exist_ok=True)
         monkeypatch.setattr(
-            "xpcs_toolkit.gui.state.preferences.get_preferences_path",
+            "xpcsviewer.gui.state.preferences.get_preferences_path",
             lambda: prefs_file,
         )
         manager = ThemeManager()
@@ -72,10 +72,10 @@ class TestThemeSwitchingIntegration:
 
     def test_theme_persistence(self, tmp_path, monkeypatch):
         """Theme preference should persist across manager instances."""
-        prefs_file = tmp_path / ".xpcs_toolkit" / "preferences.json"
+        prefs_file = tmp_path / ".xpcsviewer" / "preferences.json"
         prefs_file.parent.mkdir(parents=True, exist_ok=True)
         monkeypatch.setattr(
-            "xpcs_toolkit.gui.state.preferences.get_preferences_path",
+            "xpcsviewer.gui.state.preferences.get_preferences_path",
             lambda: prefs_file,
         )
 
@@ -155,10 +155,10 @@ class TestThemePreferencesIntegration:
 
     def test_preferences_save_and_load(self, tmp_path, monkeypatch):
         """Preferences should save and load correctly."""
-        prefs_file = tmp_path / ".xpcs_toolkit" / "preferences.json"
+        prefs_file = tmp_path / ".xpcsviewer" / "preferences.json"
         prefs_file.parent.mkdir(parents=True, exist_ok=True)
         monkeypatch.setattr(
-            "xpcs_toolkit.gui.state.preferences.get_preferences_path",
+            "xpcsviewer.gui.state.preferences.get_preferences_path",
             lambda: prefs_file,
         )
 
@@ -174,10 +174,10 @@ class TestThemePreferencesIntegration:
 
     def test_default_preferences_created(self, tmp_path, monkeypatch):
         """Default preferences should be created if file doesn't exist."""
-        prefs_file = tmp_path / ".xpcs_toolkit" / "preferences.json"
+        prefs_file = tmp_path / ".xpcsviewer" / "preferences.json"
         prefs_file.parent.mkdir(parents=True, exist_ok=True)
         monkeypatch.setattr(
-            "xpcs_toolkit.gui.state.preferences.get_preferences_path",
+            "xpcsviewer.gui.state.preferences.get_preferences_path",
             lambda: prefs_file,
         )
 

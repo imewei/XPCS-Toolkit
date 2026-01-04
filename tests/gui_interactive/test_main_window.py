@@ -9,7 +9,7 @@ from unittest.mock import patch
 import pytest
 from PySide6 import QtCore, QtWidgets
 
-from xpcs_toolkit.xpcs_viewer import XpcsViewer, tab_mapping
+from xpcsviewer.xpcs_viewer import XpcsViewer, tab_mapping
 
 
 class TestMainWindow:
@@ -219,7 +219,7 @@ class TestWindowStateManagement:
     def test_window_close_behavior(self, qapp, qtbot):
         """Test window closing behavior."""
         # Create a temporary window for close testing
-        with patch("xpcs_toolkit.xpcs_viewer.ViewerKernel"):
+        with patch("xpcsviewer.xpcs_viewer.ViewerKernel"):
             window = XpcsViewer(path=None)
             qtbot.addWidget(window)
             window.show()
@@ -240,7 +240,7 @@ class TestWindowStateManagement:
         try:
             # Create multiple windows
             for _i in range(2):
-                with patch("xpcs_toolkit.xpcs_viewer.ViewerKernel"):
+                with patch("xpcsviewer.xpcs_viewer.ViewerKernel"):
                     window = XpcsViewer(path=None)
                     qtbot.addWidget(window)
                     window.show()

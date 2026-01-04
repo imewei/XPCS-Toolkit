@@ -11,9 +11,9 @@ import numpy as np
 import pyqtgraph as pg
 import pytest
 
-from xpcs_toolkit.module import g2mod
-from xpcs_toolkit.module.g2mod import colors, symbols
-from xpcs_toolkit.plothandler.plot_constants import MATPLOTLIB_COLORS_RGB
+from xpcsviewer.module import g2mod
+from xpcsviewer.module.g2mod import colors, symbols
+from xpcsviewer.plothandler.plot_constants import MATPLOTLIB_COLORS_RGB
 
 
 class TestG2ModConstants:
@@ -256,7 +256,7 @@ class TestPgPlotFunction:
         assert hasattr(g2mod, "pg_plot")
         assert callable(g2mod.pg_plot)
 
-    @patch("xpcs_toolkit.module.g2mod.get_data")
+    @patch("xpcsviewer.module.g2mod.get_data")
     def test_pg_plot_basic_call_structure(self, mock_get_data):
         """Test basic call structure of pg_plot function."""
         # Mock get_data to return valid data
@@ -294,7 +294,7 @@ class TestPgPlotFunction:
 class TestPgPlotParameters:
     """Test suite for pg_plot function parameters."""
 
-    @patch("xpcs_toolkit.module.g2mod.get_data")
+    @patch("xpcsviewer.module.g2mod.get_data")
     def test_pg_plot_parameter_defaults(self, mock_get_data):
         """Test pg_plot function parameter defaults."""
         mock_get_data.return_value = ([], [], [], [], [])

@@ -3,9 +3,9 @@ requires = ["setuptools>=75.6.0", "wheel", "setuptools-scm[toml]>=8.2.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "xpcs-toolkit"
+name = "xpcsviewer"
 dynamic = ["version"]
-description = "XPCS Toolkit: A python-based interactive tool to visualize and model XPCS dataset"
+description = "XPCS Viewer: A python-based interactive tool to visualize and model XPCS dataset"
 readme = "README.rst"
 license = {file = "LICENSE"}
 authors = [
@@ -96,20 +96,22 @@ performance = [
     "pympler>=1.1",
 ]
 all = [
-    "xpcs-toolkit[dev,test,docs,validation,performance]",
+    "xpcsviewer[dev,test,docs,validation,performance]",
 ]
 
 [project.scripts]
-xpcs-toolkit = "xpcs_toolkit.cli:main"
-pyxpcsviewer = "xpcs_toolkit.cli:main"
-run_viewer = "xpcs_toolkit.cli:main"
+xpcsviewer = "xpcsviewer.cli_main:main"
+pyxpcsviewer = "xpcsviewer.cli_main:main"
+xpcs-toolkit = "xpcsviewer.cli_main:main"
+xpcs-viewer = "xpcsviewer.cli_main:main"
+run_viewer = "xpcsviewer.cli_main:main"
 
 [project.urls]
-"Homepage" = "https://github.com/imewei/XPCS-Toolkit"
-"Bug Tracker" = "https://github.com/imewei/XPCS-Toolkit/issues"
-"Documentation" = "https://github.com/imewei/XPCS-Toolkit/tree/master/docs"
-"Source Code" = "https://github.com/imewei/XPCS-Toolkit"
-"Changelog" = "https://github.com/imewei/XPCS-Toolkit/blob/master/HISTORY.rst"
+"Homepage" = "https://github.com/imewei/xpcsviewer"
+"Bug Tracker" = "https://github.com/imewei/xpcsviewer/issues"
+"Documentation" = "https://github.com/imewei/xpcsviewer/tree/master/docs"
+"Source Code" = "https://github.com/imewei/xpcsviewer"
+"Changelog" = "https://github.com/imewei/xpcsviewer/blob/master/HISTORY.rst"
 
 [tool.uv]
 # Prefer uv-managed Python to guarantee reproducible environments
@@ -120,11 +122,11 @@ version_scheme = "post-release"
 local_scheme = "node-and-timestamp"
 
 [tool.setuptools.packages.find]
-include = ["xpcs_toolkit", "xpcs_toolkit.*"]
+include = ["xpcsviewer", "xpcsviewer.*"]
 exclude = ["tests*", "docs*", "validation*", "scripts*"]
 
 [tool.setuptools.package-data]
-"xpcs_toolkit" = [
+"xpcsviewer" = [
     "py.typed",
     "configure/*.json",
     "ui/*.ui",
@@ -134,7 +136,7 @@ exclude = ["tests*", "docs*", "validation*", "scripts*"]
 ]
 
 [tool.setuptools.data-files]
-"share/xpcs_toolkit/docs_images" = [
+"share/xpcsviewer/docs_images" = [
     "docs/images/average.png",
     "docs/images/diffusion.png",
     "docs/images/g2mod.png",
@@ -145,7 +147,7 @@ exclude = ["tests*", "docs*", "validation*", "scripts*"]
     "docs/images/stability.png",
     "docs/images/twotime.png",
 ]
-"share/xpcs_toolkit/test_artifacts" = [
+"share/xpcsviewer/test_artifacts" = [
     "tests/artifacts/offscreen_snap.png",
 ]
 
@@ -156,7 +158,7 @@ addopts = [
     "-v",
     "--strict-markers",
     "--strict-config",
-    "--cov=xpcs_toolkit",
+    "--cov=xpcsviewer",
     "--cov-report=term-missing",
     "--cov-report=html",
     "--cov-report=xml",
@@ -328,46 +330,46 @@ allow_untyped_defs = true
 disable_error_code = ["attr-defined", "name-defined"]
 
 [tool.coverage.run]
-source = ["xpcs_toolkit"]
+source = ["xpcsviewer"]
 omit = [
     "*/tests/*",
     "*/test_*",
     "*/__pycache__/*",
     "*/site-packages/*",
-    "xpcs_toolkit/ui/*",
-    "xpcs_toolkit/icons_rc.py",
+    "xpcsviewer/ui/*",
+    "xpcsviewer/icons_rc.py",
     "*/validation/*",
     "*/scripts/*",
-    "xpcs_toolkit/cli.py",
-    "xpcs_toolkit/viewer_ui.py",
-    "xpcs_toolkit/ui/resources/*",
-    "xpcs_toolkit/default_setting.py",
-    "xpcs_toolkit/helper/logwriter.py",
-    "xpcs_toolkit/fileIO/ftype_utils.py",
-    "xpcs_toolkit/helper/utils.py",
-    "xpcs_toolkit/module/tauq.py",
-    "xpcs_toolkit/utils/common_checks.py",
-    "xpcs_toolkit/utils/performance_monitor.py",
-    "xpcs_toolkit/utils/reliability_manager.py",
-    "xpcs_toolkit/utils/startup_optimizer.py",
-    "xpcs_toolkit/utils/visualization_optimizer.py",
-    "xpcs_toolkit/file_locator.py",
-    "xpcs_toolkit/helper/listmodel.py",
-    "xpcs_toolkit/module/average_toolbox.py",
-    "xpcs_toolkit/threading/*",
-    "xpcs_toolkit/utils/health_monitor.py",
-    "xpcs_toolkit/utils/reliability.py",
-    "xpcs_toolkit/utils/state_validator.py",
-    "xpcs_toolkit/utils/validation.py",
-    "xpcs_toolkit/utils/memory_manager.py",
-    "xpcs_toolkit/utils/memory_predictor.py",
-    "xpcs_toolkit/utils/streaming_processor.py",
-    "xpcs_toolkit/utils/lazy_loader.py",
-    "xpcs_toolkit/utils/vectorized_roi.py",
-    "xpcs_toolkit/xpcs_viewer.py",
-    "xpcs_toolkit/viewer_kernel.py",
-    "xpcs_toolkit/plothandler/*",
-    "xpcs_toolkit/gui/*",
+    "xpcsviewer/cli.py",
+    "xpcsviewer/viewer_ui.py",
+    "xpcsviewer/ui/resources/*",
+    "xpcsviewer/default_setting.py",
+    "xpcsviewer/helper/logwriter.py",
+    "xpcsviewer/fileIO/ftype_utils.py",
+    "xpcsviewer/helper/utils.py",
+    "xpcsviewer/module/tauq.py",
+    "xpcsviewer/utils/common_checks.py",
+    "xpcsviewer/utils/performance_monitor.py",
+    "xpcsviewer/utils/reliability_manager.py",
+    "xpcsviewer/utils/startup_optimizer.py",
+    "xpcsviewer/utils/visualization_optimizer.py",
+    "xpcsviewer/file_locator.py",
+    "xpcsviewer/helper/listmodel.py",
+    "xpcsviewer/module/average_toolbox.py",
+    "xpcsviewer/threading/*",
+    "xpcsviewer/utils/health_monitor.py",
+    "xpcsviewer/utils/reliability.py",
+    "xpcsviewer/utils/state_validator.py",
+    "xpcsviewer/utils/validation.py",
+    "xpcsviewer/utils/memory_manager.py",
+    "xpcsviewer/utils/memory_predictor.py",
+    "xpcsviewer/utils/streaming_processor.py",
+    "xpcsviewer/utils/lazy_loader.py",
+    "xpcsviewer/utils/vectorized_roi.py",
+    "xpcsviewer/xpcs_viewer.py",
+    "xpcsviewer/viewer_kernel.py",
+    "xpcsviewer/plothandler/*",
+    "xpcsviewer/gui/*",
 ]
 branch = true
 parallel = true

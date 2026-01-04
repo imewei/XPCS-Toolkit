@@ -47,7 +47,7 @@ except ImportError:
     h5py = MockH5py()
 from PySide6 import QtCore, QtGui, QtWidgets
 
-from xpcs_toolkit.xpcs_file import XpcsFile
+from xpcsviewer.xpcs_file import XpcsFile
 
 
 class TestDirectorySelection:

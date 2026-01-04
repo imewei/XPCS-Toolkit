@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from xpcs_toolkit.gui.state.session_manager import (
+from xpcsviewer.gui.state.session_manager import (
     AnalysisParameters,
     FileEntry,
     SessionManager,
@@ -138,11 +138,11 @@ class TestGetSessionPath:
 
         assert isinstance(path, Path)
 
-    def test_path_in_xpcs_toolkit_directory(self):
-        """Session path should be in .xpcs_toolkit directory."""
+    def test_path_in_xpcsviewer_directory(self):
+        """Session path should be in .xpcsviewer directory."""
         path = get_session_path()
 
-        assert ".xpcs_toolkit" in str(path)
+        assert ".xpcsviewer" in str(path)
         assert path.name == "session.json"
 
 
@@ -154,7 +154,7 @@ class TestSessionManagerSave:
         # Redirect session path to temp directory
         session_file = tmp_path / "session.json"
         monkeypatch.setattr(
-            "xpcs_toolkit.gui.state.session_manager.get_session_path",
+            "xpcsviewer.gui.state.session_manager.get_session_path",
             lambda: session_file,
         )
 
@@ -170,7 +170,7 @@ class TestSessionManagerSave:
         """save_session should write correct JSON content."""
         session_file = tmp_path / "session.json"
         monkeypatch.setattr(
-            "xpcs_toolkit.gui.state.session_manager.get_session_path",
+            "xpcsviewer.gui.state.session_manager.get_session_path",
             lambda: session_file,
         )
 
@@ -196,7 +196,7 @@ class TestSessionManagerSave:
         """save_session should update timestamp."""
         session_file = tmp_path / "session.json"
         monkeypatch.setattr(
-            "xpcs_toolkit.gui.state.session_manager.get_session_path",
+            "xpcsviewer.gui.state.session_manager.get_session_path",
             lambda: session_file,
         )
 
@@ -220,7 +220,7 @@ class TestSessionManagerLoad:
         """load_session should return None if no session file exists."""
         session_file = tmp_path / "session.json"
         monkeypatch.setattr(
-            "xpcs_toolkit.gui.state.session_manager.get_session_path",
+            "xpcsviewer.gui.state.session_manager.get_session_path",
             lambda: session_file,
         )
 
@@ -233,7 +233,7 @@ class TestSessionManagerLoad:
         """load_session should restore saved session."""
         session_file = tmp_path / "session.json"
         monkeypatch.setattr(
-            "xpcs_toolkit.gui.state.session_manager.get_session_path",
+            "xpcsviewer.gui.state.session_manager.get_session_path",
             lambda: session_file,
         )
 
@@ -262,7 +262,7 @@ class TestSessionManagerLoad:
         existing_file.touch()
 
         monkeypatch.setattr(
-            "xpcs_toolkit.gui.state.session_manager.get_session_path",
+            "xpcsviewer.gui.state.session_manager.get_session_path",
             lambda: session_file,
         )
 
@@ -297,7 +297,7 @@ class TestSessionManagerLoad:
         session_file.write_text("{ invalid json }")
 
         monkeypatch.setattr(
-            "xpcs_toolkit.gui.state.session_manager.get_session_path",
+            "xpcsviewer.gui.state.session_manager.get_session_path",
             lambda: session_file,
         )
 
@@ -313,7 +313,7 @@ class TestSessionManagerLoad:
         """load_session should validate active_tab range."""
         session_file = tmp_path / "session.json"
         monkeypatch.setattr(
-            "xpcs_toolkit.gui.state.session_manager.get_session_path",
+            "xpcsviewer.gui.state.session_manager.get_session_path",
             lambda: session_file,
         )
 
@@ -343,7 +343,7 @@ class TestSessionManagerWarnings:
         """get_warnings should clear warnings after being called."""
         session_file = tmp_path / "session.json"
         monkeypatch.setattr(
-            "xpcs_toolkit.gui.state.session_manager.get_session_path",
+            "xpcsviewer.gui.state.session_manager.get_session_path",
             lambda: session_file,
         )
 
@@ -375,7 +375,7 @@ class TestSessionManagerClear:
         session_file = tmp_path / "session.json"
         session_file.write_text("{}")
         monkeypatch.setattr(
-            "xpcs_toolkit.gui.state.session_manager.get_session_path",
+            "xpcsviewer.gui.state.session_manager.get_session_path",
             lambda: session_file,
         )
 
@@ -390,7 +390,7 @@ class TestSessionManagerClear:
         """clear_session should not error if no file exists."""
         session_file = tmp_path / "session.json"
         monkeypatch.setattr(
-            "xpcs_toolkit.gui.state.session_manager.get_session_path",
+            "xpcsviewer.gui.state.session_manager.get_session_path",
             lambda: session_file,
         )
 
@@ -407,7 +407,7 @@ class TestSessionManagerHasSavedSession:
         """has_saved_session should return False if no file exists."""
         session_file = tmp_path / "session.json"
         monkeypatch.setattr(
-            "xpcs_toolkit.gui.state.session_manager.get_session_path",
+            "xpcsviewer.gui.state.session_manager.get_session_path",
             lambda: session_file,
         )
 
@@ -419,7 +419,7 @@ class TestSessionManagerHasSavedSession:
         session_file = tmp_path / "session.json"
         session_file.write_text("{}")
         monkeypatch.setattr(
-            "xpcs_toolkit.gui.state.session_manager.get_session_path",
+            "xpcsviewer.gui.state.session_manager.get_session_path",
             lambda: session_file,
         )
 

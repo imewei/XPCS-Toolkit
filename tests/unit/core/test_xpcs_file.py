@@ -9,13 +9,13 @@ from unittest.mock import Mock, patch
 import numpy as np
 import pytest
 
-from xpcs_toolkit.xpcs_file import MemoryMonitor, XpcsFile
+from xpcsviewer.xpcs_file import MemoryMonitor, XpcsFile
 
 
 class TestMemoryMonitor:
     """Test suite for MemoryMonitor class."""
 
-    @patch("xpcs_toolkit.xpcs_file.get_cached_memory_monitor")
+    @patch("xpcsviewer.xpcs_file.get_cached_memory_monitor")
     def test_get_memory_usage(self, mock_get_monitor):
         """Test memory usage retrieval."""
         mock_monitor = Mock()
@@ -28,7 +28,7 @@ class TestMemoryMonitor:
         assert available == 2048.0
         mock_monitor.get_memory_info.assert_called_once()
 
-    @patch("xpcs_toolkit.xpcs_file.get_cached_memory_monitor")
+    @patch("xpcsviewer.xpcs_file.get_cached_memory_monitor")
     def test_get_memory_pressure(self, mock_get_monitor):
         """Test memory pressure calculation."""
         mock_monitor = Mock()
@@ -82,9 +82,9 @@ class TestMemoryMonitor:
 class TestXpcsFileInit:
     """Test suite for XpcsFile initialization."""
 
-    @patch("xpcs_toolkit.xpcs_file.get_qmap")
-    @patch("xpcs_toolkit.xpcs_file.get_analysis_type")
-    @patch("xpcs_toolkit.xpcs_file.batch_read_fields")
+    @patch("xpcsviewer.xpcs_file.get_qmap")
+    @patch("xpcsviewer.xpcs_file.get_analysis_type")
+    @patch("xpcsviewer.xpcs_file.batch_read_fields")
     def test_init_minimal(self, mock_batch_read, mock_get_atype, mock_get_qmap):
         """Test minimal XpcsFile initialization."""
         # Setup mocks
@@ -105,7 +105,7 @@ class TestXpcsFileInit:
         }
 
         # Create XpcsFile instance
-        with patch("xpcs_toolkit.xpcs_file.create_id", return_value="test_label"):
+        with patch("xpcsviewer.xpcs_file.create_id", return_value="test_label"):
             xfile = XpcsFile("test_file.hdf")
 
         # Verify initialization
@@ -126,9 +126,9 @@ class TestXpcsFileInit:
         mock_get_atype.assert_called_once_with("test_file.hdf")
         mock_batch_read.assert_called_once()
 
-    @patch("xpcs_toolkit.xpcs_file.get_qmap")
-    @patch("xpcs_toolkit.xpcs_file.get_analysis_type")
-    @patch("xpcs_toolkit.xpcs_file.batch_read_fields")
+    @patch("xpcsviewer.xpcs_file.get_qmap")
+    @patch("xpcsviewer.xpcs_file.get_analysis_type")
+    @patch("xpcsviewer.xpcs_file.batch_read_fields")
     def test_init_with_qmap_manager(
         self, mock_batch_read, mock_get_atype, mock_get_qmap
     ):
@@ -150,7 +150,7 @@ class TestXpcsFileInit:
             "c2_avg_frame": 1,
         }
 
-        with patch("xpcs_toolkit.xpcs_file.create_id", return_value="test_label"):
+        with patch("xpcsviewer.xpcs_file.create_id", return_value="test_label"):
             xfile = XpcsFile("test_file.hdf", qmap_manager=mock_qmap_manager)
 
         # Verify qmap manager was used instead of get_qmap
@@ -158,9 +158,9 @@ class TestXpcsFileInit:
         mock_qmap_manager.get_qmap.assert_called_once_with("test_file.hdf")
         assert xfile.atype == "Twotime"
 
-    @patch("xpcs_toolkit.xpcs_file.get_qmap")
-    @patch("xpcs_toolkit.xpcs_file.get_analysis_type")
-    @patch("xpcs_toolkit.xpcs_file.batch_read_fields")
+    @patch("xpcsviewer.xpcs_file.get_qmap")
+    @patch("xpcsviewer.xpcs_file.get_analysis_type")
+    @patch("xpcsviewer.xpcs_file.batch_read_fields")
     def test_init_with_extra_fields(
         self, mock_batch_read, mock_get_atype, mock_get_qmap
     ):
@@ -181,7 +181,7 @@ class TestXpcsFileInit:
             "avg_frame": 1,
         }
 
-        with patch("xpcs_toolkit.xpcs_file.create_id", return_value="test_label"):
+        with patch("xpcsviewer.xpcs_file.create_id", return_value="test_label"):
             xfile = XpcsFile("test_file.hdf", fields=["G2", "IP"])
 
         # Verify extra fields are loaded
@@ -194,9 +194,9 @@ class TestXpcsFileInit:
 class TestXpcsFileStringRepresentation:
     """Test suite for XpcsFile string representations."""
 
-    @patch("xpcs_toolkit.xpcs_file.get_qmap")
-    @patch("xpcs_toolkit.xpcs_file.get_analysis_type")
-    @patch("xpcs_toolkit.xpcs_file.batch_read_fields")
+    @patch("xpcsviewer.xpcs_file.get_qmap")
+    @patch("xpcsviewer.xpcs_file.get_analysis_type")
+    @patch("xpcsviewer.xpcs_file.batch_read_fields")
     def test_str_representation(self, mock_batch_read, mock_get_atype, mock_get_qmap):
         """Test __str__ method."""
         mock_get_qmap.return_value = {"dqmap": np.zeros((10, 10))}
@@ -212,7 +212,7 @@ class TestXpcsFileStringRepresentation:
             "avg_frame": 1,
         }
 
-        with patch("xpcs_toolkit.xpcs_file.create_id", return_value="test_file"):
+        with patch("xpcsviewer.xpcs_file.create_id", return_value="test_file"):
             xfile = XpcsFile("test_file.hdf")
 
         str_repr = str(xfile)
@@ -225,9 +225,9 @@ class TestXpcsFileStringRepresentation:
         assert "saxs_1d" in str_repr
         assert "(2,)" in str_repr  # Array shape representation
 
-    @patch("xpcs_toolkit.xpcs_file.get_qmap")
-    @patch("xpcs_toolkit.xpcs_file.get_analysis_type")
-    @patch("xpcs_toolkit.xpcs_file.batch_read_fields")
+    @patch("xpcsviewer.xpcs_file.get_qmap")
+    @patch("xpcsviewer.xpcs_file.get_analysis_type")
+    @patch("xpcsviewer.xpcs_file.batch_read_fields")
     def test_repr_representation(self, mock_batch_read, mock_get_atype, mock_get_qmap):
         """Test __repr__ method."""
         mock_get_qmap.return_value = {"dqmap": np.zeros((5, 5))}
@@ -242,7 +242,7 @@ class TestXpcsFileStringRepresentation:
             "avg_frame": 1,
         }
 
-        with patch("xpcs_toolkit.xpcs_file.create_id", return_value="test"):
+        with patch("xpcsviewer.xpcs_file.create_id", return_value="test"):
             xfile = XpcsFile("test.hdf")
 
         repr_str = repr(xfile)
@@ -254,10 +254,10 @@ class TestXpcsFileStringRepresentation:
 class TestXpcsFileDataAccess:
     """Test suite for XpcsFile data access methods."""
 
-    @patch("xpcs_toolkit.xpcs_file.get_qmap")
-    @patch("xpcs_toolkit.xpcs_file.get_analysis_type")
-    @patch("xpcs_toolkit.xpcs_file.batch_read_fields")
-    @patch("xpcs_toolkit.xpcs_file.read_metadata_to_dict")
+    @patch("xpcsviewer.xpcs_file.get_qmap")
+    @patch("xpcsviewer.xpcs_file.get_analysis_type")
+    @patch("xpcsviewer.xpcs_file.batch_read_fields")
+    @patch("xpcsviewer.xpcs_file.read_metadata_to_dict")
     def test_get_hdf_info(
         self, mock_read_metadata, mock_batch_read, mock_get_atype, mock_get_qmap
     ):
@@ -276,7 +276,7 @@ class TestXpcsFileDataAccess:
         }
         mock_read_metadata.return_value = {"entry": {"instrument": "APS-8IDI"}}
 
-        with patch("xpcs_toolkit.xpcs_file.create_id", return_value="test"):
+        with patch("xpcsviewer.xpcs_file.create_id", return_value="test"):
             xfile = XpcsFile("test.hdf")
 
         # First call should read metadata
@@ -289,9 +289,9 @@ class TestXpcsFileDataAccess:
         assert info2 == info
         assert mock_read_metadata.call_count == 1  # Still only called once
 
-    @patch("xpcs_toolkit.xpcs_file.get_qmap")
-    @patch("xpcs_toolkit.xpcs_file.get_analysis_type")
-    @patch("xpcs_toolkit.xpcs_file.batch_read_fields")
+    @patch("xpcsviewer.xpcs_file.get_qmap")
+    @patch("xpcsviewer.xpcs_file.get_analysis_type")
+    @patch("xpcsviewer.xpcs_file.batch_read_fields")
     def test_update_label(self, mock_batch_read, mock_get_atype, mock_get_qmap):
         """Test update_label method."""
         mock_get_qmap.return_value = {"dqmap": np.zeros((5, 5))}
@@ -306,7 +306,7 @@ class TestXpcsFileDataAccess:
             "avg_frame": 1,
         }
 
-        with patch("xpcs_toolkit.xpcs_file.create_id") as mock_create_id:
+        with patch("xpcsviewer.xpcs_file.create_id") as mock_create_id:
             mock_create_id.side_effect = ["initial_label", "updated_label"]
             xfile = XpcsFile("test.hdf", label_style="short")
 
@@ -323,9 +323,9 @@ class TestXpcsFileDataAccess:
 class TestXpcsFileLoadData:
     """Test suite for XpcsFile data loading methods."""
 
-    @patch("xpcs_toolkit.xpcs_file.get_qmap")
-    @patch("xpcs_toolkit.xpcs_file.get_analysis_type")
-    @patch("xpcs_toolkit.xpcs_file.batch_read_fields")
+    @patch("xpcsviewer.xpcs_file.get_qmap")
+    @patch("xpcsviewer.xpcs_file.get_analysis_type")
+    @patch("xpcsviewer.xpcs_file.batch_read_fields")
     def test_load_data_multitau(self, mock_batch_read, mock_get_atype, mock_get_qmap):
         """Test load_data method for Multitau analysis."""
         mock_get_qmap.return_value = {"dqmap": np.zeros((5, 5))}
@@ -349,7 +349,7 @@ class TestXpcsFileLoadData:
             field: np.array([1.0]) for field in expected_fields
         }
 
-        with patch("xpcs_toolkit.xpcs_file.create_id", return_value="test"):
+        with patch("xpcsviewer.xpcs_file.create_id", return_value="test"):
             XpcsFile("test.hdf")
 
         # Verify batch_read_fields called with correct fields
@@ -362,9 +362,9 @@ class TestXpcsFileLoadData:
         assert call_kwargs["ftype"] == "nexus"
         assert call_kwargs["use_pool"] is True
 
-    @patch("xpcs_toolkit.xpcs_file.get_qmap")
-    @patch("xpcs_toolkit.xpcs_file.get_analysis_type")
-    @patch("xpcs_toolkit.xpcs_file.batch_read_fields")
+    @patch("xpcsviewer.xpcs_file.get_qmap")
+    @patch("xpcsviewer.xpcs_file.get_analysis_type")
+    @patch("xpcsviewer.xpcs_file.batch_read_fields")
     def test_load_data_twotime(self, mock_batch_read, mock_get_atype, mock_get_qmap):
         """Test load_data method for Twotime analysis."""
         mock_get_qmap.return_value = {"dqmap": np.zeros((5, 5))}
@@ -387,7 +387,7 @@ class TestXpcsFileLoadData:
 
         mock_batch_read.return_value = return_data
 
-        with patch("xpcs_toolkit.xpcs_file.create_id", return_value="test"):
+        with patch("xpcsviewer.xpcs_file.create_id", return_value="test"):
             xfile = XpcsFile("test.hdf")
 
         # Verify twotime-specific processing
@@ -398,9 +398,9 @@ class TestXpcsFileLoadData:
         assert not hasattr(xfile, "c2_stride_frame")
         assert not hasattr(xfile, "c2_avg_frame")
 
-    @patch("xpcs_toolkit.xpcs_file.get_qmap")
-    @patch("xpcs_toolkit.xpcs_file.get_analysis_type")
-    @patch("xpcs_toolkit.xpcs_file.batch_read_fields")
+    @patch("xpcsviewer.xpcs_file.get_qmap")
+    @patch("xpcsviewer.xpcs_file.get_analysis_type")
+    @patch("xpcsviewer.xpcs_file.batch_read_fields")
     def test_load_data_with_extra_fields(
         self, mock_batch_read, mock_get_atype, mock_get_qmap
     ):
@@ -426,7 +426,7 @@ class TestXpcsFileLoadData:
         return_data = {field: np.array([1.0]) for field in base_fields + extra_fields}
         mock_batch_read.return_value = return_data
 
-        with patch("xpcs_toolkit.xpcs_file.create_id", return_value="test"):
+        with patch("xpcsviewer.xpcs_file.create_id", return_value="test"):
             XpcsFile("test.hdf", fields=extra_fields)
 
         # Verify all fields are loaded (no duplicates)
@@ -435,9 +435,9 @@ class TestXpcsFileLoadData:
         expected_all_fields = set(base_fields + extra_fields)
         assert loaded_fields == expected_all_fields
 
-    @patch("xpcs_toolkit.xpcs_file.get_qmap")
-    @patch("xpcs_toolkit.xpcs_file.get_analysis_type")
-    @patch("xpcs_toolkit.xpcs_file.batch_read_fields")
+    @patch("xpcsviewer.xpcs_file.get_qmap")
+    @patch("xpcsviewer.xpcs_file.get_analysis_type")
+    @patch("xpcsviewer.xpcs_file.batch_read_fields")
     def test_load_data_removes_duplicates(
         self, mock_batch_read, mock_get_atype, mock_get_qmap
     ):
@@ -462,7 +462,7 @@ class TestXpcsFileLoadData:
             "avg_frame": 1,
         }
 
-        with patch("xpcs_toolkit.xpcs_file.create_id", return_value="test"):
+        with patch("xpcsviewer.xpcs_file.create_id", return_value="test"):
             XpcsFile("test.hdf", fields=extra_fields)
 
         # Verify no duplicate fields in the call
@@ -494,10 +494,10 @@ def test_analysis_type_fields(analysis_type, expected_fields):
     base_fields = ["saxs_1d", "Iqp", "Int_t", "t0", "t1", "start_time"]
 
     with (
-        patch("xpcs_toolkit.xpcs_file.get_qmap") as mock_qmap,
-        patch("xpcs_toolkit.xpcs_file.get_analysis_type") as mock_atype,
-        patch("xpcs_toolkit.xpcs_file.batch_read_fields") as mock_batch,
-        patch("xpcs_toolkit.xpcs_file.create_id", return_value="test"),
+        patch("xpcsviewer.xpcs_file.get_qmap") as mock_qmap,
+        patch("xpcsviewer.xpcs_file.get_analysis_type") as mock_atype,
+        patch("xpcsviewer.xpcs_file.batch_read_fields") as mock_batch,
+        patch("xpcsviewer.xpcs_file.create_id", return_value="test"),
     ):
         mock_qmap.return_value = {"dqmap": np.zeros((5, 5))}
         mock_atype.return_value = analysis_type
@@ -516,19 +516,19 @@ def test_analysis_type_fields(analysis_type, expected_fields):
 class TestCreateId:
     """Test suite for create_id function."""
 
-    @patch("xpcs_toolkit.xpcs_file.create_id")
+    @patch("xpcsviewer.xpcs_file.create_id")
     def test_create_id_called_correctly(self, mock_create_id):
         """Test create_id function is called with correct parameters."""
         mock_create_id.return_value = "test_label"
 
         with (
             patch(
-                "xpcs_toolkit.xpcs_file.get_qmap",
+                "xpcsviewer.xpcs_file.get_qmap",
                 return_value={"dqmap": np.zeros((5, 5))},
             ),
-            patch("xpcs_toolkit.xpcs_file.get_analysis_type", return_value="Multitau"),
+            patch("xpcsviewer.xpcs_file.get_analysis_type", return_value="Multitau"),
             patch(
-                "xpcs_toolkit.xpcs_file.batch_read_fields",
+                "xpcsviewer.xpcs_file.batch_read_fields",
                 return_value={
                     "t0": 0.001,
                     "tau": np.array([0.001]),
@@ -550,9 +550,9 @@ class TestCreateId:
 class TestXpcsFilePerformance:
     """Test suite for XpcsFile performance characteristics."""
 
-    @patch("xpcs_toolkit.xpcs_file.get_qmap")
-    @patch("xpcs_toolkit.xpcs_file.get_analysis_type")
-    @patch("xpcs_toolkit.xpcs_file.batch_read_fields")
+    @patch("xpcsviewer.xpcs_file.get_qmap")
+    @patch("xpcsviewer.xpcs_file.get_analysis_type")
+    @patch("xpcsviewer.xpcs_file.batch_read_fields")
     def test_initialization_time(
         self, mock_batch_read, mock_get_atype, mock_get_qmap, performance_timer
     ):
@@ -572,7 +572,7 @@ class TestXpcsFilePerformance:
 
         performance_timer.start()
 
-        with patch("xpcs_toolkit.xpcs_file.create_id", return_value="test"):
+        with patch("xpcsviewer.xpcs_file.create_id", return_value="test"):
             xfile = XpcsFile("large_file.hdf")
 
         elapsed = performance_timer.stop()
@@ -585,9 +585,9 @@ class TestXpcsFilePerformance:
 class TestXpcsFileEdgeCases:
     """Test suite for XpcsFile edge cases and error conditions."""
 
-    @patch("xpcs_toolkit.xpcs_file.get_qmap")
-    @patch("xpcs_toolkit.xpcs_file.get_analysis_type")
-    @patch("xpcs_toolkit.xpcs_file.batch_read_fields")
+    @patch("xpcsviewer.xpcs_file.get_qmap")
+    @patch("xpcsviewer.xpcs_file.get_analysis_type")
+    @patch("xpcsviewer.xpcs_file.batch_read_fields")
     def test_empty_data_handling(self, mock_batch_read, mock_get_atype, mock_get_qmap):
         """Test handling of empty data arrays."""
         mock_get_qmap.return_value = {"dqmap": np.array([])}
@@ -600,16 +600,16 @@ class TestXpcsFileEdgeCases:
             "avg_frame": 1,
         }
 
-        with patch("xpcs_toolkit.xpcs_file.create_id", return_value="test"):
+        with patch("xpcsviewer.xpcs_file.create_id", return_value="test"):
             xfile = XpcsFile("empty_file.hdf")
 
         assert len(xfile.saxs_1d) == 0
         assert len(xfile.g2) == 0
         assert xfile.t0 == 0.001
 
-    @patch("xpcs_toolkit.xpcs_file.get_qmap")
-    @patch("xpcs_toolkit.xpcs_file.get_analysis_type")
-    @patch("xpcs_toolkit.xpcs_file.batch_read_fields")
+    @patch("xpcsviewer.xpcs_file.get_qmap")
+    @patch("xpcsviewer.xpcs_file.get_analysis_type")
+    @patch("xpcsviewer.xpcs_file.batch_read_fields")
     def test_none_extra_fields(self, mock_batch_read, mock_get_atype, mock_get_qmap):
         """Test handling when extra_fields is None."""
         mock_get_qmap.return_value = {"dqmap": np.zeros((5, 5))}
@@ -624,7 +624,7 @@ class TestXpcsFileEdgeCases:
             "Int_t": np.array([10, 20]),
         }
 
-        with patch("xpcs_toolkit.xpcs_file.create_id", return_value="test"):
+        with patch("xpcsviewer.xpcs_file.create_id", return_value="test"):
             # Should not raise exception with fields=None
             xfile = XpcsFile("test.hdf", fields=None)
 

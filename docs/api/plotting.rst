@@ -3,12 +3,12 @@ Plotting
 
 PyQtGraph real-time plotting and matplotlib integration.
 
-.. currentmodule:: xpcs_toolkit.plothandler
+.. currentmodule:: xpcsviewer.plothandler
 
 PyQtGraph Handler
 -----------------
 
-.. automodule:: xpcs_toolkit.plothandler.pyqtgraph_handler
+.. automodule:: xpcsviewer.plothandler.pyqtgraph_handler
    :members:
    :undoc-members:
    :show-inheritance:
@@ -16,7 +16,7 @@ PyQtGraph Handler
 Matplotlib Integration
 ----------------------
 
-.. automodule:: xpcs_toolkit.plothandler.matplot_qt
+.. automodule:: xpcsviewer.plothandler.matplot_qt
    :members:
    :undoc-members:
    :show-inheritance:
@@ -24,7 +24,7 @@ Matplotlib Integration
 Plot Constants
 --------------
 
-.. automodule:: xpcs_toolkit.plothandler.plot_constants
+.. automodule:: xpcsviewer.plothandler.plot_constants
    :members:
    :undoc-members:
    :show-inheritance:
@@ -34,7 +34,7 @@ Color and styling constants for consistent plot appearance across the applicatio
 Qt Signal Fixes
 ---------------
 
-.. automodule:: xpcs_toolkit.plothandler.qt_signal_fixes
+.. automodule:: xpcsviewer.plothandler.qt_signal_fixes
    :members:
    :undoc-members:
    :show-inheritance:

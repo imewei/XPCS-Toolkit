@@ -3,7 +3,7 @@
 import pytest
 from PySide6.QtWidgets import QMainWindow
 
-from xpcs_toolkit.gui.widgets.toast_notification import (
+from xpcsviewer.gui.widgets.toast_notification import (
     ToastManager,
     ToastType,
     ToastWidget,

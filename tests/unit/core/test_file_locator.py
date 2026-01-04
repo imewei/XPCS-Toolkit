@@ -9,15 +9,15 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from xpcs_toolkit.file_locator import FileLocator, create_xpcs_dataset
-from xpcs_toolkit.fileIO.qmap_utils import QMapManager
-from xpcs_toolkit.helper.listmodel import ListDataModel
+from xpcsviewer.file_locator import FileLocator, create_xpcs_dataset
+from xpcsviewer.fileIO.qmap_utils import QMapManager
+from xpcsviewer.helper.listmodel import ListDataModel
 
 
 class TestCreateXpcsDataset:
     """Test suite for create_xpcs_dataset function."""
 
-    @patch("xpcs_toolkit.file_locator.XF")
+    @patch("xpcsviewer.file_locator.XF")
     def test_create_xpcs_dataset_success(self, mock_xf_class):
         """Test successful creation of XPCS dataset."""
         mock_xf = Mock()
@@ -28,8 +28,8 @@ class TestCreateXpcsDataset:
         assert result is mock_xf
         mock_xf_class.assert_called_once_with("test_file.hdf", fields=["custom_field"])
 
-    @patch("xpcs_toolkit.file_locator.XF")
-    @patch("xpcs_toolkit.file_locator.logger")
+    @patch("xpcsviewer.file_locator.XF")
+    @patch("xpcsviewer.file_locator.logger")
     def test_create_xpcs_dataset_key_error(self, mock_logger, mock_xf_class):
         """Test handling of KeyError during dataset creation."""
         mock_xf_class.side_effect = KeyError("missing_dataset")
@@ -42,8 +42,8 @@ class TestCreateXpcsDataset:
         assert "Missing required HDF5 dataset" in warning_msg
         assert "missing_dataset" in warning_msg
 
-    @patch("xpcs_toolkit.file_locator.XF")
-    @patch("xpcs_toolkit.file_locator.logger")
+    @patch("xpcsviewer.file_locator.XF")
+    @patch("xpcsviewer.file_locator.logger")
     def test_create_xpcs_dataset_io_error(self, mock_logger, mock_xf_class):
         """Test handling of IOError during dataset creation."""
         mock_xf_class.side_effect = OSError("File not found")
@@ -56,8 +56,8 @@ class TestCreateXpcsDataset:
         assert "File I/O error" in warning_msg
         assert "File not found" in warning_msg
 
-    @patch("xpcs_toolkit.file_locator.XF")
-    @patch("xpcs_toolkit.file_locator.logger")
+    @patch("xpcsviewer.file_locator.XF")
+    @patch("xpcsviewer.file_locator.logger")
     def test_create_xpcs_dataset_generic_exception(self, mock_logger, mock_xf_class):
         """Test handling of generic exception during dataset creation."""
         mock_xf_class.side_effect = ValueError("Invalid data format")
@@ -75,7 +75,7 @@ class TestCreateXpcsDataset:
         debug_msg = mock_logger.debug.call_args[0][0]
         assert "Traceback" in debug_msg
 
-    @patch("xpcs_toolkit.file_locator.XF")
+    @patch("xpcsviewer.file_locator.XF")
     def test_create_xpcs_dataset_with_kwargs(self, mock_xf_class):
         """Test create_xpcs_dataset passes kwargs correctly."""
         mock_xf = Mock()
@@ -110,8 +110,8 @@ class TestFileLocatorInit:
         assert len(locator.cache) == 0
         assert locator.timestamp is None
 
-    @patch("xpcs_toolkit.file_locator.ListDataModel")
-    @patch("xpcs_toolkit.file_locator.QMapManager")
+    @patch("xpcsviewer.file_locator.ListDataModel")
+    @patch("xpcsviewer.file_locator.QMapManager")
     def test_init_creates_components(
         self, mock_qmap_manager_class, mock_list_model_class
     ):
@@ -237,7 +237,7 @@ class TestFileLocatorGetXfList:
         assert mock_xf1 in result
         assert mock_xf2 in result
 
-    @patch("xpcs_toolkit.file_locator.create_xpcs_dataset")
+    @patch("xpcsviewer.file_locator.create_xpcs_dataset")
     def test_get_xf_list_creates_missing_cache(self, mock_create_dataset):
         """Test get_xf_list creates cache entries for missing files."""
         locator = FileLocator("/test/path")
@@ -261,8 +261,8 @@ class TestFileLocatorGetXfList:
             expected_path, qmap_manager=locator.qmap_manager
         )
 
-    @patch("xpcs_toolkit.file_locator.create_xpcs_dataset")
-    @patch("xpcs_toolkit.file_locator.logger")
+    @patch("xpcsviewer.file_locator.create_xpcs_dataset")
+    @patch("xpcsviewer.file_locator.logger")
     def test_get_xf_list_skips_none_objects(self, mock_logger, mock_create_dataset):
         """Test get_xf_list skips files that failed to load."""
         locator = FileLocator("/test/path")
@@ -357,7 +357,7 @@ class TestFileLocatorGetXfList:
 class TestFileLocatorGetHdfInfo:
     """Test suite for FileLocator get_hdf_info method."""
 
-    @patch("xpcs_toolkit.file_locator.create_xpcs_dataset")
+    @patch("xpcsviewer.file_locator.create_xpcs_dataset")
     def test_get_hdf_info_success(self, mock_create_dataset):
         """Test successful HDF info retrieval."""
         locator = FileLocator("/test/path")
@@ -376,7 +376,7 @@ class TestFileLocatorGetHdfInfo:
         )
         mock_xf.get_hdf_info.assert_called_once_with(["entry"])
 
-    @patch("xpcs_toolkit.file_locator.create_xpcs_dataset")
+    @patch("xpcsviewer.file_locator.create_xpcs_dataset")
     def test_get_hdf_info_without_filter(self, mock_create_dataset):
         """Test HDF info retrieval without filter string."""
         locator = FileLocator("/test/path")
@@ -424,7 +424,7 @@ class TestFileLocatorCaching:
         locator = FileLocator("/test/path")
         locator.target = ["file1.hdf"]
 
-        with patch("xpcs_toolkit.file_locator.create_xpcs_dataset") as mock_create:
+        with patch("xpcsviewer.file_locator.create_xpcs_dataset") as mock_create:
             mock_xf = Mock()
             mock_xf.fit_summary = None
             mock_xf.atype = "Multitau"
@@ -487,7 +487,7 @@ class TestFileLocatorPerformance:
         assert elapsed < 0.05
         assert locator is not None
 
-    @patch("xpcs_toolkit.file_locator.create_xpcs_dataset")
+    @patch("xpcsviewer.file_locator.create_xpcs_dataset")
     def test_cache_access_performance(self, mock_create_dataset, performance_timer):
         """Test that cached access is faster than creation."""
         locator = FileLocator("/test/path")

@@ -94,59 +94,59 @@ class CoverageManager:
         self.coverage_targets = [
             # Critical scientific modules (95% minimum)
             CoverageTarget(
-                "xpcs_toolkit/module/g2mod.py", 95.0, True, "G2 correlation analysis"
+                "xpcsviewer/module/g2mod.py", 95.0, True, "G2 correlation analysis"
             ),
             CoverageTarget(
-                "xpcs_toolkit/module/twotime.py", 95.0, True, "Two-time correlation"
+                "xpcsviewer/module/twotime.py", 95.0, True, "Two-time correlation"
             ),
             CoverageTarget(
-                "xpcs_toolkit/module/saxs1d.py", 95.0, True, "SAXS 1D analysis"
+                "xpcsviewer/module/saxs1d.py", 95.0, True, "SAXS 1D analysis"
             ),
             CoverageTarget(
-                "xpcs_toolkit/module/saxs2d.py", 95.0, True, "SAXS 2D analysis"
+                "xpcsviewer/module/saxs2d.py", 95.0, True, "SAXS 2D analysis"
             ),
             CoverageTarget(
-                "xpcs_toolkit/helper/fitting.py",
+                "xpcsviewer/helper/fitting.py",
                 95.0,
                 True,
                 "Scientific fitting algorithms",
             ),
             CoverageTarget(
-                "xpcs_toolkit/fileIO/qmap_utils.py", 95.0, True, "Q-map calculations"
+                "xpcsviewer/fileIO/qmap_utils.py", 95.0, True, "Q-map calculations"
             ),
             # Core modules (85% minimum)
             CoverageTarget(
-                "xpcs_toolkit/xpcs_file.py", 85.0, True, "Core data container"
+                "xpcsviewer/xpcs_file.py", 85.0, True, "Core data container"
             ),
             CoverageTarget(
-                "xpcs_toolkit/fileIO/hdf_reader.py", 85.0, True, "HDF5 I/O operations"
+                "xpcsviewer/fileIO/hdf_reader.py", 85.0, True, "HDF5 I/O operations"
             ),
             CoverageTarget(
-                "xpcs_toolkit/viewer_kernel.py", 85.0, True, "Application kernel"
+                "xpcsviewer/viewer_kernel.py", 85.0, True, "Application kernel"
             ),
             CoverageTarget(
-                "xpcs_toolkit/threading/", 85.0, False, "Threading subsystem"
+                "xpcsviewer/threading/", 85.0, False, "Threading subsystem"
             ),
-            CoverageTarget("xpcs_toolkit/utils/", 85.0, False, "Utility modules"),
+            CoverageTarget("xpcsviewer/utils/", 85.0, False, "Utility modules"),
             # Supporting modules (75% minimum)
             CoverageTarget(
-                "xpcs_toolkit/module/average_toolbox.py", 75.0, False, "Data averaging"
+                "xpcsviewer/module/average_toolbox.py", 75.0, False, "Data averaging"
             ),
             CoverageTarget(
-                "xpcs_toolkit/module/stability.py", 75.0, False, "Stability analysis"
+                "xpcsviewer/module/stability.py", 75.0, False, "Stability analysis"
             ),
             CoverageTarget(
-                "xpcs_toolkit/plothandler/", 75.0, False, "Plotting subsystem"
+                "xpcsviewer/plothandler/", 75.0, False, "Plotting subsystem"
             ),
             CoverageTarget(
-                "xpcs_toolkit/file_locator.py", 75.0, False, "File management"
+                "xpcsviewer/file_locator.py", 75.0, False, "File management"
             ),
             # GUI modules (50% minimum - hard to test)
             CoverageTarget(
-                "xpcs_toolkit/xpcs_viewer.py", 50.0, False, "Main GUI application"
+                "xpcsviewer/xpcs_viewer.py", 50.0, False, "Main GUI application"
             ),
-            CoverageTarget("xpcs_toolkit/viewer_ui.py", 30.0, False, "UI components"),
-            CoverageTarget("xpcs_toolkit/ui/", 30.0, False, "UI resources"),
+            CoverageTarget("xpcsviewer/viewer_ui.py", 30.0, False, "UI components"),
+            CoverageTarget("xpcsviewer/ui/", 30.0, False, "UI resources"),
         ]
 
     def _find_project_root(self) -> Path:
@@ -208,7 +208,7 @@ class CoverageManager:
             "-m",
             "pytest",
             test_pattern,
-            "--cov=xpcs_toolkit",
+            "--cov=xpcsviewer",
             "--cov-report=xml",
             "--cov-report=html",
             "--cov-report=json",
@@ -279,7 +279,7 @@ class CoverageManager:
                 filename = class_elem.attrib["filename"]
 
                 # Convert to module name
-                if filename.startswith("xpcs_toolkit/"):
+                if filename.startswith("xpcsviewer/"):
                     module_name = filename
 
                     lines = class_elem.find("lines")

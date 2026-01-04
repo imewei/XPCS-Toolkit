@@ -13,21 +13,21 @@ import numpy as np
 
 # Import existing XPCS modules to test compatibility
 try:
-    from xpcs_toolkit.module import g2mod
+    from xpcsviewer.module import g2mod
 
     HAVE_G2MOD = True
 except ImportError:
     HAVE_G2MOD = False
 
 try:
-    from xpcs_toolkit.xpcs_file import XpcsFile
+    from xpcsviewer.xpcs_file import XpcsFile
 
     HAVE_XPCS_FILE = True
 except ImportError:
     HAVE_XPCS_FILE = False
 
 # Import basic fitting components (RobustOptimizer removed)
-from xpcs_toolkit.helper.fitting import single_exp
+from xpcsviewer.helper.fitting import single_exp
 
 
 # Define robust_curve_fit as alias to scipy for backward compatibility testing
@@ -371,7 +371,7 @@ class TestAPIStability(unittest.TestCase):
         # Test that key functions can be imported
         try:
             # Using local definitions for backward compatibility testing
-            from xpcs_toolkit.helper.fitting import double_exp, single_exp
+            from xpcsviewer.helper.fitting import double_exp, single_exp
 
         except ImportError as e:
             self.fail(f"Import compatibility broken: {e}")

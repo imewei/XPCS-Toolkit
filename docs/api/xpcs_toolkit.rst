@@ -1,10 +1,10 @@
-xpcs_toolkit package
+xpcsviewer package
 ====================
 
 Main Package
 ------------
 
-.. automodule:: xpcs_toolkit
+.. automodule:: xpcsviewer
    :members:
    :undoc-members:
    :show-inheritance:
@@ -16,7 +16,7 @@ Core Classes
 XpcsFile
 ~~~~~~~~
 
-.. autoclass:: xpcs_toolkit.XpcsFile
+.. autoclass:: xpcsviewer.XpcsFile
    :members:
    :undoc-members:
    :show-inheritance:
@@ -32,11 +32,11 @@ XpcsFile
 Package Information
 -------------------
 
-.. autodata:: xpcs_toolkit.__version__
+.. autodata:: xpcsviewer.__version__
    :annotation: = version string
 
-.. autodata:: xpcs_toolkit.__author__
+.. autodata:: xpcsviewer.__author__
    :annotation: = "Miaoqi Chu"
 
-.. autodata:: xpcs_toolkit.__credits__
+.. autodata:: xpcsviewer.__credits__
    :annotation: = "Argonne National Laboratory"

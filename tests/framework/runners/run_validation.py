@@ -113,7 +113,7 @@ def run_linting():
         "E9,F82",
         "--ignore",
         "F821",
-        "xpcs_toolkit/",
+        "xpcsviewer/",
         "tests/",
     ]
     if not run_command(ruff_cmd, "Running Ruff Linting", cwd=project_root):
@@ -128,7 +128,7 @@ def run_linting():
             sys.executable,
             "-m",
             "mypy",
-            "xpcs_toolkit/",
+            "xpcsviewer/",
             "--ignore-missing-imports",
         ]
         if not run_command(mypy_cmd, "Running Type Checking", cwd=project_root):
@@ -148,7 +148,7 @@ def run_coverage():
         sys.executable,
         "-m",
         "pytest",
-        "--cov=xpcs_toolkit",
+        "--cov=xpcsviewer",
         "--cov-report=term-missing",
         "--cov-report=html:htmlcov",
         "tests/",

@@ -59,7 +59,7 @@ def take_snapshot(output_path: Path, input_path: str | None, wait_time: float) -
     app = QtWidgets.QApplication.instance() or QtWidgets.QApplication(sys.argv)
 
     # Local import to keep startup lightweight for CLI tooling
-    from xpcs_toolkit.xpcs_viewer import XpcsViewer
+    from xpcsviewer.xpcs_viewer import XpcsViewer
 
     viewer_kwargs = {"path": input_path} if input_path else {}
     viewer = XpcsViewer(**viewer_kwargs)

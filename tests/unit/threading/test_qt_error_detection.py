@@ -576,7 +576,7 @@ class TestIntegratedQtErrorScenarios:
         with qt_error_capture.capture_qt_warnings():
             try:
                 # Simulate XPCS viewer initialization sequence
-                from xpcs_toolkit.xpcs_viewer import XpcsViewer
+                from xpcsviewer.xpcs_viewer import XpcsViewer
 
                 # This might trigger Qt errors during initialization
                 viewer = XpcsViewer(path="./")

@@ -4,7 +4,7 @@ import pytest
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QMainWindow
 
-from xpcs_toolkit.gui.widgets.command_palette import CommandAction, CommandPalette
+from xpcsviewer.gui.widgets.command_palette import CommandAction, CommandPalette
 
 
 class TestCommandAction:

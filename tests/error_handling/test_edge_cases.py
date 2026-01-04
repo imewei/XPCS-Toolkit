@@ -45,9 +45,9 @@ except ImportError:
 
     h5py = MockH5py()
 
-from xpcs_toolkit.fileIO.qmap_utils import get_qmap
-from xpcs_toolkit.module import g2mod
-from xpcs_toolkit.xpcs_file import XpcsFile
+from xpcsviewer.fileIO.qmap_utils import get_qmap
+from xpcsviewer.module import g2mod
+from xpcsviewer.xpcs_file import XpcsFile
 
 
 @pytest.mark.edge_cases
@@ -1548,7 +1548,7 @@ class TestConcurrencyEdgeCases:
 
     def test_race_condition_in_caching(self, error_temp_dir):
         """Test race conditions in caching mechanisms."""
-        from xpcs_toolkit.viewer_kernel import ViewerKernel
+        from xpcsviewer.viewer_kernel import ViewerKernel
 
         kernel = ViewerKernel(error_temp_dir)
         cache_results = []

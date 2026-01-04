@@ -6,7 +6,7 @@ beamline-specific data structure definitions and key mappings.
 
 import pytest
 
-from xpcs_toolkit.fileIO.aps_8idi import key
+from xpcsviewer.fileIO.aps_8idi import key
 
 
 class TestAPS8IDIKeyStructure:

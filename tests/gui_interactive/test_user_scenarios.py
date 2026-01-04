@@ -11,7 +11,7 @@ import numpy as np
 import pytest
 from PySide6 import QtCore, QtWidgets
 
-from xpcs_toolkit.xpcs_viewer import tab_mapping
+from xpcsviewer.xpcs_viewer import tab_mapping
 
 
 class TestCompleteAnalysisWorkflow:

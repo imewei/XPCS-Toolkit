@@ -1,8 +1,8 @@
 :orphan:
 
-# XPCS Toolkit Comprehensive Testing Framework
+# XPCS Viewer Comprehensive Testing Framework
 
-This document provides complete guidance for testing in XPCS Toolkit, covering all aspects of the comprehensive test suite including architecture, best practices, quality standards, and developer workflows.
+This document provides complete guidance for testing in XPCS Viewer, covering all aspects of the comprehensive test suite including architecture, best practices, quality standards, and developer workflows.
 
 ## Table of Contents
 
@@ -25,7 +25,7 @@ This document provides complete guidance for testing in XPCS Toolkit, covering a
 
 ## Overview and Philosophy
 
-The XPCS Toolkit testing framework is designed with the following principles:
+The XPCS Viewer testing framework is designed with the following principles:
 
 ### Core Principles
 - **Scientific Rigor**: All tests must validate scientific accuracy and maintain numerical precision
@@ -108,8 +108,8 @@ The framework uses pytest markers to categorize tests:
 
 ```bash
 # Create and activate conda environment
-conda create -n xpcs-toolkit-testing python==3.10.16
-conda activate xpcs-toolkit-testing
+conda create -n xpcsviewer-testing python==3.10.16
+conda activate xpcsviewer-testing
 
 # Install in development mode with test dependencies
 pip install -e ".[test]"
@@ -579,11 +579,11 @@ def qt_application():
 @gui_test(requires_display=False)
 def test_main_window_creation(self, qt_application):
     """Test that main window creates successfully."""
-    from xpcs_toolkit.xpcs_viewer import XpcsViewer
+    from xpcsviewer.xpcs_viewer import XpcsViewer
 
     window = XpcsViewer()
     assert window is not None
-    assert window.windowTitle() == "XPCS Toolkit"
+    assert window.windowTitle() == "XPCS Viewer"
 ```
 
 ### Widget Testing
@@ -591,7 +591,7 @@ def test_main_window_creation(self, qt_application):
 ```python
 def test_plot_widget_functionality(self, qt_application, synthetic_correlation_data):
     """Test plot widget with synthetic data."""
-    from xpcs_toolkit.plotting import CorrelationPlotWidget
+    from xpcsviewer.plotting import CorrelationPlotWidget
 
     widget = CorrelationPlotWidget()
 
@@ -875,7 +875,7 @@ pytest --collect-only tests/
 ```bash
 # Problem: Module import errors
 # Solution: Check PYTHONPATH and installation
-python -c "import xpcs_toolkit; print(xpcs_toolkit.__file__)"
+python -c "import xpcsviewer; print(xpcsviewer.__file__)"
 
 # Install in development mode
 pip install -e .
@@ -1007,7 +1007,7 @@ def test_unix_specific_functionality():
 
 ## Summary
 
-This comprehensive testing framework ensures that XPCS Toolkit maintains the highest standards of scientific software quality. The multi-layered approach provides confidence in both the correctness and performance of the software, while the quality standards and automation ensure that the test suite itself remains maintainable and effective.
+This comprehensive testing framework ensures that XPCS Viewer maintains the highest standards of scientific software quality. The multi-layered approach provides confidence in both the correctness and performance of the software, while the quality standards and automation ensure that the test suite itself remains maintainable and effective.
 
 Key takeaways:
 - **Use appropriate test categories** for different validation needs

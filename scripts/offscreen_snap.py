@@ -16,7 +16,7 @@ from typing import Optional
 
 from PySide6 import QtCore, QtWidgets
 
-from xpcs_toolkit.xpcs_viewer import XpcsViewer
+from xpcsviewer.xpcs_viewer import XpcsViewer
 
 
 def ensure_offscreen() -> None:

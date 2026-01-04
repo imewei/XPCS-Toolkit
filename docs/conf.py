@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# XPCS Toolkit documentation build configuration file, created by
+# XPCS Viewer documentation build configuration file, created by
 # sphinx-quickstart on Fri Jun  9 13:47:02 2017.
 #
 # This file is execfile()d with the current directory set to its
@@ -60,13 +60,13 @@ MOCK_MODULES = [
     "py_spy",
     "psutil",
     # GUI modernization modules that depend on Qt
-    "xpcs_toolkit.gui.theme.manager",
-    "xpcs_toolkit.gui.state.session_manager",
-    "xpcs_toolkit.gui.state.preferences",
-    "xpcs_toolkit.gui.shortcuts.shortcut_manager",
-    "xpcs_toolkit.gui.widgets.command_palette",
-    "xpcs_toolkit.gui.widgets.toast_notification",
-    "xpcs_toolkit.gui.widgets.drag_drop_list",
+    "xpcsviewer.gui.theme.manager",
+    "xpcsviewer.gui.state.session_manager",
+    "xpcsviewer.gui.state.preferences",
+    "xpcsviewer.gui.shortcuts.shortcut_manager",
+    "xpcsviewer.gui.widgets.command_palette",
+    "xpcsviewer.gui.widgets.toast_notification",
+    "xpcsviewer.gui.widgets.drag_drop_list",
 ]
 
 for mod_name in MOCK_MODULES:
@@ -79,15 +79,15 @@ for mod_name in MOCK_MODULES:
 os.environ["BUILDING_DOCS"] = "1"
 
 try:
-    import xpcs_toolkit
+    import xpcsviewer
 
-    version = xpcs_toolkit.__version__
+    version = xpcsviewer.__version__
 except ImportError:
     # Fallback version if package can't be imported
     version = "1.1.0"
 
 # Simple logger for docs build
-logging.info(f"Building documentation for XPCS Toolkit version {version}")
+logging.info(f"Building documentation for XPCS Viewer version {version}")
 
 # Monkey patch to suppress autodoc import warnings
 logging.getLogger("sphinx.ext.autodoc").setLevel(logging.ERROR)
@@ -126,7 +126,7 @@ source_suffix = [".rst", ".md"]
 master_doc = "index"
 
 # General information about the project.
-project = "XPCS Toolkit"
+project = "XPCS Viewer"
 project_copyright = "2025, Miaoqi Chu & Wei Chen"
 author = "Miaoqi Chu & Wei Chen"
 
@@ -217,13 +217,13 @@ autodoc_mock_imports = [
     "matplotlib.backends.qt_compat",
     "numpy.distutils",
     # GUI modernization modules that depend on Qt
-    "xpcs_toolkit.gui.theme.manager",
-    "xpcs_toolkit.gui.state.session_manager",
-    "xpcs_toolkit.gui.state.preferences",
-    "xpcs_toolkit.gui.shortcuts.shortcut_manager",
-    "xpcs_toolkit.gui.widgets.command_palette",
-    "xpcs_toolkit.gui.widgets.toast_notification",
-    "xpcs_toolkit.gui.widgets.drag_drop_list",
+    "xpcsviewer.gui.theme.manager",
+    "xpcsviewer.gui.state.session_manager",
+    "xpcsviewer.gui.state.preferences",
+    "xpcsviewer.gui.shortcuts.shortcut_manager",
+    "xpcsviewer.gui.widgets.command_palette",
+    "xpcsviewer.gui.widgets.toast_notification",
+    "xpcsviewer.gui.widgets.drag_drop_list",
 ]
 
 # Autosummary settings
@@ -285,7 +285,7 @@ html_static_path = ["_static"]
 # -- Options for HTMLHelp output ---------------------------------------
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = "xpcs_toolkitdoc"
+htmlhelp_basename = "xpcsviewerdoc"
 
 
 # -- Options for LaTeX output ------------------------------------------
@@ -303,8 +303,8 @@ latex_elements = {
 latex_documents = [
     (
         master_doc,
-        "xpcs_toolkit.tex",
-        "XPCS Toolkit Documentation",
+        "xpcsviewer.tex",
+        "XPCS Viewer Documentation",
         "Miaoqi Chu & Wei Chen",
         "manual",
     ),
@@ -315,7 +315,7 @@ latex_documents = [
 
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
-man_pages = [(master_doc, "xpcs_toolkit", "XPCS Toolkit Documentation", [author], 1)]
+man_pages = [(master_doc, "xpcsviewer", "XPCS Viewer Documentation", [author], 1)]
 
 
 # -- Options for Texinfo output ----------------------------------------
@@ -326,10 +326,10 @@ man_pages = [(master_doc, "xpcs_toolkit", "XPCS Toolkit Documentation", [author]
 texinfo_documents = [
     (
         master_doc,
-        "xpcs_toolkit",
-        "XPCS Toolkit Documentation",
+        "xpcsviewer",
+        "XPCS Viewer Documentation",
         author,
-        "xpcs_toolkit",
+        "xpcsviewer",
         "One line description of project.",
         "Miscellaneous",
     ),

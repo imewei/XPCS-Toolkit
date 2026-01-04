@@ -45,9 +45,9 @@ except ImportError:
 
     h5py = MockH5py()
 
-from xpcs_toolkit.fileIO.qmap_utils import get_qmap
-from xpcs_toolkit.module import g2mod, saxs2d, stability, twotime
-from xpcs_toolkit.xpcs_file import XpcsFile
+from xpcsviewer.fileIO.qmap_utils import get_qmap
+from xpcsviewer.module import g2mod, saxs2d, stability, twotime
+from xpcsviewer.xpcs_file import XpcsFile
 
 
 class TestDataFormatValidationErrors:
