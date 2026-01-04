@@ -129,7 +129,7 @@ class LoggingConfig:
         try:
             from importlib.metadata import version
 
-            return version("xpcs-toolkit")
+            return version("xpcsviewer")
         except Exception:
             return "unknown"
 

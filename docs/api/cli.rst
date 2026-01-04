@@ -91,26 +91,6 @@ Generate twotime correlation images from HDF5 files.
    # Generate high-resolution PDF plots
    xpcsviewer twotime -i /data -o /results --q 0.05 --dpi 300 --format pdf
 
-Legacy Entry Points
--------------------
-
-For backward compatibility, the following aliases are available:
-
-.. list-table::
-   :widths: 25 75
-   :header-rows: 1
-
-   * - Command
-     - Description
-   * - ``xpcs-toolkit``
-     - Alias for ``xpcsviewer`` (CLI)
-   * - ``pyxpcsviewer``
-     - Alias for ``xpcsviewer-gui`` (GUI)
-   * - ``xpcs-viewer``
-     - Alias for ``xpcsviewer-gui`` (GUI)
-   * - ``run_viewer``
-     - Alias for ``xpcsviewer-gui`` (GUI)
-
 Utility Functions
 -----------------
 

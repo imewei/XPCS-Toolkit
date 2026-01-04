@@ -100,15 +100,8 @@ all = [
 ]
 
 [project.scripts]
-# CLI interface (requires subcommand)
 xpcsviewer = "xpcsviewer.cli_main:main"
-xpcs-toolkit = "xpcsviewer.cli_main:main"
-
-# GUI interface (launches directly)
 xpcsviewer-gui = "xpcsviewer.cli_main:main_gui"
-pyxpcsviewer = "xpcsviewer.cli_main:main_gui"
-xpcs-viewer = "xpcsviewer.cli_main:main_gui"
-run_viewer = "xpcsviewer.cli_main:main_gui"
 
 [project.urls]
 "Homepage" = "https://github.com/imewei/xpcsviewer"

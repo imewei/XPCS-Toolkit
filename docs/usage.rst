@@ -19,22 +19,10 @@ The package provides several entry points:
      - Description
    * - ``xpcsviewer-gui``
      - GUI
-     - Launch the graphical interface (recommended)
+     - Launch the graphical interface
    * - ``xpcsviewer``
      - CLI
      - Command-line interface (requires subcommand)
-   * - ``xpcs-toolkit``
-     - CLI
-     - Alias for ``xpcsviewer``
-   * - ``pyxpcsviewer``
-     - GUI
-     - Legacy alias for GUI
-   * - ``xpcs-viewer``
-     - GUI
-     - Legacy alias for GUI
-   * - ``run_viewer``
-     - GUI
-     - Legacy alias for GUI
 
 GUI Usage
 =========

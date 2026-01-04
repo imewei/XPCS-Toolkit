@@ -73,7 +73,7 @@ else:
 
 # Version handling
 try:
-    __version__ = version("xpcs-toolkit")
+    __version__ = version("xpcsviewer")
 except PackageNotFoundError:
     __version__ = "0.1.0"  # Fallback if package is not installed
 
