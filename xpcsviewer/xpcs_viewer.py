@@ -781,23 +781,38 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
             maximized=self.isMaximized(),
         )
 
-        # Collect analysis parameters from UI widgets
+        # Helper to safely get checkbox state
+        def get_checkbox_state(attr_name: str, default: bool = True) -> bool:
+            widget = getattr(self, attr_name, None)
+            if widget is not None and hasattr(widget, "isChecked"):
+                return widget.isChecked()
+            return default
+
+        # Helper to safely get combobox text
+        def get_combobox_text(attr_name: str, default: str = "") -> str:
+            widget = getattr(self, attr_name, None)
+            if widget is not None and hasattr(widget, "currentText"):
+                return widget.currentText()
+            return default
+
+        # Helper to safely get combobox index
+        def get_combobox_index(attr_name: str, default: int = 0) -> int:
+            widget = getattr(self, attr_name, None)
+            if widget is not None and hasattr(widget, "currentIndex"):
+                return widget.currentIndex()
+            return default
+
+        # Collect analysis parameters from UI widgets - extract VALUES, not widgets
         analysis_params = AnalysisParameters(
-            saxs2d_colormap=getattr(self, "saxs2d_colormap", "viridis"),
-            saxs2d_auto_level=self.saxs2d_autolevel.isChecked()
-            if hasattr(self, "saxs2d_autolevel")
-            else True,
-            saxs2d_log_scale=getattr(self, "saxs2d_log_scale", False),
-            saxs1d_log_x=getattr(self, "saxs1d_log_x", False),
-            saxs1d_log_y=getattr(self, "saxs1d_log_y", True),
-            g2_fit_function=self.g2_fitting_function.currentText()
-            if hasattr(self, "g2_fitting_function")
-            else "single_exp",
-            g2_q_index=getattr(self, "g2_q_index", 0),
-            g2_show_fit=getattr(self, "g2_show_fit", True),
-            twotime_selected_q=self.comboBox_twotime_selection.currentIndex()
-            if hasattr(self, "comboBox_twotime_selection")
-            else 0,
+            saxs2d_colormap=get_combobox_text("cb_saxs2D_cmap", "viridis"),
+            saxs2d_auto_level=get_checkbox_state("saxs2d_autolevel", True),
+            saxs2d_log_scale=get_checkbox_state("saxs2d_log_scale", False),
+            saxs1d_log_x=get_checkbox_state("saxs1d_log_x", False),
+            saxs1d_log_y=get_checkbox_state("saxs1d_log_y", True),
+            g2_fit_function=get_combobox_text("g2_fitting_function", "single_exp"),
+            g2_q_index=get_combobox_index("g2_q_selection", 0),
+            g2_show_fit=get_checkbox_state("g2_show_fit", True),
+            twotime_selected_q=get_combobox_index("comboBox_twotime_selection", 0),
         )
 
         return SessionState(

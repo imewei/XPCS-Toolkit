@@ -4,7 +4,8 @@ API Reference
 .. toctree::
    :maxdepth: 2
 
-   xpcsviewer
+   xpcs_toolkit
+   cli
    fileio
    modules
    plotting
@@ -12,20 +13,11 @@ API Reference
    utils
    gui
 
-.. toctree::
-   :maxdepth: 1
-   :caption: Complete Module Documentation
-   :hidden:
-
-   ../xpcsviewer
-   ../xpcsviewer.fileIO
-   ../xpcsviewer.module
-   ../xpcsviewer.utils
-
 Core Components
 ---------------
 
 - **XpcsFile**: Data container and analysis
+- **CLI**: Command-line interface for batch processing
 - **Analysis Modules**: G2 correlation, SAXS analysis, two-time correlation
 - **File I/O**: HDF5 reading and Q-space mapping
 - **GUI**: PySide6 interactive visualization

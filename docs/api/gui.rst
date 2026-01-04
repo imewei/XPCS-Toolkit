@@ -39,10 +39,10 @@ See :mod:`xpcsviewer.file_locator` for complete API documentation.
 Command Line Interface
 ----------------------
 
-Command-line entry points for launching the GUI application.
-Supports various startup configurations and directory specifications.
+The GUI is launched via the ``xpcsviewer-gui`` command. For CLI batch processing,
+use the ``xpcsviewer`` command with subcommands.
 
-See :mod:`xpcsviewer.cli` for complete API documentation.
+See :doc:`cli` for complete CLI and entry point documentation.
 
 GUI Modernization Components
 ----------------------------
@@ -115,6 +115,8 @@ Enhanced UI components for improved user experience.
 - :mod:`xpcsviewer.gui.widgets.command_palette` - VS Code-style command palette (Ctrl+Shift+P)
 - :mod:`xpcsviewer.gui.widgets.toast_notification` - Non-intrusive status notifications
 - :mod:`xpcsviewer.gui.widgets.drag_drop_list` - Enhanced drag-and-drop file handling
+- :mod:`xpcsviewer.gui.widgets.error_dialog` - Actionable error display with copy-to-clipboard
+- :mod:`xpcsviewer.gui.widgets.empty_state` - Empty state placeholders with action buttons
 
 **Features:**
 
@@ -122,6 +124,7 @@ Enhanced UI components for improved user experience.
 - Animated toast notifications with auto-dismiss
 - Drag-and-drop support with visual feedback
 - Theme-aware styling
+- Actionable error dialogs with technical details
 
 Plot Handler Integration
 ~~~~~~~~~~~~~~~~~~~~~~~~

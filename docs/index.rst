@@ -12,7 +12,12 @@ Quick Start
    pip install xpcsviewer
 
    # Launch GUI
-   xpcsviewer path/to/hdf/directory
+   xpcsviewer-gui /path/to/hdf/data
+
+   # CLI batch processing
+   xpcsviewer twotime --input /data --output /results --q 0.05
+
+See :doc:`usage` for detailed CLI and GUI documentation.
 
 Note
 ----
