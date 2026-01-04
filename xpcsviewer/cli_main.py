@@ -133,60 +133,123 @@ def signal_handler(signum, frame):
     sys.exit(0)
 
 
-def main():
-    # Defer heavy imports until after argument parsing for faster startup
-    def _get_version():
-        from xpcsviewer import __version__
+def _get_version():
+    """Get package version (deferred import for faster startup)."""
+    from xpcsviewer import __version__
 
-        return __version__
+    return __version__
 
-    def _start_gui(path, label_style):
-        from xpcsviewer.xpcs_viewer import main_gui
 
-        return main_gui(path, label_style)
+def _start_gui(path, label_style):
+    """Start the GUI application (deferred import for faster startup)."""
+    from xpcsviewer.xpcs_viewer import main_gui
 
-    def _run_twotime_batch(args):
-        from xpcsviewer.cli.twotime_batch import run_twotime_batch
+    return main_gui(path, label_style)
 
-        return run_twotime_batch(args)
 
+def _run_twotime_batch(args):
+    """Run twotime batch processing (deferred import for faster startup)."""
+    from xpcsviewer.cli.twotime_batch import run_twotime_batch
+
+    return run_twotime_batch(args)
+
+
+def main_gui():
+    """GUI entry point - launches the XPCS Viewer GUI directly."""
     argparser = argparse.ArgumentParser(
-        description="XPCS Viewer: a GUI tool for XPCS data analysis"
+        description="XPCS Viewer GUI: Interactive XPCS data analysis"
+    )
+
+    argparser.add_argument(
+        "--version", action="version", version=f"xpcsviewer: {_get_version()}"
+    )
+    argparser.add_argument(
+        "--path", type=str, help="path to the result folder", default="./"
+    )
+    argparser.add_argument(
+        "positional_path",
+        nargs="?",
+        default=None,
+        help="positional path to the result folder",
+    )
+    argparser.add_argument("--label_style", type=str, help="label style", default=None)
+    argparser.add_argument(
+        "--log-level",
+        type=str,
+        choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
+        help="set logging level (default: INFO)",
+    )
+
+    args = argparser.parse_args()
+
+    # Setup signal handlers for graceful shutdown
+    signal.signal(signal.SIGTERM, signal_handler)
+    signal.signal(signal.SIGINT, signal_handler)
+    atexit.register(safe_shutdown)
+
+    # Initialize logging system
+    initialize_logging()
+
+    # Set log level if specified
+    if args.log_level is not None:
+        set_log_level(args.log_level)
+        logger.info(f"Log level set to {args.log_level}")
+
+    # Setup exception logging for uncaught exceptions
+    setup_exception_logging()
+
+    # Initialize optimized cleanup system
+    try:
+        from xpcsviewer.threading.cleanup_optimized import initialize_optimized_cleanup
+
+        initialize_optimized_cleanup()
+        logger.debug("Optimized cleanup system initialized")
+    except (ImportError, ModuleNotFoundError):
+        pass
+    except Exception as e:
+        xpcs_error = convert_exception(e, "Failed to initialize cleanup system")
+        logger.warning(f"Cleanup initialization error: {xpcs_error}")
+
+    # Resolve path
+    path = args.positional_path if args.positional_path is not None else args.path
+    logger.info(f"Starting XPCS Viewer GUI with path: {path}")
+
+    try:
+        exit_code = _start_gui(path, args.label_style)
+        logger.info(f"XPCS Viewer GUI exited with code: {exit_code}")
+        safe_shutdown()
+        sys.exit(exit_code)
+    except KeyboardInterrupt:
+        logger.info("Interrupted by user")
+        safe_shutdown()
+        sys.exit(0)
+    except (ImportError, ModuleNotFoundError) as e:
+        logger.error(f"Missing required dependencies for GUI: {e}")
+        logger.error("Please ensure all required packages are installed: pip install -e .")
+        safe_shutdown()
+        sys.exit(2)
+    except Exception as e:
+        xpcs_error = convert_exception(e, "Critical error starting XPCS Viewer")
+        logger.error(f"Critical startup failure: {xpcs_error}", exc_info=True)
+        safe_shutdown()
+        sys.exit(1)
+
+
+def main():
+    """CLI entry point - provides command-line interface for XPCS Viewer."""
+    argparser = argparse.ArgumentParser(
+        description="XPCS Viewer CLI: Command-line tools for XPCS data analysis",
+        epilog="Use 'xpcsviewer-gui' to launch the graphical interface.",
     )
 
     argparser.add_argument(
         "--version", action="version", version=f"xpcsviewer: {_get_version()}"
     )
 
-    # Add GUI arguments to main parser for backward compatibility
-    argparser.add_argument(
-        "--path", type=str, help="path to the result folder", default="./"
-    )
-    argparser.add_argument(
-        "positional_path",
-        nargs="?",
-        default=None,
-        help="positional path to the result folder (default GUI mode)",
-    )
-    argparser.add_argument("--label_style", type=str, help="label style", default=None)
-
-    # Create subparsers for different commands (optional for backward compatibility)
+    # Create subparsers for different commands
     subparsers = argparser.add_subparsers(
-        dest="command", help="Available commands", required=False
+        dest="command", help="Available commands", required=True
     )
-
-    # GUI command (explicit)
-    gui_parser = subparsers.add_parser("gui", help="Launch GUI explicitly")
-    gui_parser.add_argument(
-        "--path", type=str, help="path to the result folder", default="./"
-    )
-    gui_parser.add_argument(
-        "positional_path",
-        nargs="?",
-        default=None,
-        help="positional path to the result folder",
-    )
-    gui_parser.add_argument("--label_style", type=str, help="label style", default=None)
 
     # Twotime batch processing command
     twotime_parser = subparsers.add_parser(
@@ -246,10 +309,6 @@ def main():
 
     args = argparser.parse_args()
 
-    # Handle case where no subcommand is provided (default to GUI)
-    if args.command is None:
-        args.command = "gui"
-
     # Setup signal handlers for graceful shutdown
     signal.signal(signal.SIGTERM, signal_handler)
     signal.signal(signal.SIGINT, signal_handler)
@@ -271,60 +330,21 @@ def main():
         from xpcsviewer.threading.cleanup_optimized import initialize_optimized_cleanup
 
         initialize_optimized_cleanup()
-        logger.info("Optimized cleanup system initialized")
+        logger.debug("Optimized cleanup system initialized")
     except (ImportError, ModuleNotFoundError):
-        # Expected - cleanup optimization module not available
-        logger.info("Optimized cleanup system not available, using standard cleanup")
+        pass
     except Exception as e:
-        # Unexpected initialization errors
-        xpcs_error = convert_exception(
-            e, "Failed to initialize optimized cleanup system"
-        )
+        xpcs_error = convert_exception(e, "Failed to initialize cleanup system")
         logger.warning(f"Cleanup initialization error: {xpcs_error}")
 
-    logger.info("XPCS Viewer CLI started")
-    if args.command == "gui":
-        logger.debug(
-            f"GUI Arguments: path='{args.path}', label_style='{args.label_style}'"
-        )
-    elif args.command == "twotime":
-        logger.debug(f"Twotime Arguments: input='{args.input}', output='{args.output}'")
+    logger.info(f"XPCS Viewer CLI started: {args.command}")
 
     # Route to appropriate command handler
-    if args.command == "gui":
-        if hasattr(args, "positional_path") and args.positional_path is not None:
-            args.path = args.positional_path
-            logger.debug(f"Using positional path: {args.path}")
-
-        try:
-            exit_code = _start_gui(args.path, args.label_style)
-            logger.info(f"XPCS Viewer GUI exited with code: {exit_code}")
-            safe_shutdown()
-            sys.exit(exit_code)
-        except KeyboardInterrupt:
-            logger.info("Interrupted by user")
-            safe_shutdown()
-            sys.exit(0)
-        except (ImportError, ModuleNotFoundError) as e:
-            # Missing dependencies - provide helpful error message
-            logger.error(f"Missing required dependencies for GUI: {e}")
-            logger.error(
-                "Please ensure all required packages are installed: pip install -e ."
-            )
-            safe_shutdown()
-            sys.exit(2)  # Different exit code for dependency issues
-        except Exception as e:
-            # Unexpected critical errors - convert and provide context
-            xpcs_error = convert_exception(e, "Critical error starting XPCS Viewer")
-            logger.error(f"Critical startup failure: {xpcs_error}", exc_info=True)
-            safe_shutdown()
-            sys.exit(1)
-    elif args.command == "twotime":
+    if args.command == "twotime":
+        logger.debug(f"Twotime Arguments: input='{args.input}', output='{args.output}'")
         try:
             exit_code = _run_twotime_batch(args)
-            logger.info(
-                f"XPCS Viewer twotime batch processing completed with code: {exit_code}"
-            )
+            logger.info(f"Twotime batch processing completed with code: {exit_code}")
             safe_shutdown()
             sys.exit(exit_code)
         except KeyboardInterrupt:
@@ -332,7 +352,6 @@ def main():
             safe_shutdown()
             sys.exit(0)
         except Exception as e:
-            # Handle twotime-specific errors
             xpcs_error = convert_exception(e, "Error in twotime batch processing")
             logger.error(f"Twotime processing failed: {xpcs_error}", exc_info=True)
             safe_shutdown()
