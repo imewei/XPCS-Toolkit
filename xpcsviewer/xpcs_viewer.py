@@ -762,6 +762,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
             QDesktopServices.openUrl(QtCore.QUrl.fromLocalFile(str(docs_path)))
 
     def _maybe_prompt_start_path(self):
+        """Show startup dialog with recent directories and options."""
         # Skip in headless/offscreen runs
         if os.environ.get("QT_QPA_PLATFORM") == "offscreen":
             return
@@ -770,25 +771,90 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         if self.work_dir.text():
             return
 
+        # Get recent paths
+        recent_paths = self.recent_paths_manager.get_recent_paths()
         sample_dir = self._sample_data_path()
-        msg = QtWidgets.QMessageBox(self)
-        msg.setWindowTitle("Select Data")
-        msg.setText("Choose a data folder to start.")
-        browse_btn = msg.addButton("Browse…", QtWidgets.QMessageBox.AcceptRole)
-        sample_btn = None
-        if sample_dir:
-            sample_btn = msg.addButton("Open Sample", QtWidgets.QMessageBox.ActionRole)
-        skip_btn = msg.addButton("Skip", QtWidgets.QMessageBox.RejectRole)
-        msg.exec()
 
-        clicked = msg.clickedButton()
-        if clicked == browse_btn:
-            self.load_path(None)
-        elif sample_btn and clicked == sample_btn:
-            self.load_path(str(sample_dir))
-        else:
-            # leave as-is
-            return
+        # Create custom startup dialog
+        dialog = QtWidgets.QDialog(self)
+        dialog.setWindowTitle("Welcome to XPCS Viewer")
+        dialog.setMinimumWidth(450)
+        dialog.setModal(True)
+
+        layout = QtWidgets.QVBoxLayout(dialog)
+        layout.setSpacing(16)
+        layout.setContentsMargins(24, 24, 24, 24)
+
+        # Header
+        header = QtWidgets.QLabel("Choose a data folder to start")
+        header.setStyleSheet("font-size: 16px; font-weight: bold;")
+        layout.addWidget(header)
+
+        # Recent directories section
+        if recent_paths:
+            recent_label = QtWidgets.QLabel("Recent Directories:")
+            recent_label.setStyleSheet("font-size: 13px; color: #666; margin-top: 8px;")
+            layout.addWidget(recent_label)
+
+            recent_list = QtWidgets.QListWidget()
+            recent_list.setMaximumHeight(150)
+            recent_list.setAlternatingRowColors(True)
+
+            for recent in recent_paths[:5]:  # Show max 5 recent
+                item = QtWidgets.QListWidgetItem(recent.path)
+                item.setToolTip(recent.path)
+                recent_list.addItem(item)
+
+            layout.addWidget(recent_list)
+
+            # Double-click to open
+            def open_recent_item(item):
+                dialog.accept()
+                self.load_path(item.text())
+
+            recent_list.itemDoubleClicked.connect(open_recent_item)
+
+        # Buttons
+        button_layout = QtWidgets.QHBoxLayout()
+        button_layout.setSpacing(8)
+
+        browse_btn = QtWidgets.QPushButton("Browse…")
+        browse_btn.setDefault(True)
+        browse_btn.clicked.connect(lambda: (dialog.accept(), self.load_path(None)))
+        button_layout.addWidget(browse_btn)
+
+        if sample_dir:
+            sample_btn = QtWidgets.QPushButton("Open Sample Data")
+            sample_btn.clicked.connect(
+                lambda: (dialog.accept(), self.load_path(str(sample_dir)))
+            )
+            button_layout.addWidget(sample_btn)
+
+        button_layout.addStretch()
+
+        skip_btn = QtWidgets.QPushButton("Skip")
+        skip_btn.clicked.connect(dialog.reject)
+        button_layout.addWidget(skip_btn)
+
+        layout.addLayout(button_layout)
+
+        # If recent paths exist, add "Open Selected" button
+        if recent_paths:
+            def open_selected():
+                items = recent_list.selectedItems()
+                if items:
+                    dialog.accept()
+                    self.load_path(items[0].text())
+
+            open_selected_btn = QtWidgets.QPushButton("Open Selected")
+            open_selected_btn.setEnabled(False)
+            recent_list.itemSelectionChanged.connect(
+                lambda: open_selected_btn.setEnabled(len(recent_list.selectedItems()) > 0)
+            )
+            open_selected_btn.clicked.connect(open_selected)
+            button_layout.insertWidget(1, open_selected_btn)
+
+        dialog.exec()
 
     def setup_progress_shortcut(self):
         """Set up keyboard shortcut to show progress dialog."""
