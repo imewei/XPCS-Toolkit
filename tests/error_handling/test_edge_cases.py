@@ -1411,10 +1411,6 @@ def test_parametrized_boundary_values(boundary_type, test_value, error_temp_dir)
     try:
         with h5py.File(test_file, "w") as f:
             # Create data array with boundary value
-            if boundary_type == "small_negative" and test_value < 0:
-                # Skip negative values for data that should be positive
-                pytest.skip(f"Skipping negative value test for {boundary_type}")
-
             test_data = np.full((10, 20, 20), test_value)
 
             # Ensure we have some reasonable values mixed in
