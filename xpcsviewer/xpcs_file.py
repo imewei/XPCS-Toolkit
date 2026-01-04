@@ -1,3 +1,15 @@
+"""Core data container for XPCS datasets.
+
+This module provides the XpcsFile class, the primary interface for loading
+and accessing XPCS data from HDF5/NeXus files.
+
+Example:
+    >>> from xpcsviewer import XpcsFile
+    >>> xf = XpcsFile('data.h5')
+    >>> print(f"Analysis type: {xf.atype}")
+    >>> print(f"G2 shape: {xf.g2.shape}")
+"""
+
 from __future__ import annotations
 
 # Standard library imports

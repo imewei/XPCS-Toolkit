@@ -1,3 +1,13 @@
+"""SAXS 1D analysis module.
+
+Provides radial averaging and intensity profile analysis for small-angle
+X-ray scattering data.
+
+Functions:
+    get_data: Extract 1D SAXS intensity profiles
+    plot_saxs1d: Generate SAXS 1D plots
+"""
+
 # Third-party imports
 import numpy as np
 import pyqtgraph as pg

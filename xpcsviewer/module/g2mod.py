@@ -1,3 +1,13 @@
+"""G2 correlation analysis module.
+
+Provides multi-tau correlation analysis with single and double exponential
+fitting for XPCS time correlation functions.
+
+Functions:
+    get_data: Extract G2 correlation data from XpcsFile objects
+    fit_g2: Fit G2 data with exponential models
+"""
+
 # Third-party imports
 import numpy as np
 import pyqtgraph as pg

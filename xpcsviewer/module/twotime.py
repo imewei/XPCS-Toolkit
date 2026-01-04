@@ -1,3 +1,13 @@
+"""Two-time correlation analysis module.
+
+Provides two-time correlation map visualization and analysis for studying
+temporal dynamics beyond traditional multi-tau analysis.
+
+Functions:
+    get_twotime_data: Extract two-time correlation matrices
+    plot_twotime: Generate two-time correlation maps
+"""
+
 import numpy as np
 import pyqtgraph as pg
 

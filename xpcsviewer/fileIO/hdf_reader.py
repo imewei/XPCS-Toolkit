@@ -1,3 +1,13 @@
+"""HDF5 file reading utilities with connection pooling.
+
+Provides optimized HDF5 file reading with connection pooling, batch operations,
+and automatic resource management for efficient data access.
+
+Classes:
+    HDF5ConnectionPool: Thread-safe connection pool for HDF5 files
+    HDF5Reader: High-level reader with caching and batch operations
+"""
+
 # Standard library imports
 import os
 import threading
