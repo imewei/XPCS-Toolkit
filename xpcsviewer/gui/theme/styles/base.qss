@@ -32,6 +32,44 @@ QMainWindow::separator {
 }
 
 /* ========================================
+   Toolbar
+   ======================================== */
+
+QToolBar {
+    background-color: @background_secondary;
+    border-bottom: 1px solid @border_subtle;
+    spacing: @spacing_sm;
+    padding: @spacing_xs @spacing_sm;
+}
+
+QToolBar::separator {
+    background-color: @border_subtle;
+    width: 1px;
+    margin: @spacing_xs;
+}
+
+QToolButton {
+    background-color: transparent;
+    border: none;
+    border-radius: 6px;
+    padding: @spacing_xs @spacing_sm;
+    color: @text_primary;
+}
+
+QToolButton:hover {
+    background-color: @background_elevated;
+}
+
+QToolButton:pressed {
+    background-color: @border_subtle;
+}
+
+QToolButton:checked {
+    background-color: @accent_primary;
+    color: @background_primary;
+}
+
+/* ========================================
    Menu Bar and Menus
    ======================================== */
 

@@ -321,6 +321,96 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
             layout.setContentsMargins(8, 8, 8, 8)
             layout.setSpacing(8)
 
+    def _init_toolbar(self):
+        """Initialize the main toolbar with common actions."""
+        from PySide6.QtWidgets import QStyle, QToolBar, QToolButton
+
+        toolbar = QToolBar("Main Toolbar", self)
+        toolbar.setObjectName("mainToolbar")
+        toolbar.setMovable(False)
+        self.addToolBar(toolbar)
+
+        style = self.style()
+
+        # Open folder action
+        action_open = toolbar.addAction(
+            style.standardIcon(QStyle.SP_DirOpenIcon), "Open Folder"
+        )
+        action_open.setToolTip("Open data folder (Ctrl+O)")
+        action_open.triggered.connect(lambda: self.load_path(None))
+
+        # Reload action
+        action_reload = toolbar.addAction(
+            style.standardIcon(QStyle.SP_BrowserReload), "Reload"
+        )
+        action_reload.setToolTip("Reload files from current folder (Ctrl+R)")
+        action_reload.triggered.connect(self.reload_source)
+
+        toolbar.addSeparator()
+
+        # Plot current tab action
+        action_plot = toolbar.addAction(
+            style.standardIcon(QStyle.SP_MediaPlay), "Plot"
+        )
+        action_plot.setToolTip("Plot current tab")
+        action_plot.triggered.connect(self._plot_current_tab)
+
+        toolbar.addSeparator()
+
+        # Theme toggle button
+        self.theme_toggle_btn = QToolButton()
+        self.theme_toggle_btn.setText("🌙")
+        self.theme_toggle_btn.setToolTip("Toggle dark/light theme")
+        self.theme_toggle_btn.clicked.connect(self._toggle_theme)
+        toolbar.addWidget(self.theme_toggle_btn)
+        self._update_theme_toggle_button()
+
+        # Progress indicator
+        action_progress = toolbar.addAction(
+            style.standardIcon(QStyle.SP_ComputerIcon), "Progress"
+        )
+        action_progress.setToolTip("Show progress dialog (Ctrl+Shift+P)")
+        action_progress.triggered.connect(self.show_progress_dialog)
+
+    def _plot_current_tab(self):
+        """Trigger plot for the currently active tab."""
+        tab_index = self.tabWidget.currentIndex()
+        tab_name = tab_mapping.get(tab_index, "")
+
+        plot_methods = {
+            "saxs_2d": self.plot_saxs_2d,
+            "saxs_1d": self.plot_saxs_1d,
+            "stability": self.plot_stability,
+            "intensity_t": self.plot_intensity_t,
+            "g2": lambda: self.update_plot(),
+            "diffusion": self.plot_diffusion,
+            "twotime": lambda: self.update_plot(),
+            "qmap": lambda: self.update_plot(),
+            "average": lambda: self.update_plot(),
+            "metadata": lambda: self.update_plot(),
+        }
+
+        if tab_name in plot_methods:
+            plot_methods[tab_name]()
+
+    def _toggle_theme(self):
+        """Toggle between light and dark theme."""
+        current = self.theme_manager.get_current_theme()
+        new_theme = "dark" if current == "light" else "light"
+        self._set_theme(new_theme)
+        self._update_theme_toggle_button()
+
+    def _update_theme_toggle_button(self):
+        """Update theme toggle button appearance."""
+        if hasattr(self, "theme_toggle_btn"):
+            current = self.theme_manager.get_current_theme()
+            if current == "dark":
+                self.theme_toggle_btn.setText("☀️")
+                self.theme_toggle_btn.setToolTip("Switch to light theme")
+            else:
+                self.theme_toggle_btn.setText("🌙")
+                self.theme_toggle_btn.setToolTip("Switch to dark theme")
+
     def _init_menus_and_toolbar(self):
         # File menu
         menubar = self.menuBar()
@@ -391,6 +481,9 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         action_logs.setShortcut(QKeySequence("Ctrl+L"))
         action_logs.triggered.connect(self._open_logs_dir)
         help_menu.addAction(action_logs)
+
+        # Create toolbar
+        self._init_toolbar()
 
     def _register_shortcuts(self):
         # Add to target
