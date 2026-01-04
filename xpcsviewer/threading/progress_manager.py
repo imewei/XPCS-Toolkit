@@ -307,6 +307,7 @@ class ProgressManager(QObject):
         total: int = 100,
         is_cancellable: bool = True,
         show_in_statusbar: bool = True,
+        show_after_delay: int = 500,
     ) -> str:
         """
         Start tracking a new operation.
@@ -317,6 +318,8 @@ class ProgressManager(QObject):
             total: Total progress units
             is_cancellable: Whether the operation can be cancelled
             show_in_statusbar: Whether to show progress in status bar
+            show_after_delay: Delay in ms before showing progress dialog (0 = immediate)
+                             Set to -1 to never auto-show
 
         Returns:
             The operation ID for reference
@@ -331,13 +334,25 @@ class ProgressManager(QObject):
 
         self.active_operations[operation_id] = operation_info
 
-        # Show in progress dialog
+        # Create progress dialog if needed
         if self.progress_dialog is None:
             self.progress_dialog = ProgressDialog()
             self.progress_dialog.cancel_operation.connect(self.request_cancel)
             self.progress_dialog.cancel_all_operations.connect(self.cancel_all)
 
         self.progress_dialog.add_operation(operation_info)
+
+        # Auto-show progress dialog after delay if operation takes long
+        if show_after_delay >= 0:
+            # Hide dialog initially, show after delay if still running
+            self.progress_dialog.hide()
+            QTimer.singleShot(
+                show_after_delay,
+                lambda op_id=operation_id: self._maybe_show_dialog(op_id),
+            )
+        elif show_after_delay == 0:
+            # Show immediately
+            self.progress_dialog.show()
 
         # Show in status bar if requested and available
         if show_in_statusbar and self.statusbar:
@@ -348,6 +363,13 @@ class ProgressManager(QObject):
         logger.info(f"Started operation: {operation_id} - {description}")
 
         return operation_id
+
+    def _maybe_show_dialog(self, operation_id: str) -> None:
+        """Show progress dialog if operation is still running."""
+        if operation_id in self.active_operations and self.progress_dialog:
+            if not self.progress_dialog.isVisible():
+                self.progress_dialog.show()
+                self.progress_dialog.raise_()
 
     def update_progress(
         self,
