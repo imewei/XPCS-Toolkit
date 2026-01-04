@@ -25,21 +25,17 @@ on:
         description: 'Reason for manual docs build'
         required: false
         default: 'Manual documentation testing'
-      deploy:
-        description: 'Deploy to GitHub Pages (DISABLED - not configured)'
-        required: false
-        default: false
-        type: boolean
 
 permissions:
   contents: read
-  # pages: write      # Disabled - GitHub Pages not configured
-  # id-token: write   # Disabled - GitHub Pages not configured
 
-# Prevent multiple concurrent docs builds
 concurrency:
   group: docs-${{ github.ref }}
   cancel-in-progress: true
+
+env:
+  UV_CACHE_DIR: .uv-cache
+  UV_SYSTEM_PYTHON: 1
 
 jobs:
   build-docs:
@@ -49,14 +45,17 @@ jobs:
     steps:
     - uses: actions/checkout@v5
       with:
-        fetch-depth: 0  # Full history for proper version detection
+        fetch-depth: 0
+
+    - name: Install uv
+      uses: astral-sh/setup-uv@v4
+      with:
+        version: "latest"
+        enable-cache: true
+        cache-dependency-glob: "pyproject.toml"
 
     - name: Set up Python
-      uses: actions/setup-python@v6
-      with:
-        python-version: "3.13"
-        cache: 'pip'
-        cache-dependency-path: 'pyproject.toml'
+      run: uv python install 3.13
 
     - name: Install system dependencies
       run: |
@@ -68,49 +67,25 @@ jobs:
 
     - name: Install dependencies
       run: |
-        python -m pip install --upgrade pip wheel
-        pip install -e .[docs] --prefer-binary
+        uv sync --group docs
+        echo "[OK] Documentation dependencies installed"
 
     - name: Build documentation with Sphinx
       env:
         SPHINXOPTS: "-W --keep-going -j auto"
       run: |
         cd docs
-        make clean
-        make html
+        uv run make clean
+        uv run make html
 
-        # Add version info
         echo "Built on $(date)" > _build/html/build_info.txt
         echo "Commit: ${{ github.sha }}" >> _build/html/build_info.txt
 
-        # Copy additional markdown docs if they exist
-        for doc in DOCUMENTATION_INDEX.md OPTIMIZATION_GUIDE.md LOGGING_SYSTEM.md TESTING.md PRODUCTION_READINESS_FINAL_REPORT.md; do
-          if [ -f "$doc" ]; then
-            cp "$doc" _build/html/
-          fi
-        done
-
-        # Generate simple index for markdown files
-        echo "<h2>Additional Documentation</h2><ul>" > _build/html/markdown_index.html
-        for doc in _build/html/*.md; do
-          if [ -f "$doc" ]; then
-            basename=$(basename "$doc" .md)
-            echo "<li><a href=\"$basename.md\">$basename</a></li>" >> _build/html/markdown_index.html
-          fi
-        done
-        echo "</ul>" >> _build/html/markdown_index.html
-
     - name: Check documentation
       run: |
-        # Basic validation
         ls -la docs/_build/html/
         echo "📚 Documentation files:"
         find docs/_build/html/ -name "*.html" | head -10
-
-        # Check for common issues
-        if grep -r "TODO\|FIXME\|XXX" docs/_build/html/ --include="*.html"; then
-          echo "⚠️ Found TODO/FIXME markers in docs"
-        fi
 
     - name: Upload docs artifacts
       uses: actions/upload-artifact@v4
@@ -127,13 +102,11 @@ jobs:
         path: docs/_build/html
         retention-days: 7
 
-
-  # Link checking and validation
   link-check:
     runs-on: ubuntu-latest
     needs: build-docs
     timeout-minutes: 10
-    continue-on-error: true  # Don't fail docs build on link issues
+    continue-on-error: true
 
     steps:
     - name: Download built docs
@@ -158,40 +131,9 @@ jobs:
         path: link-check-report.md
         retention-days: 7
 
-  # Deploy to GitHub Pages - DISABLED (GitHub Pages not configured)
-  # deploy:
-  #   runs-on: ubuntu-latest
-  #   needs: [build-docs, link-check]
-  #   if: false  # Disabled - GitHub Pages not configured
-  #   timeout-minutes: 10
-  #
-  #   environment:
-  #     name: github-pages
-  #     url: ${{ steps.deployment.outputs.page_url }}
-  #
-  #   steps:
-  #   - name: Setup Pages
-  #     uses: actions/configure-pages@v4
-  #
-  #   - name: Download built docs
-  #     uses: actions/download-artifact@v5
-  #     with:
-  #       name: docs-build-${{ github.sha }}
-  #       path: _site
-  #
-  #   - name: Upload to GitHub Pages
-  #     uses: actions/upload-pages-artifact@v4
-  #     with:
-  #       path: _site
-  #
-  #   - name: Deploy to GitHub Pages
-  #     id: deployment
-  #     uses: actions/deploy-pages@v4
-
-  # Status summary
   docs-status:
     runs-on: ubuntu-latest
-    needs: [build-docs, link-check]  # Removed deploy dependency
+    needs: [build-docs, link-check]
     if: always()
 
     steps:
@@ -201,7 +143,6 @@ jobs:
         echo "================================="
         echo "🏗️ Build: ${{ needs.build-docs.result }}"
         echo "🔗 Link Check: ${{ needs.link-check.result || 'skipped' }}"
-        echo "🚀 Deploy: disabled (GitHub Pages not configured)"
 
         if [ "${{ needs.build-docs.result }}" = "failure" ]; then
           echo "❌ Documentation build failed"

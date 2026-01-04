@@ -22,15 +22,17 @@ on:
 
 permissions:
   contents: write
-  id-token: write  # For trusted publishing to PyPI
+  id-token: write
 
-# Ensure only one release runs at a time
 concurrency:
   group: release-${{ github.ref }}
   cancel-in-progress: false
 
+env:
+  UV_CACHE_DIR: .uv-cache
+  UV_SYSTEM_PYTHON: 1
+
 jobs:
-  # Pre-release validation
   validate:
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -53,10 +55,9 @@ jobs:
           VERSION="${{ github.ref_name }}"
         fi
 
-        # Check if a release already exists for this tag
         if gh release view "$VERSION" >/dev/null 2>&1; then
           echo "exists=true" >> $GITHUB_OUTPUT
-          echo "[WARNING] Release $VERSION already exists - skipping automatic release workflow"
+          echo "[WARNING] Release $VERSION already exists"
           exit 0
         else
           echo "exists=false" >> $GITHUB_OUTPUT
@@ -77,7 +78,6 @@ jobs:
 
         echo "version=$VERSION" >> $GITHUB_OUTPUT
 
-        # Check if prerelease
         if [[ "$VERSION" =~ (alpha|beta|rc) ]]; then
           echo "is_prerelease=true" >> $GITHUB_OUTPUT
         else
@@ -85,17 +85,15 @@ jobs:
         fi
 
         echo "[INFO] Release version: $VERSION"
-        echo "[INFO] Pre-release: $([ "${{ steps.version.outputs.is_prerelease }}" = "true" ] && echo "Yes" || echo "No")"
 
     - name: Check changelog
       run: |
         if [ -f "CHANGELOG.md" ] || [ -f "HISTORY.rst" ]; then
           echo "[OK] Changelog found"
         else
-          echo "[WARNING] No changelog found (CHANGELOG.md or HISTORY.rst)"
+          echo "[WARNING] No changelog found"
         fi
 
-  # Fast build and validation
   build:
     runs-on: ubuntu-latest
     needs: validate
@@ -105,45 +103,35 @@ jobs:
     steps:
     - uses: actions/checkout@v5
       with:
-        fetch-depth: 0  # Full history for version info
+        fetch-depth: 0
+
+    - name: Install uv
+      uses: astral-sh/setup-uv@v4
+      with:
+        version: "latest"
+        enable-cache: true
+        cache-dependency-glob: "pyproject.toml"
 
     - name: Set up Python
-      uses: actions/setup-python@v6
-      with:
-        python-version: "3.13"
-        cache: 'pip'
-
-    - name: Install build dependencies
-      run: |
-        python -m pip install --upgrade pip wheel
-        pip install build twine setuptools_scm
+      run: uv python install 3.13
 
     - name: Build package
       run: |
-        python -m build
+        uv build
+        echo "[OK] Package built"
 
     - name: Validate package
       run: |
-        # Comprehensive package validation
-        twine check dist/* --strict
+        uv pip install twine
+        uv run twine check dist/* --strict
 
-        # Check wheel contents
-        echo "[INFO] Wheel contents:"
-        python -m zipfile -l dist/*.whl | head -20
-
-        # Verify metadata safely
         echo "[INFO] Package files:"
         ls -la dist/
 
-        # Check sdist contents safely
-        echo "[INFO] Source distribution contents:"
-        tar -tzf dist/*.tar.gz | head -10
-
-        # Test wheel installation in clean environment
-        python -m venv test_env
+        # Test wheel installation
+        uv venv test_env
         source test_env/bin/activate
-        pip install --upgrade pip
-        pip install dist/*.whl
+        uv pip install dist/*.whl
         python -c "import xpcsviewer; print(f'[OK] Version: {xpcsviewer.__version__}')"
         deactivate
         rm -rf test_env
@@ -155,7 +143,6 @@ jobs:
         path: dist/
         retention-days: 90
 
-  # Streamlined cross-platform testing
   test-release:
     runs-on: ${{ matrix.os }}
     needs: [validate, build]
@@ -165,16 +152,20 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        python-version: ["3.13"]  # Test latest stable version for releases
+        python-version: ["3.13"]
         include:
           - os: ubuntu-latest
-            python-version: "3.12"  # Test LTS version on Linux only
+            python-version: "3.12"
 
     steps:
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v6
+    - name: Install uv
+      uses: astral-sh/setup-uv@v4
       with:
-        python-version: ${{ matrix.python-version }}
+        version: "latest"
+        enable-cache: true
+
+    - name: Set up Python ${{ matrix.python-version }}
+      run: uv python install ${{ matrix.python-version }}
 
     - name: Download build artifacts
       uses: actions/download-artifact@v5
@@ -193,37 +184,33 @@ jobs:
 
     - name: Test installation from wheel
       env:
-        # Fix Unicode encoding issues on Windows
         PYTHONIOENCODING: utf-8
         PYTHONUTF8: 1
       run: |
-        # Install from wheel
-        pip install --find-links dist/ --prefer-binary xpcsviewer
-        python -c "import xpcsviewer; print(f'[OK] XPCS Viewer {xpcsviewer.__version__} installed successfully')"
+        uv pip install --find-links dist/ xpcsviewer
+        uv run python -c "import xpcsviewer; print(f'[OK] XPCS Viewer {xpcsviewer.__version__} installed')"
 
     - name: Test CLI commands
       env:
         QT_QPA_PLATFORM: offscreen
         DISPLAY: ":99"
-      shell: bash  # CRITICAL: Force bash to prevent PowerShell syntax errors
+      shell: bash
       run: |
-        # Start virtual display for GUI tests on Linux
         if [ "${{ matrix.os }}" = "ubuntu-latest" ]; then
           Xvfb :99 -screen 0 1024x768x24 &
           sleep 2
         fi
 
         echo "[INFO] Testing CLI commands..."
-        xpcsviewer --help || echo "[WARNING] xpcsviewer command failed"
-        pyxpcsviewer --help || echo "[WARNING] pyxpcsviewer command failed"
-        run_viewer --help || echo "[WARNING] run_viewer command failed"
+        uv run xpcsviewer --help || echo "[WARNING] xpcsviewer command failed"
+        uv run pyxpcsviewer --help || echo "[WARNING] pyxpcsviewer command failed"
         echo "[OK] CLI command tests completed"
 
-    - name: Test basic import and functionality
+    - name: Test basic import
       env:
         QT_QPA_PLATFORM: offscreen
       run: |
-        python -c "
+        uv run python -c "
         import xpcsviewer
         from xpcsviewer.file_locator import FileLocator
         from xpcsviewer.viewer_kernel import ViewerKernel
@@ -251,7 +238,6 @@ jobs:
       run: |
         if [ -f "CHANGELOG.md" ]; then
           echo "RELEASE_NOTES<<EOF" >> $GITHUB_OUTPUT
-          # Extract section for this version from changelog
           awk '/^## \[?v?[0-9]/{if(found) exit; if($0 ~ /${{ needs.validate.outputs.version }}/) found=1; next} found' CHANGELOG.md | head -20 >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
         elif [ -f "HISTORY.rst" ]; then
@@ -259,7 +245,7 @@ jobs:
           head -20 HISTORY.rst >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
         else
-          echo "RELEASE_NOTES=🎉 New release of XPCS Viewer! See commit history for changes." >> $GITHUB_OUTPUT
+          echo "RELEASE_NOTES=🎉 New release of XPCS Viewer!" >> $GITHUB_OUTPUT
         fi
 
     - name: Create GitHub Release
@@ -277,20 +263,16 @@ jobs:
 
           ### 🚀 Quick Start
           ```bash
-          # Launch GUI with data directory
           xpcsviewer path_to_hdf_directory
-
-          # Alternative commands
-          pyxpcsviewer
-          run_viewer
+          # Aliases: pyxpcsviewer, xpcs-toolkit, xpcs-viewer
           ```
 
           ### 📝 Changes
           ${{ steps.extract_notes.outputs.RELEASE_NOTES }}
 
           ### 📦 Package Files
-          - **Source Distribution**: `xpcsviewer-*.tar.gz` - Full source code
-          - **Universal Wheel**: `xpcsviewer-*-py3-none-any.whl` - Ready-to-install package
+          - **Source Distribution**: `xpcsviewer-*.tar.gz`
+          - **Universal Wheel**: `xpcsviewer-*-py3-none-any.whl`
 
           ### 🔗 Links
           - [Documentation](https://github.com/imewei/xpcsviewer/tree/master/docs)
@@ -301,7 +283,6 @@ jobs:
         prerelease: ${{ needs.validate.outputs.is_prerelease == 'true' }}
         generate_release_notes: true
 
-  # PyPI publishing with enhanced checks
   pypi-publish:
     runs-on: ubuntu-latest
     needs: [validate, build, test-release, github-release]
@@ -320,7 +301,6 @@ jobs:
 
     - name: Verify package before upload
       run: |
-        # Final verification before PyPI upload
         ls -la dist/
         echo "[INFO] Package contents:"
         for file in dist/*; do
@@ -334,7 +314,6 @@ jobs:
         verbose: true
         print-hash: true
 
-  # Fork-aware PyPI publishing notice
   pypi-fork-notice:
     runs-on: ubuntu-latest
     needs: [validate, build, test-release, github-release]
@@ -345,14 +324,7 @@ jobs:
       run: |
         echo "[INFO] PyPI publishing skipped for fork repository"
         echo "[INFO] Repository: ${{ github.repository }}"
-        echo "[INFO] Owner: ${{ github.repository_owner }}"
-        echo "[INFO] PyPI publishing is only enabled for the upstream repository: AdvancedPhotonSource/pyXpcsViewer"
-        echo "[INFO] GitHub release was created successfully and is available for download"
-        echo "[INFO] To enable PyPI publishing for this fork:"
-        echo "  1. Set up PyPI trusted publisher for repository: ${{ github.repository }}"
-        echo "  2. Or remove the repository_owner condition from the workflow"
 
-  # Test PyPI for pre-releases and testing
   test-pypi-publish:
     runs-on: ubuntu-latest
     needs: [validate, build, test-release]
@@ -377,7 +349,6 @@ jobs:
         verbose: true
         print-hash: true
 
-  # Final status summary
   release-status:
     runs-on: ubuntu-latest
     needs: [validate, build, test-release, github-release, pypi-publish, pypi-fork-notice, test-pypi-publish]
@@ -385,7 +356,7 @@ jobs:
 
     steps:
     - name: Release Summary
-      shell: bash  # CRITICAL: Force bash to prevent PowerShell syntax errors
+      shell: bash
       run: |
         echo "[INFO] Release Workflow Summary"
         echo "================================"
@@ -395,11 +366,9 @@ jobs:
         echo "[INFO] Tests: ${{ needs.test-release.result }}"
         echo "[INFO] GitHub Release: ${{ needs.github-release.result }}"
         echo "[INFO] PyPI: ${{ needs.pypi-publish.result || 'skipped' }}"
-        echo "[INFO] PyPI Fork Notice: ${{ needs.pypi-fork-notice.result || 'skipped' }}"
-        echo "[INFO] Test PyPI: ${{ needs.test-pypi-publish.result || 'skipped' }}"
 
         if [ "${{ needs.build.result }}" = "failure" ] || [ "${{ needs.test-release.result }}" = "failure" ]; then
-          echo "[ERROR] Release failed - check job logs"
+          echo "[ERROR] Release failed"
           exit 1
         else
           echo "[SUCCESS] Release completed successfully!"
