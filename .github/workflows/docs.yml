@@ -5,7 +5,7 @@ on:
     branches: [ master, main, develop ]
     paths:
       - 'docs/**'
-      - 'xpcs_toolkit/**/*.py'
+      - 'xpcsviewer/**/*.py'
       - 'README.rst'
       - 'README.md'
       - 'pyproject.toml'
@@ -14,7 +14,7 @@ on:
     branches: [ master, main, develop ]
     paths:
       - 'docs/**'
-      - 'xpcs_toolkit/**/*.py'
+      - 'xpcsviewer/**/*.py'
       - 'README.rst'
       - 'README.md'
       - 'pyproject.toml'

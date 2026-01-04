@@ -167,7 +167,7 @@ jobs:
     - name: Cache test data
       uses: actions/cache@v4
       with:
-        path: ~/.cache/xpcs-toolkit
+        path: ~/.cache/xpcsviewer
         key: ${{ runner.os }}-test-data-v2-${{ hashFiles('tests/**/*.py') }}
         restore-keys: |
           ${{ runner.os }}-test-data-v2-
@@ -178,7 +178,7 @@ jobs:
       run: |
         # Install mypy with stub packages
         pip install mypy types-requests types-setuptools
-        mypy xpcs_toolkit --ignore-missing-imports --show-error-codes --pretty
+        mypy xpcsviewer --ignore-missing-imports --show-error-codes --pretty
       continue-on-error: true
 
     - name: Determine test level
@@ -219,7 +219,7 @@ jobs:
           "core")
             echo "[INFO] Running core tests (unit + integration, non-slow, excluding GUI)..."
             pytest -m "(unit or integration) and not slow and not gui" \
-              --cov=xpcs_toolkit --cov-report=xml --cov-report=term-missing \
+              --cov=xpcsviewer --cov-report=xml --cov-report=term-missing \
               --cov-context=test --tb=short --maxfail=5 --cov-fail-under=11 \
               -n auto --dist=worksteal \
               || (echo "[ERROR] Core tests failed" && exit 1)
@@ -235,7 +235,7 @@ jobs:
             # Note: GUI tests are excluded from CI due to Qt compatibility issues with parallel execution
             # GUI tests can be run locally with: pytest -m "gui" --no-cov -x
             pytest -m "not (stress or system_dependent or gui)" \
-              --cov=xpcs_toolkit --cov-report=xml --cov-report=term-missing \
+              --cov=xpcsviewer --cov-report=xml --cov-report=term-missing \
               --cov-context=test --tb=short --durations=10 --maxfail=10 --cov-fail-under=11 \
               -n auto --dist=worksteal \
               || (echo "[ERROR] Full test suite failed" && exit 1)
@@ -268,10 +268,10 @@ jobs:
         pip install -e . --force-reinstall --no-deps
         python -c "
         try:
-            import xpcs_toolkit
-            print(f'[OK] XPCS Toolkit {xpcs_toolkit.__version__} imported successfully')
+            import xpcsviewer
+            print(f'[OK] XPCS Viewer {xpcsviewer.__version__} imported successfully')
             # Test basic functionality
-            from xpcs_toolkit.file_locator import FileLocator
+            from xpcsviewer.file_locator import FileLocator
             print('[OK] Core modules accessible')
         except ImportError as e:
             print(f'[ERROR] Import failed: {e}')
@@ -344,7 +344,7 @@ jobs:
         export DISPLAY=:99
         export PYXPCS_SUPPRESS_QT_WARNINGS=1
         # Test basic import without GUI components
-        python -c "import sys; import xpcs_toolkit; print('[OK] XPCS Toolkit imported'); print(f'[INFO] Version: {xpcs_toolkit.__version__}'); print('[OK] Wheel installs correctly')"
+        python -c "import sys; import xpcsviewer; print('[OK] XPCS Viewer imported'); print(f'[INFO] Version: {xpcsviewer.__version__}'); print('[OK] Wheel installs correctly')"
         deactivate
         rm -rf test_env
 
@@ -378,8 +378,8 @@ jobs:
 
     - name: Run bandit security scan
       run: |
-        bandit -r xpcs_toolkit -f json -o bandit-report.json || true
-        bandit -r xpcs_toolkit --severity-level medium
+        bandit -r xpcsviewer -f json -o bandit-report.json || true
+        bandit -r xpcsviewer --severity-level medium
 
     - name: Run pip-audit for dependency vulnerabilities
       run: |

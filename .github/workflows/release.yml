@@ -144,7 +144,7 @@ jobs:
         source test_env/bin/activate
         pip install --upgrade pip
         pip install dist/*.whl
-        python -c "import xpcs_toolkit; print(f'[OK] Version: {xpcs_toolkit.__version__}')"
+        python -c "import xpcsviewer; print(f'[OK] Version: {xpcsviewer.__version__}')"
         deactivate
         rm -rf test_env
 
@@ -198,8 +198,8 @@ jobs:
         PYTHONUTF8: 1
       run: |
         # Install from wheel
-        pip install --find-links dist/ --prefer-binary xpcs-toolkit
-        python -c "import xpcs_toolkit; print(f'[OK] XPCS Toolkit {xpcs_toolkit.__version__} installed successfully')"
+        pip install --find-links dist/ --prefer-binary xpcsviewer
+        python -c "import xpcsviewer; print(f'[OK] XPCS Viewer {xpcsviewer.__version__} installed successfully')"
 
     - name: Test CLI commands
       env:
@@ -214,7 +214,7 @@ jobs:
         fi
 
         echo "[INFO] Testing CLI commands..."
-        xpcs-toolkit --help || echo "[WARNING] xpcs-toolkit command failed"
+        xpcsviewer --help || echo "[WARNING] xpcsviewer command failed"
         pyxpcsviewer --help || echo "[WARNING] pyxpcsviewer command failed"
         run_viewer --help || echo "[WARNING] run_viewer command failed"
         echo "[OK] CLI command tests completed"
@@ -224,11 +224,11 @@ jobs:
         QT_QPA_PLATFORM: offscreen
       run: |
         python -c "
-        import xpcs_toolkit
-        from xpcs_toolkit.file_locator import FileLocator
-        from xpcs_toolkit.viewer_kernel import ViewerKernel
+        import xpcsviewer
+        from xpcsviewer.file_locator import FileLocator
+        from xpcsviewer.viewer_kernel import ViewerKernel
         print('[OK] Core modules import successfully')
-        print(f'[INFO] Version: {xpcs_toolkit.__version__}')
+        print(f'[INFO] Version: {xpcsviewer.__version__}')
         "
 
   github-release:
@@ -259,26 +259,26 @@ jobs:
           head -20 HISTORY.rst >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
         else
-          echo "RELEASE_NOTES=🎉 New release of XPCS Toolkit! See commit history for changes." >> $GITHUB_OUTPUT
+          echo "RELEASE_NOTES=🎉 New release of XPCS Viewer! See commit history for changes." >> $GITHUB_OUTPUT
         fi
 
     - name: Create GitHub Release
       uses: softprops/action-gh-release@v1
       with:
         tag_name: ${{ needs.validate.outputs.version }}
-        name: "XPCS Toolkit ${{ needs.validate.outputs.version }}"
+        name: "XPCS Viewer ${{ needs.validate.outputs.version }}"
         body: |
-          ## 🚀 XPCS Toolkit ${{ needs.validate.outputs.version }}
+          ## 🚀 XPCS Viewer ${{ needs.validate.outputs.version }}
 
           ### 📥 Installation
           ```bash
-          pip install xpcs-toolkit==${{ needs.validate.outputs.version }}
+          pip install xpcsviewer==${{ needs.validate.outputs.version }}
           ```
 
           ### 🚀 Quick Start
           ```bash
           # Launch GUI with data directory
-          xpcs-toolkit path_to_hdf_directory
+          xpcsviewer path_to_hdf_directory
 
           # Alternative commands
           pyxpcsviewer
@@ -289,13 +289,13 @@ jobs:
           ${{ steps.extract_notes.outputs.RELEASE_NOTES }}
 
           ### 📦 Package Files
-          - **Source Distribution**: `xpcs_toolkit-*.tar.gz` - Full source code
-          - **Universal Wheel**: `xpcs_toolkit-*-py3-none-any.whl` - Ready-to-install package
+          - **Source Distribution**: `xpcsviewer-*.tar.gz` - Full source code
+          - **Universal Wheel**: `xpcsviewer-*-py3-none-any.whl` - Ready-to-install package
 
           ### 🔗 Links
-          - [Documentation](https://github.com/imewei/XPCS-Toolkit/tree/master/docs)
-          - [Issues](https://github.com/imewei/XPCS-Toolkit/issues)
-          - [PyPI Package](https://pypi.org/project/xpcs-toolkit/)
+          - [Documentation](https://github.com/imewei/xpcsviewer/tree/master/docs)
+          - [Issues](https://github.com/imewei/xpcsviewer/issues)
+          - [PyPI Package](https://pypi.org/project/xpcsviewer/)
         files: dist/*
         draft: false
         prerelease: ${{ needs.validate.outputs.is_prerelease == 'true' }}
@@ -308,7 +308,7 @@ jobs:
     if: needs.validate.outputs.release_exists != 'true' && startsWith(github.ref, 'refs/tags/') && needs.validate.outputs.is_prerelease == 'false' && github.event.inputs.dry_run != 'true' && github.repository_owner == 'AdvancedPhotonSource'
     environment:
       name: pypi
-      url: https://pypi.org/p/xpcs-toolkit
+      url: https://pypi.org/p/xpcsviewer
     timeout-minutes: 10
 
     steps:
@@ -359,7 +359,7 @@ jobs:
     if: needs.validate.outputs.release_exists != 'true' && ((startsWith(github.ref, 'refs/tags/') && needs.validate.outputs.is_prerelease == 'true') || github.event.inputs.dry_run == 'true') && github.repository_owner == 'AdvancedPhotonSource'
     environment:
       name: testpypi
-      url: https://test.pypi.org/p/xpcs-toolkit
+      url: https://test.pypi.org/p/xpcsviewer
     timeout-minutes: 10
 
     steps:
