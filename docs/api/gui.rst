@@ -47,7 +47,7 @@ See :doc:`cli` for complete CLI and entry point documentation.
 GUI Modernization Components
 ----------------------------
 
-The following modules provide modern UI/UX capabilities added in v1.1.0.
+The following modules provide modern UI/UX capabilities.
 
 Theme System
 ~~~~~~~~~~~~

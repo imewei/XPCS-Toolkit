@@ -27,7 +27,7 @@ Python-based XPCS data analysis and visualization tool.
 * Two-time correlation analysis
 * HDF5 data support (NeXus format)
 
-**New in v1.1.0 - GUI Modernization:**
+**GUI Features:**
 
 * Light/dark theme support with system detection
 * Session persistence (resume where you left off)

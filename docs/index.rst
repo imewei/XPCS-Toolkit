@@ -73,7 +73,7 @@ Features
 * HDF5 data support (NeXus format)
 * PySide6 GUI interface
 
-**New in v1.1.0:**
+**GUI Features:**
 
 * Light/dark theme support with system detection
 * Session persistence and preferences management
