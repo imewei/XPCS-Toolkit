@@ -96,7 +96,7 @@ performance = [
     "pympler>=1.1",
 ]
 all = [
-    "xpcsviewer[dev,test,docs,validation,performance]",
+    "xpcsviewer-gui[dev,test,docs,validation,performance]",
 ]
 
 [project.scripts]
