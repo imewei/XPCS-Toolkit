@@ -188,13 +188,21 @@ jobs:
           libxcursor1 libxcomposite1 libasound2t64 libxi6 libxtst6 \
           xvfb
 
-    - name: Test installation from wheel
+    - name: Create test venv and install wheel
       env:
+        UV_SYSTEM_PYTHON: "0"
         PYTHONIOENCODING: utf-8
         PYTHONUTF8: 1
+      shell: bash
       run: |
-        uv pip install --find-links dist/ xpcsviewer
-        uv run python -c "import xpcsviewer; print(f'[OK] XPCS Viewer {xpcsviewer.__version__} installed')"
+        uv venv test_env --python ${{ matrix.python-version }} --seed
+        if [ "${{ matrix.os }}" = "windows-latest" ]; then
+          source test_env/Scripts/activate
+        else
+          source test_env/bin/activate
+        fi
+        pip install dist/*.whl
+        python -c "import xpcsviewer; print(f'[OK] XPCS Viewer {xpcsviewer.__version__} installed')"
 
     - name: Test CLI commands
       env:
@@ -207,16 +215,29 @@ jobs:
           sleep 2
         fi
 
+        if [ "${{ matrix.os }}" = "windows-latest" ]; then
+          source test_env/Scripts/activate
+        else
+          source test_env/bin/activate
+        fi
+
         echo "[INFO] Testing CLI commands..."
-        uv run xpcsviewer --help || echo "[WARNING] xpcsviewer command failed"
-        uv run pyxpcsviewer --help || echo "[WARNING] pyxpcsviewer command failed"
+        xpcsviewer --help || echo "[WARNING] xpcsviewer command failed"
+        pyxpcsviewer --help || echo "[WARNING] pyxpcsviewer command failed"
         echo "[OK] CLI command tests completed"
 
     - name: Test basic import
       env:
         QT_QPA_PLATFORM: offscreen
+      shell: bash
       run: |
-        uv run python -c "
+        if [ "${{ matrix.os }}" = "windows-latest" ]; then
+          source test_env/Scripts/activate
+        else
+          source test_env/bin/activate
+        fi
+
+        python -c "
         import xpcsviewer
         from xpcsviewer.file_locator import FileLocator
         from xpcsviewer.viewer_kernel import ViewerKernel
