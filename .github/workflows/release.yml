@@ -222,8 +222,8 @@ jobs:
         fi
 
         echo "[INFO] Testing CLI commands..."
+        xpcsviewer-gui --help || echo "[WARNING] xpcsviewer-gui command failed"
         xpcsviewer --help || echo "[WARNING] xpcsviewer command failed"
-        pyxpcsviewer --help || echo "[WARNING] pyxpcsviewer command failed"
         echo "[OK] CLI command tests completed"
 
     - name: Test basic import
@@ -285,12 +285,12 @@ jobs:
 
           ### 📥 Installation
           ```bash
-          pip install xpcsviewer==${{ needs.validate.outputs.version }}
+          pip install xpcsviewer-gui==${{ needs.validate.outputs.version }}
           ```
 
           ### 🚀 Quick Start
           ```bash
-          xpcsviewer path_to_hdf_directory
+          xpcsviewer-gui path_to_hdf_directory
           # Aliases: pyxpcsviewer, xpcs-toolkit, xpcs-viewer
           ```
 
@@ -298,13 +298,13 @@ jobs:
           ${{ steps.extract_notes.outputs.RELEASE_NOTES }}
 
           ### 📦 Package Files
-          - **Source Distribution**: `xpcsviewer-*.tar.gz`
-          - **Universal Wheel**: `xpcsviewer-*-py3-none-any.whl`
+          - **Source Distribution**: `xpcsviewer_gui-*.tar.gz`
+          - **Universal Wheel**: `xpcsviewer_gui-*-py3-none-any.whl`
 
           ### 🔗 Links
           - [Documentation](https://github.com/imewei/xpcsviewer/tree/master/docs)
           - [Issues](https://github.com/imewei/xpcsviewer/issues)
-          - [PyPI Package](https://pypi.org/project/xpcsviewer/)
+          - [PyPI Package](https://pypi.org/project/xpcsviewer-gui/)
         files: dist/*
         draft: false
         prerelease: ${{ needs.validate.outputs.is_prerelease == 'true' }}
@@ -313,10 +313,10 @@ jobs:
   pypi-publish:
     runs-on: ubuntu-latest
     needs: [validate, build, test-release, github-release]
-    if: needs.validate.outputs.release_exists != 'true' && startsWith(github.ref, 'refs/tags/') && needs.validate.outputs.is_prerelease == 'false' && github.event.inputs.dry_run != 'true' && github.repository_owner == 'AdvancedPhotonSource'
+    if: needs.validate.outputs.release_exists != 'true' && startsWith(github.ref, 'refs/tags/') && needs.validate.outputs.is_prerelease == 'false' && github.event.inputs.dry_run != 'true' && github.repository_owner == 'imewei'
     environment:
       name: pypi
-      url: https://pypi.org/p/xpcsviewer
+      url: https://pypi.org/p/xpcsviewer-gui
     timeout-minutes: 10
 
     steps:
@@ -341,24 +341,13 @@ jobs:
         verbose: true
         print-hash: true
 
-  pypi-fork-notice:
-    runs-on: ubuntu-latest
-    needs: [validate, build, test-release, github-release]
-    if: needs.validate.outputs.release_exists != 'true' && startsWith(github.ref, 'refs/tags/') && github.repository_owner != 'AdvancedPhotonSource'
-
-    steps:
-    - name: PyPI Publishing Skipped for Fork
-      run: |
-        echo "[INFO] PyPI publishing skipped for fork repository"
-        echo "[INFO] Repository: ${{ github.repository }}"
-
   test-pypi-publish:
     runs-on: ubuntu-latest
     needs: [validate, build, test-release]
-    if: needs.validate.outputs.release_exists != 'true' && ((startsWith(github.ref, 'refs/tags/') && needs.validate.outputs.is_prerelease == 'true') || github.event.inputs.dry_run == 'true') && github.repository_owner == 'AdvancedPhotonSource'
+    if: needs.validate.outputs.release_exists != 'true' && ((startsWith(github.ref, 'refs/tags/') && needs.validate.outputs.is_prerelease == 'true') || github.event.inputs.dry_run == 'true') && github.repository_owner == 'imewei'
     environment:
       name: testpypi
-      url: https://test.pypi.org/p/xpcsviewer
+      url: https://test.pypi.org/p/xpcsviewer-gui
     timeout-minutes: 10
 
     steps:
@@ -378,7 +367,7 @@ jobs:
 
   release-status:
     runs-on: ubuntu-latest
-    needs: [validate, build, test-release, github-release, pypi-publish, pypi-fork-notice, test-pypi-publish]
+    needs: [validate, build, test-release, github-release, pypi-publish, test-pypi-publish]
     if: always()
 
     steps:
