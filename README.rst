@@ -4,6 +4,10 @@ XPCS Viewer
 
 Python-based XPCS data analysis and visualization tool.
 
+.. image:: https://github.com/imewei/XPCSViewer/actions/workflows/ci.yml/badge.svg
+   :target: https://github.com/imewei/XPCSViewer/actions/workflows/ci.yml
+   :alt: CI Status
+
 .. image:: https://img.shields.io/badge/python-3.12%2B-blue.svg
    :target: https://python.org
    :alt: Python Version
@@ -11,6 +15,10 @@ Python-based XPCS data analysis and visualization tool.
 .. image:: https://img.shields.io/badge/license-MIT-green.svg
    :target: LICENSE
    :alt: License
+
+.. image:: https://img.shields.io/badge/code%20style-ruff-000000.svg
+   :target: https://github.com/astral-sh/ruff
+   :alt: Ruff
 
 **Features:**
 
@@ -127,10 +135,36 @@ Testing
 Documentation
 -------------
 
+- `API Reference <https://github.com/imewei/xpcsviewer/tree/master/docs>`_
+- `User Guide <https://github.com/imewei/xpcsviewer/blob/master/docs/usage.rst>`_
+- `Quick Start <https://github.com/imewei/xpcsviewer/blob/master/docs/user_guide/quickstart.rst>`_
+
 .. code-block:: bash
 
    make docs              # Build docs
    make docs-autobuild    # Live reload docs
+
+Configuration
+-------------
+
+Environment variables for customization:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 30 50 20
+
+   * - Variable
+     - Description
+     - Default
+   * - ``XPCS_LOG_LEVEL``
+     - Logging verbosity (DEBUG, INFO, WARNING, ERROR)
+     - INFO
+   * - ``XPCS_CACHE_SIZE_MB``
+     - Maximum cache size in MB
+     - 512
+   * - ``XPCS_THEME``
+     - UI theme (light, dark, system)
+     - system
 
 Project Structure
 -----------------
