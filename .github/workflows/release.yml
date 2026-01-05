@@ -122,7 +122,7 @@ jobs:
 
     - name: Validate package
       env:
-        UV_SYSTEM_PYTHON: ""  # Override global setting to use venv
+        UV_SYSTEM_PYTHON: "0"  # Override global setting to use venv
       run: |
         # Create venv for validation to avoid system Python restrictions
         uv venv .venv
