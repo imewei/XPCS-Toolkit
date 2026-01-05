@@ -122,19 +122,23 @@ jobs:
 
     - name: Validate package
       run: |
+        # Create venv for validation to avoid system Python restrictions
+        uv venv .venv
+        source .venv/bin/activate
         uv pip install twine
-        uv run twine check dist/* --strict
+        twine check dist/* --strict
 
         echo "[INFO] Package files:"
         ls -la dist/
 
-        # Test wheel installation
+        # Test wheel installation in separate venv
+        deactivate
         uv venv test_env
         source test_env/bin/activate
         uv pip install dist/*.whl
         python -c "import xpcsviewer; print(f'[OK] Version: {xpcsviewer.__version__}')"
         deactivate
-        rm -rf test_env
+        rm -rf test_env .venv
 
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
