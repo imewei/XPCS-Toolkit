@@ -199,6 +199,13 @@ class FileLocator:
         self.source_search.replace(selected)
 
     def build(self, path=None, filter_list=(".hdf", ".h5"), sort_method="Filename"):
+        if path is None:
+            path = self.path
+
+        if not path or not os.path.isdir(path):
+            logger.warning("FileLocator.build called with invalid path: %r", path)
+            return False
+
         self.path = path
         flist = [
             entry.name

@@ -2400,14 +2400,33 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         self.pushButton_11.setText("loading")
         self.pushButton_11.setDisabled(True)
         self.pushButton_11.parent().repaint()
-        path = self.work_dir.text()
-        self.vk.build(path=path, sort_method=self.sort_method.currentText())
-        self.pushButton_11.setText("reload")
-        self.pushButton_11.setEnabled(True)
-        self.pushButton_11.parent().repaint()
 
-        self.update_box(self.vk.source, mode="source")
-        self.apply_filter_to_source()
+        try:
+            path = self.work_dir.text() if hasattr(self, "work_dir") else ""
+            if not path or not os.path.isdir(path):
+                self.statusbar.showMessage(
+                    "Please select a valid data folder before reloading.", 5000
+                )
+                logger.warning("Reload requested with invalid path: %r", path)
+                return
+            if self.vk is None:
+                self.statusbar.showMessage(
+                    "No data folder loaded. Use File -> Open Directory.", 5000
+                )
+                logger.warning("Reload requested before viewer kernel initialized")
+                return
+
+            built = self.vk.build(path=path, sort_method=self.sort_method.currentText())
+            if not built:
+                self.statusbar.showMessage("Reload failed: invalid data folder.", 5000)
+                return
+
+            self.update_box(self.vk.source, mode="source")
+            self.apply_filter_to_source()
+        finally:
+            self.pushButton_11.setText("reload")
+            self.pushButton_11.setEnabled(True)
+            self.pushButton_11.parent().repaint()
 
     def load_path(self, path=None, debug=False):
         """
