@@ -121,12 +121,14 @@ jobs:
         echo "[OK] Package built"
 
     - name: Validate package
+      env:
+        UV_SYSTEM_PYTHON: ""  # Override global setting to use venv
       run: |
         # Create venv for validation to avoid system Python restrictions
         uv venv .venv
         source .venv/bin/activate
-        uv pip install twine
-        twine check dist/* --strict
+        .venv/bin/pip install twine
+        .venv/bin/twine check dist/* --strict
 
         echo "[INFO] Package files:"
         ls -la dist/
@@ -135,8 +137,8 @@ jobs:
         deactivate
         uv venv test_env
         source test_env/bin/activate
-        uv pip install dist/*.whl
-        python -c "import xpcsviewer; print(f'[OK] Version: {xpcsviewer.__version__}')"
+        test_env/bin/pip install dist/*.whl
+        test_env/bin/python -c "import xpcsviewer; print(f'[OK] Version: {xpcsviewer.__version__}')"
         deactivate
         rm -rf test_env .venv
 
