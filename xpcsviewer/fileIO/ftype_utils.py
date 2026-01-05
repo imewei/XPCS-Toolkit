@@ -1,3 +1,13 @@
+"""
+File type detection utilities for XPCS data files.
+
+Provides functions to identify HDF5 file formats:
+
+- isNeXusFile: Check for NeXus format (APS-8IDI beamline)
+- isLegacyFile: Check for legacy XPCS format
+- get_ftype: Determine file type ('nexus', 'legacy', or False)
+"""
+
 # Standard library imports
 import os
 
@@ -11,6 +21,14 @@ logger = get_logger(__name__)
 
 
 def isNeXusFile(fname):
+    """Check if file is in NeXus format.
+
+    Args:
+        fname: Path to HDF5 file.
+
+    Returns:
+        True if file contains NeXus metadata structure.
+    """
     logger.debug(f"Checking if {fname} is NeXus file")
     try:
         with h5py.File(fname, "r") as f:

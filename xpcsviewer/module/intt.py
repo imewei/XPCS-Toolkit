@@ -1,3 +1,14 @@
+"""
+Intensity vs time analysis module.
+
+Provides visualization of intensity fluctuations over time for XPCS data.
+Supports multiple q-bins, smoothing, and sampling options.
+
+Functions:
+    smooth_data: Apply rolling window smoothing to intensity data.
+    plot: Generate intensity vs time plots with PyQtGraph.
+"""
+
 import contextlib
 
 import numpy as np

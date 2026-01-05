@@ -1,3 +1,13 @@
+"""
+2D SAXS scattering pattern visualization.
+
+Provides visualization of integrated 2D small-angle X-ray scattering patterns
+with support for log/linear scaling, colormap selection, and image rotation.
+
+Functions:
+    plot: Display 2D SAXS pattern with beam center overlay.
+"""
+
 from xpcsviewer.utils.logging_config import get_logger
 
 logger = get_logger(__name__)

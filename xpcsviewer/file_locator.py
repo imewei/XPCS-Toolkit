@@ -1,3 +1,16 @@
+"""
+File discovery and management for XPCS datasets.
+
+Provides the FileLocator class for navigating file systems, discovering
+XPCS data files, and managing file collections for analysis.
+
+Classes:
+    FileLocator: Main class for file discovery and management.
+
+Functions:
+    create_xpcs_dataset: Factory function to create XpcsFile objects.
+"""
+
 # Standard library imports
 import datetime
 import os
@@ -14,9 +27,14 @@ logger = get_logger(__name__)
 
 
 def create_xpcs_dataset(fname, **kwargs):
-    """
-    Create a xpcs_file object from a given path.
-    Returns None if file cannot be loaded as valid XPCS data.
+    """Create an XpcsFile object from a file path.
+
+    Args:
+        fname: Path to HDF5 XPCS data file.
+        **kwargs: Additional arguments passed to XpcsFile.
+
+    Returns:
+        XpcsFile instance or None if loading fails.
     """
     try:
         temp = XF(fname, **kwargs)

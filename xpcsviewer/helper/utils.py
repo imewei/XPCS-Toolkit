@@ -1,3 +1,13 @@
+"""
+Helper utilities for XPCS data processing.
+
+Provides common data transformation functions used across analysis modules:
+
+- get_min_max: Percentile-based intensity range calculation
+- norm_saxs_data: SAXS intensity normalization (I, I*q^2, I*q^4)
+- create_slice: Slice creation for array subsetting
+"""
+
 import numpy as np
 
 from xpcsviewer.utils.logging_config import get_logger
@@ -6,6 +16,17 @@ logger = get_logger(__name__)
 
 
 def get_min_max(data, min_percent=0, max_percent=100, **kwargs):
+    """Calculate intensity min/max values using percentiles.
+
+    Args:
+        data: Input array.
+        min_percent: Lower percentile (0-100).
+        max_percent: Upper percentile (0-100).
+        **kwargs: Optional plot_norm and plot_type for symmetric scaling.
+
+    Returns:
+        Tuple of (vmin, vmax) values.
+    """
     logger.debug(
         f"Calculating min/max: min_percent={min_percent}, max_percent={max_percent}"
     )

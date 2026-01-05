@@ -1,3 +1,20 @@
+"""
+XPCS analysis modules.
+
+This package contains specialized modules for X-ray Photon Correlation
+Spectroscopy data analysis:
+
+- g2mod: Multi-tau G2 correlation analysis with fitting
+- saxs1d: 1D SAXS radial averaging and analysis
+- saxs2d: 2D SAXS scattering pattern visualization
+- twotime: Two-time correlation analysis
+- twotime_utils: Utilities for two-time correlation processing
+- stability: Sample stability monitoring
+- intt: Intensity vs time analysis
+- average_toolbox: File averaging with parallel processing
+- tauq: Tau-Q relationship analysis
+"""
+
 # Import modules gracefully for documentation builds
 import os
 

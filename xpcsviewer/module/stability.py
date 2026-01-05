@@ -1,3 +1,13 @@
+"""
+Sample stability monitoring module.
+
+Analyzes temporal stability of XPCS measurements by comparing intensity
+profiles across time sections. Helps identify beam damage, sample drift,
+or other instabilities.
+
+Functions:
+    plot: Generate stability comparison plots.
+"""
 # Third-party imports
 
 # Local imports

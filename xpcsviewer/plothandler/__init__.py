@@ -1,3 +1,18 @@
+"""
+Plot rendering backends for XPCS visualization.
+
+This package provides theme-aware plotting backends using both
+Matplotlib and PyQtGraph:
+
+- matplot_qt: Matplotlib Qt integration with MplCanvas classes
+- pyqtgraph_handler: PyQtGraph widgets (ImageViewDev, PlotWidgetDev)
+- plot_constants: Theme-aware color palettes and styling
+- qt_signal_fixes: Qt signal/slot compatibility utilities
+
+All backends support light/dark theme switching and maintain
+consistent visual styling across the application.
+"""
+
 # Import modules gracefully for documentation builds
 import os
 
