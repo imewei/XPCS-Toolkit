@@ -168,7 +168,7 @@ jobs:
       uses: astral-sh/setup-uv@v4
       with:
         version: "latest"
-        enable-cache: true
+        enable-cache: false  # No checkout, no cache dependency file
 
     - name: Set up Python ${{ matrix.python-version }}
       run: uv python install ${{ matrix.python-version }}
