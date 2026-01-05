@@ -3,7 +3,7 @@
 
 # Core Sphinx dependencies (kept in sync with pyproject [project.optional-dependencies].docs)
 sphinx>=8.2.0
-sphinx-rtd-theme>=3.0.2
+furo>=2024.8.6
 myst-parser>=4.0.1
 
 # Documentation extensions
