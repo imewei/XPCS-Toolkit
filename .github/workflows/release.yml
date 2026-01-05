@@ -124,21 +124,21 @@ jobs:
       env:
         UV_SYSTEM_PYTHON: "0"  # Override global setting to use venv
       run: |
-        # Create venv for validation to avoid system Python restrictions
-        uv venv .venv
+        # Create venv for validation with pip included
+        uv venv .venv --seed
         source .venv/bin/activate
-        .venv/bin/pip install twine
-        .venv/bin/twine check dist/* --strict
+        pip install twine
+        twine check dist/* --strict
 
         echo "[INFO] Package files:"
         ls -la dist/
 
         # Test wheel installation in separate venv
         deactivate
-        uv venv test_env
+        uv venv test_env --seed
         source test_env/bin/activate
-        test_env/bin/pip install dist/*.whl
-        test_env/bin/python -c "import xpcsviewer; print(f'[OK] Version: {xpcsviewer.__version__}')"
+        pip install dist/*.whl
+        python -c "import xpcsviewer; print(f'[OK] Version: {xpcsviewer.__version__}')"
         deactivate
         rm -rf test_env .venv
 
