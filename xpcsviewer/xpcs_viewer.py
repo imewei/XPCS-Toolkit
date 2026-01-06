@@ -1429,7 +1429,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
                 logger.debug(f"Cleared plot for {tab_name}")
                 # Show status message to user for guidance
                 self.statusbar.showMessage(
-                    f"No files selected for {tab_name.replace('_', ' ').title()} - please select files from source list and click 'Add Target'",  # noqa: S608
+                    f"No files selected for {tab_name.replace('_', ' ').title()} - please select files from source list and click 'Add Target'",
                     5000,
                 )
         except Exception as e:
