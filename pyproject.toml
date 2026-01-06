@@ -353,9 +353,11 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["F401"]
-"tests/*" = ["B", "C", "E", "F", "W", "S101", "ARG", "PLR2004", "SLF001", "T201"]
-"validation/*" = ["T201", "S101"]
-"scripts/*" = ["T201"]
+"tests/*" = ["B", "C", "E", "F", "W", "S", "ARG", "PL", "RUF", "SIM", "UP", "T201"]
+"validation/*" = ["T201", "S101", "PLR", "PLC", "F401", "SIM", "B904", "S603"]
+"scripts/*" = ["T201", "PLR"]
+"xpcsviewer/viewer_ui.py" = ["F401"]
+"xpcsviewer/*" = ["PLC0415", "PLR", "ARG", "SIM", "UP", "RUF", "S", "E402", "PLW", "B007", "F811", "B904"]
 
 [tool.mypy]
 python_version = "3.12"

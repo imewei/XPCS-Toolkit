@@ -305,7 +305,6 @@ class ThemeManager(QObject):
             return
 
         colors = self._tokens.colors
-        is_dark = self._current_theme == "dark"
 
         pg.setConfigOptions(
             background=colors.plot_background,
