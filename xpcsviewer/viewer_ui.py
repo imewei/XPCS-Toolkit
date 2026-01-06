@@ -1,27 +1,63 @@
+# -*- coding: utf-8 -*-
+
 ################################################################################
 ## Form generated from reading UI file 'xpcs.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.9.2
+## Created by: Qt User Interface Compiler version 6.10.1
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
 
+import icons_rc
 from pyqtgraph import DataTreeWidget, GraphicsLayoutWidget, ImageView, PlotWidget
 from pyqtgraph.parametertree import ParameterTree
-from PySide6.QtCore import QCoreApplication, QMetaObject, QRect, QSize, Qt
-from PySide6.QtGui import QIcon
+from PySide6.QtCore import (
+    QCoreApplication,
+    QDate,
+    QDateTime,
+    QLocale,
+    QMetaObject,
+    QObject,
+    QPoint,
+    QRect,
+    QSize,
+    Qt,
+    QTime,
+    QUrl,
+)
+from PySide6.QtGui import (
+    QBrush,
+    QColor,
+    QConicalGradient,
+    QCursor,
+    QFont,
+    QFontDatabase,
+    QGradient,
+    QIcon,
+    QImage,
+    QKeySequence,
+    QLinearGradient,
+    QPainter,
+    QPalette,
+    QPixmap,
+    QRadialGradient,
+    QTransform,
+)
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QAbstractScrollArea,
+    QApplication,
     QCheckBox,
     QComboBox,
     QDoubleSpinBox,
     QGridLayout,
     QGroupBox,
     QHBoxLayout,
+    QHeaderView,
     QLabel,
     QLineEdit,
     QListView,
+    QMainWindow,
     QPushButton,
     QScrollArea,
     QSizePolicy,
@@ -38,7 +74,7 @@ from PySide6.QtWidgets import (
 from .plothandler import ImageViewDev, ImageViewPlotItem, MplCanvasBarV, PlotWidgetDev
 
 
-class Ui_mainWindow:
+class Ui_mainWindow(object):
     def setupUi(self, mainWindow):
         if not mainWindow.objectName():
             mainWindow.setObjectName("mainWindow")
@@ -53,16 +89,13 @@ class Ui_mainWindow:
         mainWindow.setMinimumSize(QSize(1024, 0))
         icon = QIcon()
         icon.addFile(
-            ":/newPrefix/icons8-giraffe-full-body-100.png",
+            ":/newPrefix/xpcsviewer_logo.png",
             QSize(),
             QIcon.Mode.Normal,
             QIcon.State.Off,
         )
         icon.addFile(
-            ":/icons/icons8-giraffe-full-body-100.png",
-            QSize(),
-            QIcon.Mode.Normal,
-            QIcon.State.On,
+            ":/icons/xpcsviewer_logo.png", QSize(), QIcon.Mode.Normal, QIcon.State.On
         )
         mainWindow.setWindowIcon(icon)
         self.centralwidget = QWidget(mainWindow)
@@ -1950,10 +1983,23 @@ class Ui_mainWindow:
         self.statusbar = QStatusBar(mainWindow)
         self.statusbar.setObjectName("statusbar")
         mainWindow.setStatusBar(self.statusbar)
+        QWidget.setTabOrder(self.work_dir, self.pushButton)
+        QWidget.setTabOrder(self.pushButton, self.pushButton_11)
+        QWidget.setTabOrder(self.pushButton_11, self.sort_method)
+        QWidget.setTabOrder(self.sort_method, self.list_view_source)
+        QWidget.setTabOrder(self.list_view_source, self.filter_type)
+        QWidget.setTabOrder(self.filter_type, self.filter_str)
+        QWidget.setTabOrder(self.filter_str, self.pushButton_2)
+        QWidget.setTabOrder(self.pushButton_2, self.pushButton_3)
+        QWidget.setTabOrder(self.pushButton_3, self.list_view_target)
+        QWidget.setTabOrder(self.list_view_target, self.btn_deselect)
+        QWidget.setTabOrder(self.btn_deselect, self.btn_up)
+        QWidget.setTabOrder(self.btn_up, self.btn_down)
+        QWidget.setTabOrder(self.btn_down, self.tabWidget)
+        QWidget.setTabOrder(self.tabWidget, self.cb_saxs2D_cmap)
         QWidget.setTabOrder(self.cb_saxs2D_cmap, self.g2_c2min)
         QWidget.setTabOrder(self.g2_c2min, self.cb_avg_chunk_size)
-        QWidget.setTabOrder(self.cb_avg_chunk_size, self.list_view_target)
-        QWidget.setTabOrder(self.list_view_target, self.max_thread_count)
+        QWidget.setTabOrder(self.cb_avg_chunk_size, self.max_thread_count)
         QWidget.setTabOrder(self.max_thread_count, self.avg_qindex)
         QWidget.setTabOrder(self.avg_qindex, self.avg_window)
         QWidget.setTabOrder(self.avg_window, self.avg_blmin)
@@ -1971,19 +2017,7 @@ class Ui_mainWindow:
         QWidget.setTabOrder(self.btn_avg_jobinfo, self.btn_avg_kill)
         QWidget.setTabOrder(self.btn_avg_kill, self.btn_start_avg_job)
         QWidget.setTabOrder(self.btn_start_avg_job, self.avg_job_table)
-        QWidget.setTabOrder(self.avg_job_table, self.work_dir)
-        QWidget.setTabOrder(self.work_dir, self.sort_method)
-        QWidget.setTabOrder(self.sort_method, self.pushButton_11)
-        QWidget.setTabOrder(self.pushButton_11, self.pushButton)
-        QWidget.setTabOrder(self.pushButton, self.list_view_source)
-        QWidget.setTabOrder(self.list_view_source, self.filter_type)
-        QWidget.setTabOrder(self.filter_type, self.filter_str)
-        QWidget.setTabOrder(self.filter_str, self.pushButton_2)
-        QWidget.setTabOrder(self.pushButton_2, self.pushButton_3)
-        QWidget.setTabOrder(self.pushButton_3, self.btn_deselect)
-        QWidget.setTabOrder(self.btn_deselect, self.btn_up)
-        QWidget.setTabOrder(self.btn_up, self.btn_down)
-        QWidget.setTabOrder(self.btn_down, self.cb_saxs2D_type)
+        QWidget.setTabOrder(self.avg_job_table, self.cb_saxs2D_type)
         QWidget.setTabOrder(self.cb_saxs2D_type, self.cb_saxs_type)
         QWidget.setTabOrder(self.cb_saxs_type, self.saxs1d_sampling)
         QWidget.setTabOrder(self.saxs1d_sampling, self.sb_saxs_offset)
@@ -2009,8 +2043,7 @@ class Ui_mainWindow:
         QWidget.setTabOrder(self.g2_tmax, self.g2_ymin)
         QWidget.setTabOrder(self.g2_ymin, self.g2_ymax)
         QWidget.setTabOrder(self.g2_ymax, self.g2_yauto)
-        QWidget.setTabOrder(self.g2_yauto, self.tabWidget)
-        QWidget.setTabOrder(self.tabWidget, self.g2_amin)
+        QWidget.setTabOrder(self.g2_yauto, self.g2_amin)
         QWidget.setTabOrder(self.g2_amin, self.g2_amax)
         QWidget.setTabOrder(self.g2_amax, self.g2_afit)
         QWidget.setTabOrder(self.g2_afit, self.g2_bmin)
@@ -2150,10 +2183,40 @@ class Ui_mainWindow:
 
     def retranslateUi(self, mainWindow):
         mainWindow.setWindowTitle(
-            QCoreApplication.translate("mainWindow", "XPCS Viewer", None)
+            QCoreApplication.translate("mainWindow", "XPCS Toolkit", None)
         )
-        self.label_2.setText(QCoreApplication.translate("mainWindow", "Path:", None))
-        self.label_56.setText(QCoreApplication.translate("mainWindow", "Sort:", None))
+        self.label_2.setText(
+            QCoreApplication.translate("mainWindow", "Data path:", None)
+        )
+        # if QT_CONFIG(tooltip)
+        self.work_dir.setToolTip(
+            QCoreApplication.translate(
+                "mainWindow",
+                "Select the folder containing XPCS runs to populate the source list.",
+                None,
+            )
+        )
+        # endif // QT_CONFIG(tooltip)
+        # if QT_CONFIG(accessibility)
+        self.work_dir.setAccessibleName(
+            QCoreApplication.translate("mainWindow", "Data path", None)
+        )
+        # endif // QT_CONFIG(accessibility)
+        # if QT_CONFIG(accessibility)
+        self.work_dir.setAccessibleDescription(
+            QCoreApplication.translate(
+                "mainWindow",
+                "Folder path used to load available runs into the source list.",
+                None,
+            )
+        )
+        # endif // QT_CONFIG(accessibility)
+        self.work_dir.setPlaceholderText(
+            QCoreApplication.translate("mainWindow", "Choose a data folder...", None)
+        )
+        self.label_56.setText(
+            QCoreApplication.translate("mainWindow", "Sort by:", None)
+        )
         self.sort_method.setItemText(
             0, QCoreApplication.translate("mainWindow", "Filename", None)
         )
@@ -2173,15 +2236,124 @@ class Ui_mainWindow:
             5, QCoreApplication.translate("mainWindow", "Time-reverse", None)
         )
 
+        # if QT_CONFIG(tooltip)
+        self.sort_method.setToolTip(
+            QCoreApplication.translate(
+                "mainWindow", "Ordering applied to the source file list.", None
+            )
+        )
+        # endif // QT_CONFIG(tooltip)
+        # if QT_CONFIG(accessibility)
+        self.sort_method.setAccessibleName(
+            QCoreApplication.translate("mainWindow", "Source sort method", None)
+        )
+        # endif // QT_CONFIG(accessibility)
+        # if QT_CONFIG(accessibility)
+        self.sort_method.setAccessibleDescription(
+            QCoreApplication.translate(
+                "mainWindow",
+                "Choose how files are ordered in the source list, such as by filename or acquisition time.",
+                None,
+            )
+        )
+        # endif // QT_CONFIG(accessibility)
+        # if QT_CONFIG(tooltip)
+        self.pushButton_11.setToolTip(
+            QCoreApplication.translate(
+                "mainWindow", "Reload files from the selected data path.", None
+            )
+        )
+        # endif // QT_CONFIG(tooltip)
+        # if QT_CONFIG(accessibility)
+        self.pushButton_11.setAccessibleName(
+            QCoreApplication.translate("mainWindow", "Reload files", None)
+        )
+        # endif // QT_CONFIG(accessibility)
+        # if QT_CONFIG(accessibility)
+        self.pushButton_11.setAccessibleDescription(
+            QCoreApplication.translate(
+                "mainWindow",
+                "Refresh the source list using the current data folder.",
+                None,
+            )
+        )
+        # endif // QT_CONFIG(accessibility)
         self.pushButton_11.setText(
-            QCoreApplication.translate("mainWindow", "reload", None)
+            QCoreApplication.translate("mainWindow", "Reload files", None)
         )
+        # if QT_CONFIG(tooltip)
+        self.pushButton.setToolTip(
+            QCoreApplication.translate(
+                "mainWindow", "Browse to pick a data folder.", None
+            )
+        )
+        # endif // QT_CONFIG(tooltip)
+        # if QT_CONFIG(accessibility)
+        self.pushButton.setAccessibleName(
+            QCoreApplication.translate("mainWindow", "Browse for data", None)
+        )
+        # endif // QT_CONFIG(accessibility)
+        # if QT_CONFIG(accessibility)
+        self.pushButton.setAccessibleDescription(
+            QCoreApplication.translate(
+                "mainWindow",
+                "Opens a folder chooser to select the data directory.",
+                None,
+            )
+        )
+        # endif // QT_CONFIG(accessibility)
         self.pushButton.setText(
-            QCoreApplication.translate("mainWindow", "browse", None)
+            QCoreApplication.translate("mainWindow", "Browse...", None)
         )
+        # if QT_CONFIG(tooltip)
+        self.box_source.setToolTip(
+            QCoreApplication.translate(
+                "mainWindow",
+                "Files detected in the selected data folder. Empty until you browse and reload.",
+                None,
+            )
+        )
+        # endif // QT_CONFIG(tooltip)
+        # if QT_CONFIG(accessibility)
+        self.box_source.setAccessibleName(
+            QCoreApplication.translate("mainWindow", "Source files", None)
+        )
+        # endif // QT_CONFIG(accessibility)
+        # if QT_CONFIG(accessibility)
+        self.box_source.setAccessibleDescription(
+            QCoreApplication.translate(
+                "mainWindow",
+                "List of available XPCS files from the chosen directory.",
+                None,
+            )
+        )
+        # endif // QT_CONFIG(accessibility)
         self.box_source.setTitle(
-            QCoreApplication.translate("mainWindow", "Source:", None)
+            QCoreApplication.translate("mainWindow", "Source files", None)
         )
+        # if QT_CONFIG(tooltip)
+        self.list_view_source.setToolTip(
+            QCoreApplication.translate(
+                "mainWindow",
+                "Available files. Select one or more, then add to the target list.",
+                None,
+            )
+        )
+        # endif // QT_CONFIG(tooltip)
+        # if QT_CONFIG(accessibility)
+        self.list_view_source.setAccessibleName(
+            QCoreApplication.translate("mainWindow", "Source file list", None)
+        )
+        # endif // QT_CONFIG(accessibility)
+        # if QT_CONFIG(accessibility)
+        self.list_view_source.setAccessibleDescription(
+            QCoreApplication.translate(
+                "mainWindow",
+                "Shows files found under the selected data path; empty until a folder is loaded.",
+                None,
+            )
+        )
+        # endif // QT_CONFIG(accessibility)
         self.filter_type.setItemText(
             0, QCoreApplication.translate("mainWindow", "prefix is", None)
         )
@@ -2189,23 +2361,222 @@ class Ui_mainWindow:
             1, QCoreApplication.translate("mainWindow", "contains", None)
         )
 
-        self.filter_str.setPlaceholderText(
+        # if QT_CONFIG(tooltip)
+        self.filter_type.setToolTip(
             QCoreApplication.translate(
-                "mainWindow", "filter, press enter to add files", None
+                "mainWindow",
+                "Select whether the filter matches a prefix or any substring.",
+                None,
             )
         )
-        self.pushButton_2.setText(QCoreApplication.translate("mainWindow", "add", None))
+        # endif // QT_CONFIG(tooltip)
+        # if QT_CONFIG(accessibility)
+        self.filter_type.setAccessibleName(
+            QCoreApplication.translate("mainWindow", "Filter mode", None)
+        )
+        # endif // QT_CONFIG(accessibility)
+        # if QT_CONFIG(accessibility)
+        self.filter_type.setAccessibleDescription(
+            QCoreApplication.translate(
+                "mainWindow",
+                "Controls how the text filter is applied to the source filenames.",
+                None,
+            )
+        )
+        # endif // QT_CONFIG(accessibility)
+        # if QT_CONFIG(tooltip)
+        self.filter_str.setToolTip(
+            QCoreApplication.translate(
+                "mainWindow",
+                "Type a prefix or substring to filter source files; press Enter to stage matching items.",
+                None,
+            )
+        )
+        # endif // QT_CONFIG(tooltip)
+        # if QT_CONFIG(accessibility)
+        self.filter_str.setAccessibleName(
+            QCoreApplication.translate("mainWindow", "Filter text", None)
+        )
+        # endif // QT_CONFIG(accessibility)
+        # if QT_CONFIG(accessibility)
+        self.filter_str.setAccessibleDescription(
+            QCoreApplication.translate(
+                "mainWindow",
+                "Filters filenames in the source list; press Enter to add matches to the target selection.",
+                None,
+            )
+        )
+        # endif // QT_CONFIG(accessibility)
+        self.filter_str.setPlaceholderText(
+            QCoreApplication.translate(
+                "mainWindow", "Filter text, then press Enter to add matches", None
+            )
+        )
+        # if QT_CONFIG(tooltip)
+        self.pushButton_2.setToolTip(
+            QCoreApplication.translate(
+                "mainWindow",
+                "Add selected or filtered source files to the target list.",
+                None,
+            )
+        )
+        # endif // QT_CONFIG(tooltip)
+        # if QT_CONFIG(accessibility)
+        self.pushButton_2.setAccessibleName(
+            QCoreApplication.translate("mainWindow", "Add to target", None)
+        )
+        # endif // QT_CONFIG(accessibility)
+        # if QT_CONFIG(accessibility)
+        self.pushButton_2.setAccessibleDescription(
+            QCoreApplication.translate(
+                "mainWindow",
+                "Moves highlighted source items into the target selection for processing.",
+                None,
+            )
+        )
+        # endif // QT_CONFIG(accessibility)
+        self.pushButton_2.setText(
+            QCoreApplication.translate("mainWindow", "Add to target", None)
+        )
+        # if QT_CONFIG(tooltip)
+        self.pushButton_3.setToolTip(
+            QCoreApplication.translate(
+                "mainWindow", "Remove the selected items from the target list.", None
+            )
+        )
+        # endif // QT_CONFIG(tooltip)
+        # if QT_CONFIG(accessibility)
+        self.pushButton_3.setAccessibleName(
+            QCoreApplication.translate("mainWindow", "Remove from target", None)
+        )
+        # endif // QT_CONFIG(accessibility)
+        # if QT_CONFIG(accessibility)
+        self.pushButton_3.setAccessibleDescription(
+            QCoreApplication.translate(
+                "mainWindow",
+                "Clears highlighted entries from the target selection.",
+                None,
+            )
+        )
+        # endif // QT_CONFIG(accessibility)
         self.pushButton_3.setText(
-            QCoreApplication.translate("mainWindow", "remove", None)
+            QCoreApplication.translate("mainWindow", "Remove from target", None)
         )
+        # if QT_CONFIG(tooltip)
+        self.box_target.setToolTip(
+            QCoreApplication.translate(
+                "mainWindow",
+                "Files queued for analysis. Starts empty until you add items.",
+                None,
+            )
+        )
+        # endif // QT_CONFIG(tooltip)
+        # if QT_CONFIG(accessibility)
+        self.box_target.setAccessibleName(
+            QCoreApplication.translate("mainWindow", "Selected files", None)
+        )
+        # endif // QT_CONFIG(accessibility)
+        # if QT_CONFIG(accessibility)
+        self.box_target.setAccessibleDescription(
+            QCoreApplication.translate(
+                "mainWindow", "List of files chosen for processing.", None
+            )
+        )
+        # endif // QT_CONFIG(accessibility)
         self.box_target.setTitle(
-            QCoreApplication.translate("mainWindow", "Target:", None)
+            QCoreApplication.translate("mainWindow", "Selected files", None)
         )
+        # if QT_CONFIG(tooltip)
+        self.btn_deselect.setToolTip(
+            QCoreApplication.translate(
+                "mainWindow",
+                "Deselect any highlighted items in the selected files list.",
+                None,
+            )
+        )
+        # endif // QT_CONFIG(tooltip)
+        # if QT_CONFIG(accessibility)
+        self.btn_deselect.setAccessibleName(
+            QCoreApplication.translate("mainWindow", "Clear selection", None)
+        )
+        # endif // QT_CONFIG(accessibility)
+        # if QT_CONFIG(accessibility)
+        self.btn_deselect.setAccessibleDescription(
+            QCoreApplication.translate(
+                "mainWindow",
+                "Removes focus from currently highlighted target entries.",
+                None,
+            )
+        )
+        # endif // QT_CONFIG(accessibility)
         self.btn_deselect.setText(
-            QCoreApplication.translate("mainWindow", "de-select", None)
+            QCoreApplication.translate("mainWindow", "Clear selection", None)
         )
-        self.btn_up.setText(QCoreApplication.translate("mainWindow", "up", None))
-        self.btn_down.setText(QCoreApplication.translate("mainWindow", "down", None))
+        # if QT_CONFIG(tooltip)
+        self.btn_up.setToolTip(
+            QCoreApplication.translate(
+                "mainWindow", "Move selected target items up.", None
+            )
+        )
+        # endif // QT_CONFIG(tooltip)
+        # if QT_CONFIG(accessibility)
+        self.btn_up.setAccessibleName(
+            QCoreApplication.translate("mainWindow", "Move up", None)
+        )
+        # endif // QT_CONFIG(accessibility)
+        # if QT_CONFIG(accessibility)
+        self.btn_up.setAccessibleDescription(
+            QCoreApplication.translate(
+                "mainWindow", "Reorder the selected target items upward.", None
+            )
+        )
+        # endif // QT_CONFIG(accessibility)
+        self.btn_up.setText(QCoreApplication.translate("mainWindow", "Move up", None))
+        # if QT_CONFIG(tooltip)
+        self.btn_down.setToolTip(
+            QCoreApplication.translate(
+                "mainWindow", "Move selected target items down.", None
+            )
+        )
+        # endif // QT_CONFIG(tooltip)
+        # if QT_CONFIG(accessibility)
+        self.btn_down.setAccessibleName(
+            QCoreApplication.translate("mainWindow", "Move down", None)
+        )
+        # endif // QT_CONFIG(accessibility)
+        # if QT_CONFIG(accessibility)
+        self.btn_down.setAccessibleDescription(
+            QCoreApplication.translate(
+                "mainWindow", "Reorder the selected target items downward.", None
+            )
+        )
+        # endif // QT_CONFIG(accessibility)
+        self.btn_down.setText(
+            QCoreApplication.translate("mainWindow", "Move down", None)
+        )
+        # if QT_CONFIG(tooltip)
+        self.list_view_target.setToolTip(
+            QCoreApplication.translate(
+                "mainWindow",
+                "Files staged for analysis. Empty until you add items from the source list.",
+                None,
+            )
+        )
+        # endif // QT_CONFIG(tooltip)
+        # if QT_CONFIG(accessibility)
+        self.list_view_target.setAccessibleName(
+            QCoreApplication.translate("mainWindow", "Selected file list", None)
+        )
+        # endif // QT_CONFIG(accessibility)
+        # if QT_CONFIG(accessibility)
+        self.list_view_target.setAccessibleDescription(
+            QCoreApplication.translate(
+                "mainWindow",
+                "Displays files queued for processing; starts empty until items are added.",
+                None,
+            )
+        )
+        # endif // QT_CONFIG(accessibility)
         self.label_38.setText(
             QCoreApplication.translate("mainWindow", "coordinates:", None)
         )

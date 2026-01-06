@@ -25,11 +25,11 @@
   <property name="windowTitle">
    <string>XPCS Toolkit</string>
   </property>
-  <property name="windowIcon">
-   <iconset>
-    <normaloff>:/newPrefix/icons8-giraffe-full-body-100.png</normaloff>
-    <normalon>:/icons/icons8-giraffe-full-body-100.png</normalon>:/newPrefix/icons8-giraffe-full-body-100.png</iconset>
-  </property>
+   <property name="windowIcon">
+    <iconset>
+     <normaloff>:/newPrefix/xpcsviewer_logo.png</normaloff>
+     <normalon>:/icons/xpcsviewer_logo.png</normalon>:/newPrefix/xpcsviewer_logo.png</iconset>
+   </property>
   <widget class="QWidget" name="centralwidget">
    <property name="sizePolicy">
     <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
