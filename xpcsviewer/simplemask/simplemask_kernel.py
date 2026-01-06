@@ -7,7 +7,6 @@ Adapted from pySimpleMask for integration with XPCS Viewer.
 """
 
 import logging
-import os
 from typing import Any, Literal
 
 import h5py
@@ -29,6 +28,9 @@ from xpcsviewer.simplemask.utils import (
 pg.setConfigOptions(imageAxisOrder="row-major")
 
 logger = logging.getLogger(__name__)
+
+# Compression threshold for HDF5 datasets (elements)
+HDF5_COMPRESSION_THRESHOLD = 1024
 
 # Version for partition file metadata
 __version__ = "1.0.0"
@@ -227,7 +229,9 @@ class SimpleMaskKernel:
 
         def optimize_save(group_handle, key, val):
             compression = (
-                "lzf" if isinstance(val, np.ndarray) and val.size > 1024 else None
+                "lzf"
+                if isinstance(val, np.ndarray) and val.size > HDF5_COMPRESSION_THRESHOLD
+                else None
             )
             return group_handle.create_dataset(key, data=val, compression=compression)
 
@@ -277,7 +281,7 @@ class SimpleMaskKernel:
     def show_saxs(
         self,
         cmap: str = "jet",
-        log: bool = True,
+        log: bool = True,  # noqa: ARG002 - kept for API compatibility
         plot_center: bool = True,
     ) -> None:
         """Display detector image with optional beam center marker.
@@ -355,7 +359,7 @@ class SimpleMaskKernel:
 
         return mask_p
 
-    def add_drawing(
+    def add_drawing(  # noqa: PLR0912 - branches needed for different shape types
         self,
         sl_type: Literal[
             "Rectangle", "Circle", "Ellipse", "Polygon", "Line"
@@ -589,6 +593,6 @@ class SimpleMaskKernel:
 
         if mode == "xy":
             return (bcx, bcy)
-        elif mode == "vh":
+        if mode == "vh":
             return (bcy, bcx)
         return (bcx, bcy)

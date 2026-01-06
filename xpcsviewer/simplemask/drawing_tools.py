@@ -8,7 +8,6 @@ from dataclasses import dataclass
 from typing import Literal
 
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QKeySequence
 
 
 @dataclass

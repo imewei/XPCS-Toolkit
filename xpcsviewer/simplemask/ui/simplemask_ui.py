@@ -3,7 +3,6 @@
 This module provides the setupUi function for SimpleMaskWindow layout.
 """
 
-import pyqtgraph as pg
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QAction, QKeySequence
 from PySide6.QtWidgets import (
@@ -13,8 +12,6 @@ from PySide6.QtWidgets import (
     QGroupBox,
     QHBoxLayout,
     QLabel,
-    QMenu,
-    QMenuBar,
     QPushButton,
     QSpinBox,
     QSplitter,
@@ -29,7 +26,7 @@ from xpcsviewer.simplemask.drawing_tools import DRAWING_TOOLS, ERASER_TOOL
 from xpcsviewer.simplemask.pyqtgraph_mod import ImageViewROI
 
 
-def setup_ui(window) -> None:
+def setup_ui(window) -> None:  # noqa: PLR0915 - UI setup requires many statements
     """Set up the SimpleMask window UI.
 
     Creates a layout with:

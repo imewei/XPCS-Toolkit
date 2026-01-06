@@ -46,7 +46,7 @@ def compute_qmap(
             metadata["pix_dim"],
             metadata["det_dist"],
         )
-    elif stype == "Reflection":
+    if stype == "Reflection":
         return compute_reflection_qmap(
             metadata["energy"],
             (metadata["bcy"], metadata["bcx"]),
@@ -56,8 +56,7 @@ def compute_qmap(
             alpha_i_deg=metadata.get("alpha_i_deg", 0.14),
             orientation=metadata.get("orientation", "north"),
         )
-    else:
-        raise ValueError(f"Unknown scattering type: {stype}")
+    raise ValueError(f"Unknown scattering type: {stype}")
 
 
 @lru_cache(maxsize=128)

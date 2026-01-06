@@ -70,12 +70,14 @@ class SimpleMaskWindow(QMainWindow):
         # Drawing tool actions (toolbar)
         for tool_key, action in self.tool_actions.items():
             action.triggered.connect(
-                lambda checked, k=tool_key: self._on_tool_selected(k)
+                lambda checked, k=tool_key: self._on_tool_selected(k)  # noqa: ARG005
             )
 
         # Drawing tool buttons (side panel)
         for tool_key, btn in self.tool_buttons.items():
-            btn.clicked.connect(lambda checked, k=tool_key: self._on_tool_selected(k))
+            btn.clicked.connect(
+                lambda checked, k=tool_key: self._on_tool_selected(k)  # noqa: ARG005
+            )
 
         # Eraser
         self.action_eraser.triggered.connect(lambda: self._on_eraser_selected())
@@ -250,10 +252,7 @@ class SimpleMaskWindow(QMainWindow):
 
         # Suggest default filename
         default_name = "mask.h5"
-        if self._last_save_path:
-            default_path = self._last_save_path
-        else:
-            default_path = str(Path.home() / default_name)
+        default_path = self._last_save_path or str(Path.home() / default_name)
 
         file_path, _ = QFileDialog.getSaveFileName(
             self,
@@ -423,7 +422,7 @@ class SimpleMaskWindow(QMainWindow):
 
         # Update kernel and recompute
         self.kernel.update_parameters(new_metadata)
-        qmap, units = self.kernel.compute_qmap()
+        qmap, _units = self.kernel.compute_qmap()
 
         if qmap is not None and "q" in qmap:
             q_min = np.nanmin(qmap["q"])
@@ -438,7 +437,7 @@ class SimpleMaskWindow(QMainWindow):
     def _on_geometry_changed(self) -> None:
         """Handle geometry parameter change."""
         # Mark that geometry has been modified
-        pass  # Q-map will be regenerated on demand
+        # Q-map will be regenerated on demand
 
     def _on_compute_partition(self) -> None:
         """Compute partition from current Q-map and binning parameters."""

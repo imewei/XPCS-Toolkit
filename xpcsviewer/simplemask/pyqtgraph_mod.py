@@ -23,11 +23,9 @@ class ImageViewROI(pg.ImageView):
 
     def roiClicked(self):
         """Override to disable default ROI click behavior."""
-        pass
 
     def roiChanged(self):
         """Override to disable default ROI change behavior."""
-        pass
 
     def adjust_viewbox(self):
         """Configure viewbox for optimal image viewing."""

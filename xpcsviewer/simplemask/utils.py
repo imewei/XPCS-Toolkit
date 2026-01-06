@@ -67,15 +67,14 @@ def optimize_integer_array(arr: np.ndarray) -> np.ndarray:
             new_dtype = np.uint32
         else:
             new_dtype = np.uint64
+    elif min_val >= np.iinfo(np.int8).min and max_val <= np.iinfo(np.int8).max:
+        new_dtype = np.int8
+    elif min_val >= np.iinfo(np.int16).min and max_val <= np.iinfo(np.int16).max:
+        new_dtype = np.int16
+    elif min_val >= np.iinfo(np.int32).min and max_val <= np.iinfo(np.int32).max:
+        new_dtype = np.int32
     else:
-        if min_val >= np.iinfo(np.int8).min and max_val <= np.iinfo(np.int8).max:
-            new_dtype = np.int8
-        elif min_val >= np.iinfo(np.int16).min and max_val <= np.iinfo(np.int16).max:
-            new_dtype = np.int16
-        elif min_val >= np.iinfo(np.int32).min and max_val <= np.iinfo(np.int32).max:
-            new_dtype = np.int32
-        else:
-            new_dtype = np.int64
+        new_dtype = np.int64
 
     return arr.astype(new_dtype) if new_dtype != arr.dtype else arr
 

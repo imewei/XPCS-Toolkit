@@ -18,6 +18,10 @@ import numpy as np
 
 logger = logging.getLogger(__name__)
 
+# Angular periodicity constants for degree-based coordinates
+ANGLE_MIN_DEG = -180
+ANGLE_MAX_DEG = 180
+
 
 def create_qring(
     qmin: float,
@@ -140,7 +144,10 @@ class MaskFile(MaskBase):
     """Mask loaded from an HDF5 file."""
 
     def __init__(
-        self, shape: tuple[int, int] = (512, 1024), fname: str | None = None, **kwargs
+        self,
+        shape: tuple[int, int] = (512, 1024),
+        fname: str | None = None,  # noqa: ARG002 - kept for API compatibility
+        **kwargs,  # noqa: ARG002 - kept for API compatibility
     ) -> None:
         super().__init__(shape=shape)
         self.mtype = "file"
@@ -258,9 +265,9 @@ class MaskParameter(MaskBase):
             # Handle periodicity of angular coordinates
             if xmap_name in ["phi", "chi", "alpha"] and unit == "deg":
                 xmap = np.copy(xmap)
-                if vbeg <= -180 and -180 <= vend <= 180:
+                if vbeg <= ANGLE_MIN_DEG <= vend <= ANGLE_MAX_DEG:
                     xmap[xmap > vend] -= 360.0
-                if vend > 180 and -180 <= vbeg <= 180:
+                if vend > ANGLE_MAX_DEG and ANGLE_MIN_DEG <= vbeg <= ANGLE_MAX_DEG:
                     xmap[xmap < vbeg] += 360.0
             mask_t = (xmap >= vbeg) * (xmap <= vend)
             if logic == "AND":

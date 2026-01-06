@@ -37,28 +37,28 @@ from xpcsviewer.simplemask.utils import (
 )
 
 __all__ = [
-    # Window and Kernel
-    "SimpleMaskKernel",
-    "SimpleMaskWindow",
-    # Q-map computation
-    "compute_qmap",
-    "compute_transmission_qmap",
-    "compute_reflection_qmap",
+    # PyQtGraph components
+    "ImageViewROI",
+    "LineROI",
+    "MaskArray",
     # Mask classes
     "MaskAssemble",
     "MaskBase",
     "MaskFile",
     "MaskList",
-    "MaskThreshold",
     "MaskParameter",
-    "MaskArray",
-    # PyQtGraph components
-    "ImageViewROI",
-    "LineROI",
+    "MaskThreshold",
+    # Window and Kernel
+    "SimpleMaskKernel",
+    "SimpleMaskWindow",
+    "check_consistency",
+    "combine_partitions",
+    # Q-map computation
+    "compute_qmap",
+    "compute_reflection_qmap",
+    "compute_transmission_qmap",
     # Utilities
     "generate_partition",
-    "combine_partitions",
-    "check_consistency",
     "hash_numpy_dict",
     "optimize_integer_array",
 ]
