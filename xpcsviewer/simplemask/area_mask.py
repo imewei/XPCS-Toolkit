@@ -7,6 +7,7 @@ and drawing-based masks.
 Ported from pySimpleMask with modifications:
 - Removed TIFF support for initial release (HDF5 only)
 - Removed skimage.io dependency
+- Uses backend abstraction for GPU acceleration when available.
 """
 
 import logging
@@ -15,6 +16,9 @@ from typing import Any
 
 import h5py
 import numpy as np
+
+from xpcsviewer.backends import get_backend
+from xpcsviewer.backends._conversions import ensure_numpy
 
 logger = logging.getLogger(__name__)
 
@@ -212,6 +216,8 @@ class MaskThreshold(MaskBase):
     ) -> None:
         """Create mask based on intensity thresholds.
 
+        Uses backend abstraction for GPU acceleration when available.
+
         Args:
             saxs_lin: 2D intensity array
             low: Lower threshold value
@@ -223,13 +229,19 @@ class MaskThreshold(MaskBase):
             self.zero_loc = None
             return
 
-        mask = np.ones_like(saxs_lin, dtype=bool)
+        backend = get_backend()
+        data = backend.array(saxs_lin)
+        mask = backend.ones_like(data, dtype=bool)
+
         if low_enable:
-            mask = mask * (saxs_lin >= low)
+            mask = mask * (data >= low)
         if high_enable:
-            mask = mask * (saxs_lin < high)
-        mask = np.logical_not(mask)
-        self.zero_loc = np.array(np.nonzero(mask))
+            mask = mask * (data < high)
+        mask = backend.logical_not(mask)
+
+        # Convert to NumPy at I/O boundary
+        mask_np = ensure_numpy(mask)
+        self.zero_loc = np.array(np.nonzero(mask_np))
 
 
 class MaskParameter(MaskBase):
@@ -247,6 +259,8 @@ class MaskParameter(MaskBase):
     ) -> None:
         """Create mask based on Q-map constraints.
 
+        Uses backend abstraction for GPU acceleration when available.
+
         Args:
             qmap: Dictionary of Q-map arrays
             constraints: List of (map_name, logic, unit, vbeg, vend) tuples
@@ -259,22 +273,28 @@ class MaskParameter(MaskBase):
             self.zero_loc = None
             return
 
-        mask = np.ones(self.shape, dtype=bool)
+        backend = get_backend()
+        mask = backend.ones(self.shape, dtype=bool)
+
         for xmap_name, logic, unit, vbeg, vend in constraints:
-            xmap = qmap[xmap_name]
+            xmap = backend.array(qmap[xmap_name])
             # Handle periodicity of angular coordinates
             if xmap_name in ["phi", "chi", "alpha"] and unit == "deg":
-                xmap = np.copy(xmap)
+                xmap = backend.copy(xmap)
                 if vbeg <= ANGLE_MIN_DEG <= vend <= ANGLE_MAX_DEG:
-                    xmap[xmap > vend] -= 360.0
+                    # Replace in-place with where pattern
+                    xmap = backend.where(xmap > vend, xmap - 360.0, xmap)
                 if vend > ANGLE_MAX_DEG and ANGLE_MIN_DEG <= vbeg <= ANGLE_MAX_DEG:
-                    xmap[xmap < vbeg] += 360.0
+                    xmap = backend.where(xmap < vbeg, xmap + 360.0, xmap)
             mask_t = (xmap >= vbeg) * (xmap <= vend)
             if logic == "AND":
-                mask = np.logical_and(mask, mask_t)
+                mask = backend.logical_and(mask, mask_t)
             elif logic == "OR":
-                mask = np.logical_or(mask, mask_t)
-        self.zero_loc = np.array(np.nonzero(~mask))
+                mask = backend.logical_or(mask, mask_t)
+
+        # Convert to NumPy at I/O boundary
+        mask_np = ensure_numpy(mask)
+        self.zero_loc = np.array(np.nonzero(~mask_np))
 
 
 class MaskArray(MaskBase):

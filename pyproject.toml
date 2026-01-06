@@ -96,8 +96,23 @@ performance = [
     "memory-profiler>=0.61.0",
     "pympler>=1.1",
 ]
+jax = [
+    "jax>=0.8.0",
+    "jaxlib>=0.8.0",
+    # Probabilistic programming
+    "numpyro>=0.19.0",
+    # Bayesian visualization and diagnostics
+    "arviz>=0.22.0",
+    "arviz-base>=0.7.0",
+    "arviz-stats>=0.7.0",
+    "arviz-plots>=0.7.0",
+    # JAX utilities
+    "interpax>=0.3.0",
+    "optimistix>=0.0.9",
+    "optax>=0.2.0",
+]
 all = [
-    "xpcsviewer-gui[dev,test,docs,validation,performance]",
+    "xpcsviewer-gui[dev,test,docs,validation,performance,jax]",
 ]
 
 [project.scripts]
@@ -162,6 +177,21 @@ performance = [
     "pytest-benchmark>=5.2.0",
     "memory-profiler>=0.61.0",
     "pympler>=1.1",
+]
+jax = [
+    "jax>=0.8.0",
+    "jaxlib>=0.8.0",
+    # Probabilistic programming
+    "numpyro>=0.19.0",
+    # Bayesian visualization and diagnostics
+    "arviz>=0.22.0",
+    "arviz-base>=0.7.0",
+    "arviz-stats>=0.7.0",
+    "arviz-plots>=0.7.0",
+    # JAX utilities
+    "interpax>=0.3.0",
+    "optimistix>=0.0.9",
+    "optax>=0.2.0",
 ]
 
 [tool.setuptools_scm]
@@ -232,6 +262,8 @@ markers = [
     # Execution characteristics
     "slow: Tests that take more than 1 second",
     "gpu: Tests that require GPU",
+    "jax: Tests that require JAX backend",
+    "bayesian: Tests for Bayesian fitting with NumPyro",
     "critical: Critical path tests that must always pass",
 
     # Domain-specific markers

@@ -55,11 +55,7 @@ from .fileIO.hdf_reader import (
 )
 from .fileIO.hdf_reader_enhanced import get_enhanced_hdf5_reader
 from .fileIO.qmap_utils import get_qmap
-from .helper.fitting import (
-    fit_with_fixed,
-    fit_with_fixed_parallel,
-    fit_with_fixed_sequential,
-)
+from .fitting import fit_with_fixed, fit_with_fixed_parallel, fit_with_fixed_sequential
 from .module.twotime_utils import get_c2_stream, get_single_c2_from_hdf
 from .utils.exceptions import XPCSFileError, convert_exception
 from .utils.lazy_loader import LazyHDF5Array, get_lazy_loader, register_lazy_hdf5
@@ -1923,11 +1919,11 @@ class XpcsFile:
 
         # Prepare fitting parameters
         if fit_func == "single":
-            from .helper.fitting import single_exp
+            from .fitting import single_exp
 
             func = single_exp
         elif fit_func == "double":
-            from .helper.fitting import double_exp
+            from .fitting import double_exp
 
             func = double_exp
         else:
@@ -2038,13 +2034,13 @@ class XpcsFile:
                 params = fit_result["params"]
                 try:
                     if fit_func == "single" and len(params) >= 4:
-                        from .helper.fitting import single_exp_all
+                        from .fitting import single_exp_all
 
                         fit_line[i, :] = single_exp_all(
                             fit_x, params, fit_flag or [True] * 4
                         )
                     elif fit_func == "double" and len(params) >= 7:
-                        from .helper.fitting import double_exp_all
+                        from .fitting import double_exp_all
 
                         fit_line[i, :] = double_exp_all(
                             fit_x, params, fit_flag or [True] * 7

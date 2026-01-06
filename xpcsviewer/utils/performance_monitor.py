@@ -509,7 +509,7 @@ class XPCSBenchmarkSuite:
             g2_err_synthetic[:, q] = np.abs(noise) + 0.001
 
         # Import fitting functions
-        from ..helper.fitting import fit_with_fixed, fit_with_fixed_parallel, single_exp
+        from ..fitting import fit_with_fixed, fit_with_fixed_parallel, single_exp
 
         # Prepare fitting parameters
         bounds = np.array(

@@ -12,6 +12,7 @@ Functions:
 import numpy as np
 import pyqtgraph as pg
 
+from xpcsviewer.backends._conversions import ensure_numpy
 from xpcsviewer.utils.logging_config import get_logger
 
 # Local imports
@@ -200,8 +201,8 @@ def plot_line_with_marker(
     # Optimized pen creation with caching
     pen_line = pg.mkPen(color=rgba, width=1.5)
 
-    # Plot line with cleaned data
-    plot_item.plot(x_plot, y_plot, pen=pen_line, name=label)
+    # Plot line with cleaned data - ensure NumPy at PyQtGraph boundary
+    plot_item.plot(ensure_numpy(x_plot), ensure_numpy(y_plot), pen=pen_line, name=label)
 
     # Optimized scatter plot for markers
     if len(x_plot) <= 1000:  # Only show markers for manageable datasets
@@ -213,10 +214,10 @@ def plot_line_with_marker(
             x_scatter = x_plot
             y_scatter = y_plot
 
-        # Create scatter plot with optimized parameters
+        # Create scatter plot with optimized parameters - ensure NumPy at PyQtGraph boundary
         scatter = pg.ScatterPlotItem(
-            x=x_scatter,
-            y=y_scatter,
+            x=ensure_numpy(x_scatter),
+            y=ensure_numpy(y_scatter),
             symbol=marker,
             size=marker_size,
             pen=pg.mkPen(color=rgba, width=1),

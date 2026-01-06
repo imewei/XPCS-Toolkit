@@ -27,7 +27,7 @@ except ImportError:
     HAVE_XPCS_FILE = False
 
 # Import basic fitting components (RobustOptimizer removed)
-from xpcsviewer.helper.fitting import single_exp
+from xpcsviewer.fitting import single_exp
 
 
 # Define robust_curve_fit as alias to scipy for backward compatibility testing
@@ -371,7 +371,7 @@ class TestAPIStability(unittest.TestCase):
         # Test that key functions can be imported
         try:
             # Using local definitions for backward compatibility testing
-            from xpcsviewer.helper.fitting import double_exp, single_exp
+            from xpcsviewer.fitting import double_exp, single_exp
 
         except ImportError as e:
             self.fail(f"Import compatibility broken: {e}")
@@ -479,8 +479,12 @@ class TestLegacyWorkflowCompatibility(unittest.TestCase):
     def test_parameter_extraction_compatibility(self):
         """Test compatibility with parameter extraction routines."""
         # Test that typical parameter extraction still works
+        # Use fixed seed for reproducibility
+        np.random.seed(42)
         tau = np.logspace(-6, 0, 50)
-        g2 = single_exp(tau, 1000.0, 1.0, 0.5)
+        # Add realistic noise to synthetic data (otherwise covariance is zero)
+        noise = np.random.normal(0, 0.01, len(tau))
+        g2 = single_exp(tau, 1000.0, 1.0, 0.5) + noise
 
         popt, pcov = robust_curve_fit(single_exp, tau, g2)
 

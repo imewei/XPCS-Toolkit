@@ -8,6 +8,7 @@ Functions:
     plot: Display 2D SAXS pattern with beam center overlay.
 """
 
+from xpcsviewer.backends._conversions import ensure_numpy
 from xpcsviewer.utils.logging_config import get_logger
 
 logger = get_logger(__name__)
@@ -45,8 +46,8 @@ def plot(
     if not do_autorange:
         view_range = pg_hdl.view.viewRange()
 
-    # Set new image
-    pg_hdl.setImage(img, autoLevels=autolevel, autoRange=do_autorange)
+    # Set new image - ensure NumPy at PyQtGraph boundary
+    pg_hdl.setImage(ensure_numpy(img), autoLevels=autolevel, autoRange=do_autorange)
 
     # Restore view range if we skipped auto-ranging
     if not do_autorange:

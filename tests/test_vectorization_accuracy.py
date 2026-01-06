@@ -15,7 +15,7 @@ import pytest
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
 try:
-    from xpcsviewer.helper import fitting
+    from xpcsviewer import fitting
     from xpcsviewer.module import g2mod, saxs1d, twotime_utils
 
     MODULES_AVAILABLE = True

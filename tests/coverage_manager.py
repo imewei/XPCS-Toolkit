@@ -106,7 +106,7 @@ class CoverageManager:
                 "xpcsviewer/module/saxs2d.py", 95.0, True, "SAXS 2D analysis"
             ),
             CoverageTarget(
-                "xpcsviewer/helper/fitting.py",
+                "xpcsviewer/fitting/legacy.py",
                 95.0,
                 True,
                 "Scientific fitting algorithms",

@@ -11,6 +11,8 @@ Functions:
 import numpy as np
 import pyqtgraph as pg
 
+from xpcsviewer.backends import get_backend
+from xpcsviewer.backends._conversions import ensure_numpy
 from xpcsviewer.utils.logging_config import get_logger
 
 from ..xpcs_file import MemoryMonitor
@@ -73,7 +75,7 @@ def clean_c2_for_visualization(c2, method="nan_to_num"):
     if method == "interpolate":
         # Use interpolation for better continuity
         try:
-            from scipy import ndimage
+            from xpcsviewer.backends.scipy_replacements import gaussian_filter
 
             c2_clean = np.copy(c2)
             finite_mask = np.isfinite(c2)
@@ -83,8 +85,10 @@ def clean_c2_for_visualization(c2, method="nan_to_num"):
                 median_val = np.median(c2[finite_mask])
                 c2_clean[~finite_mask] = median_val
 
-                # Apply light Gaussian filter to smooth transitions
-                c2_clean = ndimage.gaussian_filter(c2_clean, sigma=0.5, mode="nearest")
+                # Apply light Gaussian filter to smooth transitions (backend-agnostic)
+                c2_clean = ensure_numpy(
+                    gaussian_filter(c2_clean, sigma=0.5, mode="nearest")
+                )
 
                 # Preserve original finite values
                 c2_clean[finite_mask] = c2[finite_mask]
@@ -92,7 +96,7 @@ def clean_c2_for_visualization(c2, method="nan_to_num"):
             return c2_clean
         except ImportError:
             logger.warning(
-                "scipy not available for interpolation, falling back to nan_to_num"
+                "gaussian_filter not available for interpolation, falling back to nan_to_num"
             )
             return clean_c2_for_visualization(c2, method="nan_to_num")
 
@@ -186,8 +190,9 @@ def plot_twotime(
         )
         return
 
-    hdl["saxs"].setImage(np.flipud(saxs))
-    hdl["dqmap"].setImage(dqmap_disp)
+    # Ensure NumPy arrays at PyQtGraph boundary
+    hdl["saxs"].setImage(ensure_numpy(np.flipud(saxs)))
+    hdl["dqmap"].setImage(ensure_numpy(dqmap_disp))
 
     # Monitor memory before loading potentially large c2 data
     if MemoryMonitor.is_memory_pressure_high(0.8):
@@ -219,7 +224,7 @@ def plot_twotime(
         return
 
     hdl["tt"].imageItem.setScale(delta_t)
-    hdl["tt"].setImage(c2_clean, autoRange=True)  # Use cleaned data
+    hdl["tt"].setImage(ensure_numpy(c2_clean), autoRange=True)  # Use cleaned data
 
     cmap = pg.colormap.getFromMatplotlib(cmap)
     hdl["tt"].setColorMap(cmap)

@@ -3,6 +3,7 @@ Vectorized ROI (Region of Interest) Calculations for XPCS Viewer
 
 This module provides highly optimized vectorized ROI calculations with advanced
 memory management and parallel processing capabilities for XPCS data analysis.
+Uses JAX backend for GPU acceleration when available.
 """
 
 import time
@@ -13,6 +14,9 @@ from enum import Enum
 from typing import Any
 
 import numpy as np
+
+from xpcsviewer.backends import get_backend
+from xpcsviewer.backends._conversions import ensure_numpy
 
 from .logging_config import get_logger
 from .memory_manager import MemoryPressure, get_memory_manager
@@ -53,11 +57,17 @@ class ROIResult:
 
 
 class VectorizedROICalculator(ABC):
-    """Abstract base class for vectorized ROI calculators."""
+    """Abstract base class for vectorized ROI calculators.
+
+    Uses JAX backend for GPU acceleration when available, with automatic
+    vmap for batch processing.
+    """
 
     def __init__(self, chunk_size_mb: float = 100.0):
         self.chunk_size_mb = chunk_size_mb
         self.memory_manager = get_memory_manager()
+        self._backend = get_backend()
+        self._vmap_enabled = self._backend.name == "jax"
 
     @abstractmethod
     def calculate_roi_mask(
@@ -295,6 +305,45 @@ class VectorizedROICalculator(ABC):
         # Default x-values
         return np.arange(len(roi_params.parameters.get("default_size", 100)))
 
+    def process_batch_vmap(
+        self, frames: np.ndarray, roi_mask: np.ndarray
+    ) -> np.ndarray:
+        """Process batch of frames using JAX vmap for GPU acceleration.
+
+        Parameters
+        ----------
+        frames : np.ndarray
+            Stack of frames [N, H, W]
+        roi_mask : np.ndarray
+            ROI mask [H, W]
+
+        Returns
+        -------
+        np.ndarray
+            Summed intensities for each frame [N]
+        """
+        if self._vmap_enabled:
+            import jax
+            import jax.numpy as jnp
+
+            # Convert to JAX arrays
+            frames_jax = jnp.asarray(frames)
+            mask_jax = jnp.asarray(roi_mask)
+
+            # Define single-frame processing function
+            def process_single_frame(frame):
+                return jnp.sum(jnp.where(mask_jax, frame, 0.0))
+
+            # Apply vmap for batch processing
+            batch_fn = jax.vmap(process_single_frame)
+            result = batch_fn(frames_jax)
+
+            # Return as NumPy array
+            return ensure_numpy(result)
+        else:
+            # NumPy fallback for non-JAX backend
+            return np.sum(frames * roi_mask[np.newaxis, ...], axis=(1, 2))
+
 
 class PieROICalculator(VectorizedROICalculator):
     """Optimized calculator for pie-shaped ROI."""
@@ -368,8 +417,8 @@ class PieROICalculator(VectorizedROICalculator):
                 final_roi_data[qmax_idx:] = np.nan
 
         return ROIResult(
-            x_values=x_values,
-            roi_data=final_roi_data,
+            x_values=ensure_numpy(x_values),
+            roi_data=ensure_numpy(final_roi_data),
             roi_type=roi_params.roi_type,
             parameters=roi_params.parameters,
             metadata={"vectorized": True, "qsize": qsize},
@@ -435,8 +484,8 @@ class RingROICalculator(VectorizedROICalculator):
         x_values = np.linspace(phi_min, phi_max, phi_num)
 
         return ROIResult(
-            x_values=x_values,
-            roi_data=final_roi_data,
+            x_values=ensure_numpy(x_values),
+            roi_data=ensure_numpy(final_roi_data),
             roi_type=roi_params.roi_type,
             parameters=roi_params.parameters,
             metadata={

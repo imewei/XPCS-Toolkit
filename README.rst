@@ -65,6 +65,52 @@ Installation
    pip install xpcsviewer[validation] # Profiling and validation tools
    pip install xpcsviewer[performance] # Performance analysis tools
 
+GPU Acceleration (Optional)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+For GPU-accelerated computations on NVIDIA GPUs with CUDA 12+:
+
+.. code-block:: bash
+
+   # Install JAX CPU backend (default)
+   pip install xpcsviewer[jax]
+
+   # For GPU acceleration, install JAX with CUDA support
+   # This uses your system's CUDA installation (requires CUDA 12+)
+   pip install jax[cuda12-local]
+
+   # Or for CUDA 13+
+   pip install jax[cuda13-local]
+
+**Verify GPU detection:**
+
+.. code-block:: bash
+
+   python -c "import jax; print(jax.devices())"
+   # Expected output: [CudaDevice(id=0), ...]
+
+**Environment variables for control:**
+
+.. list-table::
+   :header-rows: 1
+   :widths: 30 50 20
+
+   * - Variable
+     - Description
+     - Default
+   * - ``XPCS_USE_JAX``
+     - Enable JAX backend (true, false, auto)
+     - auto
+   * - ``JAX_PLATFORMS``
+     - Force CPU/GPU (cpu, cuda)
+     - (auto-detected)
+   * - ``XPCS_GPU_FALLBACK``
+     - Allow CPU fallback if GPU fails
+     - true
+   * - ``XPCS_GPU_MEMORY_FRACTION``
+     - Maximum GPU memory usage (0.0-1.0)
+     - 0.9
+
 Usage
 -----
 

@@ -1,8 +1,13 @@
-"""
-Simplified XPCS fitting utilities.
+"""Legacy fitting utilities for backward compatibility.
 
-Core fitting functions for G2 correlation analysis without over-engineering.
+Provides the same API as the old xpcsviewer.helper.fitting module,
+migrated to use the new JAX-accelerated backend where possible.
+
+These functions maintain the same interface for xpcs_file.py compatibility
+while leveraging the new fitting infrastructure internally.
 """
+
+from __future__ import annotations
 
 from collections.abc import Callable
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor, as_completed
@@ -12,6 +17,8 @@ import numpy as np
 from numpy.typing import NDArray
 from scipy.optimize import curve_fit
 
+from xpcsviewer.backends import get_backend
+from xpcsviewer.backends._conversions import ensure_numpy
 from xpcsviewer.utils.logging_config import get_logger
 
 logger = get_logger(__name__)
@@ -21,7 +28,10 @@ def single_exp(
     x: NDArray[np.floating[Any]], tau: float, bkg: float, cts: float
 ) -> NDArray[np.floating[Any]]:
     """Single exponential model for G2 correlation function."""
-    return cts * np.exp(-2 * x / tau) + bkg
+    backend = get_backend()
+    x_arr = backend.array(x)
+    result = cts * backend.exp(-2 * x_arr / tau) + bkg
+    return ensure_numpy(result)
 
 
 def double_exp(
@@ -33,14 +43,24 @@ def double_exp(
     cts2: float,
 ) -> NDArray[np.floating[Any]]:
     """Double exponential model for G2 correlation function."""
-    return cts1 * np.exp(-2 * x / tau1) + cts2 * np.exp(-2 * x / tau2) + bkg
+    backend = get_backend()
+    x_arr = backend.array(x)
+    result = (
+        cts1 * backend.exp(-2 * x_arr / tau1)
+        + cts2 * backend.exp(-2 * x_arr / tau2)
+        + bkg
+    )
+    return ensure_numpy(result)
 
 
 def single_exp_all(
     x: NDArray[np.floating[Any]], a: float, b: float, c: float, d: float
 ) -> NDArray[np.floating[Any]]:
     """Single exponential with all parameters."""
-    return a * np.exp(-2 * x / b) + c + d
+    backend = get_backend()
+    x_arr = backend.array(x)
+    result = a * backend.exp(-2 * x_arr / b) + c + d
+    return ensure_numpy(result)
 
 
 def double_exp_all(
@@ -53,7 +73,10 @@ def double_exp_all(
     f: float,
 ) -> NDArray[np.floating[Any]]:
     """Double exponential with all parameters."""
-    return a * np.exp(-2 * x / b) + c * np.exp(-2 * x / d) + e + f
+    backend = get_backend()
+    x_arr = backend.array(x)
+    result = a * backend.exp(-2 * x_arr / b) + c * backend.exp(-2 * x_arr / d) + e + f
+    return ensure_numpy(result)
 
 
 def fit_with_fixed(
@@ -67,8 +90,7 @@ def fit_with_fixed(
     p0: NDArray[np.floating[Any]] | None = None,
     **kwargs: Any,
 ) -> tuple[NDArray[np.floating[Any]], NDArray[np.floating[Any]]]:
-    """
-    Simplified fitting with fixed parameters.
+    """Fitting with fixed parameters using scipy.optimize.curve_fit.
 
     Parameters
     ----------
@@ -94,6 +116,12 @@ def fit_with_fixed(
     tuple
         (fit_line, fit_params)
     """
+    # Ensure numpy arrays at scipy boundary
+    x = ensure_numpy(x)
+    y = ensure_numpy(y)
+    sigma = ensure_numpy(sigma)
+    fit_x = ensure_numpy(fit_x)
+
     if not isinstance(fit_flag, np.ndarray):
         fit_flag = np.array(fit_flag)
 
@@ -122,11 +150,7 @@ def fit_with_fixed(
     # Fit each column
     for n in range(y.shape[1]):
         try:
-            # Perform curve fitting
-            # Extract sigma for this column to match y shape
             sigma_col = sigma[:, n] if sigma.ndim > 1 else sigma
-            # Use appropriate method for constrained optimization
-            # 'trf' is recommended for bounded problems
             popt, pcov = curve_fit(
                 wrapper_func,
                 x,
@@ -138,27 +162,16 @@ def fit_with_fixed(
                 max_nfev=5000,
             )
 
-            # Store results
             fit_val[n, 0, fit_flag] = popt
-
-            # Debug covariance matrix and error calculation
             pcov_diag = np.diag(pcov)
             errors = np.sqrt(pcov_diag)
 
-            # Check for problematic values
             if np.any(pcov_diag < 0):
                 logger.warning(
-                    f"Column {n}: Negative diagonal elements in covariance matrix: {pcov_diag}"
-                )
-            if np.any(~np.isfinite(pcov_diag)):
-                logger.warning(
-                    f"Column {n}: Non-finite diagonal elements in covariance matrix: {pcov_diag}"
+                    f"Column {n}: Negative diagonal elements in covariance matrix"
                 )
             if np.any(~np.isfinite(errors)):
-                logger.warning(f"Column {n}: Non-finite errors calculated: {errors}")
-                # Set problematic errors to a reasonable value
                 errors = np.where(np.isfinite(errors), errors, np.abs(popt) * 0.1)
-                logger.info(f"Column {n}: Corrected errors to: {errors}")
 
             fit_val[n, 1, fit_flag] = errors
             fit_val[n, 0, fix_flag] = bounds[1, fix_flag]
@@ -166,14 +179,13 @@ def fit_with_fixed(
 
         except Exception as e:
             logger.warning(f"Fitting failed for column {n}: {e}")
-            # Use bounds mean as fallback
             fit_val[n, 0, :] = np.mean(bounds, axis=0)
             fit_val[n, 1, :] = 0
 
     # Generate fit lines
     fit_line = np.zeros((y.shape[1], len(fit_x)))
     for n in range(y.shape[1]):
-        fit_line[n] = base_func(fit_x, *fit_val[n, 0, :])
+        fit_line[n] = ensure_numpy(base_func(fit_x, *fit_val[n, 0, :]))
 
     return fit_line, fit_val
 
@@ -181,23 +193,10 @@ def fit_with_fixed(
 def _fit_single_qvalue(
     args: tuple[Any, ...],
 ) -> tuple[int, NDArray[np.floating[Any]], NDArray[np.floating[Any]], bool]:
-    """
-    Worker function for parallel fitting of a single q-value.
-
-    Parameters
-    ----------
-    args : tuple
-        (column_index, x_data, y_column, sigma_column, wrapper_func, p0, bounds_fit)
-
-    Returns
-    -------
-    tuple
-        (column_index, popt, errors, success)
-    """
+    """Worker function for parallel fitting of a single q-value."""
     col_idx, x, y_col, sigma_col, wrapper_func, p0, bounds_fit = args
 
     try:
-        # Perform curve fitting for this q-value
         popt, pcov = curve_fit(
             wrapper_func,
             x,
@@ -209,11 +208,9 @@ def _fit_single_qvalue(
             max_nfev=5000,
         )
 
-        # Calculate parameter errors
         pcov_diag = np.diag(pcov)
-        errors = np.sqrt(np.abs(pcov_diag))  # Use abs to handle negative values
+        errors = np.sqrt(np.abs(pcov_diag))
 
-        # Handle problematic errors
         if np.any(~np.isfinite(errors)):
             errors = np.where(np.isfinite(errors), errors, np.abs(popt) * 0.1)
 
@@ -237,37 +234,13 @@ def fit_with_fixed_parallel(
     use_threads: bool = True,
     **kwargs: Any,
 ) -> tuple[NDArray[np.floating[Any]], NDArray[np.floating[Any]]]:
-    """
-    Parallel version of fit_with_fixed for processing multiple q-values simultaneously.
+    """Parallel version of fit_with_fixed for processing multiple q-values simultaneously."""
+    # Ensure numpy arrays at scipy boundary
+    x = ensure_numpy(x)
+    y = ensure_numpy(y)
+    sigma = ensure_numpy(sigma)
+    fit_x = ensure_numpy(fit_x)
 
-    Parameters
-    ----------
-    base_func : callable
-        Function to fit
-    x : array
-        Input data (tau values)
-    y : array
-        G2 correlation data (tau x q_values)
-    sigma : array
-        Error bars
-    bounds : tuple
-        (lower_bounds, upper_bounds)
-    fit_flag : array
-        Boolean array indicating which parameters to fit
-    fit_x : array
-        X values for output curve
-    p0 : array, optional
-        Initial parameter values
-    max_workers : int, optional
-        Maximum number of workers for parallel processing
-    use_threads : bool, optional
-        Whether to use threads (True) or processes (False)
-
-    Returns
-    -------
-    tuple
-        (fit_line, fit_params)
-    """
     if not isinstance(fit_flag, np.ndarray):
         fit_flag = np.array(fit_flag)
 
@@ -279,28 +252,22 @@ def fit_with_fixed_parallel(
     num_args = len(fit_flag)
     num_qvals = y.shape[1]
 
-    # Process boundaries for fitting parameters only
     bounds_fit = bounds[:, fit_flag]
-
-    # Initial guess for fitting parameters
     p0 = np.mean(bounds_fit, axis=0) if p0 is None else np.array(p0)[fit_flag]
 
     fit_val = np.zeros((num_qvals, 2, num_args))
 
-    # Create wrapper function for fixed parameters
     def wrapper_func(x_data, *fit_params):
         full_params = np.zeros(num_args)
         full_params[fit_flag] = fit_params
-        full_params[fix_flag] = bounds[1, fix_flag]  # Use upper bound as fixed value
-        return base_func(x_data, *full_params)
+        full_params[fix_flag] = bounds[1, fix_flag]
+        return ensure_numpy(base_func(x_data, *full_params))
 
-    # Prepare arguments for parallel processing
     fit_args = []
     for n in range(num_qvals):
         sigma_col = sigma[:, n] if sigma.ndim > 1 else sigma
         fit_args.append((n, x, y[:, n], sigma_col, wrapper_func, p0, bounds_fit))
 
-    # Determine number of workers
     if max_workers is None:
         import os
 
@@ -310,42 +277,33 @@ def fit_with_fixed_parallel(
         f"Starting parallel G2 fitting for {num_qvals} q-values using {max_workers} workers"
     )
 
-    # Execute parallel fitting
     executor_class = ThreadPoolExecutor if use_threads else ProcessPoolExecutor
 
     with executor_class(max_workers=max_workers) as executor:
-        # Submit all fitting tasks
         future_to_col = {
             executor.submit(_fit_single_qvalue, args): args[0] for args in fit_args
         }
 
-        # Collect results as they complete
         for completed_fits, future in enumerate(as_completed(future_to_col), start=1):
             col_idx, popt, errors, success = future.result()
 
             if success:
-                # Store successful fit results
                 fit_val[col_idx, 0, fit_flag] = popt
                 fit_val[col_idx, 1, fit_flag] = errors
                 fit_val[col_idx, 0, fix_flag] = bounds[1, fix_flag]
                 fit_val[col_idx, 1, fix_flag] = 0
             else:
-                # Use bounds mean as fallback for failed fits
                 fit_val[col_idx, 0, :] = np.mean(bounds, axis=0)
                 fit_val[col_idx, 1, :] = 0
 
-            # Progress reporting
             if completed_fits % max(1, num_qvals // 10) == 0:
                 progress = (completed_fits / num_qvals) * 100
                 logger.debug(
                     f"Parallel fitting progress: {progress:.1f}% ({completed_fits}/{num_qvals})"
                 )
 
-    # Generate fit lines in parallel as well
-    logger.debug(f"Generating fit lines for {num_qvals} q-values")
-
     def generate_fit_line(n):
-        return n, base_func(fit_x, *fit_val[n, 0, :])
+        return n, ensure_numpy(base_func(fit_x, *fit_val[n, 0, :]))
 
     fit_line = np.zeros((num_qvals, len(fit_x)))
 
@@ -362,22 +320,6 @@ def fit_with_fixed_parallel(
     return fit_line, fit_val
 
 
-def robust_curve_fit(
-    func: Callable[..., NDArray[np.floating[Any]]],
-    x: NDArray[np.floating[Any]],
-    y: NDArray[np.floating[Any]],
-    **kwargs: Any,
-) -> tuple[NDArray[np.floating[Any]], NDArray[np.floating[Any]]]:
-    """Simple wrapper around scipy.optimize.curve_fit with error handling."""
-    try:
-        return curve_fit(func, x, y, **kwargs)
-    except Exception as e:
-        logger.warning(f"Curve fitting failed: {e}")
-        # Return fallback values
-        n_params = func.__code__.co_argcount - 1  # -1 for x parameter
-        return np.ones(n_params), np.eye(n_params)
-
-
 def sequential_fitting(
     func: Callable[..., NDArray[np.floating[Any]]],
     x: NDArray[np.floating[Any]],
@@ -386,50 +328,24 @@ def sequential_fitting(
     p0: NDArray[np.floating[Any]] | None = None,
     bounds: tuple[NDArray[np.floating[Any]], NDArray[np.floating[Any]]] | None = None,
     **kwargs: Any,
-) -> tuple[NDArray[np.floating[Any]], NDArray[np.floating[Any]]]:
-    """
-    Sequential fitting approach: robust → least squares → differential evolution.
-
-    Implements a three-stage fitting strategy for improved reliability:
-    1. Robust fitting using Huber loss (handles outliers)
-    2. Standard least squares (if robust fails)
-    3. Differential evolution global optimization (if least squares fails)
-
-    Parameters
-    ----------
-    func : callable
-        Function to fit
-    x : array
-        Independent variable data
-    y : array
-        Dependent variable data
-    sigma : array, optional
-        Uncertainty in y
-    p0 : array, optional
-        Initial parameter guess
-    bounds : tuple, optional
-        Parameter bounds as (lower, upper)
-    **kwargs
-        Additional arguments for fitting methods
-
-    Returns
-    -------
-    tuple
-        (popt, pcov, method_used) where method_used indicates which method succeeded
-    """
+) -> tuple[NDArray[np.floating[Any]], NDArray[np.floating[Any]], str]:
+    """Sequential fitting approach: robust → least squares → differential evolution."""
     import warnings
 
-    from scipy.optimize import curve_fit, differential_evolution
+    from scipy.optimize import differential_evolution
 
-    # Suppress warnings during fitting attempts
+    # Ensure numpy arrays
+    x = ensure_numpy(x)
+    y = ensure_numpy(y)
+    if sigma is not None:
+        sigma = ensure_numpy(sigma)
+
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
 
-        # Method 1: Robust fitting with Huber loss
+        # Method 1: Robust fitting with TRF
         try:
-            logger.debug("Attempting robust fitting with Huber loss")
-            # Use appropriate method for bounded problems
-            # Check if bounds are specified (not infinite bounds)
+            logger.debug("Attempting robust fitting")
             try:
                 is_bounded = not (
                     isinstance(bounds, tuple)
@@ -438,9 +354,8 @@ def sequential_fitting(
                     and np.all(bounds[1] == np.inf)
                 )
             except (ValueError, TypeError):
-                # If comparison fails, assume bounds are specified
                 is_bounded = True
-            # Remove conflicting parameters from kwargs
+
             safe_kwargs = {
                 k: v for k, v in kwargs.items() if k not in ["max_nfev", "maxfev"]
             }
@@ -453,7 +368,7 @@ def sequential_fitting(
                     sigma=sigma,
                     p0=p0,
                     bounds=bounds,
-                    method="trf",  # Trust Region Reflective for bounded problems
+                    method="trf",
                     max_nfev=5000,
                     **safe_kwargs,
                 )
@@ -465,11 +380,10 @@ def sequential_fitting(
                     sigma=sigma,
                     p0=p0,
                     bounds=bounds,
-                    method="lm",  # Levenberg-Marquardt for unbounded problems
+                    method="lm",
                     maxfev=5000,
                     **safe_kwargs,
                 )
-            # Validate result
             if np.all(np.isfinite(popt)) and np.all(np.isfinite(pcov)):
                 logger.debug("Robust fitting succeeded")
                 return popt, pcov, "robust"
@@ -479,8 +393,6 @@ def sequential_fitting(
         # Method 2: Standard least squares
         try:
             logger.debug("Attempting standard least squares fitting")
-            # Use appropriate method and parameter name for bounded problems
-            # Check if bounds are specified (not infinite bounds)
             try:
                 is_bounded = not (
                     isinstance(bounds, tuple)
@@ -489,9 +401,8 @@ def sequential_fitting(
                     and np.all(bounds[1] == np.inf)
                 )
             except (ValueError, TypeError):
-                # If comparison fails, assume bounds are specified
                 is_bounded = True
-            # Remove conflicting parameters from kwargs
+
             safe_kwargs = {
                 k: v for k, v in kwargs.items() if k not in ["max_nfev", "maxfev"]
             }
@@ -519,20 +430,18 @@ def sequential_fitting(
                     maxfev=5000,
                     **safe_kwargs,
                 )
-            # Validate result
             if np.all(np.isfinite(popt)) and np.all(np.isfinite(pcov)):
                 logger.debug("Standard fitting succeeded")
                 return popt, pcov, "least_squares"
         except Exception as e:
             logger.debug(f"Standard fitting failed: {e}")
 
-        # Method 3: Differential Evolution (global optimization)
+        # Method 3: Differential Evolution
         try:
             logger.debug("Attempting differential evolution fitting")
             if bounds is None:
                 raise ValueError("Bounds required for differential evolution")
 
-            # Define objective function for differential evolution
             def objective(params):
                 try:
                     y_pred = func(x, *params)
@@ -547,7 +456,7 @@ def sequential_fitting(
             result = differential_evolution(
                 objective,
                 bounds=list(zip(bounds[0], bounds[1], strict=False)),
-                seed=42,  # For reproducibility
+                seed=42,
                 maxiter=1000,
                 popsize=15,
                 tol=1e-6,
@@ -555,9 +464,7 @@ def sequential_fitting(
 
             if result.success:
                 popt = result.x
-                # Estimate covariance using Jacobian at optimum
                 try:
-                    # Calculate Jacobian numerically
                     eps = np.sqrt(np.finfo(float).eps)
                     jac = np.zeros((len(y), len(popt)))
                     y0 = func(x, *popt)
@@ -567,7 +474,6 @@ def sequential_fitting(
                         y_plus = func(x, *params_plus)
                         jac[:, i] = (y_plus - y0) / eps
 
-                    # Estimate covariance matrix
                     if sigma is not None:
                         jac_weighted = jac / sigma[:, np.newaxis]
                     else:
@@ -576,7 +482,6 @@ def sequential_fitting(
                     pcov = np.linalg.inv(jac_weighted.T @ jac_weighted)
 
                 except (np.linalg.LinAlgError, ValueError):
-                    # Fallback: identity matrix scaled by parameter magnitude
                     pcov = np.eye(len(popt)) * (np.abs(popt) + 1e-10)
 
                 logger.debug("Differential evolution succeeded")
@@ -586,7 +491,7 @@ def sequential_fitting(
         except Exception as e:
             logger.debug(f"Differential evolution failed: {e}")
 
-    # All methods failed - return fallback values
+    # All methods failed
     logger.warning("All fitting methods failed, using fallback parameters")
     n_params = func.__code__.co_argcount - 1
     if p0 is not None:
@@ -596,7 +501,7 @@ def sequential_fitting(
     else:
         popt = np.ones(n_params)
 
-    pcov = np.eye(n_params) * 1e6  # Large uncertainty
+    pcov = np.eye(n_params) * 1e6
     return popt, pcov, "fallback"
 
 
@@ -610,37 +515,14 @@ def fit_with_fixed_sequential(
     fit_x: NDArray[np.floating[Any]],
     p0: NDArray[np.floating[Any]] | None = None,
     **kwargs: Any,
-) -> tuple[NDArray[np.floating[Any]], NDArray[np.floating[Any]]]:
-    """
-    Enhanced fitting with sequential method approach: robust → least squares → differential evolution.
+) -> tuple[NDArray[np.floating[Any]], NDArray[np.floating[Any]], list[str]]:
+    """Enhanced fitting with sequential method approach."""
+    # Ensure numpy arrays
+    x = ensure_numpy(x)
+    y = ensure_numpy(y)
+    sigma = ensure_numpy(sigma)
+    fit_x = ensure_numpy(fit_x)
 
-    This version of fit_with_fixed uses the sequential_fitting function to provide
-    more robust fitting by trying multiple optimization methods.
-
-    Parameters
-    ----------
-    base_func : callable
-        Function to fit
-    x : array
-        Input data
-    y : array
-        Output data (2D array, columns are different q-values)
-    sigma : array
-        Error bars
-    bounds : tuple
-        (lower_bounds, upper_bounds)
-    fit_flag : array
-        Boolean array indicating which parameters to fit
-    fit_x : array
-        X values for output curve
-    p0 : array, optional
-        Initial parameter values
-
-    Returns
-    -------
-    tuple
-        (fit_line, fit_params, fit_methods) where fit_methods indicates which method was used for each column
-    """
     if not isinstance(fit_flag, np.ndarray):
         fit_flag = np.array(fit_flag)
 
@@ -650,30 +532,22 @@ def fit_with_fixed_sequential(
         bounds = np.array(bounds)
 
     num_args = len(fit_flag)
-
-    # Process boundaries for fitting parameters only
     bounds_fit = bounds[:, fit_flag]
-
-    # Initial guess for fitting parameters
     p0 = np.mean(bounds_fit, axis=0) if p0 is None else np.array(p0)[fit_flag]
 
     fit_val = np.zeros((y.shape[1], 2, num_args))
-    fit_methods = []  # Track which method was used for each column
+    fit_methods = []
 
-    # Create wrapper function for fixed parameters
     def wrapper_func(x_data, *fit_params):
         full_params = np.zeros(num_args)
         full_params[fit_flag] = fit_params
-        full_params[fix_flag] = bounds[1, fix_flag]  # Use upper bound as fixed value
-        return base_func(x_data, *full_params)
+        full_params[fix_flag] = bounds[1, fix_flag]
+        return ensure_numpy(base_func(x_data, *full_params))
 
-    # Fit each column using sequential approach
     for n in range(y.shape[1]):
         try:
-            # Extract sigma for this column to match y shape
             sigma_col = sigma[:, n] if sigma.ndim > 1 else sigma
 
-            # Use sequential fitting
             popt, pcov, method_used = sequential_fitting(
                 wrapper_func,
                 x,
@@ -687,7 +561,6 @@ def fit_with_fixed_sequential(
             fit_methods.append(method_used)
             logger.debug(f"Column {n}: fitted using {method_used}")
 
-            # Store results
             fit_val[n, 0, fit_flag] = popt
             fit_val[n, 1, fit_flag] = np.sqrt(np.diag(pcov))
             fit_val[n, 0, fix_flag] = bounds[1, fix_flag]
@@ -696,16 +569,13 @@ def fit_with_fixed_sequential(
         except Exception as e:
             logger.warning(f"Sequential fitting failed for column {n}: {e}")
             fit_methods.append("fallback_error")
-            # Use bounds mean as fallback
             fit_val[n, 0, :] = np.mean(bounds, axis=0)
             fit_val[n, 1, :] = 0
 
-    # Generate fit lines
     fit_line = np.zeros((y.shape[1], len(fit_x)))
     for n in range(y.shape[1]):
-        fit_line[n] = base_func(fit_x, *fit_val[n, 0, :])
+        fit_line[n] = ensure_numpy(base_func(fit_x, *fit_val[n, 0, :]))
 
-    # Log summary of methods used
     method_counts = {}
     for method in fit_methods:
         method_counts[method] = method_counts.get(method, 0) + 1
@@ -714,57 +584,48 @@ def fit_with_fixed_sequential(
     return fit_line, fit_val, fit_methods
 
 
+def robust_curve_fit(
+    func: Callable[..., NDArray[np.floating[Any]]],
+    x: NDArray[np.floating[Any]],
+    y: NDArray[np.floating[Any]],
+    **kwargs: Any,
+) -> tuple[NDArray[np.floating[Any]], NDArray[np.floating[Any]]]:
+    """Simple wrapper around scipy.optimize.curve_fit with error handling."""
+    x = ensure_numpy(x)
+    y = ensure_numpy(y)
+    try:
+        return curve_fit(func, x, y, **kwargs)
+    except Exception as e:
+        logger.warning(f"Curve fitting failed: {e}")
+        n_params = func.__code__.co_argcount - 1
+        return np.ones(n_params), np.eye(n_params)
+
+
 def vectorized_parameter_estimation(
     x: NDArray[np.floating[Any]],
     y: NDArray[np.floating[Any]],
     model_type: str = "exponential",
-) -> dict[str, NDArray[np.floating[Any]]]:
-    """
-    Stub function for vectorized parameter estimation.
+) -> tuple | None:
+    """Vectorized parameter estimation."""
+    x = ensure_numpy(x)
+    y = ensure_numpy(y)
 
-    This is a placeholder implementation for testing purposes.
-
-    Parameters
-    ----------
-    x : array_like
-        Independent variable data
-    y : array_like
-        Dependent variable data
-    model_type : str
-        Type of model to fit ("exponential" supported)
-
-    Returns
-    -------
-    tuple or None
-        Estimated parameters (tau, baseline, amplitude) for exponential model,
-        or None if fitting fails
-    """
     try:
         if model_type == "exponential":
-            # Use existing single_exp function with scipy curve_fit
-            from scipy.optimize import curve_fit
-
-            # Better initial guesses for exponential decay
             y_min = np.min(y)
             y_max = np.max(y)
-
-            # Estimate baseline as minimum value
             baseline_guess = y_min
-
-            # Estimate amplitude as range
             amplitude_guess = y_max - y_min
 
-            # Estimate tau from half-life approach
-            half_amp = y_min + (y_max - y_min) / np.e  # 1/e point
+            half_amp = y_min + (y_max - y_min) / np.e
             idx_half = np.argmin(np.abs(y - half_amp))
             tau_guess = x[idx_half] if idx_half > 0 else x[len(x) // 2]
 
             p0 = [tau_guess, baseline_guess, amplitude_guess]
 
-            # More generous bounds for better convergence
             bounds = (
-                [x[1] * 0.1, -np.abs(y_max), amplitude_guess * 0.1],  # Lower bounds
-                [x[-1] * 10, y_max * 1.1, amplitude_guess * 10],  # Upper bounds
+                [x[1] * 0.1, -np.abs(y_max), amplitude_guess * 0.1],
+                [x[-1] * 10, y_max * 1.1, amplitude_guess * 10],
             )
 
             popt, _ = curve_fit(
@@ -773,7 +634,6 @@ def vectorized_parameter_estimation(
             return tuple(popt)
 
     except Exception:
-        # Return None if fitting fails
         return None
 
     return None
@@ -784,25 +644,9 @@ def vectorized_residual_analysis(
     y_true: NDArray[np.floating[Any]],
     y_pred: NDArray[np.floating[Any]],
 ) -> dict[str, float | NDArray[np.floating[Any]]]:
-    """
-    Stub function for vectorized residual analysis.
-
-    This is a placeholder implementation for testing purposes.
-
-    Parameters
-    ----------
-    x : array_like
-        Independent variable data (not used in this stub)
-    y_true : array_like
-        True/observed values
-    y_pred : array_like
-        Predicted values
-
-    Returns
-    -------
-    dict
-        Dictionary with residual statistics
-    """
+    """Vectorized residual analysis."""
+    y_true = ensure_numpy(y_true)
+    y_pred = ensure_numpy(y_pred)
     residuals = y_true - y_pred
 
     return {
