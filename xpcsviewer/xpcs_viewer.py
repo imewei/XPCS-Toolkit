@@ -68,12 +68,12 @@ tab_mapping = {
     2: "stability",
     3: "intensity_t",
     4: "g2",
-    5: "diffusion",
-    6: "twotime",
-    7: "qmap",
-    8: "average",
-    9: "metadata",
-    10: "g2_map",
+    5: "g2_map",
+    6: "diffusion",
+    7: "twotime",
+    8: "qmap",
+    9: "average",
+    10: "metadata",
 }
 
 
@@ -1817,13 +1817,13 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
 
         main_layout.addWidget(controls_widget)
 
-        # Add the tab to the tab widget (after the existing tabs)
-        self.tabWidget.addTab(self.tab_g2map, "G2 Map")
+        # Insert the tab right after g2 (index 5)
+        self.tabWidget.insertTab(5, self.tab_g2map, "g2 map")
 
         # Connect Q-bin spinbox to update profile
         self.spinBox_g2map_qbin.valueChanged.connect(self._update_g2map_profile)
 
-        logger.info("G2 Map tab initialized")
+        logger.info("g2 map tab initialized")
 
     def _update_g2map_profile(self, qbin):
         """Update only the G2 profile when Q-bin changes."""
