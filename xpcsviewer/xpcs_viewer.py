@@ -36,14 +36,15 @@ from .gui.theme.manager import ThemeManager
 from .gui.widgets.command_palette import CommandPalette
 from .gui.widgets.drag_drop_list import DragDropListView
 from .gui.widgets.toast_notification import ToastManager
+
+# Local imports
+from .simplemask import SimpleMaskWindow
 from .threading.async_kernel import AsyncDataPreloader, AsyncViewerKernel
 from .threading.progress_manager import ProgressManager
 
 # Import centralized logging
 from .utils import get_logger, log_system_info, setup_exception_logging
 from .viewer_kernel import ViewerKernel
-
-# Local imports
 from .viewer_ui import Ui_mainWindow as Ui
 
 # Initialize centralized logging and get logger
@@ -74,6 +75,7 @@ tab_mapping = {
     8: "qmap",
     9: "average",
     10: "metadata",
+    11: "mask_editor",
 }
 
 
@@ -226,6 +228,9 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
 
         # Initialize G2 Map tab (dynamic creation)
         self._init_g2map_tab()
+
+        # Initialize Mask Editor tab (dynamic creation)
+        self._init_mask_editor_tab()
 
         self.avg_job_pop.clicked.connect(self.remove_avg_job)
         self.btn_submit_job.clicked.connect(self.submit_job)
@@ -1322,10 +1327,15 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         - Updates plot kwargs record for caching
         """
         idx = self.tabWidget.currentIndex()
-        tab_name = tab_mapping[idx]
+        tab_name = tab_mapping.get(idx, "")
         logger.debug(f"update_plot called for tab: {tab_name} (index: {idx})")
 
         if tab_name == "average":
+            return
+
+        # Mask Editor is a "launcher" tab - opens external window instead of plotting
+        if tab_name == "mask_editor":
+            self.open_simplemask()
             return
 
         # Check if files are selected before attempting to plot
@@ -1824,6 +1834,214 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         self.spinBox_g2map_qbin.valueChanged.connect(self._update_g2map_profile)
 
         logger.info("g2 map tab initialized")
+
+    def _init_mask_editor_tab(self):
+        """Initialize the Mask Editor tab as a launcher tab.
+
+        This tab doesn't display plots - clicking it launches the
+        SimpleMask window for mask creation and editing.
+        """
+        # Create a simple placeholder tab
+        self.tab_mask_editor = QtWidgets.QWidget()
+        self.tab_mask_editor.setObjectName("tab_mask_editor")
+
+        # Simple layout with instructions
+        layout = QtWidgets.QVBoxLayout(self.tab_mask_editor)
+        layout.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
+
+        # Info label
+        info_label = QtWidgets.QLabel(
+            "Mask Editor\n\n"
+            "Click this tab to open the Mask Editor window.\n"
+            "The window will open with the current detector image."
+        )
+        info_label.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
+        info_label.setStyleSheet("font-size: 14px; color: #666;")
+        layout.addWidget(info_label)
+
+        # Add a button as alternative way to open
+        self.btn_open_mask_editor = QtWidgets.QPushButton("Open Mask Editor")
+        self.btn_open_mask_editor.setMaximumWidth(200)
+        self.btn_open_mask_editor.clicked.connect(self.open_simplemask)
+        layout.addWidget(
+            self.btn_open_mask_editor, alignment=QtCore.Qt.AlignmentFlag.AlignCenter
+        )
+
+        # Insert tab at the end (after metadata)
+        self.tabWidget.addTab(self.tab_mask_editor, "Mask Editor")
+
+        # Store reference to SimpleMask window (prevents garbage collection)
+        self._simplemask_window: SimpleMaskWindow | None = None
+
+        logger.info("Mask Editor tab initialized")
+
+    def open_simplemask(self):
+        """Open or focus the SimpleMask window with current detector data.
+
+        Extracts detector image and geometry metadata from the currently
+        selected file and passes it to SimpleMaskWindow.
+        """
+        # Create window if it doesn't exist or was closed
+        if self._simplemask_window is None or not self._simplemask_window.isVisible():
+            self._simplemask_window = SimpleMaskWindow(parent_viewer=self)
+            # Connect signals for mask import
+            self._simplemask_window.mask_exported.connect(self.import_mask)
+            self._simplemask_window.qmap_exported.connect(self.import_partition)
+            logger.info("Created new SimpleMask window")
+
+        # Get detector image and metadata from current file
+        detector_image, metadata = self._get_simplemask_data()
+
+        # Load data into the window
+        self._simplemask_window.load_from_viewer(detector_image, metadata)
+
+        # Show and bring to front
+        self._simplemask_window.show()
+        self._simplemask_window.raise_()
+        self._simplemask_window.activateWindow()
+
+    def _get_simplemask_data(self) -> tuple:
+        """Get detector image and metadata for SimpleMask.
+
+        Returns:
+            Tuple of (detector_image, metadata) or (None, None) if no data loaded
+        """
+        if not self.vk or not self.vk.target or len(self.vk.target) == 0:
+            logger.debug("No files loaded for SimpleMask")
+            return None, None
+
+        try:
+            xf_list = self.vk.get_xf_list()
+            if not xf_list:
+                return None, None
+
+            xf = xf_list[0]  # Use first file
+
+            # Get detector image (SAXS 2D)
+            detector_image = xf.saxs_2d
+
+            # Extract geometry metadata
+            metadata = {
+                "bcx": getattr(xf, "bcx", None),
+                "bcy": getattr(xf, "bcy", None),
+                "det_dist": getattr(xf, "det_dist", None),
+                "pix_dim": getattr(xf, "pix_dim_x", None),
+                "energy": getattr(xf, "X_energy", None),
+                "shape": detector_image.shape if detector_image is not None else None,
+            }
+
+            logger.debug(
+                f"SimpleMask data: shape={metadata.get('shape')}, "
+                f"bcx={metadata.get('bcx')}, bcy={metadata.get('bcy')}"
+            )
+            return detector_image, metadata
+
+        except Exception as e:
+            logger.error(f"Failed to get SimpleMask data: {e}")
+            return None, None
+
+    def import_mask(self, mask: np.ndarray) -> None:
+        """Import mask from SimpleMask into current analysis.
+
+        Args:
+            mask: Boolean mask array from SimpleMask (True = keep, False = masked)
+        """
+        if not self.vk or not self.vk.target or len(self.vk.target) == 0:
+            QtWidgets.QMessageBox.warning(
+                self,
+                "No Data Loaded",
+                "Load data first before importing a mask.",
+            )
+            return
+
+        try:
+            xf_list = self.vk.get_xf_list()
+            if not xf_list:
+                return
+
+            # Validate dimensions
+            xf = xf_list[0]
+            if xf.saxs_2d is not None:
+                detector_shape = xf.saxs_2d.shape
+                if mask.shape != detector_shape:
+                    QtWidgets.QMessageBox.warning(
+                        self,
+                        "Dimension Mismatch",
+                        f"Mask dimensions {mask.shape} do not match\n"
+                        f"detector dimensions {detector_shape}.\n\n"
+                        "Cannot import mask.",
+                    )
+                    return
+
+            # Store mask for use in analysis
+            # TODO: Integrate with actual analysis pipeline when available
+            self._imported_mask = mask
+            logger.info(
+                f"Imported mask with shape {mask.shape}, {np.sum(mask)} pixels unmasked"
+            )
+
+            self.statusbar.showMessage(
+                f"Mask imported: {np.sum(mask):,} of {mask.size:,} pixels unmasked"
+            )
+
+        except Exception as e:
+            logger.error(f"Failed to import mask: {e}")
+            QtWidgets.QMessageBox.critical(
+                self,
+                "Import Error",
+                f"Failed to import mask:\n{e}",
+            )
+
+    def import_partition(self, partition: dict) -> None:
+        """Import Q-map partition from SimpleMask.
+
+        Args:
+            partition: Partition dictionary from SimpleMask containing:
+                - dynamic_roi_map: Dynamic partition map
+                - static_roi_map: Static partition map
+                - mask: Associated mask
+                - beam_center_x/y: Beam center coordinates
+                - and other partition metadata
+        """
+        if not self.vk or not self.vk.target or len(self.vk.target) == 0:
+            QtWidgets.QMessageBox.warning(
+                self,
+                "No Data Loaded",
+                "Load data first before importing a partition.",
+            )
+            return
+
+        try:
+            # Store partition for use in analysis
+            # TODO: Integrate with actual analysis pipeline when available
+            self._imported_partition = partition
+
+            dq_num = (
+                partition.get("dynamic_roi_map", np.array([])).max()
+                if "dynamic_roi_map" in partition
+                else 0
+            )
+            sq_num = (
+                partition.get("static_roi_map", np.array([])).max()
+                if "static_roi_map" in partition
+                else 0
+            )
+
+            logger.info(
+                f"Imported partition: {dq_num} dynamic bins, {sq_num} static bins"
+            )
+
+            self.statusbar.showMessage(
+                f"Partition imported: {dq_num} dynamic Q-bins, {sq_num} static Q-bins"
+            )
+
+        except Exception as e:
+            logger.error(f"Failed to import partition: {e}")
+            QtWidgets.QMessageBox.critical(
+                self,
+                "Import Error",
+                f"Failed to import partition:\n{e}",
+            )
 
     def _update_g2map_profile(self, qbin):
         """Update only the G2 profile when Q-bin changes."""
