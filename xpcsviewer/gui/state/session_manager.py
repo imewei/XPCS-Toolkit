@@ -214,9 +214,9 @@ class SessionManager:
                 qmap_show_rings=params_data.get("qmap_show_rings", True),
             )
 
-            # Validate active_tab
+            # Validate active_tab (11 tabs: 0=saxs_2d through 10=metadata)
             active_tab = data.get("active_tab", 0)
-            if not 0 <= active_tab <= 9:
+            if not 0 <= active_tab <= 10:
                 logger.warning(f"Invalid active_tab {active_tab}, using 0")
                 active_tab = 0
 
