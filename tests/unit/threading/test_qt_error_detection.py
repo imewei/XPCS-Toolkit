@@ -348,6 +348,16 @@ def background_cleanup_tester():
     return BackgroundCleanupTester()
 
 
+@pytest.fixture(scope="module")
+def qapp():
+    """Create QApplication instance for Qt testing."""
+    app = QtWidgets.QApplication.instance()
+    if app is None:
+        app = QtWidgets.QApplication([])
+        app.setQuitOnLastWindowClosed(False)
+    yield app
+
+
 class TestQtErrorDetection:
     """Test Qt error detection framework."""
 
@@ -528,14 +538,14 @@ class TestQtGuiInitialization:
 class TestErrorRegressionFramework:
     """Test framework for Qt error regression testing."""
 
-    def test_error_regression_baseline(self, qt_error_capture):
+    def test_error_regression_baseline(self, qt_error_capture, qapp):
         """Establish baseline for Qt error detection."""
         with qt_error_capture.capture_qt_warnings():
             # Simulate minimal XPCS viewer initialization
-            QtWidgets.QApplication.instance()
+            # qapp fixture ensures QApplication exists
             main_window = QtWidgets.QMainWindow()
             main_window.show()
-            QtWidgets.QApplication.processEvents()
+            qapp.processEvents()
             main_window.close()
 
         summary = qt_error_capture.get_error_summary()
