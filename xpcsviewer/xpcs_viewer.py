@@ -73,6 +73,7 @@ tab_mapping = {
     7: "qmap",
     8: "average",
     9: "metadata",
+    10: "g2_map",
 }
 
 
@@ -222,6 +223,9 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
 
         self.mp_2t_hdls = None
         self.init_twotime_plot_handler()
+
+        # Initialize G2 Map tab (dynamic creation)
+        self._init_g2map_tab()
 
         self.avg_job_pop.clicked.connect(self.remove_avg_job)
         self.btn_submit_job.clicked.connect(self.submit_job)
@@ -1334,6 +1338,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
             "g2",
             "twotime",
             "qmap",
+            "g2_map",
         ]
         if (
             not self.vk or not self.vk.target or len(self.vk.target) == 0
@@ -1416,6 +1421,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
                 "g2": self.mp_g2 if hasattr(self, "mp_g2") else None,
                 "twotime": self.mp_2t_hdls if hasattr(self, "mp_2t_hdls") else None,
                 "qmap": self.pg_qmap if hasattr(self, "pg_qmap") else None,
+                "g2_map": self.pg_g2map if hasattr(self, "pg_g2map") else None,
             }
 
             handler = plot_handlers.get(tab_name)
@@ -1733,6 +1739,157 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
             x, y = int(pos.x()), int(pos.y())
             self.plot_twotime(highlight_xy=(x, y))
         event.accept()  # Mark the event as handled
+
+    def _init_g2map_tab(self):
+        """Initialize the G2 Map tab with dynamically created widgets."""
+        # Create the G2 Map tab widget
+        self.tab_g2map = QtWidgets.QWidget()
+        self.tab_g2map.setObjectName("tab_g2map")
+
+        # Main layout for the tab
+        main_layout = QtWidgets.QVBoxLayout(self.tab_g2map)
+
+        # Create a splitter for the three-panel layout
+        splitter = QtWidgets.QSplitter(QtCore.Qt.Orientation.Horizontal)
+
+        # Panel 1: G2 Map (2D view)
+        g2map_widget = QtWidgets.QWidget()
+        g2map_layout = QtWidgets.QVBoxLayout(g2map_widget)
+        g2map_label = QtWidgets.QLabel("G2 Map")
+        g2map_label.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
+        self.pg_g2map = pg.ImageView()
+        self.pg_g2map.ui.histogram.hide()
+        self.pg_g2map.ui.roiBtn.hide()
+        self.pg_g2map.ui.menuBtn.hide()
+        g2map_layout.addWidget(g2map_label)
+        g2map_layout.addWidget(self.pg_g2map)
+        splitter.addWidget(g2map_widget)
+
+        # Panel 2: Q-map (cropped)
+        qmap_widget = QtWidgets.QWidget()
+        qmap_layout = QtWidgets.QVBoxLayout(qmap_widget)
+        qmap_label = QtWidgets.QLabel("Q-map (cropped)")
+        qmap_label.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
+        self.pg_g2map_qmap = pg.ImageView()
+        self.pg_g2map_qmap.ui.histogram.hide()
+        self.pg_g2map_qmap.ui.roiBtn.hide()
+        self.pg_g2map_qmap.ui.menuBtn.hide()
+        qmap_layout.addWidget(qmap_label)
+        qmap_layout.addWidget(self.pg_g2map_qmap)
+        splitter.addWidget(qmap_widget)
+
+        # Panel 3: G2 Profile
+        profile_widget = QtWidgets.QWidget()
+        profile_layout = QtWidgets.QVBoxLayout(profile_widget)
+        profile_label = QtWidgets.QLabel("G2 Profile at Q-bin")
+        profile_label.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
+        self.pg_g2map_profile = pg.PlotWidget()
+        self.pg_g2map_profile.setLabel("left", "g2")
+        self.pg_g2map_profile.setLabel("bottom", "tau", units="s")
+        profile_layout.addWidget(profile_label)
+        profile_layout.addWidget(self.pg_g2map_profile)
+        splitter.addWidget(profile_widget)
+
+        main_layout.addWidget(splitter)
+
+        # Controls at the bottom
+        controls_widget = QtWidgets.QGroupBox("G2 Map Controls")
+        controls_layout = QtWidgets.QHBoxLayout(controls_widget)
+
+        # Q-bin selector
+        controls_layout.addWidget(QtWidgets.QLabel("Q-bin:"))
+        self.spinBox_g2map_qbin = QtWidgets.QSpinBox()
+        self.spinBox_g2map_qbin.setMinimum(0)
+        self.spinBox_g2map_qbin.setMaximum(999)
+        self.spinBox_g2map_qbin.setValue(0)
+        controls_layout.addWidget(self.spinBox_g2map_qbin)
+
+        # Normalization checkbox
+        self.checkBox_g2map_normalize = QtWidgets.QCheckBox("Normalize baseline")
+        controls_layout.addWidget(self.checkBox_g2map_normalize)
+
+        controls_layout.addStretch()
+
+        # Plot button
+        self.btn_plot_g2map = QtWidgets.QPushButton("Update G2 Map")
+        self.btn_plot_g2map.clicked.connect(self.plot_g2map)
+        controls_layout.addWidget(self.btn_plot_g2map)
+
+        main_layout.addWidget(controls_widget)
+
+        # Add the tab to the tab widget (after the existing tabs)
+        self.tabWidget.addTab(self.tab_g2map, "G2 Map")
+
+        # Connect Q-bin spinbox to update profile
+        self.spinBox_g2map_qbin.valueChanged.connect(self._update_g2map_profile)
+
+        logger.info("G2 Map tab initialized")
+
+    def _update_g2map_profile(self, qbin):
+        """Update only the G2 profile when Q-bin changes."""
+        if self.vk is None:
+            return
+        rows = self.get_target_rows()
+        if not rows:
+            return
+        try:
+            xf_list = self.vk.get_xf_list(rows=rows)
+            if not xf_list:
+                return
+            xf_obj = xf_list[0]
+            # Update profile
+            self.pg_g2map_profile.clear()
+            color = (0, 128, 255)
+            pen = pg.mkPen(color=color, width=2)
+            x = xf_obj.t_el
+            if qbin >= xf_obj.g2.shape[1]:
+                qbin = xf_obj.g2.shape[1] - 1
+            y = xf_obj.g2[:, qbin]
+            dy = xf_obj.g2_err[:, qbin]
+            line = pg.ErrorBarItem(x=np.log10(x), y=y, top=dy, bottom=dy, pen=pen)
+            pen_symbol = pg.mkPen(color=color, width=1)
+            self.pg_g2map_profile.plot(
+                x,
+                y,
+                pen=None,
+                symbol="o",
+                name=f"qbin={qbin}",
+                symbolSize=3,
+                symbolPen=pen_symbol,
+                symbolBrush=pg.mkBrush(color=(*color, 0)),
+            )
+            self.pg_g2map_profile.setLogMode(x=True, y=None)
+            self.pg_g2map_profile.addItem(line)
+        except Exception as e:
+            logger.warning(f"Failed to update G2 map profile: {e}")
+
+    def plot_g2map(self):
+        """Plot the G2 Map visualization."""
+        if self.vk is None:
+            self.statusbar.showMessage("No data available for G2 map")
+            return
+
+        rows = self.get_target_rows()
+        if not rows:
+            self.statusbar.showMessage("Please select files to plot G2 map")
+            return
+
+        qbin = self.spinBox_g2map_qbin.value()
+        normalize = self.checkBox_g2map_normalize.isChecked()
+
+        try:
+            self.vk.plot_g2map(
+                g2map_hdl=self.pg_g2map,
+                qmap_hdl=self.pg_g2map_qmap,
+                g2_hdl=self.pg_g2map_profile,
+                rows=rows,
+                qbin=qbin,
+                normalization=normalize,
+            )
+            self.statusbar.showMessage("G2 map updated successfully")
+        except Exception as e:
+            logger.error(f"Error plotting G2 map: {e}")
+            self.statusbar.showMessage(f"Error plotting G2 map: {e}")
 
     def plot_qmap(self, dryrun=False):
         kwargs = {
