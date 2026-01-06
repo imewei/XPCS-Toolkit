@@ -453,6 +453,7 @@ def gui_main_window(qapp, qtbot, mock_viewer_kernel):
         window.plot_twotime = Mock()
         window.plot_stability = Mock()
         window.plot_intt = Mock()
+        window.plot_g2_map = Mock()  # Prevent G2 map plot initialization
         # Don't mock refit_g2 - it's needed for fitting workflow
 
         # Show window for interaction testing

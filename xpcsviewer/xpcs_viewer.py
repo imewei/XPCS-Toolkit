@@ -1812,7 +1812,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
 
         # Plot button
         self.btn_plot_g2map = QtWidgets.QPushButton("Update G2 Map")
-        self.btn_plot_g2map.clicked.connect(self.plot_g2map)
+        self.btn_plot_g2map.clicked.connect(self.plot_g2_map)
         controls_layout.addWidget(self.btn_plot_g2map)
 
         main_layout.addWidget(controls_widget)
@@ -1875,19 +1875,36 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         except Exception as e:
             logger.warning(f"Failed to update G2 map profile: {e}")
 
-    def plot_g2map(self):
+    def plot_g2_map(self, dryrun=False):
         """Plot the G2 Map visualization."""
+        rows = self.get_target_rows()
+        qbin = (
+            self.spinBox_g2map_qbin.value()
+            if hasattr(self, "spinBox_g2map_qbin")
+            else 0
+        )
+        normalize = (
+            self.checkBox_g2map_normalize.isChecked()
+            if hasattr(self, "checkBox_g2map_normalize")
+            else False
+        )
+
+        kwargs = {
+            "rows": rows,
+            "qbin": qbin,
+            "normalize": normalize,
+        }
+
+        if dryrun:
+            return kwargs
+
         if self.vk is None:
             self.statusbar.showMessage("No data available for G2 map")
-            return
+            return None
 
-        rows = self.get_target_rows()
         if not rows:
             self.statusbar.showMessage("Please select files to plot G2 map")
-            return
-
-        qbin = self.spinBox_g2map_qbin.value()
-        normalize = self.checkBox_g2map_normalize.isChecked()
+            return None
 
         try:
             self.vk.plot_g2map(
@@ -1902,6 +1919,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         except Exception as e:
             logger.error(f"Error plotting G2 map: {e}")
             self.statusbar.showMessage(f"Error plotting G2 map: {e}")
+        return None
 
     def plot_qmap(self, dryrun=False):
         kwargs = {

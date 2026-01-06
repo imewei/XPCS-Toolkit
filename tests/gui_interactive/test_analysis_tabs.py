@@ -249,8 +249,8 @@ class TestDiffusionTab:
         # Initialize the viewer kernel (it's None by default when path=None)
         window.vk = mock_viewer_kernel
 
-        # Switch to diffusion tab (index 5)
-        gui_test_helpers.click_tab(qtbot, tab_widget, 5)
+        # Switch to diffusion tab (index 6 after g2_map was added)
+        gui_test_helpers.click_tab(qtbot, tab_widget, 6)
         current_widget = tab_widget.currentWidget()
 
         assert current_widget is not None
@@ -274,8 +274,8 @@ class TestTwoTimeTab:
         # Initialize the viewer kernel (it's None by default when path=None)
         window.vk = mock_viewer_kernel
 
-        # Switch to two-time tab (index 6)
-        gui_test_helpers.click_tab(qtbot, tab_widget, 6)
+        # Switch to two-time tab (index 7 after g2_map was added)
+        gui_test_helpers.click_tab(qtbot, tab_widget, 7)
         current_widget = tab_widget.currentWidget()
 
         assert current_widget is not None
@@ -295,7 +295,7 @@ class TestTwoTimeTab:
         # Initialize the viewer kernel (it's None by default when path=None)
         window.vk = mock_viewer_kernel
 
-        gui_test_helpers.click_tab(qtbot, tab_widget, 6)
+        gui_test_helpers.click_tab(qtbot, tab_widget, 7)
         current_widget = tab_widget.currentWidget()
 
         # Look for parameter controls
@@ -403,9 +403,9 @@ class TestQMapTab:
         # Initialize the viewer kernel (it's None by default when path=None)
         window.vk = mock_viewer_kernel
 
-        # Switch to Q-map tab (index 7)
-        if tab_widget.count() > 7:
-            gui_test_helpers.click_tab(qtbot, tab_widget, 7)
+        # Switch to Q-map tab (index 8 after g2_map was added)
+        if tab_widget.count() > 8:
+            gui_test_helpers.click_tab(qtbot, tab_widget, 8)
             current_widget = tab_widget.currentWidget()
 
             assert current_widget is not None
@@ -429,9 +429,9 @@ class TestAverageTab:
         window.vk = mock_viewer_kernel
         tab_widget = window.findChild(QtWidgets.QTabWidget)
 
-        # Switch to average tab (index 8)
-        if tab_widget.count() > 8:
-            gui_test_helpers.click_tab(qtbot, tab_widget, 8)
+        # Switch to average tab (index 9 after g2_map was added)
+        if tab_widget.count() > 9:
+            gui_test_helpers.click_tab(qtbot, tab_widget, 9)
             current_widget = tab_widget.currentWidget()
 
             assert current_widget is not None
@@ -455,9 +455,9 @@ class TestMetadataTab:
         # Initialize the viewer kernel (it's None by default when path=None)
         window.vk = mock_viewer_kernel
 
-        # Switch to metadata tab (index 9)
-        if tab_widget.count() > 9:
-            gui_test_helpers.click_tab(qtbot, tab_widget, 9)
+        # Switch to metadata tab (index 10 after g2_map was added)
+        if tab_widget.count() > 10:
+            gui_test_helpers.click_tab(qtbot, tab_widget, 10)
             current_widget = tab_widget.currentWidget()
 
             assert current_widget is not None
@@ -482,8 +482,9 @@ class TestMetadataTab:
         # Initialize the viewer kernel (it's None by default when path=None)
         window.vk = mock_viewer_kernel
 
-        if tab_widget.count() > 9:
-            gui_test_helpers.click_tab(qtbot, tab_widget, 9)
+        # Switch to metadata tab (index 10 after g2_map was added)
+        if tab_widget.count() > 10:
+            gui_test_helpers.click_tab(qtbot, tab_widget, 10)
             current_widget = tab_widget.currentWidget()
 
             # Mock metadata
