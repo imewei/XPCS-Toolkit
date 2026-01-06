@@ -25,6 +25,7 @@ Python-based XPCS data analysis and visualization tool.
 * G2 correlation analysis with fitting
 * SAXS 1D/2D visualization
 * Two-time correlation analysis
+* Mask Editor with Q-map and Q-binning
 * HDF5 data support (NeXus format)
 
 **GUI Features:**
@@ -174,6 +175,7 @@ Project Structure
    xpcsviewer/
    ├── module/            # Analysis modules
    ├── fileIO/            # HDF5 I/O
+   ├── simplemask/        # Mask editor & Q-map
    ├── gui/               # GUI modernization
    │   ├── theme/         # Light/dark theming
    │   ├── state/         # Session & preferences
@@ -193,6 +195,9 @@ Analysis Features
 * SAXS 1D radial averaging
 * Sample stability monitoring
 * File averaging tools
+* Mask editing with drawing tools (Rectangle, Circle, Polygon, Line, Ellipse)
+* Q-map generation from detector geometry
+* Q-binning (partition) for XPCS analysis
 
 Gallery
 -------

@@ -9,6 +9,7 @@ Subpackages
 
    xpcs_toolkit.fileIO
    xpcs_toolkit.module
+   xpcs_toolkit.simplemask
    xpcs_toolkit.utils
 
 Submodules

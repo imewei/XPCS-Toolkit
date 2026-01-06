@@ -79,12 +79,15 @@ def compute_transmission_qmap(
 
     Returns:
         Tuple of (qmap, qmap_unit) dictionaries.
+
         qmap contains:
-            - phi: Azimuthal angle (degrees)
-            - TTH: Two-theta angle (radians stored as float32)
-            - q: Momentum transfer magnitude (Angstrom^-1)
-            - qx, qy: Q components (Angstrom^-1)
-            - x, y: Pixel coordinates
+
+        - phi: Azimuthal angle (degrees)
+        - TTH: Two-theta angle (radians stored as float32)
+        - q: Momentum transfer magnitude (Angstrom^-1)
+        - qx, qy: Q components (Angstrom^-1)
+        - x, y: Pixel coordinates
+
         qmap_unit contains unit strings for each map.
     """
     # Wavevector magnitude: k0 = 2*pi/lambda
@@ -157,10 +160,12 @@ def compute_reflection_qmap(
 
     Returns:
         Tuple of (qmap, qmap_unit) dictionaries.
+
         qmap contains additional reflection-specific arrays:
-            - qz, qr: Vertical and radial Q components
-            - alpha_f: Exit angle
-            - tth: In-plane two-theta
+
+        - qz, qr: Vertical and radial Q components
+        - alpha_f: Exit angle
+        - tth: In-plane two-theta
     """
     k0 = 2 * np.pi / (E2KCONST / energy)
 
