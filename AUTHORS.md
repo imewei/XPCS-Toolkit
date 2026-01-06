@@ -1,23 +1,17 @@
-=======
-Credits
-=======
+# Credits
 
-Development Lead
-----------------
+## Development Lead
 
-* Miaoqi Chu <mqichu@anl.gov>
+- Miaoqi Chu <mqichu@anl.gov>
 
-Contributors
-------------
+## Contributors
 
-* Wei Chen <wchen@anl.gov>
+- Wei Chen <wchen@anl.gov>
 
-Original Project
-----------------
+## Original Project
 
 Forked from pyXpcsViewer (Advanced Photon Source, Argonne National Laboratory).
 
-Citation
---------
+## Citation
 
 Chu et al., "pyXPCSviewer: an open-source interactive tool for X-ray photon correlation spectroscopy visualization and analysis", Journal of Synchrotron Radiation, (2022) 29, 1122–1129.
