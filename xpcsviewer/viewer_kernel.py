@@ -330,6 +330,110 @@ class ViewerKernel(FileLocator):
             return q, tel
         return None, None
 
+    def plot_g2map(
+        self, g2map_hdl, qmap_hdl, g2_hdl, rows=None, qbin=0, normalization=False
+    ):
+        """
+        Generate G2 2D map visualization.
+
+        Creates a 2D representation of G2 correlation data with associated
+        Q-map and profile views for comprehensive analysis.
+
+        Parameters
+        ----------
+        g2map_hdl : ImageView
+            Plot handler for the G2 2D map display
+        qmap_hdl : ImageView
+            Plot handler for the cropped Q-map display
+        g2_hdl : PlotWidget
+            Plot handler for the G2 profile at selected Q-bin
+        rows : list, optional
+            List of file indices (uses first file only)
+        qbin : int
+            Index of Q-bin for profile display
+        normalization : bool
+            If True, apply baseline normalization to G2 data
+
+        Notes
+        -----
+        This visualization shows the full G2 correlation map with the ability
+        to select individual Q-bins for detailed profile analysis.
+        """
+        xf_list = self.get_xf_list(rows=rows)
+        if not xf_list:
+            return
+
+        xf_obj = xf_list[0]
+        # Set G2 map image
+        g2map_hdl.setImage(xf_obj.get_offseted_g2(normalization).T)
+        # Set cropped Q-map image
+        qmap_hdl.setImage(xf_obj.get_cropped_qmap("dqmap"))
+
+        # Plot G2 profile for selected Q-bin
+        g2_hdl.clear()
+        color = (0, 128, 255)
+        pen = pg.mkPen(color=color, width=2)
+
+        x = xf_obj.t_el
+        y = xf_obj.g2[:, qbin]
+        dy = xf_obj.g2_err[:, qbin]
+
+        line = pg.ErrorBarItem(x=np.log10(x), y=y, top=dy, bottom=dy, pen=pen)
+        pen_symbol = pg.mkPen(color=color, width=1)
+        g2_hdl.plot(
+            x,
+            y,
+            pen=None,
+            symbol="o",
+            name=f"{qbin=}",
+            symbolSize=3,
+            symbolPen=pen_symbol,
+            symbolBrush=pg.mkBrush(color=(*color, 0)),
+        )
+
+        g2_hdl.setLogMode(x=True, y=None)
+        g2_hdl.addItem(line)
+
+    def plot_g2_stability(
+        self, handler, q_range, t_range, y_range, rows=None, **kwargs
+    ):
+        """
+        Generate G2 stability plots showing frame-by-frame correlation analysis.
+
+        Creates plots showing how G2 correlation varies across different frames
+        for analyzing temporal stability of the measurement.
+
+        Parameters
+        ----------
+        handler : GraphicsLayoutWidget
+            PyQtGraph layout widget for plotting
+        q_range : tuple
+            Q-value range as (q_min, q_max)
+        t_range : tuple
+            Time delay range as (t_min, t_max)
+        y_range : tuple
+            Y-axis range for correlation function values
+        rows : list, optional
+            List of file indices (uses first file only)
+        **kwargs
+            Additional plotting parameters
+
+        Notes
+        -----
+        Only processes files with "Multitau" analysis type and requires
+        g2_partial data to be available in the HDF5 file.
+        """
+        xf_list = self.get_xf_list(rows=rows, filter_atype="Multitau")
+        if not xf_list:
+            logger.warning("No Multitau files available for G2 stability analysis")
+            return
+
+        xf_obj = xf_list[0]
+        g2_module = self.get_module("g2mod")
+        g2_module.pg_plot_stability(
+            handler, xf_obj, q_range, t_range, y_range, **kwargs
+        )
+
     def plot_qmap(self, hdl, rows=None, target=None):
         xf_list = self.get_xf_list(rows=rows)
         if xf_list:

@@ -896,6 +896,16 @@ class XpcsFile:
             return self.saxs_2d_log_data
         if key == "Int_t_fft":
             return self._compute_int_t_fft_cached()
+        # G2 partial data for stability analysis (lazy loading)
+        if key in ["g2_partial", "g2_partial_err", "g2_partial_labels"]:
+            if key not in self.__dict__:
+                try:
+                    ret = get(self.fname, [key], "alias", ftype="nexus", use_pool=True)
+                    self.__dict__[key] = ret[key]
+                except Exception as e:
+                    self.__dict__[key] = None
+                    logger.warning("Cannot load %s due to %s", key, str(e))
+            return self.__dict__[key]
         if key in self.__dict__:
             return self.__dict__[key]
         # Raise AttributeError so hasattr() works correctly
@@ -1115,6 +1125,115 @@ class XpcsFile:
             t_el = t_el[t_roi]
 
         return qvalues, t_el, g2, g2_err, labels
+
+    def get_g2_stability_data(self, qrange=None, trange=None):
+        """
+        Get G2 stability data from g2_partial for frame-by-frame analysis.
+
+        Parameters
+        ----------
+        qrange : tuple or None
+            Q-range filter (qmin, qmax). If None, use all Q-bins.
+        trange : tuple or None
+            Time range filter (tmin, tmax). If None, use all delay times.
+
+        Returns
+        -------
+        tuple
+            (qvalues, t_el, g2, g2_err, qbin_labels, labels) where:
+            - qvalues: Q-values for selected bins
+            - t_el: delay times
+            - g2: G2 partial data [frames, delays, q_bins]
+            - g2_err: G2 partial errors
+            - qbin_labels: labels for Q-bins
+            - labels: frame labels
+        """
+        if "Multitau" not in self.atype:
+            raise ValueError("G2 stability data only available for Multitau analysis")
+
+        # Check if g2_partial data is available
+        if self.g2_partial is None:
+            raise AttributeError(
+                "g2_partial data not available in this file. "
+                "G2 stability analysis requires partial G2 data."
+            )
+
+        # qrange can be None
+        qindex_selected, qvalues = self.qmap.get_qbin_in_qrange(qrange, zero_based=True)
+        g2 = self.g2_partial[:, :, qindex_selected]
+        g2_err = (
+            self.g2_partial_err[:, :, qindex_selected]
+            if self.g2_partial_err is not None
+            else np.zeros_like(g2)
+        )
+
+        qbin_labels = [
+            f"qbin={qbin + 1}, {self.qmap.get_qbin_label(qbin + 1)}"
+            for qbin in qindex_selected
+        ]
+        labels = (
+            self.g2_partial_labels
+            if self.g2_partial_labels is not None
+            else np.arange(g2.shape[0])
+        )
+
+        if trange is not None:
+            t_roi = (self.t_el >= trange[0]) * (self.t_el <= trange[1])
+            g2 = g2[:, t_roi]
+            g2_err = g2_err[:, t_roi]
+            t_el = self.t_el[t_roi]
+        else:
+            t_el = self.t_el
+
+        return qvalues, t_el, g2, g2_err, qbin_labels, labels
+
+    def get_cropped_qmap(self, target="dqmap", enabled=True):
+        """
+        Get cropped Q-map array, trimmed to non-zero region.
+
+        Parameters
+        ----------
+        target : str
+            Either "dqmap" (dynamic) or "sqmap" (static)
+        enabled : bool
+            If True, crop to non-zero region. If False, return full array.
+
+        Returns
+        -------
+        np.ndarray
+            Cropped or full Q-map array
+        """
+        if target not in ["dqmap", "sqmap"]:
+            raise ValueError(f"target must be 'dqmap' or 'sqmap', got '{target}'")
+
+        obj = getattr(self, target).copy()
+        if enabled:
+            idx = np.nonzero(obj >= 1)
+            if len(idx[0]) > 0 and len(idx[1]) > 0:
+                sl_v = slice(np.min(idx[0]), np.max(idx[0]) + 1)
+                sl_h = slice(np.min(idx[1]), np.max(idx[1]) + 1)
+                obj = obj[sl_v, sl_h]
+        return obj
+
+    def get_offseted_g2(self, normalization=False):
+        """
+        Get G2 data with optional baseline normalization for G2 map visualization.
+
+        Parameters
+        ----------
+        normalization : bool
+            If True, normalize G2 by subtracting baseline and shifting to mean.
+
+        Returns
+        -------
+        np.ndarray
+            G2 data array, optionally normalized
+        """
+        g2 = self.g2.copy()
+        if normalization:
+            g2_baseline = g2[0]
+            g2 = g2 - g2_baseline + np.mean(g2_baseline)
+        return g2
 
     def get_saxs1d_data(
         self,

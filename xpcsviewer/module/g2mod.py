@@ -55,6 +55,186 @@ def get_data(xf_list, q_range=None, t_range=None):
     return q, tel, g2, g2_err, labels
 
 
+def get_g2_stability_data(xf_obj, q_range=None, t_range=None):
+    """
+    Extract G2 stability data from a single XpcsFile object.
+
+    Parameters
+    ----------
+    xf_obj : XpcsFile
+        Single XpcsFile object with g2_partial data
+    q_range : tuple or None
+        Q-range filter (qmin, qmax)
+    t_range : tuple or None
+        Time range filter (tmin, tmax)
+
+    Returns
+    -------
+    tuple
+        (q, tel, g2, g2_err, qbin_labels, labels)
+    """
+    if "Multitau" not in xf_obj.atype:
+        return False, None, None, None, None, None
+
+    q, tel, g2, g2_err, qbin_labels, labels = xf_obj.get_g2_stability_data(
+        qrange=q_range, trange=t_range
+    )
+    return q, tel, g2, g2_err, qbin_labels, labels
+
+
+def pg_plot_stability(
+    hdl,
+    xf_obj,
+    q_range,
+    t_range,
+    y_range,
+    y_auto=False,
+    q_auto=False,
+    t_auto=False,
+    num_col=4,
+    rows=None,
+    offset=0,
+    show_fit=False,
+    show_label=False,
+    bounds=None,
+    fit_flag=None,
+    plot_type="multiple",
+    subtract_baseline=True,
+    marker_size=5,
+    label_size=4,
+    fit_func="single",
+    **kwargs,
+):
+    """
+    Plot G2 stability data showing frame-by-frame correlation analysis.
+
+    Parameters
+    ----------
+    hdl : GraphicsLayoutWidget
+        PyQtGraph layout widget for plotting
+    xf_obj : XpcsFile
+        XpcsFile object with g2_partial data
+    q_range : tuple
+        Q-range for filtering
+    t_range : tuple
+        Time range for filtering
+    y_range : tuple
+        Y-axis range
+    y_auto, q_auto, t_auto : bool
+        Auto-range flags
+    num_col : int
+        Number of columns in layout
+    offset : float
+        Y-offset between curves
+    show_label : bool
+        Show legend labels
+    plot_type : str
+        Plot type: 'multiple', 'single', 'single-combined'
+    marker_size : int
+        Symbol size
+    **kwargs : dict
+        Additional plotting parameters
+    """
+    if q_auto:
+        q_range = None
+    if t_auto:
+        t_range = None
+    if y_auto:
+        y_range = None
+
+    q, tel, g2, g2_err, qbin_labels, labels = get_g2_stability_data(
+        xf_obj, q_range=q_range, t_range=t_range
+    )
+
+    # Handle case where data is not available
+    if g2 is False or g2 is None:
+        logger.warning("G2 stability data not available for this file")
+        return
+
+    num_figs, num_lines = compute_geometry(g2, plot_type)
+
+    num_data, num_qval = len(g2), g2[0].shape[1]
+    # col and rows for the 2d layout
+    col = min(num_figs, num_col)
+    row = (num_figs + col - 1) // col
+
+    rows = np.arange(num_data)
+
+    hdl.adjust_canvas_size(num_col=col, num_row=row)
+    hdl.clear()
+
+    # Handle log scale for time range
+    if t_range:
+        with np.errstate(divide="ignore", invalid="ignore"):
+            t_range_positive = np.asarray(t_range)
+            t_range_positive = np.where(
+                t_range_positive > 0, t_range_positive, np.finfo(float).eps
+            )
+            t0_range = np.log10(t_range_positive)
+
+    axes = []
+    for n in range(num_figs):
+        i_col = n % col
+        i_row = n // col
+        t = hdl.addPlot(row=i_row, col=i_col)
+        axes.append(t)
+        if show_label:
+            legend = t.addLegend(labelTextSize="6pt")
+            legend.anchor(itemPos=(1, 0), parentPos=(1, 0), offset=(0, 0))
+
+        t.setMouseEnabled(x=False, y=y_auto)
+
+    for m in range(num_data):
+        # default base line to be 1.0; used for non-fitting or fit error cases
+        baseline_offset = np.ones(num_qval)
+
+        for n in range(num_qval):
+            color = colors[rows[m] % len(colors)]
+            label = None
+            if plot_type == "multiple":
+                ax = axes[n]
+                title = qbin_labels[n]
+                label = f"frame={int(labels[m])}"
+                if m == 0:
+                    ax.setTitle(title)
+            elif plot_type == "single":
+                ax = axes[m]
+                # overwrite color; use the same color for the same set;
+                color = colors[n % len(colors)]
+                title = str(labels[m])
+                ax.setTitle(title)
+            elif plot_type == "single-combined":
+                ax = axes[0]
+                label = str(labels[m]) + qbin_labels[n]
+
+            ax.setLabel("bottom", "tau (s)")
+            ax.setLabel("left", "g2")
+
+            symbol = symbols[rows[m] % len(symbols)]
+
+            x = tel
+            # normalize baseline
+            y = g2[m][:, n] - baseline_offset[n] + 1.0 + m * offset
+            y_err = g2_err[m][:, n]
+
+            pg_plot_one_g2(
+                ax,
+                x,
+                y,
+                y_err,
+                color,
+                label=label,
+                symbol=symbol,
+                symbol_size=marker_size,
+            )
+            if not y_auto and y_range is not None:
+                ax.setRange(yRange=y_range)
+            if not t_auto and t_range is not None:
+                ax.setRange(xRange=t0_range)
+
+    return
+
+
 def compute_geometry(g2, plot_type):
     """
     compute the number of figures and number of plot lines for a given type

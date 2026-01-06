@@ -28,6 +28,10 @@ key = {
         "stride_frame": "/xpcs/multitau/config/stride_frame",
         "avg_frame": "/xpcs/multitau/config/avg_frame",
         "g2_err": "/xpcs/multitau/normalized_g2_err",
+        # G2 partial data for stability analysis
+        "g2_partial": "/xpcs/multitau/normalized_g2_segments",
+        "g2_partial_err": "/xpcs/multitau/normalized_g2_segments_err",
+        "g2_partial_labels": "/xpcs/multitau/normalized_g2_segments_labels",
         "saxs_2d": "/xpcs/temporal_mean/scattering_2d",
         "saxs_1d": "/xpcs/temporal_mean/scattering_1d",
         "Iqp": "/xpcs/temporal_mean/scattering_1d_segments",
