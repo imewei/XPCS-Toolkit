@@ -92,17 +92,10 @@ def pg_plot_stability(
     q_auto=False,
     t_auto=False,
     num_col=4,
-    rows=None,
     offset=0,
-    show_fit=False,
     show_label=False,
-    bounds=None,
-    fit_flag=None,
     plot_type="multiple",
-    subtract_baseline=True,
     marker_size=5,
-    label_size=4,
-    fit_func="single",
     **kwargs,
 ):
     """
@@ -154,11 +147,12 @@ def pg_plot_stability(
     num_figs, num_lines = compute_geometry(g2, plot_type)
 
     num_data, num_qval = len(g2), g2[0].shape[1]
-    # col and rows for the 2d layout
+    # col and row for the 2d layout
     col = min(num_figs, num_col)
     row = (num_figs + col - 1) // col
 
-    rows = np.arange(num_data)
+    # Frame indices for color/symbol cycling
+    frame_indices = np.arange(num_data)
 
     hdl.adjust_canvas_size(num_col=col, num_row=row)
     hdl.clear()
@@ -189,7 +183,7 @@ def pg_plot_stability(
         baseline_offset = np.ones(num_qval)
 
         for n in range(num_qval):
-            color = colors[rows[m] % len(colors)]
+            color = colors[frame_indices[m] % len(colors)]
             label = None
             if plot_type == "multiple":
                 ax = axes[n]
@@ -210,7 +204,7 @@ def pg_plot_stability(
             ax.setLabel("bottom", "tau (s)")
             ax.setLabel("left", "g2")
 
-            symbol = symbols[rows[m] % len(symbols)]
+            symbol = symbols[frame_indices[m] % len(symbols)]
 
             x = tel
             # normalize baseline

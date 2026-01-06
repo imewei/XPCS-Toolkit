@@ -1435,7 +1435,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
                 logger.debug(f"Cleared plot for {tab_name}")
                 # Show status message to user for guidance
                 self.statusbar.showMessage(
-                    f"No files selected for {tab_name.replace('_', ' ').title()} - please select files from source list and click 'Add Target'",
+                    f"No files selected for {tab_name.replace('_', ' ').title()} - please select files from source list and click 'Add Target'",  # nosec B608
                     5000,
                 )
         except Exception as e:
@@ -1846,11 +1846,23 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
                 qbin = xf_obj.g2.shape[1] - 1
             y = xf_obj.g2[:, qbin]
             dy = xf_obj.g2_err[:, qbin]
-            line = pg.ErrorBarItem(x=np.log10(x), y=y, top=dy, bottom=dy, pen=pen)
+
+            # Filter valid data points (positive x for log scale)
+            valid_mask = np.isfinite(x) & np.isfinite(y) & (x > 0)
+            if not np.any(valid_mask):
+                return
+
+            x_valid = x[valid_mask]
+            y_valid = y[valid_mask]
+            dy_valid = dy[valid_mask] if dy is not None else np.zeros_like(y_valid)
+
+            line = pg.ErrorBarItem(
+                x=np.log10(x_valid), y=y_valid, top=dy_valid, bottom=dy_valid, pen=pen
+            )
             pen_symbol = pg.mkPen(color=color, width=1)
             self.pg_g2map_profile.plot(
-                x,
-                y,
+                x_valid,
+                y_valid,
                 pen=None,
                 symbol="o",
                 name=f"qbin={qbin}",

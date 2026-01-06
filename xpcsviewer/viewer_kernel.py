@@ -378,11 +378,23 @@ class ViewerKernel(FileLocator):
         y = xf_obj.g2[:, qbin]
         dy = xf_obj.g2_err[:, qbin]
 
-        line = pg.ErrorBarItem(x=np.log10(x), y=y, top=dy, bottom=dy, pen=pen)
+        # Filter valid data points (positive x for log scale)
+        valid_mask = np.isfinite(x) & np.isfinite(y) & (x > 0)
+        if not np.any(valid_mask):
+            logger.warning("No valid data points for G2 map profile")
+            return
+
+        x_valid = x[valid_mask]
+        y_valid = y[valid_mask]
+        dy_valid = dy[valid_mask] if dy is not None else np.zeros_like(y_valid)
+
+        line = pg.ErrorBarItem(
+            x=np.log10(x_valid), y=y_valid, top=dy_valid, bottom=dy_valid, pen=pen
+        )
         pen_symbol = pg.mkPen(color=color, width=1)
         g2_hdl.plot(
-            x,
-            y,
+            x_valid,
+            y_valid,
             pen=None,
             symbol="o",
             name=f"{qbin=}",
