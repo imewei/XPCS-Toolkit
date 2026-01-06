@@ -424,7 +424,7 @@ class XPCSBenchmarkSuite:
         with PerformanceProfiler(
             "memory_pressure_detection", metadata={"test": "pressure"}
         ) as profiler:
-            for i in range(1000):
+            for _i in range(1000):
                 memory_manager.get_memory_pressure()
                 memory_manager.get_cache_stats()
 

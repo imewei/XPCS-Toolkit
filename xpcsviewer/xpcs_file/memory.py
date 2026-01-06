@@ -44,22 +44,6 @@ class MemoryMonitor:
         memory = psutil.virtual_memory()
         return MemoryStatus(memory.percent / 100.0)
 
-    def is_memory_pressure_high(self, threshold: float = 0.85) -> bool:
-        """Check if memory pressure is above threshold.
-
-        Parameters
-        ----------
-        threshold : float, optional
-            Memory pressure threshold (0-1), by default 0.85
-
-        Returns
-        -------
-        bool
-            True if memory pressure exceeds threshold
-        """
-        memory = psutil.virtual_memory()
-        return (memory.percent / 100.0) > threshold
-
     @staticmethod
     def get_memory_usage() -> tuple[float, float]:
         """Get current memory usage in MB (static method for backward compatibility)."""

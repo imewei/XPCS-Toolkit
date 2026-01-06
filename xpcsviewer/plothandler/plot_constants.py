@@ -7,7 +7,10 @@ previously duplicated across multiple modules (matplot_qt.py, g2mod.py, tauq.py)
 Also provides theme-aware plotting colors via get_theme_colors().
 """
 
+import logging
 from typing import Literal
+
+logger = logging.getLogger(__name__)
 
 ThemeName = Literal["light", "dark"]
 
@@ -177,8 +180,10 @@ def get_theme_colors(theme: ThemeName | None = None) -> dict[str, str]:
                         if hasattr(widget, "theme_manager"):
                             current_theme = widget.theme_manager.get_current_theme()
                             return get_plot_colors(current_theme)
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug(
+                    "Failed to fetch plot colors from active theme manager: %s", e
+                )
             # Default to light if no manager found
             return get_plot_colors("light")
         except ImportError:

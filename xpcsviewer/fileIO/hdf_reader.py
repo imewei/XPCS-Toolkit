@@ -13,7 +13,7 @@ import os
 import threading
 import time
 from collections import OrderedDict
-from contextlib import contextmanager
+from contextlib import contextmanager, suppress
 from typing import Any
 
 # Third-party imports
@@ -21,6 +21,13 @@ import h5py
 import numpy as np
 import psutil
 
+from xpcsviewer.constants import (
+    CACHE_ENTRY_TIMEOUT,
+    DIRECT_READ_LIMIT_MB,
+    LARGE_DATASET_THRESHOLD_MB,
+    NDIM_2D,
+    NDIM_3D,
+)
 from xpcsviewer.utils.logging_config import get_logger
 
 # Local imports
@@ -35,15 +42,6 @@ _perf_monitor = None
 MEMORY_PRESSURE_CRITICAL = 0.90  # 90% - Critical memory pressure
 MEMORY_PRESSURE_HIGH = 0.80  # 80% - High memory pressure
 MEMORY_PRESSURE_MODERATE = 0.70  # 70% - Moderate memory pressure
-
-# Import additional constants for magic value replacement
-from xpcsviewer.constants import (
-    CACHE_ENTRY_TIMEOUT,
-    DIRECT_READ_LIMIT_MB,
-    LARGE_DATASET_THRESHOLD_MB,
-    NDIM_2D,
-    NDIM_3D,
-)
 
 
 class PooledConnection:
@@ -616,11 +614,8 @@ class HDF5ConnectionPool:
 
     def __del__(self):
         # Pass True to indicate this is called from destructor during shutdown
-        try:
+        with suppress(Exception):
             self.clear_pool(from_destructor=True)
-        except Exception:
-            # Silently ignore any errors during shutdown - destructor context
-            pass
 
 
 # Global connection pool instance with enhanced settings
@@ -646,14 +641,16 @@ def put(save_path, result, ftype="nexus", mode="raw"):
         'raw' or 'alias'
     """
     with h5py.File(save_path, "a") as f:
-        for key, val in result.items():
-            if mode == "alias":
-                key = hdf_key[ftype][key]
-            if key in f:
-                del f[key]
-            if isinstance(val, np.ndarray) and val.ndim == 1:
-                val = np.reshape(val, (1, -1))
-            f[key] = val
+        for key, value in result.items():
+            dest_key = hdf_key[ftype][key] if mode == "alias" else key
+            if dest_key in f:
+                del f[dest_key]
+            dest_value = (
+                np.reshape(value, (1, -1))
+                if isinstance(value, np.ndarray) and value.ndim == 1
+                else value
+            )
+            f[dest_key] = dest_value
         return
 
 

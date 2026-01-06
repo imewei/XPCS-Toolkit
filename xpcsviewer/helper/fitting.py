@@ -320,10 +320,8 @@ def fit_with_fixed_parallel(
         }
 
         # Collect results as they complete
-        completed_fits = 0
-        for future in as_completed(future_to_col):
+        for completed_fits, future in enumerate(as_completed(future_to_col), start=1):
             col_idx, popt, errors, success = future.result()
-            completed_fits += 1
 
             if success:
                 # Store successful fit results

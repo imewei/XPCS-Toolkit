@@ -37,12 +37,8 @@ from scipy.optimize import curve_fit
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 try:
-    from xpcsviewer.fileIO.qmap_utils import QMapCalculator
     from xpcsviewer.module.g2mod import G2Calculator
     from xpcsviewer.module.saxs1d import SAXS1DProcessor
-    from xpcsviewer.module.saxs2d import SAXS2DProcessor
-    from xpcsviewer.module.twotime import TwoTimeProcessor
-    from xpcsviewer.xpcs_file import XpcsFile
 except ImportError as e:
     print(f"Warning: Could not import XPCS modules: {e}")
     print("Running in compatibility mode with reference implementations")
@@ -268,15 +264,16 @@ class AccuracyValidator(ABC):
         errors = []
         all_passed = True
 
-        for key in reference:
+        for key, reference_value in reference.items():
             if key in computed:
-                if isinstance(reference[key], (int, float)) and isinstance(
-                    computed[key], (int, float)
+                computed_value = computed[key]
+                if isinstance(reference_value, (int, float)) and isinstance(
+                    computed_value, (int, float)
                 ):
-                    abs_error = abs(reference[key] - computed[key])
+                    abs_error = abs(reference_value - computed_value)
                     rel_error = (
-                        abs_error / abs(reference[key])
-                        if abs(reference[key]) > 1e-15
+                        abs_error / abs(reference_value)
+                        if abs(reference_value) > 1e-15
                         else abs_error
                     )
                     errors.append((key, abs_error, rel_error))

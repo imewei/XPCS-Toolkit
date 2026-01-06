@@ -254,11 +254,12 @@ class XpcsFile:
             # omit those to avoid lengthy output
             if key == "hdf_info":
                 continue
-            if isinstance(val, np.ndarray) and val.size > 1:
-                val = str(val.shape)
-            else:
-                val = str(val)
-            ans.append(f"   {key.ljust(12)}: {val.ljust(30)}")
+            display_val = (
+                str(val.shape)
+                if isinstance(val, np.ndarray) and val.size > 1
+                else str(val)
+            )
+            ans.append(f"   {key.ljust(12)}: {display_val.ljust(30)}")
         return "\n".join(ans)
 
     def __repr__(self):
@@ -1248,7 +1249,7 @@ class XpcsFile:
         elif selection is not None and selection < len(dqlist):
             dq_bin = dqlist[selection]
 
-        if dq_bin is not None and dq_bin != np.nan and dq_bin > 0:
+        if dq_bin is not None and not np.isnan(dq_bin) and dq_bin > 0:
             # highlight the selected qbin if it's valid
             dqmap_disp[dqmap_disp == dq_bin] = qindex_max + 1
             matching_indices = np.where(dqlist == dq_bin)[0]
@@ -2694,12 +2695,10 @@ class XpcsFile:
 
     def export_saxs1d(self, roi_list, folder):
         # export ROI
-        idx = 0
-        for roi in roi_list:
+        for idx, roi in enumerate(roi_list):
             fname = os.path.join(
                 folder, self.label + "_" + roi["sl_type"] + f"_{idx:03d}.txt"
             )
-            idx += 1
             x, y = self.get_roi_data(roi)
             if roi["sl_type"] == "Ring":
                 header = "phi(degree) Intensity"

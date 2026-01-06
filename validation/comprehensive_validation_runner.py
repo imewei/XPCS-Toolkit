@@ -215,7 +215,7 @@ class ValidationOrchestrator:
                 return False
 
             # Run tests with subprocess
-            result = subprocess.run(
+            result = subprocess.run(  # noqa: S603 - executes local test file via current interpreter
                 [sys.executable, str(test_file)],
                 check=False,
                 capture_output=True,

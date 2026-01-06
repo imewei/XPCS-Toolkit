@@ -1429,7 +1429,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
                 logger.debug(f"Cleared plot for {tab_name}")
                 # Show status message to user for guidance
                 self.statusbar.showMessage(
-                    f"No files selected for {tab_name.replace('_', ' ').title()} - please select files from source list and click 'Add Target'",  # nosec B608
+                    f"No files selected for {tab_name.replace('_', ' ').title()} - please select files from source list and click 'Add Target'",  # noqa: S608
                     5000,
                 )
         except Exception as e:
@@ -1533,7 +1533,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
 
     def plot_metadata(self, dryrun=False):
         if not self.vk:
-            return None if dryrun else None
+            return None
 
         kwargs = {"rows": self.get_selected_rows()}
         if dryrun:

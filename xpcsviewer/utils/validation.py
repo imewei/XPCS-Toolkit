@@ -276,7 +276,7 @@ def validate_hdf5_file_integrity(
                             warnings.append(f"Missing common XPCS dataset: {dataset}")
 
         except OSError as e:
-            raise XPCSValidationError(f"Cannot read HDF5 file: {e}")
+            raise XPCSValidationError(f"Cannot read HDF5 file: {e}") from e
 
         validation_time = time.time() - start_time
         is_valid = len(errors) == 0

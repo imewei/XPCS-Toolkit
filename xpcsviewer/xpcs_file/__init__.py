@@ -67,18 +67,14 @@ except (ImportError, AttributeError):
 
 
 __all__ = [
-    # Main class
-    "XpcsFile",
-    # Memory
-    "MemoryStatus",
-    "MemoryMonitor",
-    "get_cached_memory_monitor",
-    # Cache
     "CacheItem",
     "DataCache",
-    # Fitting
-    "single_exp_all",
-    "double_exp_all",
-    "power_law",
+    "MemoryMonitor",
+    "MemoryStatus",
+    "XpcsFile",
     "create_id",
+    "double_exp_all",
+    "get_cached_memory_monitor",
+    "power_law",
+    "single_exp_all",
 ]

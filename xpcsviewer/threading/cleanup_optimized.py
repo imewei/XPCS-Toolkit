@@ -136,13 +136,9 @@ class SmartGarbageCollector:
 
     def should_collect(self) -> bool:
         """Determine if garbage collection should be triggered."""
-        # Check time since last collection
-        if time.time() - self.last_collection < self.min_collection_interval:
-            return False
-
-        # In a real implementation, we would check memory pressure here
-        # For now, we'll use a simple timer-based approach
-        return True
+        # In a real implementation, we would check memory pressure here.
+        # For now, use a simple timer-based approach.
+        return (time.time() - self.last_collection) >= self.min_collection_interval
 
     def collect(self):
         """Perform smart garbage collection."""

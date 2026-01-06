@@ -561,7 +561,6 @@ def get_reliability_status() -> dict[str, Any]:
 
 def shutdown_reliability() -> None:
     """Shutdown reliability features."""
-    global _reliability_manager
     if _reliability_manager:
         _reliability_manager.shutdown()
 

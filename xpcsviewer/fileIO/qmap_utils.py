@@ -361,7 +361,7 @@ class QMap:
             if shape[2] > 1:
                 saxs1d = np.concatenate([avg[..., None], full_data], axis=-1)
                 saxs1d = saxs1d[0].T  # shape: (num_lines + 1, num_q)
-                labels = [label + "_%d" % (n + 1) for n in range(shape[2])]
+                labels = [f"{label}_{n + 1}" for n in range(shape[2])]
                 labels = [label, *labels]
             else:
                 saxs1d = avg.reshape(1, -1)  # shape: (1, num_q)

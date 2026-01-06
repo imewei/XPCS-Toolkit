@@ -516,12 +516,13 @@ def batch_saxs_analysis(data_list, operations):
     max(len(q) for q, _ in data_list)
 
     for q, intensity in data_list:
+        processed_q = q
         processed_I = intensity.copy()
 
         for op in operations:
             if op["type"] == "normalize":
                 processed_I = vectorized_intensity_normalization(
-                    q, processed_I, method=op["method"]
+                    processed_q, processed_I, method=op["method"]
                 )
 
             elif op["type"] == "smooth":
@@ -534,11 +535,11 @@ def batch_saxs_analysis(data_list, operations):
             elif op["type"] == "trim":
                 # Vectorized trimming
                 q_min, q_max = op["q_range"]
-                mask = (q >= q_min) & (q <= q_max)
-                q = q[mask]
+                mask = (processed_q >= q_min) & (processed_q <= q_max)
+                processed_q = processed_q[mask]
                 processed_I = processed_I[mask]
 
-        processed_data.append((q, processed_I))
+        processed_data.append((processed_q, processed_I))
 
     return processed_data
 

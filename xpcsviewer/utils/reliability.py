@@ -275,7 +275,7 @@ def validate_input(
                 xpcs_error = convert_exception(
                     e, f"Validation failed for {func.__name__}"
                 )
-                raise xpcs_error
+                raise xpcs_error from e
 
         return wrapper
 

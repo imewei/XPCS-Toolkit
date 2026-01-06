@@ -568,7 +568,6 @@ def start_health_monitoring(interval: float = 30.0) -> None:
 
 def stop_health_monitoring() -> None:
     """Stop background health monitoring."""
-    global _health_monitor
     if _health_monitor:
         _health_monitor.stop_monitoring()
 

@@ -480,23 +480,23 @@ def optimize_g2_error_propagation(g2_data, g2_errors, operations):
 
     for op in operations:
         if op["type"] == "scale":
-            # Error propagation for scaling: σ_new = |scale| * σ_old
+            # Error propagation for scaling: sigma_new = |scale| * sigma_old
             scale_factor = op["factor"]
             propagated_errors *= np.abs(scale_factor)
 
         elif op["type"] == "offset":
-            # Error propagation for offset: σ_new = σ_old (additive operations don't change uncertainty)
+            # Error propagation for offset: sigma_new = sigma_old (additive operations don't change uncertainty)
             pass
 
         elif op["type"] == "power":
-            # Error propagation for power: σ_new = |n * x^(n-1)| * σ_old
+            # Error propagation for power: sigma_new = |n * x^(n-1)| * sigma_old
             power = op["power"]
             propagated_errors = (
                 np.abs(power * np.power(g2_data, power - 1)) * propagated_errors
             )
 
         elif op["type"] == "log":
-            # Error propagation for logarithm: σ_new = σ_old / |x|
+            # Error propagation for logarithm: sigma_new = sigma_old / |x|
             propagated_errors = propagated_errors / np.abs(g2_data)
 
     return propagated_errors

@@ -119,7 +119,6 @@ def get_shared_array(name: str) -> np.ndarray | None:
 
 def cleanup_shared_arrays():
     """Clean up all shared memory arrays."""
-    global _shared_arrays
     for name, (shm, _array) in _shared_arrays.items():
         try:
             shm.close()
@@ -216,8 +215,7 @@ def process_c2_batch(
             futures.append((future, args))
 
         # Collect results as they complete with better error handling
-        completed_count = 0
-        for future, args in futures:
+        for completed_count, (future, args) in enumerate(futures, start=1):
             if progress_callback:
                 progress_callback(
                     completed_count, len(batch_args), f"Completed {args[1]}"
@@ -229,8 +227,6 @@ def process_c2_batch(
             except Exception as e:
                 logger.error(f"Error in parallel C2 processing for {args[1]}: {e}")
                 results.append((None, 0, str(e)))
-
-            completed_count += 1
 
     return results
 
@@ -572,10 +568,7 @@ def get_c2_stream(full_path, max_size=-1):
 
     # Use connection pool for reading the index list
     with _connection_pool.get_connection(full_path, "r") as f:
-        if c2_prefix in f:
-            idxlist = list(f[c2_prefix])  # Extract the list of indices
-        else:
-            idxlist = []  # Return empty list if prefix is missing
+        idxlist = list(f[c2_prefix]) if c2_prefix in f else []
 
     def generator():
         for idx in idxlist:  # Use idxlist for iteration

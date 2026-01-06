@@ -607,7 +607,6 @@ def start_state_monitoring(
 
 def stop_state_monitoring() -> None:
     """Stop background state consistency monitoring."""
-    global _state_validator
     if _state_validator:
         _state_validator.stop_background_validation()
 

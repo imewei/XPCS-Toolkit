@@ -53,7 +53,7 @@ def average_plot_cluster(self, hdl1, num_clusters=2):
     freq = np.bincount(y_pred)
     self.meta["avg_intt_mask"] = y_pred == y_pred[freq.argmax()]
     valid_num = np.sum(y_pred == y_pred[freq.argmax()])
-    title = "%d / %d" % (valid_num, y_pred.size)
+    title = f"{valid_num} / {y_pred.size}"
     hdl1.show_scatter(
         intt_minmax, color=y_pred, xlabel="Int-t min", ylabel="Int-t max", title=title
     )
@@ -214,7 +214,9 @@ class AverageToolbox(QtCore.QRunnable):
                     saxs_2d = np.expand_dims(saxs_2d, axis=0)
                 result[key] = saxs_2d
 
-        logger.info("the valid dataset number is %d / %d" % (np.sum(mask), tot_num))
+        logger.info(
+            "the valid dataset number is %d / %d", int(np.sum(mask)), int(tot_num)
+        )
 
         # Report final memory usage and peak memory reduction
         final_memory_mb, _ = MemoryMonitor.get_memory_usage()
@@ -283,7 +285,7 @@ class AverageToolbox(QtCore.QRunnable):
                     dt = (time.perf_counter() - t0) / (m + 1)
                     eta = dt * (tot_num - m - 1)
                     self.eta = eta
-                    self._progress = "%d%%" % (curr_percentage)
+                    self._progress = f"{curr_percentage}%"
 
                 fname = self.model[m]
                 try:
@@ -426,12 +428,12 @@ class AverageToolbox(QtCore.QRunnable):
                         dt = (time.perf_counter() - t0) / completed_files
                         eta = dt * (tot_num - completed_files)
                         self.eta = eta
-                        self._progress = "%d%%" % curr_percentage
+                        self._progress = f"{curr_percentage}%"
 
                 except Exception as e:
                     logger.error(f"Batch processing failed: {e}")
                     # Handle batch failure - mark files as invalid
-                    for m in batch_indices:
+                    for _m in batch_indices:
                         self.baseline[self.ptr] = 0
                         self.ptr += 1
                         self.signals.values.emit((self.jid, 0))
@@ -515,7 +517,7 @@ class AverageToolbox(QtCore.QRunnable):
             data["input_datasets"] = self.model[:]
 
         tree = pg.DataTreeWidget(data=data)
-        tree.setWindowTitle("Job_%d_%s" % (self.jid, self.model[0]))
+        tree.setWindowTitle(f"Job_{self.jid}_{self.model[0]}")
         tree.resize(600, 800)
         return tree
 
@@ -708,7 +710,7 @@ def do_average(
         if key == "g2_err":
             result[key] /= np.sqrt(np.sum(mask))
 
-    logger.info("the valid dataset number is %d / %d" % (np.sum(mask), tot_num))
+    logger.info("the valid dataset number is %d / %d", int(np.sum(mask)), int(tot_num))
 
     # Report final memory usage and peak memory reduction
     final_memory_mb, _ = MemoryMonitor.get_memory_usage()

@@ -434,7 +434,7 @@ class LineBuilder:
         self.ys = []
         self.ax = ax
         self.fig = fig
-        self.color = random.choice(colors)
+        self.color = random.choice(colors)  # noqa: S311 - non-cryptographic UI randomness
         self.color_hist = []
         self.num_lines = 0
         self.labels = []
@@ -486,7 +486,7 @@ class LineBuilder:
         line.figure.canvas.draw()
         self.num_lines += 1
         self.color_hist.append(self.color)
-        self.color = random.choice(colors)
+        self.color = random.choice(colors)  # noqa: S311 - non-cryptographic UI randomness
 
     def mouse_click(self, event):
         if not event.inaxes:

@@ -218,10 +218,7 @@ class CommandPalette(QDialog):
         # Initials match
         words = text.split()
         initials = "".join(w[0] for w in words if w)
-        if initials.startswith(query):
-            return True
-
-        return False
+        return bool(initials.startswith(query))
 
     def _execute_selected(self) -> None:
         """Execute the currently selected action."""

@@ -21,6 +21,7 @@ import sys
 import threading
 import traceback
 from datetime import datetime
+from typing import ClassVar
 
 
 class ColoredConsoleFormatter(logging.Formatter):
@@ -35,7 +36,7 @@ class ColoredConsoleFormatter(logging.Formatter):
     """
 
     # ANSI color codes
-    COLORS = {
+    COLORS: ClassVar[dict[str, str]] = {
         "DEBUG": "\033[36m",  # Cyan
         "INFO": "\033[32m",  # Green
         "WARNING": "\033[33m",  # Yellow
@@ -65,11 +66,9 @@ class ColoredConsoleFormatter(logging.Formatter):
             return True
 
         # Check if running in common IDEs
-        if any(ide in os.environ.get("_", "") for ide in ("pycharm", "vscode", "code")):
-            return True
-
-        # Default to no colors for safety
-        return False
+        return any(
+            ide in os.environ.get("_", "") for ide in ("pycharm", "vscode", "code")
+        )
 
     def _colorize(self, text: str, color: str) -> str:
         """Apply color to text if colors are enabled."""

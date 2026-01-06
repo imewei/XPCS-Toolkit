@@ -6,7 +6,7 @@ initialization patterns, error handling, and progress reporting.
 """
 
 from abc import abstractmethod
-from typing import Any
+from typing import Any, ClassVar
 
 from .async_workers import BaseAsyncWorker
 
@@ -186,14 +186,14 @@ class StandardPlotProgressSteps:
     """Standardized progress step definitions for common plot types."""
 
     # Common step patterns
-    BASIC_PLOT_STEPS = [
+    BASIC_PLOT_STEPS: ClassVar[list[str]] = [
         "Loading data files",
         "Processing data",
         "Generating plot",
         "Finalizing display",
     ]
 
-    FITTING_PLOT_STEPS = [
+    FITTING_PLOT_STEPS: ClassVar[list[str]] = [
         "Loading data files",
         "Extracting data arrays",
         "Performing fitting",
@@ -202,7 +202,7 @@ class StandardPlotProgressSteps:
         "Finalizing display",
     ]
 
-    MULTI_PANEL_STEPS = [
+    MULTI_PANEL_STEPS: ClassVar[list[str]] = [
         "Loading data files",
         "Processing panel 1",
         "Processing panel 2",

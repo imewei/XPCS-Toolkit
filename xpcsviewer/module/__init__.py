@@ -17,6 +17,7 @@ Spectroscopy data analysis:
 
 # Import modules gracefully for documentation builds
 import os
+from contextlib import suppress
 
 if os.environ.get("BUILDING_DOCS"):
     # Provide placeholder modules for documentation
@@ -36,7 +37,7 @@ if os.environ.get("BUILDING_DOCS"):
     twotime = PlaceholderModule()
     twotime_utils = PlaceholderModule()
 else:
-    try:
+    with suppress(ImportError):
         from . import (
             average_toolbox,
             g2mod,
@@ -48,9 +49,7 @@ else:
             twotime,
             twotime_utils,
         )
-    except ImportError:
-        # Fallback for missing dependencies
-        pass
+
 
 __all__ = [
     "average_toolbox",

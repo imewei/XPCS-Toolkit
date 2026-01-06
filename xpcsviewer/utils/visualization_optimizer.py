@@ -15,14 +15,6 @@ from typing import Any
 
 import numpy as np
 
-# Check PyQtGraph availability
-PYQTGRAPH_AVAILABLE = importlib.util.find_spec("pyqtgraph") is not None
-if PYQTGRAPH_AVAILABLE:
-    import pyqtgraph as pg
-
-# Check Matplotlib availability
-MATPLOTLIB_AVAILABLE = importlib.util.find_spec("matplotlib") is not None
-
 from xpcsviewer.constants import (
     DECIMATION_FACTOR_THRESHOLD,
     MEMORY_EFFICIENCY_LOW,
@@ -37,6 +29,14 @@ from xpcsviewer.constants import (
 
 from .logging_config import get_logger
 from .memory_manager import MemoryPressure, get_memory_manager
+
+# Check PyQtGraph availability
+PYQTGRAPH_AVAILABLE = importlib.util.find_spec("pyqtgraph") is not None
+if PYQTGRAPH_AVAILABLE:
+    import pyqtgraph as pg
+
+# Check Matplotlib availability
+MATPLOTLIB_AVAILABLE = importlib.util.find_spec("matplotlib") is not None
 
 
 # Lazy import threading to avoid circular dependencies
@@ -695,12 +695,16 @@ class AdvancedGUIRenderer:
                     updates_to_process = dict(self._pending_updates)
                     self._pending_updates.clear()
 
-                    for widget_id, (func, args, kwargs) in updates_to_process.items():
+                    for pending_widget_id, (
+                        func,
+                        pending_args,
+                        pending_kwargs,
+                    ) in updates_to_process.items():
                         try:
-                            func(*args, **kwargs)
+                            func(*pending_args, **pending_kwargs)
                         except Exception as e:
                             logger.warning(
-                                f"Batched update failed for {widget_id}: {e}"
+                                f"Batched update failed for {pending_widget_id}: {e}"
                             )
 
                 self._batch_timer = None

@@ -183,7 +183,6 @@ class QtConnectionFixer:
             # Handle overloaded signals if signature is specified
             if signal_signature is not None:
                 # This handles cases like clicked["bool"] -> clicked
-                signal = signal  # In Qt5+, we typically use the base signal
                 logger.debug(
                     f"Handling overloaded signal {signal_name} with signature {signal_signature}"
                 )

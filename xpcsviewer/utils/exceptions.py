@@ -9,9 +9,12 @@ This module provides a comprehensive exception hierarchy that enables:
 - Automated error reporting and classification
 """
 
+import logging
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any
+
+logger = logging.getLogger(__name__)
 
 
 class XPCSBaseError(Exception):
@@ -348,7 +351,7 @@ def handle_exceptions(
                         xpcs_exception.add_context(key, value)
 
                 xpcs_exception.add_context("function", func.__name__)
-                raise xpcs_exception
+                raise xpcs_exception from e
 
         return wrapper
 
@@ -387,8 +390,11 @@ class exception_context:
             if self.cleanup_func:
                 try:
                     self.cleanup_func()
-                except Exception:
-                    pass  # Don't let cleanup failures mask original exception
+                except Exception as cleanup_err:
+                    logger.debug(
+                        "Cleanup function failed (ignored to preserve original error): %s",
+                        cleanup_err,
+                    )
 
             # Convert exception if needed
             if not isinstance(exc_value, XPCSBaseError):
