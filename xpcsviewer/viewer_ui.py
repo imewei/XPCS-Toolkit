@@ -2183,7 +2183,7 @@ class Ui_mainWindow(object):
 
     def retranslateUi(self, mainWindow):
         mainWindow.setWindowTitle(
-            QCoreApplication.translate("mainWindow", "XPCS Toolkit", None)
+            QCoreApplication.translate("mainWindow", "XPCS Viewer", None)
         )
         self.label_2.setText(
             QCoreApplication.translate("mainWindow", "Data path:", None)
