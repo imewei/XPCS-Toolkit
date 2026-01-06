@@ -8,7 +8,6 @@
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
 
-import icons_rc
 from pyqtgraph import DataTreeWidget, GraphicsLayoutWidget, ImageView, PlotWidget
 from pyqtgraph.parametertree import ParameterTree
 from PySide6.QtCore import (
@@ -71,6 +70,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from . import icons_rc
 from .plothandler import ImageViewDev, ImageViewPlotItem, MplCanvasBarV, PlotWidgetDev
 
 
