@@ -1,6 +1,6 @@
 <RCC>
   <qresource prefix="icons">
-    <file>icons8-giraffe-full-body-100.png</file>
+
     <file>xpcsviewer_logo.png</file>
     <file>icons/xpcs_logo_16x16.png</file>
     <file>icons/xpcs_logo_32x32.png</file>

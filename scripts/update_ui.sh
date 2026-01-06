@@ -1,6 +1,6 @@
 #!/bin/bash
 
-WD=""../src/xpcs_toolkit""
+WD="../xpcsviewer"
 
 echo "$(date): Starting UI file update for XPCS Toolkit"
 echo "$(date): Working directory: $WD"
