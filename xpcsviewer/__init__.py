@@ -75,7 +75,7 @@ else:
 try:
     __version__ = version("xpcsviewer")
 except PackageNotFoundError:
-    __version__ = "0.1.0"  # Fallback if package is not installed
+    __version__ = "0.1.2"  # Fallback if package is not installed
 
 __author__ = "Miaoqi Chu & Wei Chen"
 __credits__ = "Argonne National Laboratory"
