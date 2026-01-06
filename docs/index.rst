@@ -70,6 +70,7 @@ Features
 * G2 correlation analysis with fitting
 * SAXS 1D/2D visualization
 * Two-time correlation analysis
+* Mask Editor with Q-map and Q-binning
 * HDF5 data support (NeXus format)
 * PySide6 GUI interface
 

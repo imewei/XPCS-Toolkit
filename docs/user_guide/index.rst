@@ -8,4 +8,5 @@ Installation, usage, and workflows for XPCS Viewer.
 
    installation
    quickstart
+   simplemask
    examples

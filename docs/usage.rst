@@ -130,6 +130,8 @@ Analysis Tabs
      - Q-space mapping visualization
    * - Average
      - File averaging tools for batch processing
+   * - Mask Editor
+     - Mask creation, Q-map generation, and Q-binning (see :doc:`user_guide/simplemask`)
    * - Metadata
      - Dataset information and parameters
 
