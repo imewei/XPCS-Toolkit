@@ -18,6 +18,7 @@ from pathlib import Path
 # Add XPCS-Toolkit to Python path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+# ruff: noqa: E402
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.optimize import curve_fit

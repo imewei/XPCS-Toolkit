@@ -85,6 +85,39 @@ class TestQmapBenchmarks:
 
         assert result[0] is not None
 
+    @pytest.mark.benchmark(group="qmap")
+    def test_qmap_xlarge_detector_2048(self, benchmark) -> None:
+        """Benchmark Q-map on extra-large detector (2048x2048) for SC-001.
+
+        SC-001: Q-map computation completes at least 5x faster on GPU
+        compared to CPU-only execution for large detectors (2048x2048 pixels).
+
+        Note: This test measures baseline performance. GPU vs CPU comparison
+        requires running on systems with GPU hardware.
+        """
+        from xpcsviewer.simplemask.qmap import compute_transmission_qmap
+
+        energy = 10.0  # keV
+        shape = (2048, 2048)
+        center = (1024.0, 1024.0)
+        pix_dim = 0.075  # mm (75 microns)
+        det_dist = 5000.0  # mm (5 meters)
+
+        # Warmup
+        _ = compute_transmission_qmap(energy, center, shape, pix_dim, det_dist)
+
+        # Benchmark - returns (qmap_dict, metadata)
+        result = benchmark(
+            compute_transmission_qmap, energy, center, shape, pix_dim, det_dist
+        )
+
+        # Result is a tuple: (qmap_dict, metadata)
+        qmap_dict, metadata = result
+        assert qmap_dict is not None
+        assert "q" in qmap_dict
+        # Verify output shape matches expected 2048x2048
+        assert qmap_dict["q"].shape == (2048, 2048)
+
 
 @pytest.mark.skipif(not JAX_AVAILABLE, reason="JAX not installed")
 class TestPartitionBenchmarks:

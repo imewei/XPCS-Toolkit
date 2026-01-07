@@ -353,10 +353,11 @@ class DeviceManager:
                 # JAX doesn't provide direct memory querying,
                 # but we can get device info
                 device = devices[0]
+                logger.debug("GPU device found: %s (memory info unavailable)", device)
                 # Memory info would require platform-specific APIs
                 return {"total": None, "available": None}
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug("Failed to query GPU memory info: %s", e)
 
         return {"total": None, "available": None}
 

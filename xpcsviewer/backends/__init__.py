@@ -35,7 +35,7 @@ _jax_configured: bool = False
 
 def _configure_jax() -> None:
     """Configure JAX settings (float64, memory) on first use."""
-    global _jax_configured
+    global _jax_configured  # noqa: PLW0603 - intentional module-level state
     if _jax_configured:
         return
 

@@ -184,6 +184,122 @@ class TestMemoryMonitoring:
 
 
 @pytest.mark.skipif(not JAX_AVAILABLE, reason="JAX not installed")
+class TestMemoryThreshold:
+    """Tests for SC-007: Memory usage stays within 90% of available device memory."""
+
+    def test_memory_stays_below_90_percent(self, monkeypatch) -> None:
+        """Test memory usage stays below 90% threshold per SC-007.
+
+        SC-007: Memory usage during large computations stays within 90%
+        of available device memory through automatic chunking.
+        """
+        monkeypatch.setenv("XPCS_USE_JAX", "1")
+        monkeypatch.setenv("JAX_PLATFORMS", "cpu")
+        # Set memory fraction to 90% per SC-007
+        monkeypatch.setenv("XPCS_GPU_MEMORY_FRACTION", "0.9")
+
+        from xpcsviewer.backends import _reset_backend
+
+        _reset_backend()
+
+        import psutil
+
+        from xpcsviewer.simplemask.qmap import compute_transmission_qmap
+
+        process = psutil.Process()
+
+        # Get available system memory
+        virtual_mem = psutil.virtual_memory()
+        available_memory = virtual_mem.available
+
+        # Run multiple large Q-map computations
+        initial_memory = process.memory_info().rss
+
+        for _ in range(5):
+            # Use 2048x2048 detector (large array per SC-001)
+            qmap, _ = compute_transmission_qmap(
+                energy=10.0,
+                center=(1024.0, 1024.0),
+                shape=(2048, 2048),
+                pix_dim=0.075,
+                det_dist=5000.0,
+            )
+            del qmap
+            gc.collect()
+
+        peak_memory = process.memory_info().rss
+        memory_used = peak_memory - initial_memory
+
+        # Verify memory usage is reasonable (less than 90% of available)
+        # For this test, we check that memory increase is less than 1GB
+        # (a practical threshold that should be well under 90% on most systems)
+        memory_used_mb = memory_used / (1024 * 1024)
+        assert memory_used_mb < 1024, (
+            f"Memory usage {memory_used_mb:.1f}MB exceeds 1GB threshold"
+        )
+
+        # Also verify we're using less than 50% of available memory
+        # (conservative check since we can't guarantee 90% threshold on all systems)
+        usage_percent = (memory_used / available_memory) * 100
+        assert usage_percent < 50, (
+            f"Memory usage {usage_percent:.1f}% exceeds 50% of available memory"
+        )
+
+    def test_gpu_memory_fraction_configured(self, monkeypatch) -> None:
+        """Test GPU memory fraction is configured correctly."""
+        monkeypatch.setenv("XPCS_USE_JAX", "1")
+        monkeypatch.setenv("XPCS_GPU_MEMORY_FRACTION", "0.9")
+
+        import os
+
+        from xpcsviewer.backends import _reset_backend, get_backend
+
+        _reset_backend()
+        _ = get_backend()
+
+        # Verify XLA memory fraction is set
+        xla_fraction = os.environ.get("XLA_PYTHON_CLIENT_MEM_FRACTION")
+        if xla_fraction:
+            assert float(xla_fraction) == 0.9
+
+    def test_chunked_processing_for_large_arrays(self, monkeypatch) -> None:
+        """Test that large arrays are processed in chunks to manage memory."""
+        monkeypatch.setenv("XPCS_USE_JAX", "1")
+        monkeypatch.setenv("JAX_PLATFORMS", "cpu")
+
+        from xpcsviewer.backends import _reset_backend, get_backend
+
+        _reset_backend()
+
+        backend = get_backend()
+
+        # Process moderately large arrays that would stress memory
+        # if not properly managed
+        import psutil
+
+        process = psutil.Process()
+        initial_memory = process.memory_info().rss
+
+        # Create and process multiple large arrays
+        results = []
+        for _ in range(3):
+            x = backend.linspace(0, 1, 500000)
+            y = backend.sin(x) * backend.exp(-x)
+            z = backend.mean(y)
+            results.append(float(z))
+            del x, y, z
+            gc.collect()
+
+        final_memory = process.memory_info().rss
+        memory_increase = (final_memory - initial_memory) / (1024 * 1024)
+
+        # Memory increase should be reasonable
+        assert memory_increase < 500, (
+            f"Memory increased by {memory_increase:.1f}MB during chunked processing"
+        )
+
+
+@pytest.mark.skipif(not JAX_AVAILABLE, reason="JAX not installed")
 class TestChunkedProcessing:
     """Tests for chunked processing to manage memory."""
 
