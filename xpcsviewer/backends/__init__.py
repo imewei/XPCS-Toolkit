@@ -180,6 +180,12 @@ def _parse_bool_env(name: str, default: bool = False) -> bool:
 from ._base import BackendProtocol
 from ._conversions import ensure_backend_array, ensure_numpy
 from ._device import DeviceConfig, DeviceManager, DeviceType
+from .io_adapter import (
+    HDF5Adapter,
+    MatplotlibAdapter,
+    PyQtGraphAdapter,
+    create_adapters,
+)
 
 __all__ = [
     "get_backend",
@@ -191,4 +197,8 @@ __all__ = [
     "DeviceType",
     "ensure_numpy",
     "ensure_backend_array",
+    "PyQtGraphAdapter",
+    "HDF5Adapter",
+    "MatplotlibAdapter",
+    "create_adapters",
 ]
