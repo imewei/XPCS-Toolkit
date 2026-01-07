@@ -195,7 +195,7 @@ jax = [
 ]
 
 [tool.setuptools_scm]
-version_scheme = "post-release"
+version_scheme = "python-simplified-semver"
 local_scheme = "node-and-timestamp"
 
 [tool.setuptools.packages.find]
