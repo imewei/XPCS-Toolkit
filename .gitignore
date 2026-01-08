@@ -54,6 +54,7 @@ cover/
 bandit_report.json
 bandit-report.json
 .benchmarks/
+.nlsq_cache/
 .claude
 .ruff_cache/
 

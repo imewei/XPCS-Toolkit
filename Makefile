@@ -400,6 +400,11 @@ clean-test:
 		-not -path "./venv/*" \
 		-not -path "./.claude/*" \
 		-exec rm -rf {} + 2>/dev/null || true
+	find . -type d -name .nlsq_cache \
+		-not -path "./.venv/*" \
+		-not -path "./venv/*" \
+		-not -path "./.claude/*" \
+		-exec rm -rf {} + 2>/dev/null || true
 	rm -rf .coverage .coverage.* coverage.xml coverage.json
 	rm -rf test-artifacts/ test-reports/
 	find . -name '*.log' -path './tests/*' -delete 2>/dev/null || true
