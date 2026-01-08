@@ -166,6 +166,11 @@ class TestQtComplianceValidation(unittest.TestCase):
         if not QT_AVAILABLE:
             pytest.skip("Qt not available")
 
+        # Ensure QApplication exists
+        app = QtWidgets.QApplication.instance()
+        if app is None:
+            app = QtWidgets.QApplication([])
+
         # Create and destroy widgets to test memory management
         widgets = []
 

@@ -785,7 +785,12 @@ class SimpleMaskWindow(QMainWindow):
         Args:
             event: Close event
         """
-        if self._unsaved_changes:
+        # Skip confirmation dialog in test/headless mode to prevent blocking
+        import os
+
+        is_test_mode = os.environ.get("QT_QPA_PLATFORM") == "offscreen"
+
+        if self._unsaved_changes and not is_test_mode:
             reply = QMessageBox.question(
                 self,
                 "Unsaved Changes",
