@@ -122,6 +122,49 @@ def qt_application():
     # Don't quit the app here - let it persist for the session
 
 
+@pytest.fixture(autouse=True)
+def qt_cleanup(request):
+    """Auto-cleanup Qt state after each test to ensure test isolation.
+
+    This fixture runs after every test and:
+    1. Closes visible top-level widgets (not owned by pytest-qt)
+    2. Processes pending Qt events
+    3. Runs garbage collection to clean up weak references
+    """
+    yield  # Run the test first
+
+    # Only perform cleanup if Qt is available
+    if not QT_AVAILABLE:
+        return
+
+    import gc
+
+    # Get the QApplication instance
+    app = QtWidgets.QApplication.instance()
+    if app is None:
+        return
+
+    # Only close widgets that are visible and not managed by qtbot
+    # This is less aggressive than deleteLater() which was causing errors
+    for widget in app.topLevelWidgets():
+        try:
+            # Only close visible widgets to avoid interfering with pytest-qt managed widgets
+            if widget is not None and widget.isVisible():
+                widget.close()
+        except (RuntimeError, AttributeError):
+            # Widget already deleted or doesn't have isVisible
+            pass
+
+    # Process any pending events from widget cleanup
+    try:
+        app.processEvents()
+    except RuntimeError:
+        pass
+
+    # Force garbage collection to clean up weak references
+    gc.collect()
+
+
 @pytest.fixture(scope="function")
 def qt_widget(qt_application):
     """Create a basic QWidget for testing."""
