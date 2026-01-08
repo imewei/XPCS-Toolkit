@@ -101,7 +101,7 @@ class TestNLSQEquivalence:
         """Test NLSQ fit matches scipy curve_fit for single exponential."""
         from scipy.optimize import curve_fit
 
-        from xpcsviewer.fitting.nlsq import _nlsq_scipy
+        from xpcsviewer.fitting.nlsq import nlsq_optimize
 
         x, y, yerr = generate_single_exp_data(tau=1.0, baseline=1.0, contrast=0.3)
 
@@ -120,15 +120,14 @@ class TestNLSQEquivalence:
         )
 
         # New NLSQ implementation
-        param_names = ["tau", "baseline", "contrast"]
-        p0 = np.array([1.0, 1.0, 0.3])
+        p0 = {"tau": 1.0, "baseline": 1.0, "contrast": 0.3}
         bounds = {
             "tau": (1e-6, 1e6),
             "baseline": (0.0, 2.0),
             "contrast": (0.0, 1.0),
         }
 
-        result = _nlsq_scipy(single_exp_func, x, y, yerr, param_names, p0, bounds)
+        result = nlsq_optimize(single_exp_func, x, y, yerr, p0, bounds, preset="fast")
 
         # Compare results - should be very close
         np.testing.assert_allclose(result.params["tau"], popt_scipy[0], rtol=0.1)
@@ -137,7 +136,7 @@ class TestNLSQEquivalence:
 
     def test_nlsq_recovers_true_parameters(self) -> None:
         """Test NLSQ fitting recovers true parameters."""
-        from xpcsviewer.fitting.nlsq import _nlsq_scipy
+        from xpcsviewer.fitting.nlsq import nlsq_optimize
 
         true_tau = 1.5
         true_baseline = 1.0
@@ -147,15 +146,14 @@ class TestNLSQEquivalence:
             tau=true_tau, baseline=true_baseline, contrast=true_contrast, seed=123
         )
 
-        param_names = ["tau", "baseline", "contrast"]
-        p0 = np.array([1.0, 1.0, 0.3])
+        p0 = {"tau": 1.0, "baseline": 1.0, "contrast": 0.3}
         bounds = {
             "tau": (1e-6, 1e6),
             "baseline": (0.0, 2.0),
             "contrast": (0.0, 1.0),
         }
 
-        result = _nlsq_scipy(single_exp_func, x, y, yerr, param_names, p0, bounds)
+        result = nlsq_optimize(single_exp_func, x, y, yerr, p0, bounds, preset="fast")
 
         # Check recovered values are close to true values
         assert np.abs(result.params["tau"] - true_tau) < 0.2
@@ -168,19 +166,18 @@ class TestChiSquaredEquivalence:
 
     def test_chi_squared_calculation(self) -> None:
         """Test chi-squared calculation matches manual calculation."""
-        from xpcsviewer.fitting.nlsq import _nlsq_scipy
+        from xpcsviewer.fitting.nlsq import nlsq_optimize
 
         x, y, yerr = generate_single_exp_data()
 
-        param_names = ["tau", "baseline", "contrast"]
-        p0 = np.array([1.0, 1.0, 0.3])
+        p0 = {"tau": 1.0, "baseline": 1.0, "contrast": 0.3}
         bounds = {
             "tau": (1e-6, 1e6),
             "baseline": (0.0, 2.0),
             "contrast": (0.0, 1.0),
         }
 
-        result = _nlsq_scipy(single_exp_func, x, y, yerr, param_names, p0, bounds)
+        result = nlsq_optimize(single_exp_func, x, y, yerr, p0, bounds, preset="fast")
 
         # Calculate chi-squared manually
         y_fit = single_exp_func(
@@ -197,7 +194,7 @@ class TestChiSquaredEquivalence:
         assert result.chi_squared > 0
         # The chi_squared in result should be related to the residuals
         # Result stores reduced chi-squared
-        dof = len(x) - len(param_names)
+        dof = len(x) - 3  # 3 parameters
         reduced_chi_sq_manual = chi_sq_manual / dof
         np.testing.assert_allclose(result.chi_squared, reduced_chi_sq_manual, rtol=0.5)
 
@@ -207,57 +204,54 @@ class TestCovarianceEquivalence:
 
     def test_covariance_shape(self) -> None:
         """Test covariance matrix has correct shape."""
-        from xpcsviewer.fitting.nlsq import _nlsq_scipy
+        from xpcsviewer.fitting.nlsq import nlsq_optimize
 
         x, y, yerr = generate_single_exp_data()
 
-        param_names = ["tau", "baseline", "contrast"]
-        p0 = np.array([1.0, 1.0, 0.3])
+        p0 = {"tau": 1.0, "baseline": 1.0, "contrast": 0.3}
         bounds = {
             "tau": (1e-6, 1e6),
             "baseline": (0.0, 2.0),
             "contrast": (0.0, 1.0),
         }
 
-        result = _nlsq_scipy(single_exp_func, x, y, yerr, param_names, p0, bounds)
+        result = nlsq_optimize(single_exp_func, x, y, yerr, p0, bounds, preset="fast")
 
         # Covariance should be (n_params, n_params)
         assert result.covariance.shape == (3, 3)
 
     def test_covariance_is_symmetric(self) -> None:
         """Test covariance matrix is symmetric."""
-        from xpcsviewer.fitting.nlsq import _nlsq_scipy
+        from xpcsviewer.fitting.nlsq import nlsq_optimize
 
         x, y, yerr = generate_single_exp_data()
 
-        param_names = ["tau", "baseline", "contrast"]
-        p0 = np.array([1.0, 1.0, 0.3])
+        p0 = {"tau": 1.0, "baseline": 1.0, "contrast": 0.3}
         bounds = {
             "tau": (1e-6, 1e6),
             "baseline": (0.0, 2.0),
             "contrast": (0.0, 1.0),
         }
 
-        result = _nlsq_scipy(single_exp_func, x, y, yerr, param_names, p0, bounds)
+        result = nlsq_optimize(single_exp_func, x, y, yerr, p0, bounds, preset="fast")
 
         # Covariance should be symmetric
         np.testing.assert_allclose(result.covariance, result.covariance.T, rtol=1e-6)
 
     def test_covariance_diagonal_is_positive(self) -> None:
         """Test covariance diagonal (variances) are positive."""
-        from xpcsviewer.fitting.nlsq import _nlsq_scipy
+        from xpcsviewer.fitting.nlsq import nlsq_optimize
 
         x, y, yerr = generate_single_exp_data()
 
-        param_names = ["tau", "baseline", "contrast"]
-        p0 = np.array([1.0, 1.0, 0.3])
+        p0 = {"tau": 1.0, "baseline": 1.0, "contrast": 0.3}
         bounds = {
             "tau": (1e-6, 1e6),
             "baseline": (0.0, 2.0),
             "contrast": (0.0, 1.0),
         }
 
-        result = _nlsq_scipy(single_exp_func, x, y, yerr, param_names, p0, bounds)
+        result = nlsq_optimize(single_exp_func, x, y, yerr, p0, bounds, preset="fast")
 
         # Diagonal elements (variances) should be positive
         assert np.all(np.diag(result.covariance) >= 0)
