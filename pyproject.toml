@@ -49,6 +49,7 @@ dependencies = [
     "tqdm>=4.67.1",
     "psutil>=7.1.0",
     "hdf5plugin>=6.0.0",
+    "nlsq>=0.6.0",
 ]
 
 [project.optional-dependencies]
