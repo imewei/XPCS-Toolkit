@@ -3,9 +3,6 @@ GUI Components
 
 Interactive XPCS data visualization interface with modern theming and user experience features.
 
-.. note::
-   For complete API documentation of all GUI modules, see :doc:`xpcs_toolkit`.
-
 .. currentmodule:: xpcsviewer
 
 Main Application

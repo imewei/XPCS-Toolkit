@@ -3,9 +3,6 @@ Analysis Modules
 
 Specialized modules for XPCS analysis and data processing.
 
-.. note::
-   For complete API documentation of all analysis modules, see :doc:`../xpcs_toolkit.module`.
-
 .. currentmodule:: xpcsviewer.module
 
 G2 Correlation Analysis

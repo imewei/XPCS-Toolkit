@@ -4,9 +4,6 @@ Utilities
 Utility modules providing logging, memory management, performance monitoring,
 and other support functions.
 
-.. note::
-   For complete API documentation of all utility modules, see :doc:`../xpcs_toolkit.utils`.
-
 .. currentmodule:: xpcsviewer.utils
 
 Logging

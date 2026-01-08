@@ -46,23 +46,11 @@ The GUI launches maximized with a rectangular layout, uses only the menu bar for
 
 .. toctree::
    :maxdepth: 1
-   :caption: Additional Topics
-
-   ROBUST_FITTING_INTEGRATION
-   gui-review
-
-.. toctree::
-   :maxdepth: 1
    :caption: Project Info
 
    readme
    authors
    history
-
-.. toctree::
-   :hidden:
-
-   xpcs_toolkit
 
 Features
 --------

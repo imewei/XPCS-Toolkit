@@ -4,7 +4,7 @@ API Reference
 .. toctree::
    :maxdepth: 2
 
-   xpcs_toolkit
+   package
    cli
    fileio
    modules
