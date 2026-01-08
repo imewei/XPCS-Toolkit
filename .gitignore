@@ -222,6 +222,7 @@ validation_report_*.json
 optimization_report_*.json
 archived_reports/
 archived_scripts/
+.optimization/
 
 # Runtime debug and log files only
 debug_*.log

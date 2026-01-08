@@ -26,12 +26,22 @@ python tests/framework/quality_standards.py --check-all
 tests/
 ├── unit/                    # Component isolation tests
 │   ├── core/               # Core system components
+│   │   ├── test_xpcs_file.py             # Existing XpcsFile tests
+│   │   ├── test_xpcs_file_data_access.py # G2, TwoTime data access (XF-001→XF-006)
+│   │   ├── test_xpcs_file_fitting.py     # G2 fitting tests (XF-009→XF-012)
+│   │   ├── test_xpcs_file_roi.py         # ROI extraction tests (XF-007, XF-008)
+│   │   ├── test_viewer_kernel.py         # Existing ViewerKernel tests
+│   │   ├── test_viewer_kernel_plotting.py # Plotting tests (VK-001→VK-005)
+│   │   └── test_viewer_kernel_export.py  # Export tests (VK-006→VK-009)
+│   ├── schemas/            # Schema validation tests
+│   │   └── test_validators.py            # QMapSchema, G2Data, MaskSchema validation
 │   ├── analysis/           # Analysis module tests
 │   ├── fileio/             # File I/O system tests
 │   ├── threading/          # Threading and async tests
 │   ├── utils/              # Utility function tests
 │   └── test_package_basics.py # Basic package functionality
 ├── integration/            # Component interaction tests
+│   └── test_hdf5_facade.py # HDF5 facade read/write tests
 ├── scientific/             # Scientific accuracy validation
 │   ├── algorithms/         # Algorithm validation
 │   ├── properties/         # Mathematical property tests
@@ -48,7 +58,8 @@ tests/
 ├── framework/             # Test framework tools
 │   └── runners/          # Test execution runners
 ├── fixtures/              # Test data and fixtures
-│   └── reference_data/   # Reference datasets
+│   ├── reference_data/   # Reference datasets
+│   └── xpcs_synthetic.py # XPCS synthetic data generators
 ├── gui_interactive/       # User interface tests
 ├── end_to_end/           # Complete workflow tests
 └── error_handling/        # Error scenarios and edge cases
