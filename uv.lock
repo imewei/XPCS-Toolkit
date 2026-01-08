@@ -1361,6 +1361,26 @@ wheels = [
 ]
 
 [[package]]
+name = "nlsq"
+version = "0.6.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "h5py" },
+    { name = "jax" },
+    { name = "jaxlib" },
+    { name = "matplotlib" },
+    { name = "numpy" },
+    { name = "optax" },
+    { name = "psutil" },
+    { name = "scipy" },
+    { name = "tqdm" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/92/9a/93d3a309efc013acf010e155e44ca85ebc02753d39920d89900718d5deed/nlsq-0.6.0.tar.gz", hash = "sha256:b049fb867f8b45d2582275be7e2b47e0c8d149e6a8ffe232179136e907202dac", size = 2019872, upload-time = "2026-01-07T04:53:16.739Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/5e/41/f538eff181d9d590ccb2c96a249752e4c9755d5597fc20e2e87c4e2b5144/nlsq-0.6.0-py3-none-any.whl", hash = "sha256:1fe86c2783fc8ae355ca3e9b39d252500fdfe875ab757ec4a4cbd747e35a82fd", size = 597626, upload-time = "2026-01-07T04:53:14.678Z" },
+]
+
+[[package]]
 name = "nodeenv"
 version = "1.10.0"
 source = { registry = "https://pypi.org/simple" }
@@ -2671,6 +2691,7 @@ dependencies = [
     { name = "hdf5plugin" },
     { name = "joblib" },
     { name = "matplotlib" },
+    { name = "nlsq" },
     { name = "numpy" },
     { name = "pandas" },
     { name = "psutil" },
@@ -2860,6 +2881,7 @@ requires-dist = [
     { name = "memory-profiler", marker = "extra == 'validation'", specifier = ">=0.61.0" },
     { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.19.0" },
     { name = "myst-parser", marker = "extra == 'docs'", specifier = ">=4.0.1" },
+    { name = "nlsq", specifier = ">=0.6.0" },
     { name = "numpy", specifier = ">=2.3.0" },
     { name = "numpyro", marker = "extra == 'jax'", specifier = ">=0.19.0" },
     { name = "optax", marker = "extra == 'jax'", specifier = ">=0.2.0" },
