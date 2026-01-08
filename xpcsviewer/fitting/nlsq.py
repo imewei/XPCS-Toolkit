@@ -112,6 +112,8 @@ def _nlsq_jax(
     only_ub_finite = ~lb_finite & ub_finite
 
     # Transform parameters to unbounded space for optimization
+    # JIT-compiled for performance (OPT-008)
+    @jax.jit
     def to_unconstrained(params):
         """Transform bounded params to unbounded space."""
         # Use sigmoid-like transform for bounded params
@@ -134,6 +136,8 @@ def _nlsq_jax(
                 result.append(p)
         return jnp.array(result)
 
+    # JIT-compiled for performance (OPT-008)
+    @jax.jit
     def from_unconstrained(unconstrained):
         """Transform back from unbounded space."""
         result = []
@@ -226,6 +230,8 @@ def _compute_covariance_jax(
     """
 
     # Compute Jacobian using JAX
+    # JIT-compiled for performance (OPT-008)
+    @jax.jit
     def model_at_params(params):
         return model_fn(x, *params)
 

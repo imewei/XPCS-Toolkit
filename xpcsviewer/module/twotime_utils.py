@@ -623,6 +623,7 @@ def compute_c2_statistics_vectorized(c2_matrices):
         Dictionary with statistical measures
     """
     c2_array = np.array(c2_matrices)
+    n = c2_array.shape[-1]  # Matrix size
 
     # Vectorized statistical computations
     stats = {
@@ -633,16 +634,16 @@ def compute_c2_statistics_vectorized(c2_matrices):
         "max": np.max(c2_array, axis=0),
         "trace": np.trace(c2_array, axis1=-2, axis2=-1),  # Batch trace computation
         "diagonal_mean": np.mean(np.diagonal(c2_array, axis1=-2, axis2=-1), axis=-1),
-        "off_diagonal_mean": [],
     }
 
-    # Vectorized off-diagonal mean computation
-    for i in range(c2_array.shape[0]):
-        mask = ~np.eye(c2_array.shape[-1], dtype=bool)
-        off_diag_vals = c2_array[i][mask]
-        stats["off_diagonal_mean"].append(np.mean(off_diag_vals))
-
-    stats["off_diagonal_mean"] = np.array(stats["off_diagonal_mean"])
+    # Fully vectorized off-diagonal mean computation (OPT-010)
+    # total_sum - diagonal_sum = off_diagonal_sum
+    # off_diagonal_count = n*n - n = n*(n-1)
+    total_sum = np.sum(c2_array, axis=(-2, -1))  # Sum over each matrix
+    diagonal_sum = stats["trace"]  # Already computed
+    off_diagonal_sum = total_sum - diagonal_sum
+    off_diagonal_count = n * (n - 1)
+    stats["off_diagonal_mean"] = off_diagonal_sum / off_diagonal_count
 
     return stats
 
