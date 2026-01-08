@@ -507,3 +507,93 @@ class JAXBackend:
         """
         _ensure_jax()
         return _jax.value_and_grad(func, argnums=argnums)
+
+    # =========================================================================
+    # Batch Processing (OPT-012: T042)
+    # =========================================================================
+
+    def vmap(
+        self,
+        func: Callable,
+        in_axes: int | tuple[int | None, ...] = 0,
+        out_axes: int = 0,
+    ) -> Callable:
+        """Vectorize function over batch dimension.
+
+        Parameters
+        ----------
+        func : callable
+            Function to vectorize
+        in_axes : int or tuple
+            Axes to map over for each input argument
+            (None means broadcast, 0 means batch over first axis)
+        out_axes : int
+            Axis for batched outputs
+
+        Returns
+        -------
+        callable
+            Vectorized function that operates on batches
+        """
+        _ensure_jax()
+        return _jax.vmap(func, in_axes=in_axes, out_axes=out_axes)
+
+    def scan(
+        self,
+        func: Callable,
+        init: jnp.ndarray,
+        xs: jnp.ndarray,
+        length: int | None = None,
+    ) -> tuple[jnp.ndarray, jnp.ndarray]:
+        """Scan over leading array dimension while carrying along state.
+
+        Parameters
+        ----------
+        func : callable
+            Function of signature (carry, x) -> (carry, y)
+        init : array
+            Initial carry value
+        xs : array
+            Array to scan over (first dimension)
+        length : int, optional
+            Number of iterations (inferred from xs if not provided)
+
+        Returns
+        -------
+        tuple
+            (final_carry, stacked_outputs)
+        """
+        _ensure_jax()
+        from jax import lax
+
+        return lax.scan(func, init, xs, length=length)
+
+    def fori_loop(
+        self,
+        lower: int,
+        upper: int,
+        body_fun: Callable,
+        init_val: jnp.ndarray,
+    ) -> jnp.ndarray:
+        """Execute body function in a loop from lower to upper.
+
+        Parameters
+        ----------
+        lower : int
+            Loop start index (inclusive)
+        upper : int
+            Loop end index (exclusive)
+        body_fun : callable
+            Function of signature (i, val) -> val
+        init_val : array
+            Initial loop carry value
+
+        Returns
+        -------
+        array
+            Final carry value after loop completes
+        """
+        _ensure_jax()
+        from jax import lax
+
+        return lax.fori_loop(lower, upper, body_fun, init_val)
