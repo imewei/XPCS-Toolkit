@@ -28,6 +28,12 @@ import contextlib
 from tests.fixtures.core_fixtures import *
 from tests.fixtures.qt_fixtures import *
 from tests.fixtures.scientific_fixtures import *
+from tests.fixtures.xpcs_synthetic import (
+    generate_roi_parameters,
+    generate_synthetic_c2_matrix,
+    generate_synthetic_g2_data,
+    generate_synthetic_saxs_2d,
+)
 from xpcsviewer.utils.logging_config import setup_logging
 
 # Import optional framework utilities
@@ -712,3 +718,219 @@ def threading_error_scenarios():
             self.threads.clear()
 
     return ThreadingErrorScenarios()
+
+
+# ============================================================================
+# XPCS Synthetic Data Fixtures (Phase 1 - Test Suite Update)
+# ============================================================================
+
+
+@pytest.fixture(scope="function")
+def synthetic_g2_data():
+    """Generate synthetic G2 data with known parameters for fitting validation."""
+    return generate_synthetic_g2_data(
+        tau=10e-3,  # 10ms relaxation time
+        amplitude=0.5,
+        baseline=1.0,
+        n_points=50,
+        noise_level=0.01,
+    )
+
+
+@pytest.fixture(scope="function")
+def synthetic_g2_double_exp():
+    """Generate synthetic double exponential G2 data."""
+    return generate_synthetic_g2_data(
+        tau=5e-3,  # 5ms fast component
+        amplitude=0.3,
+        tau2=50e-3,  # 50ms slow component
+        amplitude2=0.2,
+        double_exp=True,
+        baseline=1.0,
+        n_points=50,
+        noise_level=0.01,
+    )
+
+
+@pytest.fixture(scope="function")
+def synthetic_c2_matrix():
+    """Generate synthetic two-time C2 correlation matrix."""
+    return generate_synthetic_c2_matrix(
+        size=100,
+        tau_c=10e-3,
+        beta=0.5,
+        baseline=1.0,
+        noise_level=0.05,
+        correct_diagonal=True,
+    )
+
+
+@pytest.fixture(scope="function")
+def synthetic_c2_uncorrected():
+    """Generate synthetic C2 matrix without diagonal correction."""
+    return generate_synthetic_c2_matrix(
+        size=100,
+        tau_c=10e-3,
+        beta=0.5,
+        baseline=1.0,
+        noise_level=0.05,
+        correct_diagonal=False,
+    )
+
+
+@pytest.fixture(scope="function")
+def synthetic_saxs_2d():
+    """Generate synthetic SAXS 2D detector image with ring patterns."""
+    return generate_synthetic_saxs_2d(
+        image_size=(512, 512),
+        ring_q_values=[0.01, 0.05, 0.1],
+        ring_widths=[0.005, 0.01, 0.02],
+        background=100.0,
+        peak_intensity=10000.0,
+    )
+
+
+@pytest.fixture(scope="function")
+def roi_parameter_list():
+    """Generate ROI parameter sets for parallel extraction testing."""
+    return generate_roi_parameters(
+        n_rois=5,
+        roi_type="ring",
+        center=(256, 256),
+        r_inner_range=(50, 100),
+        r_outer_offset=20,
+        phi_num=180,
+    )
+
+
+# ============================================================================
+# Mock Handler Fixtures (Phase 2 - Foundational)
+# ============================================================================
+
+
+@pytest.fixture(scope="function")
+def mock_matplotlib_handler():
+    """Create mock matplotlib handler for plotting tests."""
+    from unittest.mock import MagicMock
+
+    handler = MagicMock()
+    handler.figure = MagicMock()
+    handler.ax = MagicMock()
+    handler.ax.plot = MagicMock(return_value=[MagicMock()])
+    handler.ax.set_xlabel = MagicMock()
+    handler.ax.set_ylabel = MagicMock()
+    handler.ax.set_title = MagicMock()
+    handler.ax.legend = MagicMock()
+    handler.ax.imshow = MagicMock(return_value=MagicMock())
+    handler.ax.clear = MagicMock()
+    handler.canvas = MagicMock()
+    handler.canvas.draw = MagicMock()
+    handler.canvas.draw_idle = MagicMock()
+    return handler
+
+
+@pytest.fixture(scope="function")
+def mock_pyqtgraph_handler():
+    """Create mock pyqtgraph handler for plotting tests."""
+    from unittest.mock import MagicMock
+
+    handler = MagicMock()
+    handler.setImage = MagicMock()
+    handler.setData = MagicMock()
+    handler.clear = MagicMock()
+    handler.plot = MagicMock(return_value=MagicMock())
+    handler.addItem = MagicMock()
+    handler.removeItem = MagicMock()
+    handler.getViewBox = MagicMock(return_value=MagicMock())
+    handler.setLabel = MagicMock()
+    handler.setTitle = MagicMock()
+    handler.setXRange = MagicMock()
+    handler.setYRange = MagicMock()
+    return handler
+
+
+@pytest.fixture(scope="function")
+def mock_xpcs_file(synthetic_g2_data, synthetic_c2_matrix, synthetic_saxs_2d):
+    """Create mock XpcsFile with synthetic data for testing."""
+    from unittest.mock import MagicMock
+
+    mock_file = MagicMock()
+
+    # Configure G2 data access
+    mock_file.get_g2_data = MagicMock(
+        return_value={
+            "tau": synthetic_g2_data["delay_times"],
+            "g2": synthetic_g2_data["g2_values"],
+            "g2_err": synthetic_g2_data["g2_errors"],
+        }
+    )
+
+    # Configure stability data
+    mock_file.get_g2_stability_data = MagicMock(
+        return_value={
+            "frame_indices": list(range(10)),
+            "g2_values": [synthetic_g2_data["g2_values"]] * 10,
+        }
+    )
+
+    # Configure TwoTime data
+    mock_file.get_twotime_c2 = MagicMock(return_value=synthetic_c2_matrix["c2"])
+
+    # Configure ROI data
+    mock_file.get_roi_data = MagicMock(
+        return_value={
+            "qbin": 0.05,
+            "data": synthetic_saxs_2d["image"].sum(axis=0)[:180],
+            "phi": list(range(180)),
+        }
+    )
+
+    # Configure parallel ROI
+    mock_file.get_multiple_roi_data_parallel = MagicMock(
+        return_value=[
+            {"qbin": i * 0.01, "data": synthetic_saxs_2d["image"].sum(axis=0)[:180]}
+            for i in range(5)
+        ]
+    )
+
+    # Configure fitting
+    mock_file.fit_g2 = MagicMock(
+        return_value={
+            "tau_fit": synthetic_g2_data["known_tau"],
+            "amplitude_fit": synthetic_g2_data["known_amplitude"],
+            "baseline_fit": synthetic_g2_data["baseline"],
+            "success": True,
+        }
+    )
+
+    # Configure basic attributes
+    mock_file.filename = "test_xpcs_file.h5"
+    mock_file.is_valid = True
+    mock_file.has_g2_data = True
+    mock_file.has_twotime_data = True
+
+    return mock_file
+
+
+@pytest.fixture(scope="function")
+def mock_viewer_kernel(mock_xpcs_file, mock_matplotlib_handler, mock_pyqtgraph_handler):
+    """Create mock ViewerKernel for testing."""
+    from unittest.mock import MagicMock
+
+    kernel = MagicMock()
+    kernel.xpcs_file = mock_xpcs_file
+
+    # Configure plot methods
+    kernel.plot_g2 = MagicMock()
+    kernel.plot_saxs_1d = MagicMock()
+    kernel.plot_saxs_2d = MagicMock()
+    kernel.plot_twotime = MagicMock()
+
+    # Configure export methods
+    kernel.export_g2 = MagicMock(return_value=True)
+    kernel.export_saxs_1d = MagicMock(return_value=True)
+
+    # Configure ROI methods
+    kernel.add_roi = MagicMock(return_value={"index": 0, "type": "ring"})
+
+    return kernel
