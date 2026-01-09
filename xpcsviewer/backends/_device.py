@@ -328,9 +328,17 @@ class DeviceManager:
 
         import jax
 
+        # Log array info at entry if DEBUG enabled
+        if logger.isEnabledFor(logging.DEBUG):
+            shape = getattr(array, "shape", "N/A")
+            dtype = getattr(array, "dtype", "N/A")
+            logger.debug(f"place_on_device: shape={shape}, dtype={dtype}")
+
         device = self.get_device()
         if device is not None:
-            return jax.device_put(array, device)
+            result = jax.device_put(array, device)
+            logger.debug(f"place_on_device: placed on {device}")
+            return result
         return array
 
     def get_memory_info(self) -> dict[str, int | None]:

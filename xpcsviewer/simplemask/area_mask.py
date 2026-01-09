@@ -108,6 +108,9 @@ class MaskBase:
         Returns:
             Combined mask array
         """
+        if logger.isEnabledFor(logging.DEBUG):
+            zero_count = 0 if self.zero_loc is None else self.zero_loc.shape[1]
+            logger.debug(f"combine_mask: {self.mtype} with {zero_count} masked pixels")
         if self.zero_loc is not None:
             if mask is None:
                 mask = self.get_mask()

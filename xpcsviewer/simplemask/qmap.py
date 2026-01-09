@@ -79,20 +79,26 @@ def compute_qmap(
     Raises:
         ValueError: If required geometry parameters are missing (None)
     """
+    logger.debug(f"compute_qmap: entry stype={stype}, shape={metadata.get('shape')}")
     # Validate required parameters before attempting computation
     required = ("energy", "bcx", "bcy", "shape", "pix_dim", "det_dist")
     _validate_geometry_metadata(metadata, required)
 
     if stype == "Transmission":
-        return compute_transmission_qmap(
+        result = compute_transmission_qmap(
             metadata["energy"],
             (metadata["bcy"], metadata["bcx"]),
             metadata["shape"],
             metadata["pix_dim"],
             metadata["det_dist"],
         )
+        if logger.isEnabledFor(logging.DEBUG):
+            sqmap = result[0].get("sqmap")
+            if sqmap is not None:
+                logger.debug(f"compute_qmap: exit sqmap shape={sqmap.shape}")
+        return result
     if stype == "Reflection":
-        return compute_reflection_qmap(
+        result = compute_reflection_qmap(
             metadata["energy"],
             (metadata["bcy"], metadata["bcx"]),
             metadata["shape"],
@@ -101,6 +107,11 @@ def compute_qmap(
             alpha_i_deg=metadata.get("alpha_i_deg", 0.14),
             orientation=metadata.get("orientation", "north"),
         )
+        if logger.isEnabledFor(logging.DEBUG):
+            sqmap = result[0].get("sqmap")
+            if sqmap is not None:
+                logger.debug(f"compute_qmap: exit sqmap shape={sqmap.shape}")
+        return result
     raise ValueError(f"Unknown scattering type: {stype}")
 
 

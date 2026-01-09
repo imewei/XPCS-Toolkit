@@ -12,6 +12,7 @@ Each schema includes:
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from typing import Literal
 
@@ -20,6 +21,15 @@ import numpy as np
 from xpcsviewer.utils.logging_config import get_logger
 
 logger = get_logger(__name__)
+
+
+def _log_validation_result(
+    schema_name: str, shape: tuple | None, success: bool
+) -> None:
+    """Log schema validation result at DEBUG level."""
+    if logger.isEnabledFor(logging.DEBUG):
+        status = "passed" if success else "failed"
+        logger.debug(f"Schema validation {status}: {schema_name} shape={shape}")
 
 
 @dataclass

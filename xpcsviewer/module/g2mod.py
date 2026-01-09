@@ -8,6 +8,9 @@ Functions:
     fit_g2: Fit G2 data with exponential models
 """
 
+# Standard library imports
+import logging
+
 # Third-party imports
 import numpy as np
 import pyqtgraph as pg
@@ -22,17 +25,32 @@ pg.setConfigOption("foreground", pg.mkColor(80, 80, 80))
 logger = get_logger(__name__)
 
 
+def _log_array_dims(prefix: str, arr) -> None:
+    """Log array shape/dtype for data flow tracing."""
+    if logger.isEnabledFor(logging.DEBUG):
+        if arr is None:
+            logger.debug(f"{prefix}: None")
+        elif hasattr(arr, "shape"):
+            logger.debug(f"{prefix}: shape={arr.shape}, dtype={arr.dtype}")
+        elif isinstance(arr, (list, tuple)):
+            logger.debug(f"{prefix}: list of {len(arr)} items")
+
+
 # https://www.geeksforgeeks.org/pyqtgraph-symbols/
 symbols = ["o", "t", "t1", "t2", "t3", "s", "p", "h", "star", "+", "d", "x"]
 
 
 def get_data(xf_list, q_range=None, t_range=None):
+    logger.debug(
+        f"get_data: entry with {len(xf_list)} files, q_range={q_range}, t_range={t_range}"
+    )
     # Early validation - check all files have correlation analysis (Multitau or Twotime)
     analysis_types = [xf.atype for xf in xf_list]
     if not all(
         any(atype_part in ["Multitau", "Twotime"] for atype_part in atype)
         for atype in analysis_types
     ):
+        logger.debug("get_data: exit early - no correlation analysis")
         return False, None, None, None, None
 
     # Pre-allocate lists with known size for better memory efficiency
@@ -52,6 +70,8 @@ def get_data(xf_list, q_range=None, t_range=None):
         g2_err[i] = _g2_err
         labels[i] = _labels
 
+    _log_array_dims("get_data g2", g2[0] if g2 else None)
+    logger.debug(f"get_data: exit with {num_files} datasets")
     return q, tel, g2, g2_err, labels
 
 

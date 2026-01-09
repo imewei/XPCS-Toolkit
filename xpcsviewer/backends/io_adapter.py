@@ -17,6 +17,7 @@ Public API:
 
 from __future__ import annotations
 
+import logging
 from typing import TYPE_CHECKING, Any
 
 import numpy as np
@@ -31,6 +32,14 @@ if TYPE_CHECKING:
     from ._base import BackendProtocol
 
 logger = get_logger(__name__)
+
+
+def _log_array_info(prefix: str, array: Any) -> None:
+    """Log array shape and dtype at DEBUG level."""
+    if logger.isEnabledFor(logging.DEBUG):
+        shape = getattr(array, "shape", "N/A")
+        dtype = getattr(array, "dtype", "N/A")
+        logger.debug(f"{prefix}: shape={shape}, dtype={dtype}")
 
 
 class PyQtGraphAdapter:
@@ -78,6 +87,8 @@ class PyQtGraphAdapter:
         np.ndarray
             NumPy array suitable for PyQtGraph
         """
+        _log_array_info("to_pyqtgraph input", array)
+
         if self.enable_monitoring:
             import time
 
@@ -96,6 +107,7 @@ class PyQtGraphAdapter:
                     f"array shape {result.shape}"
                 )
 
+        _log_array_info("to_pyqtgraph output", result)
         return result
 
     def from_pyqtgraph(self, array: np.ndarray) -> Any:

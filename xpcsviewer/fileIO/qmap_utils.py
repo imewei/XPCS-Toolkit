@@ -1,4 +1,5 @@
 # Standard library imports
+import logging
 import warnings
 
 # Third-party imports
@@ -11,6 +12,19 @@ from .aps_8idi import key as key_map
 from .hdf_reader import _connection_pool
 
 logger = get_logger(__name__)
+
+
+def _log_qmap_shape(qmap: dict | None, prefix: str = "QMap") -> None:
+    """Log Q-map array shapes at DEBUG level."""
+    if qmap is None or not logger.isEnabledFor(logging.DEBUG):
+        return
+    sqmap = qmap.get("sqmap")
+    dqmap = qmap.get("dqmap")
+    logger.debug(
+        f"{prefix}: sqmap={sqmap.shape if sqmap is not None else None}, "
+        f"dqmap={dqmap.shape if dqmap is not None else None}"
+    )
+
 
 # Detector and beam constants
 DEFAULT_DETECTOR_SIZE = 1024

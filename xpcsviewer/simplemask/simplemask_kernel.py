@@ -130,9 +130,14 @@ class SimpleMaskKernel:
             Tuple of (qmap_dict, units_dict)
         """
         stype = self.metadata.get("stype", "Transmission")
+        logger.debug(f"compute_qmap: stype={stype}, shape={self.shape}")
         self.qmap, self.qmap_unit = compute_qmap(stype, self.metadata)
         if self.mask_kernel is not None:
             self.mask_kernel.update_qmap(self.qmap)
+        if logger.isEnabledFor(logging.DEBUG) and self.qmap:
+            sqmap = self.qmap.get("sqmap")
+            if sqmap is not None:
+                logger.debug(f"compute_qmap: result sqmap shape={sqmap.shape}")
         return self.qmap, self.qmap_unit
 
     def mask_evaluate(self, target: str, **kwargs) -> str:

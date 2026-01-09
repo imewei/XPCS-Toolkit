@@ -8,6 +8,9 @@ Functions:
     plot_saxs1d: Generate SAXS 1D plots
 """
 
+# Standard library imports
+import logging
+
 # Third-party imports
 import numpy as np
 import pyqtgraph as pg
@@ -19,6 +22,16 @@ from xpcsviewer.utils.logging_config import get_logger
 from ..plothandler.matplot_qt import get_color_marker
 
 logger = get_logger(__name__)
+
+
+def _log_array_dims(prefix: str, arr) -> None:
+    """Log array shape/dtype for data flow tracing."""
+    if logger.isEnabledFor(logging.DEBUG):
+        if arr is None:
+            logger.debug(f"{prefix}: None")
+        elif hasattr(arr, "shape"):
+            logger.debug(f"{prefix}: shape={arr.shape}, dtype={arr.dtype}")
+
 
 pg.setConfigOption("background", "w")
 
@@ -251,6 +264,7 @@ def pg_plot(
     """
     Highly optimized SAXS1D plotting with vectorized operations and memory efficiency.
     """
+    logger.debug(f"pg_plot: entry with {len(xf_list)} files, q_range=[{qmin}, {qmax}]")
     pg_hdl.clear()
     plot_item = pg_hdl.getPlotItem()
     plot_item.setTitle(title)
