@@ -10,6 +10,7 @@ import time
 from enum import Enum
 from typing import Any
 
+from xpcsviewer.utils.log_utils import log_timing
 from xpcsviewer.utils.logging_config import get_logger
 
 logger = get_logger(__name__)
@@ -75,6 +76,7 @@ class ObjectRegistry:
 _object_registry = None
 
 
+@log_timing(threshold_ms=100)
 def shutdown_threads(threads: list[threading.Thread], timeout: float = 5.0):
     """Utility function to shutdown a list of threads."""
     logger.debug(f"Shutting down {len(threads)} threads")
@@ -275,6 +277,7 @@ def initialize_optimized_cleanup():
         return None
 
 
+@log_timing(threshold_ms=50)
 def schedule_type_cleanup(obj_type: str, priority_or_func, delay: float = 0.0):
     """Schedule cleanup for objects of a specific type.
 

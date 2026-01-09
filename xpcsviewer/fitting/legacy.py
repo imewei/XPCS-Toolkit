@@ -19,6 +19,7 @@ from scipy.optimize import curve_fit
 
 from xpcsviewer.backends import get_backend
 from xpcsviewer.backends._conversions import ensure_numpy
+from xpcsviewer.utils.log_utils import log_timing
 from xpcsviewer.utils.logging_config import get_logger
 
 logger = get_logger(__name__)
@@ -79,6 +80,7 @@ def double_exp_all(
     return ensure_numpy(result)
 
 
+@log_timing(threshold_ms=100)
 def fit_with_fixed(
     base_func: Callable[..., NDArray[np.floating[Any]]],
     x: NDArray[np.floating[Any]],
@@ -221,6 +223,7 @@ def _fit_single_qvalue(
         return col_idx, None, None, False
 
 
+@log_timing(threshold_ms=500)
 def fit_with_fixed_parallel(
     base_func: Callable[..., NDArray[np.floating[Any]]],
     x: NDArray[np.floating[Any]],
@@ -505,6 +508,7 @@ def sequential_fitting(
     return popt, pcov, "fallback"
 
 
+@log_timing(threshold_ms=500)
 def fit_with_fixed_sequential(
     base_func: Callable[..., NDArray[np.floating[Any]]],
     x: NDArray[np.floating[Any]],

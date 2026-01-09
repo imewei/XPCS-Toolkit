@@ -22,6 +22,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from ..utils.log_utils import log_timing
 from ..utils.logging_config import get_logger
 
 logger = get_logger(__name__)
@@ -300,6 +301,7 @@ class ProgressManager(QObject):
         """Set the main window status bar for simple progress display."""
         self.statusbar = statusbar
 
+    @log_timing(threshold_ms=50)
     def start_operation(
         self,
         operation_id: str,

@@ -18,6 +18,7 @@ from typing import Any
 import psutil
 from PySide6.QtCore import QObject, Signal
 
+from ..utils.log_utils import log_timing
 from ..utils.logging_config import get_logger
 from ..utils.memory_manager import MemoryPressure, get_memory_manager
 
@@ -177,6 +178,7 @@ class UnifiedThreadingManager(QObject):
             f"UnifiedThreadingManager initialized: {max_workers} workers, {self.cpu_count} CPUs, {self.total_memory_gb:.1f}GB RAM"
         )
 
+    @log_timing(threshold_ms=50)
     def submit_task(
         self,
         task_id: str,
@@ -269,6 +271,7 @@ class UnifiedThreadingManager(QObject):
         # Add completion callback
         future.add_done_callback(lambda f: self._handle_task_completion(task, f))
 
+    @log_timing(threshold_ms=100)
     def _execute_task(self, task: UnifiedTask) -> Any:
         """Execute a task with full tracking and error handling."""
         task.started_at = time.time()

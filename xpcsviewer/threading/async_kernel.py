@@ -13,6 +13,7 @@ from typing import Any
 from PySide6 import QtCore
 from PySide6.QtCore import QObject, Signal, Slot
 
+from ..utils.log_utils import log_timing
 from ..utils.logging_config import get_logger
 from .async_workers import ComputationWorker, DataLoadWorker, WorkerManager
 from .plot_workers import (
@@ -55,6 +56,7 @@ class AsyncViewerKernel(QObject):
             )
         )
 
+    @log_timing(threshold_ms=100)
     def load_files_async(
         self,
         file_paths: list[str],
@@ -193,6 +195,7 @@ class AsyncViewerKernel(QObject):
 
         return self._submit_plot_worker(worker, operation_id)
 
+    @log_timing(threshold_ms=100)
     def compute_async(
         self,
         compute_func: Callable,

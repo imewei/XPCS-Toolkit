@@ -19,6 +19,7 @@ import numpy as np
 
 from xpcsviewer.constants import MIN_HISTORY_SAMPLES, NDIM_2D, STREAMING_CHUNK_SIZE_MB
 
+from ..utils.log_utils import log_timing
 from ..utils.logging_config import get_logger
 from ..utils.memory_manager import MemoryPressure, get_memory_manager
 
@@ -532,6 +533,7 @@ class EnhancedHDF5Reader:
                 logger.error(f"Failed to open HDF5 file {file_path}: {e}")
                 raise
 
+    @log_timing(threshold_ms=500)
     def read_dataset(
         self,
         file_path: str,
@@ -663,6 +665,7 @@ class EnhancedHDF5Reader:
 
         return True
 
+    @log_timing(threshold_ms=500)
     def read_multiple_datasets(
         self,
         file_path: str,
@@ -717,6 +720,7 @@ class EnhancedHDF5Reader:
 
         return results
 
+    @log_timing(threshold_ms=100)
     def get_dataset_info(self, file_path: str, dataset_path: str) -> dict[str, Any]:
         """
         Get dataset metadata without loading data.

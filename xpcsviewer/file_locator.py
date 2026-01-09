@@ -20,12 +20,22 @@ import traceback
 # Local imports
 from .fileIO.qmap_utils import QMapManager
 from .helper.listmodel import ListDataModel
+from .utils.log_utils import log_timing
 from .utils.logging_config import get_logger
 from .xpcs_file import XpcsFile as XF
 
 logger = get_logger(__name__)
 
 
+def _get_file_size_mb(fname: str) -> float:
+    """Get file size in MB, returns 0.0 if file doesn't exist."""
+    try:
+        return os.path.getsize(fname) / (1024 * 1024)
+    except OSError:
+        return 0.0
+
+
+@log_timing(threshold_ms=500)
 def create_xpcs_dataset(fname, **kwargs):
     """Create an XpcsFile object from a file path.
 
@@ -36,6 +46,10 @@ def create_xpcs_dataset(fname, **kwargs):
     Returns:
         XpcsFile instance or None if loading fails.
     """
+    file_size_mb = _get_file_size_mb(fname)
+    logger.debug(
+        f"Loading XPCS dataset: {os.path.basename(fname)} ({file_size_mb:.1f} MB)"
+    )
     try:
         temp = XF(fname, **kwargs)
         return temp
@@ -137,23 +151,32 @@ class FileLocator:
         )
         return xf_obj.get_hdf_info(filter_str)
 
+    @log_timing(threshold_ms=1000)
     def add_target(self, alist, threshold=256, preload=True):
         if not alist:
             return
+        loaded_count = 0
+        total_size_mb = 0.0
         if preload and len(alist) <= threshold:
-            t0 = time.perf_counter()
             for fn in alist:
                 if fn in self.target:
                     continue
                 full_fname = os.path.normpath(os.path.join(self.path, fn))
+                file_size = _get_file_size_mb(full_fname)
                 xf_obj = create_xpcs_dataset(full_fname, qmap_manager=self.qmap_manager)
                 if xf_obj is not None:
                     self.target.append(fn)
                     self.cache[full_fname] = xf_obj
-            t1 = time.perf_counter()
-            logger.info(f"Load {len(alist)}  files in {t1 - t0:.3f} seconds")
+                    loaded_count += 1
+                    total_size_mb += file_size
+            logger.info(
+                f"Loaded {loaded_count}/{len(alist)} files "
+                f"(total: {total_size_mb:.1f} MB)"
+            )
         else:
-            logger.info("preload disabled or too many files added")
+            logger.info(
+                f"Preload disabled or too many files ({len(alist)} > {threshold})"
+            )
             self.target.extend(alist)
         self.timestamp = str(datetime.datetime.now())
         return

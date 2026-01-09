@@ -18,6 +18,7 @@ from typing import Any
 from PySide6 import QtCore
 from PySide6.QtCore import QObject, QRunnable, Signal, Slot
 
+from ..utils.log_utils import log_timing
 from ..utils.logging_config import get_logger
 
 logger = get_logger(__name__)
@@ -289,6 +290,7 @@ class BaseAsyncWorker(QRunnable):
         raise NotImplementedError("Subclasses must implement do_work() method")
 
     @Slot()
+    @log_timing(threshold_ms=100)
     def run(self):
         """
         Main entry point for the worker thread.

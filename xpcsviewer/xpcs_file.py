@@ -59,6 +59,7 @@ from .fitting import fit_with_fixed, fit_with_fixed_parallel, fit_with_fixed_seq
 from .module.twotime_utils import get_c2_stream, get_single_c2_from_hdf
 from .utils.exceptions import XPCSFileError, convert_exception
 from .utils.lazy_loader import LazyHDF5Array, get_lazy_loader, register_lazy_hdf5
+from .utils.log_utils import log_timing
 from .utils.logging_config import get_logger
 from .utils.memory_manager import CacheType, MemoryPressure, get_memory_manager
 from .utils.memory_predictor import (
@@ -330,6 +331,7 @@ class XpcsFile:
             self.hdf_info = read_metadata_to_dict(self.fname)
         return self.hdf_info
 
+    @log_timing(threshold_ms=500)
     def load_data(self, extra_fields=None):
         # default common fields for both twotime and multitau analysis;
         fields = ["saxs_1d", "Iqp", "Int_t", "t0", "t1", "start_time"]
@@ -927,6 +929,7 @@ class XpcsFile:
     def get_qbinlist_at_qindex(self, qindex, zero_based=True):
         return self.qmap.get_qbinlist_at_qindex(qindex, zero_based=zero_based)
 
+    @log_timing(threshold_ms=200)
     def get_g2_data(self, qrange=None, trange=None):
         # Support both Multitau and Twotime analysis types
         supported_types = ["Multitau", "Twotime"]
@@ -1231,6 +1234,7 @@ class XpcsFile:
             g2 = g2 - g2_baseline + np.mean(g2_baseline)
         return g2
 
+    @log_timing(threshold_ms=200)
     def get_saxs1d_data(
         self,
         bkg_xf=None,
@@ -1295,6 +1299,7 @@ class XpcsFile:
             qbin_labels.append(self.get_qbin_label(qbin, append_qbin=True))
         return qbin_labels
 
+    @log_timing(threshold_ms=200)
     def get_twotime_maps(
         self, scale="log", auto_crop=True, highlight_xy=None, selection=None
     ):
@@ -3013,6 +3018,7 @@ class XpcsFile:
             logger.error(f"Failed to compute Int_t FFT: {e}")
             return np.array([]), np.array([])
 
+    @log_timing(threshold_ms=100)
     def clear_cache(self, cache_type: str = "all"):
         """
         Clear cached data to free memory.
