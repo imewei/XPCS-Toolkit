@@ -247,9 +247,11 @@ class JSONFormatter(logging.Formatter):
         if current_file:
             log_entry["current_file"] = current_file
 
-        # Add elapsed time
+        # Add elapsed time (both seconds and milliseconds for flexibility)
         elapsed = datetime.fromtimestamp(record.created) - self.start_time
-        log_entry["elapsed_seconds"] = round(elapsed.total_seconds(), 3)
+        elapsed_sec = elapsed.total_seconds()
+        log_entry["elapsed_seconds"] = round(elapsed_sec, 3)
+        log_entry["elapsed_ms"] = round(elapsed_sec * 1000, 1)
 
         # Add process information
         log_entry["process_id"] = record.process
