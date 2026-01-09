@@ -5,9 +5,12 @@ Displays informative messages when no data is available for display,
 with optional action buttons to guide users.
 """
 
+import logging
 from collections.abc import Callable
 
 from PySide6.QtCore import Qt
+
+logger = logging.getLogger(__name__)
 from PySide6.QtWidgets import (
     QFrame,
     QHBoxLayout,
@@ -124,11 +127,13 @@ class EmptyStateWidget(QFrame):
 
     def _on_action_clicked(self) -> None:
         """Handle action button click."""
+        logger.debug(f"EmptyState action clicked: {self.message_label.text()}")
         if self._action_callback:
             self._action_callback()
 
     def set_message(self, message: str) -> None:
         """Update the primary message."""
+        logger.debug(f"EmptyState message changed: {message}")
         self.message_label.setText(message)
 
     def set_description(self, description: str) -> None:

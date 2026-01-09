@@ -522,13 +522,21 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         """Switch to next tab."""
         current = self.tabWidget.currentIndex()
         count = self.tabWidget.count()
-        self.tabWidget.setCurrentIndex((current + 1) % count)
+        next_idx = (current + 1) % count
+        logger.debug(
+            f"Tab navigation: next ({tab_mapping.get(current, '')} -> {tab_mapping.get(next_idx, '')})"
+        )
+        self.tabWidget.setCurrentIndex(next_idx)
 
     def _prev_tab(self) -> None:
         """Switch to previous tab."""
         current = self.tabWidget.currentIndex()
         count = self.tabWidget.count()
-        self.tabWidget.setCurrentIndex((current - 1) % count)
+        prev_idx = (current - 1) % count
+        logger.debug(
+            f"Tab navigation: prev ({tab_mapping.get(current, '')} -> {tab_mapping.get(prev_idx, '')})"
+        )
+        self.tabWidget.setCurrentIndex(prev_idx)
 
     def _register_command_palette_actions(self) -> None:
         """Register actions in the command palette."""
@@ -2802,6 +2810,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
             logger.error(f"Diffusion export unexpected error: {e}", exc_info=True)
 
     def reload_source(self):
+        logger.debug("reload_source: starting reload")
         self.pushButton_11.setText("loading")
         self.pushButton_11.setDisabled(True)
         self.pushButton_11.parent().repaint()
@@ -2821,13 +2830,16 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
                 logger.warning("Reload requested before viewer kernel initialized")
                 return
 
+            logger.debug(f"reload_source: building from {sanitize_path(path)}")
             built = self.vk.build(path=path, sort_method=self.sort_method.currentText())
             if not built:
                 self.statusbar.showMessage("Reload failed: invalid data folder.", 5000)
+                logger.warning("reload_source: build failed for path")
                 return
 
             self.update_box(self.vk.source, mode="source")
             self.apply_filter_to_source()
+            logger.info(f"reload_source: completed, {len(self.vk.source)} files loaded")
         finally:
             self.pushButton_11.setText("reload")
             self.pushButton_11.setEnabled(True)

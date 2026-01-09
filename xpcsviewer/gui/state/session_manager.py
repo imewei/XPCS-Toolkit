@@ -141,7 +141,10 @@ class SessionManager:
             with open(session_path, "w", encoding="utf-8") as f:
                 json.dump(data, f, indent=2)
 
-            logger.debug("Session saved successfully")
+            logger.debug(
+                f"Session saved successfully: tab={session.active_tab}, "
+                f"files={len(session.target_files)}, path={session.data_path}"
+            )
             return True
 
         except OSError as e:
@@ -230,7 +233,10 @@ class SessionManager:
                 analysis_params=params,
             )
 
-            logger.debug("Session loaded successfully")
+            logger.debug(
+                f"Session loaded: tab={session.active_tab}, "
+                f"files={len(target_files)}, path={session.data_path}"
+            )
             return session
 
         except json.JSONDecodeError as e:
