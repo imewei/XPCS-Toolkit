@@ -233,14 +233,17 @@ class SimpleMaskWindow(QMainWindow):
             action: Action type
         """
         if self.kernel is None:
+            logger.debug(f"_on_mask_action({action}): No kernel loaded")
             return
 
+        logger.debug(f"Mask action: {action}")
         self.kernel.mask_action(action)
         self._refresh_mask_display()
 
         if action == "reset":
             self.mark_saved()
             self.status_bar.showMessage("Mask reset to initial state")
+            logger.info("Mask reset to initial state")
         else:
             self.status_bar.showMessage(f"Mask {action}")
 
@@ -420,9 +423,32 @@ class SimpleMaskWindow(QMainWindow):
             "energy": self.spin_energy.value(),
         }
 
-        # Update kernel and recompute
+        # Update kernel parameters
         self.kernel.update_parameters(new_metadata)
-        qmap, _units = self.kernel.compute_qmap()
+
+        try:
+            qmap, _units = self.kernel.compute_qmap()
+        except ValueError as e:
+            # Handle missing/invalid parameters
+            logger.warning(f"Q-map generation failed: {e}")
+            self.status_bar.showMessage(f"Q-map failed: check geometry values")
+            QMessageBox.warning(
+                self,
+                "Q-Map Generation Failed",
+                f"Failed to generate Q-map:\n\n{e}",
+            )
+            return
+
+        # Initialize mask_kernel if this is the first successful Q-map computation
+        # (happens when initial load failed due to missing geometry)
+        if self.kernel.mask_kernel is None and self.kernel.detector_image is not None:
+            from xpcsviewer.simplemask.area_mask import MaskAssemble
+
+            self.kernel.mask_kernel = MaskAssemble(
+                self.kernel.shape, self.kernel.detector_image
+            )
+            self.kernel.mask_kernel.update_qmap(self.kernel.qmap)
+            logger.info("Initialized mask kernel after successful Q-map generation")
 
         if qmap is not None and "q" in qmap:
             q_min = np.nanmin(qmap["q"])
@@ -431,6 +457,16 @@ class SimpleMaskWindow(QMainWindow):
                 f"Q-map generated: {q_min:.4f} - {q_max:.4f} Å⁻¹"
             )
             logger.info(f"Generated Q-map: q range [{q_min:.4f}, {q_max:.4f}] Å⁻¹")
+
+            # Update info label to show successful state
+            if self._detector_image is not None:
+                shape = self._detector_image.shape
+                bcx = new_metadata["bcx"]
+                bcy = new_metadata["bcy"]
+                self.info_label.setText(
+                    f"Image: {shape[1]} x {shape[0]} pixels\n"
+                    f"Beam center: ({bcx:.1f}, {bcy:.1f})"
+                )
         else:
             self.status_bar.showMessage("Q-map generation failed")
 
@@ -701,7 +737,42 @@ class SimpleMaskWindow(QMainWindow):
                 pg_hdl=self.image_view, infobar=self.status_bar
             )
 
-        success = self.kernel.read_data(detector_image, self._metadata)
+        try:
+            success = self.kernel.read_data(detector_image, self._metadata)
+        except ValueError as e:
+            # Handle missing geometry parameters gracefully
+            logger.warning(f"Failed to initialize Q-map: {e}")
+
+            # Store image without Q-map for now
+            self.kernel.detector_image = detector_image.copy()
+            self.kernel.shape = detector_image.shape
+            self.kernel.metadata = self._metadata.copy() if self._metadata else {}
+            self.kernel.metadata["shape"] = self.kernel.shape
+            self.kernel.mask = np.ones(self.kernel.shape, dtype=bool)
+
+            # Display the image anyway
+            self._display_image(detector_image)
+
+            # Show info about missing parameters
+            shape = detector_image.shape
+            self.info_label.setText(
+                f"Image: {shape[1]} x {shape[0]} pixels\n\n"
+                f"⚠️ Missing geometry parameters.\n"
+                f"Set values in Geometry panel,\n"
+                f"then click 'Generate Q-Map'."
+            )
+            self.status_bar.showMessage(
+                "Loaded image - set geometry parameters manually"
+            )
+
+            # Populate spinboxes with any available values
+            self._update_geometry_spinboxes()
+
+            logger.info(
+                f"Loaded detector image {shape} without Q-map (missing geometry)"
+            )
+            return
+
         if success:
             logger.info(f"Loaded detector image with shape {detector_image.shape}")
             self._unsaved_changes = False

@@ -101,10 +101,14 @@ class ColoredConsoleFormatter(logging.Formatter):
         # Format module name
         module_name = self._format_module_name(record_copy.name)
 
-        # Build the basic message
-        basic_msg = (
-            f"{timestamp} {colored_level} {module_name:20} | {record_copy.getMessage()}"
+        # Get session context if available (added by SessionContextFilter)
+        session_id = getattr(record_copy, "session_id", None)
+        session_prefix = (
+            f"[{session_id}] " if session_id and session_id != "no-session" else ""
         )
+
+        # Build the basic message
+        basic_msg = f"{timestamp} {colored_level} {session_prefix}{module_name:20} | {record_copy.getMessage()}"
 
         # Add exception information if present
         if record_copy.exc_info:
@@ -153,6 +157,17 @@ class StructuredFileFormatter(logging.Formatter):
         # Get thread information
         thread_name = getattr(record_copy, "threadName", "MainThread")
 
+        # Get session context if available (added by SessionContextFilter)
+        session_id = getattr(record_copy, "session_id", None)
+        operation = getattr(record_copy, "operation", None)
+
+        # Build session/operation part
+        context_part = ""
+        if session_id and session_id != "no-session":
+            context_part = f"[{session_id}]"
+            if operation:
+                context_part = f"[{session_id}:{operation}]"
+
         # Build structured message
         parts = [
             f"{timestamp}",
@@ -160,9 +175,15 @@ class StructuredFileFormatter(logging.Formatter):
             f"[{record_copy.levelname:8}]",
             f"[{record_copy.name}]",
             f"[{thread_name}]",
-            f"{record_copy.funcName}:{record_copy.lineno}",
-            f"- {record_copy.getMessage()}",
         ]
+        if context_part:
+            parts.append(context_part)
+        parts.extend(
+            [
+                f"{record_copy.funcName}:{record_copy.lineno}",
+                f"- {record_copy.getMessage()}",
+            ]
+        )
 
         basic_msg = " ".join(parts)
 
@@ -200,6 +221,11 @@ class JSONFormatter(logging.Formatter):
 
     def _format_json(self, record: logging.LogRecord) -> str:
         """Internal JSON formatting method."""
+        # Get session context if available (added by SessionContextFilter)
+        session_id = getattr(record, "session_id", "no-session")
+        operation = getattr(record, "operation", "")
+        current_file = getattr(record, "current_file", "")
+
         # Base log entry structure
         log_entry = {
             "timestamp": datetime.fromtimestamp(record.created).isoformat(),
@@ -210,9 +236,16 @@ class JSONFormatter(logging.Formatter):
             "function": record.funcName,
             "line": record.lineno,
             "thread": getattr(record, "threadName", "MainThread"),
+            "session_id": session_id,
             "app_name": self.app_name,
             "app_version": self.app_version,
         }
+
+        # Add optional context fields
+        if operation:
+            log_entry["operation"] = operation
+        if current_file:
+            log_entry["current_file"] = current_file
 
         # Add elapsed time
         elapsed = datetime.fromtimestamp(record.created) - self.start_time
@@ -254,6 +287,10 @@ class JSONFormatter(logging.Formatter):
                 "exc_info",
                 "exc_text",
                 "stack_info",
+                # Session context fields (already handled above)
+                "session_id",
+                "operation",
+                "current_file",
             ):
                 # Only include JSON-serializable values
                 if self._is_json_serializable(value):

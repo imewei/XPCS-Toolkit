@@ -5,10 +5,13 @@ This module provides non-blocking popup notifications for
 operation feedback, errors, and warnings.
 """
 
+import logging
 from enum import Enum
 
 from PySide6.QtCore import Property, QPoint, Qt, QTimer
 from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QWidget
+
+logger = logging.getLogger(__name__)
 
 
 class ToastType(Enum):
@@ -138,6 +141,10 @@ class ToastManager:
         self._toasts.append(toast)
         self._position_toasts()
         toast.show()
+
+        logger.debug(
+            f"Toast shown: [{toast_type.value}] {message[:50]}{'...' if len(message) > 50 else ''}"
+        )
 
         # Set up auto-dismiss
         if duration_ms > 0:

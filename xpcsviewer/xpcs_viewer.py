@@ -43,7 +43,7 @@ from .threading.async_kernel import AsyncDataPreloader, AsyncViewerKernel
 from .threading.progress_manager import ProgressManager
 
 # Import centralized logging
-from .utils import get_logger, log_system_info, setup_exception_logging
+from .utils import get_logger, log_system_info, sanitize_path, setup_exception_logging
 from .viewer_kernel import ViewerKernel
 from .viewer_ui import Ui_mainWindow as Ui
 
@@ -2854,7 +2854,12 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         - Updates source and target file lists in GUI
         - Sets up averaging job table model
         """
+        logger.debug(
+            f"load_path called with path={sanitize_path(path) if path else None}"
+        )
+
         if path in [None, False]:
+            logger.debug("Opening directory selection dialog")
             # DontUseNativeDialog is used so files are shown along with dirs;
             folder = QtWidgets.QFileDialog.getExistingDirectory(
                 self,
@@ -2862,18 +2867,27 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
                 self.start_wd,
                 QtWidgets.QFileDialog.DontUseNativeDialog,
             )
+            if folder:
+                logger.debug(f"User selected directory: {sanitize_path(folder)}")
+            else:
+                logger.debug("Directory selection cancelled")
+                return
         else:
             folder = path
 
         if not os.path.isdir(folder):
+            logger.warning(f"Invalid directory: {sanitize_path(folder)}")
             self.statusbar.showMessage(f"{folder} is not a folder.")
             folder = self.start_wd
 
         self.work_dir.setText(folder)
+        logger.info(f"Loading data from: {sanitize_path(folder)}")
 
         if self.vk is None:
+            logger.debug("Creating new ViewerKernel")
             self.vk = ViewerKernel(folder, self.statusbar)
         else:
+            logger.debug("Resetting existing ViewerKernel")
             self.vk.set_path(folder)
             self.vk.clear()
 
@@ -2888,6 +2902,10 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         # Update recent paths and menu
         self.recent_paths_manager.add_path(folder)
         self._populate_recent_directories_menu()
+
+        logger.debug(
+            f"Loaded {len(self.vk.source) if self.vk.source else 0} files from directory"
+        )
 
         # Trigger plot update to show proper empty states since no files are auto-added
         self.update_plot()
@@ -2923,7 +2941,10 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
             if val is not None:
                 target.append(val)
         if target == []:
+            logger.debug("add_target: No files selected in source list")
             return
+
+        logger.debug(f"add_target: Adding {len(target)} files to target list")
 
         tab_id = self.tabWidget.currentIndex()
         tab_name = tab_mapping[tab_id]
@@ -2934,6 +2955,8 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
 
         # Update tab availability based on file formats
         self.update_tab_availability()
+
+        logger.debug(f"add_target: Target list now has {len(self.vk.target)} files")
 
         if tab_name == "average":
             self.init_average()
@@ -3033,47 +3056,63 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         self._enable_all_tabs()  # First enable all
         self._clear_tab_tooltips()  # Clear any existing tooltips
 
-        # Disable Two Time tab (index 6)
-        twotime_tab_index = 6
+        # Disable Two Time tab (index 7 based on tab_mapping)
+        twotime_tab_index = 7
         self.tabWidget.setTabEnabled(twotime_tab_index, False)
         self.tabWidget.setTabToolTip(
             twotime_tab_index,
-            "Two Time analysis not available for multitau format files",
+            "Two Time analysis not available for multi-tau format files",
         )
 
         # If user is currently on Two Time tab, switch to G2 tab
         if self.tabWidget.currentIndex() == twotime_tab_index:
             self.tabWidget.setCurrentIndex(4)  # Switch to G2 tab
-            logger.info("Switched from Two Time to G2 tab (multitau format)")
+            logger.info("Switched from Two Time to G2 tab (multi-tau format)")
 
-        logger.debug("Configured tabs for multitau format: Two Time tab disabled")
+        logger.debug("Configured tabs for multi-tau format: Two Time tab disabled")
 
     def _configure_for_twotime(self):
-        """Configure tabs for twotime format: disable G2 and Diffusion tabs."""
+        """Configure tabs for twotime format: disable G2, G2 Map, and Diffusion tabs.
+
+        Multi-tau related tabs (g2, g2_map, diffusion) are grouped and disabled
+        when two-time data is loaded since they require multi-tau correlation data.
+        """
         self._enable_all_tabs()  # First enable all
         self._clear_tab_tooltips()  # Clear any existing tooltips
 
-        # Disable G2 tab (index 4) and Diffusion tab (index 5)
+        # Disable multi-tau related tabs (based on tab_mapping indices)
+        # These tabs require multi-tau correlation data which isn't available in two-time files
         g2_tab_index = 4
-        diffusion_tab_index = 5
-        self.tabWidget.setTabEnabled(g2_tab_index, False)
-        self.tabWidget.setTabEnabled(diffusion_tab_index, False)
+        g2_map_tab_index = 5
+        diffusion_tab_index = 6
+        twotime_tab_index = 7
+
+        multitau_tabs = [g2_tab_index, g2_map_tab_index, diffusion_tab_index]
+
+        for tab_index in multitau_tabs:
+            self.tabWidget.setTabEnabled(tab_index, False)
+
         self.tabWidget.setTabToolTip(
-            g2_tab_index, "G2 analysis not available for twotime format files"
+            g2_tab_index,
+            "G2 analysis requires multi-tau data (not available in two-time format files)",
+        )
+        self.tabWidget.setTabToolTip(
+            g2_map_tab_index,
+            "G2 Map requires multi-tau data (not available in two-time format files)",
         )
         self.tabWidget.setTabToolTip(
             diffusion_tab_index,
-            "Diffusion analysis not available for twotime format files",
+            "Diffusion analysis requires multi-tau data (not available in two-time format files)",
         )
 
         # If user is currently on disabled tab, switch to Two Time tab
         current_tab = self.tabWidget.currentIndex()
-        if current_tab in [g2_tab_index, diffusion_tab_index]:
-            self.tabWidget.setCurrentIndex(6)  # Switch to Two Time tab
-            logger.info("Switched from disabled tab to Two Time tab (twotime format)")
+        if current_tab in multitau_tabs:
+            self.tabWidget.setCurrentIndex(twotime_tab_index)
+            logger.info("Switched from disabled tab to Two Time tab (two-time format)")
 
         logger.debug(
-            "Configured tabs for twotime format: G2 and Diffusion tabs disabled"
+            "Configured tabs for two-time format: G2, G2 Map, and Diffusion tabs disabled"
         )
 
     def _clear_tab_tooltips(self):
@@ -3096,6 +3135,8 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         for x in self.list_view_target.selectedIndexes():
             rmv_list.append(x.data())
 
+        logger.debug(f"remove_target: Removing {len(rmv_list)} files from target list")
+
         self.vk.remove_target(rmv_list)
         # clear selection to avoid the bug: when the last one is selected, then
         # the list will out of bounds
@@ -3106,6 +3147,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
 
         # if all files are removed; then go to state 1
         if self.vk.target in [[], None] or len(self.vk.target) == 0:
+            logger.debug("remove_target: All files removed, resetting GUI")
             self.reset_gui()
         self.update_box(self.vk.target, mode="target")
 

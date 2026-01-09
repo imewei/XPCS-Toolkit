@@ -56,6 +56,42 @@ def get_logger(name=None):
     return _get_logger(name)
 
 
+# New logging utilities (comprehensive logging system)
+def LoggingContext(*args, **kwargs):
+    """Lazy import wrapper for LoggingContext."""
+    from .log_utils import LoggingContext as _LoggingContext
+
+    return _LoggingContext(*args, **kwargs)
+
+
+def RateLimitedLogger(logger, **kwargs):
+    """Lazy import wrapper for RateLimitedLogger."""
+    from .log_utils import RateLimitedLogger as _RateLimitedLogger
+
+    return _RateLimitedLogger(logger, **kwargs)
+
+
+def log_timing(**kwargs):
+    """Lazy import wrapper for log_timing decorator."""
+    from .log_utils import log_timing as _log_timing
+
+    return _log_timing(**kwargs)
+
+
+def sanitize_path(path, mode=None):
+    """Lazy import wrapper for sanitize_path."""
+    from .log_utils import sanitize_path as _sanitize_path
+
+    return _sanitize_path(path, mode)
+
+
+def set_log_level(level):
+    """Lazy import wrapper for set_log_level."""
+    from .logging_config import set_log_level as _set_log_level
+
+    return _set_log_level(level)
+
+
 def log_system_info():
     """Lazy import wrapper for log_system_info to avoid circular imports."""
     from .logging_config import log_system_info as _log_system_info
@@ -84,21 +120,24 @@ def setup_exception_logging():
 
 # Define essential exports
 __all__ = [
+    # Log formatters
     "ColoredConsoleFormatter",
     "JSONFormatter",
     "PerformanceFormatter",
     "StructuredFileFormatter",
     "create_formatter",
-    "get_logger",  # Available as lazy import wrapper
-    "log_system_info",  # Available as lazy import wrapper
-    "setup_exception_logging",  # Available as lazy import wrapper
-    "visualization_optimizer",  # Graphics optimization utilities
-    # Other logging utilities available via direct import from .logging_config
-    # "get_log_file_path",
-    # "get_logging_config",
-    # "initialize_logging",
-    # "set_log_level",
-    # "setup_logging",
+    # Core logging utilities (lazy import wrappers)
+    "get_logger",
+    "log_system_info",
+    "setup_exception_logging",
+    "set_log_level",
+    # New comprehensive logging utilities
+    "LoggingContext",
+    "RateLimitedLogger",
+    "log_timing",
+    "sanitize_path",
+    # Graphics utilities
+    "visualization_optimizer",
 ]
 
 

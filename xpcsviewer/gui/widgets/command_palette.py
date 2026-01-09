@@ -5,6 +5,7 @@ This module provides a searchable command palette dialog
 for executing actions via keyboard.
 """
 
+import logging
 from collections.abc import Callable
 from dataclasses import dataclass
 
@@ -17,6 +18,8 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -135,6 +138,7 @@ class CommandPalette(QDialog):
 
     def show(self) -> None:
         """Show the command palette dialog."""
+        logger.debug("Command palette opened")
         self._search_input.clear()
         self._populate_results()
         self._search_input.setFocus()
@@ -231,6 +235,7 @@ class CommandPalette(QDialog):
         action_id = item.data(Qt.ItemDataRole.UserRole)
         if action_id and action_id in self._actions:
             action = self._actions[action_id]
+            logger.debug(f"Command executed: {action_id} ({action.name})")
             self.hide()
             action.callback()
             self.action_triggered.emit(action_id)

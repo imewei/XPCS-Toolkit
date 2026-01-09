@@ -30,6 +30,31 @@ E2KCONST = 12.39841984
 _JIT_CACHE: dict[str, callable] = {}
 
 
+def _validate_geometry_metadata(metadata: dict, required_keys: tuple[str, ...]) -> None:
+    """Validate that required geometry parameters are present and valid.
+
+    Args:
+        metadata: Dictionary containing geometry parameters
+        required_keys: Tuple of required parameter names
+
+    Raises:
+        ValueError: If any required parameter is missing (None) or invalid
+    """
+    missing = []
+    for key in required_keys:
+        value = metadata.get(key)
+        if value is None:
+            missing.append(key)
+
+    if missing:
+        missing_str = ", ".join(missing)
+        raise ValueError(
+            f"Cannot compute Q-map: missing required geometry parameter(s): {missing_str}. "
+            f"Please ensure HDF file contains detector geometry metadata or set values "
+            f"manually in the Mask Editor geometry panel."
+        )
+
+
 def compute_qmap(
     stype: str, metadata: dict
 ) -> tuple[dict[str, np.ndarray], dict[str, str]]:
@@ -50,7 +75,14 @@ def compute_qmap(
     Returns:
         Tuple of (qmap_dict, units_dict) where qmap_dict contains arrays
         for various Q-space coordinates and units_dict contains their units.
+
+    Raises:
+        ValueError: If required geometry parameters are missing (None)
     """
+    # Validate required parameters before attempting computation
+    required = ("energy", "bcx", "bcy", "shape", "pix_dim", "det_dist")
+    _validate_geometry_metadata(metadata, required)
+
     if stype == "Transmission":
         return compute_transmission_qmap(
             metadata["energy"],

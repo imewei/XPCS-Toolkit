@@ -17,6 +17,9 @@ Environment Variables:
     PYXPCS_LOG_MAX_SIZE: Maximum log file size in MB (default: 10)
     PYXPCS_LOG_BACKUP_COUNT: Number of backup log files (default: 5)
     PYXPCS_SUPPRESS_QT_WARNINGS: 1 to suppress Qt logging (default: 0)
+    PYXPCS_LOG_RATE_LIMIT: Rate limit for high-frequency logs in msgs/sec (default: 10.0)
+    PYXPCS_LOG_SANITIZE_PATHS: Path sanitization mode: none/home/hash (default: home)
+    PYXPCS_LOG_SESSION_ID: Enable session correlation IDs: 1/0 (default: 1)
 
 Usage:
     from xpcsviewer.utils.logging_config import get_logger
@@ -120,6 +123,25 @@ class LoggingConfig:
             os.environ.get("PYXPCS_SUPPRESS_QT_WARNINGS", "0") == "1"
         )
 
+        # Rate limit configuration (new)
+        try:
+            self.rate_limit = float(os.environ.get("PYXPCS_LOG_RATE_LIMIT", "10.0"))
+            if self.rate_limit <= 0:
+                self.rate_limit = 10.0
+        except ValueError:
+            self.rate_limit = 10.0
+
+        # Path sanitization mode (new)
+        sanitize_value = os.environ.get("PYXPCS_LOG_SANITIZE_PATHS", "home").lower()
+        if sanitize_value in ("none", "home", "hash"):
+            self.sanitize_paths = sanitize_value
+        else:
+            self.sanitize_paths = "home"
+
+        # Session ID enable flag (new)
+        session_value = os.environ.get("PYXPCS_LOG_SESSION_ID", "1")
+        self.enable_session_id = session_value.lower() in ("1", "true", "yes", "on")
+
         # Application info
         self.app_name = "XPCS Viewer"
         self.app_version = self._get_app_version()
@@ -140,6 +162,9 @@ class LoggingConfig:
         root_logger.handlers.clear()
         root_logger.setLevel(self.log_level)
 
+        # Create session context filter for all handlers
+        self._session_filter = self._create_session_filter()
+
         # Setup console handler
         self._setup_console_handler()
 
@@ -153,10 +178,26 @@ class LoggingConfig:
         # Log configuration summary
         self._log_configuration_summary()
 
+    def _create_session_filter(self) -> logging.Filter | None:
+        """Create session context filter if enabled."""
+        if not self.enable_session_id:
+            return None
+
+        try:
+            from .log_utils import SessionContextFilter
+
+            return SessionContextFilter()
+        except ImportError:
+            return None
+
     def _setup_console_handler(self):
         """Setup colored console logging handler."""
         console_handler = logging.StreamHandler(sys.stdout)
         console_handler.setLevel(self.log_level)
+
+        # Add session context filter if enabled
+        if self._session_filter is not None:
+            console_handler.addFilter(self._session_filter)
 
         # Use colored formatter for console
         console_formatter = ColoredConsoleFormatter()
@@ -176,6 +217,10 @@ class LoggingConfig:
                 encoding="utf-8",
             )
             file_handler.setLevel(self.log_level)
+
+            # Add session context filter if enabled
+            if self._session_filter is not None:
+                file_handler.addFilter(self._session_filter)
 
             # Choose formatter based on configuration
             if self.use_json_format:
@@ -241,6 +286,9 @@ class LoggingConfig:
             "max_file_size_mb": self.max_file_size / (1024 * 1024),
             "backup_count": self.backup_count,
             "suppress_qt_warnings": self.suppress_qt_warnings,
+            "rate_limit": self.rate_limit,
+            "sanitize_paths": self.sanitize_paths,
+            "enable_session_id": self.enable_session_id,
             "app_name": self.app_name,
             "app_version": self.app_version,
         }
