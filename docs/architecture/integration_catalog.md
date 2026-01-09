@@ -30,7 +30,7 @@
 **Location:** `xpcs_file.py`, `fileIO/hdf_reader.py`
 
 **Schema:** `/xpcs/` hierarchy
-```python
+```text
 /xpcs/
   ├── qmap/mask           # int32, (H, W)
   ├── qmap/sqmap          # float64, (H, W)

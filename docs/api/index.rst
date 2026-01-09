@@ -7,6 +7,7 @@ API Reference
    package
    cli
    fileio
+   fitting
    modules
    simplemask
    plotting
@@ -20,6 +21,7 @@ Core Components
 
 - **XpcsFile**: Data container and analysis
 - **CLI**: Command-line interface for batch processing
+- **Fitting**: Bayesian fitting with NLSQ warm-start (NLSQ 0.6.0)
 - **Analysis Modules**: G2 correlation, SAXS analysis, two-time correlation
 - **SimpleMask**: Mask editing and Q-map generation
 - **File I/O**: HDF5 reading and Q-space mapping

@@ -2,6 +2,28 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
+### Added
+
+- Fitting module enhanced with NLSQ 0.6.0 features
+  - Statistical metrics: R², adjusted R², RMSE, MAE, AIC, BIC
+  - Confidence intervals for parameter uncertainty (95% level)
+  - Prediction intervals accounting for observation noise
+  - `auto_bounds` parameter for automatic bounds inference
+  - `stability` parameter for numerical stability checks ('auto', 'check', False)
+  - `fallback` parameter for fallback strategies on difficult problems
+  - `compute_diagnostics` parameter for model health diagnostics
+  - `show_progress` parameter for progress bar on long fits
+  - Presets: 'fast', 'robust', 'global', 'streaming', 'large'
+
+### Documentation
+
+- New Sphinx API documentation for fitting module (`docs/api/fitting.rst`)
+- README updated with fitting module section and code example
+- Comprehensive docstrings for NLSQResult statistical metrics
+- Note on weighted R² behavior (can be negative with measurement uncertainties)
+
 ## [0.1.2] - 2026-01-06
 
 ### Added

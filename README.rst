@@ -227,6 +227,7 @@ Project Structure
    │   ├── state/         # Session & preferences
    │   ├── shortcuts/     # Keyboard shortcuts
    │   └── widgets/       # Modern UI widgets
+   ├── fitting/           # Bayesian fitting (NLSQ 0.6.0)
    ├── plothandler/       # Theme-aware plotting
    ├── threading/         # Async workers
    ├── utils/             # Utilities
@@ -244,6 +245,34 @@ Analysis Features
 * Mask editing with drawing tools (Rectangle, Circle, Polygon, Line, Ellipse)
 * Q-map generation from detector geometry
 * Q-binning (partition) for XPCS analysis
+
+Fitting Module (NLSQ 0.6.0)
+---------------------------
+
+Bayesian fitting with NumPyro NUTS sampler and JAX-accelerated NLSQ warm-start:
+
+* Statistical metrics: R², adjusted R², RMSE, MAE, AIC, BIC
+* Confidence intervals for parameter uncertainty
+* Prediction intervals accounting for observation noise
+* Models: single/double/stretched exponential, power law
+* Automatic bounds inference and fallback strategies
+* Model health diagnostics
+
+.. code-block:: python
+
+   from xpcsviewer.fitting import nlsq_fit
+   import jax.numpy as jnp
+
+   def model(x, tau, baseline, contrast):
+       return baseline + contrast * jnp.exp(-2 * x / tau)
+
+   result = nlsq_fit(
+       model, x_data, y_data, y_errors,
+       p0={'tau': 1.0, 'baseline': 1.0, 'contrast': 0.3},
+       bounds={'tau': (0.01, 100), 'baseline': (0.9, 1.1), 'contrast': (0.1, 0.5)},
+   )
+   print(f"R² = {result.r_squared:.4f}")
+   print(result.summary())
 
 Gallery
 -------

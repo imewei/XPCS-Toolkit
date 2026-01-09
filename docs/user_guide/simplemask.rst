@@ -1,6 +1,6 @@
-================
+=================
 Mask Editor Guide
-================
+=================
 
 The Mask Editor (SimpleMask) provides tools for creating, editing, and managing detector masks
 for XPCS analysis. It also supports Q-map generation and Q-binning (partition) for correlation analysis.

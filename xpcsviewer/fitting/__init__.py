@@ -181,7 +181,7 @@ def nlsq_fit(
     Parameters
     ----------
     model_fn : callable
-        Model function: y = model_fn(x, *params). Must use jax.numpy operations.
+        Model function taking x and parameter values. Uses JAX operations.
     x : array_like
         Independent variable
     y : array_like

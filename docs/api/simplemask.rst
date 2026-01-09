@@ -59,8 +59,7 @@ Core computation logic for mask operations.
 
 .. autoclass:: xpcsviewer.simplemask.simplemask_kernel.SimpleMaskKernel
    :members:
-   :undoc-members:
-   :show-inheritance:
+   :no-index:
 
    **Key Methods**
 
@@ -108,8 +107,7 @@ Q-map computation from detector geometry.
 
 .. automodule:: xpcsviewer.simplemask.qmap
    :members:
-   :undoc-members:
-   :show-inheritance:
+   :no-index:
 
    **Key Functions**
 
@@ -133,8 +131,7 @@ Mask assembly with undo/redo history.
 
 .. automodule:: xpcsviewer.simplemask.area_mask
    :members:
-   :undoc-members:
-   :show-inheritance:
+   :no-index:
 
    **Key Classes**
 
@@ -169,8 +166,7 @@ Tool definitions for mask drawing.
 
 .. automodule:: xpcsviewer.simplemask.drawing_tools
    :members:
-   :undoc-members:
-   :show-inheritance:
+   :no-index:
 
    **Available Tools**
 
@@ -188,8 +184,7 @@ Partition utilities for Q-binning.
 
 .. automodule:: xpcsviewer.simplemask.utils
    :members:
-   :undoc-members:
-   :show-inheritance:
+   :no-index:
 
 PyQtGraph Modifications
 =======================
@@ -198,8 +193,7 @@ Custom ROI classes for drawing tools.
 
 .. automodule:: xpcsviewer.simplemask.pyqtgraph_mod
    :members:
-   :undoc-members:
-   :show-inheritance:
+   :no-index:
 
    **Key Classes**
 

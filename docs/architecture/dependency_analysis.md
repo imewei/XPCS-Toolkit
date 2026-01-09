@@ -127,7 +127,7 @@ xpcsviewer/
 #### HDF5 Schema Contracts (Implicit)
 
 **XPCS Data File Schema:**
-```python
+```text
 /xpcs/
   ├── qmap/
   │   ├── mask           # int32, shape=(H, W)

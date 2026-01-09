@@ -90,12 +90,12 @@ def validate_pcov(pcov, param_names=None) -> tuple[bool, str]:
 def compute_uncertainty_band(model, x_pred, popt, pcov, confidence=0.95):
     """Compute prediction uncertainty band via error propagation (FR-016).
 
-    Formula: σ_y(x) = sqrt(diag(J @ pcov @ J.T))
+    Uses Jacobian-based error propagation to compute uncertainty bands.
 
     Parameters
     ----------
     model : callable
-        Model function: y = model(x, *params)
+        Model function taking x and params
     x_pred : ndarray
         X values for prediction
     popt : ndarray
@@ -155,12 +155,12 @@ def compute_prediction_interval(model, x_pred, popt, pcov, residuals, confidence
     Prediction intervals are wider than confidence intervals because they
     account for both parameter uncertainty AND observation noise.
 
-    Formula: PI = CI ± t * σ_residuals
+    Adds residual standard deviation term to confidence interval width.
 
     Parameters
     ----------
     model : callable
-        Model function: y = model(x, *params)
+        Model function taking x and params
     x_pred : ndarray
         X values for prediction
     popt : ndarray

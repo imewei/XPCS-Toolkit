@@ -5,6 +5,10 @@ Developer Guide
    :maxdepth: 2
 
    optimization
+   /architecture/dependency_analysis
+   /architecture/integration_catalog
+   /architecture/dependency_diagram
+   /architecture/FACADE_INFRASTRUCTURE
 
 Setup
 -----
