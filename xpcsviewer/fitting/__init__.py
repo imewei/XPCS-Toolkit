@@ -3,12 +3,21 @@
 This module provides Bayesian parameter estimation using NumPyro NUTS
 sampler with JAX-accelerated NLSQ warm-start.
 
+NLSQ 0.6.0 Enhanced Features:
+    - R², adjusted R², RMSE, MAE, AIC, BIC metrics on NLSQResult
+    - Confidence intervals for parameters
+    - Prediction intervals (accounting for observation noise)
+    - Automatic bounds inference (auto_bounds)
+    - Numerical stability checks (stability)
+    - Fallback strategies for difficult problems (fallback)
+    - Model health diagnostics (compute_diagnostics)
+
 Public API:
     fit_single_exp(x, y, yerr=None, **kwargs) -> FitResult
     fit_double_exp(x, y, yerr=None, **kwargs) -> FitResult
     fit_stretched_exp(x, y, yerr=None, **kwargs) -> FitResult
     fit_power_law(q, tau, **kwargs) -> FitResult
-    nlsq_fit(model_fn, x, y, yerr, p0, bounds) -> NLSQResult
+    nlsq_fit(model_fn, x, y, yerr, p0, bounds, **kwargs) -> NLSQResult
     SamplerConfig
     FitResult
     NLSQResult
@@ -159,13 +168,20 @@ def nlsq_fit(
     yerr: ArrayLike | None,
     p0: dict[str, float],
     bounds: dict[str, tuple[float, float]],
+    preset: str = "robust",
+    *,
+    auto_bounds: bool = False,
+    stability: str | bool = False,
+    fallback: bool = False,
+    compute_diagnostics: bool = False,
+    show_progress: bool = False,
 ) -> NLSQResult:
-    """JAX-accelerated nonlinear least squares for warm-start.
+    """JAX-accelerated nonlinear least squares with NLSQ 0.6.0 features.
 
     Parameters
     ----------
     model_fn : callable
-        Model function: y = model_fn(x, **params)
+        Model function: y = model_fn(x, *params). Must use jax.numpy operations.
     x : array_like
         Independent variable
     y : array_like
@@ -176,15 +192,71 @@ def nlsq_fit(
         Initial parameter guess {name: value}
     bounds : dict
         Parameter bounds {name: (min, max)}
+    preset : {'fast', 'robust', 'global', 'streaming', 'large'}, optional
+        NLSQ preset configuration (default: 'robust'):
+
+        - 'fast': Single-start for speed
+        - 'robust': Multi-start with 5 starts
+        - 'global': Thorough search with 20 starts
+        - 'streaming': For large datasets
+        - 'large': Auto-detect dataset size
+
+    auto_bounds : bool, optional
+        Enable automatic bounds inference (default: False)
+    stability : {'auto', 'check', False}, optional
+        Numerical stability checks (default: False):
+
+        - 'auto': Check and apply fixes
+        - 'check': Check and warn only
+        - False: Skip checks
+
+    fallback : bool, optional
+        Enable fallback strategies for difficult problems (default: False)
+    compute_diagnostics : bool, optional
+        Compute model health diagnostics (default: False)
+    show_progress : bool, optional
+        Display progress bar (default: False)
 
     Returns
     -------
     NLSQResult
-        Point estimates and covariance
+        Enhanced result with R², RMSE, AIC, BIC, confidence intervals,
+        predictions, and optional model diagnostics.
+
+    Examples
+    --------
+    Basic usage:
+
+    >>> result = nlsq_fit(model_fn, x, y, yerr, p0, bounds)
+    >>> print(f"R² = {result.r_squared:.4f}")
+    >>> print(result.summary())
+
+    Robust fitting with diagnostics:
+
+    >>> result = nlsq_fit(
+    ...     model_fn, x, y, yerr, p0, bounds,
+    ...     preset='robust',
+    ...     stability='auto',
+    ...     fallback=True,
+    ...     compute_diagnostics=True,
+    ... )
     """
     from .nlsq import nlsq_optimize
 
-    return nlsq_optimize(model_fn, x, y, yerr, p0, bounds)
+    return nlsq_optimize(
+        model_fn,
+        x,
+        y,
+        yerr,
+        p0,
+        bounds,
+        preset=preset,
+        auto_bounds=auto_bounds,
+        stability=stability,
+        fallback=fallback,
+        compute_diagnostics=compute_diagnostics,
+        show_progress=show_progress,
+    )
 
 
 # =============================================================================
@@ -349,10 +421,11 @@ from .legacy import (
 # Re-export public classes
 from .results import FitDiagnostics, FitResult, NLSQResult, SamplerConfig
 
-# Re-export visualization functions (FR-013 to FR-021)
+# Re-export visualization functions (FR-013 to FR-021, NLSQ 0.6.0)
 from .visualization import (
     PUBLICATION_STYLE,
     apply_publication_style,
+    compute_prediction_interval,
     compute_uncertainty_band,
     generate_arviz_diagnostics,
     plot_comparison,
@@ -378,11 +451,12 @@ __all__ = [
     "grad",
     "value_and_grad",
     "minimize_with_grad",
-    # Visualization functions (FR-013 to FR-021)
+    # Visualization functions (FR-013 to FR-021, NLSQ 0.6.0)
     "PUBLICATION_STYLE",
     "apply_publication_style",
     "validate_pcov",
     "compute_uncertainty_band",
+    "compute_prediction_interval",
     "plot_nlsq_fit",
     "generate_arviz_diagnostics",
     "plot_posterior_predictive",

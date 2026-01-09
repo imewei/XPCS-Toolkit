@@ -118,6 +118,31 @@ class NLSQResult:
         Covariance validity flag (FR-021)
     pcov_message : str
         Validation message describing covariance status
+    r_squared : float
+        Coefficient of determination (R²). Range: (-∞, 1], where 1 is perfect fit.
+
+        Note: When measurement uncertainties (sigma/yerr) are provided, NLSQ 0.6.0
+        computes R² using weighted residuals. This can result in negative R² values
+        if the weighted model fit is worse than the weighted mean. This is expected
+        behavior for weighted least squares - use ``chi_squared`` for fit quality
+        assessment when uncertainties are provided.
+    adj_r_squared : float
+        Adjusted R² accounting for number of parameters. Subject to the same
+        weighted residuals behavior as ``r_squared``.
+    rmse : float
+        Root mean squared error. Lower is better.
+    mae : float
+        Mean absolute error. Robust to outliers.
+    aic : float
+        Akaike Information Criterion. Lower is better for model selection.
+    bic : float
+        Bayesian Information Criterion. Penalizes complexity more than AIC.
+    confidence_intervals : dict[str, tuple[float, float]]
+        Parameter confidence intervals at 95% level {param: (lower, upper)}.
+    predictions : ndarray or None
+        Model predictions at input x values.
+    model_diagnostics : dict or None
+        NLSQ model health diagnostics (if compute_diagnostics=True).
     """
 
     params: dict[str, float]
@@ -127,6 +152,109 @@ class NLSQResult:
     converged: bool
     pcov_valid: bool = True
     pcov_message: str = ""
+    r_squared: float = 0.0
+    adj_r_squared: float = 0.0
+    rmse: float = 0.0
+    mae: float = 0.0
+    aic: float = 0.0
+    bic: float = 0.0
+    confidence_intervals: dict[str, tuple[float, float]] = field(default_factory=dict)
+    predictions: np.ndarray | None = None
+    model_diagnostics: dict | None = None
+
+    def get_param_uncertainty(self, param: str) -> float:
+        """Get standard error for a parameter from the covariance matrix.
+
+        Parameters
+        ----------
+        param : str
+            Parameter name
+
+        Returns
+        -------
+        float
+            Standard error (sqrt of diagonal covariance element)
+        """
+        param_names = list(self.params.keys())
+        if param not in param_names:
+            raise KeyError(f"Parameter '{param}' not found in params")
+        idx = param_names.index(param)
+        return float(np.sqrt(self.covariance[idx, idx]))
+
+    def get_confidence_interval(
+        self, param: str, alpha: float = 0.95
+    ) -> tuple[float, float]:
+        """Get confidence interval for a parameter.
+
+        Parameters
+        ----------
+        param : str
+            Parameter name
+        alpha : float
+            Confidence level (default: 0.95 for 95% CI)
+
+        Returns
+        -------
+        tuple[float, float]
+            (lower, upper) bounds of confidence interval
+        """
+        if param in self.confidence_intervals:
+            return self.confidence_intervals[param]
+
+        # Compute from covariance if not cached
+        from scipy import stats
+
+        param_value = self.params[param]
+        std_err = self.get_param_uncertainty(param)
+        z = stats.norm.ppf((1 + alpha) / 2)
+        return (param_value - z * std_err, param_value + z * std_err)
+
+    def summary(self) -> str:
+        """Generate a formatted summary of the fit results.
+
+        Returns
+        -------
+        str
+            Formatted summary string
+        """
+        lines = ["NLSQ Fit Results", "=" * 50]
+
+        # Convergence status
+        status = "Converged" if self.converged else "Did not converge"
+        lines.append(f"Status: {status}")
+        lines.append("")
+
+        # Fit quality metrics
+        lines.append("Fit Quality:")
+        lines.append(f"  R²:            {self.r_squared:.6f}")
+        lines.append(f"  Adjusted R²:   {self.adj_r_squared:.6f}")
+        lines.append(f"  RMSE:          {self.rmse:.6e}")
+        lines.append(f"  MAE:           {self.mae:.6e}")
+        lines.append(f"  χ² (reduced):  {self.chi_squared:.4f}")
+        lines.append("")
+
+        # Model selection criteria
+        lines.append("Model Selection:")
+        lines.append(f"  AIC:           {self.aic:.2f}")
+        lines.append(f"  BIC:           {self.bic:.2f}")
+        lines.append("")
+
+        # Parameters with uncertainties
+        lines.append("Parameters:")
+        for name, value in self.params.items():
+            std_err = self.get_param_uncertainty(name)
+            ci = self.get_confidence_interval(name)
+            lines.append(f"  {name}: {value:.6e} ± {std_err:.6e}")
+            lines.append(f"    95% CI: [{ci[0]:.6e}, {ci[1]:.6e}]")
+
+        # Covariance validity
+        lines.append("")
+        if self.pcov_valid:
+            lines.append("Covariance: Valid")
+        else:
+            lines.append(f"Covariance: Invalid - {self.pcov_message}")
+
+        return "\n".join(lines)
 
     def plot(self, model, x_data, y_data, **kwargs):
         """Plot fit with uncertainty band.

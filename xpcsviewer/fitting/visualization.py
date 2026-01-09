@@ -4,7 +4,11 @@ This module provides visualization functions for NLSQ and Bayesian
 fitting results, including uncertainty bands, diagnostic plots,
 and publication-quality output.
 
-Stub module - implementation in Phase 4.5.
+NLSQ 0.6.0 Enhanced Features:
+- Prediction interval visualization
+- R², RMSE, AIC/BIC display on plots
+- Confidence interval annotations
+- Model comparison with information criteria
 """
 
 from __future__ import annotations
@@ -145,6 +149,65 @@ def compute_uncertainty_band(model, x_pred, popt, pcov, confidence=0.95):
     return y_fit, y_lower, y_upper
 
 
+def compute_prediction_interval(model, x_pred, popt, pcov, residuals, confidence=0.95):
+    """Compute prediction interval including residual variance (NLSQ 0.6.0).
+
+    Prediction intervals are wider than confidence intervals because they
+    account for both parameter uncertainty AND observation noise.
+
+    Formula: PI = CI ± t * σ_residuals
+
+    Parameters
+    ----------
+    model : callable
+        Model function: y = model(x, *params)
+    x_pred : ndarray
+        X values for prediction
+    popt : ndarray
+        Fitted parameters
+    pcov : ndarray
+        Parameter covariance matrix
+    residuals : ndarray
+        Fit residuals (y - y_pred) from training data
+    confidence : float
+        Confidence level (default: 0.95 for 95% PI)
+
+    Returns
+    -------
+    y_fit : ndarray
+        Fitted curve values
+    pi_lower : ndarray
+        Lower bound of prediction interval
+    pi_upper : ndarray
+        Upper bound of prediction interval
+    """
+    import numpy as np
+    from scipy import stats
+
+    # Get confidence interval
+    y_fit, ci_lower, ci_upper = compute_uncertainty_band(
+        model, x_pred, popt, pcov, confidence
+    )
+
+    # Estimate residual standard deviation
+    n_data = len(residuals)
+    n_params = len(popt)
+    dof = max(1, n_data - n_params)
+    sigma_residuals = np.sqrt(np.sum(residuals**2) / dof)
+
+    # t-value for prediction interval
+    t_value = stats.t.ppf((1 + confidence) / 2, dof)
+
+    # Prediction interval = confidence interval + residual variance
+    ci_half_width = (ci_upper - ci_lower) / 2
+    pi_half_width = np.sqrt(ci_half_width**2 + (t_value * sigma_residuals) ** 2)
+
+    pi_lower = y_fit - pi_half_width
+    pi_upper = y_fit + pi_half_width
+
+    return y_fit, pi_lower, pi_upper
+
+
 def plot_nlsq_fit(
     result: NLSQResult,
     model,
@@ -153,8 +216,13 @@ def plot_nlsq_fit(
     x_pred=None,
     confidence=0.95,
     ax=None,
+    show_metrics: bool = True,
+    show_prediction_interval: bool = False,
+    xlabel: str = "x",
+    ylabel: str = "y",
+    title: str | None = None,
 ) -> plt.Axes:
-    """Plot NLSQ fit with uncertainty band (FR-017, FR-021).
+    """Plot NLSQ fit with uncertainty band (FR-017, FR-021, NLSQ 0.6.0).
 
     If covariance is invalid, logs warning and displays
     "Uncertainty unavailable" in legend.
@@ -170,9 +238,21 @@ def plot_nlsq_fit(
     x_pred : ndarray, optional
         X values for prediction curve
     confidence : float
-        Confidence level for band
+        Confidence level for band (default: 0.95)
     ax : matplotlib.axes.Axes, optional
         Axes to plot on (creates new if None)
+    show_metrics : bool, optional
+        Display R², RMSE, and χ² on the plot (default: True).
+        Uses NLSQ 0.6.0 enhanced metrics from NLSQResult.
+    show_prediction_interval : bool, optional
+        Show prediction interval in addition to confidence interval.
+        Prediction intervals account for observation noise (default: False).
+    xlabel : str, optional
+        X-axis label (default: "x")
+    ylabel : str, optional
+        Y-axis label (default: "y")
+    title : str, optional
+        Plot title (default: None)
 
     Returns
     -------
@@ -206,6 +286,21 @@ def plot_nlsq_fit(
     # Check covariance validity
     if result.pcov_valid:
         try:
+            # Prediction interval (wider, includes observation noise)
+            if show_prediction_interval:
+                _, pi_lower, pi_upper = compute_prediction_interval(
+                    model, x_pred, popt, result.covariance, result.residuals, confidence
+                )
+                ax.fill_between(
+                    x_pred,
+                    pi_lower,
+                    pi_upper,
+                    alpha=0.15,
+                    color="C0",
+                    label=f"{int(confidence * 100)}% PI",
+                )
+
+            # Confidence interval (parameter uncertainty only)
             _, y_lower, y_upper = compute_uncertainty_band(
                 model, x_pred, popt, result.covariance, confidence
             )
@@ -228,9 +323,32 @@ def plot_nlsq_fit(
     if result.pcov_valid:
         ax.plot(x_pred, y_fit, "C0-", lw=2, label="Fit")
 
-    ax.set_xlabel("x")
-    ax.set_ylabel("y")
-    ax.legend()
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel)
+
+    if title:
+        ax.set_title(title)
+
+    # Add metrics annotation (NLSQ 0.6.0 enhanced)
+    if show_metrics:
+        metrics_text = (
+            f"R² = {result.r_squared:.4f}\n"
+            f"RMSE = {result.rmse:.2e}\n"
+            f"χ²ᵣ = {result.chi_squared:.3f}"
+        )
+        # Position in upper right corner with some padding
+        ax.text(
+            0.97,
+            0.97,
+            metrics_text,
+            transform=ax.transAxes,
+            fontsize=9,
+            verticalalignment="top",
+            horizontalalignment="right",
+            bbox={"boxstyle": "round", "facecolor": "white", "alpha": 0.8},
+        )
+
+    ax.legend(loc="best")
 
     return ax
 
