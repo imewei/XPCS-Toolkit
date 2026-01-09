@@ -12,6 +12,7 @@ import pyqtgraph as pg
 from .constants import MEMORY_CLEANUP_TIMEOUT_S
 from .file_locator import FileLocator
 from .helper.listmodel import TableDataModel
+from .utils.log_utils import log_timing
 from .utils.logging_config import get_logger
 from .xpcs_file import MemoryMonitor, XpcsFile
 
@@ -177,6 +178,7 @@ class ViewerKernel(FileLocator):
         self.reset_meta()
         self._cleanup_memory()
 
+    @log_timing(threshold_ms=100)
     def _cleanup_memory(self) -> None:
         """
         Clean up cached data and release memory resources.
@@ -198,7 +200,6 @@ class ViewerKernel(FileLocator):
         the configured threshold or when explicitly requested during
         kernel reset operations.
         """
-        """Clean up cached data and release memory."""
         # Clear dataset cache
         self._current_dset_cache.clear()
 
@@ -288,6 +289,7 @@ class ViewerKernel(FileLocator):
         tree.resize(1024, 800)
         return tree
 
+    @log_timing(threshold_ms=500)
     def plot_g2(self, handler, q_range, t_range, y_range, rows=None, **kwargs):
         """
         Generate G2 correlation function plots for multi-tau analysis.
@@ -330,6 +332,7 @@ class ViewerKernel(FileLocator):
             return q, tel
         return None, None
 
+    @log_timing(threshold_ms=500)
     def plot_g2map(
         self, g2map_hdl, qmap_hdl, g2_hdl, rows=None, qbin=0, normalization=False
     ):
@@ -406,6 +409,7 @@ class ViewerKernel(FileLocator):
         g2_hdl.setLogMode(x=True, y=None)
         g2_hdl.addItem(line)
 
+    @log_timing(threshold_ms=500)
     def plot_g2_stability(
         self, handler, q_range, t_range, y_range, rows=None, **kwargs
     ):
@@ -559,6 +563,7 @@ class ViewerKernel(FileLocator):
             return info
         return None
 
+    @log_timing(threshold_ms=500)
     def plot_saxs_2d(self, *args, rows=None, **kwargs):
         """
         Generate SAXS 2D scattering pattern visualization.
@@ -684,6 +689,7 @@ class ViewerKernel(FileLocator):
         pass
         # saxs1d.switch_line_builder(mp_hdl, lb_type)
 
+    @log_timing(threshold_ms=1000)
     def plot_twotime(self, hdl, rows=None, **kwargs):
         """
         Generate two-time correlation plots for dynamic analysis.
@@ -920,6 +926,7 @@ class ViewerKernel(FileLocator):
             "memory_pressure": MemoryMonitor.get_memory_pressure(),
         }
 
+    @log_timing(threshold_ms=1000)
     def export_g2(self, folder, rows=None):
         """
         Export G2 correlation data and fitting results to text files.
@@ -1080,6 +1087,7 @@ class ViewerKernel(FileLocator):
                 f"G2 export failed: 0/{total_files} files exported successfully"
             )
 
+    @log_timing(threshold_ms=1000)
     def export_diffusion(self, folder, rows=None):
         """
         Export tau-q power law fitting results to text files.

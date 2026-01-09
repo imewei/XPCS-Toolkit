@@ -28,6 +28,7 @@ from xpcsviewer.schemas import (
     PartitionSchema,
     QMapSchema,
 )
+from xpcsviewer.utils.log_utils import log_timing
 from xpcsviewer.utils.logging_config import get_logger
 
 if TYPE_CHECKING:
@@ -77,6 +78,7 @@ class HDF5Facade:
         self.pool = pool if pool is not None else _connection_pool
         self.validate = validate
 
+    @log_timing(threshold_ms=500)
     def read_qmap(self, file_path: str | Path, group: str = "/xpcs/qmap") -> QMapSchema:
         """Read Q-map from HDF5 file with schema validation.
 
@@ -183,6 +185,7 @@ class HDF5Facade:
                 ) from e
             raise
 
+    @log_timing(threshold_ms=500)
     def write_mask(
         self,
         file_path: str | Path,
@@ -256,6 +259,7 @@ class HDF5Facade:
             logger.error(f"Failed to write mask to {file_path}: {e}")
             raise
 
+    @log_timing(threshold_ms=500)
     def write_partition(
         self,
         file_path: str | Path,
@@ -349,6 +353,7 @@ class HDF5Facade:
             logger.error(f"Failed to write partition to {file_path}: {e}")
             raise
 
+    @log_timing(threshold_ms=500)
     def read_g2_data(
         self, file_path: str | Path, q_idx: int | None = None, group: str = "/xpcs/g2"
     ) -> G2Data:
@@ -431,6 +436,7 @@ class HDF5Facade:
                 ) from e
             raise
 
+    @log_timing(threshold_ms=300)
     def read_geometry_metadata(
         self, file_path: str | Path, group: str = "/xpcs/metadata"
     ) -> GeometryMetadata:

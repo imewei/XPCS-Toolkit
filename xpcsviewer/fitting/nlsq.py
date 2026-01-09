@@ -20,6 +20,8 @@ from typing import TYPE_CHECKING, Literal
 
 import numpy as np
 
+from xpcsviewer.utils.log_utils import log_timing
+
 from .results import NLSQResult
 from .visualization import validate_pcov
 
@@ -31,6 +33,7 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
+@log_timing(threshold_ms=500)
 def nlsq_optimize(
     model_fn: Callable,
     x: ArrayLike,

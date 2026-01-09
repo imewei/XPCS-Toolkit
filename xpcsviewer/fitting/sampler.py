@@ -11,6 +11,8 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 
+from xpcsviewer.utils.log_utils import log_timing
+
 from .models import (
     double_exp_func,
     double_exp_model,
@@ -154,6 +156,7 @@ def _build_fit_result(
     )
 
 
+@log_timing(threshold_ms=2000)
 def run_single_exp_fit(
     x: ArrayLike,
     y: ArrayLike,
@@ -217,6 +220,7 @@ def run_single_exp_fit(
     return _build_fit_result(mcmc, samples, nlsq_init, param_names)
 
 
+@log_timing(threshold_ms=2000)
 def run_double_exp_fit(
     x: ArrayLike,
     y: ArrayLike,
@@ -294,6 +298,7 @@ def run_double_exp_fit(
     return _build_fit_result(mcmc, samples, nlsq_init, param_names)
 
 
+@log_timing(threshold_ms=2000)
 def run_stretched_exp_fit(
     x: ArrayLike,
     y: ArrayLike,
@@ -358,6 +363,7 @@ def run_stretched_exp_fit(
     return _build_fit_result(mcmc, samples, nlsq_init, param_names)
 
 
+@log_timing(threshold_ms=2000)
 def run_power_law_fit(
     q: ArrayLike,
     tau: ArrayLike | FitResult,

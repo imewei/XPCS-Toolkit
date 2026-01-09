@@ -28,6 +28,7 @@ from xpcsviewer.constants import (
     NDIM_2D,
     NDIM_3D,
 )
+from xpcsviewer.utils.log_utils import log_timing
 from xpcsviewer.utils.logging_config import get_logger
 
 # Local imports
@@ -668,6 +669,7 @@ def get_abs_cs_scale(fname, ftype="nexus", use_pool=True):
         return float(f[key][()])
 
 
+@log_timing(threshold_ms=500)
 def read_metadata_to_dict(file_path, use_pool=True):
     """
     Reads an HDF5 file and loads its contents into a nested dictionary.
@@ -731,6 +733,7 @@ def read_metadata_to_dict(file_path, use_pool=True):
     return data_dict
 
 
+@log_timing(threshold_ms=200)
 def get(fname, fields, mode="raw", ret_type="dict", ftype="nexus", use_pool=True):
     """
     get the values for the various keys listed in fields for a single
@@ -781,6 +784,7 @@ def get(fname, fields, mode="raw", ret_type="dict", ftype="nexus", use_pool=True
     return None
 
 
+@log_timing(threshold_ms=100)
 def get_analysis_type(fname, ftype="nexus", use_pool=True):
     """
     determine the analysis type of the file
@@ -846,6 +850,7 @@ def get_analysis_type(fname, ftype="nexus", use_pool=True):
     return tuple(analysis_type)
 
 
+@log_timing(threshold_ms=300)
 def batch_read_fields(
     fname: str,
     fields: list[str],
@@ -908,6 +913,7 @@ def batch_read_fields(
     return processed_results
 
 
+@log_timing(threshold_ms=500)
 def get_file_info(fname: str, use_pool: bool = True) -> dict[str, Any]:
     """
     Get basic file information and statistics.
@@ -986,6 +992,7 @@ def force_connection_health_check():
     _connection_pool.force_health_check()
 
 
+@log_timing(threshold_ms=1000)
 def get_chunked_dataset(
     fname: str,
     dataset_path: str,
