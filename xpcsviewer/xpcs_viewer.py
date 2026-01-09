@@ -44,6 +44,7 @@ from .threading.progress_manager import ProgressManager
 
 # Import centralized logging
 from .utils import get_logger, log_system_info, sanitize_path, setup_exception_logging
+from .utils.log_utils import RateLimitedLogger
 from .viewer_kernel import ViewerKernel
 from .viewer_ui import Ui_mainWindow as Ui
 
@@ -190,6 +191,9 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         # list widget models
         self.source_model = None
         self.target_model = None
+
+        # Rate-limited logger for high-frequency GUI events (mouse moves, etc.)
+        self._rate_limited_logger = RateLimitedLogger(logger, rate_per_second=2.0)
 
         # UI polish
         self._init_spacing()
@@ -1587,6 +1591,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
             payload = self.vk.get_info_at_mouse(rows, x, y)
             if payload:
                 self.saxs2d_display.setText(payload)
+                self._rate_limited_logger.debug(f"SAXS 2D mouse at ({x}, {y})")
 
     def plot_saxs_2d_selection(self):
         selection = self.spinBox_saxs2d_selection.value()
