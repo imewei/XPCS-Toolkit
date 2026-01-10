@@ -161,6 +161,8 @@ def run_single_exp_fit(
     x: ArrayLike,
     y: ArrayLike,
     yerr: ArrayLike | None = None,
+    stability: str = "auto",
+    auto_bounds: bool = False,
     **kwargs,
 ) -> FitResult:
     """Run single exponential fit with NLSQ warm-start.
@@ -173,6 +175,10 @@ def run_single_exp_fit(
         G2 correlation values
     yerr : array_like, optional
         Measurement uncertainties
+    stability : str, optional
+        NLSQ stability mode: 'auto', 'check', or False (default: 'auto')
+    auto_bounds : bool, optional
+        Use NLSQ auto-bounds inference (default: False)
     **kwargs
         Sampler configuration
 
@@ -191,7 +197,7 @@ def run_single_exp_fit(
     config = _extract_config(kwargs)
     param_names = ["tau", "baseline", "contrast"]
 
-    # NLSQ warm-start
+    # NLSQ warm-start with NLSQ 0.6.0 features
     logger.info("Running NLSQ warm-start for single exponential fit")
     p0 = {"tau": 1.0, "baseline": 1.0, "contrast": 0.3}
     bounds = {
@@ -200,8 +206,25 @@ def run_single_exp_fit(
         "contrast": (0.0, 1.0),
     }
 
-    nlsq_result = nlsq_optimize(single_exp_func, x, y, yerr, p0, bounds)
+    nlsq_result = nlsq_optimize(
+        single_exp_func,
+        x,
+        y,
+        yerr,
+        p0,
+        bounds,
+        stability=stability,
+        auto_bounds=auto_bounds,
+        compute_diagnostics=True,  # Enable for health checking
+    )
     nlsq_init = nlsq_result.params
+
+    # Log warning if NLSQ fit is unhealthy
+    if hasattr(nlsq_result, "is_healthy") and not nlsq_result.is_healthy:
+        health_score = getattr(nlsq_result, "health_score", "N/A")
+        logger.warning(
+            f"NLSQ warm-start may be unreliable: health_score={health_score}"
+        )
 
     # Convert to JAX arrays
     x_jax = jnp.asarray(x)
@@ -225,6 +248,8 @@ def run_double_exp_fit(
     x: ArrayLike,
     y: ArrayLike,
     yerr: ArrayLike | None = None,
+    stability: str = "auto",
+    auto_bounds: bool = False,
     **kwargs,
 ) -> FitResult:
     """Run double exponential fit with NLSQ warm-start.
@@ -237,6 +262,10 @@ def run_double_exp_fit(
         G2 correlation values
     yerr : array_like, optional
         Measurement uncertainties
+    stability : str, optional
+        NLSQ stability mode: 'auto', 'check', or False (default: 'auto')
+    auto_bounds : bool, optional
+        Use NLSQ auto-bounds inference (default: False)
     **kwargs
         Sampler configuration
 
@@ -255,7 +284,7 @@ def run_double_exp_fit(
     config = _extract_config(kwargs)
     param_names = ["tau1", "tau2", "baseline", "contrast1", "contrast2"]
 
-    # NLSQ warm-start
+    # NLSQ warm-start with NLSQ 0.6.0 features
     logger.info("Running NLSQ warm-start for double exponential fit")
     p0 = {
         "tau1": 0.1,
@@ -272,8 +301,25 @@ def run_double_exp_fit(
         "contrast2": (0.0, 1.0),
     }
 
-    nlsq_result = nlsq_optimize(double_exp_func, x, y, yerr, p0, bounds)
+    nlsq_result = nlsq_optimize(
+        double_exp_func,
+        x,
+        y,
+        yerr,
+        p0,
+        bounds,
+        stability=stability,
+        auto_bounds=auto_bounds,
+        compute_diagnostics=True,
+    )
     nlsq_init = nlsq_result.params
+
+    # Log warning if NLSQ fit is unhealthy
+    if hasattr(nlsq_result, "is_healthy") and not nlsq_result.is_healthy:
+        health_score = getattr(nlsq_result, "health_score", "N/A")
+        logger.warning(
+            f"NLSQ warm-start may be unreliable: health_score={health_score}"
+        )
 
     # Convert to JAX arrays
     x_jax = jnp.asarray(x)
@@ -303,6 +349,8 @@ def run_stretched_exp_fit(
     x: ArrayLike,
     y: ArrayLike,
     yerr: ArrayLike | None = None,
+    stability: str = "auto",
+    auto_bounds: bool = False,
     **kwargs,
 ) -> FitResult:
     """Run stretched exponential fit with NLSQ warm-start.
@@ -315,6 +363,10 @@ def run_stretched_exp_fit(
         G2 correlation values
     yerr : array_like, optional
         Measurement uncertainties
+    stability : str, optional
+        NLSQ stability mode: 'auto', 'check', or False (default: 'auto')
+    auto_bounds : bool, optional
+        Use NLSQ auto-bounds inference (default: False)
     **kwargs
         Sampler configuration
 
@@ -333,7 +385,7 @@ def run_stretched_exp_fit(
     config = _extract_config(kwargs)
     param_names = ["tau", "baseline", "contrast", "beta"]
 
-    # NLSQ warm-start
+    # NLSQ warm-start with NLSQ 0.6.0 features
     logger.info("Running NLSQ warm-start for stretched exponential fit")
     p0 = {"tau": 1.0, "baseline": 1.0, "contrast": 0.3, "beta": 0.8}
     bounds = {
@@ -343,8 +395,25 @@ def run_stretched_exp_fit(
         "beta": (0.01, 0.99),
     }
 
-    nlsq_result = nlsq_optimize(stretched_exp_func, x, y, yerr, p0, bounds)
+    nlsq_result = nlsq_optimize(
+        stretched_exp_func,
+        x,
+        y,
+        yerr,
+        p0,
+        bounds,
+        stability=stability,
+        auto_bounds=auto_bounds,
+        compute_diagnostics=True,
+    )
     nlsq_init = nlsq_result.params
+
+    # Log warning if NLSQ fit is unhealthy
+    if hasattr(nlsq_result, "is_healthy") and not nlsq_result.is_healthy:
+        health_score = getattr(nlsq_result, "health_score", "N/A")
+        logger.warning(
+            f"NLSQ warm-start may be unreliable: health_score={health_score}"
+        )
 
     # Convert to JAX arrays
     x_jax = jnp.asarray(x)
@@ -367,6 +436,8 @@ def run_stretched_exp_fit(
 def run_power_law_fit(
     q: ArrayLike,
     tau: ArrayLike | FitResult,
+    stability: str = "auto",
+    auto_bounds: bool = False,
     **kwargs,
 ) -> FitResult:
     """Run power law fit with NLSQ warm-start.
@@ -377,6 +448,10 @@ def run_power_law_fit(
         Q values
     tau : array_like or FitResult
         Relaxation times (or FitResult with tau samples)
+    stability : str, optional
+        NLSQ stability mode: 'auto', 'check', or False (default: 'auto')
+    auto_bounds : bool, optional
+        Use NLSQ auto-bounds inference (default: False)
     **kwargs
         Sampler configuration
 
@@ -401,7 +476,7 @@ def run_power_law_fit(
     config = _extract_config(kwargs)
     param_names = ["tau0", "alpha"]
 
-    # NLSQ warm-start
+    # NLSQ warm-start with NLSQ 0.6.0 features
     logger.info("Running NLSQ warm-start for power law fit")
     p0 = {"tau0": 1.0, "alpha": 2.0}
     bounds = {
@@ -409,8 +484,25 @@ def run_power_law_fit(
         "alpha": (0.0, 10.0),
     }
 
-    nlsq_result = nlsq_optimize(power_law_func, q, tau, tau_err, p0, bounds)
+    nlsq_result = nlsq_optimize(
+        power_law_func,
+        q,
+        tau,
+        tau_err,
+        p0,
+        bounds,
+        stability=stability,
+        auto_bounds=auto_bounds,
+        compute_diagnostics=True,
+    )
     nlsq_init = nlsq_result.params
+
+    # Log warning if NLSQ fit is unhealthy
+    if hasattr(nlsq_result, "is_healthy") and not nlsq_result.is_healthy:
+        health_score = getattr(nlsq_result, "health_score", "N/A")
+        logger.warning(
+            f"NLSQ warm-start may be unreliable: health_score={health_score}"
+        )
 
     # Convert to JAX arrays
     q_jax = jnp.asarray(q)
