@@ -642,6 +642,143 @@ def plot_comparison(
     return ax
 
 
+def plot_diagnostics(
+    result: NLSQResult,
+    model,
+    x_data,
+    y_data,
+    figsize=(10, 8),
+) -> Figure:
+    """Create 2x2 diagnostic plot for NLSQ fit (T081-T085).
+
+    Layout:
+    - Top-left: Residuals plot (vs x)
+    - Top-right: Parameter confidence intervals
+    - Bottom-left: Diagnostic issues / health score
+    - Bottom-right: Summary metrics (R², adj_R², RMSE, AIC, BIC)
+
+    Parameters
+    ----------
+    result : NLSQResult
+        Output from NLSQ fitting with native_result
+    model : callable
+        Model function
+    x_data, y_data : ndarray
+        Original data
+    figsize : tuple
+        Figure size (default: (10, 8))
+
+    Returns
+    -------
+    fig : matplotlib.figure.Figure
+    """
+    import matplotlib.pyplot as plt
+    import numpy as np
+
+    x_data = np.asarray(x_data)
+    y_data = np.asarray(y_data)
+
+    fig, axes = plt.subplots(2, 2, figsize=figsize)
+    ax_residuals, ax_ci, ax_health, ax_metrics = axes.flatten()
+
+    # Get parameters
+    popt = np.array(list(result.params.values()))
+    param_names = list(result.params.keys())
+
+    # Top-left: Residuals plot (T082)
+    y_pred = model(x_data, *popt)
+    residuals = y_data - y_pred
+    ax_residuals.scatter(x_data, residuals, c="C0", alpha=0.6, s=20)
+    ax_residuals.axhline(0, color="k", linestyle="--", alpha=0.5)
+    ax_residuals.set_xlabel("x")
+    ax_residuals.set_ylabel("Residuals")
+    ax_residuals.set_title("Residuals vs X")
+
+    # Top-right: Parameter confidence intervals (T083)
+    if result.pcov_valid and result.covariance is not None:
+        perr = np.sqrt(np.diag(result.covariance))
+        y_pos = np.arange(len(param_names))
+        ax_ci.barh(y_pos, 2 * perr, left=popt - perr, height=0.4, color="C0", alpha=0.6)
+        ax_ci.scatter(popt, y_pos, c="C0", s=50, zorder=5)
+        ax_ci.set_yticks(y_pos)
+        ax_ci.set_yticklabels(param_names)
+        ax_ci.set_xlabel("Parameter Value ± 1σ")
+        ax_ci.set_title("Parameter Estimates with 68% CI")
+    else:
+        ax_ci.text(
+            0.5,
+            0.5,
+            "Covariance invalid\n(no CI available)",
+            ha="center",
+            va="center",
+            transform=ax_ci.transAxes,
+        )
+        ax_ci.set_title("Parameter Confidence Intervals")
+
+    # Bottom-left: Diagnostic issues / health score (T084)
+    health_info = []
+    health_score = getattr(result, "health_score", None)
+    is_healthy = getattr(result, "is_healthy", None)
+
+    if health_score is not None:
+        health_info.append(f"Health Score: {health_score:.2f}")
+    if is_healthy is not None:
+        health_info.append(f"Status: {'Healthy' if is_healthy else 'Issues detected'}")
+    if result.converged:
+        health_info.append("✓ Converged")
+    else:
+        health_info.append("✗ Did not converge")
+    if result.pcov_valid:
+        health_info.append("✓ Covariance valid")
+    else:
+        health_info.append(f"✗ {result.pcov_message}")
+
+    cond_num = getattr(result, "condition_number", None)
+    if cond_num is not None:
+        health_info.append(f"Condition Number: {cond_num:.1f}")
+
+    ax_health.text(
+        0.1,
+        0.8,
+        "\n".join(health_info),
+        transform=ax_health.transAxes,
+        fontsize=11,
+        verticalalignment="top",
+        family="monospace",
+    )
+    ax_health.set_xlim(0, 1)
+    ax_health.set_ylim(0, 1)
+    ax_health.axis("off")
+    ax_health.set_title("Fit Diagnostics")
+
+    # Bottom-right: Summary metrics (T085)
+    metrics_lines = [
+        f"R²:       {result.r_squared:.6f}",
+        f"Adj R²:   {result.adj_r_squared:.6f}",
+        f"RMSE:     {result.rmse:.2e}",
+        f"MAE:      {result.mae:.2e}",
+        f"χ²ᵣ:      {result.chi_squared:.4f}",
+        f"AIC:      {result.aic:.2f}",
+        f"BIC:      {result.bic:.2f}",
+    ]
+    ax_metrics.text(
+        0.1,
+        0.8,
+        "\n".join(metrics_lines),
+        transform=ax_metrics.transAxes,
+        fontsize=11,
+        verticalalignment="top",
+        family="monospace",
+    )
+    ax_metrics.set_xlim(0, 1)
+    ax_metrics.set_ylim(0, 1)
+    ax_metrics.axis("off")
+    ax_metrics.set_title("Fit Metrics")
+
+    fig.tight_layout()
+    return fig
+
+
 def save_figure(fig, filepath, formats=("pdf", "png"), dpi=300) -> dict:
     """Save figure in multiple formats (FR-018).
 
