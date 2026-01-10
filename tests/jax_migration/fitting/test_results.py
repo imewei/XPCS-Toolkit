@@ -106,13 +106,14 @@ class TestNLSQResult:
         """Test NLSQResult creation."""
         result = NLSQResult(
             params={"tau": 1.0, "baseline": 1.0},
-            covariance=np.eye(2),
-            residuals=np.zeros(10),
             chi_squared=1.0,
             converged=True,
             pcov_valid=True,
             pcov_message="Covariance matrix is valid",
         )
+        # Set properties via setters for backward compat
+        result.covariance = np.eye(2)
+        result.residuals = np.zeros(10)
 
         assert result.params["tau"] == 1.0
         assert result.converged is True
@@ -122,11 +123,11 @@ class TestNLSQResult:
         """Test default pcov validation values."""
         result = NLSQResult(
             params={"tau": 1.0},
-            covariance=np.eye(1),
-            residuals=np.zeros(10),
             chi_squared=1.0,
             converged=True,
         )
+        result.covariance = np.eye(1)
+        result.residuals = np.zeros(10)
 
         assert result.pcov_valid is True
         assert result.pcov_message == ""
@@ -227,9 +228,9 @@ class TestNLSQResultVisualizationMethods:
         """Test plot method exists."""
         result = NLSQResult(
             params={"tau": 1.0},
-            covariance=np.eye(1),
-            residuals=np.zeros(10),
             chi_squared=1.0,
             converged=True,
         )
+        result.covariance = np.eye(1)
+        result.residuals = np.zeros(10)
         assert hasattr(result, "plot")
