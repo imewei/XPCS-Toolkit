@@ -145,13 +145,17 @@ class CommandPalette(QDialog):
         super().show()
 
         # Center over parent
+        # Center over parent
         if self.parent():
-            parent_rect = self.parent().rect()
+            from typing import cast
+
+            parent_widget = cast(QWidget, self.parent())
+            parent_rect = parent_widget.rect()
             x = parent_rect.center().x() - self.width() // 2
             y = parent_rect.top() + 100
             self.move(
-                self.parent().mapToGlobal(self.pos()).x() + x - self.pos().x(),
-                self.parent().mapToGlobal(self.pos()).y() + y - self.pos().y(),
+                parent_widget.mapToGlobal(self.pos()).x() + x - self.pos().x(),
+                parent_widget.mapToGlobal(self.pos()).y() + y - self.pos().y(),
             )
 
     def hide(self) -> None:

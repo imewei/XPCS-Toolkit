@@ -57,7 +57,7 @@ class EmptyStateWidget(QFrame):
         self, message: str, description: str, action_text: str, icon_text: str
     ) -> None:
         """Set up the widget UI."""
-        self.setFrameStyle(QFrame.NoFrame)
+        self.setFrameStyle(QFrame.Shape.NoFrame)
         self.setStyleSheet(
             """
             EmptyStateWidget {
@@ -67,13 +67,13 @@ class EmptyStateWidget(QFrame):
         )
 
         layout = QVBoxLayout(self)
-        layout.setAlignment(Qt.AlignCenter)
+        layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.setSpacing(16)
 
         # Icon
         self.icon_label = QLabel(icon_text)
         self.icon_label.setStyleSheet("font-size: 48px;")
-        self.icon_label.setAlignment(Qt.AlignCenter)
+        self.icon_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(self.icon_label)
 
         # Message
@@ -85,7 +85,7 @@ class EmptyStateWidget(QFrame):
             color: #666;
             """
         )
-        self.message_label.setAlignment(Qt.AlignCenter)
+        self.message_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.message_label.setWordWrap(True)
         layout.addWidget(self.message_label)
 
@@ -98,16 +98,16 @@ class EmptyStateWidget(QFrame):
                 color: #888;
                 """
             )
-            self.description_label.setAlignment(Qt.AlignCenter)
+            self.description_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
             self.description_label.setWordWrap(True)
             layout.addWidget(self.description_label)
         else:
-            self.description_label = None
+            self.description_label = None  # type: ignore[assignment]
 
         # Action button
         if action_text and self._action_callback:
             button_layout = QHBoxLayout()
-            button_layout.setAlignment(Qt.AlignCenter)
+            button_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
             self.action_button = QPushButton(action_text)
             self.action_button.setStyleSheet(
@@ -123,7 +123,7 @@ class EmptyStateWidget(QFrame):
 
             layout.addLayout(button_layout)
         else:
-            self.action_button = None
+            self.action_button = None  # type: ignore[assignment]
 
     def _on_action_clicked(self) -> None:
         """Handle action button click."""

@@ -114,7 +114,8 @@ class DragDropListView(QListView):
             List of original indices in current display order
         """
         model = self.model()
-        if model is None:
+        # model check assumed valid by type checker or handled
+        if not model:
             return []
 
         order = []
@@ -142,7 +143,8 @@ class DragDropListView(QListView):
             True if move was successful
         """
         model = self.model()
-        if model is None:
+        # model check assumed valid by type checker or handled
+        if not model:
             return False
 
         row_count = model.rowCount()

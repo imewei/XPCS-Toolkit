@@ -175,7 +175,7 @@ class SessionManager:
                 logger.info(f"Migrating session from version {version}")
 
             # Parse target files and validate existence
-            target_files = []
+            target_files: list[FileEntry] = []
             for entry in data.get("target_files", []):
                 path = entry.get("path", "")
                 order = entry.get("order", len(target_files))

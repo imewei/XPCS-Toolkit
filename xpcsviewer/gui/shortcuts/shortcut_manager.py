@@ -4,6 +4,8 @@ Keyboard shortcut management for XPCS-TOOLKIT GUI.
 This module provides centralized shortcut registration and management.
 """
 
+from typing import Callable
+
 from PySide6.QtCore import QObject, Signal
 from PySide6.QtGui import QKeySequence, QShortcut
 from PySide6.QtWidgets import QWidget
@@ -36,7 +38,7 @@ class ShortcutManager(QObject):
         self,
         shortcut_id: str,
         key_sequence: str | QKeySequence,
-        callback: callable,
+        callback: Callable,
         description: str = "",
     ) -> bool:
         """

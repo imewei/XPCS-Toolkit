@@ -129,8 +129,10 @@ class ThemeManager(QObject):
         if app is None:
             return "light"
 
-        # Qt 6.5+ has colorScheme() on QStyleHints
-        style_hints = app.styleHints()
+        from typing import cast
+
+        app_gui = cast(QGuiApplication, app)
+        style_hints = app_gui.styleHints()
         if hasattr(style_hints, "colorScheme"):
             from PySide6.QtCore import Qt
 
@@ -140,7 +142,7 @@ class ThemeManager(QObject):
             return "light"
 
         # Fallback: check palette
-        palette = app.palette()
+        palette = app_gui.palette()
         bg = palette.window().color()
         # If background is dark, assume dark mode
         if bg.lightness() < 128:
@@ -155,7 +157,9 @@ class ThemeManager(QObject):
             return
 
         stylesheet = self._build_stylesheet()
-        app.setStyleSheet(stylesheet)
+        from typing import cast
+
+        cast(QApplication, app).setStyleSheet(stylesheet)
         logger.debug(f"Applied {self._current_theme} theme stylesheet")
 
     def _build_stylesheet(self) -> str:
