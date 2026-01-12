@@ -155,8 +155,8 @@ class VectorizedROICalculator(ABC):
         if roi_params.roi_type == ROIType.PIE:
             # For pie ROI, we accumulate binned q-values
             qsize = roi_params.parameters.get("qsize", 1000)
-            accumulated_data = np.zeros(qsize)
-            normalization = np.zeros(qsize)
+            accumulated_data: Any = np.zeros(qsize)
+            normalization: Any = np.zeros(qsize)
 
         elif roi_params.roi_type == ROIType.RING:
             # For ring ROI, we accumulate angular values
@@ -167,7 +167,7 @@ class VectorizedROICalculator(ABC):
         else:
             # Generic accumulation
             accumulated_data = 0.0
-            normalization = 0
+            normalization = 0.0
 
         # Process chunks
         for chunk, chunk_info in iterator:

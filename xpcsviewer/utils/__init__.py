@@ -7,15 +7,18 @@ and other core support functions.
 
 import os
 
+
+# Import modules gracefully for documentation builds
+# Define PlaceholderModule once
+class PlaceholderModule:
+    """Placeholder module for documentation builds."""
+
+    def __getattr__(self, name):
+        return lambda *args, **kwargs: None
+
+
 # Import modules gracefully for documentation builds
 if os.environ.get("BUILDING_DOCS"):
-    # Provide placeholder modules for documentation
-    class PlaceholderModule:
-        """Placeholder module for documentation builds."""
-
-        def __getattr__(self, name):
-            return lambda *args, **kwargs: None
-
     visualization_optimizer = PlaceholderModule()
 
     # Import log formatters normally as they should work
@@ -36,15 +39,9 @@ else:
     )
 
     try:
-        from . import visualization_optimizer
+        from . import visualization_optimizer  # type: ignore[assignment]
     except ImportError:
         # Create placeholder if import fails
-        class PlaceholderModule:
-            """Placeholder module for documentation builds."""
-
-            def __getattr__(self, name):
-                return lambda *args, **kwargs: None
-
         visualization_optimizer = PlaceholderModule()
 
 

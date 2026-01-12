@@ -7,6 +7,7 @@ particularly for operations like logarithmic transformations of SAXS data.
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
+from typing import Any
 
 import numpy as np
 
@@ -27,6 +28,46 @@ class ChunkInfo:
     total_chunks: int
 
 
+def calculate_chunk_slices(
+    shape: tuple[int, ...], dtype: np.dtype, chunk_size_mb: float
+) -> list[tuple[slice, ...]]:
+    """Calculate optimal chunk slices for streaming processing."""
+    itemsize = dtype.itemsize
+    total_size_mb = np.prod(shape) * itemsize / (1024 * 1024)
+
+    # If data is small enough, process as single chunk
+    if total_size_mb <= chunk_size_mb:
+        return [tuple(slice(0, dim_size) for dim_size in shape)]
+
+    # For large data, calculate chunks along the first dimension
+    elements_per_chunk = int(chunk_size_mb * 1024 * 1024 / itemsize)
+
+    # Calculate elements per row for multi-dimensional arrays
+    if len(shape) > 1:
+        elements_per_row = np.prod(shape[1:])
+        rows_per_chunk = max(1, int(elements_per_chunk // elements_per_row))
+    else:
+        rows_per_chunk = elements_per_chunk
+
+    # Ensure rows_per_chunk is a standard python int for range()
+    rows_per_chunk = int(rows_per_chunk)
+
+    chunk_slices = []
+    for start_row in range(0, shape[0], rows_per_chunk):
+        end_row = min(start_row + rows_per_chunk, shape[0])
+
+        # Create slice tuple
+        slice_obj = tuple(
+            [
+                slice(start_row, end_row) if dim == 0 else slice(0, shape[dim])
+                for dim in range(len(shape))
+            ]
+        )
+        chunk_slices.append(slice_obj)
+
+    return chunk_slices
+
+
 class StreamingProcessor(ABC):
     """Abstract base class for streaming data processors."""
 
@@ -35,13 +76,13 @@ class StreamingProcessor(ABC):
         self.memory_manager = get_memory_manager()
 
     @abstractmethod
-    def process_chunk(self, chunk: np.ndarray, chunk_info: ChunkInfo) -> np.ndarray:
+    def process_chunk(self, chunk: np.ndarray, chunk_info: ChunkInfo) -> Any:
         """Process a single data chunk."""
 
     @abstractmethod
     def combine_chunks(
         self, processed_chunks: list, original_shape: tuple[int, ...]
-    ) -> np.ndarray:
+    ) -> Any:
         """Combine processed chunks into final result."""
 
     def process_array_streaming(
@@ -66,7 +107,9 @@ class StreamingProcessor(ABC):
             output_dtype = data.dtype
 
         # Calculate optimal chunk size based on memory constraints
-        chunk_slices = self._calculate_chunk_slices(data.shape, data.dtype)
+        chunk_slices = calculate_chunk_slices(
+            data.shape, data.dtype, self.chunk_size_mb
+        )
         total_chunks = len(chunk_slices)
 
         logger.info(
@@ -122,40 +165,6 @@ class StreamingProcessor(ABC):
         )
 
         return result
-
-    def _calculate_chunk_slices(self, shape: tuple[int, ...], dtype: np.dtype) -> list:
-        """Calculate optimal chunk slices for streaming processing."""
-        itemsize = dtype.itemsize
-        total_size_mb = np.prod(shape) * itemsize / (1024 * 1024)
-
-        # If data is small enough, process as single chunk
-        if total_size_mb <= self.chunk_size_mb:
-            return [tuple(slice(0, dim_size) for dim_size in shape)]
-
-        # For large data, calculate chunks along the first dimension
-        elements_per_chunk = int(self.chunk_size_mb * 1024 * 1024 / itemsize)
-
-        # Calculate elements per row for multi-dimensional arrays
-        if len(shape) > 1:
-            elements_per_row = np.prod(shape[1:])
-            rows_per_chunk = max(1, elements_per_chunk // elements_per_row)
-        else:
-            rows_per_chunk = elements_per_chunk
-
-        chunk_slices = []
-        for start_row in range(0, shape[0], rows_per_chunk):
-            end_row = min(start_row + rows_per_chunk, shape[0])
-
-            # Create slice tuple
-            slice_obj = tuple(
-                [
-                    slice(start_row, end_row) if dim == 0 else slice(0, shape[dim])
-                    for dim in range(len(shape))
-                ]
-            )
-            chunk_slices.append(slice_obj)
-
-        return chunk_slices
 
 
 class SAXSLogProcessor(StreamingProcessor):
@@ -316,7 +325,7 @@ class AdaptiveChunkSizer:
     def __init__(self, base_chunk_size_mb: float = 50.0):
         self.base_chunk_size_mb = base_chunk_size_mb
         self.memory_manager = get_memory_manager()
-        self.performance_history = []
+        self.performance_history: list[float] = []
 
     def get_optimal_chunk_size(
         self, data_shape: tuple[int, ...], data_dtype: np.dtype
@@ -426,7 +435,7 @@ def process_roi_streaming(
     processor = ROIProcessor(roi_mask=roi_mask, chunk_size_mb=chunk_size_mb)
 
     # Calculate optimal chunk slices
-    chunk_slices = processor._calculate_chunk_slices(data.shape, data.dtype)
+    chunk_slices = calculate_chunk_slices(data.shape, data.dtype, chunk_size_mb)
 
     processed_chunks = []
     for i, slice_obj in enumerate(chunk_slices):
@@ -461,8 +470,10 @@ class MemoryEfficientIterator:
         self.memory_manager = get_memory_manager()
 
         # Calculate chunk slices
-        processor = StreamingProcessor(chunk_size_mb)
-        self.chunk_slices = processor._calculate_chunk_slices(data.shape, data.dtype)
+        # Calculate chunk slices
+        self.chunk_slices = calculate_chunk_slices(
+            data.shape, data.dtype, chunk_size_mb
+        )
         self.current_index = 0
 
     def __iter__(self):

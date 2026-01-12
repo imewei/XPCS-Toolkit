@@ -13,7 +13,7 @@ from collections import deque
 from collections.abc import Callable
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any
+from typing import Any, cast
 
 import h5py
 import numpy as np
@@ -65,7 +65,7 @@ class LazyDataProxy(ABC):
         self.data_key = data_key
         self.loader_func = loader_func
         self.estimated_size_mb = estimated_size_mb
-        self._loaded_data = None
+        self._loaded_data: np.ndarray | None = None
         self._last_access = 0.0
         self._access_count = 0
         self._loader = None
@@ -95,15 +95,17 @@ class LazyDataProxy(ABC):
         self, slice_info: tuple[slice, ...] | None = None, cache_hit: bool = True
     ) -> None:
         """Record access for pattern analysis."""
-        if self._loader:
-            access_event = AccessEvent(
-                timestamp=time.time(),
-                data_key=self.data_key,
-                slice_info=slice_info,
-                access_size_mb=self.estimated_size_mb,
-                cache_hit=cache_hit,
+        loader = getattr(self, "_loader", None)
+        if loader:
+            loader._record_access(
+                AccessEvent(
+                    timestamp=time.time(),
+                    data_key=self.data_key,
+                    slice_info=slice_info,
+                    access_size_mb=self.estimated_size_mb,
+                    cache_hit=cache_hit,
+                )
             )
-            self._loader._record_access(access_event)
 
         self._last_access = time.time()
         self._access_count += 1
@@ -124,7 +126,7 @@ class LazyHDF5Array(LazyDataProxy):
         self.hdf5_path = hdf5_path
         self.dataset_path = dataset_path
         self.chunk_size_mb = chunk_size_mb
-        self._metadata_cache = {}
+        self._metadata_cache: dict[str, tuple[int, ...]] = {}
 
     def _load_hdf5_data(self, slice_info=None):
         """Load data from HDF5 file, optionally with slicing."""
@@ -265,9 +267,6 @@ class IntelligentPrefetcher:
 
     def analyze_access_pattern(self, data_key: str) -> AccessPattern:
         """Analyze access pattern for a specific data key."""
-        if data_key in self.pattern_cache:
-            return self.pattern_cache[data_key]
-
         # Get recent accesses for this data key
         recent_accesses = [
             event
@@ -376,7 +375,9 @@ class IntelligentLazyLoader:
 
         # Prefetching system
         if enable_prefetching:
-            self.prefetcher = IntelligentPrefetcher(max_prefetch_mb=prefetch_memory_mb)
+            self.prefetcher: IntelligentPrefetcher | None = IntelligentPrefetcher(
+                max_prefetch_mb=prefetch_memory_mb
+            )
         else:
             self.prefetcher = None
 
@@ -406,7 +407,7 @@ class IntelligentLazyLoader:
         """
         if data_key in self.data_proxies:
             logger.debug(f"Data key {data_key} already registered")
-            return self.data_proxies[data_key]
+            return cast(LazyHDF5Array, self.data_proxies[data_key])
 
         # Check memory pressure before registering large datasets
         if estimated_size_mb > 100:  # Large dataset
@@ -417,7 +418,7 @@ class IntelligentLazyLoader:
                 )
 
         proxy = LazyHDF5Array(data_key, hdf5_path, dataset_path, estimated_size_mb)
-        proxy._loader = self  # Set back-reference for access recording
+        proxy._loader = cast(Any, self)  # Set back-reference for access recording
 
         self.data_proxies[data_key] = proxy
         self.weak_refs[data_key] = proxy

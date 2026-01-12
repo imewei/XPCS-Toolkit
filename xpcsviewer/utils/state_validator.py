@@ -110,7 +110,7 @@ class LockFreeStateValidator:
         # Performance metrics
         self._validation_count = AtomicCounter()
         self._inconsistency_count = AtomicCounter()
-        self._performance_history = []
+        self._performance_history: list[float] = []
 
         # Background validation
         self._validation_active = False
@@ -285,9 +285,9 @@ class LockFreeStateValidator:
                         ).hexdigest()[:8]
 
             if hasattr(obj, "fit_summary") and obj.fit_summary is not None:
-                attributes["has_fit_summary"] = True
+                attributes["has_fit_summary"] = "True"
                 if isinstance(obj.fit_summary, dict):
-                    attributes["fit_keys"] = sorted(obj.fit_summary.keys())
+                    attributes["fit_keys"] = str(sorted(obj.fit_summary.keys()))
 
         except Exception as e:
             # Don't let attribute extraction failures break validation
@@ -415,7 +415,7 @@ class LockFreeStateValidator:
     def validate_all_objects(self) -> dict[str, Any]:
         """Validate consistency of all tracked objects."""
         start_time = time.time()
-        results = {
+        results: dict[str, Any] = {
             "total_objects": 0,
             "valid_objects": 0,
             "invalid_objects": 0,
@@ -518,7 +518,7 @@ class LockFreeStateValidator:
         total_validations = self._validation_count.get()
         total_inconsistencies = self._inconsistency_count.get()
 
-        stats = {
+        stats: dict[str, Any] = {
             "tracked_objects": len(
                 [obj for obj in self._tracked_objects if obj is not None]
             ),
@@ -642,7 +642,7 @@ class state_validation_context:
         self.obj = obj
         self.expected_final_state = expected_final_state
         self.initial_valid = False
-        self.initial_issues = []
+        self.initial_issues: list[str] = []
 
     def __enter__(self):
         # Validate initial state

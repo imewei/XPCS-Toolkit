@@ -40,7 +40,7 @@ class ValidationResult:
 
     is_valid: bool
     error_message: str | None = None
-    warnings: list[str] = None
+    warnings: list[str] | None = None
     validation_time: float = 0.0
     cached: bool = False
 
@@ -282,19 +282,20 @@ def validate_input(
     return decorator
 
 
-def _validate_type(value: Any, expected_type: type, param_name: str) -> bool:
-    """Validate parameter type with support for complex types."""
-    try:
-        # Handle Union types and generic types
-        if hasattr(expected_type, "__origin__"):
-            if expected_type.__origin__ is Union:
-                return any(isinstance(value, t) for t in expected_type.__args__)
-            # Handle other generic types as needed
-            return isinstance(value, expected_type.__origin__)
-        return isinstance(value, expected_type)
-    except Exception:
-        # If type checking fails, assume it's valid to avoid breaking functionality
-        return True
+def _validate_type(value: Any, expected_type: Any) -> bool:
+    """Validate type with support for generic aliases."""
+    if value is None:
+        return True  # None is often acceptable for optional types
+
+    # Handle Union types and generic types
+    if hasattr(expected_type, "__origin__"):
+        if expected_type.__origin__ is Union:
+            # Check if value matches any type in the Union
+            return any(_validate_type(value, t) for t in expected_type.__args__)
+        # Handle other generic types (e.g., List[int], Dict[str, Any])
+        # For now, just check against the origin type
+        return isinstance(value, expected_type.__origin__)
+    return isinstance(value, expected_type)
 
 
 def _validate_range(value: int | float | np.number, param_name: str) -> bool:
@@ -305,11 +306,11 @@ def _validate_range(value: int | float | np.number, param_name: str) -> bool:
 
     # Domain-specific range checks
     if "threshold" in param_name.lower() or "alpha" in param_name.lower():
-        return 0.0 <= value <= 1.0
+        return bool(0.0 <= value <= 1.0)
     if "q_" in param_name.lower() or param_name.lower().endswith("_q"):
-        return value > 0.0  # Q-values should be positive
+        return bool(value > 0.0)  # Q-values should be positive
     if "time" in param_name.lower() or "t_" in param_name.lower():
-        return value >= 0.0  # Time values should be non-negative
+        return bool(value >= 0.0)  # Time values should be non-negative
 
     return True  # Default: accept all finite values
 
@@ -318,8 +319,8 @@ def _validate_array(
     array: np.ndarray, param_name: str, level: ValidationLevel
 ) -> tuple[list[str], list[str]]:
     """Validate numpy array properties."""
-    errors = []
-    warnings = []
+    errors: list[str] = []
+    warnings: list[str] = []
 
     # Check for empty arrays
     if array.size == 0:
@@ -385,7 +386,7 @@ def _validate_values(
                 if min_val < 0:
                     warnings.append(f"Negative intensity values in '{param_name}'")
 
-    elif isinstance(value, (int, float, np.number)):
+    elif isinstance(value, (int, float, np.integer, np.floating)):
         if np.isnan(value):
             errors.append(f"Parameter '{param_name}' is NaN")
         elif np.isinf(value):

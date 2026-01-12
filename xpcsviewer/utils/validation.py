@@ -426,7 +426,7 @@ def validate_scientific_array(
 
 
 def validate_g2_data(
-    g2_array: np.ndarray, tau_array: np.ndarray = None
+    g2_array: np.ndarray, tau_array: np.ndarray | None = None
 ) -> ValidationResult:
     """
     Specialized validation for G2 correlation data.

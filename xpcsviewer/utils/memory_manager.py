@@ -12,7 +12,7 @@ import weakref
 from collections import OrderedDict
 from contextlib import contextmanager
 from enum import Enum
-from typing import Any
+from typing import Any, Callable
 
 import numpy as np
 import psutil
@@ -135,7 +135,7 @@ class UnifiedMemoryManager:
         self._object_registry: weakref.WeakSet[Any] = weakref.WeakSet()
 
         # Monitoring and statistics
-        self._stats = {
+        self._stats: dict[str, Any] = {
             "cache_hits": 0,
             "cache_misses": 0,
             "evictions": 0,
@@ -175,7 +175,7 @@ class UnifiedMemoryManager:
             return  # No eviction needed
 
         target_mb = partition_limit_mb * 0.7  # Leave 30% buffer
-        evicted_mb = 0
+        evicted_mb = 0.0
 
         # First pass: evict aged items
         aged_keys = []
@@ -197,7 +197,11 @@ class UnifiedMemoryManager:
             self._evict_lru(cache_type, target_mb - (current_mb - evicted_mb))
 
     def preload_data(
-        self, key: str, loader_func: callable, cache_type: CacheType, priority: int = 5
+        self,
+        key: str,
+        loader_func: Callable[[], Any],
+        cache_type: CacheType,
+        priority: int = 5,
     ):
         """
         Schedule data for intelligent preloading.

@@ -217,9 +217,9 @@ class SessionContextFilter(logging.Filter):
         Returns:
             True (always allows the record through)
         """
-        record.session_id = _session_id.get()  # type: ignore[attr-defined]
-        record.operation = _operation.get()  # type: ignore[attr-defined]
-        record.current_file = _current_file.get()  # type: ignore[attr-defined]
+        record.session_id = _session_id.get()
+        record.operation = _operation.get()
+        record.current_file = _current_file.get()
         return True
 
 
@@ -299,7 +299,7 @@ class RateLimitedLogger:
         """Internal logging method with rate limiting."""
         msg_key = self._get_message_key(msg)
         if self._try_consume(msg_key):
-            self._logger.log(level, msg, *args, **kwargs)
+            self._logger.log(level, msg, *args, **kwargs)  # type: ignore[arg-type]
             return True
         return False
 

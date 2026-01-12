@@ -431,7 +431,7 @@ class ParallelStartupManager:
         self, component_names: list[str], components: dict[str, ComponentInfo]
     ) -> list[tuple[int, list[str]]]:
         """Group components by priority level."""
-        priority_groups = {}
+        priority_groups: dict[int, list[str]] = {}
 
         for name in component_names:
             component = components[name]

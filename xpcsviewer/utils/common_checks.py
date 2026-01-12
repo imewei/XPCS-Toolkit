@@ -85,7 +85,7 @@ def safe_array_access(arr: Any, index: int | slice, default: Any = None) -> Any:
         return default
 
 
-def safe_dict_access(d: dict, key: str, default: Any = None) -> Any:
+def safe_dict_access(d: dict | None, key: str, default: Any = None) -> Any:
     """
     Safely access dictionary values with None checking.
 
