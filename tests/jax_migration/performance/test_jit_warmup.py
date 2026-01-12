@@ -24,13 +24,9 @@ except ImportError:
 class TestJITWarmup:
     """Tests for JIT compilation warmup behavior."""
 
-    def test_first_call_triggers_compilation(self) -> None:
+    def test_first_call_triggers_compilation(self, jax_backend_active) -> None:
         """Test first call triggers JIT compilation (slower)."""
-        from xpcsviewer.backends import get_backend
-
-        backend = get_backend()
-        if backend.name != "jax":
-            pytest.skip("JIT warmup only applies to JAX backend")
+        backend = jax_backend_active
 
         # Create test data
         x = backend.linspace(0, 10, 1000)
@@ -56,13 +52,9 @@ class TestJITWarmup:
         assert first_call_time > 0  # Basic sanity check
         assert second_call_time > 0
 
-    def test_jit_caches_compiled_function(self) -> None:
+    def test_jit_caches_compiled_function(self, jax_backend_active) -> None:
         """Test JIT caches compiled function for reuse."""
-        from xpcsviewer.backends import get_backend
-
-        backend = get_backend()
-        if backend.name != "jax":
-            pytest.skip("JIT caching only applies to JAX backend")
+        backend = jax_backend_active
 
         # Create test data
         x = backend.linspace(0, 10, 10000)
@@ -88,13 +80,9 @@ class TestJITWarmup:
         # (within 10x of each other for reasonable consistency)
         assert max(times) < 10 * min(times) + 0.001  # Add small epsilon
 
-    def test_jit_with_different_shapes_recompiles(self) -> None:
+    def test_jit_with_different_shapes_recompiles(self, jax_backend_active) -> None:
         """Test JIT recompiles for different input shapes."""
-        from xpcsviewer.backends import get_backend
-
-        backend = get_backend()
-        if backend.name != "jax":
-            pytest.skip("JIT shape handling only applies to JAX backend")
+        backend = jax_backend_active
 
         @backend.jit
         def simple_sum(x):
@@ -123,14 +111,9 @@ class TestQmapJITWarmup:
         # Function should exist
         assert callable(compute_transmission_qmap)
 
-    def test_qmap_first_call_compiles(self) -> None:
+    def test_qmap_first_call_compiles(self, jax_backend_active) -> None:
         """Test Q-map first call includes compilation."""
-        from xpcsviewer.backends import get_backend
         from xpcsviewer.simplemask.qmap import compute_transmission_qmap
-
-        backend = get_backend()
-        if backend.name != "jax":
-            pytest.skip("Q-map JIT only applies to JAX backend")
 
         # Parameters: energy (keV), center (row, col), shape, pixel_size (mm), distance (mm)
         energy = 10.0  # keV

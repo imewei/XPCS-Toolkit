@@ -57,6 +57,7 @@ bandit-report.json
 .nlsq_cache/
 .claude
 .ruff_cache/
+test-*/
 
 # Translations
 *.mo

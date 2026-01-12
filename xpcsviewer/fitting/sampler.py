@@ -100,8 +100,15 @@ def _run_mcmc(
 
     # Run sampling
     if init_params is not None:
-        # Convert init_params to JAX arrays
-        init_params_jax = {k: jnp.array(v) for k, v in init_params.items()}
+        # Convert init_params to JAX arrays and replicate for each chain
+        # NumPyro expects init_params shape (num_chains, ...) when num_chains > 1
+        init_params_jax = {}
+        for k, v in init_params.items():
+            val = jnp.array(v)
+            if config.num_chains > 1:
+                # Replicate the initial value for each chain
+                val = jnp.broadcast_to(val, (config.num_chains,) + val.shape)
+            init_params_jax[k] = val
         mcmc.run(rng_key, *model_args, init_params=init_params_jax)
     else:
         mcmc.run(rng_key, *model_args)

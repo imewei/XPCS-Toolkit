@@ -168,9 +168,6 @@ class TestPartitionWorkflow:
 class TestFittingWorkflow:
     """End-to-end tests for Bayesian fitting workflow."""
 
-    @pytest.mark.skip(
-        reason="ArviZ diagnostics require more samples than feasible for CI"
-    )
     def test_complete_bayesian_fitting_workflow(self, monkeypatch) -> None:
         """Test complete Bayesian fitting from data to diagnostics.
 
@@ -180,9 +177,6 @@ class TestFittingWorkflow:
         3. Run NUTS sampling
         4. Check convergence diagnostics
         5. Extract parameter estimates
-
-        Note: Skipped in CI due to ArviZ diagnostics requiring more samples.
-        The sampler tests in tests/jax_migration/fitting/ cover this functionality.
         """
         monkeypatch.setenv("XPCS_USE_JAX", "1")
         monkeypatch.setenv("JAX_PLATFORMS", "cpu")

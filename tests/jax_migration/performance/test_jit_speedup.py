@@ -23,13 +23,9 @@ except ImportError:
 class TestJITSpeedup:
     """Tests for JIT compilation speedup."""
 
-    def test_repeated_calls_faster_than_first(self) -> None:
+    def test_repeated_calls_faster_than_first(self, jax_backend_active) -> None:
         """Test repeated JIT calls are faster than first call."""
-        from xpcsviewer.backends import get_backend
-
-        backend = get_backend()
-        if backend.name != "jax":
-            pytest.skip("JIT speedup only applies to JAX backend")
+        backend = jax_backend_active
 
         # Create reasonably sized test data
         x = backend.linspace(0, 10, 10000)
@@ -62,14 +58,8 @@ class TestJITSpeedup:
         # All cached calls should be similar (low variance)
         assert max(cached_times) < 5 * avg_cached + 0.001
 
-    def test_jit_vs_non_jit_speedup(self) -> None:
+    def test_jit_vs_non_jit_speedup(self, jax_backend_active) -> None:
         """Test JIT version is faster than non-JIT for repeated calls."""
-        from xpcsviewer.backends import get_backend
-
-        backend = get_backend()
-        if backend.name != "jax":
-            pytest.skip("JIT vs non-JIT comparison only applies to JAX backend")
-
         import jax.numpy as jnp
 
         # Create test data
@@ -118,14 +108,9 @@ class TestJITSpeedup:
 class TestQmapJITSpeedup:
     """Tests for Q-map JIT speedup."""
 
-    def test_qmap_repeated_calls_stable(self) -> None:
+    def test_qmap_repeated_calls_stable(self, jax_backend_active) -> None:
         """Test Q-map repeated calls have stable performance."""
-        from xpcsviewer.backends import get_backend
         from xpcsviewer.simplemask.qmap import compute_transmission_qmap
-
-        backend = get_backend()
-        if backend.name != "jax":
-            pytest.skip("Q-map JIT speedup only applies to JAX backend")
 
         # Parameters: energy (keV), center (row, col), shape, pixel_size (mm), distance (mm)
         energy = 10.0  # keV
@@ -150,14 +135,9 @@ class TestQmapJITSpeedup:
         # Allow 3x variance as a reasonable bound
         assert max(times) < avg_time * 3 + 0.01
 
-    def test_partition_repeated_calls_stable(self) -> None:
+    def test_partition_repeated_calls_stable(self, jax_backend_active) -> None:
         """Test partition repeated calls have stable performance."""
-        from xpcsviewer.backends import get_backend
         from xpcsviewer.simplemask.utils import create_partition
-
-        backend = get_backend()
-        if backend.name != "jax":
-            pytest.skip("Partition JIT speedup only applies to JAX backend")
 
         # Create test Q-map
         np.random.seed(42)
@@ -184,15 +164,11 @@ class TestQmapJITSpeedup:
 class TestJITMemoryEfficiency:
     """Tests for JIT memory efficiency."""
 
-    def test_jit_does_not_leak_memory(self) -> None:
+    def test_jit_does_not_leak_memory(self, jax_backend_active) -> None:
         """Test JIT compilation doesn't leak memory on repeated calls."""
         import gc
 
-        from xpcsviewer.backends import get_backend
-
-        backend = get_backend()
-        if backend.name != "jax":
-            pytest.skip("JIT memory test only applies to JAX backend")
+        backend = jax_backend_active
 
         @backend.jit
         def compute(x):
