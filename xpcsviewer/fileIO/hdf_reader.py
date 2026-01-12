@@ -196,7 +196,7 @@ class HDF5ConnectionPool:
 
         # Health monitoring
         self._last_health_check = 0.0
-        self._unhealthy_files = set()
+        self._unhealthy_files: set[str] = set()
 
         # Read-ahead cache for batch operations
         self._read_cache: dict[str, dict[str, Any]] = {}
@@ -483,10 +483,8 @@ class HDF5ConnectionPool:
     def get_pool_stats(self) -> dict[str, Any]:
         """Get comprehensive pool statistics."""
         with self._pool_lock:
-            pool_info = {
-                "pool_size": len(self._pool),
-                "max_pool_size": self.max_pool_size,
-                "base_pool_size": self.base_pool_size,
+            pool_info: dict[str, Any] = {
+                "active_connections": len(self._pool),
                 "unhealthy_files": len(self._unhealthy_files),
                 "health_check_interval": self.health_check_interval,
                 "memory_adaptation_enabled": self.enable_memory_pressure_adaptation,

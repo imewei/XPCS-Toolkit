@@ -95,19 +95,21 @@ class IntelligentChunker:
         AccessPattern
             Detected access pattern
         """
-        if len(recent_accesses) < MIN_HISTORY_SAMPLES:
+        valid_accesses = [a for a in recent_accesses if a is not None]
+
+        if len(valid_accesses) < MIN_HISTORY_SAMPLES:
             return AccessPattern.RANDOM
 
         # Analyze for sequential pattern
-        if self._is_sequential_pattern(recent_accesses):
+        if self._is_sequential_pattern(valid_accesses):
             return AccessPattern.SEQUENTIAL
 
         # Analyze for block pattern
-        if self._is_block_pattern(recent_accesses):
+        if self._is_block_pattern(valid_accesses):
             return AccessPattern.BLOCK
 
         # Check for sparse pattern
-        if self._is_sparse_pattern(recent_accesses):
+        if self._is_sparse_pattern(valid_accesses):
             return AccessPattern.SPARSE
 
         return AccessPattern.RANDOM
@@ -206,10 +208,10 @@ class IntelligentChunker:
             if len(chunk_shape) > 1:
                 # Keep other dimensions, adjust first dimension
                 elements_per_row = np.prod(chunk_shape[1:])
-                rows_per_chunk = max(1, target_elements // elements_per_row)
+                rows_per_chunk = int(max(1, int(target_elements // elements_per_row)))
                 chunk_shape[0] = min(rows_per_chunk, dataset_shape[0])
             else:
-                chunk_shape[0] = min(target_elements, dataset_shape[0])
+                chunk_shape[0] = min(int(target_elements), dataset_shape[0])
 
         elif access_pattern == AccessPattern.BLOCK:
             # For block access, create balanced chunks
@@ -420,9 +422,8 @@ class ReadAheadCache:
         file_path: str,
         dataset_path: str,
         slice_info: tuple[slice, ...] | None,
-        data: np.ndarray,
+        data: np.ndarray | None,
     ):
-        """Cache data with intelligent eviction."""
         if data is None:
             return
 
@@ -502,11 +503,13 @@ class EnhancedHDF5Reader:
         self.memory_manager = get_memory_manager()
 
         # Connection management
-        self._connections = weakref.WeakValueDictionary()
+        self._connections: weakref.WeakValueDictionary[str, h5py.File] = (
+            weakref.WeakValueDictionary()
+        )
         self._connection_lock = threading.Lock()
 
         # Statistics
-        self.stats = {
+        self.stats: dict[str, Any] = {
             "reads": 0,
             "cache_hits": 0,
             "cache_misses": 0,
@@ -744,9 +747,9 @@ class EnhancedHDF5Reader:
             return {
                 "shape": dataset.shape,
                 "dtype": dataset.dtype,
-                "size_mb": np.prod(dataset.shape)
-                * dataset.dtype.itemsize
-                / (1024 * 1024),
+                "size_mb": float(
+                    np.prod(dataset.shape) * dataset.dtype.itemsize / (1024 * 1024)
+                ),
                 "chunks": dataset.chunks,
                 "compression": dataset.compression,
                 "compression_opts": dataset.compression_opts,

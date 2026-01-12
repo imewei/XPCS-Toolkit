@@ -162,7 +162,7 @@ class HDF5Facade:
                 )
             else:
                 # Skip validation - use dict
-                qmap = {
+                qmap_data = {
                     "sqmap": sqmap,
                     "dqmap": dqmap,
                     "phis": phis,
@@ -173,7 +173,7 @@ class HDF5Facade:
                     "partition_map": partition_map,
                 }
                 # Still create schema, just without validation
-                qmap = QMapSchema(**qmap)
+                qmap = QMapSchema(**qmap_data)
 
             logger.debug(f"Successfully read Q-map from {file_path}")
             return qmap
