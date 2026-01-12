@@ -78,7 +78,7 @@ class NumPyBackend:
 
     def meshgrid(self, *xi: np.ndarray, indexing: str = "xy") -> tuple[np.ndarray, ...]:
         """Create coordinate matrices from coordinate vectors."""
-        return tuple(np.meshgrid(*xi, indexing=indexing))
+        return tuple(np.meshgrid(*xi, indexing=indexing))  # type: ignore[call-overload]
 
     def zeros_like(self, x: np.ndarray, dtype: Any = None) -> np.ndarray:
         """Create zero-filled array with same shape as input."""
@@ -215,7 +215,7 @@ class NumPyBackend:
 
         Note: size parameter is ignored for NumPy (used by JAX for JIT).
         """
-        return np.unique(x, return_inverse=return_inverse)
+        return np.unique(x, return_inverse=return_inverse)  # type: ignore[call-overload]
 
     # =========================================================================
     # Boolean/Masking Functions

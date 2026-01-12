@@ -74,12 +74,12 @@ class BackendProtocol(Protocol):
     # =========================================================================
 
     @abstractmethod
-    def zeros(self, shape: tuple[int, ...], dtype: Any = None) -> ArrayType:
+    def zeros(self, shape: tuple[int, ...], dtype: Any = None) -> ArrayType:  # type: ignore[type-var]
         """Create array filled with zeros."""
         ...
 
     @abstractmethod
-    def ones(self, shape: tuple[int, ...], dtype: Any = None) -> ArrayType:
+    def ones(self, shape: tuple[int, ...], dtype: Any = None) -> ArrayType:  # type: ignore[type-var]
         """Create array filled with ones."""
         ...
 
@@ -90,17 +90,17 @@ class BackendProtocol(Protocol):
         stop: float | None = None,
         step: float = 1,
         dtype: Any = None,
-    ) -> ArrayType:
+    ) -> ArrayType:  # type: ignore[type-var]
         """Create array with evenly spaced values."""
         ...
 
     @abstractmethod
-    def linspace(self, start: float, stop: float, num: int) -> ArrayType:
+    def linspace(self, start: float, stop: float, num: int) -> ArrayType:  # type: ignore[type-var]
         """Create array with linearly spaced values."""
         ...
 
     @abstractmethod
-    def logspace(self, start: float, stop: float, num: int) -> ArrayType:
+    def logspace(self, start: float, stop: float, num: int) -> ArrayType:  # type: ignore[type-var]
         """Create array with logarithmically spaced values."""
         ...
 
@@ -122,12 +122,12 @@ class BackendProtocol(Protocol):
     @abstractmethod
     def full(
         self, shape: tuple[int, ...], fill_value: float, dtype: Any = None
-    ) -> ArrayType:
+    ) -> ArrayType:  # type: ignore[type-var]
         """Create array filled with specified value."""
         ...
 
     @abstractmethod
-    def array(self, data: Any, dtype: Any = None) -> ArrayType:
+    def array(self, data: Any, dtype: Any = None) -> ArrayType:  # type: ignore[type-var]
         """Create array from data."""
         ...
 
@@ -390,7 +390,7 @@ class BackendProtocol(Protocol):
         ...
 
     @abstractmethod
-    def from_numpy(self, x: np.ndarray) -> ArrayType:
+    def from_numpy(self, x: np.ndarray) -> ArrayType:  # type: ignore[type-var]
         """Convert NumPy ndarray to backend array."""
         ...
 

@@ -44,7 +44,7 @@ class DeviceConfig:
     allow_gpu_fallback: bool = True
     memory_fraction: float = 0.9
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Validate configuration values."""
         if not 0.0 < self.memory_fraction <= 1.0:
             raise ValueError(
@@ -115,7 +115,8 @@ class DeviceManager:
     """
 
     _instance: DeviceManager | None = None
-    _lock = threading.Lock()
+    _lock = threading.RLock()
+    _initialized: bool
 
     def __new__(cls) -> DeviceManager:
         """Create singleton instance."""
@@ -128,7 +129,7 @@ class DeviceManager:
                     cls._instance = instance
         return cls._instance
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize device manager (only runs once)."""
         if self._initialized:
             return

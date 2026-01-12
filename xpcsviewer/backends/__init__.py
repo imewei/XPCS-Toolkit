@@ -131,11 +131,11 @@ def set_backend(name: str) -> None:
         _configure_jax()
         from ._jax_backend import JAXBackend
 
-        _current_backend = JAXBackend()
+        _current_backend = JAXBackend()  # type: ignore[assignment]
     elif name == "numpy":
         from ._numpy_backend import NumPyBackend
 
-        _current_backend = NumPyBackend()
+        _current_backend = NumPyBackend()  # type: ignore[assignment]
     else:
         raise ValueError(f"Unknown backend: {name}. Use 'jax' or 'numpy'.")
 

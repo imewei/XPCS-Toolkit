@@ -13,6 +13,8 @@ import numpy as np
 if TYPE_CHECKING:
     from numpy.typing import ArrayLike
 
+    from xpcsviewer.backends import ensure_numpy
+
 
 def gaussian_filter(
     input_array: ArrayLike,
@@ -98,7 +100,9 @@ def _gaussian_filter_jax(
                 result, sigma[axis], axis, pad_mode, truncate
             )
 
-    return result
+    from xpcsviewer.backends import ensure_numpy
+
+    return ensure_numpy(result)
 
 
 def _gaussian_filter_1d_jax(
