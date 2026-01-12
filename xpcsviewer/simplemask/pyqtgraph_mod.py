@@ -164,15 +164,15 @@ class LineROI(pg.ROI):
         width: float,
         **args,
     ):
-        pos1 = pg.Point(pos1)
-        pos2 = pg.Point(pos2)
-        d = pos2 - pos1
+        p1 = pg.Point(pos1)
+        p2 = pg.Point(pos2)
+        d = p2 - p1
         length = d.length()
         ra = d.angle(pg.Point(1, 0), units="radians")
         c = pg.Point(width / 2.0 * np.sin(ra), -width / 2.0 * np.cos(ra))
-        pos1 = pos1 + c
+        p1 = p1 + c
 
         pg.ROI.__init__(
-            self, pos1, size=pg.Point(length, width), angle=np.rad2deg(ra), **args
+            self, p1, size=pg.Point(length, width), angle=np.rad2deg(ra), **args
         )
         self.addScaleRotateHandle([1, 0.5], [0, 0])

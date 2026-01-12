@@ -25,8 +25,10 @@ class ThreadingIntegrator:
         """Initialize with basic threading components."""
         self.main_window = main_window
 
+        from PySide6.QtCore import QThreadPool
+
         # Initialize basic components
-        self.worker_manager = WorkerManager()
+        self.worker_manager = WorkerManager(QThreadPool.globalInstance())
         self.progress_manager = ProgressManager(main_window)
 
         # Set up status bar if available

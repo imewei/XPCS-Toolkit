@@ -75,7 +75,9 @@ class AverageToolbox(QtCore.QRunnable):
 
         self.work_dir = work_dir
         self.signals = WorkerSignal()
-        self.kwargs = {}
+        from typing import Any
+
+        self.kwargs: dict[str, Any] = {}
         if jid is None:
             self.jid = uuid.uuid4()
         else:

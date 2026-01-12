@@ -17,12 +17,12 @@ from xpcsviewer.utils.logging_config import get_logger
 from ..fileIO.aps_8idi import key as key_map
 from ..fileIO.hdf_reader import _connection_pool
 
-key_map = key_map["nexus"]
+key_map_nexus = key_map["nexus"]
 logger = get_logger(__name__)
 
 # Global process pool for reuse
-_process_pool = None
-_pool_size = None
+_process_pool: ProcessPoolExecutor | None = None
+_pool_size: int | None = None
 _shared_arrays = {}
 
 
@@ -130,7 +130,7 @@ def cleanup_shared_arrays():
     _shared_arrays.clear()
 
 
-def read_single_c2_enhanced(args: tuple) -> tuple[np.ndarray, int, str]:
+def read_single_c2_enhanced(args: tuple) -> tuple[np.ndarray | None, int, str]:
     """
     Vectorized version of read_single_c2 with optimized matrix operations.
 
@@ -144,7 +144,7 @@ def read_single_c2_enhanced(args: tuple) -> tuple[np.ndarray, int, str]:
     progress_callback = args[4] if len(args) > 4 else None
 
     try:
-        c2_prefix = key_map["c2_prefix"]
+        c2_prefix = key_map_nexus["c2_prefix"]
 
         if progress_callback:
             progress_callback(f"Reading {index_str}")
@@ -282,7 +282,7 @@ def read_single_c2(args):
     if len(args) == 4:
         # Legacy mode: open file each time
         full_path, index_str, max_size, correct_diag = args
-        c2_prefix = key_map["c2_prefix"]
+        c2_prefix = key_map_nexus["c2_prefix"]
         with _connection_pool.get_connection(full_path, "r") as f:
             c2_half = f[f"{c2_prefix}/{index_str}"][()]
             c2 = _reconstruct_c2_matrix_vectorized(c2_half)
@@ -294,7 +294,7 @@ def read_single_c2(args):
         # Optimized mode: reuse file handle
         # Handle both 5+ args (new) and other arg counts
         f, index_str, max_size, correct_diag = args[:4]
-        c2_prefix = key_map["c2_prefix"]
+        c2_prefix = key_map_nexus["c2_prefix"]
         c2_half = f[f"{c2_prefix}/{index_str}"][()]
         c2 = _reconstruct_c2_matrix_vectorized(c2_half)
         sampling_rate = 1
@@ -318,7 +318,7 @@ def get_all_c2_from_hdf(
 ):
     # t0 = time.perf_counter()
     idx_toload = []
-    c2_prefix = key_map["c2_prefix"]
+    c2_prefix = key_map_nexus["c2_prefix"]
 
     # Use connection pool for single file handle across all operations
     with _connection_pool.get_connection(full_path, "r") as f:
@@ -389,7 +389,7 @@ def get_all_c2_from_hdf_enhanced(
         progress_callback(0, 100, "Scanning HDF5 file structure")
 
     idx_toload = []
-    c2_prefix = key_map["c2_prefix"]
+    c2_prefix = key_map_nexus["c2_prefix"]
 
     try:
         with h5py.File(full_path, "r") as f:
@@ -504,7 +504,7 @@ def get_all_c2_from_hdf_enhanced(
 def get_single_c2_from_hdf(
     full_path, selection=0, max_size=512, t0=1, correct_diag=True
 ):
-    c2_prefix = key_map["c2_prefix"]
+    c2_prefix = key_map_nexus["c2_prefix"]
 
     # Use connection pool and batch operations
     with _connection_pool.get_connection(full_path, "r") as f:
@@ -541,9 +541,9 @@ def get_single_c2_from_hdf(
 @lru_cache(maxsize=16)
 def get_c2_g2partials_from_hdf(full_path):
     # t0 = time.perf_counter()
-    c2_prefix = key_map["c2_prefix"]
-    g2_full_key = key_map["c2_g2"]  # Dataset {5000, 25}
-    g2_partial_key = key_map["c2_g2_segments"]  # Dataset {1000, 5, 25}
+    c2_prefix = key_map_nexus["c2_prefix"]
+    g2_full_key = key_map_nexus["c2_g2"]  # Dataset {5000, 25}
+    g2_partial_key = key_map_nexus["c2_g2_segments"]  # Dataset {1000, 5, 25}
 
     # Use connection pool for optimization
     with _connection_pool.get_connection(full_path, "r") as f:
@@ -564,7 +564,7 @@ def get_c2_g2partials_from_hdf(full_path):
 
 def get_c2_stream(full_path, max_size=-1):
     """Returns (idxlist, generator) where the generator yields C2 streams."""
-    c2_prefix = key_map["c2_prefix"]
+    c2_prefix = key_map_nexus["c2_prefix"]
 
     # Use connection pool for reading the index list
     with _connection_pool.get_connection(full_path, "r") as f:

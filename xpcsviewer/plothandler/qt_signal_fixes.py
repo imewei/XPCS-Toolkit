@@ -111,7 +111,7 @@ class QtConnectionFixer:
     @staticmethod
     def validate_signal_connection(
         signal: Any,
-        slot: Callable,
+        slot: Any,
         connection_type: Qt.ConnectionType = Qt.ConnectionType.AutoConnection,
     ) -> bool:
         """

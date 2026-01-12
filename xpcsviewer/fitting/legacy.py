@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor, as_completed
-from typing import Any
+from typing import TYPE_CHECKING, Any, cast
 
 import numpy as np
 from nlsq import curve_fit
@@ -116,13 +116,11 @@ def fit_with_fixed(
     sigma = ensure_numpy(sigma)
     fit_x = ensure_numpy(fit_x)
 
-    if not isinstance(fit_flag, np.ndarray):
-        fit_flag = np.array(fit_flag)
+    fit_flag = np.asarray(fit_flag)
 
     fix_flag = np.logical_not(fit_flag)
 
-    if not isinstance(bounds, np.ndarray):
-        bounds = np.array(bounds)
+    bounds = np.asarray(bounds)
 
     num_args = len(fit_flag)
 
@@ -238,13 +236,9 @@ def fit_with_fixed_parallel(
     sigma = ensure_numpy(sigma)
     fit_x = ensure_numpy(fit_x)
 
-    if not isinstance(fit_flag, np.ndarray):
-        fit_flag = np.array(fit_flag)
-
+    fit_flag = np.asarray(fit_flag)
     fix_flag = np.logical_not(fit_flag)
-
-    if not isinstance(bounds, np.ndarray):
-        bounds = np.array(bounds)
+    bounds = np.asarray(bounds)
 
     num_args = len(fit_flag)
     num_qvals = y.shape[1]
@@ -356,7 +350,6 @@ def sequential_fitting(
             stability="auto",
             **safe_kwargs,
         )
-        # Handle both CurveFitResult and tuple returns
         if hasattr(result, "popt"):
             popt, pcov = np.asarray(result.popt), np.asarray(result.pcov)
         else:
@@ -400,13 +393,9 @@ def fit_with_fixed_sequential(
     sigma = ensure_numpy(sigma)
     fit_x = ensure_numpy(fit_x)
 
-    if not isinstance(fit_flag, np.ndarray):
-        fit_flag = np.array(fit_flag)
-
+    fit_flag = np.asarray(fit_flag)
     fix_flag = np.logical_not(fit_flag)
-
-    if not isinstance(bounds, np.ndarray):
-        bounds = np.array(bounds)
+    bounds = np.asarray(bounds)
 
     num_args = len(fit_flag)
     bounds_fit = bounds[:, fit_flag]
@@ -517,7 +506,7 @@ def vectorized_parameter_estimation(
             maxfev=5000,
         )
         if hasattr(result, "popt"):
-            popt = result.popt
+            popt = cast(Any, result).popt
         else:
             popt = result[0]
         return tuple(popt)

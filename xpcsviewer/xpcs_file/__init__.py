@@ -62,8 +62,7 @@ try:
     _xpcs_module = _lazy_import_xpcs_file()
     XpcsFile = _xpcs_module.XpcsFile
 except (ImportError, AttributeError):
-    # Fallback: module not yet available (during initial package setup)
-    XpcsFile = None  # type: ignore
+    HDF5_AVAILABLE = False
 
 
 __all__ = [

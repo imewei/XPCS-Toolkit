@@ -118,13 +118,15 @@ class BaseAsyncWorker(QRunnable):
         self.signals = WorkerSignals()
         self.worker_id = worker_id or f"worker_{id(self)}"
         self._is_cancelled = False
-        self._start_time = None
+        self._start_time: float | None = None
 
         # Performance optimization: Progress emission caching and rate limiting
         self._last_progress_time = 0.0
         self._last_eta_calculation_time = 0.0
         self._cached_eta = 0.0
-        self._cached_progress_data = None  # (current, total, message)
+        self._cached_progress_data: tuple[int, int, str] | None = (
+            None  # (current, total, message)
+        )
         self._progress_emission_interval = 0.1  # Max 10 emissions per second
         self._eta_calculation_interval = 0.1  # Recalculate ETA every 100ms
 
@@ -392,7 +394,7 @@ class DataLoadWorker(BaseAsyncWorker):
         self.load_func = load_func
         self.file_paths = file_paths
         self.load_kwargs = load_kwargs or {}
-        self.loaded_data = []
+        self.loaded_data: list[Any] = []
 
     def do_work(self) -> list:
         """Load data from multiple files with progress reporting."""
@@ -490,9 +492,12 @@ class WorkerManager(QObject):
     def __init__(self, thread_pool: QtCore.QThreadPool):
         super().__init__()
         self.thread_pool = thread_pool
-        self.active_workers = {}  # worker_id -> worker
-        self.worker_results = {}  # worker_id -> result
-        self.worker_errors = {}  # worker_id -> (error_msg, traceback)
+        self.thread_pool = thread_pool
+        self.active_workers: dict[str, BaseAsyncWorker] = {}  # worker_id -> worker
+        self.worker_results: dict[str, Any] = {}  # worker_id -> result
+        self.worker_errors: dict[
+            str, tuple[str, str]
+        ] = {}  # worker_id -> (error_msg, traceback)
 
         # Register for optimized cleanup
         try:

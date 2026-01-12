@@ -250,8 +250,8 @@ class MaskThreshold(MaskBase):
             return
 
         backend = get_backend()
-        data = backend.array(saxs_lin)
-        mask = backend.ones_like(data, dtype=bool)
+        data: Any = backend.array(saxs_lin)
+        mask: Any = backend.ones_like(data, dtype=bool)
 
         if low_enable:
             mask = mask * (data >= low)
@@ -295,10 +295,10 @@ class MaskParameter(MaskBase):
             return
 
         backend = get_backend()
-        mask = backend.ones(self.shape, dtype=bool)
+        mask: Any = backend.ones(self.shape, dtype=bool)
 
         for xmap_name, logic, unit, vbeg, vend in constraints:
-            xmap = backend.array(qmap[xmap_name])
+            xmap: Any = backend.array(qmap[xmap_name])
             # Handle periodicity of angular coordinates
             if xmap_name in ["phi", "chi", "alpha"] and unit == "deg":
                 xmap = backend.copy(xmap)

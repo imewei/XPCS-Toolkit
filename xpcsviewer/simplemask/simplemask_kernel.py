@@ -610,8 +610,6 @@ class SimpleMaskKernel:
         if bcx is None or bcy is None:
             return (None, None)
 
-        if mode == "xy":
-            return (bcx, bcy)
         if mode == "vh":
             return (bcy, bcx)
         return (bcx, bcy)

@@ -298,7 +298,7 @@ def create_twotime_plot_matplotlib(
         cmap="jet",
         aspect="equal",
         origin="lower",
-        extent=extent,
+        extent=tuple(extent),
         vmin=vmin,
         vmax=vmax,
     )
