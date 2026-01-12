@@ -8,6 +8,7 @@ for XPCS data analysis workflows, enabling proactive memory management.
 import time
 from collections import deque
 from dataclasses import dataclass
+from typing import Any
 
 import numpy as np
 import psutil
@@ -413,7 +414,7 @@ class XPCSMemoryPredictor:
 
         self.memory_history.append(memory_snapshot)
 
-    def get_prediction_summary(self) -> dict[str, any]:
+    def get_prediction_summary(self) -> dict[str, Any]:
         """Get a summary of current memory predictions and trends."""
         trends = self.detect_memory_trends()
         cleanup_needed, cleanup_reasons = self.check_proactive_cleanup_needed()

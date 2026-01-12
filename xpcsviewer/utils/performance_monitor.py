@@ -22,7 +22,7 @@ import numpy as np
 import psutil
 
 from .logging_config import get_logger
-from .memory_manager import get_memory_manager
+from .memory_manager import CacheType, get_memory_manager
 
 logger = get_logger(__name__)
 
@@ -88,12 +88,13 @@ class PerformanceProfiler:
         self.metadata = metadata or {}
 
         # Metrics tracking
-        self.start_time = None
-        self.end_time = None
-        self.memory_before_mb = None
-        self.memory_after_mb = None
-        self.memory_peak_mb = None
-        self.cpu_percent = None
+        # Metrics tracking
+        self.start_time: float = 0.0
+        self.end_time: float = 0.0
+        self.memory_before_mb: float = 0.0
+        self.memory_after_mb: float = 0.0
+        self.memory_peak_mb: float = 0.0
+        self.cpu_percent: float = 0.0
         self.success = True
         self.error_message = ""
 
@@ -255,13 +256,13 @@ class PerformanceMonitor:
         # Convert metrics to serializable format
         serializable_stats = self._make_serializable(stats)
 
-        filepath = Path(filepath)
-        filepath.parent.mkdir(parents=True, exist_ok=True)
+        file_path = Path(filepath)
+        file_path.parent.mkdir(parents=True, exist_ok=True)
 
-        with open(filepath, "w") as f:
+        with open(file_path, "w") as f:
             json.dump(serializable_stats, f, indent=2)
 
-        logger.info(f"Performance metrics exported to {filepath}")
+        logger.info(f"Performance metrics exported to {file_path}")
 
     def clear_history(self):
         """Clear performance metrics history."""
@@ -416,8 +417,8 @@ class XPCSBenchmarkSuite:
             # Cache operations
             for i in range(100):
                 cache_key = f"test_data_{i}"
-                memory_manager.cache_put(cache_key, test_data, "array_data")
-                retrieved = memory_manager.cache_get(cache_key, "array_data")
+                memory_manager.cache_put(cache_key, test_data, CacheType.ARRAY_DATA)
+                retrieved = memory_manager.cache_get(cache_key, CacheType.ARRAY_DATA)
                 assert retrieved is not None
 
         # Test memory pressure detection
@@ -687,7 +688,7 @@ class XPCSBenchmarkSuite:
         for metric in metrics:
             operation_groups[metric.operation_name].append(metric)
 
-        summary = {
+        summary: dict[str, Any] = {
             "total_operations": len(operation_groups),
             "total_metrics": len(metrics),
             "overall_success_rate": sum(1 for m in metrics if m.success) / len(metrics),

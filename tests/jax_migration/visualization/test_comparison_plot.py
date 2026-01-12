@@ -37,8 +37,8 @@ def mock_nlsq_result():
 
     return NLSQResult(
         params=params,
-        covariance=covariance,
-        residuals=residuals,
+        _covariance=covariance,
+        _residuals=residuals,
         chi_squared=1.2,
         converged=True,
         pcov_valid=True,

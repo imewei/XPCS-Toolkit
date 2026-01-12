@@ -452,7 +452,7 @@ class HealthMonitor:
     def get_health_summary(self) -> dict[str, Any]:
         """Get comprehensive health summary."""
         with self._lock:
-            summary = {
+            summary: dict[str, Any] = {
                 "overall_status": self._get_overall_status().value,
                 "monitoring_active": self._monitoring_active,
                 "metrics": {},
@@ -597,7 +597,7 @@ class health_monitoring_context:
     def __init__(self, operation_name: str, alert_on_warning: bool = True):
         self.operation_name = operation_name
         self.alert_on_warning = alert_on_warning
-        self.start_metrics = {}
+        self.start_metrics: dict[str, float] = {}
 
     def __enter__(self):
         # Capture initial metrics

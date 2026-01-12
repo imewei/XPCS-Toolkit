@@ -12,13 +12,31 @@ import h5py
 import numpy as np
 from numpy.typing import NDArray
 from PySide6.QtCore import Signal
-from PySide6.QtWidgets import QFileDialog, QMainWindow, QMessageBox
+from PySide6.QtGui import QAction
+from PySide6.QtWidgets import (
+    QButtonGroup,
+    QDoubleSpinBox,
+    QFileDialog,
+    QLabel,
+    QMainWindow,
+    QMenu,
+    QMessageBox,
+    QPushButton,
+    QSpinBox,
+    QSplitter,
+    QStatusBar,
+    QToolBar,
+    QToolButton,
+    QVBoxLayout,
+    QWidget,
+)
 
 from xpcsviewer.simplemask.drawing_tools import (
     DRAWING_TOOLS,
     ERASER_TOOL,
     get_tool_color,
 )
+from xpcsviewer.simplemask.pyqtgraph_mod import ImageViewROI
 from xpcsviewer.simplemask.simplemask_kernel import SimpleMaskKernel
 from xpcsviewer.simplemask.ui.simplemask_ui import setup_ui
 
@@ -38,6 +56,58 @@ class SimpleMaskWindow(QMainWindow):
 
     mask_exported = Signal(np.ndarray)
     qmap_exported = Signal(dict)
+
+    # UI Components (injected by setup_ui)
+    status_bar: QStatusBar
+    image_view: ImageViewROI
+    info_label: QLabel
+    tool_buttons: dict[str, QToolButton]
+    tool_button_group: QButtonGroup
+    tool_actions: dict[str, QAction]
+    toolbar: QToolBar
+    splitter: QSplitter
+    left_panel: QWidget
+    right_panel: QWidget
+    right_layout: QVBoxLayout
+    file_menu: QMenu
+
+    # Buttons
+    btn_eraser: QToolButton
+    btn_apply_drawing: QPushButton
+    btn_undo: QPushButton
+    btn_redo: QPushButton
+    btn_reset: QPushButton
+    btn_toggle_mask: QPushButton
+    btn_generate_qmap: QPushButton
+    btn_toggle_qmap: QPushButton
+    btn_compute_partition: QPushButton
+    btn_toggle_partition: QPushButton
+    btn_export_partition: QPushButton
+
+    # SpinBoxes
+    spin_bcx: QDoubleSpinBox
+    spin_bcy: QDoubleSpinBox
+    spin_det_dist: QDoubleSpinBox
+    spin_pix_dim: QDoubleSpinBox
+    spin_energy: QDoubleSpinBox
+    spin_dq_num: QSpinBox
+    spin_sq_num: QSpinBox
+    spin_dp_num: QSpinBox
+    spin_sp_num: QSpinBox
+
+    # Actions
+    action_eraser: QAction
+    action_apply: QAction
+    action_undo: QAction
+    action_redo: QAction
+    action_apply_viewer: QAction
+    action_generate_qmap: QAction
+    action_toggle_qmap: QAction
+    action_toggle_mask: QAction
+    action_save_mask: QAction
+    action_load_mask: QAction
+    action_apply_to_viewer: QAction
+    action_close: QAction
 
     def __init__(self, parent_viewer: Any = None):
         """Initialize SimpleMask window.
@@ -441,13 +511,20 @@ class SimpleMaskWindow(QMainWindow):
 
         # Initialize mask_kernel if this is the first successful Q-map computation
         # (happens when initial load failed due to missing geometry)
-        if self.kernel.mask_kernel is None and self.kernel.detector_image is not None:
+        # Initialize mask_kernel if this is the first successful Q-map computation
+        # (happens when initial load failed due to missing geometry)
+        if (
+            self.kernel.mask_kernel is None
+            and self.kernel.detector_image is not None
+            and self.kernel.shape is not None
+        ):
             from xpcsviewer.simplemask.area_mask import MaskAssemble
 
             self.kernel.mask_kernel = MaskAssemble(
                 self.kernel.shape, self.kernel.detector_image
             )
-            self.kernel.mask_kernel.update_qmap(self.kernel.qmap)
+            if self.kernel.qmap is not None:
+                self.kernel.mask_kernel.update_qmap(self.kernel.qmap)
             logger.info("Initialized mask kernel after successful Q-map generation")
 
         if qmap is not None and "q" in qmap:

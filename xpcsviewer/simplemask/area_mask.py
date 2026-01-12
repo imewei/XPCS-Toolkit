@@ -79,6 +79,10 @@ class MaskBase:
         self.mtype = "base"
         self.qrings: list = []
 
+    def evaluate(self, **kwargs: Any) -> None:
+        """Evaluate mask (base method)."""
+        pass
+
     def describe(self) -> str:
         """Return description of mask statistics."""
         if self.zero_loc is None:
@@ -116,7 +120,7 @@ class MaskBase:
                 mask = self.get_mask()
             else:
                 mask[tuple(self.zero_loc)] = 0
-        return mask
+        return mask if mask is not None else self.get_mask()
 
 
 class MaskList(MaskBase):
@@ -134,11 +138,18 @@ class MaskList(MaskBase):
             row: Row index
             col: Column index
         """
-        self.zero_loc = np.append(
-            self.zero_loc, np.array([row, col]).reshape(2, 1), axis=1
-        )
+        if self.zero_loc is None:
+            self.zero_loc = np.array([[row], [col]])
+        else:
+            self.zero_loc = np.append(
+                self.zero_loc, np.array([row, col]).reshape(2, 1), axis=1
+            )
 
-    def evaluate(self, zero_loc: np.ndarray | None = None) -> None:
+    def evaluate(
+        self,
+        zero_loc: np.ndarray | None = None,
+        **kwargs: Any,
+    ) -> None:
         """Set the mask from a coordinate array.
 
         Args:
@@ -159,7 +170,12 @@ class MaskFile(MaskBase):
         super().__init__(shape=shape)
         self.mtype = "file"
 
-    def evaluate(self, fname: str | None = None, key: str | None = None) -> None:
+    def evaluate(
+        self,
+        fname: str | None = None,
+        key: str | None = None,
+        **kwargs: Any,
+    ) -> None:
         """Load mask from an HDF5 file.
 
         Args:
@@ -216,6 +232,7 @@ class MaskThreshold(MaskBase):
         high: float = 1e8,
         low_enable: bool = True,
         high_enable: bool = True,
+        **kwargs: Any,
     ) -> None:
         """Create mask based on intensity thresholds.
 
@@ -259,6 +276,7 @@ class MaskParameter(MaskBase):
         self,
         qmap: dict[str, np.ndarray] | None = None,
         constraints: list[tuple[str, str, str, float, float]] | None = None,
+        **kwargs: Any,
     ) -> None:
         """Create mask based on Q-map constraints.
 
@@ -307,7 +325,7 @@ class MaskArray(MaskBase):
         super().__init__(shape=shape)
         self.mtype = "array"
 
-    def evaluate(self, arr: np.ndarray | None = None) -> None:
+    def evaluate(self, arr: np.ndarray | None = None, **kwargs: Any) -> None:
         """Set mask from an array.
 
         Args:
@@ -333,7 +351,7 @@ class MaskAssemble:
             saxs_lin: 2D intensity array for threshold masking
             qmap: Q-map dictionary for parameter masking
         """
-        self.workers = {
+        self.workers: dict[str, Any] = {
             "mask_blemish": MaskFile(shape),
             "mask_file": MaskFile(shape),
             "mask_threshold": MaskThreshold(shape),

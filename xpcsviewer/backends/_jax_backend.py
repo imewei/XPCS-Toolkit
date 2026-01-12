@@ -16,8 +16,8 @@ if TYPE_CHECKING:
     import jax.numpy as jnp
 
 # Import JAX lazily to allow fallback when not installed
-_jax = None
-_jnp = None
+_jax: Any = None
+_jnp: Any = None
 
 
 def _ensure_jax():

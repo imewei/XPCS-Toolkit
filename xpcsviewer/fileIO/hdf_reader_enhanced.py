@@ -76,7 +76,7 @@ class IntelligentChunker:
         self,
         file_path: str,
         dataset_path: str,
-        recent_accesses: list[tuple[slice, ...]],
+        recent_accesses: list[tuple[slice, ...] | None],
     ) -> AccessPattern:
         """
         Analyze access pattern from recent slice requests.
@@ -250,8 +250,10 @@ class ReadAheadCache:
     def __init__(self, max_cache_mb: float = 200.0):
         self.max_cache_mb = max_cache_mb
         self.cache: OrderedDict[str, CacheEntry] = OrderedDict()
-        self.access_patterns = defaultdict(deque)
-        self.prediction_history = defaultdict(list)
+        self.access_patterns: dict[
+            str, deque[tuple[float, tuple[slice, ...] | None]]
+        ] = defaultdict(deque)
+        self.prediction_history: dict[str, list[Any]] = defaultdict(list)
         self._lock = threading.RLock()
         self.memory_manager = get_memory_manager()
 
@@ -287,7 +289,7 @@ class ReadAheadCache:
             Predicted next slice accesses
         """
         key = f"{file_path}:{dataset_path}"
-        predictions = []
+        predictions: list[tuple[slice, ...]] = []
 
         with self._lock:
             if (
@@ -307,7 +309,7 @@ class ReadAheadCache:
         return predictions[:3]  # Limit to 3 predictions
 
     def _is_sequential_access(
-        self, accesses: list[tuple[float, tuple[slice, ...]]]
+        self, accesses: list[tuple[float, tuple[slice, ...] | None]]
     ) -> bool:
         """Check if recent accesses show sequential pattern."""
         if len(accesses) < MIN_HISTORY_SAMPLES:
@@ -326,7 +328,7 @@ class ReadAheadCache:
         return all(d > 0 for d in diffs) and np.std(diffs) < np.mean(diffs) * 0.5
 
     def _is_sliding_window(
-        self, accesses: list[tuple[float, tuple[slice, ...]]]
+        self, accesses: list[tuple[float, tuple[slice, ...] | None]]
     ) -> bool:
         """Check if accesses show sliding window pattern."""
         if len(accesses) < MIN_HISTORY_SAMPLES:

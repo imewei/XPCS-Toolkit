@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import logging
 from functools import lru_cache
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Callable
 
 import numpy as np
 
@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 E2KCONST = 12.39841984
 
 # JIT cache for compiled functions (JAX arrays are not hashable for lru_cache)
-_JIT_CACHE: dict[str, callable] = {}
+_JIT_CACHE: dict[str, Callable] = {}
 
 
 def _validate_geometry_metadata(metadata: dict, required_keys: tuple[str, ...]) -> None:
@@ -168,7 +168,7 @@ def compute_q_at_pixel(
     energy: float,
     pix_dim: float,
     det_dist: float,
-) -> float:
+) -> float | Any:
     """Compute Q value at a single pixel (differentiable).
 
     This function is differentiable with respect to center_x, center_y,
@@ -224,7 +224,7 @@ def compute_q_sum_squared(
     energy: float,
     pix_dim: float,
     det_dist: float,
-) -> float:
+) -> float | Any:
     """Compute sum of squared Q values at given pixels (differentiable).
 
     This function is useful for gradient-based calibration objectives.
@@ -250,7 +250,7 @@ def compute_q_sum_squared(
         # Wavevector magnitude
         k0 = 2 * jnp.pi / (E2KCONST / energy)
 
-        q_sum_sq = 0.0
+        q_sum_sq: Any = 0.0
         for px, py in pixel_positions:
             dx = px - center_x
             dy = py - center_y
@@ -264,11 +264,11 @@ def compute_q_sum_squared(
         # NumPy fallback
         total = 0.0
         for px, py in pixel_positions:
-            q = compute_q_at_pixel(
+            q_val: Any = compute_q_at_pixel(
                 center_x, center_y, px, py, energy, pix_dim, det_dist
             )
-            total += q**2
-        return total
+            total += q_val**2
+        return float(total)
 
 
 def create_q_objective(
@@ -276,7 +276,7 @@ def create_q_objective(
     pixel_positions: list[tuple[float, float]],
     energy: float,
     pix_dim: float,
-) -> callable:
+) -> Callable:
     """Create a differentiable objective function for Q-map calibration.
 
     Creates an objective function that measures the squared difference
@@ -482,7 +482,7 @@ def _compute_reflection_qmap_backend(
     phi = backend.arctan2(vg, hg)
     tth_full = backend.arctan(r / det_dist)
 
-    alpha_i = backend.deg2rad(backend.array(alpha_i_deg))
+    alpha_i: Any = backend.deg2rad(backend.array(alpha_i_deg))
     alpha_f = backend.arctan(vg * pix_dim / det_dist) - alpha_i
     tth = backend.arctan(hg * pix_dim / det_dist)
 

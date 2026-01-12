@@ -318,7 +318,12 @@ class NLSQResult:
     def confidence_intervals(self) -> dict[str, tuple[float, float]]:
         """Parameter confidence intervals at 95% level."""
         if self.native_result is not None:
-            return self.native_result.confidence_intervals
+            # Cast to dict in case it's a method or other type in strict mypy
+            from typing import cast
+
+            return cast(
+                dict[str, tuple[float, float]], self.native_result.confidence_intervals
+            )
         return self._confidence_intervals
 
     @confidence_intervals.setter
@@ -339,7 +344,7 @@ class NLSQResult:
     def is_healthy(self) -> bool:
         """Whether the fit passes all health checks."""
         if self.diagnostics is not None:
-            return self.diagnostics.status == "healthy"
+            return str(self.diagnostics.status) == "healthy"
         return True  # Default to healthy when no diagnostics
 
     # T033: health_score property
@@ -347,7 +352,7 @@ class NLSQResult:
     def health_score(self) -> int:
         """Health score (0-100)."""
         if self.diagnostics is not None:
-            return self.diagnostics.health_score
+            return int(self.diagnostics.health_score)
         return 100  # Default to perfect health when no diagnostics
 
     # T034: condition_number property

@@ -10,7 +10,7 @@ Implements T066 for US4 (Gradient-Based Calibration).
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Callable
 
 import numpy as np
 
@@ -175,7 +175,7 @@ def create_calibration_objective(
     pixel_positions: list[tuple[float, float]],
     pix_dim: float,
     k0: float,
-) -> callable:
+) -> Callable:
     """Create a differentiable objective function for geometry calibration.
 
     The objective measures how well predicted Q-values match target Q-values
@@ -222,7 +222,7 @@ def create_calibration_objective(
 
 
 def minimize_with_grad(
-    objective: callable,
+    objective: Callable,
     initial_params: NDArray[np.floating],
     max_iterations: int = 500,
     tolerance: float = 1e-8,

@@ -43,7 +43,7 @@ def double_exp(
 ) -> NDArray[np.floating[Any]]:
     """Double exponential model for G2 correlation function."""
     b = get_backend()
-    xa = b.array(x)
+    xa: Any = b.array(x)
     return ensure_numpy(
         cts1 * b.exp(-2 * xa / tau1) + cts2 * b.exp(-2 * xa / tau2) + bkg
     )
@@ -68,7 +68,7 @@ def double_exp_all(
 ) -> NDArray[np.floating[Any]]:
     """Double exponential with all parameters."""
     b = get_backend()
-    xa = b.array(x)
+    xa: Any = b.array(x)
     return ensure_numpy(a * b.exp(-2 * xa / b_) + c * b.exp(-2 * xa / d) + e + f)
 
 
@@ -186,7 +186,9 @@ def fit_with_fixed(
 
 def _fit_single_qvalue(
     args: tuple[Any, ...],
-) -> tuple[int, NDArray[np.floating[Any]], NDArray[np.floating[Any]], bool]:
+) -> tuple[
+    int, NDArray[np.floating[Any]] | None, NDArray[np.floating[Any]] | None, bool
+]:
     """Worker function for parallel fitting of a single q-value."""
     col_idx, x, y_col, sigma_col, wrapper_func, p0, bounds_fit = args
 
@@ -308,7 +310,10 @@ def fit_with_fixed_parallel(
         }
 
         for future in as_completed(line_futures):
-            n, line_data = future.result()
+            from typing import cast
+
+            result_tuple = cast(tuple[int, NDArray[np.floating[Any]]], future.result())
+            n, line_data = result_tuple
             fit_line[n] = line_data
 
     logger.info(f"Parallel G2 fitting completed for {num_qvals} q-values")
@@ -337,7 +342,9 @@ def sequential_fitting(
     safe_kwargs = {k: v for k, v in kwargs.items() if k not in ["max_nfev", "maxfev"]}
 
     try:
-        result = curve_fit(
+        from typing import Any
+
+        result: Any = curve_fit(
             func,
             x,
             y,
@@ -446,7 +453,7 @@ def fit_with_fixed_sequential(
     for n in range(y.shape[1]):
         fit_line[n] = ensure_numpy(base_func(fit_x, *fit_val[n, 0, :]))
 
-    method_counts = {}
+    method_counts: dict[str, int] = {}
     for method in fit_methods:
         method_counts[method] = method_counts.get(method, 0) + 1
     logger.info(f"Fitting methods used: {method_counts}")
@@ -464,7 +471,12 @@ def robust_curve_fit(
     x = ensure_numpy(x)
     y = ensure_numpy(y)
     try:
-        return curve_fit(func, x, y, **kwargs)
+        from typing import Any
+
+        result: Any = curve_fit(func, x, y, **kwargs)
+        if hasattr(result, "popt"):
+            return np.asarray(result.popt), np.asarray(result.pcov)
+        return np.asarray(result[0]), np.asarray(result[1])
     except Exception as e:
         logger.warning(f"Curve fitting failed: {e}")
         n_params = func.__code__.co_argcount - 1
@@ -480,13 +492,20 @@ def vectorized_parameter_estimation(
     x, y = ensure_numpy(x), ensure_numpy(y)
     if model_type != "exponential":
         return None
+
     try:
         y_min, y_max = np.min(y), np.max(y)
         amp = y_max - y_min
         idx = np.argmin(np.abs(y - (y_min + amp / np.e)))
         tau = x[idx] if idx > 0 else x[len(x) // 2]
-        popt, _ = curve_fit(
-            single_exp,
+
+        # Define JIT-safe model function (no ensure_numpy)
+        def _model_func(x_val, tau_val, bkg_val, cts_val):
+            b = get_backend()
+            return cts_val * b.exp(-2 * b.array(x_val) / tau_val) + bkg_val
+
+        result = curve_fit(
+            _model_func,
             x,
             y,
             p0=[tau, y_min, amp],
@@ -497,6 +516,10 @@ def vectorized_parameter_estimation(
             method="trf",
             maxfev=5000,
         )
+        if hasattr(result, "popt"):
+            popt = result.popt
+        else:
+            popt = result[0]
         return tuple(popt)
     except Exception:
         return None

@@ -145,7 +145,7 @@ class UnifiedThreadingManager(QObject):
         }
 
         # Task management
-        self._task_queue = PriorityQueue()
+        self._task_queue: PriorityQueue[UnifiedTask] = PriorityQueue()
         self._active_tasks: dict[str, UnifiedTask] = {}
         self._completed_tasks: dict[str, UnifiedTask] = {}
         self._task_lock = threading.RLock()

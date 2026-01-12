@@ -94,7 +94,7 @@ class PyQtGraphAdapter:
 
             start_time = time.perf_counter()
 
-        result = ensure_numpy(array)
+        result: np.ndarray = ensure_numpy(array)
 
         if self.enable_monitoring:
             elapsed = time.perf_counter() - start_time
@@ -205,7 +205,7 @@ class HDF5Adapter:
 
             start_time = time.perf_counter()
 
-        result = ensure_numpy(array)
+        result: np.ndarray = ensure_numpy(array)
 
         if self.enable_monitoring:
             elapsed = time.perf_counter() - start_time
@@ -241,7 +241,7 @@ class HDF5Adapter:
 
             start_time = time.perf_counter()
 
-        result = self.backend.from_numpy(array)
+        result: Any = self.backend.from_numpy(array)
 
         if self.enable_monitoring:
             elapsed = time.perf_counter() - start_time

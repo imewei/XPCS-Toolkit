@@ -47,7 +47,7 @@ class AsyncViewerKernel(QObject):
         super().__init__()
         self.viewer_kernel = viewer_kernel
         self.worker_manager = WorkerManager(thread_pool)
-        self.active_operations = {}  # operation_id -> worker_id
+        self.active_operations: dict[str, str] = {}  # operation_id -> worker_id
 
         # Connect worker manager signals
         self.worker_manager.worker_progress.connect(
@@ -365,9 +365,9 @@ class AsyncDataPreloader(QObject):
         super().__init__()
         self.async_kernel = async_kernel
         self.max_cache_size = max_cache_size
-        self.cache = {}  # file_path -> data
-        self.cache_order = []  # LRU tracking
-        self.preload_queue = []
+        self.cache: dict[str, Any] = {}  # file_path -> data
+        self.cache_order: list[str] = []  # LRU tracking
+        self.preload_queue: list[str] = []
         self.is_preloading = False
 
     def suggest_preload(

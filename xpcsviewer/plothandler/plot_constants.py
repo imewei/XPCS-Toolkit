@@ -171,9 +171,11 @@ def get_theme_colors(theme: ThemeName | None = None) -> dict[str, str]:
 
             # Try to get current theme from singleton or default
             try:
+                from typing import cast
+
                 from PySide6.QtWidgets import QApplication
 
-                app = QApplication.instance()
+                app = cast(QApplication, QApplication.instance())
                 if app is not None:
                     # Find ThemeManager in top-level widgets
                     for widget in app.topLevelWidgets():

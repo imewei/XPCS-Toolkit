@@ -71,9 +71,10 @@ class TestCreateXpcsDataset:
         assert "Invalid data format" in warning_msg
 
         # Should also log debug traceback
-        mock_logger.debug.assert_called_once()
-        debug_msg = mock_logger.debug.call_args[0][0]
-        assert "Traceback" in debug_msg
+        # Should also log debug traceback
+        # logger.debug is called for loading message AND traceback, so check calls
+        debug_calls = [args[0] for args, _ in mock_logger.debug.call_args_list]
+        assert any("Traceback" in str(msg) for msg in debug_calls)
 
     @patch("xpcsviewer.file_locator.XF")
     def test_create_xpcs_dataset_with_kwargs(self, mock_xf_class):

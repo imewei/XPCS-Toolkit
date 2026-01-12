@@ -1,3 +1,5 @@
+from typing import Any
+
 import numpy as np
 import pyqtgraph as pg
 from pyqtgraph import GraphicsLayoutWidget, ImageView, QtCore, QtGui
@@ -29,7 +31,7 @@ class ImageViewDev(ImageView):
     def __init__(self, *args, **kwargs) -> None:
         with qt_connection_context():
             super().__init__(*args, **kwargs)
-        self.roi_record = {}
+        self.roi_record: dict[str, Any] = {}
         self.roi_idx = 0
         logger.debug("ImageViewDev initialized")
 
@@ -42,9 +44,16 @@ class ImageViewDev(ImageView):
         theme : str
             Either "light" or "dark"
         """
+        from typing import Literal, cast
+
         from .plot_constants import get_theme_colors
 
-        colors = get_theme_colors(theme)
+        theme_literal = (
+            cast(Literal["light", "dark"], theme)
+            if theme in ["light", "dark"]
+            else "light"
+        )
+        colors = get_theme_colors(theme_literal)
         # Set background color on the view
         self.view.setBackgroundColor(colors["background"])
 
@@ -307,9 +316,16 @@ class PlotWidgetDev(GraphicsLayoutWidget):
         theme : str
             Either "light" or "dark"
         """
+        from typing import Literal, cast
+
         from .plot_constants import get_theme_colors
 
-        colors = get_theme_colors(theme)
+        theme_literal = (
+            cast(Literal["light", "dark"], theme)
+            if theme in ["light", "dark"]
+            else "light"
+        )
+        colors = get_theme_colors(theme_literal)
         self.setBackground(colors["background"])
 
     def adjust_canvas_size(self, num_col, num_row):

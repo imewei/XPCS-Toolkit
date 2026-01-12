@@ -119,10 +119,10 @@ class XPCSReliabilityManager:
         self._lock = threading.RLock()
 
         # Component references
-        self._health_monitor = None
-        self._state_validator = None
-        self._validation_cache = None
-        self._fallback_manager = None
+        self._health_monitor: Any | None = None
+        self._state_validator: Any | None = None
+        self._validation_cache: Any | None = None
+        self._fallback_manager: Any | None = None
 
         # Performance monitoring
         self._start_time = time.time()
@@ -199,6 +199,7 @@ class XPCSReliabilityManager:
         """Initialize health monitoring component."""
         try:
             self._health_monitor = get_health_monitor()
+            assert self._health_monitor is not None
             start_health_monitoring(self.config.health_monitoring_interval)
 
             # Register critical status callback
@@ -245,6 +246,7 @@ class XPCSReliabilityManager:
         """Initialize validation caching."""
         try:
             self._validation_cache = get_validation_cache()
+            assert self._validation_cache is not None
             # Configure cache size limit
             self._validation_cache._max_size = self.config.cache_size_limit
 
@@ -400,7 +402,7 @@ class XPCSReliabilityManager:
     def get_status(self) -> dict[str, Any]:
         """Get comprehensive reliability system status."""
         with self._lock:
-            status = {
+            status: dict[str, Any] = {
                 "initialized": self._initialized,
                 "profile": self.config.profile.value,
                 "active_features": self._active_features.copy(),

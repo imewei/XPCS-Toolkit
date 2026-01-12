@@ -9,9 +9,10 @@ import logging
 import warnings
 from collections.abc import Callable
 from contextlib import contextmanager
+from typing import Any
 
 from PySide6 import QtWidgets
-from PySide6.QtCore import QMetaObject, QObject, Qt, Signal
+from PySide6.QtCore import QMetaMethod, QMetaObject, QObject, Qt, Signal
 
 from ..utils.logging_config import get_logger
 
@@ -109,7 +110,7 @@ class QtConnectionFixer:
 
     @staticmethod
     def validate_signal_connection(
-        signal: Signal,
+        signal: Any,
         slot: Callable,
         connection_type: Qt.ConnectionType = Qt.ConnectionType.AutoConnection,
     ) -> bool:
@@ -260,7 +261,7 @@ class PyQtGraphWrapper:
 
 # Utility functions for common signal/slot operations
 def safe_connect(
-    signal: Signal,
+    signal: Any,
     slot: Callable,
     connection_type: Qt.ConnectionType = Qt.ConnectionType.AutoConnection,
 ) -> bool:
@@ -278,7 +279,7 @@ def safe_connect(
     return QtConnectionFixer.validate_signal_connection(signal, slot, connection_type)
 
 
-def safe_disconnect(signal: Signal, slot: Callable | None = None) -> bool:
+def safe_disconnect(signal: Any, slot: Callable | None = None) -> bool:
     """
     Safely disconnect a signal from a slot.
 
@@ -428,7 +429,7 @@ class LegacyConnectionDetector:
         Returns:
             List of potential legacy connection patterns found
         """
-        issues = []
+        issues: list[str] = []
 
         # This is a basic scan - in practice, legacy connections are
         # found through code review rather than runtime detection
@@ -437,8 +438,8 @@ class LegacyConnectionDetector:
             meta = obj.metaObject()
             for i in range(meta.methodCount()):
                 method = meta.method(i)
-                if method.methodType() == QMetaObject.MethodType.Signal:
-                    signal_name = method.name().data().decode()
+                if method.methodType() == QMetaMethod.MethodType.Signal:
+                    signal_name = bytes(method.name().data()).decode("utf-8")
                     # Check if signal has been connected with old syntax
                     # (This is difficult to detect at runtime)
                     logger.debug(f"Found signal: {signal_name}")

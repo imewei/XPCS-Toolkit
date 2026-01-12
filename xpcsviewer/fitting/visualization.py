@@ -410,13 +410,13 @@ def plot_posterior_predictive(
         params = [result.samples[name][idx] for name in param_names]
         predictions.append(model(x_pred, *params))
 
-    predictions = np.array(predictions)
+    predictions_arr = np.array(predictions)
 
     # Compute credible interval
     alpha = 1 - credible_level
-    lower = np.percentile(predictions, 100 * alpha / 2, axis=0)
-    upper = np.percentile(predictions, 100 * (1 - alpha / 2), axis=0)
-    median = np.median(predictions, axis=0)
+    lower = np.percentile(predictions_arr, 100 * alpha / 2, axis=0)
+    upper = np.percentile(predictions_arr, 100 * (1 - alpha / 2), axis=0)
+    median = np.median(predictions_arr, axis=0)
 
     # Plot credible interval
     ax.fill_between(
@@ -619,11 +619,11 @@ def plot_comparison(
         params = [bayesian_result.samples[name][idx] for name in param_names]
         predictions.append(model(x_pred, *params))
 
-    predictions = np.array(predictions)
+    predictions_arr = np.array(predictions)
     alpha = 1 - confidence_level
-    lower = np.percentile(predictions, 100 * alpha / 2, axis=0)
-    upper = np.percentile(predictions, 100 * (1 - alpha / 2), axis=0)
-    median = np.median(predictions, axis=0)
+    lower = np.percentile(predictions_arr, 100 * alpha / 2, axis=0)
+    upper = np.percentile(predictions_arr, 100 * (1 - alpha / 2), axis=0)
+    median = np.median(predictions_arr, axis=0)
 
     ax.fill_between(
         x_pred,

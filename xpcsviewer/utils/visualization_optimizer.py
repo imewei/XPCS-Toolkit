@@ -268,7 +268,7 @@ class PlotPerformanceOptimizer:
         dict[str, Any]
             Optimization settings applied
         """
-        optimizations = {}
+        optimizations: dict[str, Any] = {}
 
         if plot_type == "image":
             # Image-specific optimizations
@@ -326,7 +326,7 @@ class PlotPerformanceOptimizer:
         dict[str, Any]
             Optimization settings applied
         """
-        optimizations = {}
+        optimizations: dict[str, Any] = {}
 
         # General matplotlib optimizations
         figure.set_facecolor("white")  # Faster rendering
@@ -421,8 +421,8 @@ class PlotCacheManager:
 
     def __init__(self, max_cache_size_mb: float = 200.0):
         self.max_cache_size_mb = max_cache_size_mb
-        self.plot_cache = {}
-        self.cache_access_times = {}
+        self.plot_cache: dict[str, Any] = {}
+        self.cache_access_times: dict[str, float] = {}
         self.current_cache_size_mb = 0.0
 
     def get_plot_cache_key(self, data_hash: str, plot_params: dict[str, Any]) -> str:
@@ -569,7 +569,7 @@ class AdvancedGUIRenderer:
         self.quality_auto_adjust = quality_auto_adjust
 
         # Performance tracking
-        self._frame_times = []
+        self._frame_times: list[float] = []
         self._last_frame_time = time.time()
         self._performance_samples = 50
 
@@ -579,7 +579,9 @@ class AdvancedGUIRenderer:
         self._max_quality = 1.0
 
         # Update batching
-        self._pending_updates = {}
+        self._pending_updates: dict[
+            str, tuple[Callable, tuple[Any, ...], dict[str, Any]]
+        ] = {}
         self._batch_timer = None
         self._batch_interval_ms = 16  # ~60 FPS
 
@@ -669,7 +671,7 @@ class AdvancedGUIRenderer:
                 logger.debug(f"Increased rendering quality to {new_quality:.2f}")
 
     def batch_widget_update(
-        self, widget_id: str, update_func: callable, *args, **kwargs
+        self, widget_id: str, update_func: Callable, *args, **kwargs
     ):
         """
         Batch widget updates to reduce rendering overhead.

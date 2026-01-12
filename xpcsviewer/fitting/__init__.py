@@ -241,6 +241,8 @@ def nlsq_fit(
     ...     compute_diagnostics=True,
     ... )
     """
+    from typing import Any, cast
+
     from .nlsq import nlsq_optimize
 
     return nlsq_optimize(
@@ -250,9 +252,9 @@ def nlsq_fit(
         yerr,
         p0,
         bounds,
-        preset=preset,
+        preset=cast(Any, preset),
         auto_bounds=auto_bounds,
-        stability=stability,
+        stability=cast(Any, stability),
         fallback=fallback,
         compute_diagnostics=compute_diagnostics,
         show_progress=show_progress,

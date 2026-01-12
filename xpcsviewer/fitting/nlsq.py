@@ -57,7 +57,9 @@ def nlsq_optimize(
     upper = np.array([bounds.get(n, (-np.inf, np.inf))[1] for n in param_names])
 
     try:
-        native_result = nlsq.fit(
+        from typing import Any
+
+        native_result: Any = nlsq.fit(
             model_fn,
             x,
             y,

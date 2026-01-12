@@ -17,10 +17,10 @@ from .utils.logging_config import get_logger
 from .xpcs_file import MemoryMonitor, XpcsFile
 
 # Lazy-loaded modules cache
-_module_cache: dict[str, ModuleType] = {}
+_module_cache: dict[str, ModuleType | type] = {}
 
 
-def _get_module(module_name: str) -> ModuleType:
+def _get_module(module_name: str) -> ModuleType | type:
     """Lazy load analysis modules to improve startup time"""
     if module_name not in _module_cache:
         if module_name == "g2mod":
@@ -105,20 +105,22 @@ class ViewerKernel(FileLocator):
     >>> kernel.plot_saxs_2d(plot_handler, rows=[0, 1, 2])
     """
 
-    def get_module(self, module_name: str) -> ModuleType:
+    def get_module(self, module_name: str) -> ModuleType | type:
         """Public interface to lazy load analysis modules"""
         return _get_module(module_name)
 
     def __init__(self, path: str, statusbar: Any | None = None) -> None:
         super().__init__(path)
         self.statusbar = statusbar
-        self.meta = None
+        self.meta: dict[str, Any] = {}
         self.reset_meta()
         self.path = path
-        self.avg_tb = _get_module("average_toolbox")(path)
+        from typing import Callable, cast
+
+        self.avg_tb = cast(Callable[[str], Any], _get_module("average_toolbox"))(path)
         self.avg_worker = TableDataModel()
         self.avg_jid = 0
-        self.avg_worker_active = {}
+        self.avg_worker_active: dict[int, Any] = {}
 
         # Memory-aware caching for current_dset with weak references
         self._current_dset_cache: weakref.WeakValueDictionary[str, XpcsFile] = (

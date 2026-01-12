@@ -7,7 +7,7 @@
         test-parallel test-unit test-scientific test-gui test-gui-headless \
         clean clean-all clean-pyc clean-build clean-test clean-venv \
         format lint type-check check quick docs build publish info version \
-        run-app check-deps
+        run-app check-deps verify verify-fast install-hooks
 
 # Configuration
 PYTHON := python
@@ -109,6 +109,11 @@ help:
 	@echo "  $(CYAN)type-check$(RESET)       Run type checking (mypy)"
 	@echo "  $(CYAN)check$(RESET)            Run all checks (lint + type)"
 	@echo "  $(CYAN)quick$(RESET)            Fast iteration: format + smoke tests"
+	@echo ""
+	@echo "$(BOLD)$(GREEN)PRE-PUSH VERIFICATION$(RESET)"
+	@echo "  $(CYAN)verify$(RESET)           Run FULL local CI (lint + type + tests) - use before push"
+	@echo "  $(CYAN)verify-fast$(RESET)      Quick verification (lint + type + fast tests)"
+	@echo "  $(CYAN)install-hooks$(RESET)    Install pre-push hook to auto-run verify"
 	@echo ""
 	@echo "$(BOLD)$(GREEN)DOCUMENTATION$(RESET)"
 	@echo "  $(CYAN)docs$(RESET)             Build documentation with Sphinx"
@@ -487,3 +492,58 @@ pre-commit-install:
 pre-commit-run:
 	@echo "$(BOLD)$(BLUE)Running pre-commit hooks on all files...$(RESET)"
 	pre-commit run --all-files
+
+# ===================
+# Pre-push verification
+# ===================
+verify:
+	@echo "$(BOLD)$(BLUE)======================================$(RESET)"
+	@echo "$(BOLD)$(BLUE)  FULL LOCAL CI VERIFICATION$(RESET)"
+	@echo "$(BOLD)$(BLUE)======================================$(RESET)"
+	@echo ""
+	@echo "$(BOLD)Step 1/3: Pre-commit hooks$(RESET)"
+	@pre-commit run --all-files || (echo "$(RED)Pre-commit failed!$(RESET)" && exit 1)
+	@echo ""
+	@echo "$(BOLD)Step 2/3: Type checking$(RESET)"
+	@$(RUN_CMD) mypy $(PACKAGE_NAME) || (echo "$(RED)Type check failed!$(RESET)" && exit 1)
+	@echo ""
+	@echo "$(BOLD)Step 3/3: Full test suite (excl. GUI)$(RESET)"
+	@$(RUN_CMD) $(PYTEST) --ignore=$(TEST_DIR)/gui_interactive/ -n auto --dist=loadscope || (echo "$(RED)Tests failed!$(RESET)" && exit 1)
+	@echo ""
+	@echo "$(BOLD)$(GREEN)======================================$(RESET)"
+	@echo "$(BOLD)$(GREEN)  ALL CHECKS PASSED - SAFE TO PUSH$(RESET)"
+	@echo "$(BOLD)$(GREEN)======================================$(RESET)"
+
+verify-fast:
+	@echo "$(BOLD)$(BLUE)======================================$(RESET)"
+	@echo "$(BOLD)$(BLUE)  QUICK LOCAL CI VERIFICATION$(RESET)"
+	@echo "$(BOLD)$(BLUE)======================================$(RESET)"
+	@echo ""
+	@echo "$(BOLD)Step 1/3: Pre-commit hooks$(RESET)"
+	@pre-commit run --all-files || (echo "$(RED)Pre-commit failed!$(RESET)" && exit 1)
+	@echo ""
+	@echo "$(BOLD)Step 2/3: Type checking$(RESET)"
+	@$(RUN_CMD) mypy $(PACKAGE_NAME) || (echo "$(RED)Type check failed!$(RESET)" && exit 1)
+	@echo ""
+	@echo "$(BOLD)Step 3/3: Fast tests$(RESET)"
+	@$(RUN_CMD) $(PYTEST) -m "not slow" -n auto --dist=loadscope -q || (echo "$(RED)Tests failed!$(RESET)" && exit 1)
+	@echo ""
+	@echo "$(BOLD)$(GREEN)======================================$(RESET)"
+	@echo "$(BOLD)$(GREEN)  QUICK CHECKS PASSED$(RESET)"
+	@echo "$(BOLD)$(GREEN)======================================$(RESET)"
+
+install-hooks:
+	@echo "$(BOLD)$(BLUE)Installing git hooks...$(RESET)"
+	@pre-commit install
+	@pre-commit install --hook-type commit-msg
+	@rm -f .git/hooks/pre-push
+	@echo "$(BOLD)$(GREEN)✓ Git hooks installed!$(RESET)"
+	@echo ""
+	@echo "$(BOLD)Hooks installed:$(RESET)"
+	@echo "  - pre-commit: lint, format, type checks"
+	@echo "  - commit-msg: conventional commits check"
+	@echo ""
+	@echo "$(BOLD)Usage:$(RESET)"
+	@echo "  git commit -m 'msg'  → runs pre-commit hooks"
+	@echo "  git push             → triggers GitHub Actions CI"
+	@echo "  make verify-fast     → full local verification (optional)"

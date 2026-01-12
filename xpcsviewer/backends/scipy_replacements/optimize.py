@@ -121,7 +121,7 @@ def _minimize_optimistix(
 
     # Select solver based on method
     if method is None or method.upper() in ("BFGS", "L-BFGS-B"):
-        solver = optx.BFGS(rtol=tol, atol=tol)
+        solver: Any = optx.BFGS(rtol=tol, atol=tol)
     elif method.upper() == "CG":
         solver = optx.NonlinearCG(rtol=tol, atol=tol)
     elif method.upper() in ("ADAM", "SGD"):
@@ -132,7 +132,7 @@ def _minimize_optimistix(
 
     # Run optimization
     try:
-        sol = optx.minimise(
+        sol: Any = optx.minimise(
             objective,
             solver,
             x0,
@@ -341,10 +341,10 @@ def _curve_fit_optimistix(
         return residual
 
     # Use Levenberg-Marquardt for least squares
-    solver = optx.LevenbergMarquardt(rtol=1e-8, atol=1e-8)
+    solver: Any = optx.LevenbergMarquardt(rtol=1e-8, atol=1e-8)
 
     try:
-        sol = optx.least_squares(
+        sol: Any = optx.least_squares(
             residual_fn,
             solver,
             p0,
@@ -482,10 +482,10 @@ def _least_squares_optimistix(
     def residual_fn(x, _):
         return fun(x)
 
-    solver = optx.LevenbergMarquardt(rtol=xtol, atol=ftol)
+    solver: Any = optx.LevenbergMarquardt(rtol=xtol, atol=ftol)
 
     try:
-        sol = optx.least_squares(
+        sol: Any = optx.least_squares(
             residual_fn,
             solver,
             x0,
@@ -609,10 +609,10 @@ def _root_optimistix(
             return fun(x, *args)
         return fun(x)
 
-    solver = optx.Newton(rtol=tol, atol=tol)
+    solver: Any = optx.Newton(rtol=tol, atol=tol)
 
     try:
-        sol = optx.root_find(
+        sol: Any = optx.root_find(
             residual_fn,
             solver,
             x0,

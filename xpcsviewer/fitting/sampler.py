@@ -7,7 +7,7 @@ NUTS sampler with JAX-accelerated NLSQ warm-start.
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 import numpy as np
 
@@ -129,9 +129,9 @@ def _build_fit_result(
 
     for name in param_names:
         if name in summary.index:
-            r_hat[name] = float(summary.loc[name, "r_hat"])
-            ess_bulk[name] = int(summary.loc[name, "ess_bulk"])
-            ess_tail[name] = int(summary.loc[name, "ess_tail"])
+            r_hat[name] = float(summary.loc[name, "r_hat"])  # type: ignore
+            ess_bulk[name] = int(summary.loc[name, "ess_bulk"])  # type: ignore
+            ess_tail[name] = int(summary.loc[name, "ess_tail"])  # type: ignore
 
     # Count divergences
     num_divergent = int(np.sum(mcmc.get_extra_fields()["diverging"]))
@@ -161,7 +161,7 @@ def run_single_exp_fit(
     x: ArrayLike,
     y: ArrayLike,
     yerr: ArrayLike | None = None,
-    stability: str = "auto",
+    stability: Literal["auto", "check", False] = "auto",
     auto_bounds: bool = False,
     **kwargs,
 ) -> FitResult:
@@ -248,7 +248,7 @@ def run_double_exp_fit(
     x: ArrayLike,
     y: ArrayLike,
     yerr: ArrayLike | None = None,
-    stability: str = "auto",
+    stability: Literal["auto", "check", False] = "auto",
     auto_bounds: bool = False,
     **kwargs,
 ) -> FitResult:
@@ -349,7 +349,7 @@ def run_stretched_exp_fit(
     x: ArrayLike,
     y: ArrayLike,
     yerr: ArrayLike | None = None,
-    stability: str = "auto",
+    stability: Literal["auto", "check", False] = "auto",
     auto_bounds: bool = False,
     **kwargs,
 ) -> FitResult:
@@ -436,7 +436,7 @@ def run_stretched_exp_fit(
 def run_power_law_fit(
     q: ArrayLike,
     tau: ArrayLike | FitResult,
-    stability: str = "auto",
+    stability: Literal["auto", "check", False] = "auto",
     auto_bounds: bool = False,
     **kwargs,
 ) -> FitResult:

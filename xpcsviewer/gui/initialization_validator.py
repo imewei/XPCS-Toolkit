@@ -193,11 +193,13 @@ class GuiInitializationValidator:
 
         # Check if window has central widget or content
         central_widget = main_window.centralWidget()
-        if central_widget is None:
+        from typing import cast
+
+        if cast(Any, central_widget) is None:
             issues.append("Main window has no central widget")
 
         # Check for essential child widgets
-        essential_widgets = []
+        essential_widgets: list[QtWidgets.QWidget] = []
         try:
             # Look for common essential widgets
             tab_widgets = main_window.findChildren(QtWidgets.QTabWidget)

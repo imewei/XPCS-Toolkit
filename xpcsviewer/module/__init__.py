@@ -18,8 +18,9 @@ Spectroscopy data analysis:
 # Import modules gracefully for documentation builds
 import os
 from contextlib import suppress
+from typing import TYPE_CHECKING
 
-if os.environ.get("BUILDING_DOCS"):
+if os.environ.get("BUILDING_DOCS") and not TYPE_CHECKING:
     # Provide placeholder modules for documentation
     class PlaceholderModule:
         """Placeholder module for documentation builds."""

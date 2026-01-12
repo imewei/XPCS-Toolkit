@@ -12,7 +12,7 @@ from __future__ import annotations
 import hashlib
 import json
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Callable
 
 import numpy as np
 
@@ -25,7 +25,7 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 # JIT cache for compiled functions (JAX arrays are not hashable for lru_cache)
-_PARTITION_JIT_CACHE: dict[str, callable] = {}
+_PARTITION_JIT_CACHE: dict[str, Callable] = {}
 
 
 def hash_numpy_dict(input_dictionary: dict[str, Any]) -> str:
@@ -73,6 +73,7 @@ def optimize_integer_array(arr: np.ndarray) -> np.ndarray:
     min_val, max_val = arr.min(), arr.max()
 
     # Choose smallest dtype based on min/max
+    new_dtype: Any = arr.dtype
     if min_val >= 0:
         if max_val <= np.iinfo(np.uint8).max:
             new_dtype = np.uint8
@@ -115,7 +116,9 @@ def _get_partition_linear_jit():
         import jax.numpy as jnp
 
         @jax.jit
-        def _partition_linear_core(mask_b, xmap_b, v_min, v_max, v_span):
+        def _partition_linear_core(
+            mask_b: Any, xmap_b: Any, v_min: Any, v_max: Any, v_span: Any
+        ) -> tuple[Any, Any]:
             """JIT-compiled linear partition core computation.
 
             Note: v_span is pre-computed outside JIT since linspace needs
@@ -158,7 +161,9 @@ def _get_partition_log_jit():
         import jax.numpy as jnp
 
         @jax.jit
-        def _partition_log_core(mask_b, xmap_b, v_min, v_max, v_span):
+        def _partition_log_core(
+            mask_b: Any, xmap_b: Any, v_min: Any, v_max: Any, v_span: Any
+        ) -> tuple[Any, Any]:
             """JIT-compiled logarithmic partition core computation.
 
             Note: v_span is pre-computed outside JIT since logspace needs
@@ -238,8 +243,8 @@ def _generate_partition_backend(
     backend = get_backend()
 
     # Convert inputs to backend arrays
-    mask_b = backend.array(mask)
-    xmap_b = backend.array(xmap)
+    mask_b: Any = backend.array(mask)
+    xmap_b: Any = backend.array(xmap)
     xmap_phi = None
     unit_xmap = None
 
@@ -277,7 +282,7 @@ def _generate_partition_backend(
         xmap_b = backend.where(xmap_b > 0, xmap_b, backend.array(float("nan")))
 
         # Pre-compute v_span (needs concrete num_pts value)
-        v_span = backend.logspace(
+        v_span: Any = backend.logspace(
             backend.log10(backend.array(v_min)),
             backend.log10(backend.array(v_max)),
             num_pts + 1,
@@ -327,6 +332,7 @@ def _generate_partition_backend(
             )
 
     # Convert to NumPy for output (I/O boundary)
+    # Cast to Any to satisfy static check if needed
     partition_np = ensure_numpy(partition).astype(np.uint32)
     v_list_np = ensure_numpy(v_list)
 
@@ -334,11 +340,14 @@ def _generate_partition_backend(
         # Use NumPy for bincount (complex operation)
         unit_xmap_np = ensure_numpy(unit_xmap)
         partition_np_i64 = partition_np.astype(np.int64)
+        assert xmap_phi is not None
         xmap_phi_np = ensure_numpy(xmap_phi)
         idx_map = (unit_xmap_np * partition_np_i64).astype(np.int64)
         sum_value = np.bincount(idx_map.flatten(), weights=xmap_phi_np.flatten())
         norm_factor = np.bincount(idx_map.flatten())
-        v_list_np = sum_value / np.clip(norm_factor, 1, None)
+        # Use a large float max instead of None for numpy < 1.17 compatibility if needed,
+        # but clip accepts None for max in recent numpy. Mypy complains about None.
+        v_list_np = sum_value / np.clip(norm_factor, 1, np.inf)
         v_list_np = v_list_np[1:]
 
     return {
@@ -392,15 +401,15 @@ def _combine_partitions_backend(
     """
     backend = get_backend()
 
-    p1 = backend.array(pack1["partition"].astype(np.int64))
-    p2 = backend.array(pack2["partition"].astype(np.int64))
+    p1: NDArray[Any] = backend.array(pack1["partition"].astype(np.int64))  # type: ignore
+    p2: NDArray[Any] = backend.array(pack2["partition"].astype(np.int64))  # type: ignore
     num_pts2 = int(pack2["num_pts"])
 
     # Convert to zero-based indexing, merge, convert back
     partition = (p1 - 1) * num_pts2 + (p2 - 1) + 1
 
     # Clip to ensure non-negative
-    partition = backend.clip(partition, 0, None)
+    partition = backend.clip(partition, 0, np.inf)
 
     # Convert to NumPy for unique operation (complex)
     partition_np = ensure_numpy(partition).astype(np.int64)

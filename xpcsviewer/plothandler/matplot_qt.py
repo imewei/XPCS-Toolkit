@@ -126,9 +126,16 @@ class MplCanvas(FigureCanvasQTAgg):
         theme : str
             Either "light" or "dark"
         """
+        from typing import Literal, cast
+
         from .plot_constants import get_theme_colors
 
-        colors = get_theme_colors(theme)
+        theme_literal = (
+            cast(Literal["light", "dark"], theme)
+            if theme in ["light", "dark"]
+            else "light"
+        )
+        colors = get_theme_colors(theme_literal)
 
         # Update figure background
         self.fig.set_facecolor(colors["background"])

@@ -22,8 +22,9 @@ Example:
 # Handle imports gracefully for documentation builds
 import os
 from importlib.metadata import PackageNotFoundError, version
+from typing import TYPE_CHECKING
 
-if os.environ.get("BUILDING_DOCS"):
+if os.environ.get("BUILDING_DOCS") and not TYPE_CHECKING:
     # Provide placeholder classes for documentation builds
     class XpcsFile:
         """Placeholder XpcsFile class for documentation builds."""
@@ -50,25 +51,27 @@ else:
         from xpcsviewer import module, plothandler, utils
         from xpcsviewer.file_locator import FileLocator
         from xpcsviewer.viewer_kernel import ViewerKernel
-        from xpcsviewer.viewer_ui import ViewerUI
+        from xpcsviewer.viewer_ui import Ui_mainWindow as ViewerUI
         from xpcsviewer.xpcs_file import XpcsFile as XpcsFile  # Explicit re-export
         from xpcsviewer.xpcs_viewer import XpcsViewer
     except ImportError:
         # For documentation builds where dependencies may not be available
-        class XpcsFile:
-            """Placeholder XpcsFile class for documentation builds."""
+        if not TYPE_CHECKING:
 
-        class FileLocator:
-            """Placeholder FileLocator class for documentation builds."""
+            class XpcsFile:
+                """Placeholder XpcsFile class for documentation builds."""
 
-        class ViewerKernel:
-            """Placeholder ViewerKernel class for documentation builds."""
+            class FileLocator:
+                """Placeholder FileLocator class for documentation builds."""
 
-        class ViewerUI:
-            """Placeholder ViewerUI class for documentation builds."""
+            class ViewerKernel:
+                """Placeholder ViewerKernel class for documentation builds."""
 
-        class XpcsViewer:
-            """Placeholder XpcsViewer class for documentation builds."""
+            class ViewerUI:
+                """Placeholder ViewerUI class for documentation builds."""
+
+            class XpcsViewer:
+                """Placeholder XpcsViewer class for documentation builds."""
 
 
 # Version handling

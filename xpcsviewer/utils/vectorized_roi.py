@@ -588,7 +588,7 @@ class ParallelROIProcessor:
                 future_to_roi[future] = i
 
             # Collect results in order
-            results = [None] * len(roi_list)
+            results: list[ROIResult | None] = [None] * len(roi_list)
             for future in as_completed(future_to_roi):
                 index = future_to_roi[future]
                 try:
@@ -606,7 +606,9 @@ class ParallelROIProcessor:
                         memory_used_mb=0.0,
                     )
 
-        return results
+        from typing import cast
+
+        return cast(list[ROIResult], results)
 
     def _get_calculator(self, roi_type: ROIType) -> VectorizedROICalculator:
         """Get appropriate calculator for ROI type."""

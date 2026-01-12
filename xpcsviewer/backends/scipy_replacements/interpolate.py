@@ -74,8 +74,8 @@ class Interp1d:
             self._jnp = jnp
             self._interpax = interpax
         except ImportError:
-            self._x = np.asarray(x)
-            self._y = np.asarray(y)
+            self._x = np.asarray(x)  # type: ignore
+            self._y = np.asarray(y)  # type: ignore
 
         self._kind = kind
         self._bounds_error = bounds_error
@@ -114,9 +114,9 @@ class Interp1d:
         """Interpolation using interpax library."""
         jnp = self._jnp
         interpax = self._interpax
-        x_new = jnp.asarray(x_new)
-        x_new_shape = x_new.shape
-        x_new_flat = x_new.flatten()
+        x_new_arr = jnp.asarray(x_new)
+        x_new_shape = x_new_arr.shape
+        x_new_flat = x_new_arr.flatten()
 
         x_min, x_max = self._x[0], self._x[-1]
 

@@ -15,8 +15,9 @@ consistent visual styling across the application.
 
 # Import modules gracefully for documentation builds
 import os
+from typing import TYPE_CHECKING
 
-if os.environ.get("BUILDING_DOCS"):
+if os.environ.get("BUILDING_DOCS") and not TYPE_CHECKING:
     # Provide placeholder classes for documentation
     class PlaceholderClass:
         """Placeholder class for documentation builds."""

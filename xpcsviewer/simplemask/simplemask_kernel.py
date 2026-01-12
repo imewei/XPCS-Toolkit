@@ -14,6 +14,7 @@ import numpy as np
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtCore
 
+from xpcsviewer.backends._conversions import ensure_numpy
 from xpcsviewer.simplemask.area_mask import MaskAssemble
 from xpcsviewer.simplemask.pyqtgraph_mod import ImageViewROI, LineROI
 from xpcsviewer.simplemask.qmap import compute_qmap
@@ -174,8 +175,8 @@ class SimpleMaskKernel:
         Returns:
             Current combined mask array
         """
-        if self.mask_kernel is None:
-            return self.mask
+        if self.mask_kernel is None or self.mask is None:
+            return self.mask if self.mask is not None else np.zeros((0, 0), dtype=bool)
 
         self.mask = self.mask_kernel.apply(target)
         return self.mask
@@ -319,7 +320,7 @@ class SimpleMaskKernel:
         Returns:
             Mask array from drawing operations
         """
-        if self.detector_image is None or self.hdl is None:
+        if self.detector_image is None or self.hdl is None or self.shape is None:
             return np.ones(self.shape, dtype=bool) if self.shape else np.array([])
 
         shape = self.shape
@@ -357,7 +358,7 @@ class SimpleMaskKernel:
         self.hdl.remove_rois(filter_str="roi_")
 
         if np.sum(mask_i) == 0:
-            mask_i = 1
+            mask_i = np.ones_like(mask_e, dtype=bool)
 
         mask_p = np.logical_not(mask_e) * mask_i
         mask_p = mask_p[:-1, :-1]
@@ -401,11 +402,13 @@ class SimpleMaskKernel:
             self.hdl.remove_item(label)
 
         cen = self.get_center()
-        if cen[0] is None or cen[0] < 0 or cen[1] < 0:
+        if cen[0] is None or cen[1] is None or cen[0] < 0 or cen[1] < 0:
             cen = (self.shape[1] // 2, self.shape[0] // 2)
         elif cen[0] > self.shape[1] or cen[1] > self.shape[0]:
             logger.warning("Beam center out of range, using image center")
-            cen = (self.shape[1] // 2, self.shape[0] // 2)
+            cen_x: float = float(self.shape[1] // 2)
+            cen_y: float = float(self.shape[0] // 2)
+            cen = (cen_x, cen_y)
 
         if sl_mode == "inclusive":
             pen = pg.mkPen(color=color, width=width, style=QtCore.Qt.DotLine)
@@ -432,21 +435,27 @@ class SimpleMaskKernel:
             new_roi.addScaleHandle([1, 0.5], [0, 0.5])
 
         elif sl_type == "Circle":
-            if second_point is not None:
+            cx, cy = cen
+            radius = 10.0
+            if second_point is not None and cx is not None and cy is not None:
                 radius = np.sqrt(
-                    (second_point[1] - cen[1]) ** 2 + (second_point[0] - cen[0]) ** 2
+                    (second_point[1] - cy) ** 2 + (second_point[0] - cx) ** 2
                 )
-            new_roi = pg.CircleROI(
-                pos=[cen[0] - radius, cen[1] - radius], radius=radius, **kwargs
-            )
+
+            if cx is not None and cy is not None:
+                new_roi = pg.CircleROI(
+                    pos=[cx - radius, cy - radius], radius=radius, **kwargs
+                )
+            else:
+                return None
 
         elif sl_type == "Polygon":
             if num_edges is None:
                 num_edges = np.random.randint(6, 11)
             offset = np.random.randint(0, 360)
             theta = np.linspace(0, np.pi * 2, num_edges + 1) + np.deg2rad(offset)
-            x = radius * np.cos(theta) + cen[0]
-            y = radius * np.sin(theta) + cen[1]
+            x = radius * np.cos(theta) + (cen[0] if cen[0] is not None else 0)
+            y = radius * np.sin(theta) + (cen[1] if cen[1] is not None else 0)
             pts = np.vstack([x, y]).T
             new_roi = pg.PolyLineROI(pts, closed=True, **kwargs)
 
@@ -455,10 +464,12 @@ class SimpleMaskKernel:
             new_roi.addScaleHandle([0, 0], [1, 1])
 
         elif sl_type == "Line":
-            if second_point is None:
+            if second_point is None or cen[0] is None or cen[1] is None:
                 return None
             line_width = kwargs.pop("width", 1) if "width" in kwargs else 1
-            new_roi = LineROI(cen, second_point, line_width, **kwargs)
+            # cast to float tuple for LineROI
+            cen_f = (float(cen[0]), float(cen[1]))
+            new_roi = LineROI(cen_f, second_point, line_width, **kwargs)
 
         else:
             raise TypeError(f"ROI type not implemented: {sl_type}")
@@ -544,9 +555,9 @@ class SimpleMaskKernel:
         static_map = combine_partitions(pack_sq, pack_sp, prefix="static")
 
         # Check consistency
-        flag_consistency = check_consistency(
-            dynamic_map["dynamic_roi_map"], static_map["static_roi_map"], self.mask
-        )
+        d_map = ensure_numpy(dynamic_map["dynamic_roi_map"])
+        s_map = ensure_numpy(static_map["static_roi_map"])
+        flag_consistency = check_consistency(d_map, s_map, self.mask)
         logger.info(f"dqmap/sqmap consistency check: {flag_consistency}")
 
         center = self.get_center()
@@ -558,7 +569,10 @@ class SimpleMaskKernel:
             "energy": self.metadata.get("energy", 10.0),
             "detector_distance": self.metadata.get("det_dist", 5000.0),
             "map_names": list(map_names),
-            "map_units": [self.qmap_unit[name0], self.qmap_unit[name1]],
+            "map_units": [
+                self.qmap_unit[name0] if self.qmap_unit else "",
+                self.qmap_unit[name1] if self.qmap_unit else "",
+            ],
             "source_file": self.metadata.get("source_file", ""),
         }
         partition.update(dynamic_map)
