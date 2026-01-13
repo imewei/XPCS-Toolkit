@@ -2060,7 +2060,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         """Update only the G2 profile when Q-bin changes."""
         if self.vk is None:
             return
-        rows = self.get_target_rows()
+        rows = self.get_selected_rows()
         if not rows:
             return
         try:
@@ -2108,7 +2108,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
 
     def plot_g2_map(self, dryrun=False):
         """Plot the G2 Map visualization."""
-        rows = self.get_target_rows()
+        rows = self.get_selected_rows()
         qbin = (
             self.spinBox_g2map_qbin.value()
             if hasattr(self, "spinBox_g2map_qbin")
