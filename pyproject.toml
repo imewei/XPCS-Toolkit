@@ -35,6 +35,43 @@ classifiers = [
 requires-python = ">=3.12"
 keywords = ["XPCS", "X-ray", "photon correlation spectroscopy", "synchrotron", "visualization", "science"]
 
+# ============================================================================
+# GPU ACCELERATION (20-100x speedup for large datasets)
+# ============================================================================
+# Default: CPU-only JAX (works on ALL platforms: Linux, macOS, Windows)
+#
+# For GPU acceleration (Linux + NVIDIA GPU + System CUDA):
+#
+#   Prerequisites:
+#     - System CUDA 12.x or 13.x installed (nvcc in PATH)
+#     - NVIDIA GPU with SM >= 5.2 (Maxwell or newer)
+#
+#   Quick install (from repository):
+#     make install-jax-gpu          # Auto-detect system CUDA version
+#     make install-jax-gpu-cuda13   # Force CUDA 13 (requires system CUDA 13.x)
+#     make install-jax-gpu-cuda12   # Force CUDA 12 (requires system CUDA 12.x)
+#
+#   Manual install (uses system CUDA):
+#     pip uninstall -y jax jaxlib
+#     pip install "jax[cuda13-local]"  # If system has CUDA 13.x
+#     pip install "jax[cuda12-local]"  # If system has CUDA 12.x
+#
+#   GPU Compatibility:
+#     CUDA 13 (SM 7.5+): RTX 20xx/30xx/40xx, T4, A100, H100, L40
+#     CUDA 12 (SM 5.2+): GTX 9xx/10xx, P100, V100, plus all CUDA 13 GPUs
+#
+#   Platform support:
+#     - Linux + NVIDIA GPU + System CUDA: Full GPU acceleration
+#     - Windows WSL2: Experimental support (Linux wheels)
+#     - macOS: CPU-only (no NVIDIA GPU support)
+#     - Windows native: CPU-only (no pre-built wheels)
+#
+#   Verify your CUDA installation:
+#     nvcc --version        # Should show CUDA 12.x or 13.x
+#     nvidia-smi            # Should show your GPU
+#
+# See README.rst for detailed GPU installation guide
+# ============================================================================
 dependencies = [
     "pyside6>=6.10.1",
     "numpy>=2.3.0",
