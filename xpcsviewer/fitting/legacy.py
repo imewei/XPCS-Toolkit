@@ -30,7 +30,8 @@ def single_exp(
 ) -> NDArray[np.floating[Any]]:
     """Single exponential model for G2 correlation function."""
     b = get_backend()
-    return ensure_numpy(cts * b.exp(-2 * b.array(x) / tau) + bkg)
+    # Note: Do NOT use ensure_numpy() here - this function is JIT-traced by nlsq
+    return cts * b.exp(-2 * b.array(x) / tau) + bkg
 
 
 def double_exp(
@@ -44,9 +45,8 @@ def double_exp(
     """Double exponential model for G2 correlation function."""
     b = get_backend()
     xa: Any = b.array(x)
-    return ensure_numpy(
-        cts1 * b.exp(-2 * xa / tau1) + cts2 * b.exp(-2 * xa / tau2) + bkg
-    )
+    # Note: Do NOT use ensure_numpy() here - this function is JIT-traced by nlsq
+    return cts1 * b.exp(-2 * xa / tau1) + cts2 * b.exp(-2 * xa / tau2) + bkg
 
 
 def single_exp_all(
@@ -54,7 +54,8 @@ def single_exp_all(
 ) -> NDArray[np.floating[Any]]:
     """Single exponential with all parameters."""
     b = get_backend()
-    return ensure_numpy(a * b.exp(-2 * b.array(x) / b_) + c + d)
+    # Note: Do NOT use ensure_numpy() here - this function is JIT-traced by nlsq
+    return a * b.exp(-2 * b.array(x) / b_) + c + d
 
 
 def double_exp_all(
@@ -69,7 +70,8 @@ def double_exp_all(
     """Double exponential with all parameters."""
     b = get_backend()
     xa: Any = b.array(x)
-    return ensure_numpy(a * b.exp(-2 * xa / b_) + c * b.exp(-2 * xa / d) + e + f)
+    # Note: Do NOT use ensure_numpy() here - this function is JIT-traced by nlsq
+    return a * b.exp(-2 * xa / b_) + c * b.exp(-2 * xa / d) + e + f
 
 
 @log_timing(threshold_ms=100)
@@ -252,7 +254,8 @@ def fit_with_fixed_parallel(
         full_params = np.zeros(num_args)
         full_params[fit_flag] = fit_params
         full_params[fix_flag] = bounds[1, fix_flag]
-        return ensure_numpy(base_func(x_data, *full_params))
+        # Note: Do NOT use ensure_numpy() here - this function is JIT-traced by nlsq
+        return base_func(x_data, *full_params)
 
     fit_args = []
     for n in range(num_qvals):
@@ -408,7 +411,8 @@ def fit_with_fixed_sequential(
         full_params = np.zeros(num_args)
         full_params[fit_flag] = fit_params
         full_params[fix_flag] = bounds[1, fix_flag]
-        return ensure_numpy(base_func(x_data, *full_params))
+        # Note: Do NOT use ensure_numpy() here - this function is JIT-traced by nlsq
+        return base_func(x_data, *full_params)
 
     for n in range(y.shape[1]):
         try:
