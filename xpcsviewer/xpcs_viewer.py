@@ -200,6 +200,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         self._init_menus_and_toolbar()
         self._register_shortcuts()
         self._setup_drag_drop_list()
+        self._apply_button_styles()
         self.timer = QtCore.QTimer()
 
         if path is not None:
@@ -333,6 +334,36 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         if layout:
             layout.setContentsMargins(8, 8, 8, 8)
             layout.setSpacing(8)
+
+    def _apply_button_styles(self):
+        """Apply semantic button styling for better visual hierarchy.
+
+        Uses QSS property selectors to differentiate button types:
+        - Primary (default): Main action buttons like Plot, Fit
+        - Secondary: Navigation buttons like Move up/down
+        - Destructive: Remove/delete actions
+        """
+        from xpcsviewer.gui.theme.style_helpers import (
+            apply_destructive_buttons,
+            apply_secondary_buttons,
+        )
+
+        # Destructive buttons (remove/delete actions)
+        destructive_buttons = [
+            "pushButton_3",  # Remove from target
+            "avg_job_pop",  # Remove average job
+            "btn_avg_kill",  # Kill average job
+        ]
+        apply_destructive_buttons(self, destructive_buttons)
+
+        # Secondary buttons (navigation, utility actions)
+        secondary_buttons = [
+            "btn_up",  # Move up
+            "btn_down",  # Move down
+            "btn_deselect",  # Clear selection
+            "pushButton_11",  # Reload files
+        ]
+        apply_secondary_buttons(self, secondary_buttons)
 
     def _init_toolbar(self):
         """Initialize the main toolbar with common actions."""

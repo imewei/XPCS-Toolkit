@@ -17,6 +17,15 @@ from xpcsviewer.gui.theme.plot_themes import (
     get_plot_colors,
     get_pyqtgraph_options,
 )
+from xpcsviewer.gui.theme.style_helpers import (
+    apply_destructive_buttons,
+    apply_secondary_buttons,
+    set_button_size,
+    set_button_style,
+    set_card_style,
+    set_control_row,
+    set_density,
+)
 from xpcsviewer.gui.theme.tokens import (
     DARK_TOKENS,
     LIGHT_TOKENS,
@@ -36,9 +45,16 @@ __all__ = [
     "ThemeDefinition",
     "ThemeManager",
     "TypographyTokens",
+    "apply_destructive_buttons",
     "apply_matplotlib_theme",
     "apply_pyqtgraph_theme",
+    "apply_secondary_buttons",
     "get_matplotlib_params",
     "get_plot_colors",
     "get_pyqtgraph_options",
+    "set_button_size",
+    "set_button_style",
+    "set_card_style",
+    "set_control_row",
+    "set_density",
 ]

@@ -606,3 +606,268 @@ QDialog#commandPalette QListWidget::item {
 QListView[dropIndicator="true"] {
     border: 2px dashed @accent_primary;
 }
+
+/* ========================================
+   Secondary/Outline Button Style
+   ======================================== */
+
+QPushButton[buttonStyle="secondary"] {
+    background-color: transparent;
+    color: @text_primary;
+    border: 1px solid @border_strong;
+}
+
+QPushButton[buttonStyle="secondary"]:hover {
+    background-color: @background_secondary;
+    border-color: @accent_primary;
+}
+
+QPushButton[buttonStyle="secondary"]:pressed {
+    background-color: @border_subtle;
+}
+
+/* Destructive button style (for remove/delete actions) */
+QPushButton[buttonStyle="destructive"] {
+    background-color: transparent;
+    color: @error;
+    border: 1px solid @error;
+}
+
+QPushButton[buttonStyle="destructive"]:hover {
+    background-color: @error;
+    color: @background_primary;
+}
+
+QPushButton[buttonStyle="destructive"]:pressed {
+    background-color: @error;
+    color: @background_primary;
+}
+
+/* Small button variant */
+QPushButton[buttonSize="small"] {
+    padding: @spacing_xs @spacing_sm;
+    font-size: @size_sm;
+}
+
+/* Icon-only button variant */
+QPushButton[buttonStyle="icon"] {
+    background-color: transparent;
+    border: none;
+    padding: @spacing_xs;
+    min-width: 28px;
+    max-width: 28px;
+    min-height: 28px;
+    max-height: 28px;
+}
+
+QPushButton[buttonStyle="icon"]:hover {
+    background-color: @background_elevated;
+    border-radius: 4px;
+}
+
+/* ========================================
+   Enhanced Control Panel Styling
+   ======================================== */
+
+/* Control row styling for better visual grouping */
+QWidget[controlRow="true"] {
+    background-color: @background_secondary;
+    border: 1px solid @border_subtle;
+    border-radius: 6px;
+    padding: @spacing_sm;
+}
+
+/* Parameter group with card styling */
+QGroupBox[cardStyle="true"] {
+    background-color: @background_elevated;
+    border: 1px solid @border_subtle;
+    border-radius: 8px;
+    margin-top: @spacing_lg;
+    padding: @spacing_md;
+    padding-top: @spacing_xl;
+}
+
+QGroupBox[cardStyle="true"]::title {
+    subcontrol-origin: margin;
+    subcontrol-position: top left;
+    left: @spacing_md;
+    padding: @spacing_xs @spacing_sm;
+    background-color: @accent_primary;
+    color: @background_primary;
+    border-radius: 4px;
+    font-weight: 500;
+}
+
+/* ========================================
+   Enhanced Tab Content Area
+   ======================================== */
+
+/* Tab content with better padding */
+QTabWidget::tab-bar {
+    left: @spacing_sm;
+}
+
+/* Scrollable tab content area */
+QScrollArea {
+    background-color: transparent;
+    border: none;
+}
+
+QScrollArea > QWidget > QWidget {
+    background-color: transparent;
+}
+
+/* ========================================
+   Form Layout Enhancements
+   ======================================== */
+
+/* Inline form controls with consistent height */
+QComboBox, QSpinBox, QDoubleSpinBox, QLineEdit {
+    min-height: 28px;
+}
+
+/* Label alignment for forms */
+QLabel {
+    padding: 0 @spacing_xs;
+}
+
+/* Form section headers */
+QLabel[sectionHeader="true"] {
+    font-weight: 500;
+    color: @text_secondary;
+    padding-bottom: @spacing_xs;
+    border-bottom: 1px solid @border_subtle;
+    margin-bottom: @spacing_sm;
+}
+
+/* ========================================
+   Action Button Groups
+   ======================================== */
+
+/* Horizontal button group container */
+QWidget[buttonGroup="horizontal"] {
+    background-color: transparent;
+}
+
+QWidget[buttonGroup="horizontal"] QPushButton {
+    margin-right: @spacing_xs;
+}
+
+QWidget[buttonGroup="horizontal"] QPushButton:last-child {
+    margin-right: 0;
+}
+
+/* ========================================
+   Enhanced Plot Controls Area
+   ======================================== */
+
+/* Plot toolbar styling */
+QWidget[plotToolbar="true"] {
+    background-color: @background_secondary;
+    border: 1px solid @border_subtle;
+    border-radius: 6px;
+    padding: @spacing_sm @spacing_md;
+}
+
+/* ========================================
+   File List Panel Improvements
+   ======================================== */
+
+/* Source/Target list headers */
+QGroupBox#box_source::title,
+QGroupBox#box_target::title {
+    font-weight: 600;
+    color: @text_primary;
+}
+
+/* List action buttons row */
+QWidget[listActions="true"] {
+    background-color: @background_secondary;
+    border-top: 1px solid @border_subtle;
+    padding: @spacing_xs @spacing_sm;
+}
+
+/* ========================================
+   Status Indicators
+   ======================================== */
+
+/* Processing/loading indicator */
+QLabel[status="processing"] {
+    color: @info;
+    font-style: italic;
+}
+
+QLabel[status="success"] {
+    color: @success;
+}
+
+QLabel[status="error"] {
+    color: @error;
+}
+
+QLabel[status="warning"] {
+    color: @warning;
+}
+
+/* ========================================
+   Improved Table Styling
+   ======================================== */
+
+QTableView {
+    background-color: @background_input;
+    border: 1px solid @border_subtle;
+    border-radius: 6px;
+    gridline-color: @border_subtle;
+    outline: none;
+}
+
+QTableView::item {
+    padding: @spacing_xs @spacing_sm;
+}
+
+QTableView::item:selected {
+    background-color: @accent_primary;
+    color: @background_primary;
+}
+
+QTableView::item:hover:!selected {
+    background-color: @background_secondary;
+}
+
+/* ========================================
+   Enhanced Splitter Interaction
+   ======================================== */
+
+QSplitter::handle:pressed {
+    background-color: @accent_pressed;
+}
+
+/* Visual hint for splitter on hover */
+QSplitter::handle:horizontal:hover {
+    width: 6px;
+}
+
+QSplitter::handle:vertical:hover {
+    height: 6px;
+}
+
+/* ========================================
+   Control Density Variants
+   ======================================== */
+
+/* Compact mode for dense UIs */
+QWidget[density="compact"] QSpinBox,
+QWidget[density="compact"] QDoubleSpinBox,
+QWidget[density="compact"] QComboBox,
+QWidget[density="compact"] QLineEdit {
+    min-height: 24px;
+    padding: 2px @spacing_xs;
+}
+
+QWidget[density="compact"] QPushButton {
+    padding: @spacing_xs @spacing_sm;
+}
+
+QWidget[density="compact"] QLabel {
+    padding: 0 2px;
+}
