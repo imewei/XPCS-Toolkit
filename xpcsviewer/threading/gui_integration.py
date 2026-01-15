@@ -9,7 +9,8 @@ from __future__ import annotations
 from collections.abc import Callable
 from functools import wraps
 
-from PySide6 import QtWidgets
+# Qt imports via compatibility layer
+from xpcsviewer.gui.qt_compat import QtWidgets
 
 from ..utils.logging_config import get_logger
 from .async_workers import WorkerManager
@@ -25,7 +26,7 @@ class ThreadingIntegrator:
         """Initialize with basic threading components."""
         self.main_window = main_window
 
-        from PySide6.QtCore import QThreadPool
+        from xpcsviewer.gui.qt_compat import QThreadPool
 
         # Initialize basic components
         self.worker_manager = WorkerManager(QThreadPool.globalInstance())

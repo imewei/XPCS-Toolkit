@@ -7,17 +7,23 @@ that are used in the SimpleMask module:
 - optax for gradient-based optimization
 
 Available modules:
-    ndimage: gaussian_filter, binary_dilation, etc.
+    ndimage: gaussian_filter, gaussian_filter1d, zoom, etc.
     interpolate: interp1d, interp2d_jax, etc.
     optimize: minimize, curve_fit, least_squares, root
 """
 
 from __future__ import annotations
 
+from xpcsviewer.backends.scipy_replacements import ndimage
 from xpcsviewer.backends.scipy_replacements.interpolate import (
     Interp1d,
     interp1d,
     interp2d_jax,
+)
+from xpcsviewer.backends.scipy_replacements.ndimage import (
+    gaussian_filter,
+    gaussian_filter1d,
+    zoom,
 )
 from xpcsviewer.backends.scipy_replacements.optimize import (
     OptimizeResult,
@@ -36,6 +42,10 @@ __all__ = [
     "Interp1d",
     "interp1d",
     "interp2d_jax",
+    # ndimage functions
+    "gaussian_filter",
+    "gaussian_filter1d",
+    "zoom",
     # Optimization functions
     "OptimizeResult",
     "minimize",

@@ -16,7 +16,8 @@ from queue import Empty, PriorityQueue
 from typing import Any
 
 import psutil
-from PySide6.QtCore import QObject, Signal
+# Qt imports via compatibility layer
+from xpcsviewer.gui.qt_compat import QObject, Signal
 
 from ..utils.log_utils import log_timing
 from ..utils.logging_config import get_logger

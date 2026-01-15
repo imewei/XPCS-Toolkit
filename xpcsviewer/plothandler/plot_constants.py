@@ -173,7 +173,7 @@ def get_theme_colors(theme: ThemeName | None = None) -> dict[str, str]:
             try:
                 from typing import cast
 
-                from PySide6.QtWidgets import QApplication
+                from xpcsviewer.gui.qt_compat import QApplication
 
                 app = cast(QApplication, QApplication.instance())
                 if app is not None:

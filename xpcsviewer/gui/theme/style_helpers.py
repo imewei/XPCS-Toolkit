@@ -7,7 +7,8 @@ enabling the use of QSS property selectors defined in base.qss.
 
 from typing import Literal
 
-from PySide6.QtWidgets import QGroupBox, QPushButton, QWidget
+# Qt imports via compatibility layer
+from xpcsviewer.gui.qt_compat import QGroupBox, QPushButton, QWidget
 
 ButtonStyle = Literal["primary", "secondary", "destructive", "icon"]
 ButtonSize = Literal["normal", "small"]

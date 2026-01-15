@@ -176,10 +176,84 @@ def log_array_size_mismatch(
 
 
 def validate_array_compatibility(
+    *arrays: np.ndarray,
+    names: list[str] | None = None,
+    allow_broadcast: bool = False,
+    file_label: str = "unknown",
+) -> bool:
+    """
+    Validate that arrays have compatible shapes.
+
+    Per Technical Guidelines, this function raises XPCSValidationError instead
+    of silently truncating arrays, as silent data modification is prohibited.
+
+    Parameters
+    ----------
+    *arrays : np.ndarray
+        Arrays to validate
+    names : list[str] | None
+        Optional names for error messages
+    allow_broadcast : bool
+        If True, allow NumPy-compatible broadcasting.
+        If False (default), require exact shape match.
+    file_label : str
+        Label for error messaging (deprecated, use names instead)
+
+    Returns
+    -------
+    bool
+        True if arrays are compatible
+
+    Raises
+    ------
+    XPCSValidationError
+        If arrays have incompatible shapes (no silent truncation)
+
+    Notes
+    -----
+    Changed from silent truncation to raising XPCSValidationError
+    per data integrity guidelines. Silent data modification is prohibited.
+    """
+    if not arrays:
+        raise XPCSValidationError("No arrays provided for validation")
+
+    # Filter out None arrays
+    valid_arrays = [arr for arr in arrays if arr is not None]
+    if not valid_arrays:
+        raise XPCSValidationError(f"All arrays are None for file {file_label}")
+
+    # Get lengths
+    lengths = [len(arr) for arr in valid_arrays]
+
+    # Check for empty arrays
+    if any(length == 0 for length in lengths):
+        raise XPCSValidationError(f"Empty arrays found for file {file_label}")
+
+    # Build array info for error messages
+    if names is not None:
+        array_info = dict(zip(names[: len(lengths)], lengths, strict=False))
+    else:
+        array_info = {f"array_{i}": length for i, length in enumerate(lengths)}
+
+    # Check for length mismatch
+    if len(set(lengths)) > 1:
+        raise XPCSValidationError(
+            f"Array length mismatch: {array_info}. "
+            f"Per data integrity guidelines, silent truncation is not allowed."
+        )
+
+    return True
+
+
+def validate_array_compatibility_legacy(
     *arrays, file_label: str = "unknown"
 ) -> tuple[bool, int, str | None]:
     """
-    Validate that arrays have compatible sizes and return the minimum length.
+    Legacy validation that returns tuple instead of raising.
+
+    DEPRECATED: Use validate_array_compatibility() which raises XPCSValidationError.
+    This function is kept for backward compatibility but should not be used
+    for new code as it allows silent data truncation.
 
     Args:
         *arrays: Variable number of arrays to check
@@ -191,6 +265,15 @@ def validate_array_compatibility(
         - int: Minimum length of arrays
         - str or None: Warning message if sizes differ, None if all same size
     """
+    import warnings
+
+    warnings.warn(
+        "validate_array_compatibility_legacy is deprecated. "
+        "Use validate_array_compatibility() which raises XPCSValidationError.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+
     if not arrays:
         return False, 0, "No arrays provided for validation"
 

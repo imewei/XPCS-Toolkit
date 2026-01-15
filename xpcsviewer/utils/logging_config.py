@@ -410,9 +410,9 @@ def log_system_info():
 
     # Log Qt information if available
     try:
-        from PySide6 import __version__ as pyside_version
+        from qtpy import QT_VERSION
 
-        logger.info(f"PySide6: {pyside_version}")
+        logger.info(f"Qt (via qtpy): {QT_VERSION}")
     except ImportError:
         pass
 

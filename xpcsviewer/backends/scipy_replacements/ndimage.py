@@ -202,6 +202,155 @@ def _convolve_1d(arr, kernel, axis: int):
     return jnp.moveaxis(result, -1, axis)
 
 
+def gaussian_filter1d(
+    input_array: ArrayLike,
+    sigma: float,
+    axis: int = -1,
+    mode: str = "reflect",
+    truncate: float = 4.0,
+) -> np.ndarray:
+    """Apply 1D Gaussian filter along specified axis.
+
+    This is a JAX-compatible implementation that uses convolution with
+    a 1D Gaussian kernel. Falls back to scipy.ndimage.gaussian_filter1d
+    when JAX is not available.
+
+    Parameters
+    ----------
+    input_array : array-like
+        Input array to filter
+    sigma : float
+        Standard deviation for Gaussian kernel
+    axis : int
+        Axis along which to apply filter (default: -1)
+    mode : str
+        Boundary mode: 'reflect', 'constant', 'nearest', 'wrap'
+        (default: 'reflect')
+    truncate : float
+        Truncate filter at this many standard deviations (default: 4.0)
+
+    Returns
+    -------
+    ndarray
+        Filtered array
+    """
+    try:
+        import jax.numpy as jnp
+
+        arr = jnp.asarray(input_array)
+
+        # Map mode to JAX padding mode
+        padding_modes = {
+            "reflect": "REFLECT",
+            "constant": "CONSTANT",
+            "nearest": "REPLICATE",
+            "wrap": "CIRCULAR",
+        }
+        if mode not in padding_modes:
+            raise ValueError(f"Unsupported mode: {mode}")
+        pad_mode = padding_modes[mode]
+
+        result = _gaussian_filter_1d_jax(arr, sigma, axis, pad_mode, truncate)
+
+        from xpcsviewer.backends import ensure_numpy
+
+        return ensure_numpy(result)
+    except ImportError:
+        from scipy.ndimage import gaussian_filter1d as scipy_gaussian_1d
+
+        return scipy_gaussian_1d(
+            input_array, sigma, axis=axis, mode=mode, truncate=truncate
+        )
+
+
+def zoom(
+    input_array: ArrayLike,
+    zoom_factor: float | tuple[float, ...],
+    order: int = 1,
+    mode: str = "constant",
+    cval: float = 0.0,
+) -> np.ndarray:
+    """Zoom (resize) array using interpolation.
+
+    This is a JAX-compatible implementation using interpax for interpolation.
+    Falls back to scipy.ndimage.zoom when JAX is not available.
+
+    Parameters
+    ----------
+    input_array : array-like
+        Input array to zoom
+    zoom_factor : float or tuple of floats
+        Zoom factor for each axis. If scalar, applied uniformly.
+    order : int
+        Interpolation order (0=nearest, 1=linear, 3=cubic). Default: 1.
+    mode : str
+        Boundary mode (default: 'constant')
+    cval : float
+        Fill value for constant mode (default: 0.0)
+
+    Returns
+    -------
+    ndarray
+        Zoomed array
+    """
+    try:
+        import interpax
+        import jax.numpy as jnp
+
+        arr = jnp.asarray(input_array)
+        ndim = arr.ndim
+
+        # Normalize zoom_factor to tuple
+        if isinstance(zoom_factor, (int, float)):
+            zoom_tuple = (float(zoom_factor),) * ndim
+        else:
+            zoom_tuple = tuple(float(z) for z in zoom_factor)
+
+        if len(zoom_tuple) != ndim:
+            raise ValueError(f"zoom_factor must have {ndim} elements")
+
+        # Calculate new shape
+        new_shape = tuple(int(round(s * z)) for s, z in zip(arr.shape, zoom_tuple))
+
+        if ndim == 1:
+            # 1D case
+            x_old = jnp.arange(arr.shape[0])
+            x_new = jnp.linspace(0, arr.shape[0] - 1, new_shape[0])
+
+            method = "linear" if order == 1 else ("nearest" if order == 0 else "cubic")
+            result = interpax.interp1d(x_new, x_old, arr, method=method, extrap=cval)
+
+        elif ndim == 2:
+            # 2D case - use bilinear/bicubic interpolation
+            y_old = jnp.arange(arr.shape[0])
+            x_old = jnp.arange(arr.shape[1])
+            y_new = jnp.linspace(0, arr.shape[0] - 1, new_shape[0])
+            x_new = jnp.linspace(0, arr.shape[1] - 1, new_shape[1])
+
+            # Create meshgrid for query points
+            xq, yq = jnp.meshgrid(x_new, y_new)
+
+            method = "linear" if order == 1 else ("nearest" if order == 0 else "cubic")
+            result = interpax.interp2d(
+                yq, xq, y_old, x_old, arr, method=method, extrap=cval
+            )
+
+        else:
+            # For higher dimensions, fall back to scipy
+            from scipy.ndimage import zoom as scipy_zoom
+
+            return scipy_zoom(input_array, zoom_factor, order=order, mode=mode, cval=cval)
+
+        from xpcsviewer.backends import ensure_numpy
+
+        return ensure_numpy(result)
+
+    except ImportError:
+        from scipy.ndimage import zoom as scipy_zoom
+
+        return scipy_zoom(input_array, zoom_factor, order=order, mode=mode, cval=cval)
+
+
 def uniform_filter(
     input_array: ArrayLike,
     size: int | tuple[int, ...] = 3,

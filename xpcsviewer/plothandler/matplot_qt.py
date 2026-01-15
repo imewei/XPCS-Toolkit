@@ -2,21 +2,26 @@ import os
 import random
 import time
 
-# Set Qt API to PySide6 before importing matplotlib
-os.environ.setdefault("QT_API", "PySide6")
-
+# Set Qt API before importing matplotlib (via qt_compat environment setup)
 import matplotlib
 
-# Set matplotlib backend to PySide6-compatible qtagg
+# Set matplotlib backend to Qt-compatible qtagg
 matplotlib.use("qtagg")
 import matplotlib.pyplot as plt
 import numpy as np
 
-# Import from the PySide6-compatible backend
+# Import from the Qt-compatible backend
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg, NavigationToolbar2QT
 from matplotlib.figure import Figure
-from PySide6 import QtCore, QtWidgets
-from PySide6.QtWidgets import QHBoxLayout, QVBoxLayout, QWidget
+
+# Qt imports via compatibility layer
+from xpcsviewer.gui.qt_compat import (
+    QHBoxLayout,
+    QVBoxLayout,
+    QWidget,
+    QtCore,
+    QtWidgets,
+)
 
 from xpcsviewer.utils.logging_config import get_logger
 

@@ -700,6 +700,8 @@ def vectorized_g2_interpolation(tel, g2_data, target_tel):
     """
     Vectorized interpolation of G2 data to new time points.
 
+    Uses JAX-compatible interpax backend when available.
+
     Args:
         tel: Original time points
         g2_data: G2 data [time, q_values]
@@ -708,14 +710,14 @@ def vectorized_g2_interpolation(tel, g2_data, target_tel):
     Returns:
         Interpolated G2 data
     """
-    from scipy.interpolate import interp1d
+    from xpcsviewer.backends.scipy_replacements import interp1d
 
     # Vectorized interpolation for all q-values simultaneously
     interpolated_data = np.zeros((len(target_tel), g2_data.shape[1]))
 
     # Process all q-values in vectorized manner
     for q_idx in range(g2_data.shape[1]):
-        # Create interpolation function
+        # Create interpolation function using JAX-compatible backend
         interp_func = interp1d(
             tel,
             g2_data[:, q_idx],

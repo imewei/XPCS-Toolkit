@@ -432,7 +432,7 @@ def vectorized_background_subtraction(foreground_data, background_data, weight=1
 
     # Interpolate background to foreground q-values if needed
     if not np.array_equal(q, q_bg):
-        from scipy.interpolate import interp1d
+        from xpcsviewer.backends.scipy_replacements import interp1d
 
         interp_func = interp1d(
             q_bg, I_bg, kind="linear", bounds_error=False, fill_value=0
@@ -541,8 +541,8 @@ def batch_saxs_analysis(data_list, operations):
                 )
 
             elif op["type"] == "smooth":
-                # Vectorized smoothing
-                from scipy.ndimage import gaussian_filter1d
+                # Vectorized smoothing using JAX-compatible backend
+                from xpcsviewer.backends.scipy_replacements import gaussian_filter1d
 
                 sigma = op.get("sigma", 1.0)
                 processed_I = gaussian_filter1d(processed_I, sigma=sigma)

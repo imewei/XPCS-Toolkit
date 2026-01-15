@@ -4,12 +4,18 @@ Visualization Performance Optimization for XPCS Viewer
 This module addresses critical performance bottlenecks in the visualization layer
 that were identified during comprehensive analysis, including PyQtGraph optimization,
 matplotlib performance improvements, and intelligent plot handler selection.
+
+Data Integrity Configuration:
+    By default, downsampling is DISABLED to preserve data integrity per Technical
+    Guidelines. Users must explicitly enable downsampling via VisualizationConfig
+    if they want performance optimization at the cost of data fidelity.
 """
 
 import importlib.util
 import time
 from collections.abc import Callable
 from contextlib import contextmanager
+from dataclasses import dataclass
 from enum import Enum
 from typing import Any
 
@@ -50,6 +56,85 @@ def _get_threading_manager():
 
 
 logger = get_logger(__name__)
+
+
+# =============================================================================
+# Data Integrity Configuration (Technical Guidelines Compliance)
+# =============================================================================
+
+
+@dataclass
+class VisualizationConfig:
+    """Configuration for visualization data integrity settings.
+
+    Per Technical Guidelines, downsampling is DISABLED by default to ensure
+    no silent data loss in visualization. Users must explicitly opt-in to
+    downsampling if they prefer performance over data fidelity.
+
+    Attributes
+    ----------
+    allow_downsampling : bool
+        If True, allow data reduction for visualization performance.
+        Default is False (data integrity preserved).
+    downsample_threshold : int
+        Minimum data points before downsampling activates.
+        Only applies when allow_downsampling is True.
+    log_downsampling : bool
+        If True, log all downsampling operations with counts.
+        Default is True for audit trail.
+
+    Example
+    -------
+    >>> # Enable downsampling for interactive performance
+    >>> config = VisualizationConfig(allow_downsampling=True)
+    >>> set_visualization_config(config)
+    >>>
+    >>> # Disable downsampling for data integrity (default)
+    >>> config = VisualizationConfig(allow_downsampling=False)
+    >>> set_visualization_config(config)
+    """
+
+    allow_downsampling: bool = False
+    downsample_threshold: int = 100_000
+    log_downsampling: bool = True
+
+
+# Module-level default configuration (downsampling OFF by default)
+_default_visualization_config: VisualizationConfig = VisualizationConfig()
+
+
+def get_visualization_config() -> VisualizationConfig:
+    """Get the current visualization configuration.
+
+    Returns
+    -------
+    VisualizationConfig
+        The current module-level visualization configuration.
+    """
+    return _default_visualization_config
+
+
+def set_visualization_config(config: VisualizationConfig) -> None:
+    """Set the visualization configuration.
+
+    Parameters
+    ----------
+    config : VisualizationConfig
+        New configuration to apply.
+
+    Example
+    -------
+    >>> # Enable downsampling for large datasets
+    >>> set_visualization_config(VisualizationConfig(allow_downsampling=True))
+    """
+    global _default_visualization_config
+    _default_visualization_config = config
+    if config.allow_downsampling:
+        logger.info(
+            f"Visualization downsampling ENABLED (threshold: {config.downsample_threshold})"
+        )
+    else:
+        logger.debug("Visualization downsampling DISABLED (data integrity mode)")
 
 
 class PlotBackend(Enum):
@@ -104,14 +189,22 @@ def optimized_pyqtgraph_context():
 
 
 class ImageDisplayOptimizer:
-    """Optimizes large image display performance."""
+    """Optimizes large image display performance.
+
+    Per Technical Guidelines, downsampling is disabled by default.
+    Users must explicitly enable it via VisualizationConfig.
+    """
 
     def __init__(self, max_display_size: tuple[int, int] = (2048, 2048)):
         self.max_display_size = max_display_size
         self.memory_manager = get_memory_manager()
 
     def optimize_image_for_display(
-        self, image: np.ndarray, target_size: tuple[int, int] | None = None
+        self,
+        image: np.ndarray,
+        target_size: tuple[int, int] | None = None,
+        *,
+        config: VisualizationConfig | None = None,
     ) -> np.ndarray:
         """
         Optimize image for display performance.
@@ -122,12 +215,26 @@ class ImageDisplayOptimizer:
             Input image array
         target_size : tuple[int, int], optional
             Target display size (height, width)
+        config : VisualizationConfig | None
+            Configuration override. If None, uses module default.
 
         Returns
         -------
         np.ndarray
-            Optimized image for display
+            Optimized image (same as input if downsampling disabled)
+
+        Notes
+        -----
+        When config.allow_downsampling is False (default), returns
+        input image unchanged per Technical Guidelines.
         """
+        # Get configuration
+        config = config or get_visualization_config()
+
+        # Data integrity check: if downsampling disabled, return unchanged
+        if not config.allow_downsampling:
+            return image
+
         if target_size is None:
             target_size = self.max_display_size
 
@@ -148,10 +255,13 @@ class ImageDisplayOptimizer:
             # Minor size difference, no downsampling
             return image
 
-        # Apply intelligent downsampling
-        logger.info(
-            f"Downsampling image from {image.shape} by factor {downsample_factor:.1f}"
-        )
+        # Log downsampling operation for audit trail
+        original_count = image.size
+        if config.log_downsampling:
+            logger.info(
+                f"Downsampling image: {image.shape} -> factor {downsample_factor:.1f}x "
+                f"(original: {original_count:,} pixels)"
+            )
 
         # Use area-based downsampling for better quality
         new_height = int(height / downsample_factor)
@@ -171,8 +281,12 @@ class ImageDisplayOptimizer:
             logger.warning(f"Unsupported image dimensionality: {len(image.shape)}")
             return image
 
-        memory_saved = (image.nbytes - downsampled.nbytes) / (1024 * 1024)
-        logger.debug(f"Image downsampling saved {memory_saved:.1f}MB memory")
+        reduced_count = downsampled.size
+        if config.log_downsampling:
+            logger.info(
+                f"Downsampling complete: {original_count:,} -> {reduced_count:,} pixels "
+                f"(factor: {original_count / reduced_count:.1f}x)"
+            )
 
         return downsampled
 
@@ -305,7 +419,13 @@ class PlotPerformanceOptimizer:
         return optimizations
 
     def optimize_matplotlib_plot(
-        self, figure, axes, data: np.ndarray, plot_type: str
+        self,
+        figure,
+        axes,
+        data: np.ndarray,
+        plot_type: str,
+        *,
+        config: VisualizationConfig | None = None,
     ) -> dict[str, Any]:
         """
         Apply matplotlib-specific optimizations.
@@ -320,12 +440,22 @@ class PlotPerformanceOptimizer:
             Data to be plotted
         plot_type : str
             Type of plot
+        config : VisualizationConfig | None
+            Configuration override. If None, uses module default.
 
         Returns
         -------
         dict[str, Any]
             Optimization settings applied
+
+        Notes
+        -----
+        Per Technical Guidelines, downsampling is disabled by default.
+        When config.allow_downsampling is False, no data reduction occurs.
         """
+        # Get configuration
+        config = config or get_visualization_config()
+
         optimizations: dict[str, Any] = {}
 
         # General matplotlib optimizations
@@ -333,9 +463,11 @@ class PlotPerformanceOptimizer:
         optimizations["background_optimized"] = True
 
         if plot_type == "image":
-            # Image-specific optimizations
-            if data.size > POINTS_THRESHOLD_HIGH:  # > 1M pixels
-                optimized_data = self.image_optimizer.optimize_image_for_display(data)
+            # Image-specific optimizations (only if downsampling allowed)
+            if config.allow_downsampling and data.size > POINTS_THRESHOLD_HIGH:
+                optimized_data = self.image_optimizer.optimize_image_for_display(
+                    data, config=config
+                )
                 optimizations["image_downsampled"] = data.shape != optimized_data.shape
                 data = optimized_data
 
@@ -344,8 +476,9 @@ class PlotPerformanceOptimizer:
                 optimizations["interpolation"] = "nearest"
 
         elif plot_type in ["line", "scatter"]:
-            # Line/scatter optimizations
-            if data.size > POINTS_THRESHOLD_MEDIUM:  # > 100k points
+            # Line/scatter optimizations (only if downsampling allowed)
+            if config.allow_downsampling and data.size > POINTS_THRESHOLD_MEDIUM:
+                original_count = data.size
                 # Downsample data for matplotlib
                 downsample_factor = int(np.ceil(data.size / 1e4))  # Target ~10k points
                 if len(data.shape) == 1:
@@ -354,6 +487,12 @@ class PlotPerformanceOptimizer:
                     data = data[::downsample_factor, :]
                 optimizations["data_downsampled"] = True
                 optimizations["downsample_factor"] = downsample_factor
+                reduced_count = data.size
+                if config.log_downsampling:
+                    logger.info(
+                        f"Downsampling plot data: {original_count:,} -> {reduced_count:,} points "
+                        f"(factor: {downsample_factor}x)"
+                    )
 
         return optimizations
 
@@ -720,7 +859,11 @@ class AdvancedGUIRenderer:
             )
 
     def optimize_large_dataset_display(
-        self, data: np.ndarray, max_points: int = 10000
+        self,
+        data: np.ndarray,
+        max_points: int = 10000,
+        *,
+        config: VisualizationConfig | None = None,
     ) -> np.ndarray:
         """
         Optimize display of large datasets through intelligent downsampling.
@@ -731,20 +874,42 @@ class AdvancedGUIRenderer:
             Input data array
         max_points : int
             Maximum number of points to display
+        config : VisualizationConfig | None
+            Configuration override. If None, uses module default.
 
         Returns
         -------
         np.ndarray
-            Optimized data for display
+            Optimized data for display (unchanged if downsampling disabled)
+
+        Notes
+        -----
+        Per Technical Guidelines, downsampling is disabled by default.
+        When config.allow_downsampling is False, returns input unchanged.
         """
+        # Get configuration
+        config = config or get_visualization_config()
+
+        # Data integrity check: if downsampling disabled, return unchanged
+        if not config.allow_downsampling:
+            return data
+
         if data.size <= max_points:
             return data
+
+        original_count = data.size
 
         # Apply different strategies based on data dimensionality
         if len(data.shape) == 1:
             # 1D data: use peak-preserving downsampling
             downsample_factor = max(1, data.size // max_points)
-            return self._peak_preserving_downsample(data, downsample_factor)
+            result = self._peak_preserving_downsample(data, downsample_factor)
+            if config.log_downsampling:
+                logger.info(
+                    f"Downsampling 1D data: {original_count:,} -> {result.size:,} points "
+                    f"(factor: {downsample_factor}x)"
+                )
+            return result
 
         if len(data.shape) == NDIM_2D:
             # 2D data: use area-based downsampling
@@ -759,12 +924,19 @@ class AdvancedGUIRenderer:
 
                     zoom_y = new_height / data.shape[0]
                     zoom_x = new_width / data.shape[1]
-                    return ndimage.zoom(data, (zoom_y, zoom_x), order=1)
+                    result = ndimage.zoom(data, (zoom_y, zoom_x), order=1)
                 except ImportError:
                     # Fallback to simple slicing
                     step_y = max(1, data.shape[0] // new_height)
                     step_x = max(1, data.shape[1] // new_width)
-                    return data[::step_y, ::step_x]
+                    result = data[::step_y, ::step_x]
+
+                if config.log_downsampling:
+                    logger.info(
+                        f"Downsampling 2D data: {original_count:,} -> {result.size:,} pixels "
+                        f"(factor: {original_count / result.size:.1f}x)"
+                    )
+                return result
 
         return data
 

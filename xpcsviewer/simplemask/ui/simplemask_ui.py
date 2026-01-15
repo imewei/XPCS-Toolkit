@@ -3,19 +3,21 @@
 This module provides the setupUi function for SimpleMaskWindow layout.
 """
 
-from PySide6.QtCore import Qt
-from PySide6.QtGui import QAction, QKeySequence
-from PySide6.QtWidgets import (
+# Qt imports via compatibility layer
+from xpcsviewer.gui.qt_compat import (
+    QAction,
     QButtonGroup,
     QDoubleSpinBox,
     QFormLayout,
     QGroupBox,
     QHBoxLayout,
+    QKeySequence,
     QLabel,
     QPushButton,
     QSpinBox,
     QSplitter,
     QStatusBar,
+    Qt,
     QToolBar,
     QToolButton,
     QVBoxLayout,

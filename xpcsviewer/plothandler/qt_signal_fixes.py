@@ -11,8 +11,14 @@ from collections.abc import Callable
 from contextlib import contextmanager
 from typing import Any
 
-from PySide6 import QtWidgets
-from PySide6.QtCore import QMetaMethod, QMetaObject, QObject, Qt, Signal
+# Qt imports via compatibility layer
+from xpcsviewer.gui.qt_compat import (
+    QMetaMethod,
+    QObject,
+    Qt,
+    QtWidgets,
+    Signal,
+)
 
 from ..utils.logging_config import get_logger
 

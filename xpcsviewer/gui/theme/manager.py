@@ -9,9 +9,8 @@ import logging
 from pathlib import Path
 from typing import Literal
 
-from PySide6.QtCore import QObject, Signal
-from PySide6.QtGui import QGuiApplication
-from PySide6.QtWidgets import QApplication
+# Qt imports via compatibility layer
+from xpcsviewer.gui.qt_compat import QApplication, QGuiApplication, QObject, Signal
 
 from xpcsviewer.gui.state.preferences import load_preferences, save_preferences
 from xpcsviewer.gui.theme.tokens import (
@@ -134,7 +133,7 @@ class ThemeManager(QObject):
         app_gui = cast(QGuiApplication, app)
         style_hints = app_gui.styleHints()
         if hasattr(style_hints, "colorScheme"):
-            from PySide6.QtCore import Qt
+            from xpcsviewer.gui.qt_compat import Qt
 
             scheme = style_hints.colorScheme()
             if scheme == Qt.ColorScheme.Dark:

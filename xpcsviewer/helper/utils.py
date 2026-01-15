@@ -8,14 +8,22 @@ Provides common data transformation functions used across analysis modules:
 - create_slice: Slice creation for array subsetting
 """
 
+from typing import Any
+
 import numpy as np
+from numpy.typing import ArrayLike, NDArray
 
 from xpcsviewer.utils.logging_config import get_logger
 
 logger = get_logger(__name__)
 
 
-def get_min_max(data, min_percent=0, max_percent=100, **kwargs):
+def get_min_max(
+    data: ArrayLike,
+    min_percent: float = 0,
+    max_percent: float = 100,
+    **kwargs: Any,
+) -> tuple[float, float]:
     """Calculate intensity min/max values using percentiles.
 
     Args:
@@ -30,8 +38,9 @@ def get_min_max(data, min_percent=0, max_percent=100, **kwargs):
     logger.debug(
         f"Calculating min/max: min_percent={min_percent}, max_percent={max_percent}"
     )
-    vmin = np.percentile(data.ravel(), min_percent)
-    vmax = np.percentile(data.ravel(), max_percent)
+    arr = np.asarray(data)
+    vmin = float(np.percentile(arr.ravel(), min_percent))
+    vmax = float(np.percentile(arr.ravel(), max_percent))
     logger.debug(f"Percentile values: vmin={vmin}, vmax={vmax}")
     if "plot_norm" in kwargs and "plot_type" in kwargs and kwargs["plot_norm"] == 3:
         if kwargs["plot_type"] == "log":
@@ -44,7 +53,21 @@ def get_min_max(data, min_percent=0, max_percent=100, **kwargs):
     return vmin, vmax
 
 
-def norm_saxs_data(Iq, q, plot_norm=0):
+def norm_saxs_data(
+    Iq: NDArray[np.floating[Any]],
+    q: NDArray[np.floating[Any]],
+    plot_norm: int = 0,
+) -> tuple[NDArray[np.floating[Any]], str, str]:
+    """Normalize SAXS intensity data.
+
+    Args:
+        Iq: Intensity array.
+        q: Q-values array.
+        plot_norm: Normalization mode (0=none, 1=I*q^2, 2=I*q^4, 3=I/I_0).
+
+    Returns:
+        Tuple of (normalized_Iq, xlabel, ylabel).
+    """
     logger.debug(f"Normalizing SAXS data with plot_norm={plot_norm}")
     ylabel = "Intensity"
     if plot_norm == 1:
@@ -62,7 +85,19 @@ def norm_saxs_data(Iq, q, plot_norm=0):
     return Iq, xlabel, ylabel
 
 
-def create_slice(arr, x_range):
+def create_slice(
+    arr: NDArray[np.floating[Any]],
+    x_range: tuple[float, float],
+) -> slice:
+    """Create a slice for array subsetting based on value range.
+
+    Args:
+        arr: 1D sorted array of values.
+        x_range: Tuple of (min_value, max_value) defining the range.
+
+    Returns:
+        Slice object for the array subset.
+    """
     logger.debug(f"Creating slice for range {x_range} on array of size {arr.size}")
     start, end = 0, arr.size - 1
     while arr[start] < x_range[0]:

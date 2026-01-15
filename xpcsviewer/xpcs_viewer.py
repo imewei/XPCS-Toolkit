@@ -10,13 +10,17 @@ from pathlib import Path
 import numpy as np
 import pyqtgraph as pg
 from pyqtgraph.parametertree import Parameter
-from PySide6 import QtCore, QtGui, QtWidgets
-from PySide6.QtGui import (
+
+# Qt imports via compatibility layer
+from xpcsviewer.gui.qt_compat import (
     QAction,
     QActionGroup,
     QDesktopServices,
     QKeySequence,
     QShortcut,
+    QtCore,
+    QtGui,
+    QtWidgets,
 )
 
 # Import async components
@@ -377,7 +381,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
 
     def _init_toolbar(self):
         """Initialize the main toolbar with common actions."""
-        from PySide6.QtWidgets import QStyle, QToolBar, QToolButton
+        from xpcsviewer.gui.qt_compat import QStyle, QToolBar, QToolButton
 
         toolbar = QToolBar("Main Toolbar", self)
         toolbar.setObjectName("mainToolbar")
@@ -1029,7 +1033,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
 
     def setup_progress_shortcut(self):
         """Set up keyboard shortcut to show progress dialog."""
-        from PySide6.QtGui import QKeySequence, QShortcut
+        from xpcsviewer.gui.qt_compat import QKeySequence, QShortcut
 
         # Ctrl+P to show progress dialog
         shortcut = QShortcut(QKeySequence("Ctrl+P"), self)

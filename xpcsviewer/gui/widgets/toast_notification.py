@@ -8,8 +8,17 @@ operation feedback, errors, and warnings.
 import logging
 from enum import Enum
 
-from PySide6.QtCore import Property, QPoint, Qt, QTimer
-from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QWidget
+# Qt imports via compatibility layer
+from xpcsviewer.gui.qt_compat import (
+    Property,
+    QFrame,
+    QHBoxLayout,
+    QLabel,
+    QPoint,
+    Qt,
+    QTimer,
+    QWidget,
+)
 
 logger = logging.getLogger(__name__)
 

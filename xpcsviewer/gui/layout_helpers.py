@@ -7,7 +7,8 @@ of the application at runtime, complementing the QSS styling.
 
 from typing import Literal
 
-from PySide6.QtWidgets import (
+# Qt imports via compatibility layer
+from xpcsviewer.gui.qt_compat import (
     QFrame,
     QGroupBox,
     QLabel,

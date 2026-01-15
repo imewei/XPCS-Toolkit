@@ -7,8 +7,9 @@ retry buttons, and log access links.
 
 from collections.abc import Callable
 
-from PySide6.QtGui import QDesktopServices
-from PySide6.QtWidgets import (
+# Qt imports via compatibility layer
+from xpcsviewer.gui.qt_compat import (
+    QDesktopServices,
     QDialog,
     QHBoxLayout,
     QLabel,
@@ -177,7 +178,7 @@ class ErrorDialog(QDialog):
         """Open the logs directory."""
         from pathlib import Path
 
-        from PySide6.QtCore import QUrl
+        from xpcsviewer.gui.qt_compat import QUrl
 
         log_dir = Path.home() / ".xpcsviewer" / "logs"
         log_dir.mkdir(parents=True, exist_ok=True)
@@ -185,7 +186,7 @@ class ErrorDialog(QDialog):
 
     def _copy_details(self) -> None:
         """Copy error details to clipboard."""
-        from PySide6.QtWidgets import QApplication
+        from xpcsviewer.gui.qt_compat import QApplication
 
         clipboard = QApplication.clipboard()
         clipboard.setText(self._details)

@@ -7,8 +7,14 @@ drag-and-drop reordering of items.
 
 import logging
 
-from PySide6.QtCore import QModelIndex, Qt, Signal
-from PySide6.QtWidgets import QAbstractItemView, QListView
+# Qt imports via compatibility layer
+from xpcsviewer.gui.qt_compat import (
+    QAbstractItemView,
+    QListView,
+    QModelIndex,
+    Qt,
+    Signal,
+)
 
 logger = logging.getLogger(__name__)
 

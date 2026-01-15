@@ -15,8 +15,9 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any
 
-from PySide6 import QtCore
-from PySide6.QtCore import QObject, QRunnable, Signal, Slot
+# Qt imports via compatibility layer
+from xpcsviewer.gui.qt_compat import QObject, QtCore, Signal, Slot
+from qtpy.QtCore import QRunnable
 
 from ..utils.log_utils import log_timing
 from ..utils.logging_config import get_logger

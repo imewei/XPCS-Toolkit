@@ -116,6 +116,39 @@ def _run_mcmc(
     return mcmc, mcmc.get_samples()
 
 
+def compute_bfmi(arviz_data) -> float | None:
+    """Compute BFMI from ArviZ InferenceData.
+
+    Parameters
+    ----------
+    arviz_data : az.InferenceData
+        InferenceData object from MCMC sampling
+
+    Returns
+    -------
+    float | None
+        Mean BFMI across chains, or None if computation fails
+
+    Notes
+    -----
+    Uses az.bfmi() which returns per-chain values.
+    Returns mean across all chains.
+    Logs warning if BFMI < 0.2 per Technical Guidelines.
+    """
+    try:
+        bfmi_values = az.bfmi(arviz_data)
+        bfmi_mean = float(np.mean(bfmi_values))
+        if bfmi_mean < 0.2:
+            logger.warning(
+                f"Low BFMI ({bfmi_mean:.3f}) indicates poor posterior exploration. "
+                f"Consider reparameterization or increasing warmup."
+            )
+        return bfmi_mean
+    except Exception as e:
+        logger.warning(f"Failed to compute BFMI: {e}")
+        return None
+
+
 def _build_fit_result(
     mcmc: MCMC,
     samples: dict,
@@ -143,16 +176,20 @@ def _build_fit_result(
     # Count divergences
     num_divergent = int(np.sum(mcmc.get_extra_fields()["diverging"]))
 
+    # Convert to ArviZ InferenceData
+    arviz_data = az.from_numpyro(mcmc)
+
+    # Compute BFMI per Technical Guidelines
+    bfmi = compute_bfmi(arviz_data)
+
     diagnostics = FitDiagnostics(
         r_hat=r_hat,
         ess_bulk=ess_bulk,
         ess_tail=ess_tail,
         divergences=num_divergent,
         max_treedepth_reached=0,  # NumPyro doesn't track this directly
+        bfmi=bfmi,
     )
-
-    # Convert to ArviZ InferenceData
-    arviz_data = az.from_numpyro(mcmc)
 
     return FitResult(
         samples=samples_np,

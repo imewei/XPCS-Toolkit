@@ -6,6 +6,7 @@ and sampler configuration.
 
 from __future__ import annotations
 
+import sys
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
@@ -17,6 +18,37 @@ if TYPE_CHECKING:
     from nlsq.diagnostics import ModelHealthReport
     from nlsq.result import CurveFitResult
     from numpy.typing import ArrayLike
+
+
+def safe_version(package_name: str) -> str:
+    """Safely retrieve package version for reproducibility tracking.
+
+    Per Technical Guidelines, fit artifacts must include software versions.
+    This function provides robust version retrieval that never raises exceptions.
+
+    Parameters
+    ----------
+    package_name : str
+        Name of the package to get version for
+
+    Returns
+    -------
+    str
+        Version string, or "unknown" if version cannot be determined
+    """
+    try:
+        from importlib.metadata import version
+
+        return version(package_name)
+    except Exception:
+        # Fallback: try __version__ attribute
+        try:
+            import importlib
+
+            module = importlib.import_module(package_name)
+            return getattr(module, "__version__", "unknown")
+        except Exception:
+            return "unknown"
 
 
 @dataclass
@@ -63,6 +95,9 @@ class FitDiagnostics:
         Number of divergent transitions
     max_treedepth_reached : int
         Count of max treedepth events
+    bfmi : float | None
+        Bayesian Fraction of Missing Information (mean across chains).
+        Added per Technical Guidelines for Bayesian inference compliance.
     converged : bool
         True if all diagnostics pass thresholds
 
@@ -72,6 +107,7 @@ class FitDiagnostics:
     ess_bulk > 400 : Sufficient effective samples
     ess_tail > 400 : Sufficient tail samples
     divergences == 0 : No divergent transitions
+    bfmi >= 0.2 : Adequate exploration (if computed)
     """
 
     r_hat: dict[str, float] = field(default_factory=dict)
@@ -79,6 +115,7 @@ class FitDiagnostics:
     ess_tail: dict[str, int] = field(default_factory=dict)
     divergences: int = 0
     max_treedepth_reached: int = 0
+    bfmi: float | None = None  # NEW: Per Technical Guidelines
 
     @property
     def converged(self) -> bool:
@@ -95,6 +132,10 @@ class FitDiagnostics:
 
         # No divergences
         if self.divergences > 0:
+            return False
+
+        # BFMI check (per Technical Guidelines)
+        if self.bfmi is not None and self.bfmi < 0.2:
             return False
 
         return True
@@ -531,6 +572,10 @@ class FitResult:
         NLSQ warm-start point estimates
     arviz_data : InferenceData
         ArviZ-compatible data for plotting (FR-015)
+    config : SamplerConfig | None
+        Sampler configuration used for this fit (per Technical Guidelines)
+    x : ndarray | None
+        Input x data (for reproducibility metadata)
     """
 
     samples: dict[str, np.ndarray]
@@ -538,6 +583,8 @@ class FitResult:
     diagnostics: FitDiagnostics = field(default_factory=FitDiagnostics)
     nlsq_init: dict[str, float] = field(default_factory=dict)
     arviz_data: az.InferenceData | None = None
+    config: SamplerConfig | None = None  # Per Technical Guidelines
+    x: np.ndarray | None = None  # For data_metadata
 
     def get_mean(self, param: str) -> float:
         """Get posterior mean for parameter.
@@ -644,11 +691,48 @@ class FitResult:
     def to_dict(self) -> dict:
         """Convert to serializable dictionary.
 
+        Per Technical Guidelines, exports include:
+        - versions: Package versions for reproducibility
+        - sampler_config: Sampler parameters used
+        - data_metadata: Data characteristics
+        - diagnostics: Including BFMI
+
         Returns
         -------
         dict
-            Dictionary representation
+            Dictionary representation with full reproducibility metadata
         """
+        # T026: Build versions dictionary for reproducibility
+        versions = {
+            "xpcsviewer": safe_version("xpcs-toolkit"),
+            "numpyro": safe_version("numpyro"),
+            "jax": safe_version("jax"),
+            "arviz": safe_version("arviz"),
+            "nlsq": safe_version("nlsq"),
+            "python": f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}",
+        }
+
+        # T027: Build sampler_config dictionary
+        sampler_config: dict[str, Any] = {}
+        if self.config is not None:
+            sampler_config = {
+                "num_warmup": self.config.num_warmup,
+                "num_samples": self.config.num_samples,
+                "num_chains": self.config.num_chains,
+                "target_accept_prob": self.config.target_accept_prob,
+                "max_tree_depth": self.config.max_tree_depth,
+                "random_seed": self.config.random_seed,
+            }
+
+        # T028: Build data_metadata dictionary
+        data_metadata: dict[str, Any] = {}
+        if self.x is not None:
+            x_arr = np.asarray(self.x)
+            data_metadata = {
+                "n_points": len(x_arr),
+                "x_range": [float(x_arr.min()), float(x_arr.max())],
+            }
+
         return {
             "samples": {k: v.tolist() for k, v in self.samples.items()},
             "nlsq_init": self.nlsq_init,
@@ -658,8 +742,12 @@ class FitResult:
                 "ess_tail": self.diagnostics.ess_tail,
                 "divergences": self.diagnostics.divergences,
                 "max_treedepth_reached": self.diagnostics.max_treedepth_reached,
+                "bfmi": self.diagnostics.bfmi,  # Per Technical Guidelines
                 "converged": self.diagnostics.converged,
             },
+            "versions": versions,
+            "sampler_config": sampler_config,
+            "data_metadata": data_metadata,
         }
 
     def plot_posterior_predictive(self, model, x_data, y_data, **kwargs):

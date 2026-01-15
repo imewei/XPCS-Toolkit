@@ -362,6 +362,9 @@ def plot_posterior_predictive(
     credible_level=0.95,
     n_draws=100,
     ax=None,
+    *,
+    max_draws: int | None = None,
+    subsample_seed: int | None = None,
 ) -> plt.Axes:
     """Plot Bayesian fit with posterior credible interval (FR-014).
 
@@ -378,15 +381,31 @@ def plot_posterior_predictive(
     credible_level : float
         Credible interval level (default: 0.95)
     n_draws : int
-        Number of posterior samples for band calculation
+        Number of posterior samples for band calculation (legacy, prefer max_draws)
     ax : matplotlib.axes.Axes, optional
+    max_draws : int | None
+        Maximum posterior draws to use. If None (default), uses all samples.
+        When specified and n_samples > max_draws, subsamples with logging.
+        Per Technical Guidelines, subsampling must be explicit and logged.
+    subsample_seed : int | None
+        Random seed for reproducible subsampling. Only used when
+        max_draws triggers subsampling.
 
     Returns
     -------
     ax : matplotlib.axes.Axes
+
+    Notes
+    -----
+    Per Technical Guidelines, posterior subsampling is explicit and logged.
+    When max_draws is None (default), all posterior samples are used.
     """
+    import logging
+
     import matplotlib.pyplot as plt
     import numpy as np
+
+    logger = logging.getLogger(__name__)
 
     if ax is None:
         fig, ax = plt.subplots()
@@ -403,7 +422,24 @@ def plot_posterior_predictive(
     # Generate posterior predictive samples
     param_names = list(result.samples.keys())
     n_samples = len(result.samples[param_names[0]])
-    indices = np.random.choice(n_samples, min(n_draws, n_samples), replace=False)
+
+    # Determine effective draw count per Technical Guidelines
+    # max_draws takes precedence over legacy n_draws parameter
+    if max_draws is not None:
+        effective_draws = min(max_draws, n_samples)
+    else:
+        effective_draws = min(n_draws, n_samples)
+
+    # Log subsampling if occurring per Technical Guidelines
+    if effective_draws < n_samples:
+        logger.info(
+            f"Subsampling posterior: {n_samples} -> {effective_draws} draws "
+            f"(seed={subsample_seed})"
+        )
+
+    # Use seed for reproducibility if subsampling
+    rng = np.random.default_rng(subsample_seed)
+    indices = rng.choice(n_samples, effective_draws, replace=False)
 
     predictions = []
     for idx in indices:

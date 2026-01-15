@@ -7,7 +7,8 @@ functions for the mask drawing system.
 from dataclasses import dataclass
 from typing import Literal
 
-from PySide6.QtCore import Qt
+# Qt imports via compatibility layer
+from xpcsviewer.gui.qt_compat import Qt
 
 
 @dataclass

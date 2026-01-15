@@ -10,8 +10,8 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import Any
 
-from PySide6 import QtCore
-from PySide6.QtCore import QObject, Signal, Slot
+# Qt imports via compatibility layer
+from xpcsviewer.gui.qt_compat import QObject, QtCore, Signal, Slot
 
 from ..utils.log_utils import log_timing
 from ..utils.logging_config import get_logger

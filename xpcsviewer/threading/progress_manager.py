@@ -10,16 +10,22 @@ from __future__ import annotations
 import time
 from dataclasses import dataclass
 
-from PySide6 import QtCore, QtWidgets
-from PySide6.QtCore import QObject, QTimer, Signal, Slot
-from PySide6.QtWidgets import (
+# Qt imports via compatibility layer
+from xpcsviewer.gui.qt_compat import (
     QDialog,
     QHBoxLayout,
     QLabel,
+    QObject,
     QProgressBar,
     QPushButton,
+    Qt,
+    QtCore,
+    QTimer,
+    QtWidgets,
     QVBoxLayout,
     QWidget,
+    Signal,
+    Slot,
 )
 
 from ..utils.log_utils import log_timing

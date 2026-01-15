@@ -9,14 +9,16 @@ import logging
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from PySide6.QtCore import Qt, Signal
-from PySide6.QtWidgets import (
+# Qt imports via compatibility layer
+from xpcsviewer.gui.qt_compat import (
     QDialog,
     QLineEdit,
     QListWidget,
     QListWidgetItem,
+    Qt,
     QVBoxLayout,
     QWidget,
+    Signal,
 )
 
 logger = logging.getLogger(__name__)

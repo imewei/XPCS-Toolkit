@@ -11,9 +11,9 @@ from typing import Any, Literal
 import h5py
 import numpy as np
 from numpy.typing import NDArray
-from PySide6.QtCore import Signal
-from PySide6.QtGui import QAction
-from PySide6.QtWidgets import (
+# Qt imports via compatibility layer
+from xpcsviewer.gui.qt_compat import (
+    QAction,
     QButtonGroup,
     QDoubleSpinBox,
     QFileDialog,
@@ -28,6 +28,7 @@ from PySide6.QtWidgets import (
     QToolBar,
     QToolButton,
     QVBoxLayout,
+    Signal,
     QWidget,
 )
 

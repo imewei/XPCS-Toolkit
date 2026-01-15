@@ -10,8 +10,8 @@ from shutil import copyfile
 # Third-party imports
 import numpy as np
 import pyqtgraph as pg
-from PySide6 import QtCore
-from PySide6.QtCore import QObject, Slot
+# Qt imports via compatibility layer
+from xpcsviewer.gui.qt_compat import QObject, QtCore, Slot
 from sklearn.cluster import KMeans as sk_kmeans
 from tqdm import trange
 

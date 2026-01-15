@@ -14,7 +14,8 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any
 
-from PySide6 import QtCore, QtWidgets
+# Qt imports via compatibility layer
+from xpcsviewer.gui.qt_compat import QtCore, QtWidgets
 
 from ..utils.logging_config import get_logger
 

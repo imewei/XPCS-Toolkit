@@ -8,17 +8,18 @@ with optional action buttons to guide users.
 import logging
 from collections.abc import Callable
 
-from PySide6.QtCore import Qt
-
-logger = logging.getLogger(__name__)
-from PySide6.QtWidgets import (
+# Qt imports via compatibility layer
+from xpcsviewer.gui.qt_compat import (
     QFrame,
     QHBoxLayout,
     QLabel,
     QPushButton,
+    Qt,
     QVBoxLayout,
     QWidget,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class EmptyStateWidget(QFrame):

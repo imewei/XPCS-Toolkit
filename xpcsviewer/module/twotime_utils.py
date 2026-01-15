@@ -671,8 +671,8 @@ def optimized_c2_sampling(c2_matrix, target_size, method="bilinear"):
         return c2_matrix[::step, ::step]
 
     if method == "bilinear":
-        # Bilinear interpolation using vectorized operations
-        from scipy.ndimage import zoom
+        # Bilinear interpolation using JAX-compatible backend
+        from xpcsviewer.backends.scipy_replacements import zoom
 
         zoom_factor = target_size / current_size
         return zoom(c2_matrix, zoom_factor, order=1)
