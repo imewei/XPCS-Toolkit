@@ -871,3 +871,356 @@ QWidget[density="compact"] QPushButton {
 QWidget[density="compact"] QLabel {
     padding: 0 2px;
 }
+
+/* ========================================
+   Enhanced File Selection Panel
+   ======================================== */
+
+/* File panel container styling */
+QWidget[panelType="fileSelection"] {
+    background-color: @background_secondary;
+}
+
+/* Source/Target group boxes with better visual separation */
+QGroupBox#box_source,
+QGroupBox#box_target {
+    background-color: @background_primary;
+    border: 1px solid @border_subtle;
+    border-radius: 8px;
+    margin-top: @spacing_lg;
+    padding: @spacing_sm;
+    padding-top: @spacing_xl;
+}
+
+QGroupBox#box_source::title,
+QGroupBox#box_target::title {
+    font-weight: 600;
+    font-size: @size_base;
+    color: @text_primary;
+    subcontrol-origin: margin;
+    subcontrol-position: top left;
+    left: @spacing_md;
+    padding: @spacing_xs @spacing_sm;
+    background-color: @accent_primary;
+    color: @background_primary;
+    border-radius: 4px;
+}
+
+/* File action buttons row styling */
+QWidget[actionRow="true"] {
+    background-color: @background_secondary;
+    border-radius: 6px;
+    padding: @spacing_xs;
+    margin: @spacing_xs 0;
+}
+
+/* ========================================
+   Enhanced Control Panels in Tabs
+   ======================================== */
+
+/* Plot settings group boxes */
+QGroupBox[settingsPanel="true"] {
+    background-color: @background_secondary;
+    border: 1px solid @border_subtle;
+    border-radius: 8px;
+    margin-top: @spacing_md;
+    padding: @spacing_md;
+    padding-top: @spacing_lg;
+}
+
+QGroupBox[settingsPanel="true"]::title {
+    subcontrol-origin: margin;
+    subcontrol-position: top left;
+    left: @spacing_md;
+    padding: @spacing_xs @spacing_sm;
+    color: @text_secondary;
+    font-weight: 600;
+    background-color: @background_elevated;
+    border: 1px solid @border_subtle;
+    border-radius: 4px;
+}
+
+/* Inline control group for horizontal layouts */
+QWidget[controlGroup="inline"] {
+    background-color: transparent;
+}
+
+QWidget[controlGroup="inline"] QLabel {
+    color: @text_secondary;
+    font-weight: 500;
+    min-width: 60px;
+}
+
+/* ========================================
+   Improved Button Arrangements
+   ======================================== */
+
+/* Button toolbar for action groups */
+QWidget[buttonToolbar="true"] {
+    background-color: @background_secondary;
+    border: 1px solid @border_subtle;
+    border-radius: 6px;
+    padding: @spacing_xs @spacing_sm;
+}
+
+QWidget[buttonToolbar="true"] QPushButton {
+    margin: 0 @spacing_xs;
+}
+
+QWidget[buttonToolbar="true"] QPushButton:first-child {
+    margin-left: 0;
+}
+
+QWidget[buttonToolbar="true"] QPushButton:last-child {
+    margin-right: 0;
+}
+
+/* Primary action button (emphasized) */
+QPushButton[buttonRole="primary"] {
+    background-color: @accent_primary;
+    color: @background_primary;
+    font-weight: 600;
+    padding: @spacing_sm @spacing_lg;
+}
+
+QPushButton[buttonRole="primary"]:hover {
+    background-color: @accent_hover;
+}
+
+/* Compact button for tight spaces */
+QPushButton[buttonSize="compact"] {
+    padding: @spacing_xs @spacing_sm;
+    font-size: @size_sm;
+    min-height: 24px;
+}
+
+/* ========================================
+   Improved Splitter Visibility
+   ======================================== */
+
+QSplitter#splitter_3::handle,
+QSplitter#splitter::handle,
+QSplitter#splitter_2::handle {
+    background-color: @border_strong;
+    border-radius: 2px;
+}
+
+QSplitter#splitter_3::handle:horizontal,
+QSplitter#splitter_2::handle:horizontal {
+    width: 6px;
+    margin: @spacing_lg 2px;
+}
+
+QSplitter#splitter::handle:vertical {
+    height: 6px;
+    margin: 2px @spacing_lg;
+}
+
+QSplitter::handle:hover {
+    background-color: @accent_primary;
+}
+
+/* ========================================
+   Enhanced Tab Appearance
+   ======================================== */
+
+/* Tab bar with better visual distinction */
+QTabWidget#tabWidget::pane {
+    border: 1px solid @border_subtle;
+    border-radius: 0 0 8px 8px;
+    background-color: @background_primary;
+    padding: @spacing_sm;
+}
+
+QTabWidget#tabWidget > QTabBar::tab {
+    padding: @spacing_sm @spacing_md;
+    margin-right: 2px;
+    border-top-left-radius: 6px;
+    border-top-right-radius: 6px;
+    font-weight: 500;
+}
+
+QTabWidget#tabWidget > QTabBar::tab:selected {
+    background-color: @background_primary;
+    border: 1px solid @border_subtle;
+    border-bottom: none;
+    color: @accent_primary;
+    font-weight: 600;
+}
+
+QTabWidget#tabWidget > QTabBar::tab:!selected {
+    background-color: @background_secondary;
+    color: @text_secondary;
+}
+
+QTabWidget#tabWidget > QTabBar::tab:hover:!selected {
+    background-color: @background_elevated;
+    color: @text_primary;
+}
+
+/* ========================================
+   Improved Input Field Groups
+   ======================================== */
+
+/* Range input pair (min-max) styling */
+QWidget[inputPair="range"] {
+    background-color: transparent;
+}
+
+QWidget[inputPair="range"] QLabel {
+    color: @text_secondary;
+    font-size: @size_sm;
+}
+
+QWidget[inputPair="range"] QSpinBox,
+QWidget[inputPair="range"] QDoubleSpinBox,
+QWidget[inputPair="range"] QLineEdit {
+    min-width: 70px;
+    max-width: 100px;
+}
+
+/* ========================================
+   Section Headers
+   ======================================== */
+
+QLabel[role="sectionTitle"] {
+    font-size: @size_lg;
+    font-weight: 600;
+    color: @text_primary;
+    padding: @spacing_sm 0;
+    border-bottom: 2px solid @accent_primary;
+    margin-bottom: @spacing_sm;
+}
+
+QLabel[role="subTitle"] {
+    font-size: @size_base;
+    font-weight: 500;
+    color: @text_secondary;
+    padding: @spacing_xs 0;
+}
+
+/* ========================================
+   Data Path Input Enhancement
+   ======================================== */
+
+QLineEdit#work_dir {
+    background-color: @background_input;
+    border: 1px solid @border_subtle;
+    border-radius: 6px;
+    padding: @spacing_sm @spacing_md;
+    font-family: monospace;
+}
+
+QLineEdit#work_dir:focus {
+    border-color: @accent_focus;
+    border-width: 2px;
+}
+
+/* ========================================
+   Filter Row Enhancement
+   ======================================== */
+
+QLineEdit#filter_str {
+    border-radius: 6px;
+    padding-left: @spacing_md;
+}
+
+QComboBox#filter_type {
+    min-width: 90px;
+    border-radius: 6px;
+}
+
+QComboBox#sort_method {
+    min-width: 120px;
+}
+
+/* ========================================
+   Plot Area Containers
+   ======================================== */
+
+/* Native plot widgets container */
+PlotWidget, PlotWidgetDev, ImageViewDev {
+    border: 1px solid @border_subtle;
+    border-radius: 6px;
+}
+
+/* ========================================
+   Improved Scroll Area
+   ======================================== */
+
+QScrollArea#scrollArea {
+    border: none;
+    background-color: transparent;
+}
+
+QScrollArea#scrollArea > QWidget > QWidget {
+    background-color: @background_primary;
+}
+
+/* ========================================
+   G2 Fitting Panel Enhancement
+   ======================================== */
+
+QGroupBox#groupBox,
+QGroupBox#groupBox_2 {
+    background-color: @background_secondary;
+    border: 1px solid @border_subtle;
+    border-radius: 8px;
+    padding: @spacing_sm;
+}
+
+QGroupBox#groupBox::title,
+QGroupBox#groupBox_2::title {
+    font-weight: 600;
+    color: @text_primary;
+}
+
+/* ========================================
+   Status Bar Enhancement
+   ======================================== */
+
+QStatusBar {
+    background-color: @background_secondary;
+    border-top: 1px solid @border_subtle;
+    padding: @spacing_xs @spacing_md;
+    min-height: 28px;
+}
+
+QStatusBar QLabel {
+    padding: 0 @spacing_sm;
+}
+
+/* ========================================
+   Two-Time Controls Enhancement
+   ======================================== */
+
+QGroupBox#groupBox_8,
+QGroupBox#groupBox_9,
+QGroupBox#groupBox_17 {
+    background-color: @background_secondary;
+    border-radius: 8px;
+    padding: @spacing_sm;
+}
+
+/* ========================================
+   Average Tab Enhancement
+   ======================================== */
+
+QTableView#avg_job_table {
+    border-radius: 6px;
+    background-color: @background_input;
+}
+
+QTableView#avg_job_table::item:selected {
+    background-color: @accent_primary;
+}
+
+/* ========================================
+   Metadata Tree Enhancement
+   ======================================== */
+
+QTreeView#treeView {
+    border-radius: 6px;
+    background-color: @background_input;
+    alternate-background-color: @background_secondary;
+}

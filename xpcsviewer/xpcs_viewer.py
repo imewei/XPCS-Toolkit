@@ -32,6 +32,7 @@ from .gui.state.session_manager import (
     SessionState,
     WindowGeometry,
 )
+from .gui.layout_helpers import apply_all_layout_improvements
 from .gui.theme.manager import ThemeManager
 from .gui.widgets.command_palette import CommandPalette
 from .gui.widgets.drag_drop_list import DragDropListView
@@ -201,6 +202,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         self._register_shortcuts()
         self._setup_drag_drop_list()
         self._apply_button_styles()
+        self._apply_layout_improvements()
         self.timer = QtCore.QTimer()
 
         if path is not None:
@@ -364,6 +366,14 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
             "pushButton_11",  # Reload files
         ]
         apply_secondary_buttons(self, secondary_buttons)
+
+    def _apply_layout_improvements(self):
+        """Apply layout improvements for better visual hierarchy.
+
+        Enhances spacing, margins, and visual organization of
+        panels, control groups, and action buttons.
+        """
+        apply_all_layout_improvements(self)
 
     def _init_toolbar(self):
         """Initialize the main toolbar with common actions."""

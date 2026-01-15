@@ -135,3 +135,42 @@ def apply_secondary_buttons(widget: QWidget, button_names: list[str]) -> None:
         button = widget.findChild(QPushButton, name)
         if button is not None:
             set_button_style(button, "secondary")
+
+
+def set_button_role(button: QPushButton, role: str) -> None:
+    """
+    Set the semantic role of a button for emphasis styling.
+
+    Args:
+        button: The button to style
+        role: Role name (e.g., "primary" for emphasized buttons)
+    """
+    button.setProperty("buttonRole", role)
+    button.style().unpolish(button)
+    button.style().polish(button)
+
+
+def apply_primary_buttons(widget: QWidget, button_names: list[str]) -> None:
+    """
+    Apply primary (emphasized) styling to action buttons.
+
+    Args:
+        widget: Parent widget containing the buttons
+        button_names: List of button object names to style
+    """
+    for name in button_names:
+        button = widget.findChild(QPushButton, name)
+        if button is not None:
+            set_button_role(button, "primary")
+
+
+def set_settings_panel(group_box: QGroupBox) -> None:
+    """
+    Apply settings panel styling to a QGroupBox.
+
+    Args:
+        group_box: The group box to style as a settings panel
+    """
+    group_box.setProperty("settingsPanel", "true")
+    group_box.style().unpolish(group_box)
+    group_box.style().polish(group_box)
