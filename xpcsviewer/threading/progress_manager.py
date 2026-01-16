@@ -518,10 +518,23 @@ class ProgressManager(QObject):
         return set(self.active_operations.keys())
 
     def show_progress_dialog(self):
-        """Show the progress dialog."""
-        if self.progress_dialog:
-            self.progress_dialog.show()
-            self.progress_dialog.raise_()
+        """Show the progress dialog.
+
+        Creates the dialog if it doesn't exist. Shows a message if
+        there are no active operations.
+        """
+        # Create progress dialog if needed
+        if self.progress_dialog is None:
+            self.progress_dialog = ProgressDialog()
+            self.progress_dialog.cancel_operation.connect(self.request_cancel)
+            self.progress_dialog.cancel_all_operations.connect(self.cancel_all)
+
+        self.progress_dialog.show()
+        self.progress_dialog.raise_()
+
+        # If no active operations, show a message in the status bar
+        if not self.active_operations and self.statusbar:
+            self.statusbar.showMessage("No active operations", 3000)
 
     def hide_progress_dialog(self):
         """Hide the progress dialog."""
