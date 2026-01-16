@@ -11,10 +11,10 @@ from typing import Any, Literal
 import h5py
 import numpy as np
 from numpy.typing import NDArray
+
 # Qt imports via compatibility layer
 from xpcsviewer.gui.qt_compat import (
     QAction,
-    QButtonGroup,
     QDoubleSpinBox,
     QFileDialog,
     QLabel,
@@ -26,12 +26,10 @@ from xpcsviewer.gui.qt_compat import (
     QSplitter,
     QStatusBar,
     QToolBar,
-    QToolButton,
     QVBoxLayout,
-    Signal,
     QWidget,
+    Signal,
 )
-
 from xpcsviewer.simplemask.drawing_tools import (
     DRAWING_TOOLS,
     ERASER_TOOL,
@@ -62,8 +60,6 @@ class SimpleMaskWindow(QMainWindow):
     status_bar: QStatusBar
     image_view: ImageViewROI
     info_label: QLabel
-    tool_buttons: dict[str, QToolButton]
-    tool_button_group: QButtonGroup
     tool_actions: dict[str, QAction]
     toolbar: QToolBar
     splitter: QSplitter
@@ -72,15 +68,7 @@ class SimpleMaskWindow(QMainWindow):
     right_layout: QVBoxLayout
     file_menu: QMenu
 
-    # Buttons
-    btn_eraser: QToolButton
-    btn_apply_drawing: QPushButton
-    btn_undo: QPushButton
-    btn_redo: QPushButton
-    btn_reset: QPushButton
-    btn_toggle_mask: QPushButton
-    btn_generate_qmap: QPushButton
-    btn_toggle_qmap: QPushButton
+    # Buttons (partition panel only - other controls are toolbar actions)
     btn_compute_partition: QPushButton
     btn_toggle_partition: QPushButton
     btn_export_partition: QPushButton
@@ -101,6 +89,7 @@ class SimpleMaskWindow(QMainWindow):
     action_apply: QAction
     action_undo: QAction
     action_redo: QAction
+    action_reset: QAction
     action_apply_viewer: QAction
     action_generate_qmap: QAction
     action_toggle_qmap: QAction
@@ -144,30 +133,19 @@ class SimpleMaskWindow(QMainWindow):
                 lambda checked, k=tool_key: self._on_tool_selected(k)  # noqa: ARG005
             )
 
-        # Drawing tool buttons (side panel)
-        for tool_key, btn in self.tool_buttons.items():
-            btn.clicked.connect(
-                lambda checked, k=tool_key: self._on_tool_selected(k)  # noqa: ARG005
-            )
-
-        # Eraser
+        # Eraser action (toolbar)
         self.action_eraser.triggered.connect(lambda: self._on_eraser_selected())
-        self.btn_eraser.clicked.connect(lambda: self._on_eraser_selected())
 
-        # Apply drawing
+        # Apply drawing action (toolbar)
         self.action_apply.triggered.connect(self._on_apply_drawing)
-        self.btn_apply_drawing.clicked.connect(self._on_apply_drawing)
 
-        # Mask actions
+        # Mask actions (toolbar)
         self.action_undo.triggered.connect(lambda: self._on_mask_action("undo"))
         self.action_redo.triggered.connect(lambda: self._on_mask_action("redo"))
-        self.btn_undo.clicked.connect(lambda: self._on_mask_action("undo"))
-        self.btn_redo.clicked.connect(lambda: self._on_mask_action("redo"))
-        self.btn_reset.clicked.connect(lambda: self._on_mask_action("reset"))
+        self.action_reset.triggered.connect(lambda: self._on_mask_action("reset"))
 
-        # Toggle mask overlay
+        # Toggle mask overlay (toolbar)
         self.action_toggle_mask.triggered.connect(self._on_toggle_mask)
-        self.btn_toggle_mask.clicked.connect(self._on_toggle_mask)
 
         # File menu actions
         self.action_save_mask.triggered.connect(self._on_save_mask)
@@ -178,10 +156,8 @@ class SimpleMaskWindow(QMainWindow):
         # Toolbar Apply to Viewer button
         self.action_apply_viewer.triggered.connect(self.export_mask_to_viewer)
 
-        # Q-Map controls
-        self.btn_generate_qmap.clicked.connect(self._on_generate_qmap)
+        # Q-Map controls (toolbar)
         self.action_generate_qmap.triggered.connect(self._on_generate_qmap)
-        self.btn_toggle_qmap.clicked.connect(self._on_toggle_qmap)
         self.action_toggle_qmap.triggered.connect(self._on_toggle_qmap)
 
         # Geometry spinbox changes update kernel
@@ -255,28 +231,22 @@ class SimpleMaskWindow(QMainWindow):
         self._sync_tool_buttons("eraser")
 
     def _sync_tool_buttons(self, selected_tool: str | None) -> None:
-        """Synchronize tool button checked states.
+        """Synchronize toolbar action checked states.
 
         Args:
             selected_tool: Currently selected tool key, or None
         """
-        # Uncheck all tool buttons
-        for btn in self.tool_buttons.values():
-            btn.setChecked(False)
+        # Uncheck all tool actions
         for action in self.tool_actions.values():
             action.setChecked(False)
 
-        self.btn_eraser.setChecked(False)
         self.action_eraser.setChecked(False)
 
         # Check the selected tool
         if selected_tool == "eraser":
-            self.btn_eraser.setChecked(True)
             self.action_eraser.setChecked(True)
-        elif selected_tool in self.tool_buttons:
-            self.tool_buttons[selected_tool].setChecked(True)
-            if selected_tool in self.tool_actions:
-                self.tool_actions[selected_tool].setChecked(True)
+        elif selected_tool in self.tool_actions:
+            self.tool_actions[selected_tool].setChecked(True)
 
     def _on_apply_drawing(self) -> None:
         """Apply all pending drawings to the mask."""
@@ -439,17 +409,13 @@ class SimpleMaskWindow(QMainWindow):
         if self._show_mask_overlay:
             self._show_qmap_overlay = False  # Can only show one overlay at a time
 
-        # Sync button states
-        self.btn_toggle_mask.setChecked(self._show_mask_overlay)
+        # Sync action states
         self.action_toggle_mask.setChecked(self._show_mask_overlay)
-        self.btn_toggle_qmap.setChecked(False)
         self.action_toggle_qmap.setChecked(False)
 
-        # Update button text
+        # Update action text
         text = "Hide Mask" if self._show_mask_overlay else "Show Mask"
-        self.btn_toggle_mask.setText(text)
         self.action_toggle_mask.setText(text)
-        self.btn_toggle_qmap.setText("Show Q-Map")
         self.action_toggle_qmap.setText("Show Q-Map")
 
         self._refresh_display()
@@ -464,17 +430,13 @@ class SimpleMaskWindow(QMainWindow):
         if self._show_qmap_overlay:
             self._show_mask_overlay = False  # Can only show one overlay at a time
 
-        # Sync button states
-        self.btn_toggle_qmap.setChecked(self._show_qmap_overlay)
+        # Sync action states
         self.action_toggle_qmap.setChecked(self._show_qmap_overlay)
-        self.btn_toggle_mask.setChecked(False)
         self.action_toggle_mask.setChecked(False)
 
-        # Update button text
+        # Update action text
         text = "Hide Q-Map" if self._show_qmap_overlay else "Show Q-Map"
-        self.btn_toggle_qmap.setText(text)
         self.action_toggle_qmap.setText(text)
-        self.btn_toggle_mask.setText("Show Mask")
         self.action_toggle_mask.setText("Show Mask")
 
         self._refresh_display()
@@ -502,7 +464,7 @@ class SimpleMaskWindow(QMainWindow):
         except ValueError as e:
             # Handle missing/invalid parameters
             logger.warning(f"Q-map generation failed: {e}")
-            self.status_bar.showMessage(f"Q-map failed: check geometry values")
+            self.status_bar.showMessage("Q-map failed: check geometry values")
             QMessageBox.warning(
                 self,
                 "Q-Map Generation Failed",
@@ -605,19 +567,15 @@ class SimpleMaskWindow(QMainWindow):
             self._show_mask_overlay = False
             self._show_qmap_overlay = False
 
-        # Sync button states
+        # Sync button/action states
         self.btn_toggle_partition.setChecked(self._show_partition_overlay)
-        self.btn_toggle_mask.setChecked(False)
         self.action_toggle_mask.setChecked(False)
-        self.btn_toggle_qmap.setChecked(False)
         self.action_toggle_qmap.setChecked(False)
 
-        # Update button text
+        # Update button/action text
         text = "Hide Partition" if self._show_partition_overlay else "Show Partition"
         self.btn_toggle_partition.setText(text)
-        self.btn_toggle_mask.setText("Show Mask")
         self.action_toggle_mask.setText("Show Mask")
-        self.btn_toggle_qmap.setText("Show Q-Map")
         self.action_toggle_qmap.setText("Show Q-Map")
 
         self._refresh_display()

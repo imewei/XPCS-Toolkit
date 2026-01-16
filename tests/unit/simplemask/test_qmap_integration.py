@@ -107,22 +107,20 @@ class TestWindowGeometrySpinboxes:
 
 
 class TestQmapButton:
-    """Tests for Generate Q-Map button."""
+    """Tests for Generate Q-Map toolbar action."""
 
-    def test_generate_qmap_button_exists(self, qapp, qtbot):
-        """Window should have Generate Q-Map button."""
+    def test_generate_qmap_action_exists(self, qapp, qtbot):
+        """Window should have Generate Q-Map toolbar action."""
         window = SimpleMaskWindow()
         qtbot.addWidget(window)
 
-        assert hasattr(window, "btn_generate_qmap")
         assert hasattr(window, "action_generate_qmap")
 
-    def test_toggle_qmap_button_exists(self, qapp, qtbot):
-        """Window should have Show Q-Map toggle button."""
+    def test_toggle_qmap_action_exists(self, qapp, qtbot):
+        """Window should have Show Q-Map toggle action in toolbar."""
         window = SimpleMaskWindow()
         qtbot.addWidget(window)
 
-        assert hasattr(window, "btn_toggle_qmap")
         assert hasattr(window, "action_toggle_qmap")
 
 

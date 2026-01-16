@@ -53,6 +53,9 @@ from .utils.log_utils import RateLimitedLogger
 from .viewer_kernel import ViewerKernel
 from .viewer_ui import Ui_mainWindow as Ui
 
+# Import PlotWidgetDev for dynamic tab creation
+from .plothandler import PlotWidgetDev
+
 # Initialize centralized logging and get logger
 logger = get_logger(__name__)
 
@@ -75,13 +78,13 @@ tab_mapping = {
     2: "stability",
     3: "intensity_t",
     4: "g2",
-    5: "g2_map",
-    6: "diffusion",
-    7: "twotime",
-    8: "qmap",
-    9: "average",
-    10: "metadata",
-    11: "mask_editor",
+    5: "g2_fitting",  # New g2 fitting tab
+    6: "g2_map",
+    7: "diffusion",
+    8: "twotime",
+    9: "qmap",
+    10: "average",
+    11: "metadata",
 }
 
 
@@ -237,11 +240,14 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         self.mp_2t_hdls = None
         self.init_twotime_plot_handler()
 
+        # Initialize G2 Fitting tab (dynamic creation - must be before g2 map)
+        self._init_g2_fitting_tab()
+
         # Initialize G2 Map tab (dynamic creation)
         self._init_g2map_tab()
 
-        # Initialize Mask Editor tab (dynamic creation)
-        self._init_mask_editor_tab()
+        # Initialize SimpleMask window reference (will be created on demand)
+        self._simplemask_window: SimpleMaskWindow | None = None
 
         self.avg_job_pop.clicked.connect(self.remove_avg_job)
         self.btn_submit_job.clicked.connect(self.submit_job)
@@ -427,6 +433,15 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         )
         action_progress.setToolTip("Show progress dialog (Ctrl+Shift+P)")
         action_progress.triggered.connect(self.show_progress_dialog)
+
+        toolbar.addSeparator()
+
+        # Mask Editor button
+        action_mask_editor = toolbar.addAction(
+            style.standardIcon(QStyle.SP_FileDialogContentsView), "Mask Editor"
+        )
+        action_mask_editor.setToolTip("Open Mask Editor window")
+        action_mask_editor.triggered.connect(self.open_simplemask)
 
     def _plot_current_tab(self):
         """Trigger plot for the currently active tab."""
@@ -1390,11 +1405,6 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         if tab_name == "average":
             return
 
-        # Mask Editor is a "launcher" tab - opens external window instead of plotting
-        if tab_name == "mask_editor":
-            self.open_simplemask()
-            return
-
         # Check if files are selected before attempting to plot
         # Some tabs like diffusion should always update to show proper empty state
         tabs_requiring_files = [
@@ -1403,6 +1413,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
             "stability",
             "intensity_t",
             "g2",
+            "g2_fitting",
             "twotime",
             "qmap",
             "g2_map",
@@ -1486,6 +1497,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
                 "stability": self.mp_stab if hasattr(self, "mp_stab") else None,
                 "intensity_t": self.pg_intt if hasattr(self, "pg_intt") else None,
                 "g2": self.mp_g2 if hasattr(self, "mp_g2") else None,
+                "g2_fitting": self.mp_g2_fitting if hasattr(self, "mp_g2_fitting") else None,
                 "twotime": self.mp_2t_hdls if hasattr(self, "mp_2t_hdls") else None,
                 "qmap": self.pg_qmap if hasattr(self, "pg_qmap") else None,
                 "g2_map": self.pg_g2map if hasattr(self, "pg_g2map") else None,
@@ -1885,53 +1897,81 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
 
         main_layout.addWidget(controls_widget)
 
-        # Insert the tab right after g2 (index 5)
-        self.tabWidget.insertTab(5, self.tab_g2map, "g2 map")
+        # Insert the tab right after g2 fitting (index 6)
+        self.tabWidget.insertTab(6, self.tab_g2map, "g2 map")
 
         # Connect Q-bin spinbox to update profile
         self.spinBox_g2map_qbin.valueChanged.connect(self._update_g2map_profile)
 
         logger.info("g2 map tab initialized")
 
-    def _init_mask_editor_tab(self):
-        """Initialize the Mask Editor tab as a launcher tab.
+    def _init_g2_fitting_tab(self):
+        """Initialize the G2 Fitting tab with plot and fitting controls.
 
-        This tab doesn't display plots - clicking it launches the
-        SimpleMask window for mask creation and editing.
+        This method:
+        1. Creates a new tab with a PlotWidgetDev for fitted g2 display
+        2. Moves the groupBox_2 (g2 fitting controls) from tab_6 to the new tab
+        3. Inserts the tab right after the g2 tab (index 5)
         """
-        # Create a simple placeholder tab
-        self.tab_mask_editor = QtWidgets.QWidget()
-        self.tab_mask_editor.setObjectName("tab_mask_editor")
+        # Create the G2 Fitting tab widget
+        self.tab_g2_fitting = QtWidgets.QWidget()
+        self.tab_g2_fitting.setObjectName("tab_g2_fitting")
 
-        # Simple layout with instructions
-        layout = QtWidgets.QVBoxLayout(self.tab_mask_editor)
-        layout.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
+        # Main layout for the tab
+        main_layout = QtWidgets.QGridLayout(self.tab_g2_fitting)
+        main_layout.setObjectName("gridLayout_g2_fitting")
 
-        # Info label
-        info_label = QtWidgets.QLabel(
-            "Mask Editor\n\n"
-            "Click this tab to open the Mask Editor window.\n"
-            "The window will open with the current detector image."
+        # Create scroll area for the plot (matching tab_6 structure)
+        scroll_area = QtWidgets.QScrollArea(self.tab_g2_fitting)
+        scroll_area.setObjectName("scrollArea_g2_fitting")
+        size_policy = QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.Policy.Preferred,
+            QtWidgets.QSizePolicy.Policy.Preferred,
         )
-        info_label.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
-        info_label.setStyleSheet("font-size: 14px; color: #666;")
-        layout.addWidget(info_label)
-
-        # Add a button as alternative way to open
-        self.btn_open_mask_editor = QtWidgets.QPushButton("Open Mask Editor")
-        self.btn_open_mask_editor.setMaximumWidth(200)
-        self.btn_open_mask_editor.clicked.connect(self.open_simplemask)
-        layout.addWidget(
-            self.btn_open_mask_editor, alignment=QtCore.Qt.AlignmentFlag.AlignCenter
+        size_policy.setVerticalStretch(30)
+        scroll_area.setSizePolicy(size_policy)
+        scroll_area.setVerticalScrollBarPolicy(
+            QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOn
         )
+        scroll_area.setSizeAdjustPolicy(
+            QtWidgets.QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents
+        )
+        scroll_area.setWidgetResizable(True)
 
-        # Insert tab at the end (after metadata)
-        self.tabWidget.addTab(self.tab_mask_editor, "Mask Editor")
+        # Scroll area content widget
+        scroll_content = QtWidgets.QWidget()
+        scroll_content.setObjectName("g2_fitting_scroll_area")
+        scroll_layout = QtWidgets.QGridLayout(scroll_content)
+        scroll_layout.setObjectName("gridLayout_g2_fitting_scroll")
 
-        # Store reference to SimpleMask window (prevents garbage collection)
-        self._simplemask_window: SimpleMaskWindow | None = None
+        # Create PlotWidgetDev for fitted g2 display
+        self.mp_g2_fitting = PlotWidgetDev(scroll_content)
+        self.mp_g2_fitting.setObjectName("mp_g2_fitting")
+        plot_size_policy = QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.Policy.Expanding,
+            QtWidgets.QSizePolicy.Policy.Expanding,
+        )
+        self.mp_g2_fitting.setSizePolicy(plot_size_policy)
+        scroll_layout.addWidget(self.mp_g2_fitting, 0, 0, 1, 1)
 
-        logger.info("Mask Editor tab initialized")
+        scroll_area.setWidget(scroll_content)
+        main_layout.addWidget(scroll_area, 0, 0, 1, 1)
+
+        # Move groupBox_2 (g2 fitting controls) from tab_6 splitter to new tab
+        # First, remove it from the splitter
+        self.groupBox_2.setParent(None)
+
+        # Add it to the new tab's layout
+        main_layout.addWidget(self.groupBox_2, 1, 0, 1, 1)
+
+        # Insert the tab right after g2 (index 5)
+        self.tabWidget.insertTab(5, self.tab_g2_fitting, "g2 fitting")
+
+        # Hide g2_show_fit checkbox since fit is always shown on the fitting tab
+        # and never on the raw g2 tab
+        self.g2_show_fit.setVisible(False)
+
+        logger.info("g2 fitting tab initialized")
 
     def open_simplemask(self):
         """Open or focus the SimpleMask window with current detector data.
@@ -2612,7 +2652,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         kwargs = {
             "num_col": self.sb_g2_column.value(),
             "offset": self.sb_g2_offset.value(),
-            "show_fit": self.g2_show_fit.isChecked(),
+            "show_fit": False,  # G2 tab shows raw data only (fitting is on g2 fitting tab)
             "show_label": self.g2_show_label.isChecked(),
             "plot_type": self.g2_plot_type.currentText(),
             "q_range": (p[0], p[1]),
@@ -2629,10 +2669,6 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
             "fit_func": fit_func,
             "robust_fitting": True,  # Always use robust sequential fitting for better reliability
         }
-        if kwargs["show_fit"] and sum(kwargs["fit_flag"]) == 0:
-            self.statusbar.showMessage("nothing to fit, really?", 1000)
-            return None
-
         if dryrun:
             return kwargs
         self.pushButton_4.setDisabled(True)
@@ -2640,8 +2676,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         try:
             qd, tel = self.vk.plot_g2(handler=self.mp_g2, **kwargs)
             self.init_g2(qd, tel)
-            if kwargs["show_fit"]:
-                self.init_diffusion()
+            # Note: Fitting/diffusion is handled in the g2 fitting tab now
         except Exception:
             traceback.print_exc()
         finally:
@@ -2654,6 +2689,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
 
         This method forces a complete refitting of G2 data, ensuring that
         parameter values are updated even if fitting parameters haven't changed.
+        Plots to the g2 fitting tab.
         """
         logger.info("Refit G2 button clicked - forcing new fit calculation")
 
@@ -2663,7 +2699,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         kwargs = {
             "num_col": self.sb_g2_column.value(),
             "offset": self.sb_g2_offset.value(),
-            "show_fit": self.g2_show_fit.isChecked(),
+            "show_fit": True,  # Always show fit when refitting
             "show_label": self.g2_show_label.isChecked(),
             "plot_type": self.g2_plot_type.currentText(),
             "q_range": (p[0], p[1]),
@@ -2682,17 +2718,16 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
             "force_refit": True,  # KEY: Force refitting to bypass cache
         }
 
-        if kwargs["show_fit"] and sum(kwargs["fit_flag"]) == 0:
-            self.statusbar.showMessage("nothing to fit, really?", 1000)
+        if sum(kwargs["fit_flag"]) == 0:
+            self.statusbar.showMessage("No fitting parameters enabled", 1000)
             return
 
         self.btn_g2_refit.setDisabled(True)
         self.btn_g2_refit.setText("refitting")
         try:
-            qd, tel = self.vk.plot_g2(handler=self.mp_g2, **kwargs)
+            qd, tel = self.vk.plot_g2(handler=self.mp_g2_fitting, **kwargs)
             self.init_g2(qd, tel)
-            if kwargs["show_fit"]:
-                self.init_diffusion()
+            self.init_diffusion()
             self.statusbar.showMessage("G2 refitting completed successfully", 2000)
         except Exception:
             traceback.print_exc()
@@ -2700,6 +2735,63 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         finally:
             self.btn_g2_refit.setEnabled(True)
             self.btn_g2_refit.setText("refit")
+
+    def plot_g2_fitting(self, dryrun=False):
+        """
+        Plot G2 correlation functions with fitting overlay on the g2 fitting tab.
+
+        This is similar to plot_g2 but:
+        - Always shows fitting results
+        - Plots to the mp_g2_fitting widget
+
+        Parameters
+        ----------
+        dryrun : bool, optional
+            If True, returns parameters without plotting (default: False).
+
+        Returns
+        -------
+        dict or tuple
+            If dryrun=True, returns plot parameters dictionary.
+            If dryrun=False, returns (q_values, time_delays) tuple.
+        """
+        p = self.check_g2_number()
+        bounds, fit_flag, fit_func = self.check_g2_fitting_number()
+
+        kwargs = {
+            "num_col": self.sb_g2_column.value(),
+            "offset": self.sb_g2_offset.value(),
+            "show_fit": True,  # Always show fit on the fitting tab
+            "show_label": self.g2_show_label.isChecked(),
+            "plot_type": self.g2_plot_type.currentText(),
+            "q_range": (p[0], p[1]),
+            "t_range": (p[2], p[3]),
+            "y_range": (p[4], p[5]),
+            "y_auto": self.g2_yauto.isChecked(),
+            "q_auto": self.g2_qauto.isChecked(),
+            "t_auto": self.g2_tauto.isChecked(),
+            "rows": self.get_selected_rows(),
+            "bounds": bounds,
+            "fit_flag": fit_flag,
+            "marker_size": self.g2_marker_size.value(),
+            "subtract_baseline": self.g2_sub_baseline.isChecked(),
+            "fit_func": fit_func,
+            "robust_fitting": True,
+        }
+
+        if sum(kwargs["fit_flag"]) == 0:
+            self.statusbar.showMessage("No fitting parameters enabled", 1000)
+            return None
+
+        if dryrun:
+            return kwargs
+
+        try:
+            qd, tel = self.vk.plot_g2(handler=self.mp_g2_fitting, **kwargs)
+            self.init_g2(qd, tel)
+            self.init_diffusion()
+        except Exception:
+            traceback.print_exc()
 
     def export_g2(self):
         folder = QtWidgets.QFileDialog.getExistingDirectory(
@@ -3118,8 +3210,8 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         self._enable_all_tabs()  # First enable all
         self._clear_tab_tooltips()  # Clear any existing tooltips
 
-        # Disable Two Time tab (index 7 based on tab_mapping)
-        twotime_tab_index = 7
+        # Disable Two Time tab (index 8 based on tab_mapping)
+        twotime_tab_index = 8
         self.tabWidget.setTabEnabled(twotime_tab_index, False)
         self.tabWidget.setTabToolTip(
             twotime_tab_index,
@@ -3134,9 +3226,9 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         logger.debug("Configured tabs for multi-tau format: Two Time tab disabled")
 
     def _configure_for_twotime(self):
-        """Configure tabs for twotime format: disable G2, G2 Map, and Diffusion tabs.
+        """Configure tabs for twotime format: disable G2, G2 Fitting, G2 Map, and Diffusion tabs.
 
-        Multi-tau related tabs (g2, g2_map, diffusion) are grouped and disabled
+        Multi-tau related tabs (g2, g2_fitting, g2_map, diffusion) are grouped and disabled
         when two-time data is loaded since they require multi-tau correlation data.
         """
         self._enable_all_tabs()  # First enable all
@@ -3145,11 +3237,12 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         # Disable multi-tau related tabs (based on tab_mapping indices)
         # These tabs require multi-tau correlation data which isn't available in two-time files
         g2_tab_index = 4
-        g2_map_tab_index = 5
-        diffusion_tab_index = 6
-        twotime_tab_index = 7
+        g2_fitting_tab_index = 5
+        g2_map_tab_index = 6
+        diffusion_tab_index = 7
+        twotime_tab_index = 8
 
-        multitau_tabs = [g2_tab_index, g2_map_tab_index, diffusion_tab_index]
+        multitau_tabs = [g2_tab_index, g2_fitting_tab_index, g2_map_tab_index, diffusion_tab_index]
 
         for tab_index in multitau_tabs:
             self.tabWidget.setTabEnabled(tab_index, False)
@@ -3157,6 +3250,10 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         self.tabWidget.setTabToolTip(
             g2_tab_index,
             "G2 analysis requires multi-tau data (not available in two-time format files)",
+        )
+        self.tabWidget.setTabToolTip(
+            g2_fitting_tab_index,
+            "G2 Fitting requires multi-tau data (not available in two-time format files)",
         )
         self.tabWidget.setTabToolTip(
             g2_map_tab_index,
@@ -3174,7 +3271,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
             logger.info("Switched from disabled tab to Two Time tab (two-time format)")
 
         logger.debug(
-            "Configured tabs for two-time format: G2, G2 Map, and Diffusion tabs disabled"
+            "Configured tabs for two-time format: G2, G2 Fitting, G2 Map, and Diffusion tabs disabled"
         )
 
     def _clear_tab_tooltips(self):
