@@ -335,13 +335,31 @@ def sequential_fitting(
     y = ensure_numpy(y)
     sigma = ensure_numpy(sigma) if sigma is not None else None
 
+    # Determine n_params from bounds or p0 (more reliable than inspecting wrapper func)
+    if bounds is not None:
+        n_params = len(bounds[0])
+    elif p0 is not None:
+        n_params = len(p0)
+    else:
+        # Last resort: try to infer from function signature
+        # Note: This may fail for wrapper functions with *args
+        try:
+            n_params = func.__code__.co_argcount - 1
+            if n_params <= 0:
+                n_params = 1  # Minimum 1 parameter
+        except AttributeError:
+            n_params = 1
+
     # Filter kwargs for nlsq compatibility
     safe_kwargs = {k: v for k, v in kwargs.items() if k not in ["max_nfev", "maxfev"]}
 
-    try:
-        from typing import Any
+    popt: NDArray[np.floating[Any]] | None = None
+    pcov: NDArray[np.floating[Any]] | None = None
 
-        result: Any = curve_fit(
+    try:
+        from typing import Any as TypingAny
+
+        result: TypingAny = curve_fit(
             func,
             x,
             y,
@@ -358,23 +376,43 @@ def sequential_fitting(
         else:
             popt, pcov = np.asarray(result[0]), np.asarray(result[1])
 
-        if np.all(np.isfinite(popt)) and np.all(np.isfinite(pcov)):
-            logger.debug("NLSQ multistart fitting succeeded")
-            return popt, pcov, "nlsq_multistart"
+        # Validate that popt has the expected shape
+        if popt.shape == (n_params,) and np.all(np.isfinite(popt)):
+            if pcov.shape == (n_params, n_params) and np.all(np.isfinite(pcov)):
+                logger.debug("NLSQ multistart fitting succeeded")
+                return popt, pcov, "nlsq_multistart"
+            # popt is valid but pcov is not - use popt with fallback covariance
+            logger.debug("NLSQ fitting: popt valid but pcov invalid, using fallback pcov")
+            return popt, np.eye(n_params) * 1e6, "nlsq_partial"
+
     except Exception as e:
         logger.debug(f"NLSQ fitting failed: {e}")
 
-    # Fallback
+    # Fallback: construct valid parameters from bounds or p0
     logger.warning("All fitting methods failed, using fallback parameters")
-    n_params = func.__code__.co_argcount - 1
-    if p0 is not None:
-        popt = np.array(p0)
-    elif bounds is not None:
-        popt = np.mean(bounds, axis=0)
-    else:
-        popt = np.ones(n_params)
 
-    return popt, np.eye(n_params) * 1e6, "fallback"
+    if p0 is not None:
+        fallback_popt = np.asarray(p0).flatten()
+        if fallback_popt.shape[0] != n_params:
+            # p0 shape mismatch, use bounds mean
+            if bounds is not None:
+                fallback_popt = np.mean(bounds, axis=0)
+            else:
+                fallback_popt = np.ones(n_params)
+    elif bounds is not None:
+        fallback_popt = np.mean(bounds, axis=0)
+    else:
+        fallback_popt = np.ones(n_params)
+
+    # Final shape validation
+    fallback_popt = np.atleast_1d(fallback_popt)
+    if fallback_popt.shape[0] != n_params:
+        logger.warning(
+            f"Fallback popt shape mismatch: got {fallback_popt.shape}, expected ({n_params},)"
+        )
+        fallback_popt = np.ones(n_params)
+
+    return fallback_popt, np.eye(n_params) * 1e6, "fallback"
 
 
 @log_timing(threshold_ms=500)
@@ -414,6 +452,9 @@ def fit_with_fixed_sequential(
         # Note: Do NOT use ensure_numpy() here - this function is JIT-traced by nlsq
         return base_func(x_data, *full_params)
 
+    # Compute expected number of fit parameters (True values in fit_flag)
+    n_fit_params = int(np.sum(fit_flag))
+
     for n in range(y.shape[1]):
         try:
             sigma_col = sigma[:, n] if sigma.ndim > 1 else sigma
@@ -428,11 +469,28 @@ def fit_with_fixed_sequential(
                 max_nfev=5000,
             )
 
+            # Validate popt shape before assignment
+            popt = np.atleast_1d(popt)
+            if popt.shape[0] != n_fit_params:
+                logger.warning(
+                    f"Column {n}: popt shape mismatch - got {popt.shape}, "
+                    f"expected ({n_fit_params},). Using fallback."
+                )
+                popt = p0.copy() if p0 is not None else np.mean(bounds_fit, axis=0)
+                pcov = np.eye(n_fit_params) * 1e6
+                method_used = "fallback_shape_mismatch"
+
             fit_methods.append(method_used)
             logger.debug(f"Column {n}: fitted using {method_used}")
 
             fit_val[n, 0, fit_flag] = popt
-            fit_val[n, 1, fit_flag] = np.sqrt(np.diag(pcov))
+            # Safely extract diagonal from pcov
+            pcov_diag = np.diag(pcov) if pcov.ndim == 2 else np.abs(pcov)
+            errors = np.sqrt(np.abs(pcov_diag))
+            # Handle non-finite errors
+            if not np.all(np.isfinite(errors)):
+                errors = np.where(np.isfinite(errors), errors, np.abs(popt) * 0.1)
+            fit_val[n, 1, fit_flag] = errors
             fit_val[n, 0, fix_flag] = bounds[1, fix_flag]
             fit_val[n, 1, fix_flag] = 0
 
