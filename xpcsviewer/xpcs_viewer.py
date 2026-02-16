@@ -1,4 +1,5 @@
 # Standard library imports
+import contextlib
 import json
 import os
 import shutil
@@ -826,6 +827,17 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         Args:
             event: The close event
         """
+        # Close SimpleMask window if open
+        if hasattr(self, "simplemask_window") and self.simplemask_window is not None:
+            self.simplemask_window.close()
+
+        # Shutdown async kernel if available
+        if hasattr(self, "async_kernel") and self.async_kernel is not None:
+            try:
+                self.async_kernel.shutdown()
+            except Exception:
+                logger.debug("async_kernel shutdown failed during close", exc_info=True)
+
         try:
             session = self._collect_session_state()
             self.session_manager.save_session(session)
@@ -1149,7 +1161,6 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
 
         image_data = result["image_data"]
         levels = result["levels"]
-        result["cmap"]
 
         # Update the plot
         self.pg_saxs.setImage(image_data, levels=levels)
@@ -1168,44 +1179,33 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
 
         # Apply the processed G2 data to the plot widget
         try:
-            # Extract data from worker result
-            result["q"]
-            result["tel"]
-            result["g2"]
-            result["g2_err"]
-            result["labels"]
+            # Use the pre-computed plot_params from the async worker
+            # to ensure consistency with the original request
             plot_params = result["plot_params"]
-
-            # Get the file list (need to recreate from viewer kernel)
-            # Support both Multitau and Twotime files for G2 plotting
             rows = plot_params.get("rows", [])
-            xf_list = self.vk.get_xf_list(rows=rows)
 
-            # Filter for files that support G2 plotting (Multitau or Twotime)
-            g2_compatible_files = []
-            for xf in xf_list:
-                if any(atype in xf.atype for atype in ["Multitau", "Twotime"]):
-                    g2_compatible_files.append(xf)
-
-            if g2_compatible_files:
-                # Use the viewer kernel method with lazy loading
-                self.vk.plot_g2(
-                    self.mp_g2,  # Plot handler
-                    plot_params.get("q_range"),
-                    plot_params.get("t_range"),
-                    plot_params.get("y_range"),
-                    rows=self.get_selected_rows(),
-                    **{
-                        k: v
-                        for k, v in plot_params.items()
-                        if k not in ["q_range", "t_range", "y_range", "rows"]
-                    },
-                )
-                logger.info("G2 plot applied successfully")
-            else:
-                logger.warning(
-                    "No files with G2 data (Multitau or Twotime) available for plotting"
-                )
+            # Render using the viewer kernel with the original async parameters
+            # (avoids re-using self.get_selected_rows() which may have changed)
+            self.vk.plot_g2(
+                self.mp_g2,
+                plot_params.get("q_range"),
+                plot_params.get("t_range"),
+                plot_params.get("y_range"),
+                rows=rows,
+                **{
+                    k: v
+                    for k, v in plot_params.items()
+                    if k
+                    not in [
+                        "q_range",
+                        "t_range",
+                        "y_range",
+                        "rows",
+                        "target_timestamp",
+                    ]
+                },
+            )
+            logger.info("G2 plot applied successfully")
 
         except Exception as e:
             logger.error(f"Failed to apply G2 result: {e}")
@@ -1272,10 +1272,6 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
 
     def apply_intensity_result(self, result):
         """Apply intensity plot result to the GUI."""
-        logger.debug(
-            f"Apply intensity result called with result: {type(result)} - {result}"
-        )
-
         if result is None:
             logger.debug("No intensity data to plot")
             return
@@ -1288,28 +1284,19 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
             return
 
         try:
-            # Use the lazy-loaded intensity module to plot
-            logger.debug(
-                f"Result keys: {result.keys() if isinstance(result, dict) else 'Not a dict'}"
-            )
+            # Use the pre-computed plot_params from the async worker
+            # to ensure consistency with the original request
             plot_params = result["plot_params"]
             rows = plot_params.get("rows", [])
-            logger.debug(f"Plot params: {plot_params}")
 
-            # Get the file list
-            xf_list = self.vk.get_xf_list(rows=rows)
-            logger.debug(f"Got {len(xf_list)} files for intensity plot")
-
-            if xf_list:
-                # Use the viewer kernel method with lazy loading
-                # Filter out 'rows' from plot_params to avoid duplicate parameter
-                filtered_params = {k: v for k, v in plot_params.items() if k != "rows"}
-                self.vk.plot_intt(
-                    self.pg_intt, rows=self.get_selected_rows(), **filtered_params
-                )
-                logger.info("Intensity plot applied successfully")
-            else:
-                logger.warning("No files available for intensity plotting")
+            # Render using the viewer kernel with the original async parameters
+            filtered_params = {
+                k: v
+                for k, v in plot_params.items()
+                if k not in ["rows", "target_timestamp"]
+            }
+            self.vk.plot_intt(self.pg_intt, rows=rows, **filtered_params)
+            logger.info("Intensity plot applied successfully")
 
         except Exception as e:
             logger.error(f"Failed to apply intensity result: {e}")
@@ -1331,17 +1318,19 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
             return
 
         try:
-            # Use the lazy-loaded stability module via viewer kernel
-            result["xf_obj"]
+            # Use the pre-computed plot_params from the async worker
+            # to ensure consistency with the original request
             plot_params = result["plot_params"]
+            rows = plot_params.get("rows", [])
 
-            # Use the viewer kernel method with lazy loading
-            # Filter out 'rows' from plot_params to avoid duplicate parameter
-            filtered_params = {k: v for k, v in plot_params.items() if k != "rows"}
+            # Render using the viewer kernel with the original async parameters
+            filtered_params = {
+                k: v
+                for k, v in plot_params.items()
+                if k not in ["rows", "target_timestamp"]
+            }
             if self.vk:
-                self.vk.plot_stability(
-                    self.mp_stab, rows=self.get_selected_rows(), **filtered_params
-                )
+                self.vk.plot_stability(self.mp_stab, rows=rows, **filtered_params)
             logger.info("Stability plot applied successfully")
 
         except Exception as e:
@@ -1541,7 +1530,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
     def update_plot_async(self, tab_name):
         """Asynchronous plot update with progress indication."""
         # Check if there's already an active operation for this plot type
-        for _op_id, plot_type in self.active_plot_operations.items():
+        for _op_id, plot_type in list(self.active_plot_operations.items()):
             if plot_type == tab_name:
                 logger.info(f"Async {tab_name} plot already in progress, skipping")
                 return
@@ -1985,7 +1974,11 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         # Create window if it doesn't exist or was closed
         if self._simplemask_window is None or not self._simplemask_window.isVisible():
             self._simplemask_window = SimpleMaskWindow(parent_viewer=self)
-            # Connect signals for mask import
+            # Disconnect any stale signal connections before reconnecting
+            with contextlib.suppress(TypeError, RuntimeError):
+                self._simplemask_window.mask_exported.disconnect()
+            with contextlib.suppress(TypeError, RuntimeError):
+                self._simplemask_window.qmap_exported.disconnect()
             self._simplemask_window.mask_exported.connect(self.import_mask)
             self._simplemask_window.qmap_exported.connect(self.import_partition)
             logger.info("Created new SimpleMask window")
@@ -2074,11 +2067,9 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
                     )
                     return
 
-            # Store mask for use in analysis
-            # TODO: Integrate with actual analysis pipeline when available
-            self._imported_mask = mask
             logger.info(
-                f"Imported mask with shape {mask.shape}, {np.sum(mask)} pixels unmasked"
+                f"Mask exported from SimpleMask: shape {mask.shape}, "
+                f"{np.sum(mask)} pixels unmasked (not yet integrated into pipeline)"
             )
 
             self.statusbar.showMessage(
@@ -2113,10 +2104,6 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
             return
 
         try:
-            # Store partition for use in analysis
-            # TODO: Integrate with actual analysis pipeline when available
-            self._imported_partition = partition
-
             dq_num = (
                 partition.get("dynamic_roi_map", np.array([])).max()
                 if "dynamic_roi_map" in partition
@@ -2129,7 +2116,8 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
             )
 
             logger.info(
-                f"Imported partition: {dq_num} dynamic bins, {sq_num} static bins"
+                f"Partition exported from SimpleMask: {dq_num} dynamic bins, "
+                f"{sq_num} static bins (not yet integrated into pipeline)"
             )
 
             self.statusbar.showMessage(

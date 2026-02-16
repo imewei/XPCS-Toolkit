@@ -85,7 +85,9 @@ def refine_beam_center(
         losses.append(loss)
 
         if np.isnan(loss):
-            logger.warning("NaN loss detected in beam center refinement, stopping early")
+            logger.warning(
+                "NaN loss detected in beam center refinement, stopping early"
+            )
             break
 
         # Check convergence

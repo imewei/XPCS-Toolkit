@@ -209,9 +209,17 @@ class HDF5ConnectionPool:
 
     def _get_file_lock(self, fname: str) -> threading.RLock:
         """Get or create a lock for a specific file."""
+        _MAX_FILE_LOCKS = 256
         with self._file_locks_lock:
             if fname not in self._file_locks:
                 self._file_locks[fname] = threading.RLock()
+                # Prune if too many locks accumulated
+                if len(self._file_locks) > _MAX_FILE_LOCKS:
+                    keys_to_remove = list(self._file_locks.keys())[
+                        : _MAX_FILE_LOCKS // 2
+                    ]
+                    for key in keys_to_remove:
+                        self._file_locks.pop(key, None)
             return self._file_locks[fname]
 
     def _adapt_pool_size_to_memory_pressure(self) -> None:

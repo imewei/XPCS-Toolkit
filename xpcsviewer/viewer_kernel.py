@@ -9,6 +9,7 @@ import numpy as np
 import pyqtgraph as pg
 
 # Local imports
+from .backends import ensure_numpy
 from .constants import MEMORY_CLEANUP_TIMEOUT_S
 from .file_locator import FileLocator
 from .helper.listmodel import TableDataModel
@@ -370,9 +371,9 @@ class ViewerKernel(FileLocator):
 
         xf_obj = xf_list[0]
         # Set G2 map image
-        g2map_hdl.setImage(xf_obj.get_offseted_g2(normalization).T)
+        g2map_hdl.setImage(ensure_numpy(xf_obj.get_offseted_g2(normalization).T))
         # Set cropped Q-map image
-        qmap_hdl.setImage(xf_obj.get_cropped_qmap("dqmap"))
+        qmap_hdl.setImage(ensure_numpy(xf_obj.get_cropped_qmap("dqmap")))
 
         # Plot G2 profile for selected Q-bin
         g2_hdl.clear()
@@ -466,11 +467,11 @@ class ViewerKernel(FileLocator):
             if target == "scattering":
                 value = np.log10(xf_list[0].saxs_2d + 1)
                 vmin, vmax = np.percentile(value, (2, 98))
-                hdl.setImage(value, levels=(vmin, vmax))
+                hdl.setImage(ensure_numpy(value), levels=(vmin, vmax))
             elif target == "dynamic_roi_map":
-                hdl.setImage(xf_list[0].dqmap)
+                hdl.setImage(ensure_numpy(xf_list[0].dqmap))
             elif target == "static_roi_map":
-                hdl.setImage(xf_list[0].sqmap)
+                hdl.setImage(ensure_numpy(xf_list[0].sqmap))
             # Apply colormap
             hdl.setColorMap(pg.colormap.getFromMatplotlib(cmap))
 

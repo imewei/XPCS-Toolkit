@@ -16,6 +16,7 @@ from __future__ import annotations
 import os
 import re
 import time
+import uuid
 import warnings
 
 # Third-party imports
@@ -164,7 +165,8 @@ class XpcsFile:
         try:
             from .threading.cleanup_optimized import register_for_cleanup
 
-            register_for_cleanup(f"XpcsFile_{id(self)}", self)
+            self._instance_id = str(uuid.uuid4())
+            register_for_cleanup(f"XpcsFile_{self._instance_id}", self)
         except ImportError:
             pass  # Optimized cleanup system not available
         # label is a short string to describe the file/filename
@@ -175,7 +177,7 @@ class XpcsFile:
 
         # Use unified memory manager for all caching
         self._memory_manager = get_memory_manager()
-        self._cache_prefix = f"xpcs_{id(self)}"  # Unique cache prefix for this instance
+        self._cache_prefix = f"xpcs_{getattr(self, '_instance_id', str(uuid.uuid4()))}"  # Unique cache prefix for this instance
 
         # Use memory predictor for proactive memory management
         self._memory_predictor = get_memory_predictor()
@@ -1974,7 +1976,7 @@ class XpcsFile:
         # Create results structure
         results = {
             "fit_line": fit_line,
-            "fit_params": fit_val,
+            "fit_results": fit_val,
             "q_values": q_val,
             "tau": t_el,
             "g2_data": g2,

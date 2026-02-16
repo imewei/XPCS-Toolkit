@@ -14,6 +14,7 @@ Functions:
 # Standard library imports
 import datetime
 import os
+import threading
 import time
 import traceback
 
@@ -74,6 +75,7 @@ class FileLocator:
         self.target = ListDataModel()
         self.qmap_manager = QMapManager()
         self.cache = {}
+        self._cache_lock = threading.Lock()
         self.timestamp = None
 
     def set_path(self, path):
@@ -119,10 +121,13 @@ class FileLocator:
             if n < 0 or n >= len(self.target):
                 continue
             full_fname = os.path.normpath(os.path.join(self.path, self.target[n]))
-            if full_fname not in self.cache:
-                xf_obj = create_xpcs_dataset(full_fname, qmap_manager=self.qmap_manager)
-                self.cache[full_fname] = xf_obj
-            xf_obj = self.cache[full_fname]
+            with self._cache_lock:
+                if full_fname not in self.cache:
+                    xf_obj = create_xpcs_dataset(
+                        full_fname, qmap_manager=self.qmap_manager
+                    )
+                    self.cache[full_fname] = xf_obj
+                xf_obj = self.cache[full_fname]
 
             # Skip None objects (failed to load)
             if xf_obj is None:
@@ -166,7 +171,8 @@ class FileLocator:
                 xf_obj = create_xpcs_dataset(full_fname, qmap_manager=self.qmap_manager)
                 if xf_obj is not None:
                     self.target.append(fn)
-                    self.cache[full_fname] = xf_obj
+                    with self._cache_lock:
+                        self.cache[full_fname] = xf_obj
                     loaded_count += 1
                     total_size_mb += file_size
             logger.info(
@@ -183,13 +189,15 @@ class FileLocator:
 
     def clear_target(self):
         self.target.clear()
-        self.cache.clear()
+        with self._cache_lock:
+            self.cache.clear()
 
     def remove_target(self, rlist):
         for x in rlist:
             if x in self.target:
                 self.target.remove(x)
-            self.cache.pop(os.path.normpath(os.path.join(self.path, x)), None)
+            with self._cache_lock:
+                self.cache.pop(os.path.normpath(os.path.join(self.path, x)), None)
         if not self.target:
             self.clear_target()
         self.timestamp = str(datetime.datetime.now())

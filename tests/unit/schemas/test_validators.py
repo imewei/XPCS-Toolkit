@@ -25,8 +25,8 @@ class TestQMapSchemaValidConstruction:
 
         # Arrange - all arrays must have same 2D shape
         size = (512, 512)
-        sqmap = np.random.randint(0, 50, size=size, dtype=np.int32)
-        dqmap = np.random.randint(0, 50, size=size, dtype=np.int32)
+        sqmap = np.random.rand(*size).astype(np.float64) * 50
+        dqmap = np.random.rand(*size).astype(np.float64) * 50
         phis = np.random.rand(*size)  # 2D array, same shape
 
         # Act
@@ -51,8 +51,8 @@ class TestQMapSchemaValidConstruction:
 
         # Arrange
         size = (256, 256)
-        sqmap = np.zeros(size, dtype=np.int32)
-        dqmap = np.zeros(size, dtype=np.int32)
+        sqmap = np.zeros(size, dtype=np.float64)
+        dqmap = np.zeros(size, dtype=np.float64)
         phis = np.zeros(size)  # 2D array
         mask = np.ones(size, dtype=np.int32)
 
@@ -81,8 +81,8 @@ class TestQMapSchemaInvalidUnits:
 
         # Arrange - use correct shape first
         size = (256, 256)
-        sqmap = np.zeros(size, dtype=np.int32)
-        dqmap = np.zeros(size, dtype=np.int32)
+        sqmap = np.zeros(size, dtype=np.float64)
+        dqmap = np.zeros(size, dtype=np.float64)
         phis = np.zeros(size)
 
         # Act & Assert
@@ -102,8 +102,8 @@ class TestQMapSchemaInvalidUnits:
 
         # Arrange
         size = (256, 256)
-        sqmap = np.zeros(size, dtype=np.int32)
-        dqmap = np.zeros(size, dtype=np.int32)
+        sqmap = np.zeros(size, dtype=np.float64)
+        dqmap = np.zeros(size, dtype=np.float64)
         phis = np.zeros(size)
 
         # Act & Assert
@@ -126,8 +126,8 @@ class TestQMapSchemaShapeMismatch:
         from xpcsviewer.schemas.validators import QMapSchema
 
         # Arrange
-        sqmap = np.zeros((256, 256), dtype=np.int32)
-        dqmap = np.zeros((512, 512), dtype=np.int32)  # Different shape
+        sqmap = np.zeros((256, 256), dtype=np.float64)
+        dqmap = np.zeros((512, 512), dtype=np.float64)  # Different shape
         phis = np.zeros((256, 256))
 
         # Act & Assert
@@ -147,8 +147,8 @@ class TestQMapSchemaShapeMismatch:
 
         # Arrange
         size = (256, 256)
-        sqmap = np.zeros(size, dtype=np.int32)
-        dqmap = np.zeros(size, dtype=np.int32)
+        sqmap = np.zeros(size, dtype=np.float64)
+        dqmap = np.zeros(size, dtype=np.float64)
         phis = np.zeros(size)
         mask = np.ones((512, 512), dtype=np.int32)  # Different shape
 
@@ -343,8 +343,8 @@ class TestSchemaConversions:
 
         # Arrange
         size = (256, 256)
-        sqmap = np.zeros(size, dtype=np.int32)
-        dqmap = np.zeros(size, dtype=np.int32)
+        sqmap = np.zeros(size, dtype=np.float64)
+        dqmap = np.zeros(size, dtype=np.float64)
         phis = np.zeros(size)
 
         schema = QMapSchema(

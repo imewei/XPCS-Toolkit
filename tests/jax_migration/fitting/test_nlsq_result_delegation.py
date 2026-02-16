@@ -230,13 +230,13 @@ class TestNLSQResultWithoutNativeResult:
         """Test diagnostics returns None when native_result is None."""
         assert result_without_native.diagnostics is None
 
-    def test_is_healthy_default_true(self, result_without_native: NLSQResult) -> None:
-        """Test is_healthy defaults to True when no diagnostics."""
-        assert result_without_native.is_healthy is True
+    def test_is_healthy_default_false(self, result_without_native: NLSQResult) -> None:
+        """Test is_healthy defaults to False when no diagnostics available."""
+        assert result_without_native.is_healthy is False
 
-    def test_health_score_default(self, result_without_native: NLSQResult) -> None:
-        """Test health_score returns 100 when no diagnostics."""
-        assert result_without_native.health_score == 100
+    def test_health_score_default_zero(self, result_without_native: NLSQResult) -> None:
+        """Test health_score returns 0 when no diagnostics available."""
+        assert result_without_native.health_score == 0
 
 
 class TestNLSQResultCovariance:
