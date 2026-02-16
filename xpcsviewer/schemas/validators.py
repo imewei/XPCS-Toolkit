@@ -32,7 +32,7 @@ def _log_validation_result(
         logger.debug(f"Schema validation {status}: {schema_name} shape={shape}")
 
 
-@dataclass
+@dataclass(frozen=True)
 class QMapSchema:
     """Q-map data structure with validation.
 
@@ -93,6 +93,22 @@ class QMapSchema:
             raise ValueError(
                 f"phis_unit must be 'rad' or 'deg', got '{self.phis_unit}'"
             )
+
+        # Dtype validation
+        if self.sqmap.dtype != np.float64:
+            raise TypeError(f"sqmap must be float64, got {self.sqmap.dtype}")
+        if self.dqmap.dtype != np.float64:
+            raise TypeError(f"dqmap must be float64, got {self.dqmap.dtype}")
+        if self.phis.dtype != np.float64:
+            raise TypeError(f"phis must be float64, got {self.phis.dtype}")
+
+        # NaN checks
+        if np.any(np.isnan(self.sqmap)):
+            raise ValueError("sqmap contains NaN values")
+        if np.any(np.isnan(self.dqmap)):
+            raise ValueError("dqmap contains NaN values")
+        if np.any(np.isnan(self.phis)):
+            raise ValueError("phis contains NaN values")
 
         # Mask validation (if provided)
         if self.mask is not None:
@@ -161,7 +177,7 @@ class QMapSchema:
         return result
 
 
-@dataclass
+@dataclass(frozen=True)
 class GeometryMetadata:
     """Detector geometry metadata with validation.
 
@@ -271,7 +287,7 @@ class GeometryMetadata:
         return result
 
 
-@dataclass
+@dataclass(frozen=True)
 class G2Data:
     """G2 correlation data structure with validation.
 
@@ -323,9 +339,29 @@ class G2Data:
                 f"g2 first dimension ({n_q})"
             )
 
+        # Dtype validation
+        if self.g2.dtype != np.float64:
+            raise TypeError(f"g2 must be float64, got {self.g2.dtype}")
+        if self.g2_err.dtype != np.float64:
+            raise TypeError(f"g2_err must be float64, got {self.g2_err.dtype}")
+        if self.delay_times.dtype != np.float64:
+            raise TypeError(
+                f"delay_times must be float64, got {self.delay_times.dtype}"
+            )
+
+        # NaN checks
+        if np.any(np.isnan(self.g2)):
+            raise ValueError("g2 contains NaN values")
+        if np.any(np.isnan(self.delay_times)):
+            raise ValueError("delay_times contains NaN values")
+
         # Physical constraints
         if np.any(self.delay_times < 0):
             raise ValueError("Delay times must be non-negative")
+
+        # Monotonicity check
+        if not np.all(np.diff(self.delay_times) > 0):
+            raise ValueError("delay_times must be strictly monotonically increasing")
 
         if np.any(self.g2_err < 0):
             raise ValueError("G2 errors must be non-negative")
@@ -367,7 +403,7 @@ class G2Data:
         }
 
 
-@dataclass
+@dataclass(frozen=True)
 class PartitionSchema:
     """Q-bin partition data structure with validation.
 
@@ -410,6 +446,13 @@ class PartitionSchema:
         if len(self.partition_map.shape) != 2:
             raise ValueError(
                 f"partition_map must be 2D array. Got shape={self.partition_map.shape}"
+            )
+
+        # Dtype validation
+        if self.partition_map.dtype not in (np.int32, np.int64):
+            raise TypeError(
+                f"partition_map must be integer type (int32 or int64), "
+                f"got {self.partition_map.dtype}"
             )
 
         # List length validation
@@ -504,7 +547,7 @@ class PartitionSchema:
         return result
 
 
-@dataclass
+@dataclass(frozen=True)
 class MaskSchema:
     """Mask data structure with validation.
 
@@ -530,6 +573,12 @@ class MaskSchema:
         # Dimension validation
         if len(self.mask.shape) != 2:
             raise ValueError(f"mask must be 2D array. Got shape={self.mask.shape}")
+
+        # Dtype validation
+        if self.mask.dtype not in (np.int32, np.int64):
+            raise TypeError(
+                f"mask must be integer type (int32 or int64), got {self.mask.dtype}"
+            )
 
         # Value validation
         if not np.all((self.mask == 0) | (self.mask == 1)):
