@@ -387,10 +387,37 @@ def uniform_filter(
         if isinstance(size, int):
             size = (size,) * ndim
 
-        # Use Gaussian filter with sigma that approximates uniform
-        # sigma ≈ size / sqrt(12) for uniform distribution
-        sigma = tuple(s / (12**0.5) for s in size)
-        return gaussian_filter(arr, sigma, mode=mode)
+        padding_modes = {
+            "reflect": "reflect",
+            "constant": "constant",
+            "nearest": "edge",
+            "wrap": "wrap",
+        }
+        if mode not in padding_modes:
+            raise ValueError(f"Unsupported mode: {mode}")
+        pad_mode = padding_modes[mode]
+
+        result = arr
+        for axis in range(ndim):
+            sz = size[axis]
+            if sz <= 1:
+                continue
+            radius = sz // 2
+            kernel = jnp.ones(sz) / sz
+
+            pad_width = [(0, 0)] * ndim
+            pad_width[axis] = (radius, radius)
+
+            if pad_mode == "constant":
+                padded = jnp.pad(result, pad_width, mode="constant", constant_values=0)
+            else:
+                padded = jnp.pad(result, pad_width, mode=pad_mode)
+
+            result = _convolve_1d(padded, kernel, axis)
+
+        from xpcsviewer.backends import ensure_numpy
+
+        return ensure_numpy(result)
     except ImportError:
         from scipy.ndimage import uniform_filter as scipy_uniform
 

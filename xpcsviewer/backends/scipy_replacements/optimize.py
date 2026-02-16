@@ -88,10 +88,13 @@ def minimize(
     options = options or {}
     tol = tol or 1e-8
     maxiter = options.get("maxiter", 1000)
+    learning_rate = options.get("learning_rate", 0.01)
 
     # Try optimistix first, fall back to scipy
     try:
-        return _minimize_optimistix(fun, x0, args, method, jac, bounds, tol, maxiter)
+        return _minimize_optimistix(
+            fun, x0, args, method, jac, bounds, tol, maxiter, learning_rate
+        )
     except ImportError:
         return _minimize_scipy(fun, x0, args, method, jac, bounds, tol, options)
 
@@ -105,6 +108,7 @@ def _minimize_optimistix(
     bounds: list[tuple] | None,
     tol: float,
     maxiter: int,
+    learning_rate: float = 0.01,
 ) -> OptimizeResult:
     """Minimization using optimistix."""
     import jax
@@ -126,7 +130,7 @@ def _minimize_optimistix(
         solver = optx.NonlinearCG(rtol=tol, atol=tol)
     elif method.upper() in ("ADAM", "SGD"):
         # Use gradient descent with optax
-        return _minimize_optax(fun, x0, args, method, tol, maxiter)
+        return _minimize_optax(fun, x0, args, method, tol, maxiter, learning_rate)
     else:
         solver = optx.BFGS(rtol=tol, atol=tol)
 
@@ -161,6 +165,7 @@ def _minimize_optax(
     method: str,
     tol: float,
     maxiter: int,
+    learning_rate: float = 0.01,
 ) -> OptimizeResult:
     """Minimization using optax gradient descent."""
     import jax
@@ -177,11 +182,11 @@ def _minimize_optax(
 
     # Select optimizer
     if method.upper() == "ADAM":
-        optimizer = optax.adam(learning_rate=0.01)
+        optimizer = optax.adam(learning_rate=learning_rate)
     elif method.upper() == "SGD":
-        optimizer = optax.sgd(learning_rate=0.01)
+        optimizer = optax.sgd(learning_rate=learning_rate)
     else:
-        optimizer = optax.adam(learning_rate=0.01)
+        optimizer = optax.adam(learning_rate=learning_rate)
 
     # Initialize optimizer state
     opt_state = optimizer.init(x0)
@@ -368,13 +373,13 @@ def _curve_fit_optimistix(
 
             try:
                 jtj = jacobian.T @ jacobian
-                pcov = np.asarray(jnp.linalg.inv(jtj) * s_sq)
+                pcov = np.asarray(jnp.linalg.inv(jtj))
             except Exception:
                 pcov = np.full((n_params, n_params), np.inf)
         else:
             pcov = np.full((n_params, n_params), np.inf)
 
-        if not absolute_sigma and sigma is not None:
+        if not absolute_sigma:
             pcov = pcov * s_sq
 
         return popt, pcov

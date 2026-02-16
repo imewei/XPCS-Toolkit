@@ -11,6 +11,8 @@ from typing import TYPE_CHECKING, Any, Literal
 
 import numpy as np
 
+from xpcsviewer.backends import ensure_numpy
+
 if TYPE_CHECKING:
     from numpy.typing import ArrayLike
 
@@ -168,7 +170,7 @@ class Interp1d:
             result = jnp.where(below, fill_below, result)
             result = jnp.where(above, fill_above, result)
 
-        return result.reshape(x_new_shape)
+        return ensure_numpy(result.reshape(x_new_shape))
 
     def _interp_numpy(self, x_new: ArrayLike) -> np.ndarray:
         """NumPy/SciPy fallback implementation."""
@@ -268,7 +270,7 @@ def interp2d_jax(
             oob = jnp.logical_or(x_oob, y_oob)
             result = jnp.where(oob, fill_value, result)
 
-        return result
+        return ensure_numpy(result)
     except ImportError:
         from scipy.interpolate import RegularGridInterpolator
 
