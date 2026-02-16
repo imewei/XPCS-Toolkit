@@ -38,11 +38,11 @@ from xpcsviewer.constants import (
     WORKER_THRESHOLD_MEDIUM,
 )
 
-# Note: single_exp_all, double_exp_all, power_law are imported from xpcs_file.fitting
-# but also defined here for backward compatibility with code that imports from xpcs_file directly
+# Note: single_exp_all, double_exp_all, power_law are imported from xpcs_file subpackage.
+# Use absolute path to subpackage modules to avoid circular import with xpcs_file/__init__.py.
 from xpcsviewer.xpcs_file.fitting import double_exp_all, power_law, single_exp_all
 
-# Import extracted utilities from xpcs_file package
+# Import extracted utilities from xpcs_file subpackage
 from xpcsviewer.xpcs_file.memory import MemoryMonitor
 
 # Local imports
