@@ -30,6 +30,18 @@ except ImportError:
     NUMPYRO_AVAILABLE = False
     JAX_AVAILABLE = False
 
+if JAX_AVAILABLE:
+    _xnp = jnp
+else:
+    import numpy as _xnp
+
+
+def _maybe_jit(fn):
+    """Apply jax.jit only when JAX is available."""
+    if JAX_AVAILABLE:
+        return jax.jit(fn)
+    return fn
+
 
 def check_numpyro() -> None:
     """Raise error if NumPyro is not available."""
@@ -207,45 +219,50 @@ def power_law_model(
 # JIT-compiled for 5-10x performance improvement (OPT-001)
 
 
-@jax.jit
+@_maybe_jit
 def single_exp_func(x, tau, baseline, contrast):
     """Single exponential function for NLSQ fitting.
 
     Uses jax.numpy for JAX compatibility during optimization.
     JIT-compiled for accelerated execution.
     """
-    return baseline + contrast * jnp.exp(-2 * x / tau)
+    tau = _xnp.clip(tau, 1e-30)
+    return baseline + contrast * _xnp.exp(-2 * x / tau)
 
 
-@jax.jit
+@_maybe_jit
 def double_exp_func(x, tau1, tau2, baseline, contrast1, contrast2):
     """Double exponential function for NLSQ fitting.
 
     Uses jax.numpy for JAX compatibility during optimization.
     JIT-compiled for accelerated execution.
     """
+    tau1 = _xnp.clip(tau1, 1e-30)
+    tau2 = _xnp.clip(tau2, 1e-30)
     return (
         baseline
-        + contrast1 * jnp.exp(-2 * x / tau1)
-        + contrast2 * jnp.exp(-2 * x / tau2)
+        + contrast1 * _xnp.exp(-2 * x / tau1)
+        + contrast2 * _xnp.exp(-2 * x / tau2)
     )
 
 
-@jax.jit
+@_maybe_jit
 def stretched_exp_func(x, tau, baseline, contrast, beta):
     """Stretched exponential function for NLSQ fitting.
 
     Uses jax.numpy for JAX compatibility during optimization.
     JIT-compiled for accelerated execution.
     """
-    return baseline + contrast * jnp.exp(-jnp.power(2 * x / tau, beta))
+    tau = _xnp.clip(tau, 1e-30)
+    return baseline + contrast * _xnp.exp(-_xnp.power(2 * x / tau, beta))
 
 
-@jax.jit
+@_maybe_jit
 def power_law_func(q, tau0, alpha):
     """Power law function for NLSQ fitting.
 
     Uses jax.numpy for JAX compatibility during optimization.
     JIT-compiled for accelerated execution.
     """
-    return tau0 * jnp.power(q, -alpha)
+    q = _xnp.clip(q, 1e-30)
+    return tau0 * _xnp.power(q, -alpha)

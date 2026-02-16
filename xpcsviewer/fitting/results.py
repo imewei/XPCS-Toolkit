@@ -78,6 +78,23 @@ class SamplerConfig:
     max_tree_depth: int = 10
     random_seed: int | None = None
 
+    def __post_init__(self):
+        """Validate sampler configuration."""
+        if self.num_warmup <= 0:
+            raise ValueError(f"num_warmup must be positive, got {self.num_warmup}")
+        if self.num_samples <= 0:
+            raise ValueError(f"num_samples must be positive, got {self.num_samples}")
+        if self.num_chains <= 0:
+            raise ValueError(f"num_chains must be positive, got {self.num_chains}")
+        if not (0 < self.target_accept_prob < 1):
+            raise ValueError(
+                f"target_accept_prob must be in (0, 1), got {self.target_accept_prob}"
+            )
+        if self.max_tree_depth <= 0:
+            raise ValueError(
+                f"max_tree_depth must be positive, got {self.max_tree_depth}"
+            )
+
 
 @dataclass
 class FitDiagnostics:
@@ -386,7 +403,7 @@ class NLSQResult:
         """Whether the fit passes all health checks."""
         if self.diagnostics is not None:
             return str(self.diagnostics.status) == "healthy"
-        return True  # Default to healthy when no diagnostics
+        return False  # Unknown health != healthy
 
     # T033: health_score property
     @property
@@ -394,7 +411,7 @@ class NLSQResult:
         """Health score (0-100)."""
         if self.diagnostics is not None:
             return int(self.diagnostics.health_score)
-        return 100  # Default to perfect health when no diagnostics
+        return 0  # Unknown health != perfect health
 
     # T034: condition_number property
     @property

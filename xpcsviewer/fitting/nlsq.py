@@ -43,9 +43,9 @@ def nlsq_optimize(
     """NLSQ 0.6.0 curve fitting with native result delegation."""
     import nlsq
 
-    x = np.asarray(x)
-    y = np.asarray(y)
-    yerr = np.asarray(yerr) if yerr is not None else None
+    x = np.asarray(x, dtype=np.float64)
+    y = np.asarray(y, dtype=np.float64)
+    yerr = np.asarray(yerr, dtype=np.float64) if yerr is not None else None
 
     param_names = list(p0.keys())
     p0_array = np.array([p0[name] for name in param_names])

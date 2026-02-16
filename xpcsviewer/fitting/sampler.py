@@ -154,13 +154,18 @@ def _build_fit_result(
     samples: dict,
     nlsq_init: dict[str, float],
     param_names: list[str],
+    config: SamplerConfig | None = None,
+    x: np.ndarray | None = None,
 ) -> FitResult:
     """Build FitResult from MCMC output."""
     # Convert samples to numpy
     samples_np = {k: np.asarray(v) for k, v in samples.items() if k in param_names}
 
+    # Convert to ArviZ InferenceData first (needed for summary and BFMI)
+    arviz_data = az.from_numpyro(mcmc)
+
     # Get diagnostics
-    summary = az.summary(mcmc, var_names=param_names)
+    summary = az.summary(arviz_data, var_names=param_names)
 
     # Extract diagnostics
     r_hat = {}
@@ -175,9 +180,6 @@ def _build_fit_result(
 
     # Count divergences
     num_divergent = int(np.sum(mcmc.get_extra_fields()["diverging"]))
-
-    # Convert to ArviZ InferenceData
-    arviz_data = az.from_numpyro(mcmc)
 
     # Compute BFMI per Technical Guidelines
     bfmi = compute_bfmi(arviz_data)
@@ -197,6 +199,8 @@ def _build_fit_result(
         diagnostics=diagnostics,
         nlsq_init=nlsq_init,
         arviz_data=arviz_data,
+        config=config,
+        x=x,
     )
 
 
@@ -264,8 +268,8 @@ def run_single_exp_fit(
     nlsq_init = nlsq_result.params
 
     # Log warning if NLSQ fit is unhealthy
-    if hasattr(nlsq_result, "is_healthy") and not nlsq_result.is_healthy:
-        health_score = getattr(nlsq_result, "health_score", "N/A")
+    if not nlsq_result.is_healthy:
+        health_score = nlsq_result.health_score
         logger.warning(
             f"NLSQ warm-start may be unreliable: health_score={health_score}"
         )
@@ -284,7 +288,7 @@ def run_single_exp_fit(
         init_params=nlsq_init,
     )
 
-    return _build_fit_result(mcmc, samples, nlsq_init, param_names)
+    return _build_fit_result(mcmc, samples, nlsq_init, param_names, config=config, x=x)
 
 
 @log_timing(threshold_ms=2000)
@@ -359,8 +363,8 @@ def run_double_exp_fit(
     nlsq_init = nlsq_result.params
 
     # Log warning if NLSQ fit is unhealthy
-    if hasattr(nlsq_result, "is_healthy") and not nlsq_result.is_healthy:
-        health_score = getattr(nlsq_result, "health_score", "N/A")
+    if not nlsq_result.is_healthy:
+        health_score = nlsq_result.health_score
         logger.warning(
             f"NLSQ warm-start may be unreliable: health_score={health_score}"
         )
@@ -385,7 +389,7 @@ def run_double_exp_fit(
         },
     )
 
-    return _build_fit_result(mcmc, samples, nlsq_init, param_names)
+    return _build_fit_result(mcmc, samples, nlsq_init, param_names, config=config, x=x)
 
 
 @log_timing(threshold_ms=2000)
@@ -453,8 +457,8 @@ def run_stretched_exp_fit(
     nlsq_init = nlsq_result.params
 
     # Log warning if NLSQ fit is unhealthy
-    if hasattr(nlsq_result, "is_healthy") and not nlsq_result.is_healthy:
-        health_score = getattr(nlsq_result, "health_score", "N/A")
+    if not nlsq_result.is_healthy:
+        health_score = nlsq_result.health_score
         logger.warning(
             f"NLSQ warm-start may be unreliable: health_score={health_score}"
         )
@@ -473,7 +477,7 @@ def run_stretched_exp_fit(
         init_params=nlsq_init,
     )
 
-    return _build_fit_result(mcmc, samples, nlsq_init, param_names)
+    return _build_fit_result(mcmc, samples, nlsq_init, param_names, config=config, x=x)
 
 
 @log_timing(threshold_ms=2000)
@@ -510,12 +514,14 @@ def run_power_law_fit(
 
     # Handle FitResult input
     if isinstance(tau, FitResult):
-        tau_values = tau.get_mean("tau")
-        tau_err = tau.get_std("tau")
-        tau = np.full(len(q), tau_values)  # Broadcast to Q array size
-    else:
-        tau = np.asarray(tau)
-        tau_err = None
+        raise TypeError(
+            "run_power_law_fit requires per-Q tau values as an array, "
+            "not a single FitResult. Pass an array of tau values from "
+            "individual per-Q fits instead."
+        )
+
+    tau = np.asarray(tau)
+    tau_err = None
 
     config = _extract_config(kwargs)
     param_names = ["tau0", "alpha"]
@@ -542,8 +548,8 @@ def run_power_law_fit(
     nlsq_init = nlsq_result.params
 
     # Log warning if NLSQ fit is unhealthy
-    if hasattr(nlsq_result, "is_healthy") and not nlsq_result.is_healthy:
-        health_score = getattr(nlsq_result, "health_score", "N/A")
+    if not nlsq_result.is_healthy:
+        health_score = nlsq_result.health_score
         logger.warning(
             f"NLSQ warm-start may be unreliable: health_score={health_score}"
         )
@@ -562,4 +568,4 @@ def run_power_law_fit(
         init_params=nlsq_init,
     )
 
-    return _build_fit_result(mcmc, samples, nlsq_init, param_names)
+    return _build_fit_result(mcmc, samples, nlsq_init, param_names, config=config, x=q)
