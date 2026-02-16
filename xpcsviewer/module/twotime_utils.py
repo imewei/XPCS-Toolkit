@@ -614,9 +614,7 @@ def batch_c2_matrix_operations(c2_matrices, operations=None):
             lower_diag = np.diagonal(c2_array, offset=-1, axis1=-2, axis2=-1)
 
             # Compute corrected diagonal values: [batch, size]
-            diag_val = np.zeros(
-                (c2_array.shape[0], size), dtype=c2_array.dtype
-            )
+            diag_val = np.zeros((c2_array.shape[0], size), dtype=c2_array.dtype)
             diag_val[:, :-1] += upper_diag
             diag_val[:, 1:] += lower_diag
             # Interior points are average of upper and lower neighbors

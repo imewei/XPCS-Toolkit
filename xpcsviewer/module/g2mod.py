@@ -659,9 +659,7 @@ def compute_g2_ensemble_statistics(g2_data_list):
     q_mean = np.mean(q_transposed, axis=2, keepdims=True)  # [q, batch, 1]
     q_centered = q_transposed - q_mean  # [q, batch, time]
     # Standard deviation per (q, batch)
-    q_std = np.sqrt(
-        np.sum(q_centered ** 2, axis=2, keepdims=True)
-    )  # [q, batch, 1]
+    q_std = np.sqrt(np.sum(q_centered**2, axis=2, keepdims=True))  # [q, batch, 1]
     # Avoid division by zero
     q_std = np.where(q_std == 0, 1.0, q_std)
     q_normed = q_centered / q_std  # [q, batch, time]
@@ -745,9 +743,7 @@ def vectorized_g2_interpolation(tel, g2_data, target_tel):
             )
 
         # vmap over columns (q-values): in_axes=1, out_axes=1
-        interpolated_jax = jax.vmap(
-            _interp_single_q, in_axes=1, out_axes=1
-        )(g2_jax)
+        interpolated_jax = jax.vmap(_interp_single_q, in_axes=1, out_axes=1)(g2_jax)
 
         from xpcsviewer.backends._conversions import ensure_numpy
 
@@ -761,8 +757,11 @@ def vectorized_g2_interpolation(tel, g2_data, target_tel):
         result = np.empty((len(target_tel), g2_data.shape[1]))
         for q_idx in range(g2_data.shape[1]):
             interp_func = Interp1d(
-                tel, g2_data[:, q_idx], kind="cubic",
-                bounds_error=False, fill_value="extrapolate",
+                tel,
+                g2_data[:, q_idx],
+                kind="cubic",
+                bounds_error=False,
+                fill_value="extrapolate",
             )
             result[:, q_idx] = interp_func(target_tel)
         return result

@@ -395,12 +395,14 @@ def vectorized_q_binning(q_values, intensities, q_min, q_max, num_bins):
     valid_indices = bin_indices[valid]
 
     # Single-pass bin counts via bincount
-    bin_counts = np.bincount(valid_indices, minlength=num_bins).astype(
-        np.float64
-    )[:num_bins]
+    bin_counts = np.bincount(valid_indices, minlength=num_bins).astype(np.float64)[
+        :num_bins
+    ]
 
     # Compute per-bin means using np.mean for numerical stability with extreme values
-    valid_intensities = intensities[..., valid] if intensities.ndim > 1 else intensities[valid]
+    valid_intensities = (
+        intensities[..., valid] if intensities.ndim > 1 else intensities[valid]
+    )
     if intensities.ndim == 1:
         binned_intensity = np.zeros(num_bins)
         for b in range(num_bins):
@@ -413,7 +415,9 @@ def vectorized_q_binning(q_values, intensities, q_min, q_max, num_bins):
             if bin_counts[b] > 0:
                 mask_b = valid_indices == b
                 for phi_idx in range(num_phi):
-                    binned_intensity[phi_idx, b] = np.mean(valid_intensities[phi_idx, mask_b])
+                    binned_intensity[phi_idx, b] = np.mean(
+                        valid_intensities[phi_idx, mask_b]
+                    )
 
     return bin_centers, binned_intensity, bin_counts
 
