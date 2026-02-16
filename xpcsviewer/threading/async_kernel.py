@@ -16,14 +16,9 @@ from xpcsviewer.gui.qt_compat import QObject, QtCore, Signal, Slot
 from ..utils.log_utils import log_timing
 from ..utils.logging_config import get_logger
 from .async_workers import ComputationWorker, DataLoadWorker, WorkerManager
-from .plot_workers import (
-    G2PlotWorker,
-    IntensityPlotWorker,
-    QMapPlotWorker,
-    SaxsPlotWorker,
-    StabilityPlotWorker,
-    TwotimePlotWorker,
-)
+from .plot_workers import (G2PlotWorker, IntensityPlotWorker, QMapPlotWorker,
+                           SaxsPlotWorker, StabilityPlotWorker,
+                           TwotimePlotWorker)
 
 logger = get_logger(__name__)
 
@@ -92,10 +87,10 @@ class AsyncViewerKernel(QObject):
             lambda result: self._on_data_loaded(operation_id, result)
         )
         worker.signals.error.connect(
-            lambda msg, tb: self._on_operation_error(operation_id, msg, tb)
+            lambda wid, msg, tb, retry: self._on_operation_error(operation_id, msg, tb)
         )
         worker.signals.cancelled.connect(
-            lambda: self._on_operation_cancelled(operation_id)
+            lambda wid, reason: self._on_operation_cancelled(operation_id)
         )
 
         # Submit to worker manager
@@ -232,10 +227,10 @@ class AsyncViewerKernel(QObject):
             lambda result: self._on_computation_finished(operation_id, result)
         )
         worker.signals.error.connect(
-            lambda msg, tb: self._on_operation_error(operation_id, msg, tb)
+            lambda wid, msg, tb, retry: self._on_operation_error(operation_id, msg, tb)
         )
         worker.signals.cancelled.connect(
-            lambda: self._on_operation_cancelled(operation_id)
+            lambda wid, reason: self._on_operation_cancelled(operation_id)
         )
 
         # Submit to worker manager
@@ -279,10 +274,10 @@ class AsyncViewerKernel(QObject):
             lambda result: self._on_plot_ready(operation_id, result)
         )
         worker.signals.error.connect(
-            lambda msg, tb: self._on_operation_error(operation_id, msg, tb)
+            lambda wid, msg, tb, retry: self._on_operation_error(operation_id, msg, tb)
         )
         worker.signals.cancelled.connect(
-            lambda: self._on_operation_cancelled(operation_id)
+            lambda wid, reason: self._on_operation_cancelled(operation_id)
         )
 
         # Submit to worker manager

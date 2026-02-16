@@ -7,6 +7,7 @@ background threads, worker processes, and system resources.
 import gc
 import threading
 import time
+import weakref
 from enum import Enum
 from typing import Any
 
@@ -29,7 +30,7 @@ class ObjectRegistry:
     """Registry for tracking objects that need cleanup."""
 
     def __init__(self):
-        self.objects: dict[str, Any] = {}
+        self.objects: weakref.WeakValueDictionary[str, Any] = weakref.WeakValueDictionary()
         self._lock = threading.Lock()
 
     def register(self, key: str, obj: Any):

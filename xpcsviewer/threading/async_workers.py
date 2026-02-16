@@ -8,6 +8,7 @@ maintain GUI responsiveness.
 
 from __future__ import annotations
 
+import threading
 import time
 import traceback
 from collections.abc import Callable
@@ -15,9 +16,10 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any
 
+from qtpy.QtCore import QRunnable
+
 # Qt imports via compatibility layer
 from xpcsviewer.gui.qt_compat import QObject, QtCore, Signal, Slot
-from qtpy.QtCore import QRunnable
 
 from ..utils.log_utils import log_timing
 from ..utils.logging_config import get_logger
@@ -118,7 +120,7 @@ class BaseAsyncWorker(QRunnable):
         super().__init__()
         self.signals = WorkerSignals()
         self.worker_id = worker_id or f"worker_{id(self)}"
-        self._is_cancelled = False
+        self._is_cancelled = threading.Event()
         self._start_time: float | None = None
 
         # Performance optimization: Progress emission caching and rate limiting
@@ -144,11 +146,11 @@ class BaseAsyncWorker(QRunnable):
     @property
     def is_cancelled(self) -> bool:
         """Check if the worker has been cancelled."""
-        return self._is_cancelled
+        return self._is_cancelled.is_set()
 
     def cancel(self):
         """Cancel the worker operation."""
-        self._is_cancelled = True
+        self._is_cancelled.set()
         logger.info(f"Worker {self.worker_id} cancelled")
 
     def emit_progress(self, current: int, total: int, message: str = ""):
@@ -156,7 +158,7 @@ class BaseAsyncWorker(QRunnable):
         Emit progress signal with current/total and optional message.
         Optimized with caching and rate limiting to improve GUI responsiveness.
         """
-        if self._is_cancelled:
+        if self._is_cancelled.is_set():
             return
 
         # Performance measurement - start timing
@@ -242,7 +244,7 @@ class BaseAsyncWorker(QRunnable):
         Emit any cached progress data and force final progress emission.
         Called at completion to ensure the last progress update is sent.
         """
-        if self._is_cancelled:
+        if self._is_cancelled.is_set():
             return
 
         if self._cached_progress_data:
@@ -263,19 +265,19 @@ class BaseAsyncWorker(QRunnable):
 
     def emit_status(self, status: str):
         """Emit status update signal."""
-        if not self._is_cancelled:
+        if not self._is_cancelled.is_set():
             # Emit status signal with worker_id, status_message, detail_level (1 = INFO)
             self.signals.status.emit(self.worker_id, status, 1)
 
     def emit_partial_result(self, result: Any):
         """Emit partial result for incremental updates."""
-        if not self._is_cancelled:
+        if not self._is_cancelled.is_set():
             # Emit partial_result signal with worker_id, result, is_final (False for partial)
             self.signals.partial_result.emit(self.worker_id, result, False)
 
     def check_cancelled(self):
         """Check if cancelled and raise exception if so."""
-        if self._is_cancelled:
+        if self._is_cancelled.is_set():
             raise InterruptedError("Worker operation was cancelled")
 
     def do_work(self) -> Any:
@@ -493,7 +495,6 @@ class WorkerManager(QObject):
     def __init__(self, thread_pool: QtCore.QThreadPool):
         super().__init__()
         self.thread_pool = thread_pool
-        self.thread_pool = thread_pool
         self.active_workers: dict[str, BaseAsyncWorker] = {}  # worker_id -> worker
         self.worker_results: dict[str, Any] = {}  # worker_id -> result
         self.worker_errors: dict[
@@ -518,19 +519,19 @@ class WorkerManager(QObject):
         worker_id = worker.worker_id
 
         # Connect signals
-        worker.signals.started.connect(lambda: self._on_worker_started(worker_id))
+        worker.signals.started.connect(lambda wid, priority: self._on_worker_started(worker_id))
         worker.signals.finished.connect(
             lambda result: self._on_worker_finished(worker_id, result)
         )
         worker.signals.error.connect(
-            lambda msg, tb: self._on_worker_error(worker_id, msg, tb)
+            lambda wid, msg, tb, retry: self._on_worker_error(worker_id, msg, tb)
         )
         worker.signals.progress.connect(
-            lambda current, total, message: self._on_worker_progress(
+            lambda wid, current, total, message, eta: self._on_worker_progress(
                 worker_id, current, total, message
             )
         )
-        worker.signals.cancelled.connect(lambda: self._on_worker_cancelled(worker_id))
+        worker.signals.cancelled.connect(lambda wid, reason: self._on_worker_cancelled(worker_id))
 
         # Track the worker
         self.active_workers[worker_id] = worker

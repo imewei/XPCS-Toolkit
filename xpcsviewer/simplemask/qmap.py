@@ -410,7 +410,7 @@ def _compute_transmission_qmap_backend(
     return qmap, qmap_unit
 
 
-@lru_cache(maxsize=128)
+@lru_cache(maxsize=4)  # Reduced from 128 to limit memory usage
 def compute_transmission_qmap(
     energy: float,
     center: tuple[float, float],
@@ -524,7 +524,7 @@ def _compute_reflection_qmap_backend(
     return qmap, qmap_unit
 
 
-@lru_cache(maxsize=128)
+@lru_cache(maxsize=4)  # Reduced from 128 to limit memory usage
 def compute_reflection_qmap(
     energy: float,
     center: tuple[float, float],

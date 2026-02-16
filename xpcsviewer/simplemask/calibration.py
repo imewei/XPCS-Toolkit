@@ -84,6 +84,10 @@ def refine_beam_center(
         loss = float(loss_fn_jit(params))
         losses.append(loss)
 
+        if np.isnan(loss):
+            logger.warning("NaN loss detected in beam center refinement, stopping early")
+            break
+
         # Check convergence
         if len(losses) >= 2 and abs(losses[-1] - losses[-2]) < tolerance:
             logger.debug(f"Beam center refinement converged after {i + 1} iterations")
@@ -262,6 +266,10 @@ def minimize_with_grad(
         params = params - lr * grads
         loss = float(obj_fn(params))
         losses.append(loss)
+
+        if np.isnan(loss):
+            logger.warning("NaN loss detected in calibration, stopping early")
+            break
 
         # Check convergence
         if abs(losses[-1] - losses[-2]) < tolerance:

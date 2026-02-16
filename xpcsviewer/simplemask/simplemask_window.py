@@ -854,14 +854,32 @@ class SimpleMaskWindow(QMainWindow):
     def export_mask_to_viewer(self) -> None:
         """Emit current mask via mask_exported signal."""
         if self.kernel is not None and self.kernel.mask is not None:
-            self.mask_exported.emit(self.kernel.mask)
+            mask = self.kernel.mask
+            if not isinstance(mask, np.ndarray) or mask.ndim != 2:
+                logger.warning(
+                    f"Invalid mask: expected 2D ndarray, got "
+                    f"{'non-array' if not isinstance(mask, np.ndarray) else f'{mask.ndim}D'}"
+                )
+                return
+            self.mask_exported.emit(mask)
             logger.info("Mask exported to viewer")
             self.status_bar.showMessage("Mask exported to XPCS Viewer")
 
     def export_partition_to_viewer(self) -> None:
         """Emit current partition via qmap_exported signal."""
         if self.kernel is not None and self.kernel.new_partition is not None:
-            self.qmap_exported.emit(self.kernel.new_partition)
+            partition = self.kernel.new_partition
+            if not isinstance(partition, dict):
+                logger.warning(
+                    f"Invalid partition: expected dict, got {type(partition).__name__}"
+                )
+                return
+            required_keys = {"dynamic_roi_map", "static_roi_map"}
+            missing = required_keys - set(partition.keys())
+            if missing:
+                logger.warning(f"Partition missing required keys: {missing}")
+                return
+            self.qmap_exported.emit(partition)
             logger.info("Partition exported to viewer")
             self.status_bar.showMessage("Partition exported to XPCS Viewer")
 
