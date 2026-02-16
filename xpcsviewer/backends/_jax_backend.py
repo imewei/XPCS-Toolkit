@@ -264,7 +264,7 @@ class JAXBackend:
     ) -> jnp.ndarray:
         """Count number of occurrences of each value."""
         _ensure_jax()
-        return _jnp.bincount(x.astype(_jnp.int32), weights=weights, minlength=minlength)
+        return _jnp.bincount(x.astype(_jnp.int64), weights=weights, minlength=minlength)
 
     def unique(
         self,

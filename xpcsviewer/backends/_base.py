@@ -433,3 +433,39 @@ class BackendProtocol(Protocol):
     ) -> Callable:
         """Return function computing both value and gradient."""
         ...
+
+    # =========================================================================
+    # Batch Processing
+    # =========================================================================
+
+    @abstractmethod
+    def vmap(
+        self,
+        func: Callable,
+        in_axes: int | tuple[int | None, ...] = 0,
+        out_axes: int = 0,
+    ) -> Callable:
+        """Vectorize function over batch dimension."""
+        ...
+
+    @abstractmethod
+    def scan(
+        self,
+        func: Callable,
+        init: ArrayType,
+        xs: ArrayType,
+        length: int | None = None,
+    ) -> tuple[ArrayType, ArrayType]:
+        """Scan over leading array dimension while carrying along state."""
+        ...
+
+    @abstractmethod
+    def fori_loop(
+        self,
+        lower: int,
+        upper: int,
+        body_fun: Callable,
+        init_val: ArrayType,
+    ) -> ArrayType:
+        """Execute body function in a loop from lower to upper."""
+        ...
