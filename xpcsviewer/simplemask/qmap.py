@@ -443,6 +443,83 @@ def compute_transmission_qmap(
     return _compute_transmission_qmap_backend(energy, center, shape, pix_dim, det_dist)
 
 
+def _get_reflection_qmap_jit(orientation: str):
+    """Get or create JIT-compiled reflection Q-map function.
+
+    Returns a JIT-compiled function if JAX backend is active,
+    otherwise returns None. Orientation is used as a cache key
+    since it affects control flow.
+    """
+    global _JIT_CACHE
+
+    backend = get_backend()
+    if backend.name != "jax":
+        return None
+
+    cache_key = f"reflection_qmap_jit_{orientation}"
+    if cache_key not in _JIT_CACHE:
+        import jax
+        import jax.numpy as jnp
+
+        @jax.jit
+        def _reflection_qmap_core(k0, v, h, pix_dim, det_dist, alpha_i_deg):
+            """JIT-compiled core reflection Q-map computation."""
+            vg, hg = jnp.meshgrid(v, h, indexing="ij")
+            vg = vg * (-1)
+
+            # Orientation transformation (baked into this compiled variant)
+            if orientation == "west":
+                vg, hg = -hg, vg
+            elif orientation == "south":
+                vg, hg = -vg, -hg
+            elif orientation == "east":
+                vg, hg = hg, -vg
+            # "north" is identity (no transform)
+
+            r = jnp.hypot(vg, hg) * pix_dim
+            phi = jnp.arctan2(vg, hg)
+            tth_full = jnp.arctan(r / det_dist)
+
+            alpha_i = jnp.deg2rad(alpha_i_deg)
+            alpha_f = jnp.arctan(vg * pix_dim / det_dist) - alpha_i
+            tth = jnp.arctan(hg * pix_dim / det_dist)
+
+            # Q components for reflection geometry
+            qx = k0 * (jnp.cos(alpha_f) * jnp.cos(tth) - jnp.cos(alpha_i))
+            qy = k0 * (jnp.cos(alpha_f) * jnp.sin(tth))
+            qz = k0 * (jnp.sin(alpha_i) + jnp.sin(alpha_f))
+            qr = jnp.hypot(qx, qy)
+            q = jnp.hypot(qr, qz)
+
+            # Convert angular outputs to degrees
+            phi_deg = jnp.rad2deg(phi)
+            tth_full_deg = jnp.rad2deg(tth_full)
+            tth_deg = jnp.rad2deg(tth)
+            alpha_f_deg = jnp.rad2deg(alpha_f)
+
+            return (
+                phi_deg,
+                tth_full_deg,
+                tth_deg,
+                alpha_f_deg,
+                qx,
+                qy,
+                qz,
+                qr,
+                q,
+                hg,
+                vg,
+            )
+
+        _JIT_CACHE[cache_key] = _reflection_qmap_core
+        logger.debug(
+            "Created JIT-compiled reflection Q-map function "
+            f"(orientation={orientation})"
+        )
+
+    return _JIT_CACHE[cache_key]
+
+
 def _compute_reflection_qmap_backend(
     energy: float,
     center: tuple[float, float],
@@ -455,50 +532,93 @@ def _compute_reflection_qmap_backend(
     """Backend-accelerated reflection Q-map computation.
 
     Uses the backend abstraction layer for GPU acceleration when available.
+    JIT compilation is applied for repeated calls with JAX backend.
     """
     backend = get_backend()
 
+    # Wavevector magnitude
     k0 = 2 * backend.pi / (E2KCONST / energy)
 
-    # Create coordinate arrays
+    # Create pixel coordinate arrays
     v = backend.arange(shape[0], dtype=np.float64) - center[0]
     h = backend.arange(shape[1], dtype=np.float64) - center[1]
-    vg, hg = backend.meshgrid(v, h, indexing="ij")
-    vg = vg * (-1)
 
-    # Apply orientation transformation
-    if orientation == "north":
-        pass
-    elif orientation == "west":
-        vg, hg = -hg, vg
-    elif orientation == "south":
-        vg, hg = -vg, -hg
-    elif orientation == "east":
-        vg, hg = hg, -vg
+    # Try JIT-compiled path for JAX backend
+    jit_fn = _get_reflection_qmap_jit(orientation)
+    if jit_fn is not None:
+        import jax.numpy as jnp
+
+        k0_jax = jnp.asarray(k0)
+        v_jax = jnp.asarray(v)
+        h_jax = jnp.asarray(h)
+        pix_dim_jax = jnp.asarray(pix_dim)
+        det_dist_jax = jnp.asarray(det_dist)
+        alpha_i_jax = jnp.asarray(alpha_i_deg)
+
+        (
+            phi,
+            tth_full,
+            tth,
+            alpha_f,
+            qx,
+            qy,
+            qz,
+            qr,
+            q,
+            hg,
+            vg,
+        ) = jit_fn(k0_jax, v_jax, h_jax, pix_dim_jax, det_dist_jax, alpha_i_jax)
     else:
-        logger.warning(f"Unknown orientation: {orientation}. Using default north")
+        # Non-JIT path for NumPy backend
+        vg, hg = backend.meshgrid(v, h, indexing="ij")
+        vg = vg * (-1)
 
-    r = backend.hypot(vg, hg) * pix_dim
-    phi = backend.arctan2(vg, hg)
-    tth_full = backend.arctan(r / det_dist)
+        # Apply orientation transformation
+        if orientation == "north":
+            pass
+        elif orientation == "west":
+            vg, hg = -hg, vg
+        elif orientation == "south":
+            vg, hg = -vg, -hg
+        elif orientation == "east":
+            vg, hg = hg, -vg
+        else:
+            logger.warning(f"Unknown orientation: {orientation}. Using default north")
 
-    alpha_i: Any = backend.deg2rad(backend.array(alpha_i_deg))
-    alpha_f = backend.arctan(vg * pix_dim / det_dist) - alpha_i
-    tth = backend.arctan(hg * pix_dim / det_dist)
+        r = backend.hypot(vg, hg) * pix_dim
+        phi = backend.arctan2(vg, hg)
+        tth_full = backend.arctan(r / det_dist)
 
-    # Q components for reflection geometry
-    qx = k0 * (backend.cos(alpha_f) * backend.cos(tth) - backend.cos(alpha_i))
-    qy = k0 * (backend.cos(alpha_f) * backend.sin(tth))
-    qz = k0 * (backend.sin(alpha_i) + backend.sin(alpha_f))
-    qr = backend.hypot(qx, qy)
-    q = backend.hypot(qr, qz)
+        alpha_i: Any = backend.deg2rad(backend.array(alpha_i_deg))
+        alpha_f = backend.arctan(vg * pix_dim / det_dist) - alpha_i
+        tth = backend.arctan(hg * pix_dim / det_dist)
+
+        # Q components for reflection geometry
+        qx = k0 * (backend.cos(alpha_f) * backend.cos(tth) - backend.cos(alpha_i))
+        qy = k0 * (backend.cos(alpha_f) * backend.sin(tth))
+        qz = k0 * (backend.sin(alpha_i) + backend.sin(alpha_f))
+        qr = backend.hypot(qx, qy)
+        q = backend.hypot(qr, qz)
 
     # Convert to NumPy for output (I/O boundary)
+    # When using JIT path, angular values are already in degrees.
+    # When using non-JIT path, convert from radians to degrees.
+    if jit_fn is not None:
+        phi_deg = phi
+        tth_full_deg = tth_full
+        tth_deg = tth
+        alpha_f_deg = alpha_f
+    else:
+        phi_deg = backend.rad2deg(phi)
+        tth_full_deg = backend.rad2deg(tth_full)
+        tth_deg = backend.rad2deg(tth)
+        alpha_f_deg = backend.rad2deg(alpha_f)
+
     qmap = {
-        "phi": ensure_numpy(backend.rad2deg(phi)),
-        "TTH": ensure_numpy(backend.rad2deg(tth_full)),
-        "tth": ensure_numpy(backend.rad2deg(tth)),
-        "alpha_f": ensure_numpy(backend.rad2deg(alpha_f)),
+        "phi": ensure_numpy(phi_deg),
+        "TTH": ensure_numpy(tth_full_deg),
+        "tth": ensure_numpy(tth_deg),
+        "alpha_f": ensure_numpy(alpha_f_deg),
         "qx": ensure_numpy(qx),
         "qy": ensure_numpy(qy),
         "qz": ensure_numpy(qz),

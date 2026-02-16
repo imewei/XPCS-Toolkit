@@ -51,7 +51,9 @@ def gaussian_filter(
         import jax.numpy as jnp
         from jax import lax
 
-        return _gaussian_filter_jax(input_array, sigma, mode, truncate)
+        from xpcsviewer.backends import ensure_numpy
+
+        return ensure_numpy(_gaussian_filter_jax(input_array, sigma, mode, truncate))
     except ImportError:
         # Fall back to scipy
         from scipy.ndimage import gaussian_filter as scipy_gaussian
@@ -100,9 +102,8 @@ def _gaussian_filter_jax(
                 result, sigma[axis], axis, pad_mode, truncate
             )
 
-    from xpcsviewer.backends import ensure_numpy
-
-    return ensure_numpy(result)
+    # Return JAX array -- ensure_numpy is deferred to the public API
+    return result
 
 
 def _gaussian_filter_1d_jax(
@@ -254,7 +255,7 @@ def gaussian_filter1d(
 
         from xpcsviewer.backends import ensure_numpy
 
-        return ensure_numpy(result)
+        return ensure_numpy(result)  # ensure_numpy at public API boundary
     except ImportError:
         from scipy.ndimage import gaussian_filter1d as scipy_gaussian_1d
 
@@ -417,7 +418,7 @@ def uniform_filter(
 
         from xpcsviewer.backends import ensure_numpy
 
-        return ensure_numpy(result)
+        return ensure_numpy(result)  # ensure_numpy at public API boundary
     except ImportError:
         from scipy.ndimage import uniform_filter as scipy_uniform
 
