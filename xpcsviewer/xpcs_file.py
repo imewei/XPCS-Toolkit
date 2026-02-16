@@ -79,6 +79,29 @@ from .utils.vectorized_roi import (
 
 logger = get_logger(__name__)
 
+# Module-level cached singletons — avoid per-instance lookups in __init__.
+_cached_memory_manager = None
+_cached_memory_predictor = None
+_cached_lazy_loader = None
+_cached_enhanced_hdf5_reader = None
+
+
+def _get_cached_singletons():
+    """Return cached (memory_manager, memory_predictor, lazy_loader, hdf5_reader)."""
+    global _cached_memory_manager, _cached_memory_predictor  # noqa: PLW0603
+    global _cached_lazy_loader, _cached_enhanced_hdf5_reader  # noqa: PLW0603
+    if _cached_memory_manager is None:
+        _cached_memory_manager = get_memory_manager()
+        _cached_memory_predictor = get_memory_predictor()
+        _cached_lazy_loader = get_lazy_loader()
+        _cached_enhanced_hdf5_reader = get_enhanced_hdf5_reader()
+    return (
+        _cached_memory_manager,
+        _cached_memory_predictor,
+        _cached_lazy_loader,
+        _cached_enhanced_hdf5_reader,
+    )
+
 
 def create_id(fname, label_style=None, simplify_flag=True):
     """
@@ -146,6 +169,30 @@ class XpcsFile:
     XpcsFile is a class that wraps an Xpcs analysis hdf file;
     """
 
+    _QMAP_KEYS = frozenset(
+        {
+            "sqlist",
+            "dqlist",
+            "dqmap",
+            "sqmap",
+            "mask",
+            "bcx",
+            "bcy",
+            "det_dist",
+            "pixel_size",
+            "X_energy",
+            "splist",
+            "dplist",
+            "static_num_pts",
+            "dynamic_num_pts",
+            "map_names",
+            "map_units",
+            "get_qbin_label",
+        }
+    )
+
+    _G2_PARTIAL_KEYS = frozenset({"g2_partial", "g2_partial_err", "g2_partial_labels"})
+
     def __init__(self, fname, fields=None, label_style=None, qmap_manager=None):
         self.fname = fname
         if qmap_manager is None:
@@ -161,33 +208,30 @@ class XpcsFile:
         self.c2_all_data = None
         self.c2_kwargs = None
 
+        # Generate a single UUID for this instance (used for cleanup registration and cache prefix)
+        self._instance_id = str(uuid.uuid4())
+
         # Register for optimized cleanup
         try:
             from .threading.cleanup_optimized import register_for_cleanup
 
-            self._instance_id = str(uuid.uuid4())
             register_for_cleanup(f"XpcsFile_{self._instance_id}", self)
         except ImportError:
             pass  # Optimized cleanup system not available
-        # label is a short string to describe the file/filename
-        # place holder for self.saxs_2d;
+
+        # Placeholder for lazy-loaded saxs_2d data
         self._saxs_2d_data = None
         self._saxs_2d_log_data = None
         self._saxs_data_loaded = False
 
-        # Use unified memory manager for all caching
-        self._memory_manager = get_memory_manager()
-        self._cache_prefix = f"xpcs_{getattr(self, '_instance_id', str(uuid.uuid4()))}"  # Unique cache prefix for this instance
-
-        # Use memory predictor for proactive memory management
-        self._memory_predictor = get_memory_predictor()
-
-        # Use lazy loader for intelligent data loading
-        self._lazy_loader = get_lazy_loader()
+        # Use module-level cached singletons instead of per-instance lookups
+        mm, mp, ll, hr = _get_cached_singletons()
+        self._memory_manager = mm
+        self._cache_prefix = f"xpcs_{self._instance_id}"
+        self._memory_predictor = mp
+        self._lazy_loader = ll
         self._use_lazy_loading = True  # Enable by default for large datasets
-
-        # Use enhanced HDF5 reader for optimized I/O
-        self._hdf5_reader = get_enhanced_hdf5_reader()
+        self._hdf5_reader = hr
         self._use_enhanced_hdf5 = True  # Enable enhanced HDF5 reading
 
     @property
@@ -715,7 +759,6 @@ class XpcsFile:
             )
 
         # Record operation for memory predictor learning
-        time.time()
         record_operation_memory(
             operation_type="load_saxs_2d",
             input_size_mb=estimated_saxs_size_mb,
@@ -728,13 +771,10 @@ class XpcsFile:
 
     def _compute_saxs_log_standard(self, saxs_data: np.ndarray) -> np.ndarray:
         """Standard log computation for SAXS data."""
-        saxs = np.copy(saxs_data)
-        roi = saxs > 0
-        if np.sum(roi) == 0:
-            return np.zeros_like(saxs, dtype=np.uint8)
-        min_val = np.min(saxs[roi])
-        saxs[~roi] = min_val
-        return np.log10(saxs).astype(np.float32)
+        if not np.any(saxs_data > 0):
+            return np.zeros_like(saxs_data, dtype=np.uint8)
+        min_val = np.min(saxs_data[saxs_data > 0])
+        return np.log10(np.maximum(saxs_data, min_val)).astype(np.float32)
 
     def _compute_saxs_log_streaming(self, saxs_data: np.ndarray) -> np.ndarray:
         """
@@ -864,26 +904,8 @@ class XpcsFile:
         return result
 
     def __getattr__(self, key):
-        # keys from qmap
-        if key in [
-            "sqlist",
-            "dqlist",
-            "dqmap",
-            "sqmap",
-            "mask",
-            "bcx",
-            "bcy",
-            "det_dist",
-            "pixel_size",
-            "X_energy",
-            "splist",
-            "dplist",
-            "static_num_pts",
-            "dynamic_num_pts",
-            "map_names",
-            "map_units",
-            "get_qbin_label",
-        ]:
+        # keys from qmap — O(1) frozenset lookup
+        if key in self._QMAP_KEYS:
             return self.qmap.__dict__[key]
         # delayed loading of saxs_2d due to its large size - now using connection pool and batch loading
         if key == "saxs_2d":
@@ -897,7 +919,7 @@ class XpcsFile:
         if key == "Int_t_fft":
             return self._compute_int_t_fft_cached()
         # G2 partial data for stability analysis (lazy loading)
-        if key in ["g2_partial", "g2_partial_err", "g2_partial_labels"]:
+        if key in self._G2_PARTIAL_KEYS:
             if key not in self.__dict__:
                 try:
                     ret = get(self.fname, [key], "alias", ftype="nexus", use_pool=True)
@@ -1305,8 +1327,8 @@ class XpcsFile:
     def get_twotime_maps(
         self, scale="log", auto_crop=True, highlight_xy=None, selection=None
     ):
-        # emphasize the beamstop region which has qindex = 0;
-        dqmap = np.copy(self.dqmap)
+        # Work on a view until we need to mutate (astype creates a copy)
+        dqmap = self.dqmap
         saxs = self.saxs_2d_log if scale == "log" else self.saxs_2d
 
         # Handle 3D SAXS data by taking the first frame if needed
@@ -1355,13 +1377,15 @@ class XpcsFile:
             logger.warning(f"No valid Q-bins found for {self.label}")
             dqmap = dqmap.astype(np.float32)
             dqmap[dqmap == 0] = np.nan
-            dqmap_disp = np.flipud(np.copy(dqmap))
+            dqmap_disp = np.flipud(dqmap).copy()
             return dqmap_disp, saxs, None
 
+        # astype returns a new array, so dqmap is already a copy here
         dqmap = dqmap.astype(np.float32)
         dqmap[dqmap == 0] = np.nan
 
-        dqmap_disp = np.flipud(np.copy(dqmap))
+        # flipud returns a view; copy so downstream mutations are safe
+        dqmap_disp = np.flipud(dqmap).copy()
 
         dq_bin = None
         if highlight_xy is not None:
@@ -2106,27 +2130,14 @@ class XpcsFile:
         # correct the err for some data points with really small error, which
         # may cause the fitting to blowup
 
-        g2_err_mod = np.copy(g2_err)
-
-        # Vectorized approach: create boolean mask for all columns at once
         valid_mask = g2_err > threshold
 
-        # Calculate averages for each column where valid data exists
-        # Use masked arrays to handle columns with no valid data
+        # Column averages of valid values; fallback to threshold if no valid data
         masked_data = np.ma.masked_where(~valid_mask, g2_err)
-        column_averages = np.ma.mean(masked_data, axis=0)
+        column_averages = np.ma.filled(np.ma.mean(masked_data, axis=0), threshold)
 
-        # Fill masked values (columns with no valid data) with threshold
-        column_averages = np.ma.filled(column_averages, threshold)
-
-        # Broadcast and apply corrections using boolean indexing
-        # Create a matrix where each column contains its respective average
-        avg_matrix = np.broadcast_to(column_averages, g2_err.shape)
-
-        # Apply correction: replace invalid values with their column averages
-        g2_err_mod[~valid_mask] = avg_matrix[~valid_mask]
-
-        return g2_err_mod
+        # np.where avoids an explicit copy — invalid values replaced in-place
+        return np.where(valid_mask, g2_err, column_averages)
 
     def fit_tauq(self, q_range, bounds, fit_flag, force_refit=False):
         """

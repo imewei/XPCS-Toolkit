@@ -583,7 +583,7 @@ class EnhancedHDF5Reader:
             # Read requested data
             data = dataset[slice_info] if slice_info else dataset[:]
 
-            data = np.array(data)  # Ensure we own the data
+            data = np.asarray(data)  # Zero-copy if already ndarray
             self.stats["bytes_read"] += data.nbytes
 
             # Cache the data

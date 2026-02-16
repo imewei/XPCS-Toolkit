@@ -248,9 +248,10 @@ class FileLocator:
         if sort_method.startswith("Filename"):
             flist.sort()
         elif sort_method.startswith("Time"):
-            flist.sort(
-                key=lambda x: os.path.getmtime(os.path.normpath(os.path.join(path, x)))
-            )
+            # Schwartzian transform: pre-compute mtimes to avoid O(N log N) stat calls
+            decorated = [(os.path.getmtime(os.path.join(path, f)), f) for f in flist]
+            decorated.sort()
+            flist = [f for _, f in decorated]
         elif sort_method.startswith("Index"):
             pass
 

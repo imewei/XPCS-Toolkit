@@ -30,6 +30,7 @@ from xpcsviewer.constants import (
 )
 from xpcsviewer.utils.log_utils import log_timing
 from xpcsviewer.utils.logging_config import get_logger
+from xpcsviewer.xpcs_file.memory import _get_virtual_memory
 
 # Local imports
 from .aps_8idi import key as hdf_key
@@ -198,6 +199,10 @@ class HDF5ConnectionPool:
         self._last_health_check = 0.0
         self._unhealthy_files: set[str] = set()
 
+        # Throttle for memory pressure adaptation (avoid psutil syscall on every request)
+        self._last_pressure_adaptation = 0.0
+        self._pressure_adaptation_interval = 30.0  # seconds
+
         # Read-ahead cache for batch operations
         self._read_cache: dict[str, dict[str, Any]] = {}
         self._read_cache_lock = threading.RLock()
@@ -223,12 +228,24 @@ class HDF5ConnectionPool:
             return self._file_locks[fname]
 
     def _adapt_pool_size_to_memory_pressure(self) -> None:
-        """Dynamically adapt pool size based on system memory pressure."""
+        """Dynamically adapt pool size based on system memory pressure.
+
+        Throttled to run at most once per ``_pressure_adaptation_interval``
+        seconds to avoid a psutil syscall on every ``get_connection()`` call.
+        """
         if not self.enable_memory_pressure_adaptation:
             return
 
+        current_time = time.time()
+        if (
+            current_time - self._last_pressure_adaptation
+            < self._pressure_adaptation_interval
+        ):
+            return
+        self._last_pressure_adaptation = current_time
+
         try:
-            memory = psutil.virtual_memory()
+            memory = _get_virtual_memory()
             memory_pressure = memory.percent / 100.0
 
             if memory_pressure > MEMORY_PRESSURE_CRITICAL:
@@ -259,27 +276,18 @@ class HDF5ConnectionPool:
             logger.warning(f"Failed to adapt pool size to memory pressure: {e}")
 
     def _evict_lru_connections(self, count: int = 1) -> int:
-        """Evict least recently used connections."""
+        """Evict least recently used connections.
+
+        The pool is an OrderedDict with move_to_end() on access,
+        so the front is always the LRU entry — O(1) eviction.
+        """
         evicted = 0
-        connections_to_remove = []
-
-        # Get connections sorted by last access time (oldest first)
-        sorted_connections = sorted(
-            self._pool.items(), key=lambda x: x[1].last_accessed
-        )
-
-        for fname, connection in sorted_connections[:count]:
-            connections_to_remove.append(fname)
+        for _ in range(min(count, len(self._pool))):
+            fname, connection = self._pool.popitem(last=False)
             connection.close()
+            self.stats.record_connection_evicted()
+            logger.debug(f"Evicted LRU connection: {fname}")
             evicted += 1
-
-        # Remove from pool
-        for fname in connections_to_remove:
-            if fname in self._pool:
-                del self._pool[fname]
-                self.stats.record_connection_evicted()
-                logger.debug(f"Evicted LRU connection: {fname}")
-
         return evicted
 
     def _evict_excess_connections(self) -> None:
