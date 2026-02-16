@@ -635,6 +635,8 @@ def compute_g2_ensemble_statistics(g2_data_list):
     """
     # Stack all data for vectorized operations
     g2_stack = np.stack(g2_data_list, axis=0)  # [batch, time, q_values]
+    num_q = g2_stack.shape[2]
+    num_batch = g2_stack.shape[0]
 
     # Vectorized statistical computations
     stats = {
@@ -645,15 +647,30 @@ def compute_g2_ensemble_statistics(g2_data_list):
         "ensemble_max": np.max(g2_stack, axis=0),
         "ensemble_var": np.var(g2_stack, axis=0),
         "q_mean_values": np.mean(g2_stack, axis=(0, 1)),  # Mean across time and batch
-        "temporal_correlation": [],
     }
 
-    # Compute temporal correlations for each q-value
-    for q_idx in range(g2_stack.shape[2]):
-        q_data = g2_stack[:, :, q_idx]  # [batch, time]
-        # Vectorized correlation matrix computation
-        corr_matrix = np.corrcoef(q_data)
-        stats["temporal_correlation"].append(corr_matrix)
+    # Batched temporal correlation: transpose to (q, batch, time) and compute
+    # correlation matrices for all q-values without a Python loop.
+    # Each q-slice is (batch, time); corrcoef produces (batch, batch).
+    q_transposed = np.transpose(g2_stack, (2, 0, 1))  # [q, batch, time]
+
+    # Vectorized batched corrcoef: center, normalize, matmul
+    # mean across time axis (last)
+    q_mean = np.mean(q_transposed, axis=2, keepdims=True)  # [q, batch, 1]
+    q_centered = q_transposed - q_mean  # [q, batch, time]
+    # Standard deviation per (q, batch)
+    q_std = np.sqrt(
+        np.sum(q_centered ** 2, axis=2, keepdims=True)
+    )  # [q, batch, 1]
+    # Avoid division by zero
+    q_std = np.where(q_std == 0, 1.0, q_std)
+    q_normed = q_centered / q_std  # [q, batch, time]
+    # Batched correlation: (q, batch, time) @ (q, time, batch) -> (q, batch, batch)
+    n_time = q_transposed.shape[2]
+    corr_batch = np.matmul(q_normed, np.transpose(q_normed, (0, 2, 1))) / n_time
+
+    # Convert to list of per-q correlation matrices for backward compatibility
+    stats["temporal_correlation"] = [corr_batch[q] for q in range(num_q)]
 
     return stats
 
@@ -700,7 +717,8 @@ def vectorized_g2_interpolation(tel, g2_data, target_tel):
     """
     Vectorized interpolation of G2 data to new time points.
 
-    Uses JAX-compatible interpax backend when available.
+    Uses JAX vmap + interpax for batch interpolation when available,
+    falling back to a single scipy interp1d call with 2D y otherwise.
 
     Args:
         tel: Original time points
@@ -710,23 +728,41 @@ def vectorized_g2_interpolation(tel, g2_data, target_tel):
     Returns:
         Interpolated G2 data
     """
-    from xpcsviewer.backends.scipy_replacements import interp1d
+    try:
+        import interpax
+        import jax
+        import jax.numpy as jnp
 
-    # Vectorized interpolation for all q-values simultaneously
-    interpolated_data = np.zeros((len(target_tel), g2_data.shape[1]))
+        # Convert to JAX arrays once
+        tel_jax = jnp.asarray(tel)
+        target_jax = jnp.asarray(target_tel)
+        g2_jax = jnp.asarray(g2_data)  # [time, q_values]
 
-    # Process all q-values in vectorized manner
-    for q_idx in range(g2_data.shape[1]):
-        # Create interpolation function using JAX-compatible backend
-        interp_func = interp1d(
-            tel,
-            g2_data[:, q_idx],
-            kind="cubic",
-            bounds_error=False,
-            fill_value="extrapolate",
-        )
+        # Define single-column interpolation function
+        def _interp_single_q(y_col):
+            return interpax.interp1d(
+                target_jax, tel_jax, y_col, method="cubic", extrap=True
+            )
 
-        # Vectorized interpolation
-        interpolated_data[:, q_idx] = interp_func(target_tel)
+        # vmap over columns (q-values): in_axes=1, out_axes=1
+        interpolated_jax = jax.vmap(
+            _interp_single_q, in_axes=1, out_axes=1
+        )(g2_jax)
 
-    return interpolated_data
+        from xpcsviewer.backends._conversions import ensure_numpy
+
+        return ensure_numpy(interpolated_jax)
+
+    except ImportError:
+        # NumPy fallback: use project's Interp1d wrapper (avoids direct scipy import)
+        from xpcsviewer.backends.scipy_replacements.interpolate import Interp1d
+
+        # Interpolate each q-column using the wrapper
+        result = np.empty((len(target_tel), g2_data.shape[1]))
+        for q_idx in range(g2_data.shape[1]):
+            interp_func = Interp1d(
+                tel, g2_data[:, q_idx], kind="cubic",
+                bounds_error=False, fill_value="extrapolate",
+            )
+            result[:, q_idx] = interp_func(target_tel)
+        return result

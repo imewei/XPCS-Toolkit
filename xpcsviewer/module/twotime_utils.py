@@ -605,9 +605,27 @@ def batch_c2_matrix_operations(c2_matrices, operations=None):
         c2_array = 0.5 * (c2_array + np.swapaxes(c2_array, -2, -1))
 
     if "diagonal_correct" in operations:
-        # Batch diagonal correction
-        for i in range(c2_array.shape[0]):
-            c2_array[i] = correct_diagonal_c2_vectorized(c2_array[i])
+        # Fully vectorized batch diagonal correction without Python loop
+        size = c2_array.shape[-1]
+        if size >= 2:
+            # Extract upper and lower diagonals for all matrices at once
+            # np.diagonal with axis1=-2, axis2=-1 works on batches
+            upper_diag = np.diagonal(c2_array, offset=1, axis1=-2, axis2=-1)
+            lower_diag = np.diagonal(c2_array, offset=-1, axis1=-2, axis2=-1)
+
+            # Compute corrected diagonal values: [batch, size]
+            diag_val = np.zeros(
+                (c2_array.shape[0], size), dtype=c2_array.dtype
+            )
+            diag_val[:, :-1] += upper_diag
+            diag_val[:, 1:] += lower_diag
+            # Interior points are average of upper and lower neighbors
+            if size > 2:
+                diag_val[:, 1:-1] /= 2.0
+
+            # Batch diagonal assignment using advanced indexing
+            idx = np.arange(size)
+            c2_array[:, idx, idx] = diag_val
 
     return c2_array
 

@@ -86,9 +86,8 @@ def clean_c2_for_visualization(c2, method="nan_to_num"):
                 c2_clean[~finite_mask] = median_val
 
                 # Apply light Gaussian filter to smooth transitions (backend-agnostic)
-                c2_clean = ensure_numpy(
-                    gaussian_filter(c2_clean, sigma=0.5, mode="nearest")
-                )
+                # gaussian_filter already returns numpy at its API boundary
+                c2_clean = gaussian_filter(c2_clean, sigma=0.5, mode="nearest")
 
                 # Preserve original finite values
                 c2_clean[finite_mask] = c2[finite_mask]

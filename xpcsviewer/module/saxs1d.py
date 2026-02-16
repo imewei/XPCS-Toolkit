@@ -372,6 +372,8 @@ def vectorized_q_binning(q_values, intensities, q_min, q_max, num_bins):
     """
     Vectorized q-space binning for SAXS data with optimized memory usage.
 
+    Uses single-pass bincount accumulation instead of per-bin masking loops.
+
     Args:
         q_values: Q-values array
         intensities: Intensity array [q_points] or [phi_slices, q_points]
@@ -388,29 +390,30 @@ def vectorized_q_binning(q_values, intensities, q_min, q_max, num_bins):
     # Vectorized binning using digitize
     bin_indices = np.digitize(q_values, bin_edges) - 1
 
-    # Handle 1D or 2D intensity arrays
+    # Filter to valid range: indices < 0 (below q_min) or >= num_bins (at/above q_max) are excluded
+    valid = (bin_indices >= 0) & (bin_indices < num_bins)
+    valid_indices = bin_indices[valid]
+
+    # Single-pass bin counts via bincount
+    bin_counts = np.bincount(valid_indices, minlength=num_bins).astype(
+        np.float64
+    )[:num_bins]
+
+    # Compute per-bin means using np.mean for numerical stability with extreme values
+    valid_intensities = intensities[..., valid] if intensities.ndim > 1 else intensities[valid]
     if intensities.ndim == 1:
         binned_intensity = np.zeros(num_bins)
-        bin_counts = np.zeros(num_bins)
-
-        # Vectorized accumulation
-        for i in range(num_bins):
-            mask = bin_indices == i
-            if np.any(mask):
-                binned_intensity[i] = np.mean(intensities[mask])
-                bin_counts[i] = np.sum(mask)
+        for b in range(num_bins):
+            if bin_counts[b] > 0:
+                binned_intensity[b] = np.mean(valid_intensities[valid_indices == b])
     else:
-        # 2D case: multiple phi slices
         num_phi = intensities.shape[0]
         binned_intensity = np.zeros((num_phi, num_bins))
-        bin_counts = np.zeros(num_bins)
-
-        # Vectorized processing for all phi slices
-        for i in range(num_bins):
-            mask = bin_indices == i
-            if np.any(mask):
-                binned_intensity[:, i] = np.mean(intensities[:, mask], axis=1)
-                bin_counts[i] = np.sum(mask)
+        for b in range(num_bins):
+            if bin_counts[b] > 0:
+                mask_b = valid_indices == b
+                for phi_idx in range(num_phi):
+                    binned_intensity[phi_idx, b] = np.mean(valid_intensities[phi_idx, mask_b])
 
     return bin_centers, binned_intensity, bin_counts
 
