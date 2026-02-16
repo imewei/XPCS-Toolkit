@@ -5,6 +5,7 @@ This module provides advanced memory pressure prediction specifically tailored
 for XPCS data analysis workflows, enabling proactive memory management.
 """
 
+import os
 import time
 from collections import deque
 from dataclasses import dataclass
@@ -23,11 +24,17 @@ from xpcsviewer.constants import (
     MIN_HISTORY_SAMPLES,
     MIN_LEARNING_SAMPLES,
 )
+from xpcsviewer.xpcs_file.memory import _get_virtual_memory
 
 from .logging_config import get_logger
 from .memory_manager import MemoryPressure, get_memory_manager
 
 logger = get_logger(__name__)
+
+# Global flag to enable/disable predictive monitoring overhead.
+# Set XPCS_MONITORING_ENABLED=1 to turn on predict/record instrumentation.
+# Default OFF in production to eliminate ~10-50ms overhead per operation.
+MONITORING_ENABLED: bool = os.environ.get("XPCS_MONITORING_ENABLED", "0") == "1"
 
 
 @dataclass
@@ -39,6 +46,16 @@ class MemoryPrediction:
     time_horizon_seconds: float
     pressure_level: MemoryPressure
     recommended_actions: list[str]
+
+
+# Lightweight no-op prediction returned when monitoring is disabled.
+_NOOP_PREDICTION = MemoryPrediction(
+    predicted_mb=0.0,
+    confidence=0.0,
+    time_horizon_seconds=0.0,
+    pressure_level=MemoryPressure.LOW,
+    recommended_actions=[],
+)
 
 
 @dataclass
@@ -190,7 +207,7 @@ class XPCSMemoryPredictor:
         MemoryPrediction
             Prediction with memory estimate and recommendations
         """
-        current_memory = psutil.virtual_memory()
+        current_memory = _get_virtual_memory()
         current_usage_mb = (current_memory.total - current_memory.available) / (
             1024 * 1024
         )
@@ -402,7 +419,7 @@ class XPCSMemoryPredictor:
 
     def update_memory_snapshot(self):
         """Update the memory usage snapshot for trend analysis."""
-        memory = psutil.virtual_memory()
+        memory = _get_virtual_memory()
         timestamp = time.time()
 
         memory_snapshot = {
@@ -418,7 +435,7 @@ class XPCSMemoryPredictor:
         """Get a summary of current memory predictions and trends."""
         trends = self.detect_memory_trends()
         cleanup_needed, cleanup_reasons = self.check_proactive_cleanup_needed()
-        current_memory = psutil.virtual_memory()
+        current_memory = _get_virtual_memory()
 
         return {
             "current_memory_mb": (current_memory.total - current_memory.available)
@@ -454,7 +471,12 @@ def get_memory_predictor() -> XPCSMemoryPredictor:
 def predict_operation_memory(
     operation_type: str, input_size_mb: float = 0.0
 ) -> MemoryPrediction:
-    """Convenience function for memory prediction."""
+    """Convenience function for memory prediction.
+
+    Returns a cheap no-op prediction when MONITORING_ENABLED is False.
+    """
+    if not MONITORING_ENABLED:
+        return _NOOP_PREDICTION
     return get_memory_predictor().predict_operation_memory(
         operation_type, input_size_mb
     )
@@ -467,7 +489,12 @@ def record_operation_memory(
     memory_after_mb: float,
     duration_seconds: float,
 ):
-    """Convenience function for recording operation memory usage."""
+    """Convenience function for recording operation memory usage.
+
+    No-op when MONITORING_ENABLED is False.
+    """
+    if not MONITORING_ENABLED:
+        return
     return get_memory_predictor().record_operation(
         operation_type,
         input_size_mb,

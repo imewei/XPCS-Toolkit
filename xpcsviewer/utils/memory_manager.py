@@ -125,6 +125,10 @@ class UnifiedMemoryManager:
         # Memory tracking
         self._current_memory_mb = 0.0
         self._peak_memory_mb = 0.0
+        # Per-partition running totals — avoids O(n) sum on every cache_put
+        self._partition_usage_mb: dict[CacheType, float] = {
+            cache_type: 0.0 for cache_type in CacheType
+        }
         self._memory_history: list[tuple[float, float]] = []  # (timestamp, memory_mb)
 
         # Thread safety
@@ -169,7 +173,7 @@ class UnifiedMemoryManager:
         """Make space within a specific cache partition using intelligent eviction"""
         cache = self._caches[cache_type]
         partition_limit_mb = self.max_memory_mb * self._cache_partitions[cache_type]
-        current_mb = sum(entry.size_mb for entry in cache.values())
+        current_mb = self._partition_usage_mb[cache_type]
 
         if current_mb + required_mb <= partition_limit_mb:
             return  # No eviction needed
@@ -382,8 +386,8 @@ class UnifiedMemoryManager:
         with self._cache_locks[cache_type]:
             cache = self._caches[cache_type]
 
-            # Calculate current partition usage
-            current_partition_mb = sum(entry.size_mb for entry in cache.values())
+            # Use running partition total instead of O(n) recomputation
+            current_partition_mb = self._partition_usage_mb[cache_type]
 
             # Make space if needed within partition
             if current_partition_mb + entry.size_mb > partition_limit_mb:
@@ -403,11 +407,13 @@ class UnifiedMemoryManager:
             if key in cache:
                 old_entry = cache[key]
                 self._current_memory_mb -= old_entry.size_mb
+                self._partition_usage_mb[cache_type] -= old_entry.size_mb
                 del cache[key]
 
             # Add new entry
             cache[key] = entry
             self._current_memory_mb += entry.size_mb
+            self._partition_usage_mb[cache_type] += entry.size_mb
 
             # Update peak memory
             self._peak_memory_mb = max(self._peak_memory_mb, self._current_memory_mb)
@@ -536,6 +542,7 @@ class UnifiedMemoryManager:
             if key in cache:
                 entry = cache[key]
                 self._current_memory_mb -= entry.size_mb
+                self._partition_usage_mb[cache_type] -= entry.size_mb
                 del cache[key]
                 self._stats["evictions"] += 1
 
@@ -578,11 +585,12 @@ class UnifiedMemoryManager:
         with self._cache_locks[cache_type]:
             cache = self._caches[cache_type]
 
-            # Calculate freed memory
-            freed_mb = sum(entry.size_mb for entry in cache.values())
+            # Use running partition total
+            freed_mb = self._partition_usage_mb[cache_type]
 
             cache.clear()
             self._current_memory_mb -= freed_mb
+            self._partition_usage_mb[cache_type] = 0.0
 
             logger.info(f"Cleared {cache_type.value} cache, freed {freed_mb:.1f}MB")
 

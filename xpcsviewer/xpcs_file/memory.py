@@ -5,8 +5,27 @@ This module provides memory monitoring and status tracking for XPCS data operati
 
 from __future__ import annotations
 
+import time
+
 import numpy as np
 import psutil
+
+# Cached psutil result with TTL to avoid repeated syscalls.
+# Each psutil.virtual_memory() is a syscall (~0.1-0.5ms). With 30+ calls
+# per operation cycle, caching saves 3-15ms of pure overhead.
+_VMEM_CACHE_TTL = 2.0  # seconds
+_vmem_cache_result: psutil._common.svmem | None = None
+_vmem_cache_timestamp: float = 0.0
+
+
+def _get_virtual_memory() -> psutil._common.svmem:
+    """Return psutil.virtual_memory(), cached with a 2-second TTL."""
+    global _vmem_cache_result, _vmem_cache_timestamp  # noqa: PLW0603
+    now = time.monotonic()
+    if _vmem_cache_result is None or (now - _vmem_cache_timestamp) >= _VMEM_CACHE_TTL:
+        _vmem_cache_result = psutil.virtual_memory()
+        _vmem_cache_timestamp = now
+    return _vmem_cache_result
 
 
 class MemoryStatus:
@@ -27,7 +46,7 @@ class MemoryMonitor:
         tuple[float, float, float]
             (used_mb, available_mb, pressure_ratio)
         """
-        memory = psutil.virtual_memory()
+        memory = _get_virtual_memory()
         used_mb = (memory.total - memory.available) / 1024 / 1024
         available_mb = memory.available / 1024 / 1024
         pressure_ratio = memory.percent / 100.0
@@ -41,7 +60,7 @@ class MemoryMonitor:
         MemoryStatus
             Object containing percent_used attribute
         """
-        memory = psutil.virtual_memory()
+        memory = _get_virtual_memory()
         return MemoryStatus(memory.percent / 100.0)
 
     @staticmethod
@@ -61,7 +80,7 @@ class MemoryMonitor:
     @staticmethod
     def is_memory_pressure_high(threshold: float = 0.85) -> bool:
         """Check if memory pressure is above threshold (static method for backward compatibility)."""
-        memory = psutil.virtual_memory()
+        memory = _get_virtual_memory()
         return (memory.percent / 100.0) > threshold
 
     @staticmethod
