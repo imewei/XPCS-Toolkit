@@ -191,6 +191,9 @@ class HDF5ConnectionPool:
         self._pool_lock = threading.RLock()
         self._file_locks: dict[str, threading.RLock] = {}
         self._file_locks_lock = threading.RLock()
+        # Track last-access time per file lock to prune stale entries (BUG-032)
+        self._file_lock_last_access: dict[str, float] = {}
+        self._file_lock_max_age_seconds: float = 3600.0  # 1 hour stale threshold
 
         # Statistics tracking
         self.stats = ConnectionStats()
@@ -213,14 +216,35 @@ class HDF5ConnectionPool:
         )
 
     def _get_file_lock(self, fname: str) -> threading.RLock:
-        """Get or create a lock for a specific file."""
+        """Get or create a lock for a specific file.
+
+        Tracks last-access time per entry and prunes stale locks on every
+        new creation to prevent the lock dict from growing without bound
+        under long-running contention. (BUG-032)
+        """
         _MAX_FILE_LOCKS = 256
+        now = time.time()
         with self._file_locks_lock:
             if fname not in self._file_locks:
                 self._file_locks[fname] = threading.RLock()
-                # Prune if too many locks accumulated — only remove locks
-                # that are not currently held to avoid corrupting active
-                # critical sections.
+                self._file_lock_last_access[fname] = now
+                # Prune stale entries first (age-based), then fall back to
+                # size-based pruning if needed.
+                stale_keys = [
+                    k
+                    for k, ts in list(self._file_lock_last_access.items())
+                    if k != fname
+                    and (now - ts) > self._file_lock_max_age_seconds
+                    and self._file_locks.get(k) is not None
+                    and self._file_locks[k].acquire(blocking=False)
+                    and (self._file_locks[k].release() or True)
+                ]
+                for key in stale_keys:
+                    self._file_locks.pop(key, None)
+                    self._file_lock_last_access.pop(key, None)
+
+                # Size-based fallback pruning — only remove locks that are
+                # not currently held to avoid corrupting active critical sections.
                 if len(self._file_locks) > _MAX_FILE_LOCKS:
                     keys_to_remove = []
                     for key, lock in list(self._file_locks.items()):
@@ -238,6 +262,10 @@ class HDF5ConnectionPool:
                                 break
                     for key in keys_to_remove:
                         self._file_locks.pop(key, None)
+                        self._file_lock_last_access.pop(key, None)
+            else:
+                # Update last-access time on every hit
+                self._file_lock_last_access[fname] = now
             return self._file_locks[fname]
 
     def _adapt_pool_size_to_memory_pressure(self) -> None:
@@ -368,6 +396,17 @@ class HDF5ConnectionPool:
         Enhanced context manager to get an HDF5 file connection with comprehensive
         health monitoring, LRU management, and performance tracking.
 
+        Lock ordering guarantee (BUG-008):
+        All lock acquisitions follow a strict total order:
+            _pool_lock  (pool-level operations)
+        File locks (_get_file_lock) are never held at the same time as
+        _pool_lock.  Health checks and memory-pressure adaptation that require
+        _pool_lock are performed **before** acquiring any file lock so the
+        ordering is always: pool operations → yield (no lock held).  This
+        eliminates the deadlock where Thread A holds _pool_lock (via a yield
+        inside the old `with self._pool_lock:` block) while Thread B waits
+        for _pool_lock from inside its own file_lock critical section.
+
         Parameters
         ----------
         fname : str
@@ -380,110 +419,102 @@ class HDF5ConnectionPool:
         h5py.File
             HDF5 file handle
         """
-
         start_time = time.time()
-        file_lock = self._get_file_lock(fname)
 
-        # Normalize file path for consistency
+        # Normalize file path for consistency before any lock acquisition.
         fname = os.path.abspath(fname)
 
-        with file_lock:
-            # Adapt pool size based on memory pressure
-            self._adapt_pool_size_to_memory_pressure()
+        # --- Phase 1: pool-level maintenance (only _pool_lock acquired) ---
+        # Perform memory-pressure adaptation and periodic health checks here,
+        # *outside* any file lock, so they can safely acquire _pool_lock
+        # without risk of inversion.
+        self._adapt_pool_size_to_memory_pressure()
+        self._perform_health_check()
 
-            # Perform periodic health checks
-            self._perform_health_check()
+        # --- Phase 2: pool lookup / connection creation (only _pool_lock) ---
+        # Resolve the file handle we will use.  The yield happens *after* this
+        # block exits so _pool_lock is never held across the yield.
+        file_handle_to_yield = None
+        is_direct_connection = False
+        connection = None
 
-            # Skip files that are known to be unhealthy
-            if fname in self._unhealthy_files:
-                # Try to create a direct connection instead
-                logger.debug(
-                    f"Using direct connection for previously unhealthy file: {fname}"
-                )
-                file_handle = h5py.File(fname, mode)
-                try:
-                    yield file_handle
-                    # If successful, remove from unhealthy set
-                    self._unhealthy_files.discard(fname)
-                finally:
-                    file_handle.close()
-                return
-
-            connection = None
-
+        if fname in self._unhealthy_files:
+            # Open a fresh direct connection for previously unhealthy files.
+            logger.debug(
+                f"Using direct connection for previously unhealthy file: {fname}"
+            )
+            try:
+                file_handle_to_yield = h5py.File(fname, mode)
+                is_direct_connection = True
+            except Exception as e:
+                logger.error(f"Failed to open direct connection for {fname}: {e}")
+                raise
+        else:
             with self._pool_lock:
-                # Check if we already have this file open
                 if fname in self._pool:
                     connection = self._pool[fname]
-                    # Move to end (most recently used)
                     self._pool.move_to_end(fname)
 
-                    # Quick health check
                     if connection.check_health():
                         connection.touch()
                         self.stats.record_connection_reused()
                         logger.debug(f"Reusing healthy connection for {fname}")
-
-                        try:
-                            yield connection.file_handle
-                            return
-                        except Exception as e:
-                            logger.warning(
-                                f"Error using pooled connection for {fname}: {e}"
-                            )
-                            # Mark as unhealthy and continue to create new connection
-                            connection.close()
-                            del self._pool[fname]
-                            connection = None
+                        file_handle_to_yield = connection.file_handle
                     else:
-                        # Connection is unhealthy, remove it
                         logger.info(f"Removing unhealthy connection: {fname}")
                         connection.close()
                         del self._pool[fname]
                         self._unhealthy_files.add(fname)
                         connection = None
 
-                # Need to create a new connection
-                self.stats.record_cache_miss()
+                if file_handle_to_yield is None:
+                    # Need a new connection.
+                    self.stats.record_cache_miss()
 
-                # Ensure we don't exceed pool size
-                if len(self._pool) >= self.max_pool_size:
-                    self._evict_lru_connections(1)
+                    if len(self._pool) >= self.max_pool_size:
+                        self._evict_lru_connections(1)
 
-                # Create new connection
-                try:
-                    logger.debug(f"Creating new connection for {fname}")
-                    file_handle = h5py.File(fname, mode)
-                    connection = PooledConnection(file_handle, fname)
-                    self._pool[fname] = connection
-                    self.stats.record_connection_created()
+                    try:
+                        logger.debug(f"Creating new connection for {fname}")
+                        fh = h5py.File(fname, mode)
+                        connection = PooledConnection(fh, fname)
+                        self._pool[fname] = connection
+                        self.stats.record_connection_created()
+                        file_handle_to_yield = fh
+                    except Exception as e:
+                        logger.error(f"Failed to open HDF5 file {fname}: {e}")
+                        self._unhealthy_files.add(fname)
+                        raise
 
-                except Exception as e:
-                    logger.error(f"Failed to open HDF5 file {fname}: {e}")
-                    self._unhealthy_files.add(fname)
-                    raise
-
-            # Use the connection
+        # --- Phase 3: yield the file handle (no lock held) ---
+        if connection is not None:
             connection.touch()
-            try:
-                yield connection.file_handle
-            except Exception:
-                # If there's an error during usage, mark connection as potentially unhealthy
+
+        try:
+            yield file_handle_to_yield
+            # On success, clear the unhealthy flag for direct connections.
+            if is_direct_connection:
+                self._unhealthy_files.discard(fname)
+        except Exception:
+            # Mark pooled connection as potentially unhealthy on error.
+            if not is_direct_connection:
                 with self._pool_lock:
                     if fname in self._pool:
                         logger.warning(
                             f"Removing connection due to usage error: {fname}"
                         )
-                        connection.close()
+                        self._pool[fname].close()
                         del self._pool[fname]
-                raise
-            finally:
-                # Record I/O time
-                io_time = time.time() - start_time
-                self.stats.record_io_time(io_time)
+            raise
+        finally:
+            if is_direct_connection and file_handle_to_yield is not None:
+                file_handle_to_yield.close()
 
-                if io_time > 1.0:  # Log slow operations
-                    logger.debug(f"Slow I/O operation: {fname} took {io_time:.2f}s")
+            io_time = time.time() - start_time
+            self.stats.record_io_time(io_time)
+
+            if io_time > 1.0:
+                logger.debug(f"Slow I/O operation: {fname} took {io_time:.2f}s")
 
     def clear_pool(self, from_destructor=False):
         """Close all connections and clear the pool."""
@@ -1097,8 +1128,19 @@ def get_chunked_dataset(
 
             logger.debug(f"Using computed chunking: {chunk_size}")
 
-        # Read the entire dataset (chunking is handled internally by h5py for efficiency)
-        return dataset[()]
+        # BUG-056: Actually use the computed chunking strategy.
+        # Read the dataset in chunks along the first axis using the computed chunk_size.
+        if chunk_size is None:
+            # Fallback: no chunking strategy available; read directly
+            return dataset[()]
+
+        shape = dataset.shape
+        result = np.empty(shape, dtype=dataset.dtype)
+        row_chunk = chunk_size[0]
+        for start in range(0, shape[0], row_chunk):
+            end = min(start + row_chunk, shape[0])
+            result[start:end] = dataset[start:end]
+        return result
 
 
 if __name__ == "__main__":

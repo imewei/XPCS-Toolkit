@@ -161,8 +161,11 @@ class HDF5Facade:
                     partition_map=partition_map,
                 )
             else:
-                # Skip validation - use dict
-                qmap_data = {
+                # validate=False: return a raw dict so that QMapSchema
+                # __post_init__ is never triggered.  Previously this path
+                # still called QMapSchema(**qmap_data), which bypasses the
+                # validate flag and runs __post_init__ regardless. (BUG-029)
+                qmap = {
                     "sqmap": sqmap,
                     "dqmap": dqmap,
                     "phis": phis,
@@ -172,8 +175,6 @@ class HDF5Facade:
                     "mask": mask,
                     "partition_map": partition_map,
                 }
-                # Still create schema, just without validation
-                qmap = QMapSchema(**qmap_data)
 
             logger.debug(f"Successfully read Q-map from {file_path}")
             return qmap
@@ -407,10 +408,11 @@ class HDF5Facade:
                     q_values = list(g2_group["q_list"][:])
                 else:
                     # Fallback: create dummy Q values
+                    # g2 shape is (n_delay, n_q); use shape[1] for the Q axis
                     logger.warning(
                         f"Q values not found in {file_path}, using dummy values"
                     )
-                    q_values = list(range(g2.shape[0]))
+                    q_values = list(range(g2.shape[1]))
 
                 if q_idx is not None:
                     q_values = q_values[q_idx : q_idx + 1]
