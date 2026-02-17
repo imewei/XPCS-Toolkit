@@ -24,6 +24,9 @@ from xpcsviewer.gui.qt_compat import (
     QtWidgets,
 )
 
+# Import centralized logging
+from .backends._conversions import ensure_numpy
+
 # Import async components
 from .constants import MIN_AVERAGING_FILES
 from .gui.layout_helpers import apply_all_layout_improvements
@@ -50,8 +53,6 @@ from .plothandler import PlotWidgetDev
 from .simplemask import SimpleMaskWindow
 from .threading.async_kernel import AsyncDataPreloader, AsyncViewerKernel
 from .threading.progress_manager import ProgressManager
-
-# Import centralized logging
 from .utils import get_logger, log_system_info, sanitize_path, setup_exception_logging
 from .utils.log_utils import RateLimitedLogger
 from .viewer_kernel import ViewerKernel
@@ -846,6 +847,15 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
             except Exception:
                 logger.debug("async_vk shutdown failed during close", exc_info=True)
 
+        # Wait for all thread-pool workers to finish before allowing the GUI
+        # objects to be destroyed.  Without this, signals fired from
+        # background threads can reach already-deleted C++ QObjects and
+        # cause a segfault.  Use a generous but bounded timeout so the
+        # application never hangs indefinitely on shutdown. (BUG-013)
+        _SHUTDOWN_TIMEOUT_MS = 5000
+        if hasattr(self, "thread_pool") and self.thread_pool is not None:
+            self.thread_pool.waitForDone(_SHUTDOWN_TIMEOUT_MS)
+
         try:
             session = self._collect_session_state()
             self.session_manager.save_session(session)
@@ -1170,12 +1180,17 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         image_data = result["image_data"]
         levels = result["levels"]
 
-        # Update the plot
-        self.pg_saxs.setImage(image_data, levels=levels)
+        # Convert JAX arrays to NumPy before passing to PyQtGraph (BUG-027)
+        self.pg_saxs.setImage(ensure_numpy(image_data), levels=levels)
         # Apply colormap if needed
 
     def apply_g2_result(self, result):
-        """Apply G2 plot result to the GUI."""
+        """Apply G2 plot result to the GUI.
+
+        Uses the pre-computed data returned by the async worker directly,
+        avoiding redundant synchronous re-computation on the main thread
+        (BUG-014).
+        """
         if result is None:
             logger.debug("No G2 data to plot")
             return
@@ -1185,41 +1200,48 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
             logger.info(f"G2 plotting info: {result.get('message', 'Unknown info')}")
             return
 
-        # Apply the processed G2 data to the plot widget
+        # Use the pre-computed data from the worker result directly.
+        # The worker has already extracted q, tel, g2, g2_err, labels and
+        # computed the plot geometry on the background thread.  We only
+        # need to call the rendering step on the main thread.
         try:
-            # Use the pre-computed plot_params from the async worker
-            # to ensure consistency with the original request
-            plot_params = result["plot_params"]
-            rows = plot_params.get("rows", [])
+            from .module import g2mod
 
-            # Render using the viewer kernel with the original async parameters
-            # (avoids re-using self.get_selected_rows() which may have changed)
-            self.vk.plot_g2(
+            plot_params = result.get("plot_params", {})
+            q = result.get("q")
+            tel = result.get("tel")
+            g2 = result.get("g2")
+            g2_err = result.get("g2_err")
+            labels = result.get("labels")
+            num_figs = result.get("num_figs")
+            fit_results = result.get("fit_results")
+
+            if q is None or g2 is None:
+                logger.warning("G2 worker result missing required data fields")
+                return
+
+            # Render the pre-computed data into the plot handler without
+            # re-calling get_data() or get_xf_list() on the main thread.
+            g2mod.pg_plot_from_data(
                 self.mp_g2,
-                plot_params.get("q_range"),
-                plot_params.get("t_range"),
-                plot_params.get("y_range"),
-                rows=rows,
+                q=q,
+                tel=tel,
+                g2=g2,
+                g2_err=g2_err,
+                labels=labels,
+                num_figs=num_figs,
+                fit_results=fit_results,
                 **{
                     k: v
                     for k, v in plot_params.items()
                     if k
-                    not in [
-                        "q_range",
-                        "t_range",
-                        "y_range",
-                        "rows",
-                        "target_timestamp",
-                    ]
+                    not in {"q_range", "t_range", "y_range", "rows", "target_timestamp"}
                 },
             )
-            logger.info("G2 plot applied successfully")
+            logger.info("G2 plot applied successfully from async worker result")
 
         except Exception as e:
-            logger.error(f"Failed to apply G2 result: {e}")
-            import traceback
-
-            logger.error(f"Traceback: {traceback.format_exc()}")
+            logger.error(f"Failed to apply G2 result: {e}", exc_info=True)
 
     def apply_twotime_result(self, result):
         """Apply two-time plot result to the GUI."""
@@ -1361,8 +1383,8 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         image_data = result["image_data"]
         levels = result["levels"]
 
-        # Update the Q-map plot
-        self.pg_qmap.setImage(image_data, levels=levels)
+        # Convert JAX arrays to NumPy before passing to PyQtGraph (BUG-027)
+        self.pg_qmap.setImage(ensure_numpy(image_data), levels=levels)
 
     def get_selected_rows(self):
         selected_index = self.list_view_target.selectedIndexes()
@@ -1454,8 +1476,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
                 self.init_diffusion()
                 logger.debug("Diffusion pre-plot updated")
             except Exception as e:
-                logger.error(f"Failed to update diffusion pre-plot: {e}")
-                traceback.print_exc()
+                logger.exception(f"Failed to update diffusion pre-plot: {e}")
             # Don't return here - still allow the normal plot_diffusion to be called
 
         func = getattr(self, "plot_" + tab_name)
@@ -1483,8 +1504,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
                 logger.debug(f"No parameter changes for {tab_name}, skipping update")
         except Exception as e:
             logger.error(f"update selection in [{tab_name}] failed")
-            logger.error(e)
-            traceback.print_exc()
+            logger.exception(e)
 
     def _clear_plot_for_tab(self, tab_name):
         """Clear plot display for specified tab when no files are selected."""
@@ -2078,14 +2098,20 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
                     )
                     return
 
+            # Apply mask to all loaded XpcsFile objects (BUG-001 fix)
+            for xf in xf_list:
+                xf.mask = mask
+
             logger.info(
                 f"Mask exported from SimpleMask: shape {mask.shape}, "
-                f"{np.sum(mask)} pixels unmasked (not yet integrated into pipeline)"
+                f"{np.sum(mask)} pixels unmasked — applied to {len(xf_list)} file(s)"
             )
 
             self.statusbar.showMessage(
                 f"Mask imported: {np.sum(mask):,} of {mask.size:,} pixels unmasked"
             )
+
+            self.update_plot()
 
         except Exception as e:
             logger.error(f"Failed to import mask: {e}")
@@ -2126,14 +2152,27 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
                 else 0
             )
 
+            xf_list = self.vk.get_xf_list()
+            if xf_list:
+                # Apply partition maps to all loaded XpcsFile objects (BUG-001 fix)
+                dqmap = partition.get("dynamic_roi_map")
+                sqmap = partition.get("static_roi_map")
+                for xf in xf_list:
+                    if dqmap is not None:
+                        xf.dqmap = dqmap
+                    if sqmap is not None:
+                        xf.sqmap = sqmap
+
             logger.info(
                 f"Partition exported from SimpleMask: {dq_num} dynamic bins, "
-                f"{sq_num} static bins (not yet integrated into pipeline)"
+                f"{sq_num} static bins — applied to {len(xf_list) if xf_list else 0} file(s)"
             )
 
             self.statusbar.showMessage(
                 f"Partition imported: {dq_num} dynamic Q-bins, {sq_num} static Q-bins"
             )
+
+            self.update_plot()
 
         except Exception as e:
             logger.error(f"Failed to import partition: {e}")
@@ -2441,10 +2480,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
             return None
 
         except Exception as e:
-            logger.error(f"Error in plot_diffusion: {e}")
-            import traceback
-
-            traceback.print_exc()
+            logger.exception(f"Error in plot_diffusion: {e}")
             return None
 
     def select_bkgfile(self):
@@ -2481,9 +2517,14 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
             else:
                 logger.info("use the previous save path")
 
+            # Only set the default save_name when the field is currently
+            # empty.  If the user has already typed a name it must be
+            # preserved so that repeated clicks on "init" do not clobber
+            # the user's entry. (BUG-016)
             save_name = self.avg_save_name.text()
-            save_name = "Avg" + self.vk.target[0]
-            self.avg_save_name.setText(save_name)
+            if save_name == "":
+                save_name = "Avg" + self.vk.target[0]
+                self.avg_save_name.setText(save_name)
 
     def submit_job(self):
         if len(self.vk.target) < MIN_AVERAGING_FILES:
@@ -2564,6 +2605,12 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
             self.statusbar.showMessage("this job is running.", 1000)
             return
 
+        # Disconnect any previously connected slot before reconnecting (BUG-037):
+        # prevents lambda slot accumulation on repeated calls.
+        try:
+            worker.signals.values.disconnect(self.vk.update_avg_values)
+        except (RuntimeError, TypeError):
+            pass  # Signal was not connected; safe to ignore
         worker.signals.values.connect(self.vk.update_avg_values)
         self.thread_pool.start(worker)
         self.vk.avg_worker_active[worker.jid] = None
@@ -2675,7 +2722,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
             self.init_g2(qd, tel)
             # Note: Fitting/diffusion is handled in the g2 fitting tab now
         except Exception:
-            traceback.print_exc()
+            logger.exception("Error in plot_g2")
         finally:
             self.pushButton_4.setEnabled(True)
             self.pushButton_4.setText("plot")
@@ -2727,7 +2774,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
             self.init_diffusion()
             self.statusbar.showMessage("G2 refitting completed successfully", 2000)
         except Exception:
-            traceback.print_exc()
+            logger.exception("Error in refit_g2")
             self.statusbar.showMessage("G2 refitting failed", 2000)
         finally:
             self.btn_g2_refit.setEnabled(True)
@@ -2788,7 +2835,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
             self.init_g2(qd, tel)
             self.init_diffusion()
         except Exception:
-            traceback.print_exc()
+            logger.exception("Error in plot_g2_fitting")
 
     def export_g2(self):
         folder = QtWidgets.QFileDialog.getExistingDirectory(
@@ -3365,6 +3412,9 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
                     val = float(key.text())
                 except Exception:
                     key.setText(str(default_val[n]))
+                    val = default_val[
+                        n
+                    ]  # BUG-002 fix: assign val so return is never None
                     self.statusbar.showMessage("g2 number is invalid", 1000)
             vals[n] = val
 

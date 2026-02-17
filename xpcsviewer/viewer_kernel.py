@@ -693,8 +693,8 @@ class ViewerKernel(FileLocator):
             xf.export_saxs1d(roi_list, folder)
 
     def switch_saxs1d_line(self, mp_hdl, lb_type):
+        """Switch SAXS 1D line builder type (stub for future implementation)."""
         pass
-        # saxs1d.switch_line_builder(mp_hdl, lb_type)
 
     @log_timing(threshold_ms=1000)
     def plot_twotime(self, hdl, rows=None, **kwargs):

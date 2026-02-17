@@ -122,13 +122,26 @@ class FileLocator:
             if n < 0 or n >= len(self.target):
                 continue
             full_fname = os.path.normpath(os.path.join(self.path, self.target[n]))
+
+            # Check the cache without holding the lock during I/O.
+            # XpcsFile construction can be slow (HDF5 read) — holding the
+            # cache lock throughout would block all other threads that need
+            # to read or insert different files. (BUG-033)
             with self._cache_lock:
-                if full_fname not in self.cache:
-                    xf_obj = create_xpcs_dataset(
-                        full_fname, qmap_manager=self.qmap_manager
-                    )
-                    self.cache[full_fname] = xf_obj
-                xf_obj = self.cache[full_fname]
+                xf_obj = self.cache.get(full_fname)
+
+            if xf_obj is None:
+                # Construct the XpcsFile object outside the lock so HDF5 I/O
+                # does not prevent concurrent cache lookups.
+                xf_obj = create_xpcs_dataset(full_fname, qmap_manager=self.qmap_manager)
+                # Re-acquire the lock only to insert the new entry.
+                # If another thread raced ahead and already inserted the same
+                # file, prefer the existing entry so we never duplicate objects.
+                with self._cache_lock:
+                    if full_fname not in self.cache:
+                        self.cache[full_fname] = xf_obj
+                    else:
+                        xf_obj = self.cache[full_fname]
 
             # Skip None objects (failed to load)
             if xf_obj is None:

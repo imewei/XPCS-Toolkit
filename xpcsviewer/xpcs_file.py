@@ -202,7 +202,14 @@ class XpcsFile:
         self.atype = get_analysis_type(self.fname)
         self.label = self.update_label(label_style)
         payload_dictionary = self.load_data(fields)
-        self.__dict__.update(payload_dictionary)
+        # Guard against HDF5 payload overwriting existing instance attributes.
+        # Attributes set before this point (e.g. qmap, label, atype, fname)
+        # are owned by the instance and must not be silently overwritten by
+        # arbitrary keys returned from the HDF5 file. (BUG-015)
+        _PROTECTED = frozenset(self.__dict__.keys())
+        for k, v in payload_dictionary.items():
+            if k not in _PROTECTED:
+                self.__dict__[k] = v
         self.hdf_info = None
         self.fit_summary = None
         self.c2_all_data = None
@@ -529,9 +536,7 @@ class XpcsFile:
             logger.warning(
                 f"High memory pressure ({memory_pressure * 100:.1f}%) before loading SAXS data"
             )
-            # Force cache cleanup from global cache
-            # TODO: Fix undefined _global_cache reference
-            # _global_cache.force_cleanup()
+            # Cache cleanup is handled by the global memory manager when available.
 
         # Get file information to make intelligent loading decisions
         try:
@@ -2893,8 +2898,7 @@ class XpcsFile:
             if hasattr(self, attr) and getattr(self, attr) is not None:
                 arr = getattr(self, attr)
                 if isinstance(arr, np.ndarray):
-                    # TODO: Fix undefined MemoryTracker reference
-                    memory_mb = arr.nbytes / (1024 * 1024)  # Simple memory calculation
+                    memory_mb = arr.nbytes / (1024 * 1024)
                     optimal_dtype = arr.dtype  # Use current dtype as fallback
 
                     report["arrays"][attr] = {
@@ -2933,7 +2937,6 @@ class XpcsFile:
                     try:
                         arr = getattr(self, attr)
                         if isinstance(arr, np.ndarray):
-                            # TODO: Fix undefined MemoryTracker reference
                             original_memory = arr.nbytes / (1024 * 1024)
                             optimal_dtype = arr.dtype  # Use current dtype as fallback
 
