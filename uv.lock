@@ -648,14 +648,14 @@ wheels = [
 
 [[package]]
 name = "hypothesis"
-version = "6.151.6"
+version = "6.151.8"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "sortedcontainers" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/00/5b/039c095977004f2316225559d591c5a4c62b2e4d7a429db2dd01d37c3ec2/hypothesis-6.151.6.tar.gz", hash = "sha256:755decfa326c8c97a4c8766fe40509985003396442138554b0ae824f9584318f", size = 475846, upload-time = "2026-02-11T04:42:06.891Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/4f/1e/870015f855ba7d5a9ab2c02b2974d9951f302e0d282c138b7f9daf3b2e5d/hypothesis-6.151.8.tar.gz", hash = "sha256:5e8d7ed735001308ea92d623f454e02fda932ff005d46604fc7f0b2d1b540aa4", size = 475954, upload-time = "2026-02-16T11:20:30.866Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/2c/70/42760b369723f8b5aa6a21e5fae58809f503ca7ebb6da13b99f4de36305a/hypothesis-6.151.6-py3-none-any.whl", hash = "sha256:4e6e933a98c6f606b3e0ada97a750e7fff12277a40260b9300a05e7a5c3c5e2e", size = 543324, upload-time = "2026-02-11T04:42:04.025Z" },
+    { url = "https://files.pythonhosted.org/packages/e5/d2/2221a55616680457f48d6b63b8644710cb6888aba79ae8ded266bd10195d/hypothesis-6.151.8-py3-none-any.whl", hash = "sha256:7d73dc3578208aba8bfbdbcdb8306d77f56958dbf301a507b62b77e5f3ab8b09", size = 543389, upload-time = "2026-02-16T11:20:28.133Z" },
 ]
 
 [[package]]
@@ -816,14 +816,14 @@ wheels = [
 
 [[package]]
 name = "jaxtyping"
-version = "0.3.8"
+version = "0.3.9"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "wadler-lindig" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/f2/a1/4ca5e52b4834abedd0815f11ef5a2ec7844fa407586e8eaaa375913c9b7b/jaxtyping-0.3.8.tar.gz", hash = "sha256:169f9d5a001da026d2636b61598ffca1199986dbaa010fc2e416c5238160026f", size = 45800, upload-time = "2026-02-14T21:05:27.447Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/c2/be/00294e369938937e31b094437d5ea040e4fd1a20b998ebe572c4a1dcfa68/jaxtyping-0.3.9.tar.gz", hash = "sha256:f8c02d1b623d5f1b6665d4f3ddaec675d70004f16a792102c2fc51264190951d", size = 45857, upload-time = "2026-02-16T10:35:13.263Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/3e/a8/ca69c3d4f7b8230439adb97f8f65ed001192c7fd74701649f06aa332a56e/jaxtyping-0.3.8-py3-none-any.whl", hash = "sha256:e334dad726ce10d0192504f31e383ebebd0a9253c00a23662ef75b2ef9cd7261", size = 56191, upload-time = "2026-02-14T21:05:25.864Z" },
+    { url = "https://files.pythonhosted.org/packages/94/05/3e39d416fb92b2738a76e8265e6bfc5d10542f90a7c32ad1eb831eea3fa3/jaxtyping-0.3.9-py3-none-any.whl", hash = "sha256:a00557a9d616eff157491f06ed2e21ed94886fad3832399273eb912b345da378", size = 56274, upload-time = "2026-02-16T10:35:11.795Z" },
 ]
 
 [[package]]
@@ -1508,7 +1508,7 @@ wheels = [
 
 [[package]]
 name = "optimistix"
-version = "0.0.11"
+version = "0.1.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "equinox" },
@@ -1517,9 +1517,9 @@ dependencies = [
     { name = "lineax" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/35/10/0d2318a80016a42e2dbcae0be1bea3f51fce0ff5bd919afe532e1e03f0ed/optimistix-0.0.11.tar.gz", hash = "sha256:cfce0de98e7e9fdbcc2ce6d49a9f82cd3166fd0eee29c0c7a1983f8aefd37757", size = 66648, upload-time = "2025-10-17T20:53:28.148Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/5c/0b/3bdc0e698cb0d264e5dca0b5bb171342a950a43fa6e046d8c57189298422/optimistix-0.1.0.tar.gz", hash = "sha256:f05c9104748e87e1dc10a0b4a2be94e427f98c3eab0b1d41ea24a593d76be03d", size = 70164, upload-time = "2026-02-16T13:35:43.991Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/ac/08/085ca409275952524e907156d9091a76b97d2c81a1099b2cb48a08c5ca3c/optimistix-0.0.11-py3-none-any.whl", hash = "sha256:acb4fb23b598db03e376900fcb61aee8dd511de41411e849661c0ffe9e4cd1c6", size = 97384, upload-time = "2025-10-17T20:53:26.798Z" },
+    { url = "https://files.pythonhosted.org/packages/63/53/6a81a6ebb1739f19c32002139719d4ee021a349d5bdbe066910feed327a1/optimistix-0.1.0-py3-none-any.whl", hash = "sha256:c8edda7bf7fe48839c93fcd72bce750c950ed9f7033158303150b7ab395add81", size = 101740, upload-time = "2026-02-16T13:35:42.971Z" },
 ]
 
 [[package]]
