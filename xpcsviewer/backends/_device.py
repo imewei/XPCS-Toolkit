@@ -99,6 +99,20 @@ class DeviceInfo:
     memory_total: int | None = None
     memory_available: int | None = None
 
+    def __post_init__(self) -> None:
+        """Validate DeviceInfo fields at construction (BUG-044)."""
+        if self.device_id < 0:
+            raise ValueError(f"device_id must be >= 0, got {self.device_id}")
+        if self.memory_total is not None and self.memory_total < 0:
+            raise ValueError(
+                f"memory_total must be >= 0 when provided, got {self.memory_total}"
+            )
+        if self.memory_available is not None and self.memory_available < 0:
+            raise ValueError(
+                f"memory_available must be >= 0 when provided, "
+                f"got {self.memory_available}"
+            )
+
 
 class DeviceManager:
     """Singleton manager for compute device selection and placement.

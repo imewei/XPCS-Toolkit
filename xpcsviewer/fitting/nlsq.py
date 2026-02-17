@@ -76,13 +76,27 @@ def nlsq_optimize(
         )
         popt = np.asarray(native_result.popt)
         pcov = np.asarray(native_result.pcov)
-        converged = getattr(native_result, "success", True)
+        converged = getattr(native_result, "success", False)  # BUG-017: default False
     except Exception as e:
-        logger.warning(f"nlsq fitting failed: {e}, using initial guess")
-        native_result = None
-        popt = p0_array
-        pcov = np.full((n_params, n_params), np.inf)
-        converged = False
+        # Return a sentinel NLSQResult so callers can detect fitting failure.
+        # Do NOT silently return p0 as though it were a real result (BUG-003).
+        logger.warning(f"nlsq fitting failed: {e}; returning fallback sentinel")
+        return NLSQResult(
+            params=dict(zip(param_names, p0_array.tolist())),
+            chi_squared=float("nan"),
+            converged=False,
+            is_fallback=True,
+            pcov_valid=False,
+            pcov_message=f"Fitting failed: {e}",
+            native_result=None,
+            _param_names=param_names,
+            _r_squared=float("nan"),
+            _adj_r_squared=float("nan"),
+            _rmse=float("nan"),
+            _mae=float("nan"),
+            _aic=float("nan"),
+            _bic=float("nan"),
+        )
 
     # Compute chi-squared
     residuals = y - model_fn(x, *popt)

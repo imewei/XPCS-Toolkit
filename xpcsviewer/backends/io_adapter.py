@@ -66,10 +66,15 @@ class PyQtGraphAdapter:
         enable_monitoring : bool, optional
             Enable performance monitoring, by default False
         """
-        self.backend = backend
+        self._backend = backend  # BUG-046: stored as private; exposed read-only below
         self.enable_monitoring = enable_monitoring
         self._conversion_count = 0
         self._total_conversion_time = 0.0
+
+    @property
+    def backend(self) -> BackendProtocol:
+        """The backend used for array operations (read-only, BUG-046)."""
+        return self._backend
 
     def to_pyqtgraph(self, array: ArrayLike) -> np.ndarray:
         """Convert backend array to PyQtGraph-compatible NumPy array.
@@ -177,12 +182,17 @@ class HDF5Adapter:
         enable_monitoring : bool, optional
             Enable performance monitoring, by default False
         """
-        self.backend = backend
+        self._backend = backend  # BUG-046: stored as private; exposed read-only below
         self.enable_monitoring = enable_monitoring
         self._write_count = 0
         self._read_count = 0
         self._total_write_time = 0.0
         self._total_read_time = 0.0
+
+    @property
+    def backend(self) -> BackendProtocol:
+        """The backend used for array operations (read-only, BUG-046)."""
+        return self._backend
 
     def to_hdf5(self, array: ArrayLike) -> np.ndarray:
         """Convert backend array to HDF5-compatible NumPy array.
@@ -305,10 +315,15 @@ class MatplotlibAdapter:
         enable_monitoring : bool, optional
             Enable performance monitoring, by default False
         """
-        self.backend = backend
+        self._backend = backend  # BUG-046: stored as private; exposed read-only below
         self.enable_monitoring = enable_monitoring
         self._conversion_count = 0
         self._total_conversion_time = 0.0
+
+    @property
+    def backend(self) -> BackendProtocol:
+        """The backend used for array operations (read-only, BUG-046)."""
+        return self._backend
 
     def to_matplotlib(self, *arrays: ArrayLike) -> tuple[np.ndarray, ...] | np.ndarray:
         """Convert backend arrays to Matplotlib-compatible NumPy arrays.

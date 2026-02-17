@@ -12,6 +12,8 @@ import h5py
 import numpy as np
 from numpy.typing import NDArray
 
+from xpcsviewer.backends._conversions import ensure_numpy
+
 # Qt imports via compatibility layer
 from xpcsviewer.gui.qt_compat import (
     QAction,
@@ -638,7 +640,10 @@ class SimpleMaskWindow(QMainWindow):
         ):
             # Show partition overlay
             display_image = self._create_partition_display(self.kernel.new_partition)
-            self.image_view.setImage(display_image, autoLevels=True, autoRange=False)
+            # Ensure NumPy at PyQtGraph boundary (BUG-027)
+            self.image_view.setImage(
+                ensure_numpy(display_image), autoLevels=True, autoRange=False
+            )
         elif (
             self._show_qmap_overlay
             and self.kernel is not None
@@ -646,7 +651,10 @@ class SimpleMaskWindow(QMainWindow):
         ):
             # Show Q-map overlay
             display_image = self._create_qmap_display(log_image, self.kernel.qmap)
-            self.image_view.setImage(display_image, autoLevels=True, autoRange=False)
+            # Ensure NumPy at PyQtGraph boundary (BUG-027)
+            self.image_view.setImage(
+                ensure_numpy(display_image), autoLevels=True, autoRange=False
+            )
         elif (
             self._show_mask_overlay
             and self.kernel is not None
@@ -655,9 +663,15 @@ class SimpleMaskWindow(QMainWindow):
             # Create image with mask overlay
             # Masked pixels (False in mask) shown darker
             display_image = self._create_masked_display(log_image, self.kernel.mask)
-            self.image_view.setImage(display_image, autoLevels=False, autoRange=False)
+            # Ensure NumPy at PyQtGraph boundary (BUG-027)
+            self.image_view.setImage(
+                ensure_numpy(display_image), autoLevels=False, autoRange=False
+            )
         else:
-            self.image_view.setImage(log_image, autoLevels=True, autoRange=False)
+            # Ensure NumPy at PyQtGraph boundary (BUG-027)
+            self.image_view.setImage(
+                ensure_numpy(log_image), autoLevels=True, autoRange=False
+            )
 
     def _create_qmap_display(self, image: NDArray, qmap: dict[str, NDArray]) -> NDArray:
         """Create display image with Q-map overlay.
@@ -838,8 +852,9 @@ class SimpleMaskWindow(QMainWindow):
         # Add small offset to avoid log(0)
         log_image = np.log10(image + 1)
 
+        # Ensure NumPy at PyQtGraph boundary (BUG-027)
         self.image_view.setImage(
-            log_image,
+            ensure_numpy(log_image),
             autoLevels=True,
             autoRange=True,
         )

@@ -125,7 +125,7 @@ class Interp1d:
         # Handle bounds error check
         if self._bounds_error:
             out_of_bounds = jnp.logical_or(x_new_flat < x_min, x_new_flat > x_max)
-            if jnp.any(out_of_bounds):
+            if bool(jnp.any(out_of_bounds)):
                 raise ValueError("x_new values out of interpolation range")
 
         # Map kind to interpax method

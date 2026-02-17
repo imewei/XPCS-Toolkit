@@ -515,6 +515,158 @@ def _add_fit_param_annotation(ax, fit_val, fit_func, color):
     ax.addItem(text_item)
 
 
+def pg_plot_from_data(
+    hdl,
+    *,
+    q,
+    tel,
+    g2,
+    g2_err,
+    labels,
+    num_figs,
+    fit_results=None,
+    y_auto=False,
+    q_auto=False,
+    t_auto=False,
+    num_col=4,
+    rows=None,
+    offset=0,
+    show_fit=False,
+    show_label=False,
+    y_range=None,
+    t_range=None,
+    plot_type="multiple",
+    subtract_baseline=True,
+    marker_size=5,
+    fit_func="single",
+    **_ignored_kwargs,
+):
+    """Render pre-fetched G2 data without re-fetching from XpcsFile objects.
+
+    This is the rendering-only counterpart of ``pg_plot``.  It accepts the
+    data structures already extracted by the async worker (``q``, ``tel``,
+    ``g2``, ``g2_err``, ``labels``) and renders them directly, avoiding the
+    redundant ``get_data()`` and ``get_xf_list()`` calls that ``vk.plot_g2``
+    would otherwise trigger on the main thread (BUG-014).
+
+    Parameters mirror the ``pg_plot`` signature where applicable.
+    """
+    if not q or g2 is None or len(g2) == 0:
+        return
+
+    num_data = len(g2)
+    num_qval = g2[0].shape[1] if g2[0].ndim > 1 else 1
+    col = min(num_figs, num_col)
+    row = (num_figs + col - 1) // col
+
+    if rows is None or len(rows) == 0:
+        rows = list(range(num_data))
+
+    hdl.adjust_canvas_size(num_col=col, num_row=row)
+    hdl.clear()
+
+    t0_range = None
+    if t_range and not t_auto:
+        with np.errstate(divide="ignore", invalid="ignore"):
+            t_range_arr = np.asarray(t_range)
+            t_range_arr = np.where(t_range_arr > 0, t_range_arr, np.finfo(float).eps)
+            t0_range = np.log10(t_range_arr)
+
+    axes = []
+    for n in range(num_figs):
+        i_col = n % col
+        i_row = n // col
+        t = hdl.addPlot(row=i_row, col=i_col)
+        axes.append(t)
+        if show_label:
+            t.addLegend(offset=(-1, 1), labelTextSize="9pt", verSpacing=-10)
+        t.setMouseEnabled(x=False, y=y_auto)
+
+    for m in range(num_data):
+        baseline_offset = np.ones(num_qval)
+
+        # Use pre-computed fit_results from worker if available
+        fit_summary = None
+        if show_fit and fit_results is not None and m < len(fit_results):
+            fit_summary = fit_results[m]
+            if fit_summary is not None and subtract_baseline:
+                try:
+                    if (
+                        fit_summary.get("fit_val") is not None
+                        and len(fit_summary["fit_val"]) > 0
+                    ):
+                        baseline_offset = (
+                            fit_summary["fit_val"][:, 0, 2]
+                            + fit_summary["fit_val"][:, 0, 3]
+                        )
+                except (IndexError, TypeError, KeyError):
+                    baseline_offset = np.ones(num_qval)
+
+        for n in range(num_qval):
+            color = colors[rows[m] % len(colors)]
+            label = None
+            if plot_type == "multiple":
+                ax = axes[n]
+                title = labels[m][n] if labels and m < len(labels) else ""
+                if m == 0:
+                    ax.setTitle(title)
+            elif plot_type == "single":
+                ax = axes[m]
+                color = colors[n % len(colors)]
+                title = labels[m][0] if labels and m < len(labels) else ""
+                ax.setTitle(title)
+            elif plot_type == "single-combined":
+                ax = axes[0]
+                label = labels[m][n] if labels and m < len(labels) else ""
+            else:
+                ax = axes[n % len(axes)]
+
+            ax.setLabel("bottom", "tau (s)")
+            ax.setLabel("left", "g2")
+
+            symbol = symbols[rows[m] % len(symbols)]
+            x = tel[m]
+            y = g2[m][:, n] - baseline_offset[n] + 1.0 + m * offset
+            y_err = g2_err[m][:, n]
+
+            pg_plot_one_g2(
+                ax,
+                x,
+                y,
+                y_err,
+                color,
+                label=label,
+                symbol=symbol,
+                symbol_size=marker_size,
+            )
+
+            if not y_auto and y_range is not None:
+                ax.setRange(yRange=y_range)
+            if not t_auto and t0_range is not None:
+                ax.setRange(xRange=t0_range)
+
+            if show_fit and fit_summary is not None:
+                try:
+                    if (
+                        fit_summary.get("fit_line") is not None
+                        and n < fit_summary["fit_line"].shape[0]
+                        and fit_summary.get("fit_x") is not None
+                    ):
+                        y_fit = fit_summary["fit_line"][n] + m * offset
+                        y_fit = y_fit - baseline_offset[n] + 1.0
+                        fit_x = fit_summary["fit_x"]
+                        ax.plot(fit_x, y_fit, pen=pg.mkPen(color, width=2.5))
+                        if (
+                            fit_summary.get("fit_val") is not None
+                            and n < fit_summary["fit_val"].shape[0]
+                        ):
+                            _add_fit_param_annotation(
+                                ax, fit_summary["fit_val"][n], fit_func, color
+                            )
+                except (IndexError, KeyError, TypeError):
+                    pass
+
+
 def pg_plot_one_g2(ax, x, y, dy, color, label, symbol, symbol_size=5):
     """
     Optimized G2 plotting with improved data validation and performance.

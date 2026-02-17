@@ -6,9 +6,12 @@ and sampler configuration.
 
 from __future__ import annotations
 
+import logging
 import sys
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
+
+logger = logging.getLogger(__name__)
 
 import numpy as np
 
@@ -134,6 +137,25 @@ class FitDiagnostics:
     max_treedepth_reached: int = 0
     bfmi: float | None = None  # NEW: Per Technical Guidelines
 
+    def __post_init__(self) -> None:
+        """Validate diagnostic invariants (BUG-025).
+
+        Enforces:
+        - divergences >= 0 (negative divergences are physically meaningless)
+        - all ess_bulk values are non-negative
+        - all ess_tail values are non-negative
+        """
+        if self.divergences < 0:
+            raise ValueError(
+                f"divergences must be non-negative, got {self.divergences}"
+            )
+        for param, ess in self.ess_bulk.items():
+            if ess < 0:
+                raise ValueError(f"ess_bulk['{param}'] must be non-negative, got {ess}")
+        for param, ess in self.ess_tail.items():
+            if ess < 0:
+                raise ValueError(f"ess_tail['{param}'] must be non-negative, got {ess}")
+
     @property
     def converged(self) -> bool:
         """Check if all diagnostics pass thresholds."""
@@ -226,18 +248,23 @@ class NLSQResult:
     # Native result for delegation (NEW - T018)
     native_result: CurveFitResult | None = None
 
+    # Sentinel flag: True when this result is a fallback due to fitting failure (BUG-003)
+    is_fallback: bool = False
+
     # Parameter names for covariance indexing (NEW - T019)
     _param_names: list[str] = field(default_factory=list)
 
     # Legacy storage fields (used when native_result is None for backward compat)
     _covariance: np.ndarray | None = field(default=None, repr=False)
     _residuals: np.ndarray | None = field(default=None, repr=False)
-    _r_squared: float = field(default=0.0, repr=False)
-    _adj_r_squared: float = field(default=0.0, repr=False)
-    _rmse: float = field(default=0.0, repr=False)
-    _mae: float = field(default=0.0, repr=False)
-    _aic: float = field(default=0.0, repr=False)
-    _bic: float = field(default=0.0, repr=False)
+    # BUG-023: default to NaN so failed fits are distinguishable from poor-but-converged fits.
+    # Callers can detect failure with math.isnan(result.r_squared) instead of checking == 0.0.
+    _r_squared: float = field(default=float("nan"), repr=False)
+    _adj_r_squared: float = field(default=float("nan"), repr=False)
+    _rmse: float = field(default=float("nan"), repr=False)
+    _mae: float = field(default=float("nan"), repr=False)
+    _aic: float = field(default=float("nan"), repr=False)
+    _bic: float = field(default=float("nan"), repr=False)
     _confidence_intervals: dict[str, tuple[float, float]] = field(
         default_factory=dict, repr=False
     )
@@ -259,7 +286,18 @@ class NLSQResult:
 
     @r_squared.setter
     def r_squared(self, value: float) -> None:
-        """Set r_squared (for backward compat initialization)."""
+        """Set r_squared (for backward compat initialization).
+
+        Note: This setter is a no-op when native_result is active (BUG-039).
+        The value is delegated to native_result.r_squared instead.
+        """
+        if self.native_result is not None:
+            logger.warning(
+                "NLSQResult.r_squared setter called while delegation to native_result "
+                "is active; this assignment is a no-op. The getter will return "
+                "native_result.r_squared."
+            )
+            return
         self._r_squared = value
 
     # T021: adj_r_squared property delegation
@@ -272,7 +310,16 @@ class NLSQResult:
 
     @adj_r_squared.setter
     def adj_r_squared(self, value: float) -> None:
-        """Set adj_r_squared (for backward compat initialization)."""
+        """Set adj_r_squared (for backward compat initialization).
+
+        Note: This setter is a no-op when native_result is active (BUG-039).
+        """
+        if self.native_result is not None:
+            logger.warning(
+                "NLSQResult.adj_r_squared setter called while delegation to "
+                "native_result is active; this assignment is a no-op."
+            )
+            return
         self._adj_r_squared = value
 
     # T022: rmse property delegation
@@ -285,7 +332,16 @@ class NLSQResult:
 
     @rmse.setter
     def rmse(self, value: float) -> None:
-        """Set rmse (for backward compat initialization)."""
+        """Set rmse (for backward compat initialization).
+
+        Note: This setter is a no-op when native_result is active (BUG-039).
+        """
+        if self.native_result is not None:
+            logger.warning(
+                "NLSQResult.rmse setter called while delegation to "
+                "native_result is active; this assignment is a no-op."
+            )
+            return
         self._rmse = value
 
     # T023: mae property delegation
@@ -298,7 +354,16 @@ class NLSQResult:
 
     @mae.setter
     def mae(self, value: float) -> None:
-        """Set mae (for backward compat initialization)."""
+        """Set mae (for backward compat initialization).
+
+        Note: This setter is a no-op when native_result is active (BUG-039).
+        """
+        if self.native_result is not None:
+            logger.warning(
+                "NLSQResult.mae setter called while delegation to "
+                "native_result is active; this assignment is a no-op."
+            )
+            return
         self._mae = value
 
     # T024: aic property delegation
@@ -311,7 +376,16 @@ class NLSQResult:
 
     @aic.setter
     def aic(self, value: float) -> None:
-        """Set aic (for backward compat initialization)."""
+        """Set aic (for backward compat initialization).
+
+        Note: This setter is a no-op when native_result is active (BUG-039).
+        """
+        if self.native_result is not None:
+            logger.warning(
+                "NLSQResult.aic setter called while delegation to "
+                "native_result is active; this assignment is a no-op."
+            )
+            return
         self._aic = value
 
     # T025: bic property delegation
@@ -324,7 +398,16 @@ class NLSQResult:
 
     @bic.setter
     def bic(self, value: float) -> None:
-        """Set bic (for backward compat initialization)."""
+        """Set bic (for backward compat initialization).
+
+        Note: This setter is a no-op when native_result is active (BUG-039).
+        """
+        if self.native_result is not None:
+            logger.warning(
+                "NLSQResult.bic setter called while delegation to "
+                "native_result is active; this assignment is a no-op."
+            )
+            return
         self._bic = value
 
     # T026: residuals property delegation
@@ -339,7 +422,16 @@ class NLSQResult:
 
     @residuals.setter
     def residuals(self, value: np.ndarray) -> None:
-        """Set residuals (for backward compat initialization)."""
+        """Set residuals (for backward compat initialization).
+
+        Note: This setter is a no-op when native_result is active (BUG-039).
+        """
+        if self.native_result is not None:
+            logger.warning(
+                "NLSQResult.residuals setter called while delegation to "
+                "native_result is active; this assignment is a no-op."
+            )
+            return
         self._residuals = value
 
     # T027: predictions property delegation
@@ -352,7 +444,16 @@ class NLSQResult:
 
     @predictions.setter
     def predictions(self, value: np.ndarray | None) -> None:
-        """Set predictions (for backward compat initialization)."""
+        """Set predictions (for backward compat initialization).
+
+        Note: This setter is a no-op when native_result is active (BUG-039).
+        """
+        if self.native_result is not None:
+            logger.warning(
+                "NLSQResult.predictions setter called while delegation to "
+                "native_result is active; this assignment is a no-op."
+            )
+            return
         self._predictions = value
 
     # T035: covariance property delegation
@@ -368,7 +469,16 @@ class NLSQResult:
 
     @covariance.setter
     def covariance(self, value: np.ndarray) -> None:
-        """Set covariance (for backward compat initialization)."""
+        """Set covariance (for backward compat initialization).
+
+        Note: This setter is a no-op when native_result is active (BUG-039).
+        """
+        if self.native_result is not None:
+            logger.warning(
+                "NLSQResult.covariance setter called while delegation to "
+                "native_result is active; this assignment is a no-op."
+            )
+            return
         self._covariance = value
 
     # T029: confidence_intervals property delegation
@@ -386,7 +496,16 @@ class NLSQResult:
 
     @confidence_intervals.setter
     def confidence_intervals(self, value: dict[str, tuple[float, float]]) -> None:
-        """Set confidence_intervals (for backward compat initialization)."""
+        """Set confidence_intervals (for backward compat initialization).
+
+        Note: This setter is a no-op when native_result is active (BUG-039).
+        """
+        if self.native_result is not None:
+            logger.warning(
+                "NLSQResult.confidence_intervals setter called while delegation to "
+                "native_result is active; this assignment is a no-op."
+            )
+            return
         self._confidence_intervals = value
 
     # T31: diagnostics property delegation
@@ -400,10 +519,34 @@ class NLSQResult:
     # T032: is_healthy property
     @property
     def is_healthy(self) -> bool:
-        """Whether the fit passes all health checks."""
-        if self.diagnostics is not None:
-            return str(self.diagnostics.status) == "healthy"
-        return False  # Unknown health != healthy
+        """Whether the fit passes all health checks.
+
+        Uses an attribute-based check against the NLSQ diagnostics API (BUG-040).
+        Avoids the fragile str(status) == "healthy" string comparison by:
+        1. Checking diagnostics.is_healthy attribute if available (NLSQ native), or
+        2. Using health_score >= 70 as a numeric fallback, or
+        3. Checking enum value via .value or .name attribute comparison.
+        """
+        if self.diagnostics is None:
+            return False  # Unknown health != healthy
+
+        # Primary: use native is_healthy attribute if available (NLSQ 0.6.0)
+        if hasattr(self.diagnostics, "is_healthy"):
+            return bool(self.diagnostics.is_healthy)
+
+        # Secondary: use numeric health_score (avoids string comparison)
+        if hasattr(self.diagnostics, "health_score"):
+            return int(self.diagnostics.health_score) >= 70
+
+        # Fallback: use enum value/name comparison (more robust than str())
+        status = self.diagnostics.status
+        if hasattr(status, "value"):
+            return status.value == "healthy"
+        if hasattr(status, "name"):
+            return status.name.lower() == "healthy"
+
+        # Last resort: string comparison (kept for extreme backward compat)
+        return str(status).lower() in ("healthy", "modelstatus.healthy")
 
     # T033: health_score property
     @property
@@ -602,6 +745,29 @@ class FitResult:
     arviz_data: az.InferenceData | None = None
     config: SamplerConfig | None = None  # Per Technical Guidelines
     x: np.ndarray | None = None  # For data_metadata
+
+    def __post_init__(self) -> None:
+        """Validate samples invariants at construction (BUG-024).
+
+        Enforces:
+        - samples dict is non-empty (no results without actual posterior draws)
+        - all sample arrays have consistent shapes (same number of draws)
+        """
+        if not self.samples:
+            raise ValueError(
+                "FitResult.samples must be non-empty: "
+                "posterior samples dict cannot be empty"
+            )
+
+        shapes = {name: np.asarray(arr).shape for name, arr in self.samples.items()}
+        shape_values = list(shapes.values())
+        if len(shape_values) > 1 and not all(
+            s == shape_values[0] for s in shape_values
+        ):
+            raise ValueError(
+                f"FitResult.samples arrays have inconsistent shapes: {shapes}. "
+                "All sample arrays must have the same shape."
+            )
 
     def get_mean(self, param: str) -> float:
         """Get posterior mean for parameter.

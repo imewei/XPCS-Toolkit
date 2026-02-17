@@ -77,6 +77,9 @@ def single_exp_model(
     baseline = numpyro.sample("baseline", dist.Normal(1.0, 0.1))
     contrast = numpyro.sample("contrast", dist.HalfNormal(1.0))
 
+    # Clamp tau to prevent NaN gradients when NUTS samples near zero (BUG-004)
+    tau = jnp.clip(tau, 1e-30)
+
     # Model prediction
     mu = baseline + contrast * jnp.exp(-2 * x / tau)
 
@@ -165,6 +168,8 @@ def stretched_exp_model(
 
     # Clamp x to avoid NaN gradient from 0^beta when beta < 1
     x = jnp.maximum(x, 1e-30)
+    # Clamp tau to prevent overflow from (2x/tau)^beta when tau -> 0 (BUG-004)
+    tau = jnp.clip(tau, 1e-30)
 
     # Model prediction
     mu = baseline + contrast * jnp.exp(-jnp.power(2 * x / tau, beta))
@@ -203,6 +208,9 @@ def power_law_model(
     tau0 = numpyro.sample("tau0", dist.LogNormal(0.0, 2.0))
     alpha = numpyro.sample("alpha", dist.Normal(2.0, 1.0))  # Expect ~2 for diffusion
 
+    # Clamp q to prevent log(0) = -inf when q approaches zero (BUG-004)
+    q = jnp.clip(q, 1e-30)
+
     # Model prediction (in log space for stability)
     log_mu = jnp.log(tau0) - alpha * jnp.log(q)
     mu = jnp.exp(log_mu)
@@ -229,7 +237,7 @@ def single_exp_func(x, tau, baseline, contrast):
     Uses jax.numpy for JAX compatibility during optimization.
     JIT-compiled for accelerated execution.
     """
-    tau = _xnp.clip(tau, 1e-30)
+    tau = _xnp.clip(tau, 1e-30, None)
     return baseline + contrast * _xnp.exp(-2 * x / tau)
 
 
@@ -240,8 +248,8 @@ def double_exp_func(x, tau1, tau2, baseline, contrast1, contrast2):
     Uses jax.numpy for JAX compatibility during optimization.
     JIT-compiled for accelerated execution.
     """
-    tau1 = _xnp.clip(tau1, 1e-30)
-    tau2 = _xnp.clip(tau2, 1e-30)
+    tau1 = _xnp.clip(tau1, 1e-30, None)
+    tau2 = _xnp.clip(tau2, 1e-30, None)
     return (
         baseline
         + contrast1 * _xnp.exp(-2 * x / tau1)
@@ -257,7 +265,7 @@ def stretched_exp_func(x, tau, baseline, contrast, beta):
     JIT-compiled for accelerated execution.
     """
     x = _xnp.maximum(x, 1e-30)
-    tau = _xnp.clip(tau, 1e-30)
+    tau = _xnp.clip(tau, 1e-30, None)
     return baseline + contrast * _xnp.exp(-_xnp.power(2 * x / tau, beta))
 
 
@@ -268,5 +276,5 @@ def power_law_func(q, tau0, alpha):
     Uses jax.numpy for JAX compatibility during optimization.
     JIT-compiled for accelerated execution.
     """
-    q = _xnp.clip(q, 1e-30)
+    q = _xnp.clip(q, 1e-30, None)
     return tau0 * _xnp.power(q, -alpha)

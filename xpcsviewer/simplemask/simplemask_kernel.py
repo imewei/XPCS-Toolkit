@@ -304,8 +304,9 @@ class SimpleMaskKernel:
         center = self.get_center()
 
         # Create display data (original + mask overlay)
+        # Convert to NumPy to guard against JAX arrays at PyQtGraph boundary (BUG-027)
         data = self.detector_image.copy()
-        self.hdl.setImage(data)
+        self.hdl.setImage(ensure_numpy(data))
         self.hdl.adjust_viewbox()
         self.hdl.set_colormap(cmap)
 

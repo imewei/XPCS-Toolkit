@@ -67,7 +67,12 @@ def refine_beam_center(
     def loss_fn(params):
         """Variance of distances from center to ring points."""
         cx, cy = params
-        distances = jnp.sqrt((points[:, 0] - cx) ** 2 + (points[:, 1] - cy) ** 2)
+        # Add epsilon before sqrt to prevent an undefined gradient when a
+        # calibration point coincides exactly with the beam center
+        # (i.e., squared distance == 0 => d/dx sqrt(0) is undefined). (BUG-034)
+        distances = jnp.sqrt(
+            (points[:, 0] - cx) ** 2 + (points[:, 1] - cy) ** 2 + 1e-12
+        )
         return jnp.var(distances)
 
     # JIT-compiled gradient function
@@ -208,20 +213,18 @@ def create_calibration_objective(
     import jax.numpy as jnp
 
     target_q = jnp.array(target_q_values)
-    positions = [(float(x), float(y)) for x, y in pixel_positions]
-
-    def compute_q(params, px, py):
-        """Compute Q at a pixel given geometry parameters."""
-        cx, cy, det_dist = params
-        dx = px - cx
-        dy = py - cy
-        r = jnp.sqrt(dx**2 + dy**2) * pix_dim
-        alpha = jnp.arctan(r / det_dist)
-        return jnp.sin(alpha) * k0
+    # Pre-convert pixel positions to a JAX array so the objective is fully
+    # vectorised and traceable without a Python for-loop (BUG-057).
+    positions_arr = jnp.array([(float(x), float(y)) for x, y in pixel_positions])
 
     def objective(params):
-        """Sum of squared Q-value differences."""
-        predicted_q = jnp.array([compute_q(params, px, py) for px, py in positions])
+        """Sum of squared Q-value differences (vectorised, JIT-traceable)."""
+        cx, cy, det_dist = params[0], params[1], params[2]
+        dx = positions_arr[:, 0] - cx
+        dy = positions_arr[:, 1] - cy
+        r = jnp.sqrt(dx**2 + dy**2) * pix_dim
+        alpha = jnp.arctan(r / det_dist)
+        predicted_q = jnp.sin(alpha) * k0
         return jnp.sum((predicted_q - target_q) ** 2)
 
     return objective

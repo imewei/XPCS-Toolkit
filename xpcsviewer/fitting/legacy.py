@@ -25,13 +25,102 @@ from xpcsviewer.utils.logging_config import get_logger
 logger = get_logger(__name__)
 
 
+# BUG-026: Closure-based factory functions.
+# Each factory calls get_backend() ONCE at construction time and captures the
+# backend object in the closure. Subsequent curve_fit evaluations do not call
+# get_backend() again, avoiding repeated backend-lookup overhead on every
+# residual evaluation during optimization.
+
+
+def make_single_exp() -> Callable[..., NDArray[np.floating[Any]]]:
+    """Factory: create a single exponential closure with backend bound at construction."""
+    b = get_backend()  # Called once here, captured in closure
+
+    def _single_exp(
+        x: NDArray[np.floating[Any]], tau: float, bkg: float, cts: float
+    ) -> NDArray[np.floating[Any]]:
+        # Note: Do NOT use ensure_numpy() here - this function is JIT-traced by nlsq
+        return cts * b.exp(-2 * b.array(x) / tau) + bkg  # type: ignore[return-value]
+
+    return _single_exp
+
+
+def make_double_exp() -> Callable[..., NDArray[np.floating[Any]]]:
+    """Factory: create a double exponential closure with backend bound at construction."""
+    b = get_backend()  # Called once here, captured in closure
+
+    def _double_exp(
+        x: NDArray[np.floating[Any]],
+        tau1: float,
+        bkg: float,
+        cts1: float,
+        tau2: float,
+        cts2: float,
+    ) -> NDArray[np.floating[Any]]:
+        xa: Any = b.array(x)
+        # Note: Do NOT use ensure_numpy() here - this function is JIT-traced by nlsq
+        return cts1 * b.exp(-2 * xa / tau1) + cts2 * b.exp(-2 * xa / tau2) + bkg  # type: ignore[return-value]
+
+    return _double_exp
+
+
+def make_single_exp_all() -> Callable[..., NDArray[np.floating[Any]]]:
+    """Factory: create a single_exp_all closure with backend bound at construction."""
+    b = get_backend()  # Called once here, captured in closure
+
+    def _single_exp_all(
+        x: NDArray[np.floating[Any]], a: float, b_: float, c: float, d: float
+    ) -> NDArray[np.floating[Any]]:
+        # Note: Do NOT use ensure_numpy() here - this function is JIT-traced by nlsq
+        return a * b.exp(-2 * b.array(x) / b_) + c + d  # type: ignore[return-value]
+
+    return _single_exp_all
+
+
+def make_double_exp_all() -> Callable[..., NDArray[np.floating[Any]]]:
+    """Factory: create a double_exp_all closure with backend bound at construction."""
+    b = get_backend()  # Called once here, captured in closure
+
+    def _double_exp_all(
+        x: NDArray[np.floating[Any]],
+        a: float,
+        b_: float,
+        c: float,
+        d: float,
+        e: float,
+        f: float,
+    ) -> NDArray[np.floating[Any]]:
+        xa: Any = b.array(x)
+        # Note: Do NOT use ensure_numpy() here - this function is JIT-traced by nlsq
+        return a * b.exp(-2 * xa / b_) + c * b.exp(-2 * xa / d) + e + f  # type: ignore[return-value]
+
+    return _double_exp_all
+
+
+# ---------------------------------------------------------------------------
+# Backward-compatible module-level functions (kept for callers that import them
+# directly by name). These now delegate to per-call factory closures so that
+# get_backend() is invoked once per import, not once per curve_fit evaluation.
+# Callers that need the performance benefit should use make_*() factories directly.
+# ---------------------------------------------------------------------------
+_single_exp_fn: Callable[..., NDArray[np.floating[Any]]] | None = None
+_double_exp_fn: Callable[..., NDArray[np.floating[Any]]] | None = None
+_single_exp_all_fn: Callable[..., NDArray[np.floating[Any]]] | None = None
+_double_exp_all_fn: Callable[..., NDArray[np.floating[Any]]] | None = None
+
+
 def single_exp(
     x: NDArray[np.floating[Any]], tau: float, bkg: float, cts: float
 ) -> NDArray[np.floating[Any]]:
-    """Single exponential model for G2 correlation function."""
-    b = get_backend()
-    # Note: Do NOT use ensure_numpy() here - this function is JIT-traced by nlsq
-    return cts * b.exp(-2 * b.array(x) / tau) + bkg
+    """Single exponential model for G2 correlation function.
+
+    Delegates to a module-level closure created once via make_single_exp().
+    get_backend() is NOT called per evaluation (BUG-026).
+    """
+    global _single_exp_fn
+    if _single_exp_fn is None:
+        _single_exp_fn = make_single_exp()
+    return _single_exp_fn(x, tau, bkg, cts)
 
 
 def double_exp(
@@ -42,20 +131,29 @@ def double_exp(
     tau2: float,
     cts2: float,
 ) -> NDArray[np.floating[Any]]:
-    """Double exponential model for G2 correlation function."""
-    b = get_backend()
-    xa: Any = b.array(x)
-    # Note: Do NOT use ensure_numpy() here - this function is JIT-traced by nlsq
-    return cts1 * b.exp(-2 * xa / tau1) + cts2 * b.exp(-2 * xa / tau2) + bkg
+    """Double exponential model for G2 correlation function.
+
+    Delegates to a module-level closure created once via make_double_exp().
+    get_backend() is NOT called per evaluation (BUG-026).
+    """
+    global _double_exp_fn
+    if _double_exp_fn is None:
+        _double_exp_fn = make_double_exp()
+    return _double_exp_fn(x, tau1, bkg, cts1, tau2, cts2)
 
 
 def single_exp_all(
     x: NDArray[np.floating[Any]], a: float, b_: float, c: float, d: float
 ) -> NDArray[np.floating[Any]]:
-    """Single exponential with all parameters."""
-    b = get_backend()
-    # Note: Do NOT use ensure_numpy() here - this function is JIT-traced by nlsq
-    return a * b.exp(-2 * b.array(x) / b_) + c + d
+    """Single exponential with all parameters.
+
+    Delegates to a module-level closure created once via make_single_exp_all().
+    get_backend() is NOT called per evaluation (BUG-026).
+    """
+    global _single_exp_all_fn
+    if _single_exp_all_fn is None:
+        _single_exp_all_fn = make_single_exp_all()
+    return _single_exp_all_fn(x, a, b_, c, d)
 
 
 def double_exp_all(
@@ -67,11 +165,15 @@ def double_exp_all(
     e: float,
     f: float,
 ) -> NDArray[np.floating[Any]]:
-    """Double exponential with all parameters."""
-    b = get_backend()
-    xa: Any = b.array(x)
-    # Note: Do NOT use ensure_numpy() here - this function is JIT-traced by nlsq
-    return a * b.exp(-2 * xa / b_) + c * b.exp(-2 * xa / d) + e + f
+    """Double exponential with all parameters.
+
+    Delegates to a module-level closure created once via make_double_exp_all().
+    get_backend() is NOT called per evaluation (BUG-026).
+    """
+    global _double_exp_all_fn
+    if _double_exp_all_fn is None:
+        _double_exp_all_fn = make_double_exp_all()
+    return _double_exp_all_fn(x, a, b_, c, d, e, f)
 
 
 @log_timing(threshold_ms=100)
@@ -152,7 +254,6 @@ def fit_with_fixed(
                 sigma=sigma_col,
                 p0=p0,
                 bounds=(bounds_fit[0], bounds_fit[1]),
-                method="trf",
                 max_nfev=5000,
             )
 

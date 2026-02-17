@@ -167,7 +167,13 @@ def _minimize_optax(
     maxiter: int,
     learning_rate: float = 0.01,
 ) -> OptimizeResult:
-    """Minimization using optax gradient descent."""
+    """Minimization using optax gradient descent.
+
+    The inner loop uses ``jax.lax.while_loop`` so the entire update sequence
+    is JIT-compiled rather than interpreted step-by-step in Python.  This
+    avoids the O(maxiter) Python overhead that occurred with the previous
+    ``for i in range(maxiter)`` implementation. (BUG-038)
+    """
     import jax
     import jax.numpy as jnp
     import optax
@@ -188,35 +194,47 @@ def _minimize_optax(
     else:
         optimizer = optax.adam(learning_rate=learning_rate)
 
-    # Initialize optimizer state
-    opt_state = optimizer.init(x0)
-    x = x0
-
-    # Optimization loop
+    # Pre-compute gradient function (will be JIT-compiled via while_loop)
     grad_fn = jax.grad(objective)
 
-    for i in range(maxiter):
-        grads = grad_fn(x)
-        updates, opt_state = optimizer.update(grads, opt_state, x)
-        x = optax.apply_updates(x, updates)
+    # ---------------------------------------------------------------------------
+    # JIT-compiled loop via jax.lax.while_loop
+    # State: (x, opt_state, iteration, converged)
+    # ---------------------------------------------------------------------------
+    init_opt_state = optimizer.init(x0)
 
-        # Check convergence
-        grad_norm = float(jnp.linalg.norm(grads))
-        if grad_norm < tol:
-            return OptimizeResult(
-                x=np.asarray(x),
-                fun=float(objective(x)),
-                success=True,
-                message=f"Converged after {i + 1} iterations",
-                nit=i + 1,
-            )
+    def cond_fn(state):
+        _x, _opt_state, i, converged = state
+        return jnp.logical_and(~converged, i < maxiter)
+
+    def body_fn(state):
+        x, opt_state, i, _converged = state
+        grads = grad_fn(x)
+        updates, new_opt_state = optimizer.update(grads, opt_state, x)
+        new_x = optax.apply_updates(x, updates)
+        grad_norm = jnp.linalg.norm(grads)
+        new_converged = grad_norm < tol
+        return new_x, new_opt_state, i + 1, new_converged
+
+    init_state = (x0, init_opt_state, jnp.zeros((), dtype=jnp.int32), jnp.array(False))
+    final_x, _final_opt_state, nit, converged = jax.lax.while_loop(
+        cond_fn, body_fn, init_state
+    )
+
+    success = bool(converged)
+    n_iterations = int(nit)
+    message = (
+        f"Converged after {n_iterations} iterations"
+        if success
+        else f"Maximum iterations ({maxiter}) reached"
+    )
 
     return OptimizeResult(
-        x=np.asarray(x),
-        fun=float(objective(x)),
-        success=False,
-        message=f"Maximum iterations ({maxiter}) reached",
-        nit=maxiter,
+        x=np.asarray(final_x),
+        fun=float(objective(final_x)),
+        success=success,
+        message=message,
+        nit=n_iterations,
     )
 
 
@@ -366,6 +384,11 @@ def _curve_fit_optimistix(
         n_data = len(ydata)
         n_params = len(popt)
         dof = max(0, n_data - n_params)
+
+        # Initialize s_sq to 1.0 so it is always defined even when dof == 0
+        # (n_data <= n_params). Without this initialization, the unconditional
+        # use of s_sq below raises NameError when dof is 0. (BUG-005)
+        s_sq = 1.0
 
         if dof > 0:
             chi_sq = float(jnp.sum(residuals**2))

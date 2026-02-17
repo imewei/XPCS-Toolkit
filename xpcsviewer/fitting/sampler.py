@@ -7,6 +7,7 @@ NUTS sampler with JAX-accelerated NLSQ warm-start.
 from __future__ import annotations
 
 import logging
+import time
 from typing import TYPE_CHECKING, Literal
 
 import numpy as np
@@ -79,9 +80,15 @@ def _run_mcmc(
 
     # Set random seed
     if config.random_seed is not None:
-        rng_key = jax.random.PRNGKey(config.random_seed)
+        seed = config.random_seed
+        rng_key = jax.random.PRNGKey(seed)
+        logger.info(f"MCMC PRNG seed (user-specified): {seed}")
     else:
-        rng_key = jax.random.PRNGKey(0)
+        # Use time-based seed for non-deterministic runs (BUG-020).
+        # Log the seed so results can be reproduced if needed.
+        seed = int(time.time_ns() % 2**31)
+        rng_key = jax.random.PRNGKey(seed)
+        logger.info(f"MCMC PRNG seed (time-based): {seed}")
 
     # Configure NUTS sampler
     kernel = NUTS(
@@ -100,14 +107,23 @@ def _run_mcmc(
 
     # Run sampling
     if init_params is not None:
-        # Convert init_params to JAX arrays and replicate for each chain
-        # NumPyro expects init_params shape (num_chains, ...) when num_chains > 1
+        # Convert init_params to JAX arrays with per-chain jitter (BUG-021).
+        # Broadcasting identical values to all chains makes R-hat diagnostics
+        # meaningless: chains start at the same point so R-hat is trivially 1.0.
+        # Instead, add small Gaussian jitter (0.01 * normal) so each chain
+        # starts from a distinct point while staying close to the warm-start.
         init_params_jax = {}
-        for k, v in init_params.items():
+        # Split the rng_key into per-parameter subkeys for reproducible jitter
+        param_keys = list(init_params.keys())
+        subkeys = jax.random.split(rng_key, num=len(param_keys))
+        for subkey, k in zip(subkeys, param_keys):
+            v = init_params[k]
             val = jnp.array(v)
             if config.num_chains > 1:
-                # Replicate the initial value for each chain
-                val = jnp.broadcast_to(val, (config.num_chains,) + val.shape)
+                shape = (config.num_chains,) + val.shape
+                # Add small Gaussian jitter per chain instead of broadcasting
+                jitter = 0.01 * jax.random.normal(subkey, shape=shape)
+                val = val + jitter
             init_params_jax[k] = val
         mcmc.run(rng_key, *model_args, init_params=init_params_jax)
     else:
@@ -376,15 +392,22 @@ def run_double_exp_fit(
 
     # Run MCMC with warm-start
     logger.info("Running NUTS sampling")
+    # BUG-022: Sort tau1/tau2 before computing tau2_factor.
+    # NLSQ may return tau1 > tau2 which would make tau2_factor negative,
+    # causing invalid init params for the double_exp_model parameterization
+    # (which enforces tau2 = tau1 * (1 + tau2_factor) with tau2_factor > 0).
+    tau_vals = sorted([nlsq_init["tau1"], nlsq_init["tau2"]])
+    tau1_sorted = tau_vals[0]
+    tau2_sorted = tau_vals[1]
     # Clamp tau2_factor to avoid extreme values from NLSQ warm-start
-    tau2_factor = max(0.01, min(nlsq_init["tau2"] / nlsq_init["tau1"] - 1, 1000.0))
+    tau2_factor = max(0.01, min(tau2_sorted / tau1_sorted - 1, 1000.0))
 
     mcmc, samples = _run_mcmc(
         double_exp_model,
         (x_jax, y_jax, yerr_jax),
         config,
         init_params={
-            "tau1": nlsq_init["tau1"],
+            "tau1": tau1_sorted,  # BUG-022: use sorted tau1 (always the smaller value)
             "tau2_factor": tau2_factor,
             "baseline": nlsq_init["baseline"],
             "contrast1": nlsq_init["contrast1"],

@@ -9,7 +9,6 @@ Ported from pySimpleMask with backend abstraction for JAX support.
 
 from __future__ import annotations
 
-import copy
 import logging
 from functools import lru_cache
 from typing import TYPE_CHECKING, Any, Callable
@@ -200,6 +199,9 @@ def compute_q_at_pixel(
     """
     backend = get_backend()
 
+    # Guard against zero or negative det_dist to prevent division by zero (BUG-051).
+    det_dist = max(det_dist, 1e-12)
+
     # Wavevector magnitude: k0 = 2*pi/lambda, lambda = 12.39841984/E
     k0 = 2 * backend.pi / (E2KCONST / energy)
 
@@ -254,25 +256,28 @@ def compute_q_sum_squared(
         # Wavevector magnitude
         k0 = 2 * jnp.pi / (E2KCONST / energy)
 
-        q_sum_sq: Any = 0.0
-        for px, py in pixel_positions:
-            dx = px - center_x
-            dy = py - center_y
-            r = jnp.sqrt(dx**2 + dy**2) * pix_dim
-            alpha = jnp.arctan(r / det_dist)
-            q = jnp.sin(alpha) * k0
-            q_sum_sq = q_sum_sq + q**2
-
-        return q_sum_sq
+        # Vectorized computation instead of Python for-loop so that
+        # jax.grad / jax.jit can trace through without unrolling per-element
+        # Python loops (BUG-057).
+        positions_arr = jnp.array(pixel_positions)  # shape (N, 2)
+        dx = positions_arr[:, 0] - center_x
+        dy = positions_arr[:, 1] - center_y
+        r = jnp.sqrt(dx**2 + dy**2) * pix_dim
+        alpha = jnp.arctan(r / det_dist)
+        q = jnp.sin(alpha) * k0
+        return jnp.sum(q**2)
     else:
         # NumPy fallback
-        total = 0.0
-        for px, py in pixel_positions:
-            q_val: Any = compute_q_at_pixel(
-                center_x, center_y, px, py, energy, pix_dim, det_dist
-            )
-            total += q_val**2
-        return float(total)
+        positions_arr = np.array(pixel_positions)  # shape (N, 2)
+        q_vals: Any = np.array(
+            [
+                compute_q_at_pixel(
+                    center_x, center_y, float(px), float(py), energy, pix_dim, det_dist
+                )
+                for px, py in positions_arr
+            ]
+        )
+        return float(np.sum(q_vals**2))
 
 
 def create_q_objective(
@@ -320,18 +325,18 @@ def create_q_objective(
 
     target_q = jnp.array(target_q_values)
     k0 = 2 * jnp.pi / (E2KCONST / energy)
+    # Pre-convert pixel positions to a JAX array so the objective is fully
+    # vectorised and traceable without a Python for-loop (BUG-057).
+    positions_arr = jnp.array(pixel_positions)  # shape (N, 2)
 
     def objective(center_x, center_y, det_dist):
-        """Compute sum of squared Q differences."""
-        loss = 0.0
-        for i, (px, py) in enumerate(pixel_positions):
-            dx = px - center_x
-            dy = py - center_y
-            r = jnp.sqrt(dx**2 + dy**2) * pix_dim
-            alpha = jnp.arctan(r / det_dist)
-            q_pred = jnp.sin(alpha) * k0
-            loss = loss + (q_pred - target_q[i]) ** 2
-        return loss
+        """Compute sum of squared Q differences (vectorised, JIT-traceable)."""
+        dx = positions_arr[:, 0] - center_x
+        dy = positions_arr[:, 1] - center_y
+        r = jnp.sqrt(dx**2 + dy**2) * pix_dim
+        alpha = jnp.arctan(r / det_dist)
+        q_pred = jnp.sin(alpha) * k0
+        return jnp.sum((q_pred - target_q) ** 2)
 
     return objective
 
@@ -348,6 +353,9 @@ def _compute_transmission_qmap_backend(
     Uses the backend abstraction layer for GPU acceleration when available.
     JIT compilation is applied for repeated calls with JAX backend.
     """
+    # Guard against zero or negative det_dist to prevent division by zero (BUG-051).
+    det_dist = max(det_dist, 1e-12)
+
     backend = get_backend()
 
     # Wavevector magnitude: k0 = 2*pi/lambda
@@ -468,10 +476,14 @@ def compute_transmission_qmap(
 
         qmap_unit contains unit strings for each map.
     """
+    # Return the cached dict directly -- no deep copy needed (BUG-055).
+    # The arrays inside the dict are NumPy arrays produced once and never mutated
+    # in place, so sharing them across callers is safe.  Callers that need their
+    # own writable copy must call np.copy() themselves.
     qmap, qmap_unit = _compute_transmission_qmap_cached(
         energy, center, shape, pix_dim, det_dist
     )
-    return copy.deepcopy(qmap), qmap_unit.copy()
+    return qmap, qmap_unit
 
 
 # Expose lru_cache methods on the public wrapper for tests/callers
@@ -570,6 +582,9 @@ def _compute_reflection_qmap_backend(
     Uses the backend abstraction layer for GPU acceleration when available.
     JIT compilation is applied for repeated calls with JAX backend.
     """
+    # Guard against zero or negative det_dist to prevent division by zero (BUG-051).
+    det_dist = max(det_dist, 1e-12)
+
     backend = get_backend()
 
     # Wavevector magnitude
@@ -733,10 +748,12 @@ def compute_reflection_qmap(
         - alpha_f: Exit angle
         - tth: In-plane two-theta
     """
+    # Return the cached dict directly -- no deep copy needed (BUG-055).
+    # Arrays are NumPy arrays produced once and never mutated in place.
     qmap, qmap_unit = _compute_reflection_qmap_cached(
         energy, center, shape, pix_dim, det_dist, alpha_i_deg, orientation
     )
-    return copy.deepcopy(qmap), qmap_unit.copy()
+    return qmap, qmap_unit
 
 
 # Expose lru_cache methods on the public wrapper for tests/callers

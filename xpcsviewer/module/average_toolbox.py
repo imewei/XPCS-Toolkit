@@ -1,6 +1,7 @@
 # Standard library imports
 import multiprocessing
 import os
+import threading
 import time
 import traceback
 import uuid
@@ -98,10 +99,10 @@ class AverageToolbox(QtCore.QRunnable):
         # use one file as templelate
         self.origin_path = os.path.join(self.work_dir, self.model[0])
 
-        self.is_killed = False
+        self.is_killed = threading.Event()
 
     def kill(self):
-        self.is_killed = True
+        self.is_killed.set()
 
     def __str__(self) -> str:
         return str(self.jid)
@@ -279,7 +280,7 @@ class AverageToolbox(QtCore.QRunnable):
             end = min(tot_num, end)
 
             for m in range(beg, end):
-                if self.is_killed:
+                if self.is_killed.is_set():
                     logger.info("the averaging instance has been killed.")
                     self._progress = "killed"
                     self.status = "killed"
@@ -378,7 +379,7 @@ class AverageToolbox(QtCore.QRunnable):
             # Submit batch jobs
             future_to_batch = {}
             for batch_indices in batches:
-                if self.is_killed:
+                if self.is_killed.is_set():
                     return
                 future = executor.submit(
                     self._process_batch,
@@ -391,7 +392,7 @@ class AverageToolbox(QtCore.QRunnable):
 
             # Collect results as they complete
             for future in as_completed(future_to_batch):
-                if self.is_killed:
+                if self.is_killed.is_set():
                     logger.info("the averaging instance has been killed.")
                     self._progress = "killed"
                     self.status = "killed"
