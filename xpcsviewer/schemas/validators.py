@@ -171,12 +171,23 @@ class QMapSchema:
         if dqmap is None:
             dqmap = np.zeros_like(sqmap, dtype=np.float64)
 
+        # Coerce arrays to float64 to handle float32 data from HDF5 files.
+        # The __post_init__ dtype check requires float64; without this coercion,
+        # float32 HDF5 arrays raise TypeError and break backward compatibility.
+        # This follows the same pattern as from_compute_qmap(). (BUG-011)
+        sqmap = np.asarray(sqmap, dtype=np.float64)
+        dqmap = np.asarray(dqmap, dtype=np.float64)
+        phis = np.asarray(phis, dtype=np.float64)
+
+        # Use "nm^-1" as the canonical default unit to match hdf5_facade.py
+        # (which also defaults to "nm^-1").  Previously this was "A^-1",
+        # causing an inconsistency between the I/O and schema layers (BUG-028).
         return cls(
             sqmap=sqmap,
             dqmap=dqmap,
             phis=phis,
-            sqmap_unit=data.get("sqmap_unit", "A^-1"),
-            dqmap_unit=data.get("dqmap_unit", "A^-1"),
+            sqmap_unit=data.get("sqmap_unit", "nm^-1"),
+            dqmap_unit=data.get("dqmap_unit", "nm^-1"),
             phis_unit=data.get("phis_unit", "deg"),
             mask=data.get("mask"),
             partition_map=data.get("partition_map"),
@@ -234,18 +245,20 @@ class QMapSchema:
         dict
             Dictionary representation of Q-map
         """
+        # BUG-047: Return defensive copies to prevent callers from mutating
+        # the schema's internal arrays.
         result = {
-            "sqmap": self.sqmap,
-            "dqmap": self.dqmap,
-            "phis": self.phis,
+            "sqmap": np.copy(self.sqmap),
+            "dqmap": np.copy(self.dqmap),
+            "phis": np.copy(self.phis),
             "sqmap_unit": self.sqmap_unit,
             "dqmap_unit": self.dqmap_unit,
             "phis_unit": self.phis_unit,
         }
         if self.mask is not None:
-            result["mask"] = self.mask
+            result["mask"] = np.copy(self.mask)
         if self.partition_map is not None:
-            result["partition_map"] = self.partition_map
+            result["partition_map"] = np.copy(self.partition_map)
         return result
 
 
@@ -324,13 +337,39 @@ class GeometryMetadata:
         -------
         GeometryMetadata
             Validated geometry metadata instance
+
+        Raises
+        ------
+        ValueError
+            If any critical numeric field is NaN or infinite (BUG-048).
         """
+        import math
+
+        critical_fields = {
+            "bcx": float(data["bcx"]),
+            "bcy": float(data["bcy"]),
+            "det_dist": float(data["det_dist"]),
+            "lambda_": float(data["lambda_"]),
+            "pix_dim": float(data["pix_dim"]),
+        }
+        for field_name, value in critical_fields.items():
+            if math.isnan(value):
+                raise ValueError(
+                    f"GeometryMetadata.from_dict: '{field_name}' is NaN, "
+                    "which is invalid for detector geometry."
+                )
+            if math.isinf(value):
+                raise ValueError(
+                    f"GeometryMetadata.from_dict: '{field_name}' is infinite, "
+                    "which is invalid for detector geometry."
+                )
+
         return cls(
-            bcx=float(data["bcx"]),
-            bcy=float(data["bcy"]),
-            det_dist=float(data["det_dist"]),
-            lambda_=float(data["lambda_"]),
-            pix_dim=float(data["pix_dim"]),
+            bcx=critical_fields["bcx"],
+            bcy=critical_fields["bcy"],
+            det_dist=critical_fields["det_dist"],
+            lambda_=critical_fields["lambda_"],
+            pix_dim=critical_fields["pix_dim"],
             shape=tuple(data["shape"]),
             det_rotation=data.get("det_rotation"),
             incident_angle=data.get("incident_angle"),
@@ -387,6 +426,10 @@ class G2Data:
         object.__setattr__(self, "g2", np.copy(self.g2))
         object.__setattr__(self, "g2_err", np.copy(self.g2_err))
         object.__setattr__(self, "delay_times", np.copy(self.delay_times))
+        # Convert mutable list to immutable tuple so the frozen dataclass
+        # invariant is maintained — a list can be mutated even in a frozen
+        # dataclass, breaking the immutability contract. (BUG-010)
+        object.__setattr__(self, "q_values", tuple(self.q_values))
 
         # Shape consistency validation
         if self.g2.shape != self.g2_err.shape:
@@ -458,10 +501,12 @@ class G2Data:
         G2Data
             Validated G2 data instance
         """
+        # BUG-058: Coerce arrays to float64 to handle float32 HDF5 data that
+        # would otherwise fail the dtype check in __post_init__.
         return cls(
-            g2=data["g2"],
-            g2_err=data["g2_err"],
-            delay_times=data["delay_times"],
+            g2=np.asarray(data["g2"], dtype=np.float64),
+            g2_err=np.asarray(data["g2_err"], dtype=np.float64),
+            delay_times=np.asarray(data["delay_times"], dtype=np.float64),
             q_values=data["q_values"],
         )
 
@@ -520,6 +565,12 @@ class PartitionSchema:
         object.__setattr__(self, "partition_map", np.copy(self.partition_map))
         if self.mask is not None:
             object.__setattr__(self, "mask", np.copy(self.mask))
+        # Convert mutable lists to immutable tuples so the frozen dataclass
+        # invariant is fully maintained. A list stored inside a frozen
+        # dataclass can still be mutated via its append/remove methods,
+        # which silently breaks the immutability contract. (BUG-010)
+        object.__setattr__(self, "val_list", tuple(self.val_list))
+        object.__setattr__(self, "num_list", tuple(self.num_list))
 
         # Positive value validation
         if self.num_pts <= 0:
