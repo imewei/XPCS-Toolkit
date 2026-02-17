@@ -39,11 +39,13 @@ if os.environ.get("BUILDING_DOCS") and not TYPE_CHECKING:
     ImageViewPlotItem = PlaceholderClass
     PlotWidgetDev = PlaceholderClass
 
-    # Additional modules
-    pyqtgraph_handler = type("Module", (), {})()
-    matplot_qt = type("Module", (), {})()
-    plot_constants = type("Module", (), {})()
-    qt_signal_fixes = type("Module", (), {})()
+    # Additional modules — need __name__ for Sphinx autodoc compatibility
+    import types
+
+    pyqtgraph_handler = types.ModuleType("xpcsviewer.plothandler.pyqtgraph_handler")
+    matplot_qt = types.ModuleType("xpcsviewer.plothandler.matplot_qt")
+    plot_constants = types.ModuleType("xpcsviewer.plothandler.plot_constants")
+    qt_signal_fixes = types.ModuleType("xpcsviewer.plothandler.qt_signal_fixes")
 else:
     try:
         from . import matplot_qt, plot_constants, pyqtgraph_handler, qt_signal_fixes

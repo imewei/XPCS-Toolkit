@@ -41,10 +41,12 @@ if os.environ.get("BUILDING_DOCS") and not TYPE_CHECKING:
     class XpcsViewer:
         """Placeholder XpcsViewer class for documentation builds."""
 
-    # Create module-like objects for subpackages
-    module = type("module", (), {})()
-    plothandler = type("plothandler", (), {})()
-    utils = type("utils", (), {})()
+    # Create module-like objects for subpackages (need __name__ for Sphinx autodoc)
+    import types
+
+    module = types.ModuleType("xpcsviewer.module")
+    plothandler = types.ModuleType("xpcsviewer.plothandler")
+    utils = types.ModuleType("xpcsviewer.utils")
 
 else:
     try:

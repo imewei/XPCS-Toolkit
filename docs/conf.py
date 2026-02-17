@@ -43,6 +43,9 @@ class MockQtModule(mock.MagicMock):
 
 
 # Mock heavy dependencies that may not be available in docs build environment
+# NOTE: Only mock EXTERNAL dependencies here (Qt, pyqtgraph, etc.).
+# Do NOT mock xpcsviewer.* submodules — those are handled by autodoc_mock_imports
+# which uses Sphinx's own _MockModule (properly supports __name__).
 MOCK_MODULES = [
     "PySide6",
     "PySide6.QtCore",
@@ -59,14 +62,6 @@ MOCK_MODULES = [
     "line_profiler",
     "py_spy",
     "psutil",
-    # GUI modernization modules that depend on Qt
-    "xpcsviewer.gui.theme.manager",
-    "xpcsviewer.gui.state.session_manager",
-    "xpcsviewer.gui.state.preferences",
-    "xpcsviewer.gui.shortcuts.shortcut_manager",
-    "xpcsviewer.gui.widgets.command_palette",
-    "xpcsviewer.gui.widgets.toast_notification",
-    "xpcsviewer.gui.widgets.drag_drop_list",
 ]
 
 for mod_name in MOCK_MODULES:
@@ -120,7 +115,10 @@ templates_path = ["_templates"]
 
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:
-source_suffix = [".rst", ".md"]
+source_suffix = {
+    ".rst": "restructuredtext",
+    ".md": "markdown",
+}
 
 # The master toctree document.
 master_doc = "index"
@@ -224,6 +222,32 @@ autodoc_mock_imports = [
     "xpcsviewer.gui.widgets.command_palette",
     "xpcsviewer.gui.widgets.toast_notification",
     "xpcsviewer.gui.widgets.drag_drop_list",
+    # Threading modules (name conflicts with stdlib threading; all depend on Qt)
+    "xpcsviewer.threading",
+    "xpcsviewer.threading.async_workers",
+    "xpcsviewer.threading.async_kernel",
+    "xpcsviewer.threading.plot_workers",
+    "xpcsviewer.threading.base_plot_worker",
+    "xpcsviewer.threading.gui_integration",
+    "xpcsviewer.threading.unified_threading",
+    "xpcsviewer.threading.cleanup_optimized",
+    "xpcsviewer.threading.progress_manager",
+    # SimpleMask modules (depend on Qt/PyQtGraph)
+    "xpcsviewer.simplemask",
+    "xpcsviewer.simplemask.simplemask_window",
+    "xpcsviewer.simplemask.simplemask_kernel",
+    "xpcsviewer.simplemask.drawing_tools",
+    "xpcsviewer.simplemask.pyqtgraph_mod",
+    "xpcsviewer.simplemask.area_mask",
+    "xpcsviewer.simplemask.qmap",
+    "xpcsviewer.simplemask.utils",
+    "xpcsviewer.simplemask.ui",
+    "xpcsviewer.simplemask.ui.simplemask_ui",
+    # Plot handler modules (depend on Qt/PyQtGraph)
+    "xpcsviewer.plothandler",
+    "xpcsviewer.plothandler.pyqtgraph_handler",
+    "xpcsviewer.plothandler.matplot_qt",
+    "xpcsviewer.plothandler.qt_signal_fixes",
 ]
 
 # Autosummary settings
@@ -234,11 +258,14 @@ autosummary_imported_members = False
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3/", None),
     "numpy": ("https://numpy.org/doc/stable/", None),
-    "scipy": ("https://docs.scipy.org/doc/scipy/", None),
+    "scipy": ("https://scipy.github.io/devdocs/", None),
     "matplotlib": ("https://matplotlib.org/stable/", None),
     "h5py": ("https://docs.h5py.org/en/stable/", None),
     "pyside6": ("https://doc.qt.io/qtforpython-6/", None),
 }
+
+# Timeout for intersphinx inventory fetches (seconds)
+intersphinx_timeout = 10
 
 # MyST Parser settings
 myst_enable_extensions = [
