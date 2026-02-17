@@ -16,9 +16,14 @@ from xpcsviewer.gui.qt_compat import QObject, QtCore, Signal, Slot
 from ..utils.log_utils import log_timing
 from ..utils.logging_config import get_logger
 from .async_workers import ComputationWorker, DataLoadWorker, WorkerManager
-from .plot_workers import (G2PlotWorker, IntensityPlotWorker, QMapPlotWorker,
-                           SaxsPlotWorker, StabilityPlotWorker,
-                           TwotimePlotWorker)
+from .plot_workers import (
+    G2PlotWorker,
+    IntensityPlotWorker,
+    QMapPlotWorker,
+    SaxsPlotWorker,
+    StabilityPlotWorker,
+    TwotimePlotWorker,
+)
 
 logger = get_logger(__name__)
 
@@ -43,6 +48,10 @@ class AsyncViewerKernel(QObject):
         self.viewer_kernel = viewer_kernel
         self.worker_manager = WorkerManager(thread_pool)
         self.active_operations: dict[str, str] = {}  # operation_id -> worker_id
+        # Track signal connections per operation for cleanup
+        self._signal_connections: dict[
+            str, list[tuple]
+        ] = {}  # operation_id -> [(signal, slot), ...]
 
         # Connect worker manager signals
         self.worker_manager.worker_progress.connect(
@@ -269,16 +278,23 @@ class AsyncViewerKernel(QObject):
 
     def _submit_plot_worker(self, worker, operation_id: str) -> str:
         """Submit a plot worker and set up signal connections."""
-        # Connect signals
-        worker.signals.finished.connect(
-            lambda result: self._on_plot_ready(operation_id, result)
+        # Create bound slots so we can disconnect them later
+        finished_slot = lambda result: self._on_plot_ready(operation_id, result)
+        error_slot = lambda wid, msg, tb, retry: self._on_operation_error(
+            operation_id, msg, tb
         )
-        worker.signals.error.connect(
-            lambda wid, msg, tb, retry: self._on_operation_error(operation_id, msg, tb)
-        )
-        worker.signals.cancelled.connect(
-            lambda wid, reason: self._on_operation_cancelled(operation_id)
-        )
+        cancelled_slot = lambda wid, reason: self._on_operation_cancelled(operation_id)
+
+        worker.signals.finished.connect(finished_slot)
+        worker.signals.error.connect(error_slot)
+        worker.signals.cancelled.connect(cancelled_slot)
+
+        # Store connections for cleanup
+        self._signal_connections[operation_id] = [
+            (worker.signals.finished, finished_slot),
+            (worker.signals.error, error_slot),
+            (worker.signals.cancelled, cancelled_slot),
+        ]
 
         # Submit to worker manager
         worker_id = self.worker_manager.submit_worker(worker)
@@ -295,11 +311,21 @@ class AsyncViewerKernel(QObject):
         self.data_loaded.emit(operation_id, result)
         logger.debug(f"Data loading completed: {operation_id}")
 
+    def _disconnect_signals(self, operation_id: str) -> None:
+        """Disconnect stored signal connections for an operation to prevent leaks."""
+        connections = self._signal_connections.pop(operation_id, [])
+        for signal, slot in connections:
+            try:
+                signal.disconnect(slot)
+            except (RuntimeError, TypeError):
+                pass  # Already disconnected or object deleted
+
     @Slot(str, object)
     def _on_plot_ready(self, operation_id: str, result: Any):
         """Handle plot operation completion."""
         if operation_id in self.active_operations:
             del self.active_operations[operation_id]
+        self._disconnect_signals(operation_id)
         self.plot_ready.emit(operation_id, result)
         logger.debug(f"Plot operation completed: {operation_id}")
 
@@ -319,6 +345,7 @@ class AsyncViewerKernel(QObject):
         """Handle operation error."""
         if operation_id in self.active_operations:
             del self.active_operations[operation_id]
+        self._disconnect_signals(operation_id)
         self.operation_error.emit(operation_id, error_msg, traceback_str)
         logger.error(f"Operation failed: {operation_id} - {error_msg}")
 
@@ -327,6 +354,7 @@ class AsyncViewerKernel(QObject):
         """Handle operation cancellation."""
         if operation_id in self.active_operations:
             del self.active_operations[operation_id]
+        self._disconnect_signals(operation_id)
         self.operation_cancelled.emit(operation_id)
         logger.info(f"Operation cancelled: {operation_id}")
 

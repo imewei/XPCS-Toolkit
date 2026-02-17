@@ -16,6 +16,7 @@ from queue import Empty, PriorityQueue
 from typing import Any
 
 import psutil
+
 # Qt imports via compatibility layer
 from xpcsviewer.gui.qt_compat import QObject, Signal
 
@@ -126,24 +127,28 @@ class UnifiedThreadingManager(QObject):
         self.max_workers = max_workers
         self.memory_manager = get_memory_manager()
 
-        # Specialized thread pools for different task types
-        self._thread_pools = {
-            TaskType.GUI_UPDATE: ThreadPoolExecutor(
-                max_workers=2, thread_name_prefix="gui-"
-            ),
-            TaskType.COMPUTATION: ThreadPoolExecutor(
-                max_workers=max(1, self.cpu_count - 1), thread_name_prefix="compute-"
-            ),
-            TaskType.DATA_LOADING: ThreadPoolExecutor(
-                max_workers=4, thread_name_prefix="io-"
-            ),
-            TaskType.PLOT_GENERATION: ThreadPoolExecutor(
-                max_workers=3, thread_name_prefix="plot-"
-            ),
-            TaskType.MEMORY_OPERATION: ThreadPoolExecutor(
-                max_workers=2, thread_name_prefix="memory-"
-            ),
+        # Thread pool configuration (lazy initialization)
+        self._pool_configs = {
+            TaskType.GUI_UPDATE: {"max_workers": 2, "thread_name_prefix": "gui-"},
+            TaskType.COMPUTATION: {
+                "max_workers": max(1, self.cpu_count - 1),
+                "thread_name_prefix": "compute-",
+            },
+            TaskType.DATA_LOADING: {
+                "max_workers": 4,
+                "thread_name_prefix": "io-",
+            },
+            TaskType.PLOT_GENERATION: {
+                "max_workers": 3,
+                "thread_name_prefix": "plot-",
+            },
+            TaskType.MEMORY_OPERATION: {
+                "max_workers": 2,
+                "thread_name_prefix": "memory-",
+            },
         }
+        self._thread_pools: dict[TaskType, ThreadPoolExecutor] = {}
+        self._pool_lock = threading.Lock()
 
         # Task management
         self._task_queue: PriorityQueue[UnifiedTask] = PriorityQueue()
@@ -178,6 +183,23 @@ class UnifiedThreadingManager(QObject):
         logger.info(
             f"UnifiedThreadingManager initialized: {max_workers} workers, {self.cpu_count} CPUs, {self.total_memory_gb:.1f}GB RAM"
         )
+
+    def _get_pool(self, task_type: TaskType) -> ThreadPoolExecutor:
+        """Get or lazily create the thread pool for the given task type."""
+        pool = self._thread_pools.get(task_type)
+        if pool is None:
+            with self._pool_lock:
+                # Double-check after acquiring lock
+                pool = self._thread_pools.get(task_type)
+                if pool is None:
+                    config = self._pool_configs[task_type]
+                    pool = ThreadPoolExecutor(**config)
+                    self._thread_pools[task_type] = pool
+                    logger.debug(
+                        f"Lazily created {task_type.value} thread pool "
+                        f"(max_workers={config['max_workers']})"
+                    )
+        return pool
 
     @log_timing(threshold_ms=50)
     def submit_task(
@@ -259,8 +281,8 @@ class UnifiedThreadingManager(QObject):
         except Empty:
             return
 
-        # Get appropriate thread pool
-        pool = self._thread_pools[task.task_type]
+        # Get appropriate thread pool (lazily created on first access)
+        pool = self._get_pool(task.task_type)
 
         # Submit to thread pool
         future = pool.submit(self._execute_task, task)
@@ -396,7 +418,7 @@ class UnifiedThreadingManager(QObject):
 
     def _adjust_pool_size(self, task_type: TaskType, delta: int):
         """Safely adjust thread pool size."""
-        pool = self._thread_pools[task_type]
+        pool = self._get_pool(task_type)
         current_workers = pool._max_workers
         new_size = max(1, min(self.max_workers, current_workers + delta))
 
@@ -438,7 +460,7 @@ class UnifiedThreadingManager(QObject):
             "cpu_percent": cpu_percent,
             "memory_percent": memory.percent,
             "memory_available_gb": memory.available / (1024**3),
-            # Thread pool status
+            # Thread pool status (only includes pools that have been created)
             "thread_pools": {
                 task_type.value: {
                     "max_workers": pool._max_workers,

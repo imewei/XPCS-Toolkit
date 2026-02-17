@@ -286,8 +286,8 @@ class TwotimePlotWorker(BaseAsyncWorker):
         try:
             current_dset = self.viewer_kernel._get_cached_dataset(xfile.fname, xfile)
             if current_dset is None or current_dset.fname != xfile.fname:
-                # Cache the new dataset
-                self.viewer_kernel._current_dset_cache[xfile.fname] = xfile
+                # Do NOT write cache from worker thread — ViewerKernel.plot_twotime
+                # handles cache updates on the main thread.
                 new_qbin_labels = xfile.get_twotime_qbin_labels()
         except Exception as e:
             logger.warning(f"Dataset caching issue: {e}. Proceeding with current file.")

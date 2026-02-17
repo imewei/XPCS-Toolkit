@@ -204,7 +204,10 @@ class HealthMonitor:
             self._monitoring_active = False
             if self._monitor_thread and self._monitor_thread.is_alive():
                 self._monitor_thread.join(timeout=5.0)
+                if self._monitor_thread.is_alive():
+                    logger.warning("Health monitor thread did not stop within timeout")
 
+            self._monitor_thread = None
             logger.info("Health monitoring stopped")
 
     def _monitoring_loop(self) -> None:
@@ -425,8 +428,19 @@ class HealthMonitor:
             pass
 
     def _trigger_status_callbacks(self, status: HealthStatus) -> None:
-        """Trigger registered callbacks for overall status."""
+        """Trigger registered callbacks for overall status.
+
+        Warning: Callbacks are invoked on the daemon monitoring thread,
+        not on the main/GUI thread. Registered callbacks must be
+        thread-safe. For Qt-aware callbacks, use QMetaObject.invokeMethod
+        or signals to marshal work to the GUI thread.
+        """
         callbacks = self._callbacks.get(status, [])
+        if callbacks:
+            logger.debug(
+                f"Triggering {len(callbacks)} health callback(s) for "
+                f"status={status.value} on daemon thread"
+            )
         for callback in callbacks:
             try:
                 callback(status, self.get_health_summary())
@@ -442,7 +456,12 @@ class HealthMonitor:
     def register_health_callback(
         self, status: HealthStatus, callback: Callable
     ) -> None:
-        """Register callback for specific health status."""
+        """Register callback for specific health status.
+
+        Warning: Callbacks are invoked on the daemon monitoring thread.
+        They must be thread-safe. For Qt GUI updates, use signals or
+        QMetaObject.invokeMethod to marshal work to the main thread.
+        """
         self._callbacks[status].append(callback)
 
     def track_object(self, obj: Any) -> None:

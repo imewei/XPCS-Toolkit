@@ -519,7 +519,9 @@ class WorkerManager(QObject):
         worker_id = worker.worker_id
 
         # Connect signals
-        worker.signals.started.connect(lambda wid, priority: self._on_worker_started(worker_id))
+        worker.signals.started.connect(
+            lambda wid, priority: self._on_worker_started(worker_id)
+        )
         worker.signals.finished.connect(
             lambda result: self._on_worker_finished(worker_id, result)
         )
@@ -531,7 +533,9 @@ class WorkerManager(QObject):
                 worker_id, current, total, message
             )
         )
-        worker.signals.cancelled.connect(lambda wid, reason: self._on_worker_cancelled(worker_id))
+        worker.signals.cancelled.connect(
+            lambda wid, reason: self._on_worker_cancelled(worker_id)
+        )
 
         # Track the worker
         self.active_workers[worker_id] = worker

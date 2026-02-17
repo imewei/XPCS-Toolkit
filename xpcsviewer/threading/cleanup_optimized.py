@@ -30,7 +30,9 @@ class ObjectRegistry:
     """Registry for tracking objects that need cleanup."""
 
     def __init__(self):
-        self.objects: weakref.WeakValueDictionary[str, Any] = weakref.WeakValueDictionary()
+        self.objects: weakref.WeakValueDictionary[str, Any] = (
+            weakref.WeakValueDictionary()
+        )
         self._lock = threading.Lock()
 
     def register(self, key: str, obj: Any):
