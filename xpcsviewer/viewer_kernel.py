@@ -12,7 +12,7 @@ import pyqtgraph as pg
 from .backends import ensure_numpy
 from .constants import MEMORY_CLEANUP_TIMEOUT_S
 from .file_locator import FileLocator
-from .helper.listmodel import TableDataModel
+from .module.average_toolbox import AverageToolbox
 from .utils.log_utils import log_timing
 from .utils.logging_config import get_logger
 from .xpcs_file import MemoryMonitor, XpcsFile
@@ -88,10 +88,8 @@ class ViewerKernel(FileLocator):
     ----------
     meta : dict
         Metadata storage for analysis parameters and cached results
-    avg_tb : AverageToolbox
-        Toolbox for file averaging operations
-    avg_worker : TableDataModel
-        Model for managing averaging job queue
+    avg_worker : AverageToolbox or None
+        Current averaging worker, or None if no job is active
 
     Notes
     -----
@@ -116,11 +114,7 @@ class ViewerKernel(FileLocator):
         self.meta: dict[str, Any] = {}
         self.reset_meta()
         self.path = path
-        from typing import Callable, cast
-
-        self.avg_tb = cast(Callable[[str], Any], _get_module("average_toolbox"))(path)
-        self.avg_worker = TableDataModel()
-        self.avg_jid = 0
+        self.avg_worker: AverageToolbox | None = None
         self.avg_worker_active: dict[int, Any] = {}
 
         # Memory-aware caching for current_dset with weak references
@@ -789,8 +783,10 @@ class ViewerKernel(FileLocator):
         of unused datasets, helping to manage memory usage for
         large XPCS data collections.
         """
-        """Get cached dataset with memory management."""
-        return self._current_dset_cache.get(fname, fallback_xfile)
+        cached = self._current_dset_cache.get(fname)
+        if cached is not None:
+            return cached
+        return fallback_xfile
 
     def plot_intt(self, pg_hdl, rows=None, **kwargs):
         """
@@ -845,23 +841,18 @@ class ViewerKernel(FileLocator):
         if len(self.target) <= 0:
             logger.error("no average target is selected")
             return
-        worker = _get_module("average_toolbox")(
-            self.path, flist=self.target, jid=self.avg_jid
-        )
+        worker = _get_module("average_toolbox")(self.path, flist=self.target)
         worker.setup(*args, **kwargs)
-        self.avg_worker.append(worker)
+        self.avg_worker = worker
         logger.info("create average job, ID = %s", worker.jid)
-        self.avg_jid += 1
         self.target.clear()
-        return
 
-    def remove_job(self, index):
-        self.avg_worker.pop(index)
+    def remove_job(self):
+        self.avg_worker = None
 
-    def update_avg_info(self, jid):
-        self.avg_worker.layoutChanged.emit()
-        if 0 <= jid < len(self.avg_worker):
-            self.avg_worker[jid].update_plot()
+    def update_avg_info(self):
+        if self.avg_worker is not None:
+            self.avg_worker.update_plot()
 
     def update_avg_values(self, data):
         """

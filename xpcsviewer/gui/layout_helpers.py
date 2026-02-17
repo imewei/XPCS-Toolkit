@@ -240,7 +240,7 @@ def apply_all_layout_improvements(main_window: QWidget) -> None:
         "groupBox_6",  # SAXS 1D Plot Setting
         "groupBox_4",  # Stability Plot Setting
         "groupBox_7",  # Intensity-Time Plot Setting
-        "groupBox",    # G2 Data Selection
+        "groupBox",  # G2 Data Selection
         "groupBox_2",  # G2 Fitting
         "groupBox_8",  # Two-time settings
         "groupBox_9",  # Two-time controls

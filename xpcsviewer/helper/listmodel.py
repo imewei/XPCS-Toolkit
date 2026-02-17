@@ -1,6 +1,5 @@
 # Qt imports via compatibility layer
 from xpcsviewer.gui.qt_compat import QtCore
-
 from xpcsviewer.utils.logging_config import get_logger
 
 logger = get_logger(__name__)

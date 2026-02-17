@@ -97,8 +97,17 @@ def create_param_tree(data_dict):
             params.append(
                 {"name": key, "type": "group", "children": create_param_tree(value)}
             )
-        elif isinstance(value, (int, float, np.number)):  # Numeric types
-            params.append({"name": key, "type": "float", "value": float(value)})
+        elif isinstance(value, (int, np.integer)):  # Integer types
+            params.append({"name": key, "type": "int", "value": int(value)})
+        elif isinstance(value, (float, np.floating)):  # Float types
+            params.append(
+                {
+                    "name": key,
+                    "type": "float",
+                    "value": float(value),
+                    "format": "{value:.10g}",
+                }
+            )
         elif isinstance(value, str):  # String types
             params.append({"name": key, "type": "str", "value": value})
         elif isinstance(value, np.ndarray):  # Numpy arrays
@@ -257,7 +266,6 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         self.btn_set_average_save_name.clicked.connect(self.set_average_save_name)
         self.btn_avg_kill.clicked.connect(self.avg_kill_job)
         self.btn_avg_jobinfo.clicked.connect(self.show_avg_jobinfo)
-        self.avg_job_table.clicked.connect(self.update_avg_info)
         self.show_g2_fit_summary.clicked.connect(self.show_g2_fit_summary_func)
         self.btn_g2_export.clicked.connect(self.export_g2)
         self.btn_g2_refit.clicked.connect(self.refit_g2)
@@ -451,16 +459,16 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         tab_name = tab_mapping.get(tab_index, "")
 
         plot_methods = {
-            "saxs_2d": self.plot_saxs_2d,
-            "saxs_1d": self.plot_saxs_1d,
-            "stability": self.plot_stability,
-            "intensity_t": self.plot_intensity_t,
-            "g2": lambda: self.update_plot(),
-            "diffusion": self.plot_diffusion,
-            "twotime": lambda: self.update_plot(),
-            "qmap": lambda: self.update_plot(),
-            "average": lambda: self.update_plot(),
-            "metadata": lambda: self.update_plot(),
+            "saxs_2d": self.update_plot,
+            "saxs_1d": self.update_plot,
+            "stability": self.update_plot,
+            "intensity_t": self.update_plot,
+            "g2": self.update_plot,
+            "diffusion": self.update_plot,
+            "twotime": self.update_plot,
+            "qmap": self.update_plot,
+            "average": self.update_plot,
+            "metadata": self.update_plot,
         }
 
         if tab_name in plot_methods:
@@ -828,15 +836,15 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
             event: The close event
         """
         # Close SimpleMask window if open
-        if hasattr(self, "simplemask_window") and self.simplemask_window is not None:
-            self.simplemask_window.close()
+        if hasattr(self, "_simplemask_window") and self._simplemask_window is not None:
+            self._simplemask_window.close()
 
         # Shutdown async kernel if available
-        if hasattr(self, "async_kernel") and self.async_kernel is not None:
+        if hasattr(self, "async_vk") and self.async_vk is not None:
             try:
-                self.async_kernel.shutdown()
+                self.async_vk.cancel_all_operations()
             except Exception:
-                logger.debug("async_kernel shutdown failed during close", exc_info=True)
+                logger.debug("async_vk shutdown failed during close", exc_info=True)
 
         try:
             session = self._collect_session_state()
@@ -1575,6 +1583,9 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
             self.active_plot_operations[operation_id] = tab_name
 
             # Map tab names to async methods
+            # Note: twotime is included here for manual async calls but is
+            # excluded from the auto-async list in update_plot() to avoid
+            # automatic plotting issues.
             async_method_map = {
                 "saxs_2d": self.async_vk.plot_saxs_2d_async,
                 "g2": self.async_vk.plot_g2_async,
@@ -2448,10 +2459,9 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
             return
 
     def remove_avg_job(self):
-        index = self.avg_job_table.currentIndex().row()
-        if index < 0:
+        if self.vk.avg_worker is None:
             return
-        self.vk.remove_job(index)
+        self.vk.remove_job()
 
     def set_average_save_path(self):
         save_path = QtWidgets.QFileDialog.getExistingDirectory(self, "Open directory")
@@ -2524,33 +2534,29 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         self.update_box(self.vk.target, mode="target")
 
     def update_avg_info(self):
-        index = self.avg_job_table.currentIndex().row()
-        if index < 0 or index >= len(self.vk.avg_worker):
-            self.statusbar.showMessage("select a job to start", 1000)
+        worker = self.vk.avg_worker
+        if worker is None:
+            self.statusbar.showMessage("no averaging job exists", 1000)
             return
 
         self.timer.stop()
-        self.timer.setInterval(1000)
-
+        self.timer.blockSignals(True)
         try:
             self.timer.timeout.disconnect()
-            logger.info("disconnect previous slot")
-        except RuntimeError:
-            # Timer already disconnected or destroyed
+        except (RuntimeError, TypeError):
             pass
+        self.timer.blockSignals(False)
 
-        worker = self.vk.avg_worker[index]
+        self.timer.setInterval(1000)
         worker.initialize_plot(self.mp_avg_g2)
-
-        self.timer.timeout.connect(lambda x=index: self.vk.update_avg_info(x))
+        self.timer.timeout.connect(self.vk.update_avg_info)
         self.timer.start()
 
     def start_avg_job(self):
-        index = self.avg_job_table.currentIndex().row()
-        if index < 0 or index >= len(self.vk.avg_worker):
-            self.statusbar.showMessage("select a job to start", 1000)
+        worker = self.vk.avg_worker
+        if worker is None:
+            self.statusbar.showMessage("no averaging job exists", 1000)
             return
-        worker = self.vk.avg_worker[index]
         if worker.status == "finished":
             self.statusbar.showMessage("this job has finished", 1000)
             return
@@ -2561,15 +2567,15 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         worker.signals.values.connect(self.vk.update_avg_values)
         self.thread_pool.start(worker)
         self.vk.avg_worker_active[worker.jid] = None
+        self.update_avg_info()
 
     def avg_kill_job(self):
-        index = self.avg_job_table.currentIndex().row()
-        if index < 0 or index >= len(self.vk.avg_worker):
-            self.statusbar.showMessage("select a job to kill", 1000)
+        worker = self.vk.avg_worker
+        if worker is None:
+            self.statusbar.showMessage("no averaging job exists", 1000)
             return
-        worker = self.vk.avg_worker[index]
         if worker.status != "running":
-            self.statusbar.showMessage("the selected job isn's running", 1000)
+            self.statusbar.showMessage("the selected job isn't running", 1000)
             return
         worker.kill()
 
@@ -2579,11 +2585,10 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         self.tree.show()
 
     def show_avg_jobinfo(self):
-        index = self.avg_job_table.currentIndex().row()
-        if index < 0 or index >= len(self.vk.avg_worker):
-            logger.info("select a job to show it's settting")
+        worker = self.vk.avg_worker
+        if worker is None:
+            logger.info("no averaging job to show info for")
             return
-        worker = self.vk.avg_worker[index]
         self.tree = worker.get_pg_tree()
         self.tree.show()
 
@@ -3041,7 +3046,6 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         self.init_async_kernel()
 
         self.reload_source()
-        self.avg_job_table.setModel(self.vk.avg_worker)
         self.source_model = self.vk.source
         self.update_box(self.vk.source, mode="source")
 

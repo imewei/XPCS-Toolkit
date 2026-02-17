@@ -331,20 +331,7 @@ def mock_viewer_kernel(mock_xpcs_file):
         mock_kernel.cache = {}  # Add cache attribute for FileLocator compatibility
         mock_kernel.timestamp = "test_timestamp_123"  # Add missing timestamp attribute
         mock_kernel._current_dset_cache = {}  # Add missing current dataset cache
-        # Create a real Qt model for avg_worker
-        from PySide6.QtCore import QAbstractTableModel, QModelIndex
-
-        class MockAvgWorkerModel(QAbstractTableModel):
-            def rowCount(self, parent=QModelIndex()):
-                return 0
-
-            def columnCount(self, parent=QModelIndex()):
-                return 0
-
-            def data(self, index, role):
-                return None
-
-        mock_kernel.avg_worker = MockAvgWorkerModel()
+        mock_kernel.avg_worker = None
         mock_kernel.meta = {"saxs1d_bkg_xf": None}  # Add missing meta attribute
 
         # Mock common methods
@@ -486,14 +473,32 @@ def gui_main_window(qapp, qtbot, mock_viewer_kernel):
                 except ImportError:
                     pass
 
-            # Simply close the window - let Qt handle the rest
-            # Do NOT aggressively delete children as this corrupts pyqtgraph's internal state
-            window.close()
+            # Clean up PyQtGraph graphics objects BEFORE closing the window.
+            # PyQtGraph keeps internal registries (ViewBox.AllViews, etc.) that
+            # accumulate across fixture invocations. Without explicit cleanup,
+            # stale C++ pointers cause segfaults when creating new PlotItems.
+            import gc
 
-            # Process events to allow Qt to clean up properly
+            import pyqtgraph as pg
+
+            # Close all GraphicsLayoutWidgets and PlotWidgets (reverse order)
+            for cls in (pg.GraphicsLayoutWidget, pg.PlotWidget):
+                for child in window.findChildren(cls):
+                    try:
+                        child.close()
+                        child.deleteLater()
+                    except RuntimeError:
+                        pass  # Already deleted C++ side
+
+            window.close()
+            window.deleteLater()
+
             app = QtWidgets.QApplication.instance()
             if app:
-                app.processEvents()
+                app.processEvents()  # Execute deleteLater calls
+            gc.collect()  # Release Python refs to C++ objects
+            if app:
+                app.processEvents()  # Process any final cleanup events
 
         except Exception as e:
             # Don't let cleanup failures break tests

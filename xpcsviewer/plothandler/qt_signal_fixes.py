@@ -12,13 +12,7 @@ from contextlib import contextmanager
 from typing import Any
 
 # Qt imports via compatibility layer
-from xpcsviewer.gui.qt_compat import (
-    QMetaMethod,
-    QObject,
-    Qt,
-    QtWidgets,
-    Signal,
-)
+from xpcsviewer.gui.qt_compat import QMetaMethod, QObject, Qt, QtWidgets, Signal
 
 from ..utils.logging_config import get_logger
 

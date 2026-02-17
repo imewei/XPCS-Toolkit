@@ -71,11 +71,7 @@ def take_snapshot(output_path: Path, input_path: str | None, wait_time: float) -
         time.sleep(wait_time)
         app.processEvents()
 
-    screen = app.primaryScreen()
-    if screen is None:
-        raise RuntimeError("No primary screen available for offscreen capture")
-
-    pixmap = screen.grabWindow(int(viewer.winId()))
+    pixmap = viewer.grab()
     if not pixmap.save(str(output_path), "PNG"):
         raise RuntimeError(f"Failed to write snapshot to {output_path}")
 

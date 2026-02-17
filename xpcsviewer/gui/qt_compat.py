@@ -28,9 +28,12 @@ os.environ.setdefault("QT_API", "pyside6")
 # Import Qt modules through qtpy
 from qtpy import QtCore, QtGui, QtWidgets
 
+# Import QMetaMethod and QMetaObject for signal inspection
 # Import commonly used Qt classes from QtCore
 from qtpy.QtCore import (
     Property,
+    QMetaMethod,
+    QMetaObject,
     QModelIndex,
     QObject,
     QPoint,
@@ -44,6 +47,20 @@ from qtpy.QtCore import (
     QUrl,
     Signal,
     Slot,
+)
+
+# Import commonly used Qt classes from QtGui
+from qtpy.QtGui import QAction as QGuiAction
+from qtpy.QtGui import (
+    QColor,
+    QDesktopServices,
+    QFont,
+    QGuiApplication,
+    QIcon,
+    QKeySequence,
+    QPalette,
+    QPixmap,
+    QShortcut,
 )
 
 # Import commonly used Qt classes from QtWidgets
@@ -90,23 +107,6 @@ from qtpy.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
-
-# Import commonly used Qt classes from QtGui
-from qtpy.QtGui import (
-    QAction as QGuiAction,
-    QColor,
-    QDesktopServices,
-    QFont,
-    QGuiApplication,
-    QIcon,
-    QKeySequence,
-    QPalette,
-    QPixmap,
-    QShortcut,
-)
-
-# Import QMetaMethod and QMetaObject for signal inspection
-from qtpy.QtCore import QMetaMethod, QMetaObject
 
 # Re-export __all__ for explicit public API
 __all__ = [

@@ -455,9 +455,10 @@ class TestMetadataTab:
         # Initialize the viewer kernel (it's None by default when path=None)
         window.vk = mock_viewer_kernel
 
-        # Switch to metadata tab (index 10 after g2_map was added)
-        if tab_widget.count() > 10:
-            gui_test_helpers.click_tab(qtbot, tab_widget, 10)
+        # Switch to metadata tab (index 11: SAXS-2D, SAXS-1D, Stability,
+        # Intensity-Time, g2, g2 fitting, g2 map, Diffusion, Two Time, QMap, Average, Metadata)
+        if tab_widget.count() > 11:
+            gui_test_helpers.click_tab(qtbot, tab_widget, 11)
             current_widget = tab_widget.currentWidget()
 
             assert current_widget is not None
@@ -482,9 +483,9 @@ class TestMetadataTab:
         # Initialize the viewer kernel (it's None by default when path=None)
         window.vk = mock_viewer_kernel
 
-        # Switch to metadata tab (index 10 after g2_map was added)
-        if tab_widget.count() > 10:
-            gui_test_helpers.click_tab(qtbot, tab_widget, 10)
+        # Switch to metadata tab (index 11)
+        if tab_widget.count() > 11:
+            gui_test_helpers.click_tab(qtbot, tab_widget, 11)
             current_widget = tab_widget.currentWidget()
 
             # Mock metadata

@@ -11,7 +11,6 @@ from typing import Literal
 
 # Qt imports via compatibility layer
 from xpcsviewer.gui.qt_compat import QApplication, QGuiApplication, QObject, Signal
-
 from xpcsviewer.gui.state.preferences import load_preferences, save_preferences
 from xpcsviewer.gui.theme.tokens import (
     DARK_TOKENS,

@@ -171,18 +171,13 @@ class TestSimpleMaskSignals:
 class TestSimpleMaskFromViewer:
     """Tests for launching SimpleMask from XPCS Viewer."""
 
-    def test_mask_editor_tab_exists(self, gui_main_window, qtbot):
-        """Mask Editor tab should exist in XPCS Viewer."""
-        # Find the Mask Editor tab
-        tab_widget = gui_main_window.tabWidget
-        mask_editor_index = -1
-
-        for i in range(tab_widget.count()):
-            if "mask" in tab_widget.tabText(i).lower():
-                mask_editor_index = i
-                break
-
-        assert mask_editor_index >= 0, "Mask Editor tab not found"
+    def test_mask_editor_action_exists(self, gui_main_window, qtbot):
+        """Mask Editor should be accessible from XPCS Viewer toolbar."""
+        # Mask Editor is a toolbar action, not a tab — verify the method exists
+        assert hasattr(gui_main_window, "open_simplemask"), (
+            "open_simplemask method not found on XpcsViewer"
+        )
+        assert callable(gui_main_window.open_simplemask)
 
     def test_open_simplemask_creates_window(self, gui_main_window, qtbot):
         """open_simplemask should create SimpleMask window."""

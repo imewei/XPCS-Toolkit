@@ -10,8 +10,6 @@ from unittest.mock import Mock, patch
 import pytest
 
 from xpcsviewer.file_locator import FileLocator
-from xpcsviewer.helper.listmodel import TableDataModel
-from xpcsviewer.module.average_toolbox import AverageToolbox
 from xpcsviewer.viewer_kernel import ViewerKernel
 
 
@@ -29,9 +27,7 @@ class TestViewerKernelInit:
         assert kernel.path == temp_dir
         assert kernel.statusbar is None
         assert kernel.meta is not None
-        assert isinstance(kernel.avg_tb, AverageToolbox)
-        assert isinstance(kernel.avg_worker, TableDataModel)
-        assert kernel.avg_jid == 0
+        assert kernel.avg_worker is None
         assert isinstance(kernel.avg_worker_active, dict)
 
         # Check memory management attributes
@@ -119,35 +115,41 @@ class TestViewerKernelMemoryManagement:
         assert kernel._memory_cleanup_threshold == 0.9
 
 
-class TestViewerKernelAverageToolbox:
-    """Test suite for ViewerKernel average toolbox integration."""
+class TestViewerKernelAverageWorker:
+    """Test suite for ViewerKernel single average worker."""
 
-    @patch("xpcsviewer.viewer_kernel._get_module")
-    def test_average_toolbox_initialization(self, mock_get_module, temp_dir):
-        """Test AverageToolbox initialization."""
-        mock_avg_tb_class = Mock()
-        mock_avg_tb = Mock()
-        mock_avg_tb_class.return_value = mock_avg_tb
-        mock_get_module.return_value = mock_avg_tb_class
-
+    def test_avg_worker_starts_none(self, temp_dir):
+        """Test average worker is None on init."""
         kernel = ViewerKernel(temp_dir)
 
-        mock_get_module.assert_called_with("average_toolbox")
-        mock_avg_tb_class.assert_called_once_with(temp_dir)
-        assert kernel.avg_tb is mock_avg_tb
-
-    @patch("xpcsviewer.viewer_kernel.TableDataModel")
-    def test_avg_worker_initialization(self, mock_table_model_class, temp_dir):
-        """Test average worker model initialization."""
-        mock_model = Mock()
-        mock_table_model_class.return_value = mock_model
-
-        kernel = ViewerKernel(temp_dir)
-
-        mock_table_model_class.assert_called_once()
-        assert kernel.avg_worker is mock_model
-        assert kernel.avg_jid == 0
+        assert kernel.avg_worker is None
         assert isinstance(kernel.avg_worker_active, dict)
+
+    def test_remove_job_clears_worker(self, temp_dir):
+        """Test remove_job sets worker to None."""
+        kernel = ViewerKernel(temp_dir)
+        kernel.avg_worker = Mock()
+
+        kernel.remove_job()
+
+        assert kernel.avg_worker is None
+
+    def test_update_avg_info_with_no_worker(self, temp_dir):
+        """Test update_avg_info is safe when no worker exists."""
+        kernel = ViewerKernel(temp_dir)
+
+        # Should not raise
+        kernel.update_avg_info()
+
+    def test_update_avg_info_calls_update_plot(self, temp_dir):
+        """Test update_avg_info calls worker.update_plot()."""
+        kernel = ViewerKernel(temp_dir)
+        mock_worker = Mock()
+        kernel.avg_worker = mock_worker
+
+        kernel.update_avg_info()
+
+        mock_worker.update_plot.assert_called_once()
 
 
 class TestViewerKernelInheritance:
@@ -193,16 +195,6 @@ class TestViewerKernelProperties:
         new_statusbar = Mock()
         kernel.statusbar = new_statusbar
         assert kernel.statusbar is new_statusbar
-
-    def test_avg_jid_counter(self, temp_dir):
-        """Test average job ID counter."""
-        kernel = ViewerKernel(temp_dir)
-
-        assert kernel.avg_jid == 0
-
-        # Should be modifiable for job tracking
-        kernel.avg_jid = 5
-        assert kernel.avg_jid == 5
 
 
 class TestViewerKernelWeakReferences:

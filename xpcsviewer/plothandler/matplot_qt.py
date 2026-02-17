@@ -17,12 +17,11 @@ from matplotlib.figure import Figure
 # Qt imports via compatibility layer
 from xpcsviewer.gui.qt_compat import (
     QHBoxLayout,
-    QVBoxLayout,
-    QWidget,
     QtCore,
     QtWidgets,
+    QVBoxLayout,
+    QWidget,
 )
-
 from xpcsviewer.utils.logging_config import get_logger
 
 from .plot_constants import MATPLOTLIB_COLORS_HEX as colors

@@ -7,13 +7,7 @@ This module provides centralized shortcut registration and management.
 from typing import Callable
 
 # Qt imports via compatibility layer
-from xpcsviewer.gui.qt_compat import (
-    QKeySequence,
-    QObject,
-    QShortcut,
-    QWidget,
-    Signal,
-)
+from xpcsviewer.gui.qt_compat import QKeySequence, QObject, QShortcut, QWidget, Signal
 
 
 class ShortcutManager(QObject):
