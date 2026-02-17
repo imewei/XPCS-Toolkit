@@ -518,8 +518,8 @@ def get_single_c2_from_hdf(
         )
 
         # Read G2 partials in the same file operation
-        g2_full_key = key_map["c2_g2"]  # Dataset {5000, 25}
-        g2_partial_key = key_map["c2_g2_segments"]  # Dataset {1000, 5, 25}
+        g2_full_key = key_map_nexus["c2_g2"]  # Dataset {5000, 25}
+        g2_partial_key = key_map_nexus["c2_g2_segments"]  # Dataset {1000, 5, 25}
 
         g2_full = f[g2_full_key][()]
         g2_partial = f[g2_partial_key][()]
