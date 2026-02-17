@@ -4,8 +4,7 @@ import os
 import time
 import traceback
 import uuid
-from concurrent.futures import (ProcessPoolExecutor, ThreadPoolExecutor,
-                                as_completed)
+from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor, as_completed
 from shutil import copyfile
 
 # Third-party imports
@@ -64,6 +63,7 @@ class WorkerSignal(QObject):
     progress = QtCore.Signal(tuple)
     values = QtCore.Signal(tuple)
     status = QtCore.Signal(tuple)
+    finished = QtCore.Signal()
 
 
 class AverageToolbox(QtCore.QRunnable):
@@ -250,8 +250,11 @@ class AverageToolbox(QtCore.QRunnable):
         self.status = "finished"
         self.signals.status.emit((self.jid, self.status))
         self.etime = time.strftime("%H:%M:%S")
-        self.model.layoutChanged.emit()
+        QtCore.QMetaObject.invokeMethod(
+            self.model, "layoutChanged", QtCore.Qt.QueuedConnection
+        )
         self.signals.progress.emit((self.jid, 100))
+        self.signals.finished.emit()
         logger.info("average job %d finished", self.jid)
         return  # Return None since we deleted result to save memory
 
@@ -327,8 +330,7 @@ class AverageToolbox(QtCore.QRunnable):
                 # Periodic memory cleanup every 10 files (gen0 only for speed)
                 if m % 10 == 0:
                     try:
-                        from ..threading.cleanup_optimized import \
-                            smart_gc_collect
+                        from ..threading.cleanup_optimized import smart_gc_collect
 
                         smart_gc_collect("average_toolbox_periodic_cleanup")
                     except ImportError:
@@ -345,8 +347,7 @@ class AverageToolbox(QtCore.QRunnable):
                         )
                         # Force more frequent garbage collection
                         try:
-                            from ..threading.cleanup_optimized import \
-                                smart_gc_collect
+                            from ..threading.cleanup_optimized import smart_gc_collect
 
                             smart_gc_collect("average_toolbox_memory_pressure")
                         except ImportError:

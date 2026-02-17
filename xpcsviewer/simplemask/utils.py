@@ -127,6 +127,11 @@ def _get_partition_linear_jit():
             num_pts = v_span.shape[0] - 1
             v_list = (v_span[1:] + v_span[:-1]) / 2.0
 
+            # Round to 12 decimals to avoid IEEE 754 bin-edge misassignment
+            xmap_b = jnp.round(xmap_b, decimals=12)
+            v_span = jnp.round(v_span, decimals=12)
+            v_max = jnp.round(v_max, decimals=12)
+
             # Digitize: find bin indices
             partition = jnp.digitize(xmap_b, v_span) * mask_b
             partition = jnp.where(partition > num_pts, 0, partition)
@@ -171,6 +176,11 @@ def _get_partition_log_jit():
             """
             num_pts = v_span.shape[0] - 1
             v_list = jnp.sqrt(v_span[1:] * v_span[:-1])
+
+            # Round to 12 decimals to avoid IEEE 754 bin-edge misassignment
+            xmap_b = jnp.round(xmap_b, decimals=12)
+            v_span = jnp.round(v_span, decimals=12)
+            v_max = jnp.round(v_max, decimals=12)
 
             # Digitize: find bin indices
             partition = jnp.digitize(xmap_b, v_span) * mask_b
@@ -266,8 +276,8 @@ def _generate_partition_backend(
 
     # Use where to extract valid values for min/max computation
     valid_values = backend.where(roi, xmap_b, backend.array(float("nan")))
-    v_min = float(backend.nanmin(valid_values))
-    v_max = float(backend.nanmax(valid_values))
+    v_min = backend.nanmin(valid_values)
+    v_max = backend.nanmax(valid_values)
 
     # Try to use JIT-compiled versions for JAX backend
     if map_name == "q" and style == "logarithmic":
@@ -278,7 +288,7 @@ def _generate_partition_backend(
             raise ValueError(
                 "Invalid xmap values for logarithmic binning. All values are non-positive."
             )
-        v_min = float(backend.nanmin(valid_xmap))
+        v_min = backend.nanmin(valid_xmap)
         xmap_b = backend.where(xmap_b > 0, xmap_b, backend.array(float("nan")))
 
         # Pre-compute v_span (needs concrete num_pts value)
@@ -302,10 +312,14 @@ def _generate_partition_backend(
         else:
             # Non-JIT path
             v_list = backend.sqrt(v_span[1:] * v_span[:-1])
+            # Round to 12 decimals to avoid IEEE 754 bin-edge misassignment
+            xmap_b = backend.round(xmap_b, decimals=12)
+            v_span = backend.round(v_span, decimals=12)
+            v_max_r = backend.round(backend.array(v_max), decimals=12)
             partition = backend.digitize(xmap_b, v_span) * mask_b
             partition = backend.where(partition > num_pts, backend.array(0), partition)
             partition = backend.where(
-                (xmap_b == v_max) * mask_b, backend.array(num_pts), partition
+                (xmap_b == v_max_r) * mask_b, backend.array(num_pts), partition
             )
     else:
         # Pre-compute v_span (needs concrete num_pts value)
@@ -325,10 +339,14 @@ def _generate_partition_backend(
         else:
             # Non-JIT path
             v_list = (v_span[1:] + v_span[:-1]) / 2.0
+            # Round to 12 decimals to avoid IEEE 754 bin-edge misassignment
+            xmap_b = backend.round(xmap_b, decimals=12)
+            v_span = backend.round(v_span, decimals=12)
+            v_max_r = backend.round(backend.array(v_max), decimals=12)
             partition = backend.digitize(xmap_b, v_span) * mask_b
             partition = backend.where(partition > num_pts, backend.array(0), partition)
             partition = backend.where(
-                (xmap_b == v_max) * mask_b, backend.array(num_pts), partition
+                (xmap_b == v_max_r) * mask_b, backend.array(num_pts), partition
             )
 
     # Convert to NumPy for output (I/O boundary)

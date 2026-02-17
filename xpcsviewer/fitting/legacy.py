@@ -382,7 +382,9 @@ def sequential_fitting(
                 logger.debug("NLSQ multistart fitting succeeded")
                 return popt, pcov, "nlsq_multistart"
             # popt is valid but pcov is not - use popt with fallback covariance
-            logger.debug("NLSQ fitting: popt valid but pcov invalid, using fallback pcov")
+            logger.debug(
+                "NLSQ fitting: popt valid but pcov invalid, using fallback pcov"
+            )
             return popt, np.eye(n_params) * 1e6, "nlsq_partial"
 
     except Exception as e:

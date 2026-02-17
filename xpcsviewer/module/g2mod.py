@@ -373,9 +373,12 @@ def pg_plot(
                     fit_summary["fit_val"] is not None
                     and len(fit_summary["fit_val"]) > 0
                 ):
-                    # Extract baseline parameter (parameter index 3 for single exponential)
+                    # Extract baseline: model is a*exp(-2x/b) + c + d, so baseline = c + d (params 2 and 3)
                     try:
-                        baseline_offset = fit_summary["fit_val"][:, 0, 3]
+                        baseline_offset = (
+                            fit_summary["fit_val"][:, 0, 2]
+                            + fit_summary["fit_val"][:, 0, 3]
+                        )
                     except (IndexError, TypeError):
                         # Fallback to default baseline if shape doesn't match
                         baseline_offset = np.ones(num_qval)

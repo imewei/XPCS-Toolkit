@@ -9,6 +9,7 @@ Ported from pySimpleMask with backend abstraction for JAX support.
 
 from __future__ import annotations
 
+import copy
 import logging
 from functools import lru_cache
 from typing import TYPE_CHECKING, Any, Callable
@@ -145,6 +146,7 @@ def _get_transmission_qmap_jit():
 
             # Scattering angle
             alpha = jnp.arctan(r / det_dist)
+            alpha_deg = jnp.rad2deg(alpha)
 
             # Q components
             qr = jnp.sin(alpha) * k0
@@ -152,7 +154,7 @@ def _get_transmission_qmap_jit():
             qy = qr * jnp.sin(phi)
             phi_deg = jnp.rad2deg(phi)
 
-            return phi_deg, alpha, qr, qx, qy, hg, vg
+            return phi_deg, alpha_deg, qr, qx, qy, hg, vg
 
         _JIT_CACHE[cache_key] = _transmission_qmap_core
         logger.debug("Created JIT-compiled transmission Q-map function")
@@ -214,7 +216,9 @@ def compute_q_at_pixel(
     # Q magnitude
     q = backend.sin(alpha) * k0
 
-    return float(q) if backend.name != "jax" else q
+    # Always return a Python float for consistent display behavior.
+    # For gradient use cases, use compute_q_sum_squared or inline JAX computation.
+    return float(q)
 
 
 def compute_q_sum_squared(
@@ -387,15 +391,28 @@ def _compute_transmission_qmap_backend(
         qy = qr * backend.sin(phi)
         phi_deg = backend.rad2deg(phi)
 
+    # Create absolute pixel-index meshgrids (0..N-1) for status bar display.
+    # These are independent of beam center, unlike hg/vg which are offsets.
+    pix_y, pix_x = np.meshgrid(
+        np.arange(shape[0], dtype=np.int32),
+        np.arange(shape[1], dtype=np.int32),
+        indexing="ij",
+    )
+
+    # Convert alpha to degrees (JIT path already returns degrees,
+    # non-JIT path returns radians)
+    if jit_fn is None:
+        alpha = backend.rad2deg(alpha)
+
     # Convert all arrays to NumPy for output (I/O boundary)
     qmap = {
         "phi": ensure_numpy(phi_deg),
-        "TTH": ensure_numpy(alpha).astype(np.float32),
+        "TTH": ensure_numpy(alpha),
         "q": ensure_numpy(qr),
-        "qx": ensure_numpy(qx).astype(np.float32),
-        "qy": ensure_numpy(qy).astype(np.float32),
-        "x": ensure_numpy(hg).astype(np.int32),
-        "y": ensure_numpy(vg).astype(np.int32),
+        "qx": ensure_numpy(qx),
+        "qy": ensure_numpy(qy),
+        "x": pix_x,
+        "y": pix_y,
     }
 
     qmap_unit = {
@@ -411,6 +428,17 @@ def _compute_transmission_qmap_backend(
 
 
 @lru_cache(maxsize=4)  # Reduced from 128 to limit memory usage
+def _compute_transmission_qmap_cached(
+    energy: float,
+    center: tuple[float, float],
+    shape: tuple[int, int],
+    pix_dim: float,
+    det_dist: float,
+) -> tuple[dict[str, np.ndarray], dict[str, str]]:
+    """Cached inner computation for transmission Q-map."""
+    return _compute_transmission_qmap_backend(energy, center, shape, pix_dim, det_dist)
+
+
 def compute_transmission_qmap(
     energy: float,
     center: tuple[float, float],
@@ -433,14 +461,22 @@ def compute_transmission_qmap(
         qmap contains:
 
         - phi: Azimuthal angle (degrees)
-        - TTH: Two-theta angle (radians stored as float32)
+        - TTH: Two-theta angle (degrees)
         - q: Momentum transfer magnitude (Angstrom^-1)
         - qx, qy: Q components (Angstrom^-1)
         - x, y: Pixel coordinates
 
         qmap_unit contains unit strings for each map.
     """
-    return _compute_transmission_qmap_backend(energy, center, shape, pix_dim, det_dist)
+    qmap, qmap_unit = _compute_transmission_qmap_cached(
+        energy, center, shape, pix_dim, det_dist
+    )
+    return copy.deepcopy(qmap), qmap_unit.copy()
+
+
+# Expose lru_cache methods on the public wrapper for tests/callers
+compute_transmission_qmap.cache_clear = _compute_transmission_qmap_cached.cache_clear
+compute_transmission_qmap.cache_info = _compute_transmission_qmap_cached.cache_info
 
 
 def _get_reflection_qmap_jit(orientation: str):
@@ -614,6 +650,14 @@ def _compute_reflection_qmap_backend(
         tth_deg = backend.rad2deg(tth)
         alpha_f_deg = backend.rad2deg(alpha_f)
 
+    # Create absolute pixel-index meshgrids (0..N-1) for status bar display.
+    # These are independent of beam center, unlike hg/vg which are offsets.
+    pix_y, pix_x = np.meshgrid(
+        np.arange(shape[0], dtype=np.int32),
+        np.arange(shape[1], dtype=np.int32),
+        indexing="ij",
+    )
+
     qmap = {
         "phi": ensure_numpy(phi_deg),
         "TTH": ensure_numpy(tth_full_deg),
@@ -624,8 +668,8 @@ def _compute_reflection_qmap_backend(
         "qz": ensure_numpy(qz),
         "qr": ensure_numpy(qr),
         "q": ensure_numpy(q),
-        "x": ensure_numpy(hg).astype(np.int32),
-        "y": ensure_numpy(-vg).astype(np.int32),
+        "x": pix_x,
+        "y": pix_y,
     }
 
     qmap_unit = {
@@ -645,6 +689,21 @@ def _compute_reflection_qmap_backend(
 
 
 @lru_cache(maxsize=4)  # Reduced from 128 to limit memory usage
+def _compute_reflection_qmap_cached(
+    energy: float,
+    center: tuple[float, float],
+    shape: tuple[int, int],
+    pix_dim: float,
+    det_dist: float,
+    alpha_i_deg: float = 0.14,
+    orientation: str = "north",
+) -> tuple[dict[str, np.ndarray], dict[str, str]]:
+    """Cached inner computation for reflection Q-map."""
+    return _compute_reflection_qmap_backend(
+        energy, center, shape, pix_dim, det_dist, alpha_i_deg, orientation
+    )
+
+
 def compute_reflection_qmap(
     energy: float,
     center: tuple[float, float],
@@ -674,6 +733,12 @@ def compute_reflection_qmap(
         - alpha_f: Exit angle
         - tth: In-plane two-theta
     """
-    return _compute_reflection_qmap_backend(
+    qmap, qmap_unit = _compute_reflection_qmap_cached(
         energy, center, shape, pix_dim, det_dist, alpha_i_deg, orientation
     )
+    return copy.deepcopy(qmap), qmap_unit.copy()
+
+
+# Expose lru_cache methods on the public wrapper for tests/callers
+compute_reflection_qmap.cache_clear = _compute_reflection_qmap_cached.cache_clear
+compute_reflection_qmap.cache_info = _compute_reflection_qmap_cached.cache_info

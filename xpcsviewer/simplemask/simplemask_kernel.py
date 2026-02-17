@@ -579,6 +579,15 @@ class SimpleMaskKernel:
         logger.info(f"dqmap/sqmap consistency check: {flag_consistency}")
 
         center = self.get_center()
+
+        # Warn when using default physical constants
+        _defaults = {"pix_dim": 0.075, "energy": 10.0, "det_dist": 5000.0}
+        for _key, _default in _defaults.items():
+            if _key not in self.metadata or self.metadata[_key] is None:
+                logger.warning(
+                    f"Using default {_key}={_default} — no value found in metadata"
+                )
+
         partition = {
             "beam_center_x": center[0],
             "beam_center_y": center[1],

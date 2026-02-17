@@ -376,13 +376,16 @@ def run_double_exp_fit(
 
     # Run MCMC with warm-start
     logger.info("Running NUTS sampling")
+    # Clamp tau2_factor to avoid extreme values from NLSQ warm-start
+    tau2_factor = max(0.01, min(nlsq_init["tau2"] / nlsq_init["tau1"] - 1, 1000.0))
+
     mcmc, samples = _run_mcmc(
         double_exp_model,
         (x_jax, y_jax, yerr_jax),
         config,
         init_params={
             "tau1": nlsq_init["tau1"],
-            "tau2_factor": nlsq_init["tau2"] / nlsq_init["tau1"] - 1,
+            "tau2_factor": tau2_factor,
             "baseline": nlsq_init["baseline"],
             "contrast1": nlsq_init["contrast1"],
             "contrast2": nlsq_init["contrast2"],

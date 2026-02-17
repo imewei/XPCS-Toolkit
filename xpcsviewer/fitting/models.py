@@ -163,6 +163,9 @@ def stretched_exp_model(
     # Stretching exponent typically in (0, 1) for subdiffusion
     beta = numpyro.sample("beta", dist.Beta(2.0, 2.0))
 
+    # Clamp x to avoid NaN gradient from 0^beta when beta < 1
+    x = jnp.maximum(x, 1e-30)
+
     # Model prediction
     mu = baseline + contrast * jnp.exp(-jnp.power(2 * x / tau, beta))
 
@@ -253,6 +256,7 @@ def stretched_exp_func(x, tau, baseline, contrast, beta):
     Uses jax.numpy for JAX compatibility during optimization.
     JIT-compiled for accelerated execution.
     """
+    x = _xnp.maximum(x, 1e-30)
     tau = _xnp.clip(tau, 1e-30)
     return baseline + contrast * _xnp.exp(-_xnp.power(2 * x / tau, beta))
 
