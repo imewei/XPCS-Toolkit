@@ -69,6 +69,15 @@ class QMapSchema:
 
     def __post_init__(self):
         """Validate Q-map schema after initialization."""
+        # Defensive copy of array fields to prevent external mutation
+        object.__setattr__(self, "sqmap", np.copy(self.sqmap))
+        object.__setattr__(self, "dqmap", np.copy(self.dqmap))
+        object.__setattr__(self, "phis", np.copy(self.phis))
+        if self.mask is not None:
+            object.__setattr__(self, "mask", np.copy(self.mask))
+        if self.partition_map is not None:
+            object.__setattr__(self, "partition_map", np.copy(self.partition_map))
+
         # Shape validation
         if not (self.sqmap.shape == self.dqmap.shape == self.phis.shape):
             raise ValueError(
@@ -132,10 +141,15 @@ class QMapSchema:
     def from_dict(cls, data: dict) -> QMapSchema:
         """Create QMapSchema from legacy dictionary.
 
+        Supports both schema naming (sqmap, dqmap, phis) and compute_qmap
+        naming (q, phi). Falls back to compute_qmap keys when schema keys
+        are not present.
+
         Parameters
         ----------
         data : dict
-            Dictionary with keys: sqmap, dqmap, phis, sqmap_unit, dqmap_unit, phis_unit,
+            Dictionary with keys: sqmap/q, dqmap, phis/phi,
+            sqmap_unit, dqmap_unit, phis_unit,
             and optionally mask, partition_map
 
         Returns
@@ -143,15 +157,73 @@ class QMapSchema:
         QMapSchema
             Validated Q-map schema instance
         """
+        # Support both naming conventions: schema (sqmap) and compute_qmap (q)
+        sqmap = data.get("sqmap", data.get("q"))
+        if sqmap is None:
+            raise KeyError("Dictionary must contain 'sqmap' or 'q' key")
+
+        phis = data.get("phis", data.get("phi"))
+        if phis is None:
+            raise KeyError("Dictionary must contain 'phis' or 'phi' key")
+
+        # dqmap may not exist in compute_qmap output; default to zeros
+        dqmap = data.get("dqmap")
+        if dqmap is None:
+            dqmap = np.zeros_like(sqmap, dtype=np.float64)
+
         return cls(
-            sqmap=data["sqmap"],
-            dqmap=data["dqmap"],
-            phis=data["phis"],
-            sqmap_unit=data["sqmap_unit"],
-            dqmap_unit=data["dqmap_unit"],
-            phis_unit=data["phis_unit"],
+            sqmap=sqmap,
+            dqmap=dqmap,
+            phis=phis,
+            sqmap_unit=data.get("sqmap_unit", "A^-1"),
+            dqmap_unit=data.get("dqmap_unit", "A^-1"),
+            phis_unit=data.get("phis_unit", "deg"),
             mask=data.get("mask"),
             partition_map=data.get("partition_map"),
+        )
+
+    @classmethod
+    def from_compute_qmap(
+        cls,
+        qmap_dict: dict[str, np.ndarray],
+        units_dict: dict[str, str],
+    ) -> QMapSchema:
+        """Create QMapSchema from compute_qmap output.
+
+        Maps compute_qmap keys (q, phi) to schema fields (sqmap, phis).
+        The dqmap field is set to zeros since compute_qmap does not produce it.
+
+        Parameters
+        ----------
+        qmap_dict : dict[str, np.ndarray]
+            Dictionary from compute_qmap with keys: q, phi, TTH, qx, qy, x, y
+        units_dict : dict[str, str]
+            Dictionary from compute_qmap with unit strings for each key
+
+        Returns
+        -------
+        QMapSchema
+            Validated Q-map schema instance
+        """
+        sqmap = np.asarray(qmap_dict["q"], dtype=np.float64)
+        phis = np.asarray(qmap_dict["phi"], dtype=np.float64)
+        dqmap = np.zeros_like(sqmap, dtype=np.float64)
+
+        # Map compute_qmap unit conventions to schema unit literals
+        q_unit = units_dict.get("q", "A^-1")
+        phi_unit = units_dict.get("phi", "deg")
+
+        # Normalize unit strings to schema literals
+        sqmap_unit = "A^-1" if "Å" in q_unit or "A" in q_unit else "nm^-1"
+        phis_unit = "rad" if phi_unit == "rad" else "deg"
+
+        return cls(
+            sqmap=sqmap,
+            dqmap=dqmap,
+            phis=phis,
+            sqmap_unit=sqmap_unit,
+            dqmap_unit=sqmap_unit,
+            phis_unit=phis_unit,
         )
 
     def to_dict(self) -> dict:
@@ -294,9 +366,10 @@ class G2Data:
     Attributes
     ----------
     g2 : np.ndarray
-        G2 correlation values, shape=(n_q, n_delay), dtype=float64
+        G2 correlation values, shape=(n_delay, n_q), dtype=float64.
+        Axis 0 is time (delay), axis 1 is momentum transfer (Q).
     g2_err : np.ndarray
-        G2 correlation errors, shape=(n_q, n_delay), dtype=float64
+        G2 correlation errors, shape=(n_delay, n_q), dtype=float64
     delay_times : np.ndarray
         Delay times in seconds, shape=(n_delay,), dtype=float64
     q_values : list[float]
@@ -310,6 +383,11 @@ class G2Data:
 
     def __post_init__(self):
         """Validate G2 data after initialization."""
+        # Defensive copy of array fields to prevent external mutation
+        object.__setattr__(self, "g2", np.copy(self.g2))
+        object.__setattr__(self, "g2_err", np.copy(self.g2_err))
+        object.__setattr__(self, "delay_times", np.copy(self.delay_times))
+
         # Shape consistency validation
         if self.g2.shape != self.g2_err.shape:
             raise ValueError(
@@ -320,23 +398,23 @@ class G2Data:
         # Dimension validation
         if len(self.g2.shape) != 2:
             raise ValueError(
-                f"g2 must be 2D array (n_q, n_delay). Got shape={self.g2.shape}"
+                f"g2 must be 2D array (n_delay, n_q). Got shape={self.g2.shape}"
             )
 
-        n_q, n_delay = self.g2.shape
+        n_delay, n_q = self.g2.shape
 
         # Delay times validation
         if len(self.delay_times) != n_delay:
             raise ValueError(
                 f"delay_times length ({len(self.delay_times)}) must match "
-                f"g2 second dimension ({n_delay})"
+                f"g2 first dimension ({n_delay})"
             )
 
         # Q values validation
         if len(self.q_values) != n_q:
             raise ValueError(
                 f"q_values length ({len(self.q_values)}) must match "
-                f"g2 first dimension ({n_q})"
+                f"g2 second dimension ({n_q})"
             )
 
         # Dtype validation
@@ -438,6 +516,11 @@ class PartitionSchema:
 
     def __post_init__(self):
         """Validate partition schema after initialization."""
+        # Defensive copy of array fields to prevent external mutation
+        object.__setattr__(self, "partition_map", np.copy(self.partition_map))
+        if self.mask is not None:
+            object.__setattr__(self, "mask", np.copy(self.mask))
+
         # Positive value validation
         if self.num_pts <= 0:
             raise ValueError(f"num_pts must be positive, got {self.num_pts}")
@@ -570,6 +653,9 @@ class MaskSchema:
 
     def __post_init__(self):
         """Validate mask schema after initialization."""
+        # Defensive copy of array fields to prevent external mutation
+        object.__setattr__(self, "mask", np.copy(self.mask))
+
         # Dimension validation
         if len(self.mask.shape) != 2:
             raise ValueError(f"mask must be 2D array. Got shape={self.mask.shape}")

@@ -30,6 +30,8 @@ def isNeXusFile(fname):
         True if file contains NeXus metadata structure.
     """
     logger.debug(f"Checking if {fname} is NeXus file")
+    if not h5py.is_hdf5(fname):
+        return False
     try:
         with h5py.File(fname, "r") as f:
             if "/entry/instrument/bluesky/metadata/" in f:
@@ -44,6 +46,8 @@ def isNeXusFile(fname):
 
 def isLegacyFile(fname):
     logger.debug(f"Checking if {fname} is legacy file")
+    if not h5py.is_hdf5(fname):
+        return False
     try:
         with h5py.File(fname, "r") as f:
             if "/xpcs/Version" in f:

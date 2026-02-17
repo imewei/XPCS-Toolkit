@@ -108,7 +108,8 @@ class FileLocator:
             logger.info(
                 "Using cached files as fallback for plotting (target list empty)"
             )
-            ret = [xf for xf in self.cache.values() if xf is not None]
+            with self._cache_lock:
+                ret = [xf for xf in self.cache.values() if xf is not None]
             # Apply filters if specified
             if filter_fitted:
                 ret = [xf for xf in ret if xf.fit_summary is not None]

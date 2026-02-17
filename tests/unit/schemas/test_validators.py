@@ -175,8 +175,8 @@ class TestG2DataSchemaValidation:
         # Arrange
         n_q = 10
         n_delay = 50
-        g2 = 1.0 + 0.5 * np.random.rand(n_q, n_delay)
-        g2_err = 0.01 * np.ones((n_q, n_delay))
+        g2 = 1.0 + 0.5 * np.random.rand(n_delay, n_q)
+        g2_err = 0.01 * np.ones((n_delay, n_q))
         delay_times = np.logspace(-6, 2, n_delay)
         q_values = list(np.linspace(0.001, 0.1, n_q))
 
@@ -190,16 +190,16 @@ class TestG2DataSchemaValidation:
 
         # Assert
         assert schema is not None
-        assert schema.g2.shape == (n_q, n_delay)
+        assert schema.g2.shape == (n_delay, n_q)
         assert len(schema.delay_times) == n_delay
 
     def test_g2_data_shape_mismatch(self):
         """Mismatched g2/g2_err shapes should raise ValueError."""
         from xpcsviewer.schemas.validators import G2Data
 
-        # Arrange
-        g2 = np.ones((10, 50))
-        g2_err = np.ones((5, 50))  # Different shape
+        # Arrange — (n_delay, n_q) convention
+        g2 = np.ones((50, 10))
+        g2_err = np.ones((50, 5))  # Different n_q dimension
         delay_times = np.logspace(-6, 2, 50)
         q_values = list(np.linspace(0.001, 0.1, 10))
 
@@ -368,9 +368,9 @@ class TestSchemaConversions:
         """G2Data to_dict returns dictionary."""
         from xpcsviewer.schemas.validators import G2Data
 
-        # Arrange
-        g2 = np.ones((10, 50))
-        g2_err = np.ones((10, 50))
+        # Arrange — (n_delay, n_q) convention
+        g2 = np.ones((50, 10))
+        g2_err = np.ones((50, 10))
         delay_times = np.logspace(-6, 2, 50)
         q_values = list(np.linspace(0.001, 0.1, 10))
 

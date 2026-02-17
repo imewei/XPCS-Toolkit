@@ -469,7 +469,9 @@ class QMap:
         qmap, qmap_units = self.qmap, self.qmap_units
         result = ""
         for key in self.qmap:
-            if key in ["q", "qy", "phi", "alpha", "x", "y"]:
+            if key in ["x", "y"]:
+                result += f" {key}={qmap[key][y, x]:.0f} {qmap_units[key]},"
+            elif key in ["q", "qy", "phi", "alpha"]:
                 result += f" {key}={qmap[key][y, x]:.3f} {qmap_units[key]},"
             elif key in ["qx", "qr"]:
                 # GIXPCS values need higher precision (6 decimals)
@@ -614,6 +616,14 @@ class QMap:
         # Convert to degrees efficiently
         phi_deg = np.rad2deg(phi)
 
+        # Create absolute pixel-index meshgrids (0..N-1) for status bar display.
+        # These are independent of beam center, unlike hg/vg which are offsets.
+        pix_y, pix_x = np.meshgrid(
+            np.arange(shape[0], dtype=np.int32),
+            np.arange(shape[1], dtype=np.int32),
+            indexing="ij",
+        )
+
         # Use memory-efficient data types where precision allows
         qmap = {
             "phi": phi_deg,  # Keep as float64 for precision
@@ -621,8 +631,8 @@ class QMap:
             "q": qr,  # Keep as float64 for precision
             "qx": qx.astype(np.float32),
             "qy": qy.astype(np.float32),
-            "x": hg.astype(np.int32),  # Convert to int for memory efficiency
-            "y": vg.astype(np.int32),
+            "x": pix_x,
+            "y": pix_y,
             "r_pixel": r_pixel.astype(np.float32),  # Add this for ROI calculations
         }
 

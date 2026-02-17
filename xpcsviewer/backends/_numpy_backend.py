@@ -379,3 +379,121 @@ class NumPyBackend:
             "NumPy backend does not support automatic differentiation. "
             "Use JAX backend for gradient computation."
         )
+
+    # =========================================================================
+    # Batch Processing
+    # =========================================================================
+
+    def vmap(
+        self,
+        func: Callable,
+        in_axes: int | tuple[int | None, ...] = 0,
+        out_axes: int = 0,
+    ) -> Callable:
+        """Vectorize function over batch dimension.
+
+        Sequential fallback for NumPy: applies func to each slice along
+        in_axes using a Python loop and stacks results along out_axes.
+        """
+
+        def vmapped(*args):
+            # Determine batch size from first non-None axis
+            if isinstance(in_axes, int):
+                axes = (in_axes,) * len(args)
+            else:
+                axes = in_axes
+
+            batch_size = None
+            for arg, axis in zip(args, axes):
+                if axis is not None:
+                    batch_size = np.asarray(arg).shape[axis]
+                    break
+
+            if batch_size is None:
+                return func(*args)
+
+            results = []
+            for i in range(batch_size):
+                sliced_args = []
+                for arg, axis in zip(args, axes):
+                    if axis is None:
+                        sliced_args.append(arg)
+                    else:
+                        sliced_args.append(np.take(np.asarray(arg), i, axis=axis))
+                results.append(func(*sliced_args))
+
+            return np.stack(results, axis=out_axes)
+
+        return vmapped
+
+    def scan(
+        self,
+        func: Callable,
+        init: Any,
+        xs: Any,
+        length: int | None = None,
+    ) -> tuple[Any, Any]:
+        """Scan over leading array dimension while carrying along state.
+
+        Sequential fallback for NumPy using a Python for-loop accumulator.
+
+        Parameters
+        ----------
+        func : Callable
+            Function (carry, x) -> (carry, y)
+        init : array
+            Initial carry value
+        xs : array
+            Input array to scan over (leading dimension)
+        length : int, optional
+            Number of iterations (inferred from xs if not provided)
+
+        Returns
+        -------
+        tuple
+            (final_carry, stacked_outputs)
+        """
+        if length is None:
+            length = len(xs) if xs is not None else 0
+
+        carry = init
+        ys = []
+        for i in range(length):
+            x = xs[i] if xs is not None else None
+            carry, y = func(carry, x)
+            ys.append(y)
+
+        stacked = np.stack(ys, axis=0) if ys else np.array([])
+        return carry, stacked
+
+    def fori_loop(
+        self,
+        lower: int,
+        upper: int,
+        body_fun: Callable,
+        init_val: Any,
+    ) -> Any:
+        """Execute body function in a loop from lower to upper.
+
+        Sequential fallback for NumPy using a Python for-loop.
+
+        Parameters
+        ----------
+        lower : int
+            Loop start (inclusive)
+        upper : int
+            Loop end (exclusive)
+        body_fun : Callable
+            Function (i, val) -> val
+        init_val : array
+            Initial loop value
+
+        Returns
+        -------
+        array
+            Final loop value
+        """
+        val = init_val
+        for i in range(lower, upper):
+            val = body_fun(i, val)
+        return val
