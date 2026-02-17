@@ -218,11 +218,24 @@ class HDF5ConnectionPool:
         with self._file_locks_lock:
             if fname not in self._file_locks:
                 self._file_locks[fname] = threading.RLock()
-                # Prune if too many locks accumulated
+                # Prune if too many locks accumulated — only remove locks
+                # that are not currently held to avoid corrupting active
+                # critical sections.
                 if len(self._file_locks) > _MAX_FILE_LOCKS:
-                    keys_to_remove = list(self._file_locks.keys())[
-                        : _MAX_FILE_LOCKS // 2
-                    ]
+                    keys_to_remove = []
+                    for key, lock in list(self._file_locks.items()):
+                        if key == fname:
+                            continue
+                        # Try non-blocking acquire: if it succeeds the lock
+                        # is free and safe to remove.
+                        if lock.acquire(blocking=False):
+                            lock.release()
+                            keys_to_remove.append(key)
+                            if (
+                                len(self._file_locks) - len(keys_to_remove)
+                                <= _MAX_FILE_LOCKS // 2
+                            ):
+                                break
                     for key in keys_to_remove:
                         self._file_locks.pop(key, None)
             return self._file_locks[fname]
@@ -280,14 +293,17 @@ class HDF5ConnectionPool:
 
         The pool is an OrderedDict with move_to_end() on access,
         so the front is always the LRU entry — O(1) eviction.
+
+        Must be called with ``_pool_lock`` held, or will acquire it.
         """
         evicted = 0
-        for _ in range(min(count, len(self._pool))):
-            fname, connection = self._pool.popitem(last=False)
-            connection.close()
-            self.stats.record_connection_evicted()
-            logger.debug(f"Evicted LRU connection: {fname}")
-            evicted += 1
+        with self._pool_lock:
+            for _ in range(min(count, len(self._pool))):
+                fname, connection = self._pool.popitem(last=False)
+                connection.close()
+                self.stats.record_connection_evicted()
+                logger.debug(f"Evicted LRU connection: {fname}")
+                evicted += 1
         return evicted
 
     def _evict_excess_connections(self) -> None:
@@ -306,38 +322,39 @@ class HDF5ConnectionPool:
         unhealthy_connections = []
         aged_connections = []
 
-        logger.debug(f"Performing health check on {len(self._pool)} connections")
+        with self._pool_lock:
+            logger.debug(f"Performing health check on {len(self._pool)} connections")
 
-        for fname, connection in list(self._pool.items()):
-            is_healthy = connection.check_health()
-            self.stats.record_health_check(is_healthy)
+            for fname, connection in list(self._pool.items()):
+                is_healthy = connection.check_health()
+                self.stats.record_health_check(is_healthy)
 
-            # Check if connection is too old (older than health check interval)
-            connection_age = current_time - connection.created_at
-            is_aged = connection_age > self.health_check_interval
+                # Check if connection is too old (older than health check interval)
+                connection_age = current_time - connection.created_at
+                is_aged = connection_age > self.health_check_interval
 
-            if not is_healthy:
-                unhealthy_connections.append(fname)
-                self._unhealthy_files.add(fname)
-            elif is_aged:
-                aged_connections.append(fname)
+                if not is_healthy:
+                    unhealthy_connections.append(fname)
+                    self._unhealthy_files.add(fname)
+                elif is_aged:
+                    aged_connections.append(fname)
 
-        # Remove unhealthy connections
-        for fname in unhealthy_connections:
-            if fname in self._pool:
-                self._pool[fname].close()
-                del self._pool[fname]
-                logger.info(f"Removed unhealthy connection: {fname}")
+            # Remove unhealthy connections
+            for fname in unhealthy_connections:
+                if fname in self._pool:
+                    self._pool[fname].close()
+                    del self._pool[fname]
+                    logger.info(f"Removed unhealthy connection: {fname}")
 
-        # Remove aged connections
-        for fname in aged_connections:
-            if fname in self._pool:
-                connection_age = current_time - self._pool[fname].created_at
-                self._pool[fname].close()
-                del self._pool[fname]
-                logger.info(
-                    f"Removed aged connection: {fname} (age: {connection_age:.1f}s)"
-                )
+            # Remove aged connections
+            for fname in aged_connections:
+                if fname in self._pool:
+                    connection_age = current_time - self._pool[fname].created_at
+                    self._pool[fname].close()
+                    del self._pool[fname]
+                    logger.info(
+                        f"Removed aged connection: {fname} (age: {connection_age:.1f}s)"
+                    )
 
         total_removed = len(unhealthy_connections) + len(aged_connections)
         if total_removed:
@@ -778,7 +795,7 @@ def get(fname, fields, mode="raw", ret_type="dict", ftype="nexus", use_pool=True
             path = hdf_key[ftype][key] if mode == "alias" else key
             if path not in hdf_result:
                 logger.error("path to field not found: %s", path)
-                raise ValueError("key not found: %s:%s", key, path)
+                raise ValueError(f"key not found: {key}:{path}")
             val = hdf_result.get(path)[()]
             if (
                 key in ["saxs_2d"] and val.ndim == NDIM_3D
@@ -918,6 +935,10 @@ def batch_read_fields(
         # Apply same processing as original get() function
         if field == "saxs_2d" and isinstance(val, np.ndarray) and val.ndim == NDIM_3D:
             val = val[0]  # saxs_2d is in [1xNxM] format
+
+        # converts bytes to unicode (matches get() behavior)
+        if type(val) in [np.bytes_, bytes]:
+            val = val.decode()
 
         if isinstance(val, np.ndarray) and val.shape == (1, 1):
             val = val.item()

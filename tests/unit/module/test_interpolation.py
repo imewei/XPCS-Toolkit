@@ -19,7 +19,9 @@ class TestNoScipyInterpolateImports:
 
     def test_no_scipy_interpolate_imports(self):
         """Verify grep finds no scipy.interpolate imports in module/."""
-        module_path = Path(__file__).parent.parent.parent.parent / "xpcsviewer" / "module"
+        module_path = (
+            Path(__file__).parent.parent.parent.parent / "xpcsviewer" / "module"
+        )
 
         # Use grep to search for scipy.interpolate imports
         result = subprocess.run(
@@ -35,7 +37,9 @@ class TestNoScipyInterpolateImports:
 
     def test_no_scipy_ndimage_zoom_imports(self):
         """Verify grep finds no direct scipy.ndimage imports in module/."""
-        module_path = Path(__file__).parent.parent.parent.parent / "xpcsviewer" / "module"
+        module_path = (
+            Path(__file__).parent.parent.parent.parent / "xpcsviewer" / "module"
+        )
 
         # Use grep to search for scipy.ndimage imports
         result = subprocess.run(
@@ -59,10 +63,12 @@ class TestG2Interpolation:
 
         # Create test data with more points for stable cubic interpolation
         tel = np.array([0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1.0, 5.0, 10.0])
-        g2_data = np.column_stack([
-            1.0 + 0.5 * np.exp(-tel / 0.1),  # q=0: fast decay
-            1.0 + 0.3 * np.exp(-tel / 1.0),  # q=1: slow decay
-        ])
+        g2_data = np.column_stack(
+            [
+                1.0 + 0.5 * np.exp(-tel / 0.1),  # q=0: fast decay
+                1.0 + 0.3 * np.exp(-tel / 1.0),  # q=1: slow decay
+            ]
+        )
         # Target points within the range of original data
         target_tel = np.array([0.002, 0.02, 0.2, 2.0])
 
@@ -81,11 +87,13 @@ class TestG2Interpolation:
 
         # Create test data
         tel = np.linspace(0.001, 10.0, 20)
-        g2_data = np.column_stack([
-            1.0 + 0.5 * np.exp(-tel / 0.1),
-            1.0 + 0.3 * np.exp(-tel / 1.0),
-            1.0 + 0.2 * np.exp(-tel / 5.0),
-        ])
+        g2_data = np.column_stack(
+            [
+                1.0 + 0.5 * np.exp(-tel / 0.1),
+                1.0 + 0.3 * np.exp(-tel / 1.0),
+                1.0 + 0.2 * np.exp(-tel / 5.0),
+            ]
+        )
         target_tel = np.linspace(0.01, 5.0, 10)
 
         result = vectorized_g2_interpolation(tel, g2_data, target_tel)

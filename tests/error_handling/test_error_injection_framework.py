@@ -574,9 +574,9 @@ class TestSystematicErrorScenarios:
                 target_function="numpy.zeros",
                 error_type=MemoryError,
                 error_message="Cannot allocate large array",
-                trigger_condition=lambda *args: args
-                and isinstance(args[0], int)
-                and args[0] > 100,
+                trigger_condition=lambda *args: (
+                    args and isinstance(args[0], int) and args[0] > 100
+                ),
                 max_occurrences=1,
             ),
             ErrorScenario(

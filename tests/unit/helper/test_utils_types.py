@@ -28,7 +28,9 @@ class TestTypeAnnotations:
 
         for func in functions:
             # Check return annotation
-            assert func.returns is not None, f"{func.name} missing return type annotation"
+            assert func.returns is not None, (
+                f"{func.name} missing return type annotation"
+            )
 
             # Check all args have annotations (except self and **kwargs)
             for arg in func.args.args:
