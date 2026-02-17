@@ -19,16 +19,13 @@ import numpy as np
 
 from .logging_config import get_logger
 
+# BUG-060: Consolidate duplicate ValidationLevel / StateValidationLevel enums.
+# StateValidationLevel is now an alias for the canonical ValidationLevel defined
+# in reliability.py.  All existing code using StateValidationLevel continues to
+# work without modification.
+from .reliability import ValidationLevel as StateValidationLevel  # noqa: F401
+
 logger = get_logger(__name__)
-
-
-class StateValidationLevel(Enum):
-    """State validation strictness levels."""
-
-    MINIMAL = "minimal"  # Only critical invariants
-    STANDARD = "standard"  # Balanced validation
-    STRICT = "strict"  # Comprehensive validation
-    PARANOID = "paranoid"  # All possible checks
 
 
 class StateTransition(Enum):

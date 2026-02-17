@@ -257,8 +257,20 @@ class AsyncViewerKernel(QObject):
             logger.info(f"Cancelled operation: {operation_id}")
 
     def cancel_all_operations(self):
-        """Cancel all active operations."""
+        """Cancel all active operations.
+
+        Disconnects all tracked signal-slot pairs before clearing the operations
+        dict to prevent stale connections from delivering signals into deleted
+        objects (BUG-012).
+        """
+        # Cancel underlying workers first so no new signals fire after we disconnect
         self.worker_manager.cancel_all_workers()
+
+        # Disconnect all stored signal connections to prevent post-cancel signal delivery
+        for operation_id in list(self._signal_connections.keys()):
+            self._disconnect_signals(operation_id)
+
+        # Clear operations dict only after signals are disconnected
         self.active_operations.clear()
         logger.info("Cancelled all active operations")
 

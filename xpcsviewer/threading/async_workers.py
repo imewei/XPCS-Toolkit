@@ -52,6 +52,17 @@ class WorkerResult:
     worker_id: str = ""
     memory_usage: float = 0.0
 
+    def __post_init__(self) -> None:
+        """Validate WorkerResult fields at construction (BUG-061)."""
+        if self.execution_time < 0:
+            raise ValueError(
+                f"WorkerResult.execution_time must be >= 0, got {self.execution_time}"
+            )
+        if self.memory_usage < 0:
+            raise ValueError(
+                f"WorkerResult.memory_usage must be >= 0, got {self.memory_usage}"
+            )
+
 
 @dataclass
 class WorkerStats:
@@ -66,6 +77,40 @@ class WorkerStats:
     active_workers: int = 0
     cancelled_workers: int = 0
     total_memory_usage: float = 0.0
+
+    def __post_init__(self) -> None:
+        """Validate WorkerStats fields at construction (BUG-061)."""
+        if self.total_jobs < 0:
+            raise ValueError(
+                f"WorkerStats.total_jobs must be >= 0, got {self.total_jobs}"
+            )
+        if self.completed_jobs < 0:
+            raise ValueError(
+                f"WorkerStats.completed_jobs must be >= 0, got {self.completed_jobs}"
+            )
+        if self.failed_jobs < 0:
+            raise ValueError(
+                f"WorkerStats.failed_jobs must be >= 0, got {self.failed_jobs}"
+            )
+        if self.average_execution_time < 0:
+            raise ValueError(
+                f"WorkerStats.average_execution_time must be >= 0, "
+                f"got {self.average_execution_time}"
+            )
+        if self.active_workers < 0:
+            raise ValueError(
+                f"WorkerStats.active_workers must be >= 0, got {self.active_workers}"
+            )
+        if self.cancelled_workers < 0:
+            raise ValueError(
+                f"WorkerStats.cancelled_workers must be >= 0, "
+                f"got {self.cancelled_workers}"
+            )
+        if self.total_memory_usage < 0:
+            raise ValueError(
+                f"WorkerStats.total_memory_usage must be >= 0, "
+                f"got {self.total_memory_usage}"
+            )
 
 
 class WorkerSignals(QObject):
@@ -495,6 +540,7 @@ class WorkerManager(QObject):
     def __init__(self, thread_pool: QtCore.QThreadPool):
         super().__init__()
         self.thread_pool = thread_pool
+        self._workers_lock = threading.Lock()
         self.active_workers: dict[str, BaseAsyncWorker] = {}  # worker_id -> worker
         self.worker_results: dict[str, Any] = {}  # worker_id -> result
         self.worker_errors: dict[
@@ -537,8 +583,9 @@ class WorkerManager(QObject):
             lambda wid, reason: self._on_worker_cancelled(worker_id)
         )
 
-        # Track the worker
-        self.active_workers[worker_id] = worker
+        # Track the worker (lock protects against concurrent removal on finish/cancel)
+        with self._workers_lock:
+            self.active_workers[worker_id] = worker
 
         # Submit to thread pool
         self.thread_pool.start(worker)
@@ -548,12 +595,16 @@ class WorkerManager(QObject):
 
     def cancel_worker(self, worker_id: str):
         """Cancel a specific worker by ID."""
-        if worker_id in self.active_workers:
-            self.active_workers[worker_id].cancel()
+        with self._workers_lock:
+            worker = self.active_workers.get(worker_id)
+        if worker is not None:
+            worker.cancel()
 
     def cancel_all_workers(self):
         """Cancel all active workers."""
-        for worker in self.active_workers.values():
+        with self._workers_lock:
+            workers_snapshot = list(self.active_workers.values())
+        for worker in workers_snapshot:
             worker.cancel()
 
     def get_worker_result(self, worker_id: str) -> Any:
@@ -566,7 +617,8 @@ class WorkerManager(QObject):
 
     def is_worker_active(self, worker_id: str) -> bool:
         """Check if a worker is still active."""
-        return worker_id in self.active_workers
+        with self._workers_lock:
+            return worker_id in self.active_workers
 
     @Slot(str)
     def _on_worker_started(self, worker_id: str):
@@ -577,19 +629,20 @@ class WorkerManager(QObject):
     def _on_worker_finished(self, worker_id: str, result: Any):
         """Handle worker finished signal."""
         self.worker_results[worker_id] = result
-        if worker_id in self.active_workers:
-            del self.active_workers[worker_id]
+        with self._workers_lock:
+            self.active_workers.pop(worker_id, None)
+            no_remaining = not self.active_workers
         logger.debug(f"Worker {worker_id} finished")
 
-        if not self.active_workers:
+        if no_remaining:
             self.all_workers_finished.emit()
 
     @Slot(str, str, str)
     def _on_worker_error(self, worker_id: str, error_msg: str, traceback_str: str):
         """Handle worker error signal."""
         self.worker_errors[worker_id] = (error_msg, traceback_str)
-        if worker_id in self.active_workers:
-            del self.active_workers[worker_id]
+        with self._workers_lock:
+            self.active_workers.pop(worker_id, None)
         logger.error(f"Worker {worker_id} failed: {error_msg}")
 
     @Slot(str, int, int, str)
@@ -602,8 +655,8 @@ class WorkerManager(QObject):
     @Slot(str)
     def _on_worker_cancelled(self, worker_id: str):
         """Handle worker cancelled signal."""
-        if worker_id in self.active_workers:
-            del self.active_workers[worker_id]
+        with self._workers_lock:
+            self.active_workers.pop(worker_id, None)
         logger.info(f"Worker {worker_id} was cancelled")
 
     def shutdown(self):
@@ -617,8 +670,10 @@ class WorkerManager(QObject):
             f"WorkerManager shutdown: cancelling {len(self.active_workers)} active workers"
         )
 
-        # Cancel all active workers
-        for worker_id, worker in list(self.active_workers.items()):
+        # Cancel all active workers (snapshot under lock, cancel outside lock)
+        with self._workers_lock:
+            workers_snapshot = list(self.active_workers.items())
+        for worker_id, worker in workers_snapshot:
             try:
                 if hasattr(worker, "cancel"):
                     worker.cancel()
@@ -626,7 +681,8 @@ class WorkerManager(QObject):
                 logger.debug(f"Error cancelling worker {worker_id}: {e}")
 
         # Clear collections
-        self.active_workers.clear()
+        with self._workers_lock:
+            self.active_workers.clear()
         self.worker_results.clear()
         self.worker_errors.clear()
 

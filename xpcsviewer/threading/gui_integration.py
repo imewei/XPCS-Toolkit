@@ -52,13 +52,30 @@ class ThreadingIntegrator:
 
 
 def make_async(func: Callable) -> Callable:
-    """Simple decorator to make a function asynchronous using WorkerManager."""
+    """Decorator that submits a function to WorkerManager for async execution (BUG-049).
+
+    The decorated function will be run in a background thread via QThreadPool
+    instead of blocking the calling thread (typically the GUI main thread).
+
+    The wrapper returns a WorkerResult future-like object. For GUI-connected
+    callbacks, callers should connect to signals on the worker rather than
+    using the return value directly.
+    """
+    from xpcsviewer.gui.qt_compat import QThreadPool
 
     @wraps(func)
     def wrapper(*args, **kwargs):
-        # This is a simplified version - just call the function directly
-        # In a real implementation, this would submit to a worker thread
-        return func(*args, **kwargs)
+        thread_pool = QThreadPool.globalInstance()
+        worker_manager = WorkerManager(thread_pool)
+        try:
+            return worker_manager.submit_task(func, *args, **kwargs)
+        except Exception as exc:
+            # Fallback: execute synchronously if submission fails
+            logger.warning(
+                f"make_async: failed to submit {func.__name__!r} to WorkerManager "
+                f"({exc!r}); falling back to synchronous execution."
+            )
+            return func(*args, **kwargs)
 
     return wrapper
 

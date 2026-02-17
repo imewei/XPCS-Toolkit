@@ -116,6 +116,11 @@ class HealthMonitor:
         # Track application objects for health monitoring
         self._tracked_objects: set[weakref.ref] = set()
 
+        # Periodic callbacks registered by subsystems that want to reuse the
+        # health monitor's daemon thread instead of spawning their own (BUG-050).
+        # Each entry is a callable() with no required arguments.
+        self._periodic_callbacks: list[Callable] = []
+
         # Initialize core metrics
         self._initialize_metrics()
 
@@ -214,7 +219,9 @@ class HealthMonitor:
         """Main monitoring loop running in background thread."""
         logger.debug("Health monitoring loop started")
 
-        # Track GC statistics
+        # Track GC statistics -- reset at the start of *each* interval so that
+        # _update_gc_metrics reports a true per-interval delta rather than a
+        # cumulative total since monitoring started (BUG-052).
         gc_stats_start = gc.get_stats()
 
         while self._monitoring_active:
@@ -225,6 +232,18 @@ class HealthMonitor:
                 self._update_system_metrics()
                 self._update_application_metrics()
                 self._update_gc_metrics(gc_stats_start)
+
+                # Reset GC baseline to current stats so the *next* iteration
+                # measures only collections that occurred during this interval.
+                gc_stats_start = gc.get_stats()
+
+                # Invoke subsystem callbacks that have opted in to share this
+                # thread instead of running their own daemon threads (BUG-050).
+                for cb in list(self._periodic_callbacks):
+                    try:
+                        cb()
+                    except Exception as cb_exc:
+                        logger.debug(f"Error in periodic health callback: {cb_exc}")
 
                 # Check for alerts
                 self._check_health_alerts()
@@ -281,25 +300,28 @@ class HealthMonitor:
             logger.debug(f"Error updating application metrics: {e}")
 
     def _update_gc_metrics(self, initial_stats: list[dict]) -> None:
-        """Update garbage collection metrics."""
+        """Update garbage collection metrics.
+
+        ``initial_stats`` must be the GC stats snapshot taken at the *start of
+        the current interval*, not at monitoring start time.  The caller
+        (``_monitoring_loop``) refreshes the baseline after each call so that
+        this method always computes a true per-interval delta. (BUG-052)
+        """
         try:
             current_stats = gc.get_stats()
             if len(current_stats) == len(initial_stats):
-                # Calculate GC collections per hour
+                # Per-interval delta: only collections since the last snapshot.
                 total_collections = sum(
                     current_stats[i]["collections"] - initial_stats[i]["collections"]
                     for i in range(len(current_stats))
                 )
 
-                # Convert to collections per hour
-                elapsed_hours = (
-                    time.time() - getattr(self, "_monitor_start_time", time.time())
-                ) / 3600
-                if elapsed_hours > 0:
-                    collections_per_hour = total_collections / elapsed_hours
-                    self._metrics["gc_collections_per_hour"].update(
-                        collections_per_hour
-                    )
+                # Scale to collections-per-hour using the monitoring interval so
+                # the metric is comparable across different interval settings.
+                # Avoid division by zero if interval is somehow 0.
+                interval_hours = max(self.monitoring_interval, 1e-6) / 3600
+                collections_per_hour = total_collections / interval_hours
+                self._metrics["gc_collections_per_hour"].update(collections_per_hour)
 
         except Exception as e:
             logger.debug(f"Error updating GC metrics: {e}")
@@ -463,6 +485,26 @@ class HealthMonitor:
         QMetaObject.invokeMethod to marshal work to the main thread.
         """
         self._callbacks[status].append(callback)
+
+    def register_periodic_callback(self, callback: Callable) -> None:
+        """Register a callable to be invoked once per monitoring interval.
+
+        This allows subsystems to share the health monitor's daemon thread
+        instead of spawning their own background threads (BUG-050).  Each
+        registered callback is called with no arguments from the monitoring
+        loop.  Callbacks must be thread-safe and must not block for longer
+        than ``monitoring_interval`` seconds.
+
+        Warning: Callbacks are invoked on the daemon monitoring thread.
+        """
+        self._periodic_callbacks.append(callback)
+
+    def unregister_periodic_callback(self, callback: Callable) -> None:
+        """Remove a previously registered periodic callback."""
+        try:
+            self._periodic_callbacks.remove(callback)
+        except ValueError:
+            pass
 
     def track_object(self, obj: Any) -> None:
         """Track object for health monitoring."""

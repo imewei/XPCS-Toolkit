@@ -260,32 +260,55 @@ class UnifiedMemoryManager:
         }
 
     def _start_monitoring(self):
-        """Start background memory monitoring thread."""
+        """Start background memory monitoring.
+
+        Registers a periodic callback with the HealthMonitor if it is running,
+        so that memory monitoring shares the health monitor's daemon thread
+        rather than spawning a separate thread (BUG-050).  Falls back to a
+        dedicated thread if the health monitor is not available.
+        """
         import os
 
         # Skip starting background threads in test mode to prevent threading issues
         if os.environ.get("XPCS_TEST_MODE") == "1":
             return
 
+        # Prefer registering with the health monitor to reduce thread count.
+        try:
+            from .health_monitor import get_health_monitor
+
+            health_monitor = get_health_monitor()
+            health_monitor.register_periodic_callback(self._monitoring_step)
+            logger.debug(
+                "MemoryManager registered with HealthMonitor periodic callback "
+                "(no separate monitoring thread started)"
+            )
+            return
+        except Exception:
+            pass  # Fall through to dedicated thread
+
         self._monitoring_thread = threading.Thread(
             target=self._monitoring_loop, daemon=True
         )
         self._monitoring_thread.start()
 
+    def _monitoring_step(self):
+        """Single monitoring step called from the health monitor's thread."""
+        try:
+            self._update_memory_history()
+            self._check_memory_pressure()
+            self._perform_maintenance()
+
+            # Process preload queue during low pressure periods
+            if len(self._preload_queue) > 0:
+                self._process_preload_queue()
+        except Exception as e:
+            logger.warning(f"Memory monitoring error: {e}")
+
     def _monitoring_loop(self):
-        """Background monitoring loop for memory pressure and optimization."""
+        """Background monitoring loop for memory pressure and optimization (fallback)."""
         while not self._shutdown_event.wait(timeout=10.0):  # Check every 10 seconds
-            try:
-                self._update_memory_history()
-                self._check_memory_pressure()
-                self._perform_maintenance()
-
-                # Process preload queue during low pressure periods
-                if len(self._preload_queue) > 0:
-                    self._process_preload_queue()
-
-            except Exception as e:
-                logger.warning(f"Memory monitoring error: {e}")
+            self._monitoring_step()
 
     def _update_memory_history(self):
         """Update memory usage history for trend analysis."""
@@ -674,13 +697,21 @@ class UnifiedMemoryManager:
 
 # Global memory manager instance
 _global_memory_manager: UnifiedMemoryManager | None = None
+_global_memory_manager_lock = threading.Lock()
 
 
 def get_memory_manager() -> UnifiedMemoryManager:
-    """Get or create the global memory manager instance."""
+    """Get or create the global memory manager instance.
+
+    Uses double-checked locking to be thread-safe under concurrent first
+    access from multiple threads without paying the lock cost on every
+    subsequent call. (BUG-030)
+    """
     global _global_memory_manager  # noqa: PLW0603 - intentional singleton pattern
     if _global_memory_manager is None:
-        _global_memory_manager = UnifiedMemoryManager()
+        with _global_memory_manager_lock:
+            if _global_memory_manager is None:
+                _global_memory_manager = UnifiedMemoryManager()
     return _global_memory_manager
 
 

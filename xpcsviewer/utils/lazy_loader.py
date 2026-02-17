@@ -510,13 +510,21 @@ class IntelligentLazyLoader:
 
 # Global lazy loader instance
 _global_lazy_loader: IntelligentLazyLoader | None = None
+_global_lazy_loader_lock = threading.Lock()
 
 
 def get_lazy_loader() -> IntelligentLazyLoader:
-    """Get or create the global lazy loader instance."""
+    """Get or create the global lazy loader instance.
+
+    Uses double-checked locking to be thread-safe under concurrent first
+    access from multiple threads without paying the lock cost on every
+    subsequent call. (BUG-030)
+    """
     global _global_lazy_loader  # noqa: PLW0603 - intentional singleton pattern
     if _global_lazy_loader is None:
-        _global_lazy_loader = IntelligentLazyLoader()
+        with _global_lazy_loader_lock:
+            if _global_lazy_loader is None:
+                _global_lazy_loader = IntelligentLazyLoader()
     return _global_lazy_loader
 
 

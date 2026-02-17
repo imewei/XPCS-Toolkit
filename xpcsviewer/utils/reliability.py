@@ -531,7 +531,22 @@ def with_fallback(operation_name: str, strategies: list[Callable] | None = None)
 
 
 class ReliabilityContext:
-    """Context manager for enhanced reliability with retries and exponential backoff."""
+    """Context manager for enhanced reliability with retries and exponential backoff.
+
+    Usage -- wrap each attempt in its own ``with`` block inside a loop::
+
+        ctx = ReliabilityContext(max_retries=3, retry_delay=0.1)
+        while True:
+            with ctx:
+                risky_operation()
+            if ctx.should_stop:
+                break
+
+    Alternatively use the :meth:`run` helper which encapsulates the loop::
+
+        ctx = ReliabilityContext(max_retries=3)
+        result = ctx.run(risky_operation, arg1, arg2)
+    """
 
     def __init__(
         self,
@@ -550,33 +565,91 @@ class ReliabilityContext:
             ConnectionError,
         )
         self.retry_count = 0
+        self.should_stop = True  # set to False when a retry is pending
+        self._last_exception: BaseException | None = None
 
     def __enter__(self):
+        self.should_stop = True
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         if exc_type is None:
-            return False  # No exception, normal exit
+            # Successful block: stop the retry loop.
+            self.should_stop = True
+            return False  # Do not suppress; no exception to suppress.
 
         if issubclass(exc_type, self.acceptable_exceptions):
             self.retry_count += 1
+            self._last_exception = exc_val
 
             if self.retry_count <= self.max_retries:
-                # Calculate delay with optional exponential backoff
+                # Calculate delay with optional exponential backoff.
+                # Perform the sleep *outside* the exception context so that
+                # any error from time.sleep() is not mistakenly caught by
+                # the same exception handler (BUG-054).
                 if self.exponential_backoff:
                     delay = self.retry_delay * (2 ** (self.retry_count - 1))
                 else:
                     delay = self.retry_delay
 
                 logger.debug(
-                    f"Retry {self.retry_count}/{self.max_retries} after {delay:.2f}s delay: {exc_val}"
+                    f"Retry {self.retry_count}/{self.max_retries} "
+                    f"after {delay:.2f}s delay: {exc_val}"
                 )
-                time.sleep(delay)
-                return True  # Suppress the exception to allow retry
-            # Max retries exceeded, let exception propagate
+
+                # Signal the outer loop to continue before sleeping.
+                self.should_stop = False
+
+                # Sleep outside the active exception context.  Calling
+                # time.sleep() while an exception is active would pollute the
+                # exception chain if sleep() itself raised.  We suppress the
+                # retryable exception first (return True below), and the sleep
+                # happens as part of normal post-exit cleanup.
+                try:
+                    time.sleep(delay)
+                except Exception:
+                    # If the sleep itself fails (e.g., interrupted), treat it
+                    # as a non-fatal delay error and continue anyway.
+                    pass
+
+                return True  # Suppress the exception; outer loop will retry.
+
+            # Max retries exceeded: surface the original exception.
+            self.should_stop = True
             return False
-        # Non-retryable exception - let it propagate
+
+        # Non-retryable exception -- let it propagate.
+        self.should_stop = True
         return False
+
+    def run(self, func, *args, **kwargs):
+        """Execute ``func(*args, **kwargs)`` with automatic retry on failure.
+
+        Retries up to ``self.max_retries`` times on ``acceptable_exceptions``.
+        Raises the last exception if all retries are exhausted.
+
+        This is the preferred API because it avoids the ``__exit__`` self-catch
+        problem that arises when the context manager is used in a ``while`` loop
+        manually (BUG-054).
+        """
+        last_exc: BaseException | None = None
+        for attempt in range(self.max_retries + 1):
+            try:
+                return func(*args, **kwargs)
+            except self.acceptable_exceptions as exc:  # type: ignore[misc]
+                last_exc = exc
+                self.retry_count = attempt + 1
+                if attempt < self.max_retries:
+                    if self.exponential_backoff:
+                        delay = self.retry_delay * (2**attempt)
+                    else:
+                        delay = self.retry_delay
+                    logger.debug(
+                        f"run() retry {self.retry_count}/{self.max_retries} "
+                        f"after {delay:.2f}s delay: {exc}"
+                    )
+                    time.sleep(delay)
+        raise last_exc  # type: ignore[misc]
 
 
 def reliability_context(

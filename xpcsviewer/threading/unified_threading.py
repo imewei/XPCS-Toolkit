@@ -16,9 +16,10 @@ from queue import Empty, PriorityQueue
 from typing import Any
 
 import psutil
+from qtpy.QtCore import Q_ARG
 
 # Qt imports via compatibility layer
-from xpcsviewer.gui.qt_compat import QObject, Signal
+from xpcsviewer.gui.qt_compat import QMetaObject, QObject, Qt, Signal, Slot
 
 from ..utils.log_utils import log_timing
 from ..utils.logging_config import get_logger
@@ -71,6 +72,21 @@ class UnifiedTask:
     # Results
     result: Any = None
     error: Exception | None = None
+
+    def __post_init__(self) -> None:
+        """Validate UnifiedTask fields at construction (BUG-061)."""
+        if not self.task_id:
+            raise ValueError("UnifiedTask.task_id must be a non-empty string")
+        if self.timeout_seconds is not None and self.timeout_seconds <= 0:
+            raise ValueError(
+                f"UnifiedTask.timeout_seconds must be > 0 when provided, "
+                f"got {self.timeout_seconds}"
+            )
+        if self.memory_limit_mb is not None and self.memory_limit_mb <= 0:
+            raise ValueError(
+                f"UnifiedTask.memory_limit_mb must be > 0 when provided, "
+                f"got {self.memory_limit_mb}"
+            )
 
     def __lt__(self, other):
         """Priority queue comparison."""
@@ -294,14 +310,37 @@ class UnifiedThreadingManager(QObject):
         # Add completion callback
         future.add_done_callback(lambda f: self._handle_task_completion(task, f))
 
+    def _emit_task_started_queued(self, task_id: str, task_type: str) -> None:
+        """Emit task_started signal via QueuedConnection to ensure main-thread delivery.
+
+        This slot is invoked via QMetaObject.invokeMethod with Qt.QueuedConnection
+        so that callers on ThreadPoolExecutor threads safely marshal the emission
+        to the Qt main thread (BUG-007).
+        """
+        self.task_started.emit(task_id, task_type)
+
+    def _emit_task_failed_queued(self, task_id: str, error_msg: str) -> None:
+        """Emit task_failed signal via QueuedConnection (BUG-007)."""
+        self.task_failed.emit(task_id, error_msg)
+
+    def _emit_task_completed_queued(self, task_id: str, result: object) -> None:
+        """Emit task_completed signal via QueuedConnection (BUG-007)."""
+        self.task_completed.emit(task_id, result)
+
     @log_timing(threshold_ms=100)
     def _execute_task(self, task: UnifiedTask) -> Any:
         """Execute a task with full tracking and error handling."""
         task.started_at = time.time()
 
         try:
-            # Emit started signal
-            self.task_started.emit(task.task_id, task.task_type.value)
+            # Emit started signal via QueuedConnection to marshal to main thread (BUG-007)
+            QMetaObject.invokeMethod(
+                self,
+                "_emit_task_started_queued",
+                Qt.ConnectionType.QueuedConnection,
+                Q_ARG(str, task.task_id),
+                Q_ARG(str, task.task_type.value),
+            )
 
             # Memory check before execution
             if task.memory_limit_mb:
@@ -332,10 +371,24 @@ class UnifiedThreadingManager(QObject):
             # Update statistics
             if task.error:
                 self._stats["tasks_failed"] += 1
-                self.task_failed.emit(task.task_id, str(task.error))
+                # Emit via QueuedConnection to marshal to main thread (BUG-007)
+                QMetaObject.invokeMethod(
+                    self,
+                    "_emit_task_failed_queued",
+                    Qt.ConnectionType.QueuedConnection,
+                    Q_ARG(str, task.task_id),
+                    Q_ARG(str, str(task.error)),
+                )
             else:
                 self._stats["tasks_completed"] += 1
-                self.task_completed.emit(task.task_id, task.result)
+                # Emit via QueuedConnection to marshal to main thread (BUG-007)
+                QMetaObject.invokeMethod(
+                    self,
+                    "_emit_task_completed_queued",
+                    Qt.ConnectionType.QueuedConnection,
+                    Q_ARG(str, task.task_id),
+                    Q_ARG(object, task.result),
+                )
 
             self._stats["total_execution_time"] += task.execution_time
             self._stats["total_wait_time"] += task.wait_time
@@ -489,13 +542,21 @@ class UnifiedThreadingManager(QObject):
 
 # Global instance management
 _global_threading_manager: UnifiedThreadingManager | None = None
+_global_threading_manager_lock = threading.Lock()
 
 
 def get_unified_threading_manager() -> UnifiedThreadingManager:
-    """Get or create the global unified threading manager."""
+    """Get or create the global unified threading manager.
+
+    Uses double-checked locking to be thread-safe under concurrent first
+    access from multiple threads without paying the lock cost on every
+    subsequent call. (BUG-030)
+    """
     global _global_threading_manager  # noqa: PLW0603 - intentional singleton pattern
     if _global_threading_manager is None:
-        _global_threading_manager = UnifiedThreadingManager()
+        with _global_threading_manager_lock:
+            if _global_threading_manager is None:
+                _global_threading_manager = UnifiedThreadingManager()
     return _global_threading_manager
 
 
