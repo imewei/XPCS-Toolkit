@@ -164,7 +164,18 @@ class TestPartitionWorkflow:
             assert partition.shape == (512, 512)
 
 
-@pytest.mark.skipif(not JAX_AVAILABLE, reason="JAX not installed")
+try:
+    import numpyro  # noqa: F401
+
+    NUMPYRO_AVAILABLE = True
+except ImportError:
+    NUMPYRO_AVAILABLE = False
+
+
+@pytest.mark.skipif(
+    not JAX_AVAILABLE or not NUMPYRO_AVAILABLE,
+    reason="JAX and NumPyro required for Bayesian fitting",
+)
 class TestFittingWorkflow:
     """End-to-end tests for Bayesian fitting workflow."""
 

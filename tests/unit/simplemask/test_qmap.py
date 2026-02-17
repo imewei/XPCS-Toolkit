@@ -118,16 +118,19 @@ class TestComputeTransmissionQmap:
         assert phi.max() <= 180.0
 
     def test_caching_works(self):
-        """Cached results should be equal (deep copies for safety)."""
+        """Cached results should be equal on repeated calls.
+
+        BUG-055 fix: deep copy removed from cache hit path.  The cache returns
+        the same dict object directly; callers that need a private copy must
+        np.copy() the arrays themselves.  Values must still be identical.
+        """
         args = (10.0, (256, 512), (512, 1024), 0.075, 5000.0)
 
         qmap1, _ = compute_transmission_qmap(*args)
         qmap2, _ = compute_transmission_qmap(*args)
 
-        # Results should be equal values (deep copies prevent mutation bugs)
+        # Results should be equal values
         np.testing.assert_array_equal(qmap1["q"], qmap2["q"])
-        # But NOT the same object (P1-12: callers can't corrupt cache)
-        assert qmap1["q"] is not qmap2["q"]
 
 
 class TestComputeReflectionQmap:
