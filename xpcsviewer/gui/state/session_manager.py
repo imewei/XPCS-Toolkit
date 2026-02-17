@@ -217,10 +217,11 @@ class SessionManager:
                 qmap_show_rings=params_data.get("qmap_show_rings", True),
             )
 
-            # Validate active_tab (11 tabs: 0=saxs_2d through 10=metadata)
+            # Validate active_tab is a non-negative integer;
+            # upper-bound check deferred to tabWidget.count() at restore time
             active_tab = data.get("active_tab", 0)
-            if not 0 <= active_tab <= 10:
-                logger.warning(f"Invalid active_tab {active_tab}, using 0")
+            if not isinstance(active_tab, int) or active_tab < 0:
+                logger.warning(f"Invalid active_tab {active_tab!r}, using 0")
                 active_tab = 0
 
             session = SessionState(

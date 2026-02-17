@@ -1,5 +1,4 @@
 # Standard library imports
-import contextlib
 import json
 import os
 import shutil
@@ -1793,6 +1792,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         self.vk.export_saxs_1d(self.pg_saxs, folder)
 
     def init_twotime_plot_handler(self):
+        self.mp_2t_map.clear()
         self.mp_2t_hdls = {}
         labels = ["saxs", "dqmap"]
         titles = ["scattering", "dynamic_qmap"]
@@ -2005,11 +2005,6 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         # Create window if it doesn't exist or was closed
         if self._simplemask_window is None or not self._simplemask_window.isVisible():
             self._simplemask_window = SimpleMaskWindow(parent_viewer=self)
-            # Disconnect any stale signal connections before reconnecting
-            with contextlib.suppress(TypeError, RuntimeError):
-                self._simplemask_window.mask_exported.disconnect()
-            with contextlib.suppress(TypeError, RuntimeError):
-                self._simplemask_window.qmap_exported.disconnect()
             self._simplemask_window.mask_exported.connect(self.import_mask)
             self._simplemask_window.qmap_exported.connect(self.import_partition)
             logger.info("Created new SimpleMask window")
@@ -2044,6 +2039,14 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
 
             # Get detector image (SAXS 2D)
             detector_image = xf.saxs_2d
+
+            # Squeeze leading singleton dimension (e.g. (1, H, W) → (H, W))
+            if (
+                detector_image is not None
+                and detector_image.ndim == 3
+                and detector_image.shape[0] == 1
+            ):
+                detector_image = detector_image[0]
 
             # Extract geometry metadata
             metadata = {
@@ -2316,7 +2319,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         if not self._guard_no_data("twotime"):
             return None
 
-        if self.mp_2t_hdls is None:
+        if not self.mp_2t_hdls:
             self.init_twotime_plot_handler()
         new_labels = self.vk.plot_twotime(self.mp_2t_hdls, **kwargs)
         if new_labels is not None:
