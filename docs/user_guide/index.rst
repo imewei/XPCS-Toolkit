@@ -1,5 +1,3 @@
-:orphan:
-
 User Guide
 ==========
 
@@ -11,3 +9,11 @@ User Guide
    - **Need to do something specific?** See :doc:`/how-to/index`
    - **Looking for API details?** See :doc:`/api/index`
    - **Want to understand how things work?** See :doc:`/explanation/index`
+
+.. toctree::
+   :hidden:
+
+   installation
+   quickstart
+   simplemask
+   examples

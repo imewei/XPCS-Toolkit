@@ -7,8 +7,8 @@ Tutorials are **learning-oriented**: they help you get started and build underst
 .. toctree::
    :maxdepth: 2
 
+   quickstart
    getting_started
-   /user_guide/quickstart
    mask_editor
    fitting_guide
    backend_selection
@@ -16,5 +16,6 @@ Tutorials are **learning-oriented**: they help you get started and build underst
 
 .. tip::
 
-   New to xpcsviewer? Start with :doc:`getting_started` for a guided walkthrough
-   of loading data, inspecting metadata, and plotting your first G2 curve.
+   New to xpcsviewer? Start with :doc:`quickstart` for a 5-minute overview, then
+   work through :doc:`getting_started` for a guided walkthrough of loading data,
+   inspecting metadata, and plotting your first G2 curve.

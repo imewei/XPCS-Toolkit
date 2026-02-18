@@ -69,9 +69,12 @@ SAXS Data
 
    xf = XpcsFile('data.h5')
 
-   # 1D SAXS
-   q_values = xf.saxs_1d_q
-   intensities = xf.saxs_1d
+   # 1D SAXS (returns q, Iq, xlabel, ylabel)
+   q, Iq, xlabel, ylabel = xf.get_saxs1d_data()
+
+   # Or access the raw dictionary
+   q_values = xf.saxs_1d["q"]
+   intensities = xf.saxs_1d["Iq"]
 
    # 2D SAXS
    saxs_2d = xf.saxs_2d
@@ -98,5 +101,5 @@ Next Steps
 ----------
 
 - See :doc:`/usage` for detailed CLI and GUI documentation
-- See :doc:`examples` for more usage examples
+- See :doc:`/how-to/examples` for more usage examples
 - See :doc:`/api/index` for the Python API reference

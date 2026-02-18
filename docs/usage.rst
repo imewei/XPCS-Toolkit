@@ -131,7 +131,7 @@ Analysis Tabs
    * - Average
      - File averaging tools for batch processing
    * - Mask Editor
-     - Mask creation, Q-map generation, and Q-binning (see :doc:`user_guide/simplemask`)
+     - Mask creation, Q-map generation, and Q-binning (see :doc:`how-to/mask_editor_guide`)
    * - Metadata
      - Dataset information and parameters
 
@@ -261,11 +261,12 @@ SAXS Analysis
 
 .. code-block:: python
 
-   from xpcsviewer.module import saxs1d
+   # Get SAXS 1D data (q, intensity, axis labels)
+   q, Iq, xlabel, ylabel = xf.get_saxs1d_data()
 
-   # Get SAXS 1D data
-   q_values = xf.saxs_1d_q
-   intensities = xf.saxs_1d
+   # Or access the raw dictionary directly
+   q_values = xf.saxs_1d["q"]
+   intensities = xf.saxs_1d["Iq"]
 
 Configuration
 =============

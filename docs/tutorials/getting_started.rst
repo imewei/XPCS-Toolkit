@@ -4,6 +4,15 @@ Getting Started with XPCS Viewer
 This tutorial walks you through loading XPCS data from HDF5 files, inspecting
 metadata, and performing a basic G2 correlation analysis.
 
+.. admonition:: What you'll learn
+
+   - Load an XPCS HDF5 result file with :class:`~xpcsviewer.xpcs_file.XpcsFile`
+   - Inspect metadata and the HDF5 tree structure
+   - Extract G2 correlation data and apply Q/time-range filters
+   - Plot G2 autocorrelation curves with Matplotlib
+   - Access SAXS 1D data
+   - Run a basic single-exponential G2 fit
+
 Prerequisites
 -------------
 
@@ -45,7 +54,9 @@ as instance attributes.
    #      ...
 
 The ``atype`` attribute tells you the analysis type (``"Multitau"``,
-``"Twotime"``, or both).
+``"Twotime"``, or both). This is important because it determines which
+downstream analysis methods are available -- for example, two-time correlation
+maps are only present when ``"Twotime"`` appears in ``atype``.
 
 Step 2 -- Inspect Metadata
 ---------------------------
@@ -63,6 +74,10 @@ Retrieve the full HDF5 tree structure as a dictionary:
    # The Q-map object provides momentum-transfer binning info
    print(f"Q-map type: {type(xf.qmap)}")
 
+Understanding the HDF5 structure is useful when you need to access data that
+is not exposed as a top-level attribute. The ``get_hdf_info()`` method returns
+the complete tree of groups and datasets so you can see what is available.
+
 Step 3 -- Extract G2 Data
 --------------------------
 
@@ -79,7 +94,9 @@ the G2 correlation function, errors, delay times, and Q-bin labels:
    print(f"G2 shape: {g2.shape}")         # (n_delay, n_q)
    print(f"G2 error shape: {g2_err.shape}")
 
-You can restrict the range of Q values and delay times:
+You can restrict the range of Q values and delay times. This is useful when
+you want to focus on a specific Q region or exclude early/late delay points
+that may be noisy:
 
 .. code-block:: python
 
@@ -115,6 +132,10 @@ Visualize the G2 autocorrelation functions using Matplotlib:
    plt.tight_layout()
    plt.show()
 
+The logarithmic x-axis is conventional for XPCS data because the delay times
+span several orders of magnitude. Each curve corresponds to a different Q bin;
+the legend labels show the Q value in reciprocal nanometers.
+
 Step 5 -- Extract SAXS 1D Data
 -------------------------------
 
@@ -134,14 +155,16 @@ the radially averaged scattering intensity:
    plt.tight_layout()
    plt.show()
 
+The SAXS 1D profile gives the azimuthally averaged scattering intensity I(q).
+Plotting on a log-log scale reveals the power-law slope, which encodes
+structural information about the sample.
+
 Step 6 -- Basic G2 Fitting
 ----------------------------
 
 Fit a single-exponential decay model to the G2 data:
 
-.. math::
-
-   g_2(\tau) = \text{baseline} + \text{contrast} \cdot \exp(-2\tau / \tau_c)
+.. include:: /_includes/g2_fitting_basics.rst
 
 .. code-block:: python
 
@@ -165,6 +188,11 @@ Fit a single-exponential decay model to the G2 data:
    print(f"Fitted Q values: {fit_summary['q_val']}")
    print(f"Fit parameters shape: {fit_summary['fit_val'].shape}")
 
+The ``fit_g2`` method performs NLSQ fitting across all Q bins in the specified
+range. The ``fit_summary`` dictionary contains both the fitted parameters and
+the smooth fit curves for visualization. See :doc:`fitting_guide` for the
+full fitting pipeline including Bayesian inference.
+
 Step 7 -- Context Manager Usage
 --------------------------------
 
@@ -178,6 +206,9 @@ protocol for automatic cleanup:
        # Work with data...
 
    # Resources are released when exiting the context
+
+Using the context manager is recommended when processing many files in a loop
+to ensure HDF5 file handles are released promptly.
 
 Next Steps
 ----------

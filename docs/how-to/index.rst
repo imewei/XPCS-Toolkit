@@ -7,10 +7,11 @@ How-to guides are **task-oriented**: they help you solve a real-world problem.
 .. toctree::
    :maxdepth: 2
 
-   /user_guide/installation
+   installation
+   quickstart
    /usage
-   /user_guide/simplemask
-   /user_guide/examples
+   mask_editor_guide
+   examples
    /contributing
 
 .. note::

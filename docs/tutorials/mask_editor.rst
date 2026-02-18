@@ -5,6 +5,19 @@ This tutorial shows how to use the SimpleMask module to create detector masks,
 compute Q-maps from geometry metadata, and generate Q-space partitions for
 XPCS analysis.
 
+.. admonition:: What you'll learn
+
+   - Initialize the SimpleMask kernel in headless (no-GUI) mode
+   - Load detector data with geometry metadata
+   - Inspect and visualize the Q-map
+   - Create and modify masks programmatically
+   - Save and load masks in HDF5 format
+   - Compute Q-phi partitions for correlation analysis
+   - Validate Q-map data with the schema system
+
+For a task-oriented reference of the GUI tools and shortcuts, see
+:doc:`/how-to/mask_editor_guide`.
+
 Overview
 --------
 
@@ -21,6 +34,9 @@ interactive drawing tools.
 Step 1 -- Initialize the Kernel
 ---------------------------------
 
+The kernel can run without a GUI, which is useful for scripted pipelines and
+batch processing:
+
 .. code-block:: python
 
    import numpy as np
@@ -32,7 +48,8 @@ Step 1 -- Initialize the Kernel
 Step 2 -- Load Detector Data
 ------------------------------
 
-Provide a detector image and a metadata dictionary describing the geometry:
+Provide a detector image and a metadata dictionary describing the geometry.
+The geometry parameters control how pixel positions are converted to Q values:
 
 .. code-block:: python
 
@@ -57,10 +74,17 @@ The :meth:`~xpcsviewer.simplemask.simplemask_kernel.SimpleMaskKernel.read_data`
 method automatically computes the Q-map from the geometry and initializes a
 mask of all ones (all pixels valid).
 
+Geometry Parameters
+~~~~~~~~~~~~~~~~~~~~
+
+.. include:: /_includes/geometry_parameters_table.rst
+
 Step 3 -- Inspect the Q-Map
 -----------------------------
 
-The ``qmap`` dictionary contains momentum-transfer and angle maps:
+The ``qmap`` dictionary contains momentum-transfer and angle maps. Visualizing
+the Q-map helps verify that the geometry parameters are correct -- the Q rings
+should be centered on the beam position:
 
 .. code-block:: python
 
@@ -89,7 +113,9 @@ The ``qmap`` dictionary contains momentum-transfer and angle maps:
 Step 4 -- Modify the Mask
 ---------------------------
 
-The mask is a boolean array where ``True`` means valid (unmasked):
+The mask is a boolean array where ``True`` means valid (unmasked). You modify
+it by setting regions to ``False`` to exclude them from analysis. Common
+reasons to mask pixels include beamstop shadows, dead pixels, and hot pixels:
 
 .. code-block:: python
 
@@ -108,10 +134,14 @@ The mask is a boolean array where ``True`` means valid (unmasked):
    print(f"Valid pixels: {valid_pixels}/{total_pixels} "
          f"({100 * valid_pixels / total_pixels:.1f}%)")
 
+In the GUI, you use the drawing tools instead of array indexing:
+
+.. include:: /_includes/drawing_tools_table.rst
+
 Step 5 -- Save and Load Masks
 -------------------------------
 
-Masks are saved to HDF5 files for reuse:
+Masks are saved to HDF5 files for reuse across sessions and scripts:
 
 .. code-block:: python
 
@@ -126,7 +156,8 @@ Masks are saved to HDF5 files for reuse:
 Step 6 -- Recompute Q-Map
 ---------------------------
 
-If geometry parameters change, recompute the Q-map:
+If geometry parameters change (for example, after refining the beam center),
+recompute the Q-map:
 
 .. code-block:: python
 
@@ -169,6 +200,11 @@ There are two levels: **dynamic** (fewer bins, used for G2 correlation) and
        plt.tight_layout()
        plt.show()
 
+The dynamic partition determines how many G2 curves you get -- one per bin.
+More bins give finer Q resolution but fewer pixels per bin, increasing
+statistical noise. A good starting point is 10-20 dynamic Q bins with 1 phi
+bin (full azimuthal average).
+
 Step 8 -- Validate with Schemas
 ---------------------------------
 
@@ -205,7 +241,8 @@ In the full GUI application, the mask editor is launched from the
 - **Export signals**: ``mask_exported(np.ndarray)`` and ``qmap_exported(dict)``
 
 The GUI calls the same :class:`~xpcsviewer.simplemask.simplemask_kernel.SimpleMaskKernel`
-methods demonstrated above.
+methods demonstrated above. See :doc:`/how-to/mask_editor_guide` for the
+full GUI reference with keyboard shortcuts and parameter tables.
 
 Next Steps
 ----------
