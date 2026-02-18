@@ -1,23 +1,23 @@
 # Documentation build requirements for XPCS Toolkit
-# Python >=3.12; prefer `uv sync --extra docs` locally, RTD uses pip.
+# Python >=3.12; prefer `uv sync --group docs` locally, RTD uses pip.
 
 # Core Sphinx dependencies (kept in sync with pyproject [project.optional-dependencies].docs)
-sphinx>=8.2.0
-furo>=2024.8.6
-myst-parser>=4.0.1
+sphinx>=9.1.0
+furo>=2025.12.19
+myst-parser>=5.0.0
 
 # Documentation extensions
-sphinx-autodoc-typehints>=3.5.0
+sphinx-autodoc-typehints>=3.6.0
 sphinx-copybutton>=0.5.2
 
 # Required for building API documentation (match pyproject.toml)
 numpy>=2.3.0
-scipy>=1.16.0
+scipy>=1.17.0
 matplotlib>=3.10.0
 h5py>=3.15.0
 
 # PySide6 for GUI documentation
-pyside6>=6.10.1
+pyside6>=6.10.2
 
 # Mock heavy dependencies that aren't needed for docs
 # These will be mocked in conf.py if needed
