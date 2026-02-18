@@ -59,7 +59,7 @@ def make_double_exp() -> Callable[..., NDArray[np.floating[Any]]]:
     ) -> NDArray[np.floating[Any]]:
         xa: Any = b.array(x)
         # Note: Do NOT use ensure_numpy() here - this function is JIT-traced by nlsq
-        return cts1 * b.exp(-2 * xa / tau1) + cts2 * b.exp(-2 * xa / tau2) + bkg  # type: ignore[return-value]
+        return cts1 * b.exp(-2 * xa / tau1) + cts2 * b.exp(-2 * xa / tau2) + bkg
 
     return _double_exp
 
@@ -92,7 +92,7 @@ def make_double_exp_all() -> Callable[..., NDArray[np.floating[Any]]]:
     ) -> NDArray[np.floating[Any]]:
         xa: Any = b.array(x)
         # Note: Do NOT use ensure_numpy() here - this function is JIT-traced by nlsq
-        return a * b.exp(-2 * xa / b_) + c * b.exp(-2 * xa / d) + e + f  # type: ignore[return-value]
+        return a * b.exp(-2 * xa / b_) + c * b.exp(-2 * xa / d) + e + f
 
     return _double_exp_all
 

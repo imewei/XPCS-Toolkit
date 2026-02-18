@@ -541,7 +541,7 @@ class NLSQResult:
         # Fallback: use enum value/name comparison (more robust than str())
         status = self.diagnostics.status
         if hasattr(status, "value"):
-            return status.value == "healthy"
+            return status.value == "healthy"  # type: ignore[comparison-overlap]
         if hasattr(status, "name"):
             return status.name.lower() == "healthy"
 

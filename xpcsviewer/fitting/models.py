@@ -12,7 +12,9 @@ Models:
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
+
+import numpy as np
 
 if TYPE_CHECKING:
     from jax import Array
@@ -31,9 +33,9 @@ except ImportError:
     JAX_AVAILABLE = False
 
 if JAX_AVAILABLE:
-    _xnp = jnp
+    _xnp: Any = jnp
 else:
-    import numpy as _xnp
+    _xnp = np
 
 
 def _maybe_jit(fn):
