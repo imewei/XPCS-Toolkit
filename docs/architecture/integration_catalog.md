@@ -2,8 +2,8 @@
 
 **Purpose:** Quick reference guide for developers working on cross-module integrations during JAX migration and beyond.
 
-**Status:** Active (001-jax-migration branch)
-**Last Updated:** 2026-01-06
+**Status:** Active (``master`` branch)
+**Last Updated:** 2026-02-18
 
 ---
 

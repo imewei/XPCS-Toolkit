@@ -7,14 +7,9 @@ Explanations are **understanding-oriented**: they clarify and illuminate a topic
 .. toctree::
    :maxdepth: 2
 
+   xpcs_data_formats
+   g2_theory
+   twotime_analysis
+   backend_architecture
+   mask_qmap_internals
    /developer/optimization
-
-.. note::
-
-   More explanations are planned, including:
-
-   - XPCS data formats and conventions
-   - G2 correlation function theory
-   - Two-time correlation analysis background
-   - JAX backend architecture and performance model
-   - Mask and Q-map computation internals

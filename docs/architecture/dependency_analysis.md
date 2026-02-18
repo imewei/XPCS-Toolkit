@@ -1,8 +1,14 @@
 # XPCS Viewer Dependency Analysis and Integration Catalog
 
-**Analysis Date:** 2026-01-06
-**Codebase Version:** Branch `001-jax-migration`
+**Analysis Date:** 2026-01-06 (updated 2026-02-18)
+**Codebase Version:** ``master`` branch
 **Analyzed Components:** Core modules, backends, fitting, simplemask, file I/O
+
+.. note::
+
+   As of February 2026, JAX, NumPyro, NLSQ, and ArviZ are **core
+   dependencies** (listed in ``pyproject.toml`` under ``dependencies``).
+   References to "optional" JAX installation in this document are historical.
 
 ---
 
@@ -301,7 +307,7 @@ ensure_backend_array(array: np.ndarray) -> BackendArray
     ├→ module.saxs1d → [PyQtGraph plot]
     ├→ module.saxs2d → [PyQtGraph plot]
     ├→ module.g2mod → [fitting.fit_single_exp] → [FitResult]
-    └→ module.twotime → [backends.scipy_replacements] → [Plot]
+    └→ module.twotime → [backends._conversions] → [Plot]
     ↓
 [Export to HDF5 / GUI signals]
 ```

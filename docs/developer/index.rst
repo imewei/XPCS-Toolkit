@@ -1,5 +1,3 @@
-:orphan:
-
 Developer Guide
 ===============
 
@@ -11,3 +9,8 @@ Developer Guide
    - **Architecture and design?** See :doc:`/architecture/index`
    - **Contributing?** See :doc:`/contributing`
    - **Operations and deployment?** See :doc:`/operations/index`
+
+.. toctree::
+   :hidden:
+
+   optimization

@@ -64,6 +64,7 @@ graph TB
         XF[xpcs_file.py<br/>XpcsFile]
         XC[xpcs_file/cache<br/>DataCache]
         XM[xpcs_file/memory<br/>MemoryMonitor]
+        FL[file_locator.py<br/>FileLocator]
     end
 
     subgraph Utils["Utilities"]
@@ -83,11 +84,14 @@ graph TB
     XV --> GM
     XV --> UT
     VK --> XF
+    XV --> FL
+    FL --> XF
     VK -.->|lazy load| G2
     VK -.->|lazy load| S1
     VK -.->|lazy load| S2
     VK -.->|lazy load| TT
     VK -.->|lazy load| TQ
+    VK -.->|lazy load| IT
 
     %% Analysis dependencies
     G2 --> FI
@@ -96,6 +100,8 @@ graph TB
     S2 --> CV
     TT --> CV
     TT --> BE
+    IT --> CV
+    TQ --> CV
 
     %% SimpleMask
     SMW -.->|signals| XV
@@ -141,6 +147,13 @@ The GUI layer uses PySide6 and PyQtGraph for interactive visualization. `xpcs_vi
 is the main window; `viewer_kernel.py` coordinates lazy-loaded analysis modules. The
 `gui/` subpackage provides theme management (light/dark), session state persistence,
 keyboard shortcuts, and a command palette.
+
+### Core Data Model
+`XpcsFile` is the in-memory representation of an XPCS dataset loaded from HDF5.
+`DataCache` provides LRU caching for array reads, and `MemoryMonitor` tracks
+system memory to prevent out-of-memory conditions. `FileLocator` discovers and
+manages multiple HDF5 files for batch operations, providing search and filtering
+across dataset directories.
 
 ### Analysis Modules
 Each analysis module (`g2mod`, `saxs1d`, `saxs2d`, `twotime`, `tauq`, `intt`) handles a

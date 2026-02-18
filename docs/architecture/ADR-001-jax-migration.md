@@ -20,7 +20,7 @@ The team evaluated JAX as the primary computational backend because:
 - JAX supports automatic differentiation (`jax.grad`, `jax.value_and_grad`), which NumPyro requires for Hamiltonian Monte Carlo (NUTS) sampling.
 - JAX supports GPU/TPU execution with the same code, via `jax.device_put`.
 
-However, JAX is an optional dependency -- many users install XPCS Viewer for quick data inspection and do not need (or cannot install) JAX. This constraint led to the backend abstraction design.
+Initially, JAX was an optional dependency to support lightweight installations. As the project matured, JAX and its ecosystem (NumPyro, optimistix, interpax, optax) became core dependencies (listed in `pyproject.toml` under `dependencies`), since the Bayesian fitting pipeline and JIT-compiled Q-map computation are now integral to the application. The backend abstraction layer remains useful for testing (forcing NumPy behavior) and for graceful degradation when JAX is installed but GPU hardware is unavailable.
 
 ## Decision
 
@@ -69,12 +69,12 @@ xpcsviewer/backends/
 
 - **Performance**: JIT-compiled Q-map computation runs ~10x faster on repeated calls. GPU acceleration provides further speedups for large datasets.
 - **Bayesian fitting**: NumPyro NUTS sampling works natively with JAX arrays and automatic differentiation, eliminating the need for numerical gradients.
-- **Gradual adoption**: Users without JAX get full functionality via the NumPy backend. JAX is only activated when installed and configured.
+- **Backend flexibility**: The NumPy backend remains available via `XPCS_USE_JAX=false` for debugging and deterministic testing, even though JAX is installed by default.
 - **Testing**: Both backends can be tested independently. The `reset_backend()` function allows tests to switch backends between test cases.
 
 ### What became more difficult
 
 - **Debugging**: JAX's tracing semantics (functional purity requirements) can produce confusing error messages when Python control flow depends on array values.
-- **Dependency size**: JAX + jaxlib adds ~500MB to the installation. The optional dependency pattern mitigates this.
+- **Dependency size**: JAX + jaxlib adds ~500MB to the installation. Since JAX is now a core dependency, all installations carry this cost.
 - **I/O boundary discipline**: Every interaction with external libraries must go through `ensure_numpy()`. Missing conversions produce runtime errors (JAX arrays are not accepted by h5py or PyQtGraph).
 - **NumPy backend limitations**: `NumPyBackend.grad()` and `value_and_grad()` raise `NotImplementedError`. Code that requires gradients must check `backend.supports_grad` first.

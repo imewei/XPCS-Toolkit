@@ -8,7 +8,7 @@ Accepted
 
 When introducing JAX as an optional computational backend (see [ADR-001](ADR-001-jax-migration.md)), we needed an abstraction layer that:
 
-1. **Does not require JAX at import time**: Users without JAX should be able to import and use all non-JAX features.
+1. **Deferred JAX initialization**: JAX configuration (float64, device selection) must happen before the first JAX operation, so lazy initialization is still important even though JAX is now a core dependency.
 2. **Provides identical API for both backends**: Analysis code should not contain `if backend == "jax"` conditionals.
 3. **Supports capabilities introspection**: Code that requires gradients or JIT must be able to check backend capabilities at runtime.
 4. **Handles I/O boundary conversions**: External libraries (h5py, PyQtGraph, Matplotlib) require NumPy arrays; conversions must be centralized.

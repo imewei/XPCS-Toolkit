@@ -49,10 +49,10 @@
             └──────────────┬───────────────────┘
                            │
                   ┌────────┴─────────┐
-                  │ scipy_replacements│
-                  │ - interpolate     │
-                  │ - ndimage         │
-                  │ - optimize        │
+                  │ io_adapter.py    │
+                  │ - PyQtGraph      │
+                  │ - HDF5           │
+                  │ - Matplotlib     │
                   └───────────────────┘
 ```
 
@@ -141,7 +141,7 @@
                 │                       │
                 │                       ├───> backends
                 │                       ├───> backends._conversions
-                │                       ├───> backends.scipy_replacements
+                │                       ├───> backends._conversions
                 │                       └───> utils.logging_config
                 │
         ┌───────┴────────┐
@@ -420,7 +420,7 @@ fitting
 module.twotime
   ├─> backends
   ├─> backends._conversions
-  ├─> backends.scipy_replacements
+  ├─> backends._conversions
   └─> xpcs_file (for MemoryMonitor only)
       └─> (no module.twotime import) ✅
 
@@ -554,6 +554,6 @@ Low Risk:
 
 ---
 
-**Document Version:** 1.0
-**Generated:** 2026-01-06
+**Document Version:** 1.1
+**Generated:** 2026-01-06 (updated 2026-02-18)
 **Maintained:** Sync with dependency_analysis.md
