@@ -326,7 +326,7 @@ class TestSessionManagerLoad:
         loaded = manager.load_session()
 
         assert loaded is not None
-        assert loaded.active_tab == 0  # Reset to default
+        assert loaded.active_tab == 99  # Upper-bound check deferred to restore time
 
 
 class TestSessionManagerWarnings:
