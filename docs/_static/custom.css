@@ -1,0 +1,121 @@
+/* XPCS Viewer Documentation Custom Styles
+   Enhances Furo theme for scientific documentation readability */
+
+/* --- Typography & Spacing --- */
+
+/* Increase line height for body text */
+.body p,
+.body li,
+.body dd {
+    line-height: 1.7;
+}
+
+/* Better heading hierarchy spacing */
+.body h2 {
+    margin-top: 2.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--color-background-border);
+}
+
+.body h3 {
+    margin-top: 2rem;
+}
+
+/* --- Tables --- */
+
+/* Alternate row colors for readability */
+table.docutils tbody tr:nth-child(even) {
+    background-color: var(--color-background-secondary);
+}
+
+/* Better cell padding */
+table.docutils td,
+table.docutils th {
+    padding: 0.6rem 0.8rem;
+}
+
+/* Sticky header for long tables */
+table.docutils.longtable thead {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background-color: var(--color-background-primary);
+}
+
+/* --- Admonitions --- */
+
+/* Slightly larger admonition titles */
+.admonition > .admonition-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+}
+
+/* --- Code Blocks --- */
+
+/* Better code block readability */
+.highlight pre {
+    line-height: 1.5;
+    padding: 1rem;
+}
+
+/* Inline code readability */
+code.literal {
+    padding: 0.15rem 0.35rem;
+    font-size: 0.875em;
+}
+
+/* --- Math Blocks --- */
+
+/* Add breathing room around math blocks */
+div.math {
+    margin: 1.2rem 0;
+    padding: 0.5rem 0;
+}
+
+/* --- Sidebar / Navigation --- */
+
+/* Reduce visual noise in sidebar */
+.sidebar-tree .toctree-l1 > a {
+    font-weight: 600;
+}
+
+.sidebar-tree .toctree-l2 > a {
+    font-size: 0.88rem;
+}
+
+/* --- Definition Lists (parameter tables etc.) --- */
+
+dl.simple dt {
+    font-weight: 600;
+    margin-top: 0.8rem;
+}
+
+dl.simple dd {
+    margin-left: 1.5rem;
+}
+
+/* --- List Tables (used heavily in how-to guides) --- */
+
+/* Full-width list-table formatting */
+table.docutils.align-default {
+    width: 100%;
+}
+
+/* --- Section Separators --- */
+
+/* Horizontal rules between major sections */
+hr {
+    margin: 2.5rem 0;
+    border: none;
+    border-top: 1px solid var(--color-background-border);
+}
+
+/* --- Responsive Adjustments --- */
+
+@media (max-width: 768px) {
+    table.docutils td,
+    table.docutils th {
+        padding: 0.4rem 0.5rem;
+        font-size: 0.85rem;
+    }
+}

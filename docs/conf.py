@@ -113,6 +113,11 @@ extensions = [
     "sphinxcontrib.mermaid",
 ]
 
+# NOTE: sphinx_autodoc_typehints is intentionally not used here because it
+# conflicts with the MockQtModule setup required for building docs without
+# PySide6/PyQtGraph installed. The built-in autodoc_typehints = "description"
+# setting handles type hints adequately.
+
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
 
@@ -150,7 +155,14 @@ language = "en"
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This patterns also effect to html_static_path and html_extra_path
-exclude_patterns = ["_build", "Thumbs.db", ".DS_Store", "plans"]
+exclude_patterns = [
+    "_build",
+    "Thumbs.db",
+    ".DS_Store",
+    "plans",
+    "_includes/*",
+    "STRUCTURE.md",
+]
 
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = "sphinx"
@@ -265,6 +277,9 @@ intersphinx_mapping = {
     "matplotlib": ("https://matplotlib.org/stable/", None),
     "h5py": ("https://docs.h5py.org/en/stable/", None),
     "pyside6": ("https://doc.qt.io/qtforpython-6/", None),
+    "jax": ("https://jax.readthedocs.io/en/latest/", None),
+    "numpyro": ("https://num.pyro.ai/en/stable/", None),
+    "arviz": ("https://python.arviz.org/en/stable/", None),
 }
 
 # Timeout for intersphinx inventory fetches (seconds)
@@ -284,6 +299,7 @@ myst_enable_extensions = [
     "substitution",
     "tasklist",
 ]
+myst_heading_anchors = 3
 
 
 # -- Options for HTML output -------------------------------------------
@@ -292,6 +308,30 @@ myst_enable_extensions = [
 # a list of builtin themes.
 html_theme = "furo"
 html_logo = "_static/xpcsviewer_logo.png"
+
+# Furo theme options for better readability
+html_theme_options = {
+    "sidebar_hide_name": False,
+    "navigation_with_keys": True,
+    "top_of_page_button": "edit",
+    "light_css_variables": {
+        "font-stack": "Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif",
+        "font-stack--monospace": "'JetBrains Mono', 'Fira Code', 'Consolas', monospace",
+        "color-brand-primary": "#1565C0",
+        "color-brand-content": "#1565C0",
+        "color-admonition-title--tip": "#00897B",
+        "color-admonition-title-background--tip": "#00897B18",
+        "color-admonition-title--note": "#1565C0",
+        "color-admonition-title-background--note": "#1565C018",
+    },
+    "dark_css_variables": {
+        "color-brand-primary": "#82B1FF",
+        "color-brand-content": "#82B1FF",
+    },
+}
+
+# Custom CSS for improved table readability and visual hierarchy
+html_css_files = ["custom.css"]
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,

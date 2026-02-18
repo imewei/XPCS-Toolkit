@@ -1,7 +1,50 @@
 XPCS Viewer Documentation
 ===========================
 
-Python tool for X-ray Photon Correlation Spectroscopy (XPCS) data analysis.
+**XPCS Viewer** is a Python toolkit for X-ray Photon Correlation Spectroscopy (XPCS)
+data analysis. It provides a PySide6 GUI and Python API for loading, visualizing, and
+fitting XPCS correlation functions from HDF5 data files.
+
+----
+
+At a Glance
+------------
+
+.. list-table::
+   :widths: 30 70
+   :header-rows: 0
+
+   * - **Analysis**
+     - G2 correlation, SAXS 1D/2D, two-time correlation, stability, diffusion
+   * - **Fitting**
+     - NLSQ 0.6.0 point estimates + NumPyro NUTS Bayesian inference with ArviZ diagnostics
+   * - **Backends**
+     - NumPy (default) and JAX (GPU acceleration, JIT, gradients)
+   * - **Mask Editor**
+     - Interactive mask creation, Q-map generation, and Q-phi partitioning
+   * - **Data Format**
+     - HDF5 (NeXus convention) with schema-validated I/O
+   * - **GUI**
+     - PySide6 with light/dark themes, command palette, session persistence
+
+Key Features
+------------
+
+**Correlation Analysis**
+   G2 autocorrelation with multi-tau and two-time methods, SAXS 1D/2D visualization,
+   sample stability monitoring, and diffusion coefficient extraction
+
+**Fitting Pipeline**
+   NLSQ warm-start followed by NumPyro NUTS sampling. Model selection via AIC/BIC,
+   prediction intervals, and ArviZ convergence diagnostics (R-hat, ESS, BFMI)
+
+**Backend Abstraction**
+   Unified NumPy/JAX API with automatic fallback. JIT compilation and GPU acceleration
+   for compute-intensive operations. ``ensure_numpy()`` at I/O boundaries
+
+**Interactive Mask Editor**
+   Drawing tools (Rectangle, Circle, Polygon, Line, Ellipse, Eraser) with undo/redo
+   history, Q-map computation from detector geometry, and Q-phi partition export
 
 Quick Start
 -----------
@@ -17,12 +60,19 @@ Quick Start
    # CLI batch processing
    xpcsviewer twotime --input /data --output /results --q 0.05
 
-See :doc:`how-to/index` for detailed CLI and GUI documentation.
+.. code-block:: python
 
-Note
+   from xpcsviewer import XpcsFile
+
+   # Load XPCS data
+   with XpcsFile("data.hdf") as xf:
+       q, t_el, g2, g2_err, labels = xf.get_g2_data()
+       print(f"Q bins: {len(q)}, Delay points: {len(t_el)}")
+
 ----
 
-The GUI launches maximized with a rectangular layout, uses only the menu bar for actions (no top quick-access toolbar), and keeps a sensible minimum size to avoid cramped controls.
+Contents
+--------
 
 .. toctree::
    :maxdepth: 2
@@ -67,75 +117,66 @@ The GUI launches maximized with a rectangular layout, uses only the menu bar for
    authors
    history
 
-Features
---------
+.. toctree::
+   :hidden:
+   :caption: Legacy Redirects
 
-* G2 correlation analysis with fitting
-* SAXS 1D/2D visualization
-* Two-time correlation analysis
-* Mask Editor with Q-map and Q-binning
-* HDF5 data support (NeXus format)
-* PySide6 GUI interface
+   user_guide/index
+   developer/index
 
-**GUI Features:**
-
-* Light/dark theme support with system detection
-* Session persistence and preferences management
-* Command palette (Ctrl+Shift+P) for quick actions
-* Toast notifications for non-intrusive status updates
-* Keyboard shortcut management
-* Drag-and-drop file handling
-* Theme-aware plots (PyQtGraph & Matplotlib)
+----
 
 Gallery
 -------
 
-**Analysis Modules Showcase**
+.. only:: html
 
-1. **Integrated 2D Scattering Pattern**
+   **Analysis Modules Showcase**
 
-   .. image:: https://raw.githubusercontent.com/imewei/XPCSViewer/master/docs/images/saxs2d.png
-      :alt: 2D SAXS pattern visualization
+   1. **Integrated 2D Scattering Pattern**
 
-2. **1D SAXS Reduction and Analysis**
+      .. image:: https://raw.githubusercontent.com/imewei/XPCSViewer/master/docs/images/saxs2d.png
+         :alt: 2D SAXS pattern visualization
 
-   .. image:: https://raw.githubusercontent.com/imewei/XPCSViewer/master/docs/images/saxs1d.png
-      :alt: Radially averaged 1D SAXS data
+   2. **1D SAXS Reduction and Analysis**
 
-3. **Sample Stability Assessment**
+      .. image:: https://raw.githubusercontent.com/imewei/XPCSViewer/master/docs/images/saxs1d.png
+         :alt: Radially averaged 1D SAXS data
 
-   .. image:: https://raw.githubusercontent.com/imewei/XPCSViewer/master/docs/images/stability.png
-      :alt: Temporal stability analysis across 10 time sections
+   3. **Sample Stability Assessment**
 
-4. **Intensity vs Time Series**
+      .. image:: https://raw.githubusercontent.com/imewei/XPCSViewer/master/docs/images/stability.png
+         :alt: Temporal stability analysis across 10 time sections
 
-   .. image:: https://raw.githubusercontent.com/imewei/XPCSViewer/master/docs/images/intt.png
-      :alt: Intensity fluctuation monitoring
+   4. **Intensity vs Time Series**
 
-5. **File Averaging Toolbox**
+      .. image:: https://raw.githubusercontent.com/imewei/XPCSViewer/master/docs/images/intt.png
+         :alt: Intensity fluctuation monitoring
 
-   .. image:: https://raw.githubusercontent.com/imewei/XPCSViewer/master/docs/images/average.png
-      :alt: Advanced file averaging capabilities
+   5. **File Averaging Toolbox**
 
-6. **G2 Correlation Analysis**
+      .. image:: https://raw.githubusercontent.com/imewei/XPCSViewer/master/docs/images/average.png
+         :alt: Advanced file averaging capabilities
 
-   .. image:: https://raw.githubusercontent.com/imewei/XPCSViewer/master/docs/images/g2mod.png
-      :alt: Multi-tau correlation function fitting
+   6. **G2 Correlation Analysis**
 
-7. **Diffusion Characterization**
+      .. image:: https://raw.githubusercontent.com/imewei/XPCSViewer/master/docs/images/g2mod.png
+         :alt: Multi-tau correlation function fitting
 
-   .. image:: https://raw.githubusercontent.com/imewei/XPCSViewer/master/docs/images/diffusion.png
-      :alt: τ vs q analysis for diffusion coefficients
+   7. **Diffusion Characterization**
 
-8. **Two-time Correlation Maps**
+      .. image:: https://raw.githubusercontent.com/imewei/XPCSViewer/master/docs/images/diffusion.png
+         :alt: Diffusion coefficient analysis
 
-   .. image:: https://raw.githubusercontent.com/imewei/XPCSViewer/master/docs/images/twotime.png
-      :alt: Interactive two-time correlation analysis
+   8. **Two-time Correlation Maps**
 
-9. **HDF5 Metadata Explorer**
+      .. image:: https://raw.githubusercontent.com/imewei/XPCSViewer/master/docs/images/twotime.png
+         :alt: Interactive two-time correlation analysis
 
-   .. image:: https://raw.githubusercontent.com/imewei/XPCSViewer/master/docs/images/hdf_info.png
-      :alt: File structure and metadata viewer
+   9. **HDF5 Metadata Explorer**
+
+      .. image:: https://raw.githubusercontent.com/imewei/XPCSViewer/master/docs/images/hdf_info.png
+         :alt: File structure and metadata viewer
 
 Indices and Tables
 ==================
