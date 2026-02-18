@@ -115,7 +115,7 @@ def create_separator(
         separator.setFixedWidth(1)
 
     separator.setFrameShadow(QFrame.Shadow.Plain)
-    separator.setStyleSheet("background-color: palette(mid);")
+    separator.setObjectName("themeSeparator")
     return separator
 
 

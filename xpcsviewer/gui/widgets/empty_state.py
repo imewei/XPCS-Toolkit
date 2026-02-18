@@ -59,13 +59,6 @@ class EmptyStateWidget(QFrame):
     ) -> None:
         """Set up the widget UI."""
         self.setFrameStyle(QFrame.Shape.NoFrame)
-        self.setStyleSheet(
-            """
-            EmptyStateWidget {
-                background-color: transparent;
-            }
-            """
-        )
 
         layout = QVBoxLayout(self)
         layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -73,19 +66,13 @@ class EmptyStateWidget(QFrame):
 
         # Icon
         self.icon_label = QLabel(icon_text)
-        self.icon_label.setStyleSheet("font-size: 48px;")
+        self.icon_label.setObjectName("emptyStateIcon")
         self.icon_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(self.icon_label)
 
         # Message
         self.message_label = QLabel(message)
-        self.message_label.setStyleSheet(
-            """
-            font-size: 16px;
-            font-weight: bold;
-            color: #666;
-            """
-        )
+        self.message_label.setObjectName("emptyStateMessage")
         self.message_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.message_label.setWordWrap(True)
         layout.addWidget(self.message_label)
@@ -93,12 +80,7 @@ class EmptyStateWidget(QFrame):
         # Description
         if description:
             self.description_label = QLabel(description)
-            self.description_label.setStyleSheet(
-                """
-                font-size: 13px;
-                color: #888;
-                """
-            )
+            self.description_label.setObjectName("emptyStateDescription")
             self.description_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
             self.description_label.setWordWrap(True)
             layout.addWidget(self.description_label)
@@ -111,14 +93,6 @@ class EmptyStateWidget(QFrame):
             button_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
             self.action_button = QPushButton(action_text)
-            self.action_button.setStyleSheet(
-                """
-                QPushButton {
-                    padding: 8px 24px;
-                    font-size: 13px;
-                }
-                """
-            )
             self.action_button.clicked.connect(self._on_action_clicked)
             button_layout.addWidget(self.action_button)
 

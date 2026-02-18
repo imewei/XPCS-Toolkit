@@ -21,6 +21,11 @@ from xpcsviewer.gui.qt_compat import (
     QVBoxLayout,
     QWidget,
 )
+from xpcsviewer.gui.theme.style_helpers import (
+    set_button_style,
+    set_density,
+    set_settings_panel,
+)
 from xpcsviewer.simplemask.drawing_tools import DRAWING_TOOLS, ERASER_TOOL
 from xpcsviewer.simplemask.pyqtgraph_mod import ImageViewROI
 
@@ -182,6 +187,13 @@ def setup_ui(window) -> None:  # noqa: PLR0915 - UI setup requires many statemen
 
     # Stretch to push remaining controls to bottom
     right_layout.addStretch()
+
+    # Apply theme-aware styling to group boxes and controls
+    set_settings_panel(geometry_group)
+    set_settings_panel(partition_group)
+    set_density(right_panel, "compact")
+    set_button_style(window.btn_export_partition, "secondary")
+    set_button_style(window.btn_toggle_partition, "secondary")
 
     splitter.addWidget(right_panel)
 

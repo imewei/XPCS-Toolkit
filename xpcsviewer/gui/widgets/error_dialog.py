@@ -60,6 +60,7 @@ class ErrorDialog(QDialog):
         self._retry_callback = retry_callback
         self._details = details
 
+        self.setObjectName("errorDialog")
         self.setWindowTitle(title)
         self.setMinimumWidth(450)
         self.setModal(True)
@@ -76,11 +77,11 @@ class ErrorDialog(QDialog):
         header_layout = QHBoxLayout()
 
         icon_label = QLabel("Error")
-        icon_label.setStyleSheet("font-size: 32px;")
+        icon_label.setObjectName("errorIcon")
         header_layout.addWidget(icon_label)
 
         message_label = QLabel(message)
-        message_label.setStyleSheet("font-size: 14px; font-weight: bold;")
+        message_label.setObjectName("errorMessage")
         message_label.setWordWrap(True)
         header_layout.addWidget(message_label, stretch=1)
 
@@ -89,35 +90,25 @@ class ErrorDialog(QDialog):
         # Cause section
         if cause:
             cause_label = QLabel(f"<b>Cause:</b> {cause}")
+            cause_label.setObjectName("errorCause")
             cause_label.setWordWrap(True)
-            cause_label.setStyleSheet("color: #666;")
             layout.addWidget(cause_label)
 
         # Remedy section
         if remedy:
             remedy_label = QLabel(f"<b>Remedy:</b> {remedy}")
+            remedy_label.setObjectName("errorRemedy")
             remedy_label.setWordWrap(True)
-            remedy_label.setStyleSheet("color: #2E7D32;")
             layout.addWidget(remedy_label)
 
         # Details section (collapsible)
         if details:
             self.details_widget = QTextEdit()
+            self.details_widget.setObjectName("errorDetails")
             self.details_widget.setPlainText(details)
             self.details_widget.setReadOnly(True)
             self.details_widget.setMaximumHeight(150)
             self.details_widget.setVisible(False)  # Hidden by default
-            self.details_widget.setStyleSheet(
-                """
-                QTextEdit {
-                    font-family: monospace;
-                    font-size: 11px;
-                    background-color: #f5f5f5;
-                    border: 1px solid #ddd;
-                    border-radius: 4px;
-                }
-                """
-            )
             layout.addWidget(self.details_widget)
 
             # Toggle button

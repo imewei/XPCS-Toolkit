@@ -573,6 +573,77 @@ QFrame#toast_error {
 }
 
 /* ========================================
+   Empty State Widget
+   ======================================== */
+
+EmptyStateWidget {
+    background-color: transparent;
+}
+
+EmptyStateWidget QLabel#emptyStateIcon {
+    font-size: 36pt;
+    color: @text_disabled;
+}
+
+EmptyStateWidget QLabel#emptyStateMessage {
+    font-size: @size_lg;
+    font-weight: 600;
+    color: @text_secondary;
+}
+
+EmptyStateWidget QLabel#emptyStateDescription {
+    font-size: @size_base;
+    color: @text_disabled;
+}
+
+EmptyStateWidget QPushButton {
+    padding: @spacing_sm @spacing_lg;
+}
+
+/* ========================================
+   Error Dialog
+   ======================================== */
+
+QDialog#errorDialog {
+    background-color: @background_elevated;
+}
+
+QDialog#errorDialog QLabel#errorIcon {
+    font-size: @size_xxl;
+    font-weight: 700;
+    color: @error;
+}
+
+QDialog#errorDialog QLabel#errorMessage {
+    font-size: @size_lg;
+    font-weight: 600;
+}
+
+QDialog#errorDialog QLabel#errorCause {
+    color: @text_secondary;
+}
+
+QDialog#errorDialog QLabel#errorRemedy {
+    color: @success;
+}
+
+QDialog#errorDialog QTextEdit#errorDetails {
+    font-family: 'Menlo', 'Consolas', 'DejaVu Sans Mono', monospace;
+    font-size: @size_sm;
+    background-color: @background_secondary;
+    border: 1px solid @border_subtle;
+    border-radius: 4px;
+}
+
+/* ========================================
+   Separator
+   ======================================== */
+
+QFrame#themeSeparator {
+    background-color: @border_subtle;
+}
+
+/* ========================================
    Command Palette
    ======================================== */
 
