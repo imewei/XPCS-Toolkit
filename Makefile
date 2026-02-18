@@ -5,10 +5,12 @@
 .PHONY: help install install-dev env-info \
         test test-smoke test-fast test-ci test-full test-all test-coverage test-integration \
         test-parallel test-unit test-scientific test-gui test-gui-headless \
-        clean clean-all clean-pyc clean-build clean-test clean-venv \
-        format lint type-check check quick docs build publish info version \
-        run-app check-deps verify verify-fast install-hooks \
-        install-jax-gpu install-jax-gpu-cuda12 install-jax-gpu-cuda13 gpu-check
+        clean clean-all clean-pyc clean-build clean-test clean-venv docs-clean \
+        format lint type-check check quick docs docs-serve build publish publish-test \
+        info version run-app check-deps verify verify-fast \
+        install-hooks pre-commit-install pre-commit-run \
+        install-jax-gpu install-jax-gpu-cuda12 install-jax-gpu-cuda13 gpu-check \
+        _jax-gpu-install
 
 # Configuration
 PYTHON := python
@@ -18,6 +20,12 @@ SRC_DIR := xpcsviewer
 TEST_DIR := tests
 DOCS_DIR := docs
 VENV := .venv
+
+# Common find exclusions (protects .venv, venv, .claude directories)
+FIND_PRUNE := -not -path "./.venv/*" -not -path "./venv/*" -not -path "./.claude/*"
+
+# Parallel test options
+PARALLEL_OPTS := -n auto --dist=loadscope
 
 # Platform detection
 UNAME_S := $(shell uname -s 2>/dev/null || echo "Windows")
@@ -84,7 +92,7 @@ CYAN := \033[36m
 .DEFAULT_GOAL := help
 
 # ===================
-# Help target
+# Help
 # ===================
 help:
 	@echo "$(BOLD)$(BLUE)XPCSViewer Development Commands$(RESET)"
@@ -159,7 +167,7 @@ help:
 	@echo ""
 
 # ===================
-# Installation targets
+# Installation
 # ===================
 install:
 	@echo "$(BOLD)$(BLUE)Installing $(PACKAGE_NAME) in editable mode...$(RESET)"
@@ -168,17 +176,17 @@ ifdef UV_AVAILABLE
 else
 	@$(INSTALL_CMD) -e .
 endif
-	@echo "$(BOLD)$(GREEN)✓ Package installed!$(RESET)"
+	@echo "$(BOLD)$(GREEN)Done: Package installed$(RESET)"
 
 install-dev: install
 	@echo "$(BOLD)$(BLUE)Installing development dependencies...$(RESET)"
 ifdef UV_AVAILABLE
-	@$(SYNC_CMD) --dev --extra docs --extra test
+	@$(SYNC_CMD) --dev
 else
-	@$(INSTALL_CMD) -e ".[dev,test,docs]"
+	@$(INSTALL_CMD) -e .
 endif
 	@pre-commit install 2>/dev/null || echo "pre-commit not available, skipping hook installation"
-	@echo "$(BOLD)$(GREEN)✓ Dev dependencies installed!$(RESET)"
+	@echo "$(BOLD)$(GREEN)Done: Dev dependencies installed$(RESET)"
 
 # ===================
 # Environment info
@@ -198,46 +206,45 @@ env-info:
 	@echo "$(BOLD)Package Manager Detection:$(RESET)"
 	@echo "  Active manager: $(PKG_MANAGER)"
 ifdef UV_AVAILABLE
-	@echo "  ✓ uv detected: $(UV_AVAILABLE)"
+	@echo "  uv: $(UV_AVAILABLE)"
 	@echo "    Install command: $(INSTALL_CMD)"
 else
-	@echo "  ✗ uv not found"
+	@echo "  uv: not found"
 endif
 ifdef CONDA_PREFIX
-	@echo "  ✓ Conda environment detected"
-	@echo "    CONDA_PREFIX: $(CONDA_PREFIX)"
+	@echo "  Conda: $(CONDA_PREFIX)"
 ifdef MAMBA_AVAILABLE
-	@echo "    Mamba available: $(MAMBA_AVAILABLE)"
-else
-	@echo "    Mamba: not found"
+	@echo "  Mamba: $(MAMBA_AVAILABLE)"
 endif
 else
-	@echo "  ✗ Not in conda environment"
+	@echo "  Conda: not active"
 endif
 	@echo "  pip: $(shell which pip 2>/dev/null || echo 'not found')"
-	@echo ""
 
 # ===================
-# Testing targets
+# Testing
 # ===================
-test:
-	@echo "$(BOLD)$(BLUE)Running all tests...$(RESET)"
-	@echo "$(YELLOW)Note: GUI tests excluded from parallel - run 'make test-gui' separately$(RESET)"
-	$(RUN_CMD) $(PYTEST) --ignore=$(TEST_DIR)/gui_interactive/ -n auto --dist=loadscope
+
+# Core parallel test runner (test, test-parallel, test-full are identical)
+test test-parallel test-full:
+	@echo "$(BOLD)$(BLUE)Running tests (parallel, excl. GUI)...$(RESET)"
+	@echo "$(YELLOW)Note: GUI tests excluded - run 'make test-gui' separately$(RESET)"
+	$(RUN_CMD) $(PYTEST) --ignore=$(TEST_DIR)/gui_interactive/ $(PARALLEL_OPTS)
+	@echo "$(BOLD)$(GREEN)Done: Tests passed$(RESET)"
 
 test-smoke:
 	@echo "$(BOLD)$(BLUE)Running smoke tests (~30s)...$(RESET)"
-	$(RUN_CMD) $(PYTEST) -m "smoke" -n auto --dist=loadscope
-	@echo "$(BOLD)$(GREEN)✓ Smoke tests passed!$(RESET)"
+	$(RUN_CMD) $(PYTEST) -m "smoke" $(PARALLEL_OPTS)
+	@echo "$(BOLD)$(GREEN)Done: Smoke tests passed$(RESET)"
 
 test-fast:
-	@echo "$(BOLD)$(BLUE)Running fast tests (excluding slow tests)...$(RESET)"
-	$(RUN_CMD) $(PYTEST) -m "not slow" -n auto --dist=loadscope
-	@echo "$(BOLD)$(GREEN)✓ Fast tests passed!$(RESET)"
+	@echo "$(BOLD)$(BLUE)Running fast tests (excluding slow)...$(RESET)"
+	$(RUN_CMD) $(PYTEST) -m "not slow" $(PARALLEL_OPTS)
+	@echo "$(BOLD)$(GREEN)Done: Fast tests passed$(RESET)"
 
 test-unit:
 	@echo "$(BOLD)$(BLUE)Running unit tests...$(RESET)"
-	$(RUN_CMD) $(PYTEST) -m "unit" -n auto --dist=loadscope
+	$(RUN_CMD) $(PYTEST) -m "unit" $(PARALLEL_OPTS)
 
 test-integration:
 	@echo "$(BOLD)$(BLUE)Running integration tests...$(RESET)"
@@ -247,34 +254,23 @@ test-scientific:
 	@echo "$(BOLD)$(BLUE)Running scientific validation tests...$(RESET)"
 	$(RUN_CMD) $(PYTEST) -m "scientific or numerical or validation"
 
-test-parallel:
-	@echo "$(BOLD)$(BLUE)Running tests in parallel (2-4x speedup)...$(RESET)"
-	@echo "$(YELLOW)Note: GUI tests excluded - run 'make test-gui' separately$(RESET)"
-	$(RUN_CMD) $(PYTEST) --ignore=$(TEST_DIR)/gui_interactive/ -n auto --dist=loadscope
-
 test-ci:
-	@echo "$(BOLD)$(BLUE)Running CI test suite (matches GitHub Actions)...$(RESET)"
-	$(RUN_CMD) $(PYTEST) -m "not (slow or gui or stress or flaky)" -n auto --dist=loadscope --durations=10
-	@echo "$(BOLD)$(GREEN)✓ CI test suite passed!$(RESET)"
-
-test-full:
-	@echo "$(BOLD)$(BLUE)Running comprehensive test suite...$(RESET)"
-	$(RUN_CMD) $(PYTEST) --ignore=$(TEST_DIR)/gui_interactive/ -n auto --dist=loadscope
-	@echo "$(BOLD)$(GREEN)✓ Full test suite passed!$(RESET)"
+	@echo "$(BOLD)$(BLUE)Running CI test suite...$(RESET)"
+	$(RUN_CMD) $(PYTEST) -m "not (slow or gui or stress or flaky)" $(PARALLEL_OPTS) --durations=10
+	@echo "$(BOLD)$(GREEN)Done: CI suite passed$(RESET)"
 
 test-all:
 	@echo "$(BOLD)$(BLUE)Running all tests (parallel + GUI sequential)...$(RESET)"
-	@echo "$(CYAN)Step 1/2: Running non-GUI tests in parallel...$(RESET)"
-	$(RUN_CMD) $(PYTEST) --ignore=$(TEST_DIR)/gui_interactive/ -n auto --dist=loadscope
-	@echo "$(CYAN)Step 2/2: Running GUI tests sequentially...$(RESET)"
+	@echo "$(CYAN)Step 1/2: Non-GUI tests (parallel)...$(RESET)"
+	$(RUN_CMD) $(PYTEST) --ignore=$(TEST_DIR)/gui_interactive/ $(PARALLEL_OPTS)
+	@echo "$(CYAN)Step 2/2: GUI tests (sequential)...$(RESET)"
 	$(RUN_CMD) $(PYTEST) $(TEST_DIR)/gui_interactive/ -p no:xdist
-	@echo "$(BOLD)$(GREEN)✓ All tests passed!$(RESET)"
+	@echo "$(BOLD)$(GREEN)Done: All tests passed$(RESET)"
 
 test-coverage:
-	@echo "$(BOLD)$(BLUE)Running tests with coverage report...$(RESET)"
+	@echo "$(BOLD)$(BLUE)Running tests with coverage...$(RESET)"
 	$(RUN_CMD) $(PYTEST) --cov=$(PACKAGE_NAME) --cov-report=term-missing --cov-report=html --cov-report=xml
-	@echo "$(BOLD)$(GREEN)✓ Coverage report generated!$(RESET)"
-	@echo "View HTML report: open htmlcov/index.html"
+	@echo "$(BOLD)$(GREEN)Done: Coverage report at htmlcov/index.html$(RESET)"
 
 test-gui:
 	@echo "$(BOLD)$(BLUE)Running GUI tests (requires display)...$(RESET)"
@@ -286,64 +282,60 @@ test-gui-headless:
 	$(PYTHON) $(TEST_DIR)/gui_interactive/run_gui_tests.py quick --headless
 
 # ===================
-# Code quality targets
+# Code quality
 # ===================
 format:
-	@echo "$(BOLD)$(BLUE)Formatting code with ruff...$(RESET)"
+	@echo "$(BOLD)$(BLUE)Formatting code...$(RESET)"
 	$(RUN_CMD) ruff format $(PACKAGE_NAME) $(TEST_DIR)
 	$(RUN_CMD) ruff check --fix $(PACKAGE_NAME) $(TEST_DIR)
-	@echo "$(BOLD)$(GREEN)✓ Code formatted!$(RESET)"
+	@echo "$(BOLD)$(GREEN)Done: Code formatted$(RESET)"
 
 lint:
-	@echo "$(BOLD)$(BLUE)Running linting checks...$(RESET)"
+	@echo "$(BOLD)$(BLUE)Running linting...$(RESET)"
 	$(RUN_CMD) ruff check $(PACKAGE_NAME) $(TEST_DIR)
-	@echo "$(BOLD)$(GREEN)✓ No linting errors!$(RESET)"
+	@echo "$(BOLD)$(GREEN)Done: No lint errors$(RESET)"
 
 type-check:
 	@echo "$(BOLD)$(BLUE)Running type checks...$(RESET)"
 	$(RUN_CMD) mypy $(PACKAGE_NAME)
-	@echo "$(BOLD)$(GREEN)✓ Type checking passed!$(RESET)"
+	@echo "$(BOLD)$(GREEN)Done: Type checks passed$(RESET)"
 
 check: lint type-check
-	@echo "$(BOLD)$(GREEN)✓ All checks passed!$(RESET)"
+	@echo "$(BOLD)$(GREEN)Done: All checks passed$(RESET)"
 
 quick: format test-smoke
-	@echo "$(BOLD)$(GREEN)✓ Quick iteration complete!$(RESET)"
+	@echo "$(BOLD)$(GREEN)Done: Quick iteration complete$(RESET)"
 
 # ===================
-# Documentation targets
+# Documentation
 # ===================
 docs:
 	@echo "$(BOLD)$(BLUE)Building documentation...$(RESET)"
 	cd $(DOCS_DIR) && sphinx-build -b html . _build/html
-	@echo "$(BOLD)$(GREEN)✓ Documentation built!$(RESET)"
-	@echo "Open: $(DOCS_DIR)/_build/html/index.html"
+	@echo "$(BOLD)$(GREEN)Done: $(DOCS_DIR)/_build/html/index.html$(RESET)"
 
 docs-serve:
-	@echo "$(BOLD)$(BLUE)Building and serving documentation with auto-reload...$(RESET)"
+	@echo "$(BOLD)$(BLUE)Serving docs with auto-reload...$(RESET)"
 	cd $(DOCS_DIR) && sphinx-autobuild -b html . _build/html --host 0.0.0.0 --port 8000
 
 docs-clean:
-	@echo "$(BOLD)$(BLUE)Cleaning documentation build artifacts...$(RESET)"
 	rm -rf $(DOCS_DIR)/_build/
 
 # ===================
-# Build and publish targets
+# Build and publish
 # ===================
 build: clean-build
 	@echo "$(BOLD)$(BLUE)Building distribution packages...$(RESET)"
 	$(PYTHON) -m build
-	@echo "$(BOLD)$(GREEN)✓ Build complete!$(RESET)"
-	@echo "Distributions in dist/"
+	@echo "$(BOLD)$(GREEN)Done: Distributions in dist/$(RESET)"
 
 publish: build
 	@echo "$(BOLD)$(YELLOW)This will publish $(PACKAGE_NAME) to PyPI!$(RESET)"
 	@read -p "Are you sure? [y/N] " -n 1 -r; \
 	echo; \
 	if [[ $$REPLY =~ ^[Yy]$$ ]]; then \
-		echo "$(BOLD)$(BLUE)Publishing to PyPI...$(RESET)"; \
 		$(PYTHON) -m twine upload dist/*; \
-		echo "$(BOLD)$(GREEN)✓ Published to PyPI!$(RESET)"; \
+		echo "$(BOLD)$(GREEN)Done: Published to PyPI$(RESET)"; \
 	else \
 		echo "Cancelled."; \
 	fi
@@ -351,123 +343,64 @@ publish: build
 publish-test: build
 	@echo "$(BOLD)$(BLUE)Publishing to Test PyPI...$(RESET)"
 	$(PYTHON) -m twine upload --repository testpypi dist/*
-	@echo "$(BOLD)$(GREEN)✓ Published to Test PyPI!$(RESET)"
+	@echo "$(BOLD)$(GREEN)Done: Published to Test PyPI$(RESET)"
 
 # ===================
-# Application targets
+# Application
 # ===================
 run-app:
 	@echo "$(BOLD)$(BLUE)Launching XPCS Toolkit GUI...$(RESET)"
 	$(PYTHON) -m $(PACKAGE_NAME).cli
 
 # ===================
-# Cleanup targets
+# Cleanup
 # ===================
 clean-build:
 	@echo "$(BOLD)$(BLUE)Removing build artifacts...$(RESET)"
-	rm -rf build/
-	rm -rf dist/
-	rm -rf *.egg-info
-	find . -type d -name "*.egg-info" \
-		-not -path "./.venv/*" \
-		-not -path "./venv/*" \
-		-not -path "./.claude/*" \
-		-exec rm -rf {} + 2>/dev/null || true
-	find . -type d -name "*.egg" \
-		-not -path "./.venv/*" \
-		-not -path "./venv/*" \
-		-not -path "./.claude/*" \
-		-exec rm -rf {} + 2>/dev/null || true
+	rm -rf build/ dist/ *.egg-info
+	find . -type d \( -name "*.egg-info" -o -name "*.egg" \) \
+		$(FIND_PRUNE) -exec rm -rf {} + 2>/dev/null || true
 
 clean-pyc:
 	@echo "$(BOLD)$(BLUE)Removing Python file artifacts...$(RESET)"
 	find . -type d -name __pycache__ \
-		-not -path "./.venv/*" \
-		-not -path "./venv/*" \
-		-not -path "./.claude/*" \
-		-exec rm -rf {} + 2>/dev/null || true
+		$(FIND_PRUNE) -exec rm -rf {} + 2>/dev/null || true
 	find . -type f \( -name "*.pyc" -o -name "*.pyo" \) \
-		-not -path "./.venv/*" \
-		-not -path "./venv/*" \
-		-not -path "./.claude/*" \
-		-delete 2>/dev/null || true
+		$(FIND_PRUNE) -delete 2>/dev/null || true
 
 clean-test:
 	@echo "$(BOLD)$(BLUE)Removing test and coverage artifacts...$(RESET)"
-	find . -type d -name .pytest_cache \
-		-not -path "./.venv/*" \
-		-not -path "./venv/*" \
-		-not -path "./.claude/*" \
-		-exec rm -rf {} + 2>/dev/null || true
-	find . -type d -name .ruff_cache \
-		-not -path "./.venv/*" \
-		-not -path "./venv/*" \
-		-not -path "./.claude/*" \
-		-exec rm -rf {} + 2>/dev/null || true
-	find . -type d -name .mypy_cache \
-		-not -path "./.venv/*" \
-		-not -path "./venv/*" \
-		-not -path "./.claude/*" \
-		-exec rm -rf {} + 2>/dev/null || true
-	find . -type d -name htmlcov \
-		-not -path "./.venv/*" \
-		-not -path "./venv/*" \
-		-not -path "./.claude/*" \
-		-exec rm -rf {} + 2>/dev/null || true
-	find . -type d -name .hypothesis \
-		-not -path "./.venv/*" \
-		-not -path "./venv/*" \
-		-not -path "./.claude/*" \
-		-exec rm -rf {} + 2>/dev/null || true
-	find . -type d -name .benchmarks \
-		-not -path "./.venv/*" \
-		-not -path "./venv/*" \
-		-not -path "./.claude/*" \
-		-exec rm -rf {} + 2>/dev/null || true
-	find . -type d -name .nlsq_cache \
-		-not -path "./.venv/*" \
-		-not -path "./venv/*" \
-		-not -path "./.claude/*" \
-		-exec rm -rf {} + 2>/dev/null || true
-	rm -rf .coverage .coverage.* coverage.xml coverage.json
-	rm -rf test-artifacts/ test-reports/
-	find . -name '*.log' -path './tests/*' -delete 2>/dev/null || true
-	find . -name 'test_*.log' -delete 2>/dev/null || true
-	find . -name 'test_*.xml' -delete 2>/dev/null || true
+	find . -type d \( -name .pytest_cache -o -name .ruff_cache -o -name .mypy_cache \
+		-o -name htmlcov -o -name .hypothesis -o -name .benchmarks -o -name .nlsq_cache \) \
+		$(FIND_PRUNE) -exec rm -rf {} + 2>/dev/null || true
+	rm -rf .coverage .coverage.* coverage.xml coverage.json test-artifacts/ test-reports/
+	find . \( -name '*.log' -path './tests/*' -o -name 'test_*.log' -o -name 'test_*.xml' \) \
+		-delete 2>/dev/null || true
 
 clean: clean-build clean-pyc clean-test
 	@echo "$(BOLD)$(BLUE)Removing temporary files...$(RESET)"
-	find . -name '.DS_Store' -delete 2>/dev/null || true
-	find . -name 'Thumbs.db' -delete 2>/dev/null || true
-	find . -name '*.tmp' -delete 2>/dev/null || true
-	find . -name '*~' -delete 2>/dev/null || true
-	@echo "$(BOLD)$(GREEN)✓ Cleaned!$(RESET)"
-	@echo "$(BOLD)Protected directories preserved:$(RESET) .venv/, venv/, .claude/"
+	find . \( -name '.DS_Store' -o -name 'Thumbs.db' -o -name '*.tmp' -o -name '*~' \) \
+		-delete 2>/dev/null || true
+	@echo "$(BOLD)$(GREEN)Done: Cleaned (preserved .venv/, venv/, .claude/)$(RESET)"
 
 clean-all: clean
-	@echo "$(BOLD)$(BLUE)Performing deep clean of additional caches...$(RESET)"
-	rm -rf .tox/ 2>/dev/null || true
-	rm -rf .nox/ 2>/dev/null || true
-	rm -rf .eggs/ 2>/dev/null || true
-	rm -rf .cache/ 2>/dev/null || true
-	@echo "$(BOLD)$(GREEN)✓ Deep clean complete!$(RESET)"
-	@echo "$(BOLD)Protected directories preserved:$(RESET) .venv/, venv/, .claude/"
+	@echo "$(BOLD)$(BLUE)Deep clean...$(RESET)"
+	rm -rf .tox/ .nox/ .eggs/ .cache/ 2>/dev/null || true
+	@echo "$(BOLD)$(GREEN)Done: Deep clean complete$(RESET)"
 
 clean-venv:
 	@echo "$(BOLD)$(YELLOW)WARNING: This will remove the virtual environment!$(RESET)"
-	@echo "$(BOLD)You will need to recreate it manually.$(RESET)"
 	@read -p "Are you sure? [y/N] " -n 1 -r; \
 	echo; \
 	if [[ $$REPLY =~ ^[Yy]$$ ]]; then \
-		echo "$(BOLD)$(BLUE)Removing virtual environment...$(RESET)"; \
 		rm -rf $(VENV) venv; \
-		echo "$(BOLD)$(GREEN)✓ Virtual environment removed!$(RESET)"; \
+		echo "$(BOLD)$(GREEN)Done: Virtual environment removed$(RESET)"; \
 	else \
 		echo "Cancelled."; \
 	fi
 
 # ===================
-# Utility targets
+# Utility
 # ===================
 info:
 	@echo "$(BOLD)$(BLUE)Project Information$(RESET)"
@@ -478,47 +411,55 @@ info:
 	@echo "Package manager: $(PKG_MANAGER)"
 	@echo ""
 	@echo "$(BOLD)$(BLUE)Directory Structure$(RESET)"
-	@echo "===================="
-	@echo "Source: $(SRC_DIR)/"
-	@echo "Tests: $(TEST_DIR)/"
-	@echo "Docs: $(DOCS_DIR)/"
+	@echo "  Source: $(SRC_DIR)/  Tests: $(TEST_DIR)/  Docs: $(DOCS_DIR)/"
 
 version:
 	@$(PYTHON) -c "import $(PACKAGE_NAME); print($(PACKAGE_NAME).__version__)" 2>/dev/null || \
-		echo "$(BOLD)$(RED)Error: Package not installed. Run 'make install' first.$(RESET)"
+		echo "$(RED)Error: Package not installed. Run 'make install' first.$(RESET)"
 
 check-deps:
-	@echo "$(BOLD)$(BLUE)Checking required dependencies...$(RESET)"
-	@$(PYTHON) -c "import sys; print('Python:', sys.version)"
-	@$(PYTHON) -c "import numpy; print('NumPy:', numpy.__version__)"
-	@$(PYTHON) -c "import scipy; print('SciPy:', scipy.__version__)"
-	@$(PYTHON) -c "import h5py; print('h5py:', h5py.version.version)"
-	@$(PYTHON) -c "import PySide6; print('PySide6:', PySide6.__version__)"
-	@$(PYTHON) -c "import pyqtgraph; print('PyQtGraph:', pyqtgraph.__version__)"
-	@$(PYTHON) -c "import pandas; print('Pandas:', pandas.__version__)"
-	@$(PYTHON) -c "import matplotlib; print('Matplotlib:', matplotlib.__version__)"
-	@echo "$(BOLD)$(GREEN)✓ Core dependencies OK$(RESET)"
+	@echo "$(BOLD)$(BLUE)Checking dependencies...$(RESET)"
+	@$(PYTHON) -c "\
+	import sys; print(f'Python: {sys.version}'); \
+	import numpy; print(f'NumPy: {numpy.__version__}'); \
+	import scipy; print(f'SciPy: {scipy.__version__}'); \
+	import h5py; print(f'h5py: {h5py.version.version}'); \
+	import PySide6; print(f'PySide6: {PySide6.__version__}'); \
+	import pyqtgraph; print(f'PyQtGraph: {pyqtgraph.__version__}'); \
+	import pandas; print(f'Pandas: {pandas.__version__}'); \
+	import matplotlib; print(f'Matplotlib: {matplotlib.__version__}'); \
+	import jax; print(f'JAX: {jax.__version__}'); \
+	import numpyro; print(f'NumPyro: {numpyro.__version__}'); \
+	import arviz; print(f'ArviZ: {arviz.__version__}'); \
+	import optimistix; print(f'Optimistix: {optimistix.__version__}'); \
+	print('All dependencies OK')"
 
 # ===================
-# Pre-commit targets
+# Pre-commit
 # ===================
-pre-commit-install:
-	@echo "$(BOLD)$(BLUE)Installing pre-commit hooks...$(RESET)"
-	pre-commit install
-	pre-commit install --hook-type commit-msg
-	@echo "$(BOLD)$(GREEN)✓ Pre-commit hooks installed!$(RESET)"
+install-hooks pre-commit-install:
+	@echo "$(BOLD)$(BLUE)Installing git hooks...$(RESET)"
+	@pre-commit install
+	@pre-commit install --hook-type commit-msg
+	@rm -f .git/hooks/pre-push
+	@echo "$(BOLD)$(GREEN)Done: Git hooks installed$(RESET)"
+	@echo "  pre-commit: lint, format, type checks"
+	@echo "  commit-msg: conventional commits check"
+	@echo ""
+	@echo "$(BOLD)Usage:$(RESET)"
+	@echo "  git commit -m 'msg'  -> runs pre-commit hooks"
+	@echo "  git push             -> triggers GitHub Actions CI"
+	@echo "  make verify-fast     -> full local verification (optional)"
 
 pre-commit-run:
-	@echo "$(BOLD)$(BLUE)Running pre-commit hooks on all files...$(RESET)"
+	@echo "$(BOLD)$(BLUE)Running pre-commit on all files...$(RESET)"
 	pre-commit run --all-files
 
 # ===================
 # Pre-push verification
 # ===================
 verify:
-	@echo "$(BOLD)$(BLUE)======================================$(RESET)"
-	@echo "$(BOLD)$(BLUE)  FULL LOCAL CI VERIFICATION$(RESET)"
-	@echo "$(BOLD)$(BLUE)======================================$(RESET)"
+	@echo "$(BOLD)$(BLUE)====== FULL LOCAL CI VERIFICATION ======$(RESET)"
 	@echo ""
 	@echo "$(BOLD)Step 1/3: Pre-commit hooks$(RESET)"
 	@pre-commit run --all-files || (echo "$(RED)Pre-commit failed!$(RESET)" && exit 1)
@@ -527,16 +468,12 @@ verify:
 	@$(RUN_CMD) mypy $(PACKAGE_NAME) || (echo "$(RED)Type check failed!$(RESET)" && exit 1)
 	@echo ""
 	@echo "$(BOLD)Step 3/3: Full test suite (excl. GUI)$(RESET)"
-	@$(RUN_CMD) $(PYTEST) --ignore=$(TEST_DIR)/gui_interactive/ -n auto --dist=loadscope || (echo "$(RED)Tests failed!$(RESET)" && exit 1)
+	@$(RUN_CMD) $(PYTEST) --ignore=$(TEST_DIR)/gui_interactive/ $(PARALLEL_OPTS) || (echo "$(RED)Tests failed!$(RESET)" && exit 1)
 	@echo ""
-	@echo "$(BOLD)$(GREEN)======================================$(RESET)"
-	@echo "$(BOLD)$(GREEN)  ALL CHECKS PASSED - SAFE TO PUSH$(RESET)"
-	@echo "$(BOLD)$(GREEN)======================================$(RESET)"
+	@echo "$(BOLD)$(GREEN)====== ALL CHECKS PASSED - SAFE TO PUSH ======$(RESET)"
 
 verify-fast:
-	@echo "$(BOLD)$(BLUE)======================================$(RESET)"
-	@echo "$(BOLD)$(BLUE)  QUICK LOCAL CI VERIFICATION$(RESET)"
-	@echo "$(BOLD)$(BLUE)======================================$(RESET)"
+	@echo "$(BOLD)$(BLUE)====== QUICK LOCAL CI VERIFICATION ======$(RESET)"
 	@echo ""
 	@echo "$(BOLD)Step 1/3: Pre-commit hooks$(RESET)"
 	@pre-commit run --all-files || (echo "$(RED)Pre-commit failed!$(RESET)" && exit 1)
@@ -545,58 +482,43 @@ verify-fast:
 	@$(RUN_CMD) mypy $(PACKAGE_NAME) || (echo "$(RED)Type check failed!$(RESET)" && exit 1)
 	@echo ""
 	@echo "$(BOLD)Step 3/3: Fast tests$(RESET)"
-	@$(RUN_CMD) $(PYTEST) -m "not slow" -n auto --dist=loadscope -q || (echo "$(RED)Tests failed!$(RESET)" && exit 1)
+	@$(RUN_CMD) $(PYTEST) -m "not slow" $(PARALLEL_OPTS) -q || (echo "$(RED)Tests failed!$(RESET)" && exit 1)
 	@echo ""
-	@echo "$(BOLD)$(GREEN)======================================$(RESET)"
-	@echo "$(BOLD)$(GREEN)  QUICK CHECKS PASSED$(RESET)"
-	@echo "$(BOLD)$(GREEN)======================================$(RESET)"
-
-install-hooks:
-	@echo "$(BOLD)$(BLUE)Installing git hooks...$(RESET)"
-	@pre-commit install
-	@pre-commit install --hook-type commit-msg
-	@rm -f .git/hooks/pre-push
-	@echo "$(BOLD)$(GREEN)✓ Git hooks installed!$(RESET)"
-	@echo ""
-	@echo "$(BOLD)Hooks installed:$(RESET)"
-	@echo "  - pre-commit: lint, format, type checks"
-	@echo "  - commit-msg: conventional commits check"
-	@echo ""
-	@echo "$(BOLD)Usage:$(RESET)"
-	@echo "  git commit -m 'msg'  → runs pre-commit hooks"
-	@echo "  git push             → triggers GitHub Actions CI"
-	@echo "  make verify-fast     → full local verification (optional)"
+	@echo "$(BOLD)$(GREEN)====== QUICK CHECKS PASSED ======$(RESET)"
 
 # ===================
-# GPU Acceleration targets (System CUDA)
+# GPU Acceleration (System CUDA)
 # ===================
 
-# Auto-detect system CUDA version and install matching JAX package
-install-jax-gpu:
-	@echo "$(BOLD)$(BLUE)Installing JAX with GPU support (system CUDA auto-detect)...$(RESET)"
-	@echo "============================================================"
+# Internal: Validate system CUDA + GPU, then install JAX
+# Called with: $(MAKE) _jax-gpu-install CUDA_VER=<12|13> MIN_SM=<52|75> MIN_SM_DISP=<5.2|7.5> JAX_PKG=<pkg>
+_jax-gpu-install:
 	@echo "Platform: $(PLATFORM)"
 	@echo "Package manager: $(PKG_MANAGER)"
-	@echo
+	@echo ""
 ifeq ($(PLATFORM),linux)
-	@# Step 1: Detect system CUDA version
 	@CUDA_VERSION=$$(nvcc --version 2>/dev/null | grep -oP 'release \K[0-9]+' | head -1); \
+	CUDA_FULL=$$(nvcc --version 2>/dev/null | grep -oP 'release \K[0-9]+\.[0-9]+'); \
 	if [ -z "$$CUDA_VERSION" ]; then \
 		echo "$(RED)Error: nvcc not found - CUDA toolkit not installed or not in PATH$(RESET)"; \
 		echo ""; \
-		echo "Please install CUDA toolkit:"; \
+		echo "Install CUDA toolkit:"; \
 		echo "  Ubuntu/Debian: sudo apt install nvidia-cuda-toolkit"; \
-		echo "  Or download from: https://developer.nvidia.com/cuda-downloads"; \
+		echo "  Or download: https://developer.nvidia.com/cuda-downloads"; \
 		echo ""; \
 		echo "After installation, ensure nvcc is in PATH:"; \
 		echo "  export PATH=/usr/local/cuda/bin:\$$PATH"; \
 		exit 1; \
 	fi; \
-	CUDA_FULL=$$(nvcc --version 2>/dev/null | grep -oP 'release \K[0-9]+\.[0-9]+'); \
-	echo "Detected system CUDA version: $$CUDA_FULL (major: $$CUDA_VERSION)"; \
-	echo ""; \
+	if [ "$$CUDA_VERSION" != "$(CUDA_VER)" ]; then \
+		echo "$(RED)Error: System CUDA $$CUDA_FULL detected, but CUDA $(CUDA_VER).x required$(RESET)"; \
+		echo "Either:"; \
+		echo "  1. Install CUDA $(CUDA_VER).x toolkit"; \
+		echo "  2. Use: make install-jax-gpu (auto-detect your CUDA version)"; \
+		exit 1; \
+	fi; \
+	echo "System CUDA: $$CUDA_FULL"; \
 	\
-	# Step 2: Detect GPU SM version \
 	SM_VERSION=$$(nvidia-smi --query-gpu=compute_cap --format=csv,noheader 2>/dev/null | head -1 | tr -d '.'); \
 	SM_DISPLAY=$$(nvidia-smi --query-gpu=compute_cap --format=csv,noheader 2>/dev/null | head -1); \
 	GPU_NAME=$$(nvidia-smi --query-gpu=name --format=csv,noheader 2>/dev/null | head -1); \
@@ -604,41 +526,28 @@ ifeq ($(PLATFORM),linux)
 		echo "$(RED)Error: Could not detect GPU (nvidia-smi failed)$(RESET)"; \
 		exit 1; \
 	fi; \
-	echo "Detected GPU: $$GPU_NAME (SM $$SM_DISPLAY)"; \
-	echo ""; \
-	\
-	# Step 3: Validate compatibility and install \
-	if [ "$$CUDA_VERSION" = "13" ]; then \
-		if [ "$$SM_VERSION" -ge 75 ]; then \
-			echo "Compatibility: System CUDA 13 + GPU SM $$SM_DISPLAY = Compatible"; \
-			echo "Installing: $(JAX_GPU_CUDA13_PKG)"; \
-			$(MAKE) install-jax-gpu-cuda13; \
-		else \
-			echo "$(RED)Error: GPU SM $$SM_DISPLAY does not support CUDA 13 (requires SM >= 7.5)$(RESET)"; \
-			echo "Your GPU requires CUDA 12. Please install CUDA 12.x toolkit."; \
-			exit 1; \
-		fi; \
-	elif [ "$$CUDA_VERSION" = "12" ]; then \
-		if [ "$$SM_VERSION" -ge 52 ]; then \
-			echo "Compatibility: System CUDA 12 + GPU SM $$SM_DISPLAY = Compatible"; \
-			echo "Installing: $(JAX_GPU_CUDA12_PKG)"; \
-			$(MAKE) install-jax-gpu-cuda12; \
-		else \
-			echo "$(RED)Error: GPU SM $$SM_DISPLAY too old (requires SM >= 5.2)$(RESET)"; \
-			echo "Kepler and older GPUs are not supported by JAX 0.8+"; \
-			exit 1; \
-		fi; \
-	else \
-		echo "$(RED)Error: CUDA $$CUDA_VERSION not supported by JAX 0.8+$(RESET)"; \
-		echo "JAX requires CUDA 12.x or 13.x"; \
-		echo "Please upgrade your CUDA installation."; \
+	if [ "$$SM_VERSION" -lt $(MIN_SM) ]; then \
+		echo "$(RED)Error: GPU $$GPU_NAME (SM $$SM_DISPLAY) requires SM >= $(MIN_SM_DISP) for CUDA $(CUDA_VER)$(RESET)"; \
 		exit 1; \
-	fi
+	fi; \
+	echo "GPU: $$GPU_NAME (SM $$SM_DISPLAY) - compatible with CUDA $(CUDA_VER)"
+	@echo ""
+	@echo "Step 1/2: Uninstalling CPU-only JAX..."
+	@$(UNINSTALL_CMD) jax jaxlib 2>/dev/null || true
+	@echo ""
+	@echo "Step 2/2: Installing JAX with system CUDA $(CUDA_VER)..."
+	@echo "Command: $(INSTALL_CMD) $(JAX_PKG)"
+	@$(INSTALL_CMD) $(JAX_PKG)
+	@echo ""
+	@$(MAKE) gpu-check
+	@echo ""
+	@echo "$(BOLD)$(GREEN)JAX GPU support installed successfully$(RESET)"
+	@echo "  Package: $(JAX_PKG)"
+	@echo "  Uses: System CUDA $(CUDA_VER).x installation"
 else
-	@echo "$(YELLOW)Error: GPU acceleration only available on Linux$(RESET)"
+	@echo "$(RED)Error: GPU acceleration only available on Linux$(RESET)"
 	@echo "  Current platform: $(PLATFORM)"
-	@echo "  Keeping CPU-only installation"
-	@echo
+	@echo ""
 	@echo "Platform support:"
 	@echo "  - Linux + NVIDIA GPU + System CUDA: Full GPU acceleration"
 	@echo "  - Windows WSL2: Experimental (use Linux wheels)"
@@ -646,119 +555,52 @@ else
 	@echo "  - Windows native: CPU-only (no pre-built wheels)"
 endif
 
-# CUDA 13 installation (requires system CUDA 13.x)
+install-jax-gpu:
+	@echo "$(BOLD)$(BLUE)Installing JAX with GPU support (system CUDA auto-detect)...$(RESET)"
+	@echo "============================================================"
+ifeq ($(PLATFORM),linux)
+	@CUDA_VERSION=$$(nvcc --version 2>/dev/null | grep -oP 'release \K[0-9]+' | head -1); \
+	CUDA_FULL=$$(nvcc --version 2>/dev/null | grep -oP 'release \K[0-9]+\.[0-9]+'); \
+	if [ -z "$$CUDA_VERSION" ]; then \
+		echo "$(RED)Error: nvcc not found - CUDA toolkit not installed or not in PATH$(RESET)"; \
+		exit 1; \
+	fi; \
+	echo "Detected system CUDA: $$CUDA_FULL (major: $$CUDA_VERSION)"; \
+	echo ""; \
+	if [ "$$CUDA_VERSION" = "13" ]; then \
+		$(MAKE) _jax-gpu-install CUDA_VER=13 MIN_SM=75 MIN_SM_DISP=7.5 JAX_PKG=$(JAX_GPU_CUDA13_PKG); \
+	elif [ "$$CUDA_VERSION" = "12" ]; then \
+		$(MAKE) _jax-gpu-install CUDA_VER=12 MIN_SM=52 MIN_SM_DISP=5.2 JAX_PKG=$(JAX_GPU_CUDA12_PKG); \
+	else \
+		echo "$(RED)Error: CUDA $$CUDA_VERSION not supported by JAX 0.8+$(RESET)"; \
+		echo "JAX requires CUDA 12.x or 13.x"; \
+		exit 1; \
+	fi
+else
+	@echo "$(YELLOW)Error: GPU acceleration only available on Linux$(RESET)"
+	@echo "  Current platform: $(PLATFORM)"
+	@echo "  Keeping CPU-only installation"
+endif
+
 install-jax-gpu-cuda13:
 	@echo "$(BOLD)$(BLUE)Installing JAX with system CUDA 13...$(RESET)"
 	@echo "======================================"
-	@echo "Platform: $(PLATFORM)"
-	@echo "Package manager: $(PKG_MANAGER)"
-	@echo
-ifeq ($(PLATFORM),linux)
-	@# Validate system CUDA 13.x is installed
-	@CUDA_VERSION=$$(nvcc --version 2>/dev/null | grep -oP 'release \K[0-9]+' | head -1); \
-	CUDA_FULL=$$(nvcc --version 2>/dev/null | grep -oP 'release \K[0-9]+\.[0-9]+'); \
-	if [ -z "$$CUDA_VERSION" ]; then \
-		echo "$(RED)Error: nvcc not found - CUDA toolkit not installed$(RESET)"; \
-		exit 1; \
-	elif [ "$$CUDA_VERSION" != "13" ]; then \
-		echo "$(RED)Error: System CUDA $$CUDA_FULL detected, but CUDA 13.x required$(RESET)"; \
-		echo "Either:"; \
-		echo "  1. Install CUDA 13.x toolkit"; \
-		echo "  2. Use: make install-jax-gpu-cuda12 (if you have CUDA 12.x)"; \
-		exit 1; \
-	fi; \
-	echo "System CUDA: $$CUDA_FULL"
-	@# Validate GPU supports CUDA 13 (SM >= 7.5)
-	@SM_VERSION=$$(nvidia-smi --query-gpu=compute_cap --format=csv,noheader 2>/dev/null | head -1 | tr -d '.'); \
-	SM_DISPLAY=$$(nvidia-smi --query-gpu=compute_cap --format=csv,noheader 2>/dev/null | head -1); \
-	if [ -z "$$SM_VERSION" ]; then \
-		echo "$(RED)Error: Could not detect GPU$(RESET)"; \
-		exit 1; \
-	elif [ "$$SM_VERSION" -lt 75 ]; then \
-		echo "$(RED)Error: GPU SM $$SM_DISPLAY does not support CUDA 13$(RESET)"; \
-		echo "CUDA 13 requires SM >= 7.5 (Turing or newer)"; \
-		echo "Your GPU requires: make install-jax-gpu-cuda12"; \
-		exit 1; \
-	fi; \
-	echo "GPU SM version: $$SM_DISPLAY (compatible with CUDA 13)"
-	@echo
-	@echo "Step 1/2: Uninstalling CPU-only JAX..."
-	@$(UNINSTALL_CMD) jax jaxlib 2>/dev/null || true
-	@echo
-	@echo "Step 2/2: Installing JAX with system CUDA 13..."
-	@echo "Command: $(INSTALL_CMD) $(JAX_GPU_CUDA13_PKG)"
-	@$(INSTALL_CMD) $(JAX_GPU_CUDA13_PKG)
-	@echo
-	@$(MAKE) gpu-check
-	@echo
-	@echo "$(BOLD)$(GREEN)JAX GPU support installed successfully$(RESET)"
-	@echo "  Package: $(JAX_GPU_CUDA13_PKG)"
-	@echo "  Uses: System CUDA 13.x installation"
-else
-	@echo "$(RED)Error: CUDA 13 GPU acceleration only available on Linux$(RESET)"
-endif
+	@$(MAKE) _jax-gpu-install CUDA_VER=13 MIN_SM=75 MIN_SM_DISP=7.5 JAX_PKG=$(JAX_GPU_CUDA13_PKG)
 
-# CUDA 12 installation (requires system CUDA 12.x)
 install-jax-gpu-cuda12:
 	@echo "$(BOLD)$(BLUE)Installing JAX with system CUDA 12...$(RESET)"
 	@echo "======================================"
-	@echo "Platform: $(PLATFORM)"
-	@echo "Package manager: $(PKG_MANAGER)"
-	@echo
-ifeq ($(PLATFORM),linux)
-	@# Validate system CUDA 12.x is installed
-	@CUDA_VERSION=$$(nvcc --version 2>/dev/null | grep -oP 'release \K[0-9]+' | head -1); \
-	CUDA_FULL=$$(nvcc --version 2>/dev/null | grep -oP 'release \K[0-9]+\.[0-9]+'); \
-	if [ -z "$$CUDA_VERSION" ]; then \
-		echo "$(RED)Error: nvcc not found - CUDA toolkit not installed$(RESET)"; \
-		exit 1; \
-	elif [ "$$CUDA_VERSION" != "12" ]; then \
-		echo "$(RED)Error: System CUDA $$CUDA_FULL detected, but CUDA 12.x required$(RESET)"; \
-		echo "Either:"; \
-		echo "  1. Install CUDA 12.x toolkit"; \
-		echo "  2. Use: make install-jax-gpu-cuda13 (if you have CUDA 13.x and SM >= 7.5)"; \
-		exit 1; \
-	fi; \
-	echo "System CUDA: $$CUDA_FULL"
-	@# Validate GPU supports CUDA 12 (SM >= 5.2)
-	@SM_VERSION=$$(nvidia-smi --query-gpu=compute_cap --format=csv,noheader 2>/dev/null | head -1 | tr -d '.'); \
-	SM_DISPLAY=$$(nvidia-smi --query-gpu=compute_cap --format=csv,noheader 2>/dev/null | head -1); \
-	if [ -z "$$SM_VERSION" ]; then \
-		echo "$(RED)Error: Could not detect GPU$(RESET)"; \
-		exit 1; \
-	elif [ "$$SM_VERSION" -lt 52 ]; then \
-		echo "$(RED)Error: GPU SM $$SM_DISPLAY too old$(RESET)"; \
-		echo "CUDA 12 requires SM >= 5.2 (Maxwell or newer)"; \
-		echo "Kepler and older GPUs are not supported."; \
-		exit 1; \
-	fi; \
-	echo "GPU SM version: $$SM_DISPLAY (compatible with CUDA 12)"
-	@echo
-	@echo "Step 1/2: Uninstalling CPU-only JAX..."
-	@$(UNINSTALL_CMD) jax jaxlib 2>/dev/null || true
-	@echo
-	@echo "Step 2/2: Installing JAX with system CUDA 12..."
-	@echo "Command: $(INSTALL_CMD) $(JAX_GPU_CUDA12_PKG)"
-	@$(INSTALL_CMD) $(JAX_GPU_CUDA12_PKG)
-	@echo
-	@$(MAKE) gpu-check
-	@echo
-	@echo "$(BOLD)$(GREEN)JAX GPU support installed successfully$(RESET)"
-	@echo "  Package: $(JAX_GPU_CUDA12_PKG)"
-	@echo "  Uses: System CUDA 12.x installation"
-else
-	@echo "$(RED)Error: CUDA 12 GPU acceleration only available on Linux$(RESET)"
-endif
+	@$(MAKE) _jax-gpu-install CUDA_VER=12 MIN_SM=52 MIN_SM_DISP=5.2 JAX_PKG=$(JAX_GPU_CUDA12_PKG)
 
-# GPU verification target
+# GPU verification
 gpu-check:
 	@echo "$(BOLD)$(BLUE)Checking GPU Configuration...$(RESET)"
 	@echo "============================="
 	@$(PYTHON) -c "\
-import jax; \
-print(f'JAX version: {jax.__version__}'); \
-print(f'JAX backend: {jax.default_backend()}'); \
-devices = jax.devices(); \
-print(f'Devices: {devices}'); \
-gpu_count = sum(1 for d in devices if 'cuda' in str(d).lower()); \
-print(f'GPU detected: {gpu_count} device(s)') if gpu_count else print('No GPU detected - using CPU')"
+	import jax; \
+	print(f'JAX version: {jax.__version__}'); \
+	print(f'JAX backend: {jax.default_backend()}'); \
+	devices = jax.devices(); \
+	print(f'Devices: {devices}'); \
+	gpu_count = sum(1 for d in devices if 'cuda' in str(d).lower()); \
+	print(f'GPU detected: {gpu_count} device(s)') if gpu_count else print('No GPU detected - using CPU')"
