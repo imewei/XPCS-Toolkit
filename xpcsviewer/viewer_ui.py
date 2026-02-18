@@ -1393,6 +1393,29 @@ class Ui_mainWindow(object):
 
         self.gridLayout_12.addWidget(self.btn_g2_refit, 2, 10, 2, 1)
 
+        self.btn_g2_bayesian = QPushButton(self.groupBox_2)
+        self.btn_g2_bayesian.setObjectName("btn_g2_bayesian")
+        sizePolicy2.setHeightForWidth(
+            self.btn_g2_bayesian.sizePolicy().hasHeightForWidth()
+        )
+        self.btn_g2_bayesian.setSizePolicy(sizePolicy2)
+        self.gridLayout_12.addWidget(self.btn_g2_bayesian, 0, 11, 1, 1)
+
+        self.btn_g2_diagnosis = QPushButton(self.groupBox_2)
+        self.btn_g2_diagnosis.setObjectName("btn_g2_diagnosis")
+        sizePolicy2.setHeightForWidth(
+            self.btn_g2_diagnosis.sizePolicy().hasHeightForWidth()
+        )
+        self.btn_g2_diagnosis.setSizePolicy(sizePolicy2)
+        self.btn_g2_diagnosis.setEnabled(False)
+        self.gridLayout_12.addWidget(self.btn_g2_diagnosis, 1, 11, 1, 1)
+
+        self.sb_g2_bayesian_qidx = QSpinBox(self.groupBox_2)
+        self.sb_g2_bayesian_qidx.setObjectName("sb_g2_bayesian_qidx")
+        self.sb_g2_bayesian_qidx.setMinimum(0)
+        self.sb_g2_bayesian_qidx.setMaximum(999)
+        self.gridLayout_12.addWidget(self.sb_g2_bayesian_qidx, 2, 11, 1, 1)
+
         self.gridLayout_14.addLayout(self.gridLayout_12, 0, 0, 3, 1)
 
         self.splitter_2.addWidget(self.groupBox_2)
@@ -1532,6 +1555,17 @@ class Ui_mainWindow(object):
         self.btn_export_diffusion.setMinimumSize(QSize(120, 40))
 
         self.gridLayout_38.addWidget(self.btn_export_diffusion, 2, 0, 1, 1)
+
+        self.btn_diff_bayesian = QPushButton(self.groupBox_5)
+        self.btn_diff_bayesian.setObjectName("btn_diff_bayesian")
+        self.btn_diff_bayesian.setMinimumSize(QSize(120, 40))
+        self.gridLayout_38.addWidget(self.btn_diff_bayesian, 3, 0, 1, 1)
+
+        self.btn_diff_diagnosis = QPushButton(self.groupBox_5)
+        self.btn_diff_diagnosis.setObjectName("btn_diff_diagnosis")
+        self.btn_diff_diagnosis.setMinimumSize(QSize(120, 40))
+        self.btn_diff_diagnosis.setEnabled(False)
+        self.gridLayout_38.addWidget(self.btn_diff_diagnosis, 3, 1, 1, 1)
 
         self.gridLayout_39.addLayout(self.gridLayout_38, 0, 0, 1, 1)
 
@@ -3013,6 +3047,12 @@ class Ui_mainWindow(object):
         self.btn_g2_refit.setText(
             QCoreApplication.translate("mainWindow", "refit", None)
         )
+        self.btn_g2_bayesian.setText(
+            QCoreApplication.translate("mainWindow", "Fit Bayesian", None)
+        )
+        self.btn_g2_diagnosis.setText(
+            QCoreApplication.translate("mainWindow", "Plot Diagnosis", None)
+        )
         self.tabWidget.setTabText(
             self.tabWidget.indexOf(self.tab_6),
             QCoreApplication.translate("mainWindow", "g2", None),
@@ -3087,6 +3127,12 @@ class Ui_mainWindow(object):
             )
         )
         # endif // QT_CONFIG(tooltip)
+        self.btn_diff_bayesian.setText(
+            QCoreApplication.translate("mainWindow", "Fit Bayesian", None)
+        )
+        self.btn_diff_diagnosis.setText(
+            QCoreApplication.translate("mainWindow", "Plot Diagnosis", None)
+        )
         self.tabWidget.setTabText(
             self.tabWidget.indexOf(self.tab_7),
             QCoreApplication.translate("mainWindow", "Diffusion", None),

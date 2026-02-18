@@ -210,8 +210,8 @@ def improve_tab_content_spacing(tab_widget: QWidget) -> None:
     Args:
         tab_widget: The QTabWidget to improve
     """
-    for i in range(tab_widget.count()):
-        page = tab_widget.widget(i)
+    for i in range(tab_widget.count()):  # type: ignore[attr-defined]
+        page = tab_widget.widget(i)  # type: ignore[attr-defined]
         if page:
             layout = page.layout()
             if layout:

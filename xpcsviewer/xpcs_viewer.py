@@ -260,6 +260,19 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         # Initialize SimpleMask window reference (will be created on demand)
         self._simplemask_window: SimpleMaskWindow | None = None
 
+        # Bayesian fitting state — G2
+        self._g2_bayesian_results: dict[int, object] = {}
+        self._g2_diagnosis_window = None
+        self._g2_bayesian_worker_active: bool = False
+        self._g2_bayesian_model_func = None
+        self._g2_bayesian_data: tuple | None = None
+
+        # Bayesian fitting state — Diffusion
+        self._diff_bayesian_result = None
+        self._diff_diagnosis_window = None
+        self._diff_bayesian_worker_active: bool = False
+        self._diff_bayesian_data: tuple | None = None
+
         self.avg_job_pop.clicked.connect(self.remove_avg_job)
         self.btn_submit_job.clicked.connect(self.submit_job)
         self.btn_start_avg_job.clicked.connect(self.start_avg_job)
@@ -288,6 +301,28 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
 
         self.btn_export_saxs1d.clicked.connect(self.saxs1d_export)
         self.btn_export_diffusion.clicked.connect(self.export_diffusion)
+
+        # Bayesian fitting connections
+        self.btn_g2_bayesian.clicked.connect(self._fit_g2_bayesian)
+        self.btn_g2_diagnosis.clicked.connect(self._show_g2_diagnosis)
+        self.btn_diff_bayesian.clicked.connect(self._fit_diff_bayesian)
+        self.btn_diff_diagnosis.clicked.connect(self._show_diff_diagnosis)
+
+        # Disable Bayesian buttons if NumPyro is not available
+        try:
+            from .fitting.models import NUMPYRO_AVAILABLE
+
+            if not NUMPYRO_AVAILABLE:
+                for btn in (
+                    self.btn_g2_bayesian,
+                    self.btn_g2_diagnosis,
+                    self.btn_diff_bayesian,
+                    self.btn_diff_diagnosis,
+                ):
+                    btn.setEnabled(False)
+                    btn.setToolTip("NumPyro not installed")
+        except ImportError:
+            pass
 
         self.comboBox_qmap_target.currentIndexChanged.connect(self.update_plot)
         self.cb_qmap_cmap.currentIndexChanged.connect(self.update_plot)
@@ -839,6 +874,18 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         # Close SimpleMask window if open
         if hasattr(self, "_simplemask_window") and self._simplemask_window is not None:
             self._simplemask_window.close()
+
+        # Close Bayesian diagnosis windows if open
+        if (
+            hasattr(self, "_g2_diagnosis_window")
+            and self._g2_diagnosis_window is not None
+        ):
+            self._g2_diagnosis_window.close()
+        if (
+            hasattr(self, "_diff_diagnosis_window")
+            and self._diff_diagnosis_window is not None
+        ):
+            self._diff_diagnosis_window.close()
 
         # Shutdown async kernel if available
         if hasattr(self, "async_vk") and self.async_vk is not None:
@@ -2728,6 +2775,10 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         if qd is None or tel is None:
             return
 
+        # Update Bayesian Q-index spinbox range
+        if hasattr(self, "sb_g2_bayesian_qidx") and len(qd) > 0:
+            self.sb_g2_bayesian_qidx.setMaximum(len(qd) - 1)
+
         q_auto = self.g2_qauto.isChecked()
         t_auto = self.g2_tauto.isChecked()
 
@@ -3613,6 +3664,321 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
                 pvs[n][1].setEnabled(True)
                 if pvs[n][2].isChecked():
                     pvs[n][0].setEnabled(True)
+
+    # ------------------------------------------------------------------
+    # Bayesian fitting — G2 tab
+    # ------------------------------------------------------------------
+
+    def _extract_g2_for_bayesian(self):
+        """Extract (x, y, yerr, q_idx, q_value, fit_func_name) for one Q-bin.
+
+        Returns
+        -------
+        tuple or None
+            ``(x, y, yerr, q_idx, q_value, fit_func_name)`` on success,
+            ``None`` if data cannot be extracted.
+        """
+        if not self._guard_no_data("g2"):
+            return None
+
+        rows = self.get_selected_rows()
+        xf_list = self.vk.get_xf_list(rows)
+
+        from .module import g2mod
+
+        p = self.check_g2_number()
+        q_range = (p[0], p[1])
+        t_range = (p[2], p[3])
+
+        result = g2mod.get_data(xf_list, q_range=q_range, t_range=t_range)
+        if result[0] is False:
+            self.statusbar.showMessage("No G2 data available", 2000)
+            return None
+
+        q, tel, g2, g2_err, _labels = result
+
+        q_idx = self.sb_g2_bayesian_qidx.value()
+        # Use first file
+        q_arr = np.asarray(q[0])
+        if q_idx >= len(q_arr):
+            self.statusbar.showMessage(
+                f"Q-index {q_idx} out of range (max {len(q_arr) - 1})", 2000
+            )
+            return None
+
+        q_value = float(q_arr[q_idx])
+        x = np.asarray(tel[0])
+        y = np.asarray(g2[0][:, q_idx])
+        yerr = np.asarray(g2_err[0][:, q_idx])
+
+        # Filter invalid points
+        valid = np.isfinite(y) & np.isfinite(yerr) & (yerr > 0)
+        if not np.any(valid):
+            self.statusbar.showMessage("No valid G2 data for this Q-index", 2000)
+            return None
+
+        _, _, fit_func_name = self.check_g2_fitting_number()
+        return x[valid], y[valid], yerr[valid], q_idx, q_value, fit_func_name
+
+    def _fit_g2_bayesian(self):
+        """Launch Bayesian (NUTS) fit for the selected Q-bin."""
+        if self._g2_bayesian_worker_active:
+            self.statusbar.showMessage("Bayesian fit already running", 2000)
+            return
+
+        extracted = self._extract_g2_for_bayesian()
+        if extracted is None:
+            return
+
+        x, y, yerr, q_idx, q_value, fit_func_name = extracted
+
+        from .fitting import fit_double_exp, fit_single_exp
+        from .fitting.models import double_exp_func, single_exp_func
+        from .threading.bayesian_worker import BayesianFitWorker
+
+        if fit_func_name == "single":
+            fit_func = fit_single_exp
+            self._g2_bayesian_model_func = single_exp_func
+        else:
+            fit_func = fit_double_exp
+            self._g2_bayesian_model_func = double_exp_func
+
+        self._g2_bayesian_data = (x, y, yerr, q_idx, q_value)
+
+        worker = BayesianFitWorker(
+            fit_func=fit_func,
+            x=x,
+            y=y,
+            yerr=yerr,
+            q_index=q_idx,
+            q_value=q_value,
+            context="g2",
+        )
+        worker.signals.finished.connect(self._on_g2_bayesian_finished)
+        worker.signals.error.connect(self._on_g2_bayesian_error)
+
+        self._g2_bayesian_worker_active = True
+        self.btn_g2_bayesian.setEnabled(False)
+        self.btn_g2_bayesian.setText("fitting...")
+        self.statusbar.showMessage(f"Bayesian fit running for Q={q_value:.4g}...", 0)
+        self.thread_pool.start(worker)
+
+    def _on_g2_bayesian_finished(self, result):
+        """Handle successful G2 Bayesian fit."""
+        self._g2_bayesian_worker_active = False
+        self.btn_g2_bayesian.setEnabled(True)
+        self.btn_g2_bayesian.setText("Fit Bayesian")
+
+        if result is None:
+            self.statusbar.showMessage("Bayesian fit returned no result", 2000)
+            return
+
+        fit_result = result["fit_result"]
+        q_idx = result["q_index"]
+        q_value = result["q_value"]
+
+        self._g2_bayesian_results[q_idx] = fit_result
+        self.btn_g2_diagnosis.setEnabled(True)
+
+        converged = fit_result.diagnostics.converged
+        status = "converged" if converged else "NOT converged"
+        self.statusbar.showMessage(
+            f"Bayesian fit done for Q={q_value:.4g} ({status})", 4000
+        )
+
+    def _on_g2_bayesian_error(self, worker_id, error_msg, _tb, _retry):
+        """Handle G2 Bayesian fit error."""
+        self._g2_bayesian_worker_active = False
+        self.btn_g2_bayesian.setEnabled(True)
+        self.btn_g2_bayesian.setText("Fit Bayesian")
+        logger.error("Bayesian G2 fit failed: %s", error_msg)
+        self.statusbar.showMessage(f"Bayesian fit failed: {error_msg[:80]}", 4000)
+
+    def _show_g2_diagnosis(self):
+        """Show or create the G2 Bayesian diagnosis window."""
+        if self._g2_bayesian_data is None:
+            self.statusbar.showMessage("No Bayesian fit data available", 2000)
+            return
+
+        x, y, yerr, q_idx, q_value = self._g2_bayesian_data
+        fit_result = self._g2_bayesian_results.get(q_idx)
+        if fit_result is None:
+            self.statusbar.showMessage("No fit result for this Q-index", 2000)
+            return
+
+        self._update_g2_diagnosis(fit_result, x, y, yerr, q_value)
+
+    def _update_g2_diagnosis(self, fit_result, x, y, yerr, q_value):
+        """Create/update the G2 diagnosis window with current results."""
+        from .gui.bayesian_diagnosis import BayesianDiagnosisWindow
+
+        if self._g2_diagnosis_window is None:
+            self._g2_diagnosis_window = BayesianDiagnosisWindow(
+                parent=self, title="G2 Bayesian Diagnosis"
+            )
+
+        win = self._g2_diagnosis_window
+        win.set_axis_labels("Delay time (s)", "g2")
+        win.update_results(
+            result=fit_result,
+            model_func=self._g2_bayesian_model_func,
+            x_data=x,
+            y_data=y,
+            yerr=yerr,
+            q_value=q_value,
+            title=f"G2 Bayesian Diagnosis - Q={q_value:.4g}",
+        )
+        win.show()
+        win.raise_()
+
+    # ------------------------------------------------------------------
+    # Bayesian fitting — Diffusion tab
+    # ------------------------------------------------------------------
+
+    def _extract_diffusion_for_bayesian(self):
+        """Extract (q, tau, tau_err) from fit_summary for Bayesian power-law fit.
+
+        Mirrors the data extraction logic in ``module/tauq.py``.
+
+        Returns
+        -------
+        tuple or None
+            ``(q_valid, tau_valid, tau_err_valid)`` on success, ``None``
+            if no valid data is available.
+        """
+        if not self._guard_no_data("diffusion"):
+            return None
+
+        rows = self.get_selected_rows()
+        xf_list = self.vk.get_xf_list(rows)
+
+        if not xf_list:
+            self.statusbar.showMessage("No files selected", 2000)
+            return None
+
+        xf = xf_list[0]
+        if not hasattr(xf, "fit_summary") or xf.fit_summary is None:
+            self.statusbar.showMessage("Run G2 fitting first (no fit_summary)", 3000)
+            return None
+
+        fit_summary = xf.fit_summary
+        q = np.asarray(fit_summary["q_val"])
+        fit_val = np.asarray(fit_summary["fit_val"])
+        tau = fit_val[:, 0, 1]
+        tau_err = fit_val[:, 1, 1]
+
+        # Trim to consistent length
+        min_len = min(len(q), len(tau), len(tau_err))
+        q, tau, tau_err = q[:min_len], tau[:min_len], tau_err[:min_len]
+
+        # Apply Q-range filter from UI
+        try:
+            q_min = float(self.tauq_qmin.text())
+            q_max = float(self.tauq_qmax.text())
+        except (ValueError, AttributeError):
+            q_min, q_max = q.min(), q.max()
+
+        q_mask = (q >= q_min) & (q <= q_max)
+        # Validity filter
+        valid = q_mask & (tau_err > 0) & np.isfinite(tau) & np.isfinite(tau_err)
+
+        if not np.any(valid):
+            self.statusbar.showMessage("No valid diffusion data in Q-range", 2000)
+            return None
+
+        return q[valid], tau[valid], tau_err[valid]
+
+    def _fit_diff_bayesian(self):
+        """Launch Bayesian (NUTS) power-law fit for diffusion data."""
+        if self._diff_bayesian_worker_active:
+            self.statusbar.showMessage("Bayesian fit already running", 2000)
+            return
+
+        extracted = self._extract_diffusion_for_bayesian()
+        if extracted is None:
+            return
+
+        q, tau, tau_err = extracted
+
+        from .fitting import fit_power_law
+        from .threading.bayesian_worker import BayesianFitWorker
+
+        self._diff_bayesian_data = (q, tau, tau_err)
+
+        worker = BayesianFitWorker(
+            fit_func=fit_power_law,
+            x=q,
+            y=tau,
+            yerr=tau_err,
+            q_index=-1,
+            q_value=0.0,
+            context="diffusion",
+        )
+        worker.signals.finished.connect(self._on_diff_bayesian_finished)
+        worker.signals.error.connect(self._on_diff_bayesian_error)
+
+        self._diff_bayesian_worker_active = True
+        self.btn_diff_bayesian.setEnabled(False)
+        self.btn_diff_bayesian.setText("fitting...")
+        self.statusbar.showMessage("Bayesian power-law fit running...", 0)
+        self.thread_pool.start(worker)
+
+    def _on_diff_bayesian_finished(self, result):
+        """Handle successful diffusion Bayesian fit."""
+        self._diff_bayesian_worker_active = False
+        self.btn_diff_bayesian.setEnabled(True)
+        self.btn_diff_bayesian.setText("Fit Bayesian")
+
+        if result is None:
+            self.statusbar.showMessage("Bayesian fit returned no result", 2000)
+            return
+
+        self._diff_bayesian_result = result["fit_result"]
+        self.btn_diff_diagnosis.setEnabled(True)
+
+        converged = self._diff_bayesian_result.diagnostics.converged
+        status = "converged" if converged else "NOT converged"
+        self.statusbar.showMessage(f"Bayesian power-law fit done ({status})", 4000)
+
+    def _on_diff_bayesian_error(self, worker_id, error_msg, _tb, _retry):
+        """Handle diffusion Bayesian fit error."""
+        self._diff_bayesian_worker_active = False
+        self.btn_diff_bayesian.setEnabled(True)
+        self.btn_diff_bayesian.setText("Fit Bayesian")
+        logger.error("Bayesian diffusion fit failed: %s", error_msg)
+        self.statusbar.showMessage(f"Bayesian fit failed: {error_msg[:80]}", 4000)
+
+    def _show_diff_diagnosis(self):
+        """Show or create the diffusion Bayesian diagnosis window."""
+        if self._diff_bayesian_data is None or self._diff_bayesian_result is None:
+            self.statusbar.showMessage("No Bayesian fit data available", 2000)
+            return
+
+        q, tau, tau_err = self._diff_bayesian_data
+        self._update_diff_diagnosis(self._diff_bayesian_result, q, tau, tau_err)
+
+    def _update_diff_diagnosis(self, fit_result, q, tau, tau_err):
+        """Create/update the diffusion diagnosis window with current results."""
+        from .fitting.models import power_law_func
+        from .gui.bayesian_diagnosis import BayesianDiagnosisWindow
+
+        if self._diff_diagnosis_window is None:
+            self._diff_diagnosis_window = BayesianDiagnosisWindow(
+                parent=self, title="Diffusion Bayesian Diagnosis"
+            )
+
+        win = self._diff_diagnosis_window
+        win.set_axis_labels("Q (1/A)", "tau (s)")
+        win.update_results(
+            result=fit_result,
+            model_func=power_law_func,
+            x_data=q,
+            y_data=tau,
+            yerr=tau_err,
+            title="Diffusion Bayesian Diagnosis - Power Law",
+        )
+        win.show()
+        win.raise_()
 
 
 def setup_windows_icon():
