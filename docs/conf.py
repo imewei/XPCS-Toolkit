@@ -57,6 +57,10 @@ MOCK_MODULES = [
     "pyqtgraph.opengl",
     "pyqtgraph.console",
     "pyqtgraph.parametertree",
+    "qtpy",
+    "qtpy.QtCore",
+    "qtpy.QtGui",
+    "qtpy.QtWidgets",
     "joblib",
     "memory_profiler",
     "line_profiler",
@@ -65,10 +69,30 @@ MOCK_MODULES = [
 ]
 
 for mod_name in MOCK_MODULES:
-    if "Qt" in mod_name or "pyqtgraph" in mod_name:
+    if "Qt" in mod_name or "pyqtgraph" in mod_name or "qtpy" in mod_name:
         sys.modules[mod_name] = MockQtModule()
     else:
         sys.modules[mod_name] = mock.MagicMock()
+
+# Also mock internal modules that import from Qt compat layer
+# These need to be in sys.modules so that importing *from* them works
+# Use types.ModuleType so Sphinx gets a proper __name__ attribute
+import types as _types
+
+_INTERNAL_QT_MODULES = [
+    "xpcsviewer.gui.qt_compat",
+    "xpcsviewer.gui.layout_helpers",
+    "xpcsviewer.gui.initialization_validator",
+    "xpcsviewer.helper.listmodel",
+    "xpcsviewer.viewer_kernel",
+    "xpcsviewer.file_locator",
+]
+for _mod_name in _INTERNAL_QT_MODULES:
+    if _mod_name not in sys.modules:
+        _mod = _types.ModuleType(_mod_name)
+        _mod.__file__ = ""
+        _mod.__all__ = []
+        sys.modules[_mod_name] = _mod
 
 # Set environment variable to indicate we're building docs
 os.environ["BUILDING_DOCS"] = "1"
@@ -263,6 +287,20 @@ autodoc_mock_imports = [
     "xpcsviewer.plothandler.pyqtgraph_handler",
     "xpcsviewer.plothandler.matplot_qt",
     "xpcsviewer.plothandler.qt_signal_fixes",
+    # Helper modules (listmodel depends on Qt QAbstractListModel)
+    "xpcsviewer.helper.listmodel",
+    # GUI core modules (depend on Qt)
+    "xpcsviewer.gui.qt_compat",
+    "xpcsviewer.gui.layout_helpers",
+    "xpcsviewer.gui.initialization_validator",
+    # Viewer modules (depend on Qt)
+    "xpcsviewer.viewer_kernel",
+    "xpcsviewer.file_locator",
+    # qtpy (Qt abstraction layer)
+    "qtpy",
+    "qtpy.QtCore",
+    "qtpy.QtGui",
+    "qtpy.QtWidgets",
 ]
 
 # Autosummary settings
