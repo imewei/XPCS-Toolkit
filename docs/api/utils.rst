@@ -6,36 +6,118 @@ and other support functions.
 
 .. currentmodule:: xpcsviewer.utils
 
-Logging
--------
+Logging Configuration
+---------------------
 
-Advanced logging configuration with hierarchical loggers and custom formatters.
-See :mod:`xpcsviewer.utils.logging_config` for details.
+Advanced logging setup with hierarchical loggers, custom formatters, and
+environment-variable driven configuration.
+
+.. automodule:: xpcsviewer.utils.logging_config
+   :members: get_logger, initialize_logging, set_log_level, setup_logging, log_system_info, setup_exception_logging
+   :no-index:
+
+Logging Utilities
+-----------------
+
+Session context, rate-limited logging, method timing, and path sanitization.
+
+.. automodule:: xpcsviewer.utils.log_utils
+   :members: LoggingContext, SessionContextFilter, RateLimitedLogger, log_timing, sanitize_path
+   :no-index:
+
+**Environment Variables:**
+
+.. list-table::
+   :header-rows: 1
+   :widths: 30 15 55
+
+   * - Variable
+     - Default
+     - Description
+   * - ``PYXPCS_LOG_LEVEL``
+     - ``INFO``
+     - DEBUG/INFO/WARNING/ERROR/CRITICAL
+   * - ``PYXPCS_LOG_FORMAT``
+     - ``TEXT``
+     - TEXT or JSON (for log aggregation)
+   * - ``PYXPCS_LOG_RATE_LIMIT``
+     - ``10.0``
+     - Rate limit (msgs/sec)
+   * - ``PYXPCS_LOG_SANITIZE_PATHS``
+     - ``home``
+     - none/home/hash
+
+Log Formatters
+--------------
+
+Custom log formatters for console, file, JSON, and performance output.
+
+.. automodule:: xpcsviewer.utils.log_formatters
+   :members: ColoredConsoleFormatter, JSONFormatter, PerformanceFormatter, StructuredFileFormatter, create_formatter
+   :no-index:
 
 Memory Management
 -----------------
 
 Intelligent memory management with LRU caching, memory pressure detection,
-and automatic cleanup. See :mod:`xpcsviewer.utils.memory_manager` for details.
+and automatic cleanup.
+
+.. automodule:: xpcsviewer.utils.memory_manager
+   :members:
+   :no-index:
 
 Performance Monitoring
 ----------------------
 
 Real-time performance tracking for optimization and debugging.
-See :mod:`xpcsviewer.utils.performance_monitor` for details.
+
+.. automodule:: xpcsviewer.utils.performance_monitor
+   :members:
+   :no-index:
 
 Reliability
 -----------
 
-Comprehensive error handling, validation, and fallback mechanisms.
-See :mod:`xpcsviewer.utils.reliability` for details.
+Error handling, validation, and fallback mechanisms.
+
+.. automodule:: xpcsviewer.utils.reliability
+   :members:
+   :no-index:
+
+Validation
+----------
+
+Input validation utilities for data integrity checks.
+
+.. automodule:: xpcsviewer.utils.validation
+   :members:
+   :no-index:
 
 Data Processing
 ---------------
 
-Optimized data processing utilities including lazy loading, streaming,
-and vectorized operations. See:
+Optimized data processing utilities.
 
-- :mod:`xpcsviewer.utils.lazy_loader`
-- :mod:`xpcsviewer.utils.streaming_processor`
-- :mod:`xpcsviewer.utils.vectorized_roi`
+**Lazy Loader** -- Deferred module loading for startup performance:
+
+.. automodule:: xpcsviewer.utils.lazy_loader
+   :members:
+   :no-index:
+
+**Streaming Processor** -- Chunk-based data processing:
+
+.. automodule:: xpcsviewer.utils.streaming_processor
+   :members:
+   :no-index:
+
+**Vectorized ROI** -- Optimized region-of-interest extraction:
+
+.. automodule:: xpcsviewer.utils.vectorized_roi
+   :members:
+   :no-index:
+
+See Also
+--------
+
+- :doc:`constants` - Application-wide configuration constants
+- :doc:`backends` - Backend abstraction layer

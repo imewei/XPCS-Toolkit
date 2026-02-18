@@ -1,12 +1,13 @@
+:orphan:
+
 User Guide
 ==========
 
-Installation, usage, and workflows for XPCS Viewer.
+.. note::
 
-.. toctree::
-   :maxdepth: 2
+   The User Guide content has been reorganized following the `Diataxis <https://diataxis.fr/>`_ framework:
 
-   installation
-   quickstart
-   simplemask
-   examples
+   - **Getting started?** See :doc:`/tutorials/index`
+   - **Need to do something specific?** See :doc:`/how-to/index`
+   - **Looking for API details?** See :doc:`/api/index`
+   - **Want to understand how things work?** See :doc:`/explanation/index`

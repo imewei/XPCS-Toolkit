@@ -42,32 +42,43 @@ Thresholds
 
 Numeric thresholds for comparisons and validation.
 
-See :mod:`xpcsviewer.constants.thresholds` for complete API documentation.
+.. automodule:: xpcsviewer.constants.thresholds
+   :members:
+   :no-index:
 
 Timeouts
 ~~~~~~~~
 
 Time-related constants for operations, file loading, and cleanup.
+All values are in seconds unless otherwise noted.
 
-See :mod:`xpcsviewer.constants.timeouts` for complete API documentation.
+.. automodule:: xpcsviewer.constants.timeouts
+   :members:
+   :no-index:
 
 Limits
 ~~~~~~
 
 Size and count limits for caching, memory management, and UI elements.
 
-See :mod:`xpcsviewer.constants.limits` for complete API documentation.
+.. automodule:: xpcsviewer.constants.limits
+   :members:
+   :no-index:
 
 Defaults
 ~~~~~~~~
 
 Default configuration values for application settings.
 
-See :mod:`xpcsviewer.constants.defaults` for complete API documentation.
+.. automodule:: xpcsviewer.constants.defaults
+   :members:
+   :no-index:
 
 Fitting
 ~~~~~~~
 
 Parameters for curve fitting operations (single/double exponential).
 
-See :mod:`xpcsviewer.constants.fitting` for complete API documentation.
+.. automodule:: xpcsviewer.constants.fitting
+   :members:
+   :no-index:

@@ -17,7 +17,7 @@ Quick Start
    # CLI batch processing
    xpcsviewer twotime --input /data --output /results --q 0.05
 
-See :doc:`usage` for detailed CLI and GUI documentation.
+See :doc:`how-to/index` for detailed CLI and GUI documentation.
 
 Note
 ----
@@ -26,10 +26,15 @@ The GUI launches maximized with a rectangular layout, uses only the menu bar for
 
 .. toctree::
    :maxdepth: 2
-   :caption: User Guide
+   :caption: Tutorials
 
-   user_guide/index
-   usage
+   tutorials/index
+
+.. toctree::
+   :maxdepth: 2
+   :caption: How-To Guides
+
+   how-to/index
 
 .. toctree::
    :maxdepth: 2
@@ -39,10 +44,21 @@ The GUI launches maximized with a rectangular layout, uses only the menu bar for
 
 .. toctree::
    :maxdepth: 2
-   :caption: Developer Guide
+   :caption: Explanation
 
-   developer/index
-   contributing
+   explanation/index
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Architecture
+
+   architecture/index
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Operations
+
+   operations/index
 
 .. toctree::
    :maxdepth: 1
