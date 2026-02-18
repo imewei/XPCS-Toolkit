@@ -36,7 +36,7 @@ class EmptyStateWidget(QFrame):
         description: str = "",
         action_text: str = "",
         action_callback: Callable | None = None,
-        icon_text: str = "📭",
+        icon_text: str = "--",
         parent: QWidget | None = None,
     ):
         """
@@ -160,7 +160,7 @@ class NoFilesLoadedState(EmptyStateWidget):
             description="Browse to a folder containing XPCS data files to get started.",
             action_text="Browse for Data",
             action_callback=browse_callback,
-            icon_text="📂",
+            icon_text="[ ]",
             parent=parent,
         )
 
@@ -174,7 +174,7 @@ class NoFilesSelectedState(EmptyStateWidget):
             description="Add files from the source list to analyze.",
             action_text="",
             action_callback=None,
-            icon_text="📋",
+            icon_text="[=]",
             parent=parent,
         )
 
@@ -188,7 +188,7 @@ class NoDataToPlotState(EmptyStateWidget):
             description="Select files and configure plot settings.",
             action_text="",
             action_callback=None,
-            icon_text="📊",
+            icon_text="[#]",
             parent=parent,
         )
 
@@ -202,6 +202,6 @@ class FeatureNotAvailableState(EmptyStateWidget):
             description="This feature is not available for the current dataset.",
             action_text="",
             action_callback=None,
-            icon_text="🚫",
+            icon_text="[X]",
             parent=parent,
         )

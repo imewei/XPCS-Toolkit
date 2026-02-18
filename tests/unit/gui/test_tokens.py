@@ -97,8 +97,7 @@ class TestTypographyTokens:
         font_family = TYPOGRAPHY_TOKENS.font_family
         # Check for at least one of the common system font names
         has_system_font = any(
-            f in font_family
-            for f in ["-apple-system", "BlinkMacSystemFont", "Segoe UI", "system-ui"]
+            f in font_family for f in ["Helvetica Neue", "Segoe UI", "Ubuntu", "Roboto"]
         )
         assert has_system_font, f"Expected system font in: {font_family}"
         assert "sans-serif" in font_family

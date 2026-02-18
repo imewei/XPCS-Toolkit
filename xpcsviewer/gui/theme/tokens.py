@@ -63,9 +63,7 @@ class SpacingTokens:
 class TypographyTokens:
     """Typography tokens for consistent text styling."""
 
-    font_family: str = (
-        "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
-    )
+    font_family: str = "'Helvetica Neue', 'Segoe UI', 'Ubuntu', 'Roboto', sans-serif"
 
     # Font sizes (in points)
     size_xs: int = 10

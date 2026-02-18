@@ -145,14 +145,14 @@ def setup_ui(window) -> None:  # noqa: PLR0915 - UI setup requires many statemen
     window.spin_dp_num.setRange(1, 360)
     window.spin_dp_num.setValue(36)
     window.spin_dp_num.setToolTip("Number of dynamic phi-bins")
-    partition_layout.addRow("Dynamic φ:", window.spin_dp_num)
+    partition_layout.addRow("Dynamic phi:", window.spin_dp_num)
 
     # Static phi bins
     window.spin_sp_num = QSpinBox()
     window.spin_sp_num.setRange(1, 360)
     window.spin_sp_num.setValue(360)
     window.spin_sp_num.setToolTip("Number of static phi-bins")
-    partition_layout.addRow("Static φ:", window.spin_sp_num)
+    partition_layout.addRow("Static phi:", window.spin_sp_num)
 
     # Compute Partition button
     partition_buttons_layout = QHBoxLayout()

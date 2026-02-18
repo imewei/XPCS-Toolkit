@@ -75,7 +75,7 @@ class ErrorDialog(QDialog):
         # Error icon and message
         header_layout = QHBoxLayout()
 
-        icon_label = QLabel("❌")
+        icon_label = QLabel("Error")
         icon_label.setStyleSheet("font-size: 32px;")
         header_layout.addWidget(icon_label)
 
@@ -121,7 +121,7 @@ class ErrorDialog(QDialog):
             layout.addWidget(self.details_widget)
 
             # Toggle button
-            self.toggle_details_btn = QPushButton("Show Details ▼")
+            self.toggle_details_btn = QPushButton("Show Details v")
             self.toggle_details_btn.setFlat(True)
             self.toggle_details_btn.clicked.connect(self._toggle_details)
             layout.addWidget(self.toggle_details_btn)
@@ -164,7 +164,7 @@ class ErrorDialog(QDialog):
         is_visible = self.details_widget.isVisible()
         self.details_widget.setVisible(not is_visible)
         self.toggle_details_btn.setText(
-            "Hide Details ▲" if not is_visible else "Show Details ▼"
+            "Hide Details ^" if not is_visible else "Show Details v"
         )
 
     def _on_retry(self) -> None:

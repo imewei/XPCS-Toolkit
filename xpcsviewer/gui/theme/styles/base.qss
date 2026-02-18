@@ -1108,7 +1108,7 @@ QLineEdit#work_dir {
     border: 1px solid @border_subtle;
     border-radius: 6px;
     padding: @spacing_sm @spacing_md;
-    font-family: monospace;
+    font-family: 'Menlo', 'Consolas', 'DejaVu Sans Mono', monospace;
 }
 
 QLineEdit#work_dir:focus {
