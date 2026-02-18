@@ -304,6 +304,16 @@ For backward compatibility with older code:
 
 .. autofunction:: xpcsviewer.fitting.robust_curve_fit
 
+.. autofunction:: xpcsviewer.fitting.fit_with_fixed_parallel
+
+.. autofunction:: xpcsviewer.fitting.fit_with_fixed_sequential
+
+.. autofunction:: xpcsviewer.fitting.sequential_fitting
+
+.. autofunction:: xpcsviewer.fitting.vectorized_parameter_estimation
+
+.. autofunction:: xpcsviewer.fitting.vectorized_residual_analysis
+
 See Also
 --------
 

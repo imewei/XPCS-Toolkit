@@ -29,6 +29,39 @@ XpcsFile
       XpcsFile automatically detects the analysis type (Multitau, Twotime, etc.)
       and loads appropriate data fields.
 
+XpcsFile Submodules
+-------------------
+
+The ``xpcsviewer.xpcs_file`` package splits internal concerns into submodules:
+
+Cache
+~~~~~
+
+LRU data cache with memory-pressure awareness.
+
+.. automodule:: xpcsviewer.xpcs_file.cache
+   :members:
+   :no-index:
+
+Fitting Helpers
+~~~~~~~~~~~~~~~
+
+File-level fitting convenience functions used internally by
+:meth:`~xpcsviewer.XpcsFile.fit_g2`.
+
+.. automodule:: xpcsviewer.xpcs_file.fitting
+   :members:
+   :no-index:
+
+Memory Monitor
+~~~~~~~~~~~~~~
+
+Virtual-memory monitoring for adaptive cache eviction.
+
+.. automodule:: xpcsviewer.xpcs_file.memory
+   :members:
+   :no-index:
+
 Package Information
 -------------------
 
@@ -36,7 +69,7 @@ Package Information
    :annotation: = version string
 
 .. autodata:: xpcsviewer.__author__
-   :annotation: = "Miaoqi Chu"
+   :annotation: = "Miaoqi Chu & Wei Chen"
 
 .. autodata:: xpcsviewer.__credits__
    :annotation: = "Argonne National Laboratory"

@@ -200,3 +200,12 @@ Custom ROI classes for drawing tools.
    .. py:class:: LineROI
 
       Custom line ROI with adjustable width for mask drawing.
+
+Calibration Module
+==================
+
+Beam center refinement and detector geometry calibration utilities.
+
+.. automodule:: xpcsviewer.simplemask.calibration
+   :members:
+   :no-index:

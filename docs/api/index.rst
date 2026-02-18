@@ -18,6 +18,7 @@ API Reference
    utils
    constants
    gui
+   helper
 
 Core Components
 ---------------
@@ -31,6 +32,9 @@ Core Components
 - **SimpleMask**: Mask editing and Q-map generation (:doc:`simplemask`)
 - **File I/O**: Low-level HDF5 reading and Q-space mapping (:doc:`fileio`)
 - **CLI**: Command-line interface for batch processing (:doc:`cli`)
+- **Plotting**: PyQtGraph and Matplotlib integration (:doc:`plotting`)
+- **Threading**: Asynchronous workers and progress management (:doc:`threading`)
 - **Constants**: Application-wide configuration values (:doc:`constants`)
 - **GUI**: PySide6 interactive visualization (:doc:`gui`)
 - **Utils**: Logging, memory management, optimization (:doc:`utils`)
+- **Helper**: Internal data models and utilities (:doc:`helper`)

@@ -23,7 +23,9 @@ Viewer Kernel
 Backend kernel that bridges GUI and data processing operations.
 Manages file collections, averaging operations, and plot state.
 
-See :mod:`xpcsviewer.viewer_kernel` for complete API documentation.
+.. automodule:: xpcsviewer.viewer_kernel
+   :members:
+   :no-index:
 
 File Locator
 ------------
@@ -31,7 +33,18 @@ File Locator
 File discovery and management utilities for XPCS datasets.
 Handles file system navigation and dataset validation.
 
-See :mod:`xpcsviewer.file_locator` for complete API documentation.
+.. automodule:: xpcsviewer.file_locator
+   :members:
+   :no-index:
+
+Default Settings
+----------------
+
+Application default settings (window size, etc.).
+
+.. automodule:: xpcsviewer.default_setting
+   :members:
+   :no-index:
 
 Command Line Interface
 ----------------------
@@ -140,3 +153,30 @@ Theme-aware plotting backends.
 - Automatic plot theme switching with application theme
 - Consistent color palettes across backends
 - High-contrast modes for accessibility
+
+Qt Compatibility Layer
+~~~~~~~~~~~~~~~~~~~~~~
+
+Unified import interface for Qt classes supporting both PySide6 and PyQt6.
+
+.. automodule:: xpcsviewer.gui.qt_compat
+   :members:
+   :no-index:
+
+Layout Helpers
+~~~~~~~~~~~~~~
+
+Convenience functions for building Qt layouts programmatically.
+
+.. automodule:: xpcsviewer.gui.layout_helpers
+   :members:
+   :no-index:
+
+Initialization Validator
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+Startup validation for GUI dependencies and configuration.
+
+.. automodule:: xpcsviewer.gui.initialization_validator
+   :members:
+   :no-index:
