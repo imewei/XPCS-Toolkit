@@ -315,7 +315,7 @@ def _generate_partition_backend(
             # Round to 12 decimals to avoid IEEE 754 bin-edge misassignment
             xmap_b = backend.round(xmap_b, decimals=12)
             v_span = backend.round(v_span, decimals=12)
-            v_max_r = backend.round(backend.array(v_max), decimals=12)
+            v_max_r: Any = backend.round(backend.array(v_max), decimals=12)
             partition = backend.digitize(xmap_b, v_span) * mask_b
             partition = backend.where(partition > num_pts, backend.array(0), partition)
             partition = backend.where(

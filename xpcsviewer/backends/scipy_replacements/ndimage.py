@@ -6,7 +6,7 @@ functions used in SimpleMask for smoothing and filtering.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 
@@ -66,7 +66,7 @@ def _gaussian_filter_jax(
     sigma: float | tuple[float, ...],
     mode: str = "reflect",
     truncate: float = 4.0,
-) -> np.ndarray:
+) -> Any:
     """JAX implementation of Gaussian filter using separable convolution."""
     import jax.numpy as jnp
     from jax import lax

@@ -636,7 +636,7 @@ class ReliabilityContext:
         for attempt in range(self.max_retries + 1):
             try:
                 return func(*args, **kwargs)
-            except self.acceptable_exceptions as exc:  # type: ignore[misc]
+            except self.acceptable_exceptions as exc:
                 last_exc = exc
                 self.retry_count = attempt + 1
                 if attempt < self.max_retries:
@@ -649,7 +649,7 @@ class ReliabilityContext:
                         f"after {delay:.2f}s delay: {exc}"
                     )
                     time.sleep(delay)
-        raise last_exc  # type: ignore[misc]
+        raise last_exc  # pragma: no cover – loop always runs at least once
 
 
 def reliability_context(

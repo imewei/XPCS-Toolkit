@@ -334,7 +334,7 @@ class UnifiedThreadingManager(QObject):
 
         try:
             # Emit started signal via QueuedConnection to marshal to main thread (BUG-007)
-            QMetaObject.invokeMethod(
+            QMetaObject.invokeMethod(  # type: ignore[call-overload]
                 self,
                 "_emit_task_started_queued",
                 Qt.ConnectionType.QueuedConnection,
@@ -372,7 +372,7 @@ class UnifiedThreadingManager(QObject):
             if task.error:
                 self._stats["tasks_failed"] += 1
                 # Emit via QueuedConnection to marshal to main thread (BUG-007)
-                QMetaObject.invokeMethod(
+                QMetaObject.invokeMethod(  # type: ignore[call-overload]
                     self,
                     "_emit_task_failed_queued",
                     Qt.ConnectionType.QueuedConnection,
@@ -382,7 +382,7 @@ class UnifiedThreadingManager(QObject):
             else:
                 self._stats["tasks_completed"] += 1
                 # Emit via QueuedConnection to marshal to main thread (BUG-007)
-                QMetaObject.invokeMethod(
+                QMetaObject.invokeMethod(  # type: ignore[call-overload]
                     self,
                     "_emit_task_completed_queued",
                     Qt.ConnectionType.QueuedConnection,

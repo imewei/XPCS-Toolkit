@@ -268,7 +268,7 @@ def compute_q_sum_squared(
         return jnp.sum(q**2)
     else:
         # NumPy fallback
-        positions_arr = np.array(pixel_positions)  # shape (N, 2)
+        positions_arr = np.array(pixel_positions)  # type: ignore[assignment]  # shape (N, 2)
         q_vals: Any = np.array(
             [
                 compute_q_at_pixel(
@@ -487,8 +487,8 @@ def compute_transmission_qmap(
 
 
 # Expose lru_cache methods on the public wrapper for tests/callers
-compute_transmission_qmap.cache_clear = _compute_transmission_qmap_cached.cache_clear
-compute_transmission_qmap.cache_info = _compute_transmission_qmap_cached.cache_info
+compute_transmission_qmap.cache_clear = _compute_transmission_qmap_cached.cache_clear  # type: ignore[attr-defined]
+compute_transmission_qmap.cache_info = _compute_transmission_qmap_cached.cache_info  # type: ignore[attr-defined]
 
 
 def _get_reflection_qmap_jit(orientation: str):
@@ -757,5 +757,5 @@ def compute_reflection_qmap(
 
 
 # Expose lru_cache methods on the public wrapper for tests/callers
-compute_reflection_qmap.cache_clear = _compute_reflection_qmap_cached.cache_clear
-compute_reflection_qmap.cache_info = _compute_reflection_qmap_cached.cache_info
+compute_reflection_qmap.cache_clear = _compute_reflection_qmap_cached.cache_clear  # type: ignore[attr-defined]
+compute_reflection_qmap.cache_info = _compute_reflection_qmap_cached.cache_info  # type: ignore[attr-defined]

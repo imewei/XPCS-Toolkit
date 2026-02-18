@@ -165,7 +165,7 @@ class HDF5Facade:
                 # __post_init__ is never triggered.  Previously this path
                 # still called QMapSchema(**qmap_data), which bypasses the
                 # validate flag and runs __post_init__ regardless. (BUG-029)
-                qmap = {
+                qmap = {  # type: ignore[assignment]
                     "sqmap": sqmap,
                     "dqmap": dqmap,
                     "phis": phis,

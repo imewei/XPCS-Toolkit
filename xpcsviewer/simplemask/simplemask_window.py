@@ -920,7 +920,7 @@ class SimpleMaskWindow(QMainWindow):
         if self.kernel is not None and self.kernel.new_partition is not None:
             partition = self.kernel.new_partition
             if not isinstance(partition, dict):
-                logger.warning(
+                logger.warning(  # type: ignore[unreachable]
                     f"Invalid partition: expected dict, got {type(partition).__name__}"
                 )
                 return

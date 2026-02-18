@@ -237,7 +237,7 @@ class HDF5ConnectionPool:
                     and (now - ts) > self._file_lock_max_age_seconds
                     and self._file_locks.get(k) is not None
                     and self._file_locks[k].acquire(blocking=False)
-                    and (self._file_locks[k].release() or True)
+                    and (self._file_locks[k].release() is None)  # type: ignore[func-returns-value]
                 ]
                 for key in stale_keys:
                     self._file_locks.pop(key, None)

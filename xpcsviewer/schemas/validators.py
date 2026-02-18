@@ -232,9 +232,9 @@ class QMapSchema:
             sqmap=sqmap,
             dqmap=dqmap,
             phis=phis,
-            sqmap_unit=sqmap_unit,
-            dqmap_unit=sqmap_unit,
-            phis_unit=phis_unit,
+            sqmap_unit=sqmap_unit,  # type: ignore[arg-type]
+            dqmap_unit=sqmap_unit,  # type: ignore[arg-type]
+            phis_unit=phis_unit,  # type: ignore[arg-type]
         )
 
     def to_dict(self) -> dict:
