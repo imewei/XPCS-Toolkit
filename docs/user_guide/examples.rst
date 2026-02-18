@@ -12,9 +12,9 @@ G2 Analysis
    # Load data
    xf = XpcsFile('data.hdf')
 
-   # Get G2 data
-   success, g2_data, tau_data, q_data, labels = g2mod.get_data(
-       [xf], q_range=[1, 5], t_range=[1e-6, 1]
+   # Get G2 data (returns q_values, delay_times, g2, g2_err, labels)
+   q, tel, g2, g2_err, labels = g2mod.get_data(
+       [xf], q_range=(1, 5), t_range=(1e-6, 1)
    )
 
 SAXS Processing
