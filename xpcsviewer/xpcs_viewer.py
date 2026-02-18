@@ -248,6 +248,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         self.list_view_target.clicked.connect(self.update_plot)
 
         self.mp_2t_hdls = None
+        self._init_twotime_tab()
         self.init_twotime_plot_handler()
 
         # Initialize G2 Fitting tab (dynamic creation - must be before g2 map)
@@ -1791,6 +1792,83 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
 
         self.vk.export_saxs_1d(self.pg_saxs, folder)
 
+    def _init_twotime_tab(self):
+        """Rebuild the two-time tab with a side-panel layout.
+
+        Restructures from the original vertical split
+        (top: SAXS+dqmap+G2 in a row, bottom: C2 heatmap) to a side-panel
+        layout that maximizes the C2 heatmap display area:
+
+        Left panel (narrow):  SAXS + dqmap stacked vertically
+        Right panel (wide):   C2 heatmap (main) + G2 curves (below)
+        Bottom:               Controls (unchanged)
+        """
+        # Remove old splitter from the tab grid layout
+        self.gridLayout_33.removeWidget(self.splitter_4)
+
+        # Detach existing plot widgets from old splitter
+        self.mp_2t_map.setParent(None)
+        self.mp_2t.setParent(None)
+
+        # Discard the old vertical splitter
+        self.splitter_4.deleteLater()
+
+        # --- Main horizontal splitter (left nav | right main view) ---
+        self.splitter_2t_main = QtWidgets.QSplitter(QtCore.Qt.Orientation.Horizontal)
+        self.splitter_2t_main.setObjectName("splitter_2t_main")
+
+        # LEFT PANEL: SAXS + dqmap navigation images (stacked vertically)
+        left_policy = QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.Policy.Preferred,
+            QtWidgets.QSizePolicy.Policy.Expanding,
+        )
+        left_policy.setHorizontalStretch(1)
+        self.mp_2t_map.setSizePolicy(left_policy)
+        self.mp_2t_map.setMinimumSize(QtCore.QSize(180, 200))
+        self.splitter_2t_main.addWidget(self.mp_2t_map)
+
+        # RIGHT PANEL: C2 heatmap + G2 curves in a vertical splitter
+        self.splitter_2t_right = QtWidgets.QSplitter(QtCore.Qt.Orientation.Vertical)
+        self.splitter_2t_right.setObjectName("splitter_2t_right")
+
+        # C2 heatmap — primary visualization, gets most vertical space
+        c2_policy = QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.Policy.Expanding,
+            QtWidgets.QSizePolicy.Policy.Expanding,
+        )
+        c2_policy.setVerticalStretch(3)
+        self.mp_2t.setSizePolicy(c2_policy)
+        self.mp_2t.setMinimumSize(QtCore.QSize(300, 250))
+        self.splitter_2t_right.addWidget(self.mp_2t)
+
+        # G2 curves — below C2
+        self.mp_2t_g2_plot = pg.PlotWidget()
+        self.mp_2t_g2_plot.setObjectName("mp_2t_g2_plot")
+        self.mp_2t_g2_plot.setBackground("w")
+        g2_policy = QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.Policy.Expanding,
+            QtWidgets.QSizePolicy.Policy.Preferred,
+        )
+        g2_policy.setVerticalStretch(1)
+        self.mp_2t_g2_plot.setSizePolicy(g2_policy)
+        self.mp_2t_g2_plot.setMinimumSize(QtCore.QSize(300, 120))
+        self.splitter_2t_right.addWidget(self.mp_2t_g2_plot)
+
+        # Right panel size policy
+        right_policy = QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.Policy.Expanding,
+            QtWidgets.QSizePolicy.Policy.Expanding,
+        )
+        right_policy.setHorizontalStretch(3)
+        self.splitter_2t_right.setSizePolicy(right_policy)
+        self.splitter_2t_main.addWidget(self.splitter_2t_right)
+
+        # Set initial proportions (~25% left, ~75% right)
+        self.splitter_2t_main.setSizes([250, 750])
+
+        # Place new splitter at the same grid position as the old one
+        self.gridLayout_33.addWidget(self.splitter_2t_main, 0, 0, 1, 1)
+
     def init_twotime_plot_handler(self):
         self.mp_2t_map.clear()
         self.mp_2t_hdls = {}
@@ -1799,7 +1877,8 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         cmaps = ["viridis", "tab20"]
         self.mp_2t_map.setBackground("w")
         for n in range(2):
-            plot_item = self.mp_2t_map.addPlot(row=0, col=n)
+            # Stack SAXS and dqmap vertically in the left panel
+            plot_item = self.mp_2t_map.addPlot(row=n, col=0)
             # Remove axes
             plot_item.hideAxis("left")
             plot_item.hideAxis("bottom")
@@ -1825,7 +1904,10 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
             self.mp_2t_hdls[labels[n]] = image_item
             self.mp_2t_hdls[labels[n] + "_colorbar"] = colorbar
 
-        c2g2_plot = self.mp_2t_map.addPlot(row=0, col=2)
+        # G2 curves use a dedicated PlotWidget on the right panel
+        c2g2_plot = self.mp_2t_g2_plot.getPlotItem()
+        c2g2_plot.setLabel("left", "g2")
+        c2g2_plot.setLabel("bottom", "t (s)")
         self.mp_2t_hdls["c2g2"] = c2g2_plot
 
         self.mp_2t_hdls["dqmap"].mouseClickEvent = self.pick_twotime_index
@@ -3556,20 +3638,28 @@ def main_gui(path=None, label_style=None):
     if path:
         logger.info(f"Starting with path: {path}")
 
-    # Set Qt configuration before creating application
-    QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True)
-    QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps, True)
-
-    # Qt warnings are handled by the logging system automatically
-    logger.debug("Qt application attributes configured")
+    # AA_EnableHighDpiScaling and AA_UseHighDpiPixmaps are always-on in Qt6
+    # and were removed as configurable attributes. Setting them is unnecessary
+    # and emits deprecation warnings.
 
     app = QtWidgets.QApplication([])
+
+    # Work around macOS 26.3 bug: Apple's ImageIO PNGReadPlugin crashes
+    # (EXC_ARM_DA_ALIGN at 0x0bad4007) when Core Text tries to render
+    # emoji glyphs via CopyEmojiImage during QLabel paint events.
+    # NoFontMerging prevents Qt from falling back to Apple Color Emoji.
+    font = app.font()
+    font.setStyleStrategy(QtGui.QFont.StyleStrategy.NoFontMerging)
+    app.setFont(font)
+
     logger.info("Qt Application created")
 
     try:
-        XpcsViewer(path=path, label_style=label_style)
+        # Store reference to prevent garbage collection of the Python wrapper
+        # while the C++ QMainWindow is alive (PySide6 lifecycle requirement)
+        _viewer = XpcsViewer(path=path, label_style=label_style)
         logger.info("XpcsViewer window created successfully")
-        app.exec_()
+        app.exec()  # exec_() is deprecated in PySide6
     except Exception as e:
         logger.critical(f"Failed to start application: {e}", exc_info=True)
         raise

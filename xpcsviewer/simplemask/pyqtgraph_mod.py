@@ -15,8 +15,11 @@ class ImageViewROI(pg.ImageView):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.removeItem(self.roi)
-        self.roi: dict[str, pg.ROI] = {}
+        # Hide the default ROI but don't remove it — removing and then
+        # overwriting self.roi breaks PyQtGraph's internal signal connections
+        # to the C++ ROI object, causing a bus error on show().
+        self.roi.hide()
+        self.roi_items: dict[str, pg.ROI] = {}
         self.roi_idx = 0
         self.ui.roiBtn.setDisabled(True)
         self.ui.menuBtn.setDisabled(True)
@@ -68,7 +71,7 @@ class ImageViewROI(pg.ImageView):
         Args:
             filter_str: If provided, only remove ROIs with labels starting with this
         """
-        keys = list(self.roi.keys()).copy()
+        keys = list(self.roi_items.keys()).copy()
         if filter_str is not None:
             keys = list(filter(lambda x: x.startswith(filter_str), keys))
         for key in keys:
@@ -77,7 +80,7 @@ class ImageViewROI(pg.ImageView):
     def clear(self):
         """Clear all ROIs and reset the view."""
         self.remove_rois()
-        self.roi = {}
+        self.roi_items = {}
         super().clear()
         self.reset_limits()
 
@@ -95,10 +98,10 @@ class ImageViewROI(pg.ImageView):
             label = f"roi_{self.roi_idx:06d}"
             self.roi_idx += 1
 
-        if label in self.roi:
+        if label in self.roi_items:
             self.remove_item(label)
 
-        self.roi[label] = t
+        self.roi_items[label] = t
         self.addItem(t)
         return label
 
@@ -108,7 +111,7 @@ class ImageViewROI(pg.ImageView):
         Args:
             label: Label of the ROI to remove
         """
-        t = self.roi.pop(label, None)
+        t = self.roi_items.pop(label, None)
         if t is not None:
             self.removeItem(t)
 

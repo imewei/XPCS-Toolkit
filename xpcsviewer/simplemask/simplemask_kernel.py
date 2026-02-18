@@ -111,6 +111,24 @@ class SimpleMaskKernel:
         self.metadata = metadata.copy()
         self.metadata["shape"] = self.shape
 
+        # Fill in defaults for missing geometry parameters so Q-map
+        # computation can proceed even when HDF5 metadata is incomplete.
+        # These match the spinbox defaults in simplemask_ui.py.
+        _geometry_defaults = {
+            "pix_dim": 0.075,
+            "energy": 10.0,
+            "det_dist": 5000.0,
+            "bcx": self.shape[1] / 2.0,
+            "bcy": self.shape[0] / 2.0,
+        }
+        for key, default in _geometry_defaults.items():
+            if self.metadata.get(key) is None:
+                logger.info(
+                    f"Geometry parameter '{key}' missing from HDF5 metadata, "
+                    f"using default: {default}"
+                )
+                self.metadata[key] = default
+
         # Initialize mask
         self.mask = np.ones(self.shape, dtype=bool)
 
@@ -281,8 +299,8 @@ class SimpleMaskKernel:
                 intensity = self.detector_image[row, col]
                 msg += f", I={intensity:.1f}"
             if self.infobar is not None:
-                self.infobar.clear()
-                self.infobar.setText(msg)
+                self.infobar.clearMessage()
+                self.infobar.showMessage(msg)
 
     def show_saxs(
         self,
@@ -329,7 +347,7 @@ class SimpleMaskKernel:
         mask_e = np.zeros_like(ones, dtype=bool)
         mask_i = np.zeros_like(mask_e)
 
-        for k, x in self.hdl.roi.items():
+        for k, x in self.hdl.roi_items.items():
             if not k.startswith("roi_"):
                 continue
 
@@ -399,7 +417,7 @@ class SimpleMaskKernel:
         if self.hdl is None or self.shape is None:
             return None
 
-        if label is not None and label in self.hdl.roi:
+        if label is not None and label in self.hdl.roi_items:
             self.hdl.remove_item(label)
 
         cen = self.get_center()

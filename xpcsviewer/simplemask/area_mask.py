@@ -412,11 +412,11 @@ class MaskAssemble:
         mask = np.logical_and(self.get_mask(), mask)
 
         # Only add to history if mask changed
-        if not np.allclose(self.mask_record[-1], mask):
+        if not np.array_equal(self.mask_record[-1], mask):
             # Remove any redo states
             while len(self.mask_record) > self.mask_ptr + 1:
                 self.mask_record.pop()
-            self.mask_record.append(mask)
+            self.mask_record.append(mask.copy())
             self.mask_ptr += 1
         return mask
 
@@ -474,7 +474,7 @@ class MaskAssemble:
         Returns:
             Current mask from history
         """
-        return self.mask_record[self.mask_ptr]
+        return self.mask_record[self.mask_ptr].copy()
 
     @property
     def blemish(self) -> np.ndarray:

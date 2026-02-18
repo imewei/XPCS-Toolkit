@@ -265,6 +265,7 @@ class SimpleMaskWindow(QMainWindow):
             self.kernel.mask_apply("mask_draw")
 
         self.mark_unsaved()
+        self._ensure_mask_overlay_visible()
         self._refresh_mask_display()
         self.status_bar.showMessage("Applied drawings to mask")
         logger.info("Applied drawings to mask")
@@ -281,14 +282,28 @@ class SimpleMaskWindow(QMainWindow):
 
         logger.debug(f"Mask action: {action}")
         self.kernel.mask_action(action)
-        self._refresh_mask_display()
 
         if action == "reset":
+            # After reset, mask returns to initial (all-True) state;
+            # disable overlay since there's nothing to visualize
+            self._show_mask_overlay = False
+            self.action_toggle_mask.setChecked(False)
+            self.action_toggle_mask.setText("Show Mask")
             self.mark_saved()
+            self._refresh_mask_display()
             self.status_bar.showMessage("Mask reset to initial state")
             logger.info("Mask reset to initial state")
         else:
-            self.status_bar.showMessage(f"Mask {action}")
+            # Auto-enable overlay so undo/redo results are visible
+            self._ensure_mask_overlay_visible()
+            self._refresh_mask_display()
+            # Check if mask is all-True (no masked pixels)
+            if self.kernel.mask is not None and np.all(self.kernel.mask):
+                self.status_bar.showMessage(
+                    f"Mask {action} - no masked pixels (all pixels valid)"
+                )
+            else:
+                self.status_bar.showMessage(f"Mask {action}")
 
     def _on_save_mask(self) -> None:
         """Handle save mask action with file dialog."""
@@ -404,6 +419,23 @@ class SimpleMaskWindow(QMainWindow):
             return False
 
         return True
+
+    def _ensure_mask_overlay_visible(self) -> None:
+        """Enable mask overlay and sync all toggle states.
+
+        Called after mask-modifying operations (apply, undo, redo) so
+        users can immediately see the result of their action.
+        """
+        if not self._show_mask_overlay:
+            self._show_mask_overlay = True
+            self._show_qmap_overlay = False
+            self._show_partition_overlay = False
+            self.action_toggle_mask.setChecked(True)
+            self.action_toggle_mask.setText("Hide Mask")
+            self.action_toggle_qmap.setChecked(False)
+            self.action_toggle_qmap.setText("Show Q-Map")
+            self.btn_toggle_partition.setChecked(False)
+            self.btn_toggle_partition.setText("Show Partition")
 
     def _on_toggle_mask(self) -> None:
         """Toggle mask overlay visibility."""
@@ -736,12 +768,12 @@ class SimpleMaskWindow(QMainWindow):
         Returns:
             Image with mask overlay visualization
         """
-        # Normalize image to 0-1 range
+        # Normalize image to 0-1 range, guarding against all-NaN or constant
         vmin, vmax = np.nanmin(image), np.nanmax(image)
-        if vmax > vmin:
-            normalized = (image - vmin) / (vmax - vmin)
-        else:
+        if np.isnan(vmin) or np.isnan(vmax) or vmax <= vmin:
             normalized = np.zeros_like(image)
+        else:
+            normalized = (image - vmin) / (vmax - vmin)
 
         # Create display - masked pixels shown darker/red-tinted
         display = normalized.copy()
@@ -807,7 +839,7 @@ class SimpleMaskWindow(QMainWindow):
             shape = detector_image.shape
             self.info_label.setText(
                 f"Image: {shape[1]} x {shape[0]} pixels\n\n"
-                f"⚠️ Missing geometry parameters.\n"
+                f"Warning: Missing geometry parameters.\n"
                 f"Set values in Geometry panel,\n"
                 f"then click 'Generate Q-Map'."
             )
@@ -826,6 +858,9 @@ class SimpleMaskWindow(QMainWindow):
         if success:
             logger.info(f"Loaded detector image with shape {detector_image.shape}")
             self._unsaved_changes = False
+
+            # Sync metadata back from kernel (includes defaults for missing params)
+            self._metadata = self.kernel.metadata.copy()
 
             # Display the image
             self._display_image(detector_image)

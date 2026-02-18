@@ -29,7 +29,7 @@ class TestRectangleScaleHandles:
         kernel = SimpleMaskKernel()
         kernel.hdl = MagicMock()
         kernel.hdl.add_item = MagicMock(return_value="roi_0")
-        kernel.hdl.roi = {}
+        kernel.hdl.roi_items = {}
         kernel.hdl.scene = MagicMock()
         kernel.hdl.scene.itemsBoundingRect = MagicMock(return_value=MagicMock())
         kernel.shape = (512, 512)
@@ -124,7 +124,7 @@ class TestEllipseScaleHandles:
         kernel = SimpleMaskKernel()
         kernel.hdl = MagicMock()
         kernel.hdl.add_item = MagicMock(return_value="roi_0")
-        kernel.hdl.roi = {}
+        kernel.hdl.roi_items = {}
         kernel.hdl.scene = MagicMock()
         kernel.shape = (512, 512)
         kernel.metadata = {"bcx": 256, "bcy": 256}
@@ -204,7 +204,7 @@ class TestCircleScaleHandles:
         kernel = SimpleMaskKernel()
         kernel.hdl = MagicMock()
         kernel.hdl.add_item = MagicMock(return_value="roi_0")
-        kernel.hdl.roi = {}
+        kernel.hdl.roi_items = {}
         kernel.hdl.scene = MagicMock()
         kernel.shape = (512, 512)
         kernel.metadata = {"bcx": 256, "bcy": 256}
@@ -295,7 +295,7 @@ class TestHandleScalingBehavior:
         kernel = SimpleMaskKernel()
         kernel.hdl = MagicMock()
         kernel.hdl.add_item = MagicMock(return_value="roi_0")
-        kernel.hdl.roi = {}
+        kernel.hdl.roi_items = {}
         kernel.hdl.scene = MagicMock()
         kernel.shape = (512, 512)
         kernel.metadata = {"bcx": 256, "bcy": 256}
