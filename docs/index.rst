@@ -64,7 +64,6 @@ The GUI launches maximized with a rectangular layout, uses only the menu bar for
    :maxdepth: 1
    :caption: Project Info
 
-   readme
    authors
    history
 
