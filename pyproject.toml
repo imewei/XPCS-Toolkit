@@ -190,6 +190,8 @@ dev = [
     "pre-commit>=4.5.0",
     "build>=1.2.0",
     "twine>=6.0.0",
+    "sphinx-design>=0.7.0",
+    "sphinxcontrib-mermaid>=2.0.0",
 ]
 test = [
     "pytest>=9.0.0",
