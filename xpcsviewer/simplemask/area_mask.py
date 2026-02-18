@@ -336,7 +336,19 @@ class MaskArray(MaskBase):
 
 
 class MaskAssemble:
-    """Manager for combining multiple mask types with undo/redo support."""
+    """Manager for combining multiple mask types with undo/redo support.
+
+    Maintains a history of mask states enabling undo, redo, and reset
+    operations. Individual mask workers (threshold, file, draw,
+    parameter, etc.) are evaluated independently and combined via
+    logical AND.
+
+    Attributes:
+        shape: Detector dimensions as ``(height, width)``.
+        workers: Dictionary of named mask worker instances.
+        mask_record: List of historical mask states.
+        mask_ptr: Index into *mask_record* for the current state.
+    """
 
     def __init__(
         self,

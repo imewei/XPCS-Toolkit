@@ -156,6 +156,32 @@ def plot_twotime(
     correct_diag=False,
     selection=0,
 ):
+    """Render a two-time correlation map with associated SAXS and G2 panels.
+
+    Displays the C2 two-time correlation matrix alongside the dynamic Q-map,
+    SAXS pattern, and extracted G2 correlation curves (full and partial).
+
+    Args:
+        xfile: XpcsFile object with Twotime analysis data.
+        hdl: Dictionary of PyQtGraph ImageView/PlotItem handles with keys
+            ``'saxs'``, ``'dqmap'``, ``'tt'``, ``'c2g2'``.
+        scale: Intensity scale for the SAXS/dqmap display: ``'log'`` or
+            ``'linear'``.
+        auto_crop: If True, automatically crop the Q-map display.
+        highlight_xy: Optional (x, y) pixel coordinate to highlight on maps.
+        cmap: Matplotlib colormap name for the C2 matrix (default ``'jet'``).
+        vmin: Minimum color level for C2 display. Ignored when autolevel=True.
+        vmax: Maximum color level for C2 display. Ignored when autolevel=True.
+        autolevel: If True, auto-compute color levels from the data.
+        correct_diag: If True, apply diagonal correction to C2 matrix.
+        selection: Q-bin index to display (default 0).
+
+    Raises:
+        AssertionError: If ``xfile`` does not contain Twotime analysis.
+
+    Example:
+        >>> plot_twotime(xfile, hdl, cmap='viridis', autolevel=True)
+    """
     assert "Twotime" in xfile.atype, "Not a twotime file"
 
     # Monitor memory before processing large twotime data
@@ -238,6 +264,16 @@ def plot_twotime(
 
 
 def plot_twotime_g2(hdl, c2_result):
+    """Plot G2 correlation curves extracted from the two-time correlation matrix.
+
+    Displays both the full G2 (averaged over all time sections) and partial
+    G2 curves (individual time sections) on a log-x axis.
+
+    Args:
+        hdl: Dictionary of PyQtGraph handles; uses ``hdl['c2g2']`` PlotItem.
+        c2_result: Dictionary from ``XpcsFile.get_twotime_c2()`` with keys
+            ``'g2_full'``, ``'g2_partial'``, and ``'acquire_period'``.
+    """
     g2_full, g2_partial = c2_result["g2_full"], c2_result["g2_partial"]
 
     hdl["c2g2"].clear()

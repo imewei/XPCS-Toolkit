@@ -28,6 +28,27 @@ def plot(
     loc="upper right",
     **kwargs,
 ):
+    """Generate a stability comparison plot for an XPCS measurement.
+
+    Plots partial SAXS-1D profiles from different time sections of the
+    measurement to visualize temporal stability (beam damage, drift, etc.).
+
+    Args:
+        fc: XpcsFile object containing partial SAXS-1D data.
+        pg_hdl: PyQtGraph PlotWidget to render into.
+        plot_type: Axis scaling mode. Bit 0 controls log-x, bit 1 controls
+            log-y: 0=linear-linear, 1=log-linear, 2=linear-log, 3=log-log.
+        plot_norm: Normalization method index:
+            0=none, 1=q^2, 2=q^4, 3=I(0).
+        legend: Unused (legend is created internally).
+        title: Unused (title is set from ``fc.label``).
+        loc: Legend anchor position string, e.g. ``'upper right'``.
+        **kwargs: Additional keyword arguments (currently unused).
+
+    Example:
+        >>> from xpcsviewer.module import stability
+        >>> stability.plot(xf, pg_widget, plot_type=3, plot_norm=1)
+    """
     logger.info(f"Starting stability plot for {fc.label}")
     logger.debug(
         f"Plot parameters: plot_type={plot_type}, plot_norm={plot_norm}, loc='{loc}'"

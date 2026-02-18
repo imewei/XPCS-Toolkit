@@ -68,6 +68,18 @@ class WorkerSignal(QObject):
 
 
 class AverageToolbox(QtCore.QRunnable):
+    """Thread-pool runnable for averaging multiple XPCS datasets.
+
+    Manages a file list, baseline filtering, and progress signalling
+    via Qt signals. Designed to run in a ``QThreadPool`` to keep the
+    GUI responsive during long averaging operations.
+
+    Args:
+        work_dir: Directory containing the HDF5 files.
+        flist: List of filenames to average.
+        jid: Optional job identifier for tracking.
+    """
+
     def __init__(self, work_dir=None, flist=None, jid=None) -> None:
         if flist is None:
             flist = ["hello"]
@@ -573,6 +585,30 @@ def do_average(
     fields=None,
     n_jobs=None,
 ):
+    """Average multiple XPCS datasets with baseline filtering.
+
+    Reads each file in *flist*, evaluates a baseline metric at the
+    given Q-index, and includes the file in the average only when
+    its baseline falls within ``[avg_blmin, avg_blmax]``. Uses
+    parallel processing for large file lists.
+
+    Args:
+        flist: List of HDF5 filenames to average.
+        work_dir: Directory containing the files. Defaults to ``"./"``
+        save_path: Output file path. Defaults to ``"AVG" + flist[0]``.
+        avg_window: Smoothing window size for baseline evaluation.
+        avg_qindex: Q-bin index used for baseline computation.
+        avg_blmin: Minimum acceptable baseline value for inclusion.
+        avg_blmax: Maximum acceptable baseline value for inclusion.
+        fields: List of HDF5 field keys to average. Defaults to
+            ``["saxs_2d", "saxs_1d", "g2", "g2_err"]``.
+        n_jobs: Number of parallel workers. Defaults to
+            ``min(len(flist), cpu_count())``.
+
+    Returns:
+        numpy.ndarray | None: Per-file baseline values as a 1-D array,
+        or ``None`` if no valid datasets pass the baseline filter.
+    """
     if fields is None:
         fields = ["saxs_2d", "saxs_1d", "g2", "g2_err"]
     if work_dir is None:

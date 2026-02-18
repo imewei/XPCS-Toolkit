@@ -12,11 +12,12 @@ Features:
     - sanitize_path: Path sanitization for privacy in logs
 
 Environment Variables:
-    PYXPCS_LOG_RATE_LIMIT: Default rate limit in msgs/sec (default: 10.0)
-    PYXPCS_LOG_SANITIZE_PATHS: Path sanitization mode: none/home/hash (default: home)
-    PYXPCS_LOG_SESSION_ID: Enable session IDs: 1/0 (default: 1)
+    - ``PYXPCS_LOG_RATE_LIMIT``: Default rate limit in msgs/sec (default: 10.0)
+    - ``PYXPCS_LOG_SANITIZE_PATHS``: Path sanitization mode: none/home/hash (default: home)
+    - ``PYXPCS_LOG_SESSION_ID``: Enable session IDs: 1/0 (default: 1)
 
-Usage:
+Example::
+
     from xpcsviewer.utils.log_utils import (
         LoggingContext,
         RateLimitedLogger,
@@ -367,7 +368,8 @@ def log_timing(
     Returns:
         Decorated function
 
-    Example:
+    Example::
+
         @log_timing()
         def process_data(data):
             ...  # Logs: "process_data completed in 123.45ms"

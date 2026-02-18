@@ -39,6 +39,16 @@ colors = [
 
 
 def smooth_data(fc, window=1, sampling=1):
+    """Apply rolling average smoothing and downsampling to intensity data.
+
+    Args:
+        fc: XpcsFile object with ``Int_t`` property returning ``(x, y)``.
+        window: Rolling average window size. Values <= 1 skip smoothing.
+        sampling: Downsampling factor. Values < 2 skip downsampling.
+
+    Returns:
+        Tuple of ``(x, y)`` arrays after smoothing and downsampling.
+    """
     # some bad frames have both x and y = 0;
     # x, y = fc.Int_t[0], fc.Int_t[1]
     y = fc.Int_t[1]
@@ -61,14 +71,25 @@ def smooth_data(fc, window=1, sampling=1):
 
 
 def plot(xf_list, pg_hdl, enable_zoom=True, xlabel="Frame Index", **kwargs):
-    """
-    Optimized intensity plotting with improved data handling and performance.
-    :param xf_list: list of xf objects
-    :param pg_hdl: pyqtgraph handler to plot
-    :param enable_zoom: bool, if to plot the zoom view or not
-    :param xlabel:
-    :param kwargs: used to define how to average/sample the data
-    :return:
+    """Plot intensity vs time with FFT spectrum and interactive zoom panel.
+
+    Renders a three-panel layout: main intensity time series, Fourier
+    spectrum, and interactive zoom view with a draggable region selector.
+
+    Args:
+        xf_list: List of XpcsFile objects to plot.
+        pg_hdl: PyQtGraph GraphicsLayoutWidget to render into.
+        enable_zoom: If True, add an interactive zoom panel with a
+            draggable region selector linked to the main plot.
+        xlabel: X-axis label. Use ``'Frame Index'`` for raw frames or
+            a time-based label (the x-values are then scaled by ``fc.t0``).
+        **kwargs: Smoothing parameters passed to ``smooth_data()``:
+            ``window`` (int) for rolling average width,
+            ``sampling`` (int) for downsampling factor.
+
+    Example:
+        >>> from xpcsviewer.module import intt
+        >>> intt.plot(xf_list, pg_widget, xlabel='Time (s)', window=5)
     """
     logger.info(f"Starting intensity plot for {len(xf_list)} files")
     logger.debug(

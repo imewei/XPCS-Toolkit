@@ -13,7 +13,27 @@ logger = get_logger(__name__)
 
 
 def plot(xf_list, hdl, q_range, offset, plot_type=3):
-    """Optimized tau-q plotting with vectorized operations and pre-computation"""
+    """Plot relaxation time tau versus scattering vector q.
+
+    Renders tau(q) with error bars for each file, optionally
+    overlaying a power-law fit line when available.
+
+    Args:
+        xf_list: List of XpcsFile objects that contain G2 fitting
+            results (``fit_summary``).
+        hdl: Matplotlib figure handle (``MplCanvas``) for rendering.
+        q_range: Tuple ``(qmin, qmax)`` limiting the q-axis display
+            range (currently unused inside the function but passed
+            for caller compatibility).
+        offset: Decade offset exponent applied per file for visual
+            separation. File *n* is divided by ``10^(offset * n)``.
+        plot_type: Axis scale encoding. 0 = lin-lin, 1 = log-lin,
+            2 = lin-log, 3 = log-log. Default is 3.
+
+    Example:
+        >>> plot(xf_list, hdl=canvas, q_range=(0.001, 0.1),
+        ...      offset=0, plot_type=3)
+    """
     logger.info(f"Starting tau-q plot for {len(xf_list)} files")
     logger.debug(
         f"Plot parameters: q_range={q_range}, offset={offset}, plot_type={plot_type}"
@@ -118,7 +138,24 @@ def plot(xf_list, hdl, q_range, offset, plot_type=3):
 
 
 def plot_pre(xf_list, hdl):
-    """Optimized plot_pre with vectorized operations and reduced redundancy"""
+    """Plot G2 fitting parameters versus q in a 2x2 subplot grid.
+
+    Displays contrast, tau, stretch exponent, and baseline as
+    functions of scattering vector q for all files in *xf_list*.
+    Upper and lower fit bounds are shown as horizontal lines.
+
+    When *xf_list* is empty, an instructional message is displayed
+    directing the user to perform G2 fitting first.
+
+    Args:
+        xf_list: List of XpcsFile objects with G2 fitting results
+            (``fit_summary`` containing ``q_val``, ``fit_val``,
+            and ``bounds``).
+        hdl: Matplotlib figure handle (``MplCanvas``) for rendering.
+
+    Example:
+        >>> plot_pre(xf_list, hdl=canvas)
+    """
     logger.info(f"Starting tau-q pre-plot for {len(xf_list)} files")
 
     hdl.clear()

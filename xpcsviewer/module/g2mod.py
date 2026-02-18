@@ -41,6 +41,27 @@ symbols = ["o", "t", "t1", "t2", "t3", "s", "p", "h", "star", "+", "d", "x"]
 
 
 def get_data(xf_list, q_range=None, t_range=None):
+    """Extract G2 correlation data from a list of XpcsFile objects.
+
+    Reads G2 correlation values, errors, delay times, and Q-values from
+    each file, optionally filtered by Q-range and time-range.
+
+    Args:
+        xf_list: List of XpcsFile objects with correlation analysis data.
+        q_range: Optional (min, max) Q-value filter in inverse Angstroms.
+        t_range: Optional (min, max) delay time filter in seconds.
+
+    Returns:
+        If all files contain correlation data, returns a 5-tuple:
+        ``(q, tel, g2, g2_err, labels)`` where each element is a list
+        of per-file arrays. Returns ``(False, None, None, None, None)``
+        if any file lacks Multitau or Twotime analysis.
+
+    Example:
+        >>> q, tel, g2, g2_err, labels = get_data(xf_list, q_range=(0.01, 0.1))
+        >>> if q is not False:
+        ...     print(f"Loaded {len(q)} files, {g2[0].shape[1]} Q-bins")
+    """
     logger.debug(
         f"get_data: entry with {len(xf_list)} files, q_range={q_range}, t_range={t_range}"
     )
@@ -250,12 +271,25 @@ def pg_plot_stability(
 
 
 def compute_geometry(g2, plot_type):
-    """
-    compute the number of figures and number of plot lines for a given type
-    and dataset;
-    :param g2: input g2 data; 2D array; dim0: t_el; dim1: q_vals
-    :param plot_type: string in ['multiple', 'single', 'single-combined']
-    :return: tuple of (number_of_figures, number_of_lines)
+    """Compute subplot grid dimensions for G2 plots.
+
+    Determines how many figures (subplots) and how many overlay
+    lines per figure are needed based on the layout mode.
+
+    Args:
+        g2: List of 2-D G2 arrays, each shaped
+            ``(n_delay, n_q)``.
+        plot_type: Layout mode. ``"multiple"`` creates one subplot
+            per Q-bin, ``"single"`` one per file, and
+            ``"single-combined"`` puts everything on one axes.
+
+    Returns:
+        tuple[int, int]: ``(num_figs, num_lines)`` where *num_figs*
+        is the number of subplot panels and *num_lines* is the
+        number of curves per panel.
+
+    Raises:
+        ValueError: If *plot_type* is not a recognised layout mode.
     """
     if plot_type == "multiple":
         num_figs = g2[0].shape[1]
@@ -296,6 +330,44 @@ def pg_plot(
     enable_diagnostics=False,
     **kwargs,
 ):
+    """Plot G2 correlation data using PyQtGraph with optional curve fitting.
+
+    Renders multi-panel G2 plots with configurable layout, fitting overlays,
+    and baseline subtraction. Supports single, double, and stretched
+    exponential fitting models.
+
+    Args:
+        hdl: PyQtGraph plot handler (GraphicsLayoutWidget).
+        xf_list: List of XpcsFile objects containing G2 data.
+        q_range: (min, max) Q-value range in inverse Angstroms, or None.
+        t_range: (min, max) delay time range in seconds, or None.
+        y_range: (min, max) y-axis range for G2 values, or None.
+        y_auto: If True, auto-scale y-axis.
+        q_auto: If True, ignore q_range and use all Q-bins.
+        t_auto: If True, ignore t_range and use all delay times.
+        num_col: Number of plot columns in the grid layout.
+        rows: List of file indices to plot, or None for all.
+        offset: Vertical offset between datasets for visibility.
+        show_fit: If True, overlay fitted curves on the data.
+        show_label: If True, display legend labels.
+        bounds: Fitting bounds array, shape ``(2, n_params)``.
+        fit_flag: Boolean array indicating which parameters to fit.
+        plot_type: Layout mode: ``'multiple'`` (one panel per Q-bin),
+            ``'single'`` (one panel per file), or ``'single-combined'``.
+        subtract_baseline: If True, subtract fitted baseline from data.
+        marker_size: Size of data point markers in pixels.
+        label_size: Font size for legend labels in points.
+        fit_func: Fitting model: ``'single'`` or ``'double'`` exponential.
+        robust_fitting: If True, use NLSQ multistart robust fitting.
+        enable_diagnostics: If True, compute model health diagnostics.
+        **kwargs: Additional keyword arguments passed to fitting routines.
+            Includes ``force_refit`` (bool) to force re-fitting.
+
+    Example:
+        >>> pg_plot(hdl, xf_list, q_range=(0.01, 0.1),
+        ...         t_range=(1e-4, 10), y_range=(0.9, 1.5),
+        ...         show_fit=True, fit_func='single')
+    """
     if q_auto:
         q_range = None
     if t_auto:
@@ -668,8 +740,20 @@ def pg_plot_from_data(
 
 
 def pg_plot_one_g2(ax, x, y, dy, color, label, symbol, symbol_size=5):
-    """
-    Optimized G2 plotting with improved data validation and performance.
+    """Plot a single G2 correlation curve with error bars on a log-x axis.
+
+    Filters NaN/inf values, applies log-scale x-axis, and downsamples
+    dense data for rendering performance.
+
+    Args:
+        ax: PyQtGraph PlotItem to draw on.
+        x: Delay times array (must be positive for log scale).
+        y: G2 correlation values.
+        dy: G2 error bars (standard deviation).
+        color: RGB tuple for plot color, e.g. ``(255, 0, 0)``.
+        label: Legend label string, or None.
+        symbol: PyQtGraph symbol character (e.g. ``'o'``, ``'s'``).
+        symbol_size: Marker size in pixels (default 5).
     """
     # Validate input data
     if len(x) == 0 or len(y) == 0:

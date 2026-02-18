@@ -25,6 +25,41 @@ def plot(
     vmin=None,
     vmax=None,
 ):
+    """Display a 2-D SAXS detector image in a PyQtGraph ImageView.
+
+    Renders the detector image from *xfile* with optional log scaling,
+    custom colour mapping, and intensity clamping. A beam-centre ROI
+    marker is drawn automatically.
+
+    Args:
+        xfile: XpcsFile containing ``saxs_2d`` and ``saxs_2d_log``
+            image arrays plus beam centre coordinates (``bcx``,
+            ``bcy``).
+        pg_hdl: PyQtGraph ImageView handle for rendering.
+        plot_type: Image intensity scaling. ``"log"`` uses the
+            pre-computed log-scaled image; any other value uses the
+            linear image.
+        cmap: Colour-map name passed to ``pg_hdl.set_colormap``.
+            ``None`` keeps the current colour map.
+        rotate: If True, transpose the image (unused in current
+            implementation but returned for caller state tracking).
+        autolevel: Automatically scale intensity levels to the
+            data range.
+        autorange: Force the view to fit the full image. When
+            False the previous view range is preserved unless the
+            image shape changed.
+        vmin: Manual lower intensity clamp. Applied only when
+            *autolevel* is False.
+        vmax: Manual upper intensity clamp. Applied only when
+            *autolevel* is False.
+
+    Returns:
+        bool: The *rotate* flag, echoed back for caller convenience.
+
+    Example:
+        >>> rotate = plot(xfile, pg_hdl=viewer, plot_type="log",
+        ...               cmap="viridis", vmin=0, vmax=100)
+    """
     logger.info(f"Starting SAXS2D plot for {getattr(xfile, 'label', 'unknown file')}")
     logger.debug(
         f"Plot parameters: plot_type='{plot_type}', cmap='{cmap}', rotate={rotate}, autolevel={autolevel}, autorange={autorange}"

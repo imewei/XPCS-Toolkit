@@ -330,7 +330,7 @@ class GeometryMetadata:
         Parameters
         ----------
         data : dict
-            Dictionary with keys: bcx, bcy, det_dist, lambda_, pix_dim, shape,
+            Dictionary with keys: bcx, bcy, det_dist, ``lambda_``, pix_dim, shape,
             and optionally det_rotation, incident_angle
 
         Returns

@@ -133,8 +133,22 @@ def get_pyqtgraph_anchor_params(loc, padding=10):
 
 
 def offset_intensity(Iq, n, plot_offset=None, yscale=None):
-    """
-    Vectorized intensity offset with optimized memory usage.
+    """Apply a vertical offset to intensity curves for visual separation.
+
+    For linear y-scale, subtracts a fraction of the peak intensity per
+    file index. For log y-scale, divides by a power-of-ten factor.
+
+    Args:
+        Iq: Intensity array. Can be 1-D ``(n_q,)`` or 2-D
+            ``(n_phi, n_q)``.
+        n: File index (0-based) used to scale the offset.
+        plot_offset: Offset magnitude. ``None`` or 0 means no offset.
+        yscale: ``"linear"`` or ``"log"`` determines the offset
+            strategy.
+
+    Returns:
+        numpy.ndarray: Offset-adjusted intensity array (same shape as
+        *Iq*).
     """
     if plot_offset is None or plot_offset == 0:
         return Iq
@@ -261,8 +275,53 @@ def pg_plot(
     show_roi=True,
     show_phi_roi=True,
 ):
-    """
-    Highly optimized SAXS1D plotting with vectorized operations and memory efficiency.
+    """Plot one-dimensional SAXS intensity profiles using PyQtGraph.
+
+    Renders I(q) curves for one or more XPCS files with support for
+    log/linear axis scaling, intensity normalization, background
+    subtraction, and multi-phi overlays.
+
+    Args:
+        xf_list: List of XpcsFile objects containing SAXS 1-D data.
+        pg_hdl: PyQtGraph PlotWidget handle for rendering.
+        plot_type: Axis scale encoding. 0 = lin-lin, 1 = log-lin,
+            2 = lin-log, 3 = log-log. Default is 2 (lin-log).
+        plot_norm: Normalization mode index. 0 = none, 1 = q^2,
+            2 = q^4, 3 = I(0).
+        plot_offset: Vertical offset exponent applied per file for
+            visual separation. 0 means no offset.
+        title: Plot title string, or None for no title.
+        rows: List of file indices to highlight at full opacity.
+            Remaining files are drawn at alpha 0.35.
+        qmax: Upper bound of the q-range to display (1/A).
+        qmin: Lower bound of the q-range to display (1/A).
+        loc: Legend anchor position string (e.g. ``"best"``,
+            ``"upper right"``).
+        marker_size: Scatter marker diameter in pixels.
+        sampling: Down-sampling factor for the q-points. 1 = no
+            down-sampling.
+        all_phi: If True, plot all phi-sector curves. Otherwise
+            plot only the first (azimuthally averaged) curve.
+        absolute_crosssection: If True, convert intensity to
+            absolute cross-section units (1/cm).
+        subtract_background: Enable background subtraction using
+            *bkg_file*.
+        bkg_file: XpcsFile used as the background reference when
+            *subtract_background* is True.
+        weight: Multiplicative weight applied to the background
+            before subtraction.
+        roi_list: Optional list of ROI descriptors to overlay.
+        show_roi: Show q-ROI indicators on the plot.
+        show_phi_roi: Show phi-ROI indicators on the plot.
+
+    Example:
+        >>> pg_plot(
+        ...     xf_list=[xf],
+        ...     pg_hdl=widget,
+        ...     plot_type=3,
+        ...     qmin=0.001,
+        ...     qmax=1.0,
+        ... )
     """
     logger.debug(f"pg_plot: entry with {len(xf_list)} files, q_range=[{qmin}, {qmax}]")
     pg_hdl.clear()

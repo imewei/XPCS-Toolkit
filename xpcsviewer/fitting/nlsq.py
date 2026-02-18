@@ -40,7 +40,47 @@ def nlsq_optimize(
     compute_diagnostics: bool = False,
     show_progress: bool = False,
 ) -> NLSQResult:
-    """NLSQ 0.6.0 curve fitting with native result delegation."""
+    """Perform non-linear least-squares curve fitting via NLSQ 0.6.0.
+
+    Wraps ``nlsq.fit`` with automatic array conversion, covariance
+    validation, and chi-squared computation. On failure, returns a
+    sentinel ``NLSQResult`` with ``converged=False`` instead of
+    raising.
+
+    Args:
+        model_fn: Model callable ``f(x, *params) -> y``.
+        x: Independent variable array.
+        y: Observed data array.
+        yerr: Per-point standard errors (optional). When provided,
+            ``absolute_sigma=True`` is passed to the solver.
+        p0: Initial parameter guesses as ``{name: value}``.
+        bounds: Parameter bounds as ``{name: (lower, upper)}``.
+        preset: NLSQ solver preset. One of ``"fast"``,
+            ``"robust"``, ``"global"``, ``"streaming"``, ``"large"``.
+        auto_bounds: If True, let NLSQ infer bounds from data.
+        stability: Numerical stability mode. ``"auto"`` applies
+            automatic fixes, ``"check"`` only diagnoses, ``False``
+            disables.
+        fallback: Enable automatic fallback strategies on failure.
+        compute_diagnostics: Populate ``ModelHealthReport``
+            diagnostics in the native result.
+        show_progress: Display a progress bar during fitting.
+
+    Returns:
+        NLSQResult: Fitting result containing parameter estimates,
+        chi-squared, covariance status, and the native NLSQ result
+        object.
+
+    Example:
+        >>> result = nlsq_optimize(
+        ...     model_fn=lambda x, a, b: a * np.exp(-x / b),
+        ...     x=delay, y=g2, yerr=g2_err,
+        ...     p0={"a": 0.3, "b": 1.0},
+        ...     bounds={"a": (0, 1), "b": (1e-6, 1e6)},
+        ...     preset="robust",
+        ... )
+        >>> print(f"converged={result.converged}, chi2={result.chi_squared:.3f}")
+    """
     import nlsq
 
     x = np.asarray(x, dtype=np.float64)
