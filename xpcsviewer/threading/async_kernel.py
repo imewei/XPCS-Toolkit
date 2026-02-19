@@ -254,6 +254,10 @@ class AsyncViewerKernel(QObject):
         if operation_id in self.active_operations:
             worker_id = self.active_operations[operation_id]
             self.worker_manager.cancel_worker(worker_id)
+            # Disconnect signals before removing from active operations to
+            # prevent stale signal delivery into deleted objects (SRE-8).
+            self._disconnect_signals(operation_id)
+            del self.active_operations[operation_id]
             logger.info(f"Cancelled operation: {operation_id}")
 
     def cancel_all_operations(self):

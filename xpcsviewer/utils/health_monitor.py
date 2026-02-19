@@ -201,19 +201,32 @@ class HealthMonitor:
             )
 
     def stop_monitoring(self) -> None:
-        """Stop background health monitoring."""
+        """Stop background health monitoring.
+
+        The lock is released before joining the monitor thread to avoid a
+        potential deadlock: the monitor loop may attempt to acquire ``_lock``
+        (e.g. via ``get_health_summary``), so holding it while waiting for
+        the thread to finish would block both sides (SRE-6).
+        """
+        thread_to_join = None
         with self._lock:
             if not self._monitoring_active:
                 return
 
             self._monitoring_active = False
             if self._monitor_thread and self._monitor_thread.is_alive():
-                self._monitor_thread.join(timeout=5.0)
-                if self._monitor_thread.is_alive():
-                    logger.warning("Health monitor thread did not stop within timeout")
+                thread_to_join = self._monitor_thread
 
+        # Join outside the lock to prevent deadlock (SRE-6).
+        if thread_to_join is not None:
+            thread_to_join.join(timeout=5.0)
+            if thread_to_join.is_alive():
+                logger.warning("Health monitor thread did not stop within timeout")
+
+        with self._lock:
             self._monitor_thread = None
-            logger.info("Health monitoring stopped")
+
+        logger.info("Health monitoring stopped")
 
     def _monitoring_loop(self) -> None:
         """Main monitoring loop running in background thread."""

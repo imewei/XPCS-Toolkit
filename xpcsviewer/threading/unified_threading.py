@@ -251,7 +251,8 @@ class UnifiedThreadingManager(QObject):
         # Check system limits
         if not self._can_accept_task(task_type):
             logger.warning(f"Task {task_id} rejected due to system limits")
-            self._stats["memory_rejected"] += 1
+            with self._task_lock:
+                self._stats["memory_rejected"] += 1
             return False
 
         # Create unified task
@@ -326,6 +327,26 @@ class UnifiedThreadingManager(QObject):
     def _emit_task_completed_queued(self, task_id: str, result: object) -> None:
         """Emit task_completed signal via QueuedConnection (BUG-007)."""
         self.task_completed.emit(task_id, result)
+
+    @Slot(str)
+    def _emit_memory_pressure_queued(self, value: str) -> None:
+        """Emit memory_pressure_changed on the main thread (SRE-1).
+
+        Invoked via QMetaObject.invokeMethod with QueuedConnection from the
+        raw monitoring thread so the actual signal emission happens on the
+        Qt main thread.
+        """
+        self.memory_pressure_changed.emit(value)
+
+    @Slot(float)
+    def _emit_load_changed_queued(self, value: float) -> None:
+        """Emit load_changed on the main thread (SRE-1).
+
+        Invoked via QMetaObject.invokeMethod with QueuedConnection from the
+        raw monitoring thread so the actual signal emission happens on the
+        Qt main thread.
+        """
+        self.load_changed.emit(value)
 
     @log_timing(threshold_ms=100)
     def _execute_task(self, task: UnifiedTask) -> Any:
@@ -433,7 +454,16 @@ class UnifiedThreadingManager(QObject):
                     > self._adaptive_config["memory_check_interval"]
                 ):
                     memory_pressure = self.memory_manager.get_memory_pressure()
-                    self.memory_pressure_changed.emit(memory_pressure.value)
+                    # Marshal signal emission to the Qt main thread (SRE-1).
+                    # _monitor_system runs on a raw threading.Thread, so
+                    # emitting Qt signals directly is unsafe.
+                    _pressure_value = memory_pressure.value
+                    QMetaObject.invokeMethod(  # type: ignore[call-overload]
+                        self,
+                        "_emit_memory_pressure_queued",
+                        Qt.ConnectionType.QueuedConnection,
+                        Q_ARG(str, _pressure_value),
+                    )
                     last_memory_check = current_time
 
                 # Load balancing
@@ -454,8 +484,15 @@ class UnifiedThreadingManager(QObject):
         cpu_percent = psutil.cpu_percent(interval=0.1)
         memory_percent = psutil.virtual_memory().percent
 
-        # Emit load signal
-        self.load_changed.emit(cpu_percent)
+        # Marshal signal emission to the Qt main thread (SRE-1).
+        # _balance_thread_pools is called from _monitor_system which runs on
+        # a raw threading.Thread.
+        QMetaObject.invokeMethod(  # type: ignore[call-overload]
+            self,
+            "_emit_load_changed_queued",
+            Qt.ConnectionType.QueuedConnection,
+            Q_ARG(float, cpu_percent),
+        )
 
         # Adjust thread pools based on system load
         if cpu_percent > 80:
@@ -483,32 +520,41 @@ class UnifiedThreadingManager(QObject):
             )
 
     def get_performance_stats(self) -> dict[str, Any]:
-        """Get comprehensive performance statistics."""
+        """Get comprehensive performance statistics.
+
+        All reads of ``_stats`` are performed under ``_task_lock`` to avoid
+        torn reads from concurrent writer threads (SRE-9).
+        """
         with self._task_lock:
             active_count = len(self._active_tasks)
             queue_size = self._task_queue.qsize()
 
-            # Calculate averages
-            completed = self._stats["tasks_completed"]
-            avg_execution_time = self._stats["total_execution_time"] / max(1, completed)
-            avg_wait_time = self._stats["total_wait_time"] / max(1, completed)
+            # Snapshot all mutable stats under the lock (SRE-9)
+            stats_snapshot = dict(self._stats)
 
-        # System resources
+            # Calculate averages
+            completed = stats_snapshot["tasks_completed"]
+            avg_execution_time = stats_snapshot["total_execution_time"] / max(
+                1, completed
+            )
+            avg_wait_time = stats_snapshot["total_wait_time"] / max(1, completed)
+
+        # System resources (no lock needed -- psutil is independent)
         cpu_percent = psutil.cpu_percent()
         memory = psutil.virtual_memory()
 
         return {
             # Task statistics
-            "tasks_submitted": self._stats["tasks_submitted"],
-            "tasks_completed": self._stats["tasks_completed"],
-            "tasks_failed": self._stats["tasks_failed"],
+            "tasks_submitted": stats_snapshot["tasks_submitted"],
+            "tasks_completed": stats_snapshot["tasks_completed"],
+            "tasks_failed": stats_snapshot["tasks_failed"],
             "active_tasks": active_count,
             "queued_tasks": queue_size,
             # Performance metrics
             "avg_execution_time_ms": avg_execution_time * 1000,
             "avg_wait_time_ms": avg_wait_time * 1000,
-            "memory_rejected": self._stats["memory_rejected"],
-            "timeout_cancelled": self._stats["timeout_cancelled"],
+            "memory_rejected": stats_snapshot["memory_rejected"],
+            "timeout_cancelled": stats_snapshot["timeout_cancelled"],
             # System resources
             "cpu_percent": cpu_percent,
             "memory_percent": memory.percent,

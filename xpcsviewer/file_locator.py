@@ -91,8 +91,14 @@ class FileLocator:
         :param rows: a list of index to select; if None is given, then use
         :return: list of xpcs_file objects;
         """
+        # Snapshot the target list under the cache lock so that concurrent
+        # modifications from the main thread (add_target, remove_target, etc.)
+        # do not cause index errors or stale reads (SRE-3).
+        with self._cache_lock:
+            target_snapshot = list(self.target)
+
         if rows is None:
-            selected = list(range(len(self.target)))
+            selected = list(range(len(target_snapshot)))
         elif isinstance(rows, int):
             selected = [rows]
         else:
@@ -119,9 +125,9 @@ class FileLocator:
 
         ret = []
         for n in selected:
-            if n < 0 or n >= len(self.target):
+            if n < 0 or n >= len(target_snapshot):
                 continue
-            full_fname = os.path.normpath(os.path.join(self.path, self.target[n]))
+            full_fname = os.path.normpath(os.path.join(self.path, target_snapshot[n]))
 
             # Check the cache without holding the lock during I/O.
             # XpcsFile construction can be slow (HDF5 read) — holding the
@@ -146,7 +152,7 @@ class FileLocator:
             # Skip None objects (failed to load)
             if xf_obj is None:
                 logger.warning(
-                    f"Skipping invalid file {self.target[n]} (failed to load)"
+                    f"Skipping invalid file {target_snapshot[n]} (failed to load)"
                 )
                 continue
 
