@@ -1,32 +1,6 @@
 Installation
 ============
 
-Requirements
-------------
+.. note::
 
-- Python 3.12+
-- 8 GB RAM minimum
-
-Install
--------
-
-.. code-block:: bash
-
-   pip install xpcsviewer
-
-Development Install
--------------------
-
-.. code-block:: bash
-
-   git clone https://github.com/imewei/XPCSViewer.git
-   cd XPCSViewer
-   pip install -e .
-
-Verify
-------
-
-.. code-block:: python
-
-   import xpcsviewer
-   print(xpcsviewer.__version__)
+   This page has moved. See :doc:`/how-to/installation` for installation instructions.

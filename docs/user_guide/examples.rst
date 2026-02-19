@@ -1,43 +1,7 @@
 Examples
 ========
 
-G2 Analysis
------------
+.. note::
 
-.. code-block:: python
-
-   from xpcsviewer import XpcsFile
-   from xpcsviewer.module import g2mod
-
-   # Load data
-   xf = XpcsFile('data.hdf')
-
-   # Get G2 data (returns q_values, delay_times, g2, g2_err, labels)
-   q, tel, g2, g2_err, labels = g2mod.get_data(
-       [xf], q_range=(1, 5), t_range=(1e-6, 1)
-   )
-
-SAXS Processing
----------------
-
-.. code-block:: python
-
-   from xpcsviewer import XpcsFile
-
-   # Load SAXS data
-   xf = XpcsFile('saxs_data.hdf')
-   saxs_2d_data = xf.saxs_2d
-
-Batch Processing
-----------------
-
-.. code-block:: python
-
-   from pathlib import Path
-   from xpcsviewer import XpcsFile
-
-   # Process multiple files
-   data_dir = Path('/path/to/data')
-   for hdf_file in data_dir.glob('*.hdf'):
-       xf = XpcsFile(str(hdf_file))
-       # Process data...
+   This page has moved. See :doc:`/how-to/examples` for code examples
+   (G2 analysis, SAXS processing, batch processing).
