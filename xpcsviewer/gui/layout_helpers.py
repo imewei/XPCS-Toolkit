@@ -234,7 +234,7 @@ def apply_all_layout_improvements(main_window: QWidget) -> None:
     # Mark primary action buttons
     mark_primary_action_buttons(main_window)
 
-    # Improve control panel group boxes
+    # Improve control panel group boxes (apply settingsPanel property)
     control_panels = [
         "groupBox_3",  # SAXS 2D Plot Setting
         "groupBox_6",  # SAXS 1D Plot Setting
@@ -244,12 +244,17 @@ def apply_all_layout_improvements(main_window: QWidget) -> None:
         "groupBox_2",  # G2 Fitting
         "groupBox_8",  # Two-time settings
         "groupBox_9",  # Two-time controls
+        "groupBox_5",  # Q-Map settings
+        "groupBox_10",  # Average settings
     ]
 
     for name in control_panels:
         group_box = main_window.findChild(QGroupBox, name)
         if group_box:
             improve_control_panel_layout(group_box)
+
+    # Apply compact density to sidebar panels
+    _apply_compact_density_to_sidebars(main_window)
 
     # Improve tab content spacing
     tab_widget = main_window.findChild(QWidget, "tabWidget")
@@ -273,3 +278,28 @@ def add_visual_separator_before_action(
         position = layout.count() - 1
     if hasattr(layout, "insertWidget"):
         layout.insertWidget(position, separator)
+
+
+def _apply_compact_density_to_sidebars(main_window: QWidget) -> None:
+    """Apply compact density to sidebar control panel widgets.
+
+    Compact density reduces padding on form controls in panels that
+    contain many stacked settings, making them easier to scan.
+
+    Args:
+        main_window: The XpcsViewer main window
+    """
+    # Widget names for sidebar splitter panels (left/right control areas)
+    sidebar_splitter_names = [
+        "splitter_3",
+        "splitter_2",
+        "widget_saxs2d_controls",
+        "widget_g2_controls",
+    ]
+
+    for name in sidebar_splitter_names:
+        widget = main_window.findChild(QWidget, name)
+        if widget:
+            widget.setProperty("density", "compact")
+            widget.style().unpolish(widget)
+            widget.style().polish(widget)
