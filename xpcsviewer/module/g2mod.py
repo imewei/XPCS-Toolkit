@@ -755,6 +755,13 @@ def pg_plot_one_g2(ax, x, y, dy, color, label, symbol, symbol_size=5):
         symbol: PyQtGraph symbol character (e.g. ``'o'``, ``'s'``).
         symbol_size: Marker size in pixels (default 5).
     """
+    # Ensure NumPy arrays at PyQtGraph I/O boundary (JAX arrays not supported)
+    from xpcsviewer.backends._conversions import ensure_numpy
+
+    x = ensure_numpy(x)
+    y = ensure_numpy(y)
+    dy = ensure_numpy(dy)
+
     # Validate input data
     if len(x) == 0 or len(y) == 0:
         return

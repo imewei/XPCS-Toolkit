@@ -292,9 +292,13 @@ class SimpleMaskKernel:
 
         if 0 <= row < self.shape[0] and 0 <= col < self.shape[1]:
             msg = f"x={col}, y={row}"
-            if self.qmap is not None and "q" in self.qmap:
-                q_val = self.qmap["q"][row, col]
-                msg += f", q={q_val:.4f} Å⁻¹"
+            q_val = (
+                self.qmap.get("q", self.qmap.get("sqmap"))
+                if self.qmap is not None
+                else None
+            )
+            if self.qmap is not None and q_val is not None:
+                msg += f", q={q_val[row, col]:.4f} Å⁻¹"
             if self.detector_image is not None:
                 intensity = self.detector_image[row, col]
                 msg += f", I={intensity:.1f}"

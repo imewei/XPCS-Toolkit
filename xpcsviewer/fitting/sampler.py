@@ -32,25 +32,49 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
-# Check if NumPyro is available
+# Check availability of optional dependencies independently (T-10).
+# Splitting the monolithic try/except allows partial functionality when only
+# some packages are missing (e.g., arviz absent but jax+numpyro present).
+JAX_AVAILABLE = False
+NUMPYRO_AVAILABLE = False
+ARVIZ_AVAILABLE = False
 try:
-    import arviz as az
     import jax
     import jax.numpy as jnp
+
+    JAX_AVAILABLE = True
+except ImportError:
+    pass
+try:
     import numpyro
+    import numpyro.distributions as dist
     from numpyro.infer import MCMC, NUTS
 
     NUMPYRO_AVAILABLE = True
 except ImportError:
-    NUMPYRO_AVAILABLE = False
+    pass
+try:
+    import arviz as az
+
+    ARVIZ_AVAILABLE = True
+except ImportError:
+    pass
 
 
 def check_numpyro() -> None:
-    """Raise error if NumPyro is not available."""
+    """Raise error if JAX, NumPyro, or ArviZ are not available."""
+    missing = []
+    if not JAX_AVAILABLE:
+        missing.append("jax")
     if not NUMPYRO_AVAILABLE:
+        missing.append("numpyro")
+    if not ARVIZ_AVAILABLE:
+        missing.append("arviz")
+    if missing:
         raise ImportError(
-            "NumPyro is required for Bayesian fitting. "
-            "Install with: pip install numpyro arviz"
+            f"Bayesian fitting requires JAX, NumPyro, and ArviZ. "
+            f"Missing: {', '.join(missing)}. "
+            f"Install with: pip install {' '.join(missing)}"
         )
 
 
@@ -493,6 +517,11 @@ def run_stretched_exp_fit(
     x_jax = jnp.asarray(x)
     y_jax = jnp.asarray(y)
     yerr_jax = jnp.asarray(yerr) if yerr is not None else None
+
+    # JAX-N-06: Clamp beta from NLSQ init to avoid boundary issues in NUTS.
+    # Beta near 0 or 1 causes numerical instability in the stretched exp model.
+    if "beta" in nlsq_init:
+        nlsq_init["beta"] = max(0.05, min(0.95, nlsq_init["beta"]))
 
     # Run MCMC with warm-start
     logger.info("Running NUTS sampling")

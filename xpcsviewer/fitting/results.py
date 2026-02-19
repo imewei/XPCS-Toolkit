@@ -118,8 +118,12 @@ class FitDiagnostics:
     bfmi : float | None
         Bayesian Fraction of Missing Information (mean across chains).
         Added per Technical Guidelines for Bayesian inference compliance.
+
+    Properties (computed)
+    ---------------------
     converged : bool
-        True if all diagnostics pass thresholds
+        True if all diagnostics pass thresholds (see below).
+        This is a computed ``@property``, not a stored field.
 
     Convergence Thresholds
     ----------------------
@@ -280,7 +284,7 @@ class NLSQResult:
     @property
     def r_squared(self) -> float:
         """Coefficient of determination (R²)."""
-        if self.native_result is not None:
+        if self.native_result is not None and hasattr(self.native_result, "r_squared"):
             return self.native_result.r_squared
         return self._r_squared
 
@@ -304,7 +308,9 @@ class NLSQResult:
     @property
     def adj_r_squared(self) -> float:
         """Adjusted R² accounting for number of parameters."""
-        if self.native_result is not None:
+        if self.native_result is not None and hasattr(
+            self.native_result, "adj_r_squared"
+        ):
             return self.native_result.adj_r_squared
         return self._adj_r_squared
 
@@ -326,7 +332,7 @@ class NLSQResult:
     @property
     def rmse(self) -> float:
         """Root mean squared error."""
-        if self.native_result is not None:
+        if self.native_result is not None and hasattr(self.native_result, "rmse"):
             return self.native_result.rmse
         return self._rmse
 
@@ -348,7 +354,7 @@ class NLSQResult:
     @property
     def mae(self) -> float:
         """Mean absolute error."""
-        if self.native_result is not None:
+        if self.native_result is not None and hasattr(self.native_result, "mae"):
             return self.native_result.mae
         return self._mae
 
@@ -370,7 +376,7 @@ class NLSQResult:
     @property
     def aic(self) -> float:
         """Akaike Information Criterion."""
-        if self.native_result is not None:
+        if self.native_result is not None and hasattr(self.native_result, "aic"):
             return self.native_result.aic
         return self._aic
 
@@ -392,7 +398,7 @@ class NLSQResult:
     @property
     def bic(self) -> float:
         """Bayesian Information Criterion."""
-        if self.native_result is not None:
+        if self.native_result is not None and hasattr(self.native_result, "bic"):
             return self.native_result.bic
         return self._bic
 
@@ -414,7 +420,7 @@ class NLSQResult:
     @property
     def residuals(self) -> np.ndarray:
         """Fit residuals as numpy array."""
-        if self.native_result is not None:
+        if self.native_result is not None and hasattr(self.native_result, "residuals"):
             return np.asarray(self.native_result.residuals)
         if self._residuals is not None:
             return self._residuals
@@ -438,7 +444,9 @@ class NLSQResult:
     @property
     def predictions(self) -> np.ndarray | None:
         """Model predictions at input x values."""
-        if self.native_result is not None:
+        if self.native_result is not None and hasattr(
+            self.native_result, "predictions"
+        ):
             return np.asarray(self.native_result.predictions)
         return self._predictions
 
@@ -460,7 +468,7 @@ class NLSQResult:
     @property
     def covariance(self) -> np.ndarray:
         """Parameter covariance matrix."""
-        if self.native_result is not None:
+        if self.native_result is not None and hasattr(self.native_result, "pcov"):
             return np.asarray(self.native_result.pcov)
         if self._covariance is not None:
             return self._covariance
@@ -485,7 +493,9 @@ class NLSQResult:
     @property
     def confidence_intervals(self) -> dict[str, tuple[float, float]]:
         """Parameter confidence intervals at 95% level."""
-        if self.native_result is not None:
+        if self.native_result is not None and hasattr(
+            self.native_result, "confidence_intervals"
+        ):
             # Cast to dict in case it's a method or other type in strict mypy
             from typing import cast
 
@@ -512,7 +522,9 @@ class NLSQResult:
     @property
     def diagnostics(self) -> ModelHealthReport | None:
         """NLSQ model health diagnostics."""
-        if self.native_result is not None:
+        if self.native_result is not None and hasattr(
+            self.native_result, "diagnostics"
+        ):
             return self.native_result.diagnostics
         return None
 

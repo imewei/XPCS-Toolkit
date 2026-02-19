@@ -109,6 +109,21 @@ _single_exp_all_fn: Callable[..., NDArray[np.floating[Any]]] | None = None
 _double_exp_all_fn: Callable[..., NDArray[np.floating[Any]]] | None = None
 
 
+def reset_legacy_closures() -> None:
+    """Reset cached model function closures (call after reset_backend()).
+
+    The module-level singletons capture the backend at first use. If the
+    backend is reset (e.g., switching from NumPy to JAX), these stale
+    closures must be invalidated so the next call re-creates them with
+    the new backend.
+    """
+    global _single_exp_fn, _double_exp_fn, _single_exp_all_fn, _double_exp_all_fn
+    _single_exp_fn = None
+    _double_exp_fn = None
+    _single_exp_all_fn = None
+    _double_exp_all_fn = None
+
+
 def single_exp(
     x: NDArray[np.floating[Any]], tau: float, bkg: float, cts: float
 ) -> NDArray[np.floating[Any]]:
@@ -653,10 +668,12 @@ def vectorized_parameter_estimation(
         idx = np.argmin(np.abs(y - (y_min + amp / np.e)))
         tau = x[idx] if idx > 0 else x[len(x) // 2]
 
-        # Define JIT-safe model function (no ensure_numpy)
+        # JAX-N-08: Capture backend once in closure instead of calling
+        # get_backend() on every residual evaluation during optimization.
+        _b = get_backend()
+
         def _model_func(x_val, tau_val, bkg_val, cts_val):
-            b = get_backend()
-            return cts_val * b.exp(-2 * b.array(x_val) / tau_val) + bkg_val
+            return cts_val * _b.exp(-2 * _b.array(x_val) / tau_val) + bkg_val
 
         result = curve_fit(
             _model_func,

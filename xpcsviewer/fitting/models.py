@@ -124,6 +124,10 @@ def double_exp_model(
     contrast1 = numpyro.sample("contrast1", dist.HalfNormal(0.5))
     contrast2 = numpyro.sample("contrast2", dist.HalfNormal(0.5))
 
+    # Clamp tau1/tau2 to prevent NaN gradients when NUTS samples near zero (JAX-N-03)
+    tau1 = jnp.clip(tau1, 1e-30)
+    tau2 = jnp.clip(tau2, 1e-30)
+
     # Model prediction
     mu = (
         baseline

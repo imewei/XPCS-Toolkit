@@ -26,8 +26,12 @@ logger = logging.getLogger(__name__)
 # Energy to wavevector constant: lambda (Angstrom) = 12.39841984 / E (keV)
 E2KCONST = 12.39841984
 
-# JIT cache for compiled functions (JAX arrays are not hashable for lru_cache)
+# JIT cache for compiled functions (JAX arrays are not hashable for lru_cache).
+# This is a bounded cache: entries are evicted in FIFO order when the cache
+# exceeds _JIT_CACHE_MAXSIZE.  External code should NOT clear this dict
+# directly; the eviction logic is handled internally.
 _JIT_CACHE: dict[str, Callable] = {}
+_JIT_CACHE_MAXSIZE: int = 32
 
 
 def _validate_geometry_metadata(metadata: dict, required_keys: tuple[str, ...]) -> None:
@@ -155,6 +159,10 @@ def _get_transmission_qmap_jit():
 
             return phi_deg, alpha_deg, qr, qx, qy, hg, vg
 
+        if len(_JIT_CACHE) >= _JIT_CACHE_MAXSIZE:
+            oldest_key = next(iter(_JIT_CACHE))
+            del _JIT_CACHE[oldest_key]
+            logger.debug("Evicted oldest JIT cache entry: %s", oldest_key)
         _JIT_CACHE[cache_key] = _transmission_qmap_core
         logger.debug("Created JIT-compiled transmission Q-map function")
 
@@ -559,6 +567,10 @@ def _get_reflection_qmap_jit(orientation: str):
                 vg,
             )
 
+        if len(_JIT_CACHE) >= _JIT_CACHE_MAXSIZE:
+            oldest_key = next(iter(_JIT_CACHE))
+            del _JIT_CACHE[oldest_key]
+            logger.debug("Evicted oldest JIT cache entry: %s", oldest_key)
         _JIT_CACHE[cache_key] = _reflection_qmap_core
         logger.debug(
             "Created JIT-compiled reflection Q-map function "

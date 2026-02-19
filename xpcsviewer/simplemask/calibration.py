@@ -86,19 +86,24 @@ def refine_beam_center(
     for i in range(max_iterations):
         grads = grad_fn(params)
         params = params - lr * grads
-        loss = float(loss_fn_jit(params))
-        losses.append(loss)
 
-        if np.isnan(loss):
-            logger.warning(
-                "NaN loss detected in beam center refinement, stopping early"
-            )
-            break
+        # Check convergence every 10 steps to reduce host-device sync overhead
+        if i % 10 == 0 or i == max_iterations - 1:
+            loss = float(loss_fn_jit(params))
+            losses.append(loss)
 
-        # Check convergence
-        if len(losses) >= 2 and abs(losses[-1] - losses[-2]) < tolerance:
-            logger.debug(f"Beam center refinement converged after {i + 1} iterations")
-            break
+            if np.isnan(loss):
+                logger.warning(
+                    "NaN loss detected in beam center refinement, stopping early"
+                )
+                break
+
+            # Check convergence
+            if len(losses) >= 2 and abs(losses[-1] - losses[-2]) < tolerance:
+                logger.debug(
+                    f"Beam center refinement converged after {i + 1} iterations"
+                )
+                break
 
         # Adaptive learning rate decay
         if i > 0 and i % 20 == 0:
@@ -269,16 +274,19 @@ def minimize_with_grad(
     for i in range(max_iterations):
         grads = grad_fn(params)
         params = params - lr * grads
-        loss = float(obj_fn(params))
-        losses.append(loss)
 
-        if np.isnan(loss):
-            logger.warning("NaN loss detected in calibration, stopping early")
-            break
+        # Check convergence every 10 steps to reduce host-device sync overhead
+        if i % 10 == 0 or i == max_iterations - 1:
+            loss = float(obj_fn(params))
+            losses.append(loss)
 
-        # Check convergence
-        if abs(losses[-1] - losses[-2]) < tolerance:
-            break
+            if np.isnan(loss):
+                logger.warning("NaN loss detected in calibration, stopping early")
+                break
+
+            # Check convergence
+            if len(losses) >= 2 and abs(losses[-1] - losses[-2]) < tolerance:
+                break
 
         # Adaptive learning rate
         if i > 0 and i % 50 == 0:

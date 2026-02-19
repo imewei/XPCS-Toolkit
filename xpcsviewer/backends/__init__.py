@@ -23,6 +23,12 @@ Environment Variables:
 from __future__ import annotations
 
 import os
+
+# Ensure float64 is enabled before any JAX import elsewhere in the codebase.
+# This must happen at module scope (import time) so that lazy JIT decoration
+# in other modules picks up the correct precision setting.
+os.environ.setdefault("JAX_ENABLE_X64", "true")
+
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -141,9 +147,21 @@ def set_backend(name: str) -> None:
 
 
 def reset_backend() -> None:
-    """Reset backend to trigger re-detection on next get_backend() call."""
+    """Reset backend to trigger re-detection on next get_backend() call.
+
+    Also resets legacy fitting closures that capture a stale backend (JAX-N-07).
+    """
     global _current_backend
     _current_backend = None
+
+    # Invalidate legacy closures that captured the old backend (JAX-N-07).
+    # Import is deferred to avoid circular import at module load time.
+    try:
+        from xpcsviewer.fitting.legacy import reset_legacy_closures
+
+        reset_legacy_closures()
+    except ImportError:
+        pass  # fitting module may not be installed
 
 
 # Alias for testing
