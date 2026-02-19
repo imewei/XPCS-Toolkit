@@ -435,51 +435,51 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         apply_all_layout_improvements(self)
 
     def _init_toolbar(self):
-        """Initialize the main toolbar with common actions."""
-        from xpcsviewer.gui.qt_compat import QStyle, QToolBar, QToolButton
+        """Initialize the main toolbar with custom SVG icons."""
+        from xpcsviewer.gui.icons import get_icon, set_icon_color
+        from xpcsviewer.gui.qt_compat import Qt, QSize, QToolBar, QToolButton
+
+        # Set initial icon color from current theme
+        text_color = self.theme_manager.get_color("text_primary")
+        set_icon_color(text_color)
 
         toolbar = QToolBar("Main Toolbar", self)
         toolbar.setObjectName("mainToolbar")
         toolbar.setMovable(False)
+        toolbar.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonIconOnly)
+        toolbar.setIconSize(QSize(20, 20))
         self.addToolBar(toolbar)
 
         style = self.style()
 
         # Open folder action
-        action_open = toolbar.addAction(
-            style.standardIcon(QStyle.SP_DirOpenIcon), "Open Folder"
-        )
+        action_open = toolbar.addAction(get_icon("folder-open", style), "Open Folder")
         action_open.setToolTip("Open data folder (Ctrl+O)")
         action_open.triggered.connect(lambda: self.load_path(None))
 
         # Reload action
-        action_reload = toolbar.addAction(
-            style.standardIcon(QStyle.SP_BrowserReload), "Reload"
-        )
+        action_reload = toolbar.addAction(get_icon("refresh", style), "Reload")
         action_reload.setToolTip("Reload files from current folder (Ctrl+R)")
         action_reload.triggered.connect(self.reload_source)
 
         toolbar.addSeparator()
 
         # Plot current tab action
-        action_plot = toolbar.addAction(style.standardIcon(QStyle.SP_MediaPlay), "Plot")
+        action_plot = toolbar.addAction(get_icon("play-circle", style), "Plot")
         action_plot.setToolTip("Plot current tab")
         action_plot.triggered.connect(self._plot_current_tab)
 
         toolbar.addSeparator()
 
-        # Theme toggle button
+        # Theme toggle button (icon swaps based on current theme)
         self.theme_toggle_btn = QToolButton()
-        self.theme_toggle_btn.setText("Dark")
         self.theme_toggle_btn.setToolTip("Toggle dark/light theme")
         self.theme_toggle_btn.clicked.connect(self._toggle_theme)
         toolbar.addWidget(self.theme_toggle_btn)
         self._update_theme_toggle_button()
 
         # Progress indicator
-        action_progress = toolbar.addAction(
-            style.standardIcon(QStyle.SP_ComputerIcon), "Progress"
-        )
+        action_progress = toolbar.addAction(get_icon("activity", style), "Progress")
         action_progress.setToolTip("Show progress dialog (Ctrl+Shift+P)")
         action_progress.triggered.connect(self.show_progress_dialog)
 
@@ -487,7 +487,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
 
         # Mask Editor button
         action_mask_editor = toolbar.addAction(
-            style.standardIcon(QStyle.SP_FileDialogContentsView), "Mask Editor"
+            get_icon("grid-mask", style), "Mask Editor"
         )
         action_mask_editor.setToolTip("Open Mask Editor window")
         action_mask_editor.triggered.connect(self.open_simplemask)
@@ -518,17 +518,21 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         current = self.theme_manager.get_current_theme()
         new_theme = "dark" if current == "light" else "light"
         self._set_theme(new_theme)
-        self._update_theme_toggle_button()
 
     def _update_theme_toggle_button(self):
-        """Update theme toggle button appearance."""
+        """Update theme toggle button icon for the current theme."""
         if hasattr(self, "theme_toggle_btn"):
+            from xpcsviewer.gui.icons import get_icon
+
+            style = self.style()
             current = self.theme_manager.get_current_theme()
             if current == "dark":
-                self.theme_toggle_btn.setText("Light")
+                # Dark mode active: show sun icon (switch to light)
+                self.theme_toggle_btn.setIcon(get_icon("sun", style))
                 self.theme_toggle_btn.setToolTip("Switch to light theme")
             else:
-                self.theme_toggle_btn.setText("Dark")
+                # Light mode active: show moon icon (switch to dark)
+                self.theme_toggle_btn.setIcon(get_icon("moon", style))
                 self.theme_toggle_btn.setToolTip("Switch to dark theme")
 
     def _init_menus_and_toolbar(self):
@@ -773,6 +777,17 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
             theme: The new theme name ("light" or "dark")
         """
         logger.debug(f"Theme changed to {theme}, refreshing plots")
+        # Recolor SVG icons for the new theme
+        from xpcsviewer.gui.icons import clear_icon_cache, set_icon_color
+
+        text_color = self.theme_manager.get_color("text_primary")
+        set_icon_color(text_color)
+        clear_icon_cache()
+        # Update tab bar separator color for the new theme
+        if hasattr(self, "_category_tab_bar"):
+            self._category_tab_bar.set_dark_mode(theme == "dark")
+        # Update theme toggle button icon (uses freshly cleared cache)
+        self._update_theme_toggle_button()
         self._refresh_all_plots(theme)
 
     def _refresh_all_plots(self, theme: str) -> None:
@@ -1524,6 +1539,10 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         tab_name = tab_mapping.get(idx, "")
         logger.debug(f"update_plot called for tab: {tab_name} (index: {idx})")
 
+        if not tab_name:
+            logger.debug(f"No tab mapping for index {idx}, skipping update")
+            return
+
         if tab_name == "average":
             return
 
@@ -2113,7 +2132,17 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         logger.info("g2 map tab initialized")
 
     def _apply_tab_labels(self):
-        """Apply scientific notation tab labels with category tooltips."""
+        """Apply scientific notation tab labels with category tooltips.
+
+        Also installs the CategoryTabBar for visual group separators and
+        sets small category icons on each tab group's first tab.
+        """
+        from xpcsviewer.gui.icons import get_icon
+        from xpcsviewer.gui.widgets.category_tab_bar import (
+            CategorySeparatorFilter,
+            TAB_INDEX_CATEGORY,
+        )
+
         tab_labels = [
             ("SAXS 2D", "2D scattering pattern | Scattering"),
             ("SAXS 1D", "1D azimuthal integration | Scattering"),
@@ -2125,13 +2154,36 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
             ("Diffusion", "Diffusion coefficient | Analysis"),
             ("Two-Time", "Two-time correlation | Correlation"),
             ("Q-Map", "Reciprocal space map | Setup"),
-            ("Average", "Frame averaging | Processing"),
-            ("Metadata", "HDF5 metadata browser | Info"),
+            ("Average", "Frame averaging | Setup"),
+            ("Metadata", "HDF5 metadata browser | Setup"),
         ]
+
+        # Category icon mapping
+        category_icons = {
+            "Scattering": get_icon("tab-scattering"),
+            "Diagnostics": get_icon("tab-diagnostics"),
+            "Correlation": get_icon("tab-correlation"),
+            "Analysis": get_icon("tab-analysis"),
+            "Setup": get_icon("tab-setup"),
+        }
+
         for i, (label, tooltip) in enumerate(tab_labels):
             if i < self.tabWidget.count():
                 self.tabWidget.setTabText(i, label)
                 self.tabWidget.setTabToolTip(i, tooltip)
+                # Set category icon on each tab
+                category = TAB_INDEX_CATEGORY.get(i)
+                if category and category in category_icons:
+                    self.tabWidget.setTabIcon(i, category_icons[category])
+
+        # Install event filter for category separators (avoids setTabBar
+        # which destroys existing tabs)
+        existing_bar = self.tabWidget.tabBar()
+        sep_filter = CategorySeparatorFilter(existing_bar)
+        is_dark = self.theme_manager.get_current_theme() == "dark"
+        sep_filter.set_dark_mode(is_dark)
+        existing_bar.installEventFilter(sep_filter)
+        self._category_tab_bar = sep_filter
 
     def _init_g2_fitting_tab(self):
         """Initialize the G2 Fitting tab with plot and fitting controls.
