@@ -11,7 +11,8 @@ Main Application
 The main GUI application window built with PySide6. Provides tab-based
 interface for different analysis modes (SAXS 2D/1D, G2, stability, two-time).
 
-See :mod:`xpcsviewer.xpcs_viewer` for complete API documentation.
+The main application module (``xpcsviewer.xpcs_viewer``) provides the entry point
+for the GUI.
 
 .. note::
    The GUI components have limited automated testing due to their interactive

@@ -35,6 +35,7 @@ docs/
 │
 ├── how-to/                           # Task-oriented (Diataxis: How-To Guides)
 │   ├── index.rst                     # How-to landing page
+│   ├── quickstart.rst                # Quick-reference task guide
 │   ├── installation.rst              # Installation guide
 │   ├── mask_editor_guide.rst         # GUI mask editor reference
 │   └── examples.rst                  # Code examples (G2, SAXS, batch)
