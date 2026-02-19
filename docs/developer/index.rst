@@ -10,7 +10,6 @@ Developer Guide
    - **Contributing?** See :doc:`/contributing`
    - **Operations and deployment?** See :doc:`/operations/index`
 
-.. toctree::
-   :hidden:
+.. seealso::
 
-   optimization
+   :doc:`/developer/optimization` — Performance profiling and optimization guide
