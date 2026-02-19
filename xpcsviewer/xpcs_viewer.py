@@ -913,6 +913,49 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         except Exception as e:
             logger.warning(f"Failed to save session on close: {e}")
 
+        # Shutdown singleton daemon managers so background threads stop
+        # promptly instead of lingering until atexit.  (SRE-4)
+        for _shutdown_path in (
+            "xpcsviewer.threading.unified_threading.shutdown_unified_threading",
+            "xpcsviewer.utils.memory_manager.shutdown_memory_manager",
+            "xpcsviewer.utils.lazy_loader.shutdown_lazy_loader",
+            "xpcsviewer.utils.reliability_manager.shutdown_reliability",
+        ):
+            try:
+                _mod_path, _fn_name = _shutdown_path.rsplit(".", 1)
+                import importlib
+
+                _mod = importlib.import_module(_mod_path)
+                getattr(_mod, _fn_name)()
+            except Exception:
+                logger.debug(
+                    "Shutdown call %s failed (expected during teardown)",
+                    _shutdown_path,
+                    exc_info=True,
+                )
+
+        # Stop health monitor if it was started
+        try:
+            from xpcsviewer.utils.health_monitor import get_health_monitor
+
+            get_health_monitor().stop_monitoring()
+        except Exception:
+            logger.debug(
+                "Health monitor stop failed (expected during teardown)",
+                exc_info=True,
+            )
+
+        # Stop background state validation if active
+        try:
+            from xpcsviewer.utils.state_validator import get_state_validator
+
+            get_state_validator().stop_background_validation()
+        except Exception:
+            logger.debug(
+                "State validator stop failed (expected during teardown)",
+                exc_info=True,
+            )
+
         # Call parent implementation
         super().closeEvent(event)
 
@@ -1009,9 +1052,18 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         if session.data_path and os.path.isdir(session.data_path):
             self.load_path(session.data_path)
 
-        # Restore active tab
+        # Restore target files from session
+        if hasattr(session, "target_files") and session.target_files:
+            sorted_files = sorted(session.target_files, key=lambda f: f.order)
+            for entry in sorted_files:
+                if os.path.isfile(entry.path):
+                    self.vk.add_target([entry.path])
+
+        # Restore active tab (block signals to prevent spurious plot updates)
         if 0 <= session.active_tab < self.tabWidget.count():
+            self.tabWidget.blockSignals(True)
             self.tabWidget.setCurrentIndex(session.active_tab)
+            self.tabWidget.blockSignals(False)
 
         # Restore analysis parameters
         params = session.analysis_params
@@ -2155,8 +2207,8 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         Extracts detector image and geometry metadata from the currently
         selected file and passes it to SimpleMaskWindow.
         """
-        # Create window if it doesn't exist or was closed
-        if self._simplemask_window is None or not self._simplemask_window.isVisible():
+        # Create window if it doesn't exist (reuse existing instance if open)
+        if self._simplemask_window is None:
             self._simplemask_window = SimpleMaskWindow(parent_viewer=self)
             self._simplemask_window.mask_exported.connect(self.import_mask)
             self._simplemask_window.qmap_exported.connect(self.import_partition)
@@ -3263,6 +3315,21 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         logger.debug(
             f"Loaded {len(self.vk.source) if self.vk.source else 0} files from directory"
         )
+
+        # Reset per-tab plot kwargs so stale parameters from a previous dataset
+        # do not leak into the new session.
+        self.plot_kwargs_record = {v: {} for _, v in tab_mapping.items()}
+
+        # Clear Bayesian fitting state from previous dataset
+        self._g2_bayesian_results = {}
+        self._g2_bayesian_data = None
+        self._g2_bayesian_model_func = None
+        self._diff_bayesian_result = None
+        self._diff_bayesian_data = None
+        if hasattr(self, "btn_g2_diagnosis"):
+            self.btn_g2_diagnosis.setEnabled(False)
+        if hasattr(self, "btn_diff_diagnosis"):
+            self.btn_diff_diagnosis.setEnabled(False)
 
         # Trigger plot update to show proper empty states since no files are auto-added
         self.update_plot()

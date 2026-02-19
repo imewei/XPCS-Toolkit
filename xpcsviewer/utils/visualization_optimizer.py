@@ -826,9 +826,12 @@ class AdvancedGUIRenderer:
         """
         self._pending_updates[widget_id] = (update_func, args, kwargs)
 
-        # Start batch timer if not already running
-        if self._batch_timer is None and self.threading_manager:
-            from ..threading.unified_threading import TaskPriority, TaskType
+        # Start batch timer if not already running.
+        # GUI widget updates must execute on the Qt main thread (SRE-2).
+        # Use QTimer.singleShot(0, ...) to post processing to the event loop
+        # instead of submitting to a ThreadPoolExecutor.
+        if self._batch_timer is None:
+            from xpcsviewer.gui.qt_compat import QTimer
 
             def process_batched_updates():
                 if self._pending_updates:
@@ -850,13 +853,9 @@ class AdvancedGUIRenderer:
 
                 self._batch_timer = None
 
-            # Schedule batched update processing
-            self.threading_manager.submit_task(
-                f"batch_update_{time.time()}",
-                process_batched_updates,
-                TaskPriority.HIGH,
-                TaskType.GUI_UPDATE,
-            )
+            # Post to Qt event loop so updates run on the main thread (SRE-2)
+            self._batch_timer = True  # Mark as scheduled
+            QTimer.singleShot(self._batch_interval_ms, process_batched_updates)
 
     def optimize_large_dataset_display(
         self,
