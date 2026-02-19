@@ -1120,12 +1120,13 @@ QTabWidget#tabWidget::pane {
 }
 
 QTabWidget#tabWidget > QTabBar::tab {
-    padding: @spacing_sm 14px;
+    padding: @spacing_sm 12px @spacing_sm 10px;
     margin-right: 1px;
     border: none;
     border-bottom: 2px solid transparent;
     font-size: @size_sm;
     font-weight: 500;
+    min-height: 28px;
 }
 
 QTabWidget#tabWidget > QTabBar::tab:selected {
@@ -1319,4 +1320,78 @@ QTreeView#treeView {
 QLabel[role="readout"] {
     font-family: @font_family_mono;
     letter-spacing: 0.3px;
+}
+
+/* ========================================
+   Enhanced Source/Target File Panels
+   ======================================== */
+
+QGroupBox#box_source,
+QGroupBox#box_target {
+    background-color: @background_secondary;
+    border: 1px solid @border_subtle;
+    border-radius: 8px;
+    margin-top: @spacing_md;
+    padding: @spacing_sm;
+    padding-top: @spacing_lg;
+}
+
+QGroupBox#box_source::title,
+QGroupBox#box_target::title {
+    subcontrol-origin: margin;
+    subcontrol-position: top left;
+    left: @spacing_md;
+    padding: @spacing_xs @spacing_sm;
+    color: @text_secondary;
+    font-weight: 600;
+    font-size: @size_xs;
+    letter-spacing: 0.5px;
+    background-color: transparent;
+    border: 1px solid @border_subtle;
+    border-radius: 4px;
+}
+
+/* ========================================
+   Toolbar Action Button Groups
+   ======================================== */
+
+QToolBar#mainToolbar {
+    background-color: @background_secondary;
+    border-bottom: 1px solid @border_subtle;
+    padding: @spacing_xs @spacing_sm;
+    spacing: @spacing_xs;
+}
+
+QToolBar#mainToolbar QToolButton {
+    background-color: transparent;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    padding: @spacing_xs;
+    color: @text_secondary;
+    min-width: 32px;
+    min-height: 32px;
+}
+
+QToolBar#mainToolbar QToolButton:hover {
+    background-color: @background_elevated;
+    border-color: @border_subtle;
+    color: @text_primary;
+}
+
+QToolBar#mainToolbar QToolButton:pressed {
+    background-color: @background_input;
+    border-color: @border_strong;
+    color: @accent_primary;
+}
+
+QToolBar#mainToolbar QToolButton[active="true"] {
+    color: @accent_primary;
+    border-color: @accent_primary;
+    background-color: @background_elevated;
+}
+
+QToolBar#mainToolbar::separator {
+    width: 1px;
+    background-color: @border_subtle;
+    margin: @spacing_xs @spacing_xs;
 }
