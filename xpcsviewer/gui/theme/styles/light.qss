@@ -1,4 +1,5 @@
 /* Light theme overrides for XPCS-TOOLKIT
+   Warm off-white surfaces with teal instrument accents
    Applied after base.qss when light theme is active
 */
 
@@ -6,78 +7,72 @@
    Light-specific refinements
    ======================================== */
 
-/* Subtle shadow effects for elevated elements */
-QMenu {
-    /* Light theme can use subtle shadows */
-}
-
+/* Tooltips with warm border */
 QToolTip {
-    /* Slightly darker border for better visibility on light */
-    border-color: #C5C5C9;
+    border-color: #C4C3BE;
 }
 
-/* Improve contrast for disabled states */
+/* Disabled button — warm gray */
 QPushButton:disabled {
-    background-color: #D1D1D6;
-    color: #8E8E93;
+    background-color: #C4C3BE;
+    color: #8A8A84;
 }
 
-/* Light theme scrollbar tweaks */
+/* Scrollbar handles — warm gray */
 QScrollBar::handle:vertical,
 QScrollBar::handle:horizontal {
-    /* Slightly more visible handles in light mode */
-    background-color: #C5C5C9;
+    background-color: #C4C3BE;
 }
 
 QScrollBar::handle:vertical:hover,
 QScrollBar::handle:horizontal:hover {
-    background-color: #8E8E93;
+    background-color: #8A8A84;
 }
 
-/* List views with clearer alternating rows */
+/* Alternating list rows */
 QListView::item:alternate {
-    background-color: #F5F5F7;
+    background-color: #F0EFEC;
 }
 
-/* Enhance QGroupBox title visibility */
+/* GroupBox title — warm secondary */
 QGroupBox::title {
-    color: #6E6E73;
+    color: #64645F;
 }
 
-/* Input placeholders slightly darker for readability */
+/* Input placeholders */
 QLineEdit::placeholder {
-    color: #8E8E93;
+    color: #8A8A84;
 }
 
-/* Tab widget refinements */
+/* Tab refinements */
 QTabBar::tab:selected {
-    background-color: #FFFFFF;
-    color: #1D1D1F;
+    background-color: #FAFAF8;
+    color: #1A1A1A;
 }
 
 QTabBar::tab:!selected {
-    color: #6E6E73;
+    color: #64645F;
 }
 
-/* Progress bar chunk refinement */
+/* Progress bar chunk — teal */
 QProgressBar::chunk {
-    background-color: #007AFF;
+    background-color: #0D9488;
 }
 
-/* Spin box buttons */
+/* Spin box buttons — warm surfaces */
 QSpinBox::up-button, QDoubleSpinBox::up-button,
 QSpinBox::down-button, QDoubleSpinBox::down-button {
-    background-color: #F5F5F7;
+    background-color: #F0EFEC;
 }
 
 QSpinBox::up-button:hover, QDoubleSpinBox::up-button:hover,
 QSpinBox::down-button:hover, QDoubleSpinBox::down-button:hover {
-    background-color: #E5E5EA;
+    background-color: #E2E1DD;
 }
 
-/* Slider groove refinement */
+/* Slider groove */
 QSlider::groove:horizontal {
-    background-color: #E5E5EA;
+    background-color: #E2E1DD;
 }
 
 /* TreeView branch indicators */
@@ -87,24 +82,24 @@ QTreeView::branch:has-children:closed {
     image: none;
 }
 
-/* Horizontal header in tables */
+/* Table headers — warm surface */
 QHeaderView::section {
-    background-color: #F5F5F7;
-    color: #1D1D1F;
+    background-color: #F0EFEC;
+    color: #1A1A1A;
     border: none;
-    border-bottom: 1px solid #D1D1D6;
+    border-bottom: 1px solid #C4C3BE;
     padding: 6px 8px;
     font-weight: 500;
 }
 
 QHeaderView::section:hover {
-    background-color: #EBEBEF;
+    background-color: #E2E1DD;
 }
 
 /* Table corner button */
 QTableView QTableCornerButton::section {
-    background-color: #F5F5F7;
+    background-color: #F0EFEC;
     border: none;
-    border-bottom: 1px solid #D1D1D6;
-    border-right: 1px solid #D1D1D6;
+    border-bottom: 1px solid #C4C3BE;
+    border-right: 1px solid #C4C3BE;
 }

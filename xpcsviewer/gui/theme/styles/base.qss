@@ -395,6 +395,8 @@ QStatusBar {
     border-top: 1px solid @border_subtle;
     color: @text_secondary;
     padding: @spacing_xs;
+    font-family: @font_family_mono;
+    letter-spacing: 0.3px;
 }
 
 QStatusBar::item {
@@ -409,9 +411,9 @@ QGroupBox {
     background-color: @background_secondary;
     border: 1px solid @border_subtle;
     border-radius: 6px;
-    margin-top: @spacing_md;
+    margin-top: 20px;
     padding: @spacing_md;
-    padding-top: @spacing_lg;
+    padding-top: 28px;
 }
 
 QGroupBox::title {
@@ -420,7 +422,7 @@ QGroupBox::title {
     left: @spacing_md;
     padding: 0 @spacing_xs;
     color: @text_secondary;
-    font-weight: 500;
+    font-weight: 600;
 }
 
 /* ========================================
@@ -484,6 +486,7 @@ QSpinBox, QDoubleSpinBox {
     border: 1px solid @border_subtle;
     border-radius: 6px;
     padding: @spacing_xs @spacing_sm;
+    font-family: @font_family_mono;
 }
 
 QSpinBox:focus, QDoubleSpinBox:focus {
@@ -628,7 +631,7 @@ QDialog#errorDialog QLabel#errorRemedy {
 }
 
 QDialog#errorDialog QTextEdit#errorDetails {
-    font-family: 'Menlo', 'Consolas', 'DejaVu Sans Mono', monospace;
+    font-family: @font_family_mono;
     font-size: @size_sm;
     background-color: @background_secondary;
     border: 1px solid @border_subtle;
@@ -766,7 +769,9 @@ QGroupBox[cardStyle="true"]::title {
     background-color: @accent_primary;
     color: @background_primary;
     border-radius: 4px;
+    font-size: @size_sm;
     font-weight: 500;
+    letter-spacing: 0.3px;
 }
 
 /* ========================================
@@ -890,6 +895,7 @@ QTableView {
     border-radius: 6px;
     gridline-color: @border_subtle;
     outline: none;
+    font-family: @font_family_mono;
 }
 
 QTableView::item {
@@ -933,14 +939,22 @@ QWidget[density="compact"] QComboBox,
 QWidget[density="compact"] QLineEdit {
     min-height: 24px;
     padding: 2px @spacing_xs;
+    font-size: @size_sm;
 }
 
 QWidget[density="compact"] QPushButton {
     padding: @spacing_xs @spacing_sm;
+    font-size: @size_sm;
 }
 
 QWidget[density="compact"] QLabel {
     padding: 0 2px;
+    font-size: @size_sm;
+}
+
+QWidget[density="compact"] QGroupBox {
+    padding: @spacing_sm;
+    padding-top: 22px;
 }
 
 /* ========================================
@@ -1006,8 +1020,10 @@ QGroupBox[settingsPanel="true"]::title {
     padding: @spacing_xs @spacing_sm;
     color: @text_secondary;
     font-weight: 600;
-    background-color: @background_elevated;
-    border: 1px solid @border_subtle;
+    font-size: @size_xs;
+    letter-spacing: 0.5px;
+    background-color: transparent;
+    border: 1px solid @accent_primary;
     border-radius: 4px;
 }
 
@@ -1095,7 +1111,7 @@ QSplitter::handle:hover {
    Enhanced Tab Appearance
    ======================================== */
 
-/* Tab bar with better visual distinction */
+/* Tab bar with teal accent underline */
 QTabWidget#tabWidget::pane {
     border: 1px solid @border_subtle;
     border-radius: 0 0 8px 8px;
@@ -1104,17 +1120,17 @@ QTabWidget#tabWidget::pane {
 }
 
 QTabWidget#tabWidget > QTabBar::tab {
-    padding: @spacing_sm @spacing_md;
-    margin-right: 2px;
-    border-top-left-radius: 6px;
-    border-top-right-radius: 6px;
+    padding: @spacing_sm 14px;
+    margin-right: 1px;
+    border: none;
+    border-bottom: 2px solid transparent;
+    font-size: @size_sm;
     font-weight: 500;
 }
 
 QTabWidget#tabWidget > QTabBar::tab:selected {
     background-color: @background_primary;
-    border: 1px solid @border_subtle;
-    border-bottom: none;
+    border-bottom: 2px solid @accent_primary;
     color: @accent_primary;
     font-weight: 600;
 }
@@ -1127,6 +1143,7 @@ QTabWidget#tabWidget > QTabBar::tab:!selected {
 QTabWidget#tabWidget > QTabBar::tab:hover:!selected {
     background-color: @background_elevated;
     color: @text_primary;
+    border-bottom: 2px solid @border_strong;
 }
 
 /* ========================================
@@ -1179,7 +1196,7 @@ QLineEdit#work_dir {
     border: 1px solid @border_subtle;
     border-radius: 6px;
     padding: @spacing_sm @spacing_md;
-    font-family: 'Menlo', 'Consolas', 'DejaVu Sans Mono', monospace;
+    font-family: @font_family_mono;
 }
 
 QLineEdit#work_dir:focus {
@@ -1255,6 +1272,7 @@ QStatusBar {
     border-top: 1px solid @border_subtle;
     padding: @spacing_xs @spacing_md;
     min-height: 28px;
+    font-family: @font_family_mono;
 }
 
 QStatusBar QLabel {
@@ -1294,4 +1312,11 @@ QTreeView#treeView {
     border-radius: 6px;
     background-color: @background_input;
     alternate-background-color: @background_secondary;
+    font-family: @font_family_mono;
+}
+
+/* Readout labels (coordinate displays, data values) */
+QLabel[role="readout"] {
+    font-family: @font_family_mono;
+    letter-spacing: 0.3px;
 }

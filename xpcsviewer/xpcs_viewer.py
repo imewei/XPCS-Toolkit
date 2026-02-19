@@ -257,6 +257,9 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         # Initialize G2 Map tab (dynamic creation)
         self._init_g2map_tab()
 
+        # Apply scientific tab labels (after all dynamic tabs are created)
+        self._apply_tab_labels()
+
         # Initialize SimpleMask window reference (will be created on demand)
         self._simplemask_window: SimpleMaskWindow | None = None
 
@@ -2056,6 +2059,27 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         self.spinBox_g2map_qbin.valueChanged.connect(self._update_g2map_profile)
 
         logger.info("g2 map tab initialized")
+
+    def _apply_tab_labels(self):
+        """Apply scientific notation tab labels with category tooltips."""
+        tab_labels = [
+            ("SAXS 2D", "2D scattering pattern | Scattering"),
+            ("SAXS 1D", "1D azimuthal integration | Scattering"),
+            ("Stability", "Frame stability analysis | Diagnostics"),
+            ("I(t)", "Integrated intensity vs time | Diagnostics"),
+            ("\u0067\u2082", "g\u2082 autocorrelation | Correlation"),
+            ("\u0067\u2082 Fit", "g\u2082 curve fitting | Correlation"),
+            ("\u0067\u2082 Map", "g\u2082 parameter map | Correlation"),
+            ("Diffusion", "Diffusion coefficient | Analysis"),
+            ("Two-Time", "Two-time correlation | Correlation"),
+            ("Q-Map", "Reciprocal space map | Setup"),
+            ("Average", "Frame averaging | Processing"),
+            ("Metadata", "HDF5 metadata browser | Info"),
+        ]
+        for i, (label, tooltip) in enumerate(tab_labels):
+            if i < self.tabWidget.count():
+                self.tabWidget.setTabText(i, label)
+                self.tabWidget.setTabToolTip(i, tooltip)
 
     def _init_g2_fitting_tab(self):
         """Initialize the G2 Fitting tab with plot and fitting controls.

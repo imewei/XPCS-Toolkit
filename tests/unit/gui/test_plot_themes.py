@@ -17,11 +17,11 @@ class TestMatplotlibParams:
 
         params = manager.get_matplotlib_params()
 
-        # Light theme should have light backgrounds
-        assert params["figure.facecolor"] == "#FFFFFF"
-        assert params["axes.facecolor"] == "#FFFFFF"
+        # Light theme should have light backgrounds (warm off-white)
+        assert params["figure.facecolor"] == "#FAFAF8"
+        assert params["axes.facecolor"] == "#FAFAF8"
         # Text should be dark on light background
-        assert params["text.color"] == "#1D1D1F"
+        assert params["text.color"] == "#1A1A1A"
 
     def test_get_matplotlib_dark_params(self, qtbot, monkeypatch, tmp_path):
         """Dark theme should return dark-colored matplotlib params."""
@@ -34,11 +34,11 @@ class TestMatplotlibParams:
 
         params = manager.get_matplotlib_params()
 
-        # Dark theme should have dark backgrounds
-        assert params["figure.facecolor"] == "#1C1C1E"
-        assert params["axes.facecolor"] == "#1C1C1E"
-        # Text should be light on dark background (uses text_primary from DARK_TOKENS)
-        assert params["text.color"] == "#F5F5F7"
+        # Dark theme should have dark backgrounds (deep blue-black panel)
+        assert params["figure.facecolor"] == "#191B1F"
+        assert params["axes.facecolor"] == "#191B1F"
+        # Text should be light on dark background (warm off-white)
+        assert params["text.color"] == "#E8E8E4"
 
     def test_matplotlib_params_have_required_keys(self, qtbot, monkeypatch, tmp_path):
         """Matplotlib params should have all required rcParams keys."""

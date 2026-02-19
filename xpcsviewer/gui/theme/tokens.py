@@ -64,6 +64,9 @@ class TypographyTokens:
     """Typography tokens for consistent text styling."""
 
     font_family: str = "'Helvetica Neue', 'Segoe UI', 'Ubuntu', 'Roboto', sans-serif"
+    font_family_mono: str = (
+        "'SF Mono', 'Menlo', 'Consolas', 'DejaVu Sans Mono', 'Ubuntu Mono', monospace"
+    )
 
     # Font sizes (in points)
     size_xs: int = 10
@@ -90,68 +93,68 @@ class ThemeDefinition:
     typography: TypographyTokens
 
 
-# Light theme colors - optimized for readability and WCAG AA compliance
+# Light theme colors - warm off-white surfaces with teal instrument accents
 LIGHT_COLORS = ColorTokens(
-    # Surfaces
-    background_primary="#FFFFFF",
-    background_secondary="#F5F5F7",
-    background_elevated="#FFFFFF",
-    background_input="#FFFFFF",
-    # Text
-    text_primary="#1D1D1F",
-    text_secondary="#6E6E73",
-    text_disabled="#AEAEB2",
-    text_placeholder="#8E8E93",
-    # Accent (blue)
-    accent_primary="#007AFF",
-    accent_hover="#0056B3",
-    accent_pressed="#004494",
-    accent_focus="#007AFF",
-    # Semantic
-    success="#34C759",
-    warning="#FF9500",
-    error="#FF3B30",
-    info="#5AC8FA",
-    # Borders
-    border_subtle="#E5E5EA",
-    border_strong="#C7C7CC",
-    border_focus="#007AFF",
+    # Surfaces — warm off-white like fine paper
+    background_primary="#FAFAF8",
+    background_secondary="#F0EFEC",
+    background_elevated="#FAFAF8",
+    background_input="#FAFAF8",
+    # Text — warm near-black
+    text_primary="#1A1A1A",
+    text_secondary="#64645F",
+    text_disabled="#A3A39E",
+    text_placeholder="#8A8A84",
+    # Accent — teal (oscilloscope phosphor)
+    accent_primary="#0D9488",
+    accent_hover="#0F766E",
+    accent_pressed="#115E59",
+    accent_focus="#0D9488",
+    # Semantic — natural tones
+    success="#16A34A",
+    warning="#D97706",
+    error="#DC2626",
+    info="#0891B2",
+    # Borders — warm
+    border_subtle="#E2E1DD",
+    border_strong="#C4C3BE",
+    border_focus="#0D9488",
     # Plot
-    plot_background="#FFFFFF",
-    plot_grid="#E5E5EA",
-    plot_axis="#1D1D1F",
+    plot_background="#FAFAF8",
+    plot_grid="#E2E1DD",
+    plot_axis="#1A1A1A",
 )
 
-# Dark theme colors - optimized for reduced eye strain
+# Dark theme colors - deep blue-gray panels with bright teal phosphor accents
 DARK_COLORS = ColorTokens(
-    # Surfaces
-    background_primary="#1C1C1E",
-    background_secondary="#2C2C2E",
-    background_elevated="#3A3A3C",
-    background_input="#2C2C2E",
-    # Text
-    text_primary="#F5F5F7",
-    text_secondary="#AEAEB2",
-    text_disabled="#636366",
-    text_placeholder="#8E8E93",
-    # Accent (blue - adjusted for dark background)
-    accent_primary="#0A84FF",
-    accent_hover="#409CFF",
-    accent_pressed="#0066CC",
-    accent_focus="#0A84FF",
+    # Surfaces — deep blue-black instrument panel
+    background_primary="#191B1F",
+    background_secondary="#23262B",
+    background_elevated="#2D3139",
+    background_input="#23262B",
+    # Text — warm off-white
+    text_primary="#E8E8E4",
+    text_secondary="#A3A3A0",
+    text_disabled="#5A5D63",
+    text_placeholder="#7A7D83",
+    # Accent — teal-400 bright phosphor
+    accent_primary="#2DD4BF",
+    accent_hover="#5EEAD4",
+    accent_pressed="#14B8A6",
+    accent_focus="#2DD4BF",
     # Semantic (adjusted for dark background)
-    success="#30D158",
-    warning="#FF9F0A",
-    error="#FF453A",
-    info="#64D2FF",
-    # Borders
-    border_subtle="#38383A",
-    border_strong="#545456",
-    border_focus="#0A84FF",
+    success="#4ADE80",
+    warning="#FBBF24",
+    error="#F87171",
+    info="#22D3EE",
+    # Borders — blue-gray
+    border_subtle="#2D3139",
+    border_strong="#3D4149",
+    border_focus="#2DD4BF",
     # Plot
-    plot_background="#1C1C1E",
-    plot_grid="#38383A",
-    plot_axis="#F5F5F7",
+    plot_background="#191B1F",
+    plot_grid="#2D3139",
+    plot_axis="#E8E8E4",
 )
 
 # Shared spacing and typography tokens

@@ -217,7 +217,10 @@ class ThemeManager(QObject):
             value = str(getattr(spacing, field_name))
             stylesheet = stylesheet.replace(token, f"{value}px")
 
-        # Typography tokens
+        # Typography tokens (mono before sans to prevent prefix match)
+        stylesheet = stylesheet.replace(
+            "@font_family_mono", typography.font_family_mono
+        )
         stylesheet = stylesheet.replace("@font_family", typography.font_family)
         stylesheet = stylesheet.replace("@size_xs", f"{typography.size_xs}pt")
         stylesheet = stylesheet.replace("@size_sm", f"{typography.size_sm}pt")
