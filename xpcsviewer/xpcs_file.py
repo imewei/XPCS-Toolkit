@@ -911,7 +911,7 @@ class XpcsFile:
     def __getattr__(self, key):
         # keys from qmap — O(1) frozenset lookup
         if key in self._QMAP_KEYS:
-            return self.qmap.__dict__[key]
+            return getattr(self.qmap, key)
         # delayed loading of saxs_2d due to its large size - now using connection pool and batch loading
         if key == "saxs_2d":
             if not self._saxs_data_loaded:

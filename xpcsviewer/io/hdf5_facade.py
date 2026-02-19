@@ -122,23 +122,35 @@ class HDF5Facade:
                 sqmap_unit = qmap_group.get("sqmap_unit", "nm^-1")
                 if isinstance(sqmap_unit, h5py.Dataset):
                     val = sqmap_unit[()]
-                    sqmap_unit = val.decode() if isinstance(val, bytes) else str(val)
-                elif isinstance(sqmap_unit, bytes):
-                    sqmap_unit = sqmap_unit.decode()
+                    sqmap_unit = (
+                        val.decode("utf-8")
+                        if isinstance(val, (bytes, np.bytes_))
+                        else str(val)
+                    )
+                elif isinstance(sqmap_unit, (bytes, np.bytes_)):
+                    sqmap_unit = sqmap_unit.decode("utf-8")
 
                 dqmap_unit = qmap_group.get("dqmap_unit", "nm^-1")
                 if isinstance(dqmap_unit, h5py.Dataset):
                     val = dqmap_unit[()]
-                    dqmap_unit = val.decode() if isinstance(val, bytes) else str(val)
-                elif isinstance(dqmap_unit, bytes):
-                    dqmap_unit = dqmap_unit.decode()
+                    dqmap_unit = (
+                        val.decode("utf-8")
+                        if isinstance(val, (bytes, np.bytes_))
+                        else str(val)
+                    )
+                elif isinstance(dqmap_unit, (bytes, np.bytes_)):
+                    dqmap_unit = dqmap_unit.decode("utf-8")
 
                 phis_unit = qmap_group.get("phis_unit", "rad")
                 if isinstance(phis_unit, h5py.Dataset):
                     val = phis_unit[()]
-                    phis_unit = val.decode() if isinstance(val, bytes) else str(val)
-                elif isinstance(phis_unit, bytes):
-                    phis_unit = phis_unit.decode()
+                    phis_unit = (
+                        val.decode("utf-8")
+                        if isinstance(val, (bytes, np.bytes_))
+                        else str(val)
+                    )
+                elif isinstance(phis_unit, (bytes, np.bytes_)):
+                    phis_unit = phis_unit.decode("utf-8")
 
                 # Read optional datasets
                 mask = qmap_group["mask"][:] if "mask" in qmap_group else None
@@ -147,6 +159,11 @@ class HDF5Facade:
                     if "partition_map" in qmap_group
                     else None
                 )
+
+            # Coerce arrays to float64 to handle float32 data from HDF5 files (T-13)
+            sqmap = np.asarray(sqmap, dtype=np.float64)
+            dqmap = np.asarray(dqmap, dtype=np.float64)
+            phis = np.asarray(phis, dtype=np.float64)
 
             # Create validated schema
             if self.validate:
@@ -417,6 +434,11 @@ class HDF5Facade:
                 if q_idx is not None:
                     q_values = q_values[q_idx : q_idx + 1]
 
+            # Coerce arrays to float64 to handle float32 data from HDF5 files (T-02)
+            g2 = np.asarray(g2, dtype=np.float64)
+            g2_err = np.asarray(g2_err, dtype=np.float64)
+            delay_times = np.asarray(delay_times, dtype=np.float64)
+
             # Create validated schema
             g2_data = G2Data(
                 g2=g2,
@@ -427,7 +449,7 @@ class HDF5Facade:
 
             logger.debug(
                 f"Successfully read G2 data from {file_path} "
-                f"({g2.shape[0]} Q-bins, {g2.shape[1]} delay points)"
+                f"({g2.shape[1]} Q-bins, {g2.shape[0]} delay points)"
             )
             return g2_data
 

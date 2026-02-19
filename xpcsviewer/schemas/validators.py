@@ -182,6 +182,9 @@ class QMapSchema:
         # Use "nm^-1" as the canonical default unit to match hdf5_facade.py
         # (which also defaults to "nm^-1").  Previously this was "A^-1",
         # causing an inconsistency between the I/O and schema layers (BUG-028).
+        if "phis_unit" not in data:
+            logger.warning("phis_unit not found in dict, defaulting to 'deg'")
+
         return cls(
             sqmap=sqmap,
             dqmap=dqmap,
@@ -712,9 +715,9 @@ class MaskSchema:
             raise ValueError(f"mask must be 2D array. Got shape={self.mask.shape}")
 
         # Dtype validation
-        if self.mask.dtype not in (np.int32, np.int64):
+        if self.mask.dtype not in (np.bool_, np.int32, np.int64):
             raise TypeError(
-                f"mask must be integer type (int32 or int64), got {self.mask.dtype}"
+                f"mask must be bool or integer type (int32 or int64), got {self.mask.dtype}"
             )
 
         # Value validation

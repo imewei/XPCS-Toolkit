@@ -320,7 +320,10 @@ def get_all_c2_from_hdf(
     idx_toload = []
     c2_prefix = key_map_nexus["c2_prefix"]
 
-    # Use connection pool for single file handle across all operations
+    # Read the index list and close the parent connection *before* spawning
+    # Pool workers.  HDF5 file handles are not fork-safe: keeping the parent
+    # connection open while child processes try to open the same file causes
+    # corruption or hangs on some platforms (SRE-7).
     with _connection_pool.get_connection(full_path, "r") as f:
         if c2_prefix not in f:
             return None
@@ -332,17 +335,18 @@ def get_all_c2_from_hdf(
             if max_c2_num > 0 and len(idx_toload) > max_c2_num:
                 break
 
-        # For multiprocessing, still need to use file paths due to pickling limitations
-        # But for single-threaded operation, we can reuse the file handle
-        if len(idx_toload) >= 6:
-            # Use multiprocessing with legacy approach (file paths)
-            args_list = [
-                (full_path, index, max_size, correct_diag) for index in idx_toload
-            ]
-            with Pool(min(len(idx_toload), num_workers)) as p:
-                result = p.map(read_single_c2, args_list)
-        else:
-            # Use single thread with shared file handle for optimization
+    # Parent HDF5 connection is now closed (SRE-7).
+
+    if len(idx_toload) >= 6:
+        # Use multiprocessing with legacy approach (file paths).
+        # The parent connection is already closed above so workers can
+        # safely open their own handles to the same file.
+        args_list = [(full_path, index, max_size, correct_diag) for index in idx_toload]
+        with Pool(min(len(idx_toload), num_workers)) as p:
+            result = p.map(read_single_c2, args_list)
+    else:
+        # Use single thread with a fresh connection for optimization
+        with _connection_pool.get_connection(full_path, "r") as f:
             args_list = [(f, index, max_size, correct_diag) for index in idx_toload]
             result = [read_single_c2(args) for args in args_list]
 

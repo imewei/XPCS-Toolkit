@@ -834,7 +834,11 @@ class ViewerKernel(FileLocator):
         The stability module provides various metrics for assessing
         sample behavior during data collection.
         """
-        xf_obj = self.get_xf_list(rows)[0]
+        xf_list = self.get_xf_list(rows)
+        if not xf_list:
+            logger.warning("No files available for stability analysis")
+            return
+        xf_obj = xf_list[0]
         _get_module("stability").plot(xf_obj, mp_hdl, **kwargs)
 
     def submit_job(self, *args, **kwargs):
