@@ -75,24 +75,28 @@ def refine_beam_center(
         )
         return jnp.var(distances)
 
-    # JIT-compiled gradient function
-    grad_fn = jax.jit(jax.grad(loss_fn))
-    loss_fn_jit = jax.jit(loss_fn)
+    # Single JIT over value_and_grad: one compilation, one kernel dispatch per step.
+    # Previously two separate jax.jit calls (grad_fn + loss_fn_jit) caused a redundant
+    # XLA compilation and an extra device round-trip on every convergence-check iteration.
+    val_and_grad_fn = jax.jit(jax.value_and_grad(loss_fn))
 
-    # Optimization loop
-    losses = [float(loss_fn_jit(params))]
+    # Optimization loop — prime the cache with the first forward+backward pass.
+    loss, grads = val_and_grad_fn(params)
+    losses = [float(loss)]
     lr = learning_rate
 
     for i in range(max_iterations):
-        grads = grad_fn(params)
         params = params - lr * grads
+
+        # Recompute value+grad together (one kernel dispatch)
+        loss, grads = val_and_grad_fn(params)
 
         # Check convergence every 10 steps to reduce host-device sync overhead
         if i % 10 == 0 or i == max_iterations - 1:
-            loss = float(loss_fn_jit(params))
-            losses.append(loss)
+            loss_val = float(loss)
+            losses.append(loss_val)
 
-            if np.isnan(loss):
+            if np.isnan(loss_val):
                 logger.warning(
                     "NaN loss detected in beam center refinement, stopping early"
                 )
@@ -265,19 +269,21 @@ def minimize_with_grad(
     import jax.numpy as jnp
 
     params = jnp.array(initial_params)
-    grad_fn = jax.jit(jax.grad(objective))
-    obj_fn = jax.jit(objective)
+    # Single JIT over value_and_grad: one compilation, one kernel dispatch per step.
+    val_and_grad_fn = jax.jit(jax.value_and_grad(objective))
 
-    losses = [float(obj_fn(params))]
+    # Prime cache with first forward+backward pass.
+    loss_val, grads = val_and_grad_fn(params)
+    losses = [float(loss_val)]
     lr = learning_rate
 
     for i in range(max_iterations):
-        grads = grad_fn(params)
         params = params - lr * grads
+        loss_val, grads = val_and_grad_fn(params)
 
         # Check convergence every 10 steps to reduce host-device sync overhead
         if i % 10 == 0 or i == max_iterations - 1:
-            loss = float(obj_fn(params))
+            loss = float(loss_val)
             losses.append(loss)
 
             if np.isnan(loss):

@@ -13,6 +13,7 @@ Example:
 from __future__ import annotations
 
 # Standard library imports
+import hashlib
 import os
 import re
 import time
@@ -409,10 +410,11 @@ class XpcsFile:
         fields = list(set(fields))
 
         # Use enhanced HDF5 reader for optimized batch reading
+        # Reuse the cached singleton set in __init__ to avoid repeated sys.modules lookups.
         try:
-            from .fileIO.hdf_reader_enhanced import get_enhanced_reader
-
-            enhanced_reader = get_enhanced_reader()
+            enhanced_reader = self._hdf5_reader
+            if enhanced_reader is None:
+                raise AttributeError("No enhanced HDF5 reader available")
             batch_cache_key = f"{self._cache_prefix}_batch_metadata"
 
             logger.debug(
@@ -526,6 +528,30 @@ class XpcsFile:
             Whether to use chunked processing for log computation. If None, decides automatically.
         """
         if self._saxs_data_loaded:
+            return
+
+        # Early cache check: if the data is already in the unified memory manager
+        # cache, skip all memory-pressure bookkeeping and file-info I/O.
+        _early_cache_key = f"{self._cache_prefix}_saxs_2d"
+        _cached_early = self._memory_manager.cache_get(
+            _early_cache_key, CacheType.ARRAY_DATA
+        )
+        if _cached_early is not None:
+            logger.info(
+                "Using cached SAXS 2D data from unified memory manager (early check)"
+            )
+            self.saxs_2d_data = _cached_early
+            _log_cache_key = f"{self._cache_prefix}_saxs_2d_log"
+            _cached_log_early = self._memory_manager.cache_get(
+                _log_cache_key, CacheType.ARRAY_DATA
+            )
+            if _cached_log_early is not None:
+                self.saxs_2d_log_data = _cached_log_early
+            else:
+                self.saxs_2d_log_data = self._compute_saxs_log_standard(
+                    self.saxs_2d_data
+                )
+            self._saxs_data_loaded = True
             return
 
         # Check memory pressure before loading large data
@@ -2964,8 +2990,6 @@ class XpcsFile:
 
     def _generate_cache_key(self, method_name, *args, **kwargs):
         """Generate a cache key from method parameters."""
-        import hashlib
-
         # Convert all parameters to a string representation
         key_parts = [method_name]
 
