@@ -15,7 +15,7 @@ At a Glance
    :header-rows: 0
 
    * - **Analysis**
-     - G2 correlation, SAXS 1D/2D, two-time correlation, stability, diffusion
+     - G2 correlation (g2, g2 Fit, g2 Map), SAXS 1D/2D, two-time correlation, stability, diffusion
    * - **Fitting**
      - NLSQ 0.6.0 point estimates + NumPyro NUTS Bayesian inference with ArviZ diagnostics
    * - **Backends**
@@ -25,14 +25,14 @@ At a Glance
    * - **Data Format**
      - HDF5 (NeXus convention) with schema-validated I/O
    * - **GUI**
-     - PySide6 with light/dark themes, command palette, session persistence
+     - PySide6 with light/dark themes, SVG icons, category tab bar, command palette, session persistence
 
 Key Features
 ------------
 
 **Correlation Analysis**
-   G2 autocorrelation with multi-tau and two-time methods, SAXS 1D/2D visualization,
-   sample stability monitoring, and diffusion coefficient extraction
+   G2 autocorrelation across dedicated tabs (g2 view, g2 Fit, g2 Map), two-time methods,
+   SAXS 1D/2D visualization, sample stability monitoring, and diffusion coefficient extraction
 
 **Fitting Pipeline**
    NLSQ warm-start followed by NumPyro NUTS sampling. Model selection via AIC/BIC,
@@ -133,50 +133,60 @@ Gallery
 
    **Analysis Modules Showcase**
 
-   1. **Integrated 2D Scattering Pattern**
+   1. **SAXS 2D -- Integrated Scattering Pattern**
 
       .. image:: https://raw.githubusercontent.com/imewei/XPCSViewer/master/docs/images/saxs2d.png
          :alt: 2D SAXS pattern visualization
 
-   2. **1D SAXS Reduction and Analysis**
+   2. **SAXS 1D -- Radial Reduction and Analysis**
 
       .. image:: https://raw.githubusercontent.com/imewei/XPCSViewer/master/docs/images/saxs1d.png
          :alt: Radially averaged 1D SAXS data
 
-   3. **Sample Stability Assessment**
+   3. **Stability -- Sample Stability Assessment**
 
       .. image:: https://raw.githubusercontent.com/imewei/XPCSViewer/master/docs/images/stability.png
-         :alt: Temporal stability analysis across 10 time sections
+         :alt: Temporal stability analysis across time sections
 
-   4. **Intensity vs Time Series**
+   4. **I(t) -- Intensity vs Time Series**
 
       .. image:: https://raw.githubusercontent.com/imewei/XPCSViewer/master/docs/images/intt.png
          :alt: Intensity fluctuation monitoring
 
-   5. **File Averaging Toolbox**
-
-      .. image:: https://raw.githubusercontent.com/imewei/XPCSViewer/master/docs/images/average.png
-         :alt: Advanced file averaging capabilities
-
-   6. **G2 Correlation Analysis**
+   5. **g2 -- Correlation Function Viewer**
 
       .. image:: https://raw.githubusercontent.com/imewei/XPCSViewer/master/docs/images/g2mod.png
-         :alt: Multi-tau correlation function fitting
+         :alt: Multi-tau correlation function display
 
-   7. **Diffusion Characterization**
+   6. **g2 Fit -- Correlation Fitting**
+
+      .. image:: https://raw.githubusercontent.com/imewei/XPCSViewer/master/docs/images/g2_fit.png
+         :alt: G2 single/double exponential fitting
+
+   7. **g2 Map -- Correlation Map**
+
+      .. image:: https://raw.githubusercontent.com/imewei/XPCSViewer/master/docs/images/g2_map.png
+         :alt: G2 correlation map across Q values
+
+   8. **Diffusion -- tau(q) Characterization**
 
       .. image:: https://raw.githubusercontent.com/imewei/XPCSViewer/master/docs/images/diffusion.png
          :alt: Diffusion coefficient analysis
 
-   8. **Two-time Correlation Maps**
+   9. **Two-Time -- Correlation Maps**
 
       .. image:: https://raw.githubusercontent.com/imewei/XPCSViewer/master/docs/images/twotime.png
          :alt: Interactive two-time correlation analysis
 
-   9. **HDF5 Metadata Explorer**
+   10. **Average -- File Averaging Toolbox**
 
-      .. image:: https://raw.githubusercontent.com/imewei/XPCSViewer/master/docs/images/hdf_info.png
-         :alt: File structure and metadata viewer
+       .. image:: https://raw.githubusercontent.com/imewei/XPCSViewer/master/docs/images/average.png
+          :alt: Advanced file averaging capabilities
+
+   11. **Metadata -- HDF5 Explorer**
+
+       .. image:: https://raw.githubusercontent.com/imewei/XPCSViewer/master/docs/images/hdf_info.png
+          :alt: File structure and metadata viewer
 
 Indices and Tables
 ==================

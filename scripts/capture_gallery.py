@@ -32,19 +32,22 @@ def main():
     app.processEvents()
     time.sleep(0.3)
 
-    # Map desired filenames to tab indices (matching docs gallery ordering)
+    # Map desired filenames to tab indices (matching current 12-tab layout)
+    # Tab order: SAXS_2D(0), SAXS_1D(1), Stability(2), I(t)(3),
+    #   g2(4), g2_Fit(5), g2_Map(6), Diffusion(7),
+    #   Two-Time(8), Q-Map(9), Average(10), Metadata(11)
     target_tabs = {
         "saxs2d": 0,
         "saxs1d": 1,
         "stability": 2,
         "intt": 3,
         "g2mod": 4,
-        "diffusion": 5,
-        "twotime": 6,
-        # average tab index is 8 (7 is qmap)
-        "average": 8,
-        # metadata view (hdf_info)
-        "hdf_info": 9,
+        "g2_fit": 5,
+        "g2_map": 6,
+        "diffusion": 7,
+        "twotime": 8,
+        "average": 10,
+        "hdf_info": 11,
     }
 
     for name, idx in target_tabs.items():

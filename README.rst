@@ -22,15 +22,19 @@ Python-based XPCS data analysis and visualization tool.
 
 **Features:**
 
-* G2 correlation analysis with fitting
+* G2 correlation analysis across three tabs (g2 view, g2 Fit, g2 Map)
 * SAXS 1D/2D visualization
 * Two-time correlation analysis
+* Diffusion coefficient extraction (tau-Q analysis)
+* Sample stability monitoring
 * Mask Editor with Q-map and Q-binning
 * HDF5 data support (NeXus format)
 
 **GUI Features:**
 
 * Light/dark theme support with system detection
+* Scalable SVG icons with theme-aware coloring
+* Category tab bar grouping 12 analysis tabs
 * Session persistence (resume where you left off)
 * Command palette (Ctrl+Shift+P) for quick access
 * Toast notifications for status updates
@@ -182,9 +186,10 @@ Testing
 Documentation
 -------------
 
-- `API Reference <https://github.com/imewei/xpcsviewer/tree/master/docs>`_
-- `User Guide <https://github.com/imewei/xpcsviewer/blob/master/docs/usage.rst>`_
-- `Quick Start <https://github.com/imewei/xpcsviewer/blob/master/docs/user_guide/quickstart.rst>`_
+- `Tutorials <docs/tutorials/index.rst>`_ -- Step-by-step learning guides
+- `How-To Guides <docs/how-to/index.rst>`_ -- Task-oriented instructions
+- `API Reference <docs/api/index.rst>`_ -- Auto-generated from docstrings
+- `Architecture <docs/architecture/index.rst>`_ -- Design decisions and diagrams
 
 .. code-block:: bash
 
@@ -219,18 +224,19 @@ Project Structure
 .. code-block::
 
    xpcsviewer/
-   ├── module/            # Analysis modules
-   ├── fileIO/            # HDF5 I/O
+   ├── module/            # Analysis modules (g2, saxs, twotime, ...)
+   ├── fileIO/            # HDF5 I/O and Q-map utilities
    ├── simplemask/        # Mask editor & Q-map
    ├── gui/               # GUI modernization
+   │   ├── icons.py       # SVG icon loader with theme-aware colors
    │   ├── theme/         # Light/dark theming
    │   ├── state/         # Session & preferences
    │   ├── shortcuts/     # Keyboard shortcuts
-   │   └── widgets/       # Modern UI widgets
+   │   └── widgets/       # Modern UI widgets (incl. category tab bar)
    ├── fitting/           # Bayesian fitting (NLSQ 0.6.0)
    ├── plothandler/       # Theme-aware plotting
    ├── threading/         # Async workers
-   ├── utils/             # Utilities
+   ├── utils/             # Utilities, validation, exceptions
    └── xpcs_file.py       # Core data class
 
 Analysis Features
@@ -279,50 +285,60 @@ Gallery
 
 **Analysis Modules Showcase**
 
-1. **Integrated 2D Scattering Pattern**
+1. **SAXS 2D -- Integrated Scattering Pattern**
 
    .. image:: https://raw.githubusercontent.com/imewei/XPCSViewer/master/docs/images/saxs2d.png
       :alt: 2D SAXS pattern visualization
 
-2. **1D SAXS Reduction and Analysis**
+2. **SAXS 1D -- Radial Reduction and Analysis**
 
    .. image:: https://raw.githubusercontent.com/imewei/XPCSViewer/master/docs/images/saxs1d.png
       :alt: Radially averaged 1D SAXS data
 
-3. **Sample Stability Assessment**
+3. **Stability -- Sample Assessment**
 
    .. image:: https://raw.githubusercontent.com/imewei/XPCSViewer/master/docs/images/stability.png
-      :alt: Temporal stability analysis across 10 time sections
+      :alt: Temporal stability analysis across time sections
 
-4. **Intensity vs Time Series**
+4. **I(t) -- Intensity vs Time**
 
    .. image:: https://raw.githubusercontent.com/imewei/XPCSViewer/master/docs/images/intt.png
       :alt: Intensity fluctuation monitoring
 
-5. **File Averaging Toolbox**
-
-   .. image:: https://raw.githubusercontent.com/imewei/XPCSViewer/master/docs/images/average.png
-      :alt: Advanced file averaging capabilities
-
-6. **G2 Correlation Analysis**
+5. **g2 -- Correlation Function Viewer**
 
    .. image:: https://raw.githubusercontent.com/imewei/XPCSViewer/master/docs/images/g2mod.png
-      :alt: Multi-tau correlation function fitting
+      :alt: Multi-tau correlation function display
 
-7. **Diffusion Characterization**
+6. **g2 Fit -- Correlation Fitting**
+
+   .. image:: https://raw.githubusercontent.com/imewei/XPCSViewer/master/docs/images/g2_fit.png
+      :alt: G2 single/double exponential fitting
+
+7. **g2 Map -- Correlation Map**
+
+   .. image:: https://raw.githubusercontent.com/imewei/XPCSViewer/master/docs/images/g2_map.png
+      :alt: G2 correlation map across Q values
+
+8. **Diffusion -- tau(q) Characterization**
 
    .. image:: https://raw.githubusercontent.com/imewei/XPCSViewer/master/docs/images/diffusion.png
-      :alt: τ vs q analysis for diffusion coefficients
+      :alt: Diffusion coefficient analysis
 
-8. **Two-time Correlation Maps**
+9. **Two-Time -- Correlation Maps**
 
    .. image:: https://raw.githubusercontent.com/imewei/XPCSViewer/master/docs/images/twotime.png
       :alt: Interactive two-time correlation analysis
 
-9. **HDF5 Metadata Explorer**
+10. **Average -- File Averaging Toolbox**
 
-   .. image:: https://raw.githubusercontent.com/imewei/XPCSViewer/master/docs/images/hdf_info.png
-      :alt: File structure and metadata viewer
+    .. image:: https://raw.githubusercontent.com/imewei/XPCSViewer/master/docs/images/average.png
+       :alt: Advanced file averaging capabilities
+
+11. **Metadata -- HDF5 Explorer**
+
+    .. image:: https://raw.githubusercontent.com/imewei/XPCSViewer/master/docs/images/hdf_info.png
+       :alt: File structure and metadata viewer
 
 License
 -------
