@@ -214,13 +214,13 @@ class TestG2VectorizedOperations(unittest.TestCase):
 
     def test_ensemble_statistics_computation(self):
         """Test ensemble statistics computation"""
+        # Default path omits ensemble_median (expensive O(B·T·Q·log B) sort).
         stats = compute_g2_ensemble_statistics(self.g2_datasets)
 
-        # Verify statistical properties
+        # Verify statistical properties available in the default (fast) path
         expected_keys = [
             "ensemble_mean",
             "ensemble_std",
-            "ensemble_median",
             "ensemble_min",
             "ensemble_max",
             "ensemble_var",
@@ -230,6 +230,13 @@ class TestG2VectorizedOperations(unittest.TestCase):
 
         for key in expected_keys:
             self.assertIn(key, stats, f"Missing statistic: {key}")
+
+        # ensemble_median is excluded from the default path for performance.
+        # Verify it appears when explicitly requested via include_median=True.
+        stats_with_median = compute_g2_ensemble_statistics(
+            self.g2_datasets, include_median=True
+        )
+        self.assertIn("ensemble_median", stats_with_median)
 
         # Test statistical consistency
         ensemble_mean = stats["ensemble_mean"]
