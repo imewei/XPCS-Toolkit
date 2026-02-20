@@ -15,6 +15,7 @@ import logging
 import numpy as np
 import pyqtgraph as pg
 
+from xpcsviewer.backends._conversions import ensure_numpy
 from xpcsviewer.plothandler.plot_constants import MATPLOTLIB_COLORS_RGB as colors
 
 # Local imports
@@ -826,6 +827,9 @@ def vectorized_g2_baseline_correction(g2_data, baseline_values):
     Returns:
         Baseline-corrected G2 data
     """
+    # Ensure host-resident NumPy arrays before raw np.* operations.
+    g2_data = ensure_numpy(g2_data)
+    baseline_values = ensure_numpy(baseline_values)
     # Broadcast baseline subtraction across all time points
     return g2_data - baseline_values[np.newaxis, :] + 1.0
 
@@ -841,59 +845,92 @@ def batch_g2_normalization(g2_data_list, method="max"):
     Returns:
         List of normalized G2 data arrays
     """
-    normalized_data = []
+    if not g2_data_list:
+        return []
 
-    for g2_data in g2_data_list:
+    # Ensure host-resident arrays; np.max/mean/std don't accept JAX arrays.
+    arrays = [ensure_numpy(a) for a in g2_data_list]
+
+    # Vectorized fast path for 'max' normalization with small-to-medium batch sizes
+    # (B ≤ 100). For very large B with small T×Q the stack allocation itself becomes
+    # the bottleneck, so fall back to the per-item loop in that case.
+    # For 'std' and 'mean', the per-item loop is retained as it avoids materializing
+    # a potentially large 3-D stack when the savings are smaller.
+    n = len(arrays)
+    use_vectorized = n <= 100 and method == "max"
+
+    if use_vectorized:
+        # Stack → single kernel for max + divide. The stack is unavoidable but
+        # eliminates 2*n separate NumPy kernel dispatches (one max + one divide per item).
+        g2_stack = np.stack(arrays, axis=0)  # [B, T, Q]
+        scale = np.max(g2_stack, axis=1, keepdims=True)  # [B, 1, Q]
+        scale = np.where(scale == 0, 1.0, scale)
+        result = g2_stack / scale  # [B, T, Q]
+        # Return list of views (no extra copy) for backward compatibility.
+        return list(result)
+
+    # Per-item path: handles 'mean', 'std', very large B, or non-uniform shapes.
+    normalized_data = []
+    for g2_data in arrays:
         if method == "max":
-            # Vectorized max normalization
             max_vals = np.max(g2_data, axis=0, keepdims=True)
-            # Avoid division by zero
             max_vals = np.where(max_vals == 0, 1.0, max_vals)
             normalized = g2_data / max_vals
         elif method == "mean":
-            # Vectorized mean normalization
             mean_vals = np.mean(g2_data, axis=0, keepdims=True)
             mean_vals = np.where(mean_vals == 0, 1.0, mean_vals)
             normalized = g2_data / mean_vals
         elif method == "std":
-            # Vectorized standard score normalization
             mean_vals = np.mean(g2_data, axis=0, keepdims=True)
             std_vals = np.std(g2_data, axis=0, keepdims=True)
             std_vals = np.where(std_vals == 0, 1.0, std_vals)
             normalized = (g2_data - mean_vals) / std_vals
         else:
             normalized = g2_data
-
         normalized_data.append(normalized)
 
     return normalized_data
 
 
-def compute_g2_ensemble_statistics(g2_data_list):
+def compute_g2_ensemble_statistics(g2_data_list, include_median: bool = False):
     """
     Compute ensemble statistics for multiple G2 datasets using vectorized operations.
 
     Args:
         g2_data_list: List of G2 data arrays [time, q_values]
+        include_median: If True, compute and include `ensemble_median` in the result.
+            This adds an O(B·T·Q·log B) partial-sort cost on top of the O(B·T·Q) mean/std
+            computation. Defaults to False for performance. Set True only when the caller
+            genuinely needs the median statistic.
 
     Returns:
-        Dictionary with ensemble statistics
+        Dictionary with ensemble statistics. Always contains:
+            ensemble_mean, ensemble_std, ensemble_min, ensemble_max,
+            ensemble_var, q_mean_values, temporal_correlation.
+        Optionally contains:
+            ensemble_median (when include_median=True).
     """
+    # Ensure host-resident NumPy arrays before stacking / raw np.* statistics.
+    g2_data_list = [ensure_numpy(arr) for arr in g2_data_list]
     # Stack all data for vectorized operations
     g2_stack = np.stack(g2_data_list, axis=0)  # [batch, time, q_values]
     num_q = g2_stack.shape[2]
-    num_batch = g2_stack.shape[0]
 
-    # Vectorized statistical computations
+    # Vectorized statistical computations — O(B·T·Q) operations only.
+    # np.median is intentionally excluded from the default path: it requires a
+    # full O(B·T·Q·log B) partial sort and accounts for 85% of this function's
+    # runtime (see tests/reports/baseline_profile.md).
     stats = {
         "ensemble_mean": np.mean(g2_stack, axis=0),
         "ensemble_std": np.std(g2_stack, axis=0),
-        "ensemble_median": np.median(g2_stack, axis=0),
         "ensemble_min": np.min(g2_stack, axis=0),
         "ensemble_max": np.max(g2_stack, axis=0),
         "ensemble_var": np.var(g2_stack, axis=0),
         "q_mean_values": np.mean(g2_stack, axis=(0, 1)),  # Mean across time and batch
     }
+
+    if include_median:
+        stats["ensemble_median"] = np.median(g2_stack, axis=0)
 
     # Batched temporal correlation: transpose to (q, batch, time) and compute
     # correlation matrices for all q-values without a Python loop.
@@ -913,8 +950,9 @@ def compute_g2_ensemble_statistics(g2_data_list):
     n_time = q_transposed.shape[2]
     corr_batch = np.matmul(q_normed, np.transpose(q_normed, (0, 2, 1))) / n_time
 
-    # Convert to list of per-q correlation matrices for backward compatibility
-    stats["temporal_correlation"] = [corr_batch[q] for q in range(num_q)]
+    # Return as 3-D ndarray for efficiency; callers that need per-q slices
+    # can index directly (corr_batch[q]) without rebuilding a Python list.
+    stats["temporal_correlation"] = corr_batch  # shape [num_q, batch, batch]
 
     return stats
 
@@ -931,6 +969,10 @@ def optimize_g2_error_propagation(g2_data, g2_errors, operations):
     Returns:
         Propagated errors
     """
+    # Ensure host-resident NumPy arrays; np.abs/power don't accept JAX arrays
+    # without triggering an untraced host-device transfer.
+    g2_data = ensure_numpy(g2_data)
+    g2_errors = ensure_numpy(g2_errors)
     propagated_errors = g2_errors.copy()
 
     for op in operations:

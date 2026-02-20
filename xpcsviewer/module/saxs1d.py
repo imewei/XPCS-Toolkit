@@ -458,25 +458,25 @@ def vectorized_q_binning(q_values, intensities, q_min, q_max, num_bins):
         :num_bins
     ]
 
-    # Compute per-bin means using np.mean for numerical stability with extreme values
+    # Compute per-bin means via scatter-accumulate (no Python loops).
+    # np.add.at performs unbuffered in-place accumulation — equivalent to a
+    # segment-reduce — in a single O(n) vectorized pass over valid_indices.
     valid_intensities = (
         intensities[..., valid] if intensities.ndim > 1 else intensities[valid]
     )
     if intensities.ndim == 1:
-        binned_intensity = np.zeros(num_bins)
-        for b in range(num_bins):
-            if bin_counts[b] > 0:
-                binned_intensity[b] = np.mean(valid_intensities[valid_indices == b])
+        binned_intensity = np.zeros(num_bins, dtype=np.float64)
+        np.add.at(binned_intensity, valid_indices, valid_intensities)
+        # Divide by counts where non-zero (same as np.mean per bin)
+        nonzero = bin_counts > 0
+        binned_intensity[nonzero] /= bin_counts[nonzero]
     else:
         num_phi = intensities.shape[0]
-        binned_intensity = np.zeros((num_phi, num_bins))
-        for b in range(num_bins):
-            if bin_counts[b] > 0:
-                mask_b = valid_indices == b
-                for phi_idx in range(num_phi):
-                    binned_intensity[phi_idx, b] = np.mean(
-                        valid_intensities[phi_idx, mask_b]
-                    )
+        binned_intensity = np.zeros((num_phi, num_bins), dtype=np.float64)
+        # valid_intensities: [num_phi, n_valid]; accumulate along bin axis for all phi at once
+        np.add.at(binned_intensity, (slice(None), valid_indices), valid_intensities)
+        nonzero = bin_counts > 0
+        binned_intensity[:, nonzero] /= bin_counts[nonzero]
 
     return bin_centers, binned_intensity, bin_counts
 
@@ -568,13 +568,9 @@ def vectorized_intensity_normalization(
         max_vals = np.max(intensities, axis=1, keepdims=True)
         return intensities / max_vals
     elif method == "area":
-        # Vectorized area normalization for multiple curves
-        areas = np.array(
-            [
-                np.trapezoid(intensities[i], q_values)
-                for i in range(intensities.shape[0])
-            ]
-        )
+        # Vectorized area normalization: np.trapezoid on the last axis handles
+        # the full 2D array in one call, avoiding a Python loop over phi slices.
+        areas = np.trapezoid(intensities, q_values, axis=1)  # [num_phi]
         return intensities / areas[:, np.newaxis]
 
     return intensities

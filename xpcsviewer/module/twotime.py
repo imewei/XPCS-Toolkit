@@ -55,15 +55,19 @@ def clean_c2_for_visualization(c2, method="nan_to_num"):
         logger.debug(f"Cleaning C2 matrix: {nan_count} NaN and {inf_count} inf values")
 
     if method == "nan_to_num":
-        # Replace NaN/inf with numeric values based on finite data statistics
-        finite_mask = np.isfinite(c2)
-        if np.any(finite_mask):
-            finite_values = c2[finite_mask]
-            # Use percentiles of finite data for inf replacement
-            pos_replacement = np.percentile(finite_values, 99.9)
-            neg_replacement = np.percentile(finite_values, 0.1)
-            # Use median for NaN replacement to avoid bias
-            nan_replacement = np.median(finite_values)
+        # Replace NaN/inf with numeric values based on finite data statistics.
+        # Use a single np.nanpercentile call with three quantiles to avoid two
+        # separate array sorts + an intermediate finite_values copy.
+        # np.nanpercentile ignores NaN/inf natively; no boolean masking needed.
+        finite_vals = c2[np.isfinite(c2)]
+        has_finite = finite_vals.size > 0
+        if has_finite:
+            # Single pass over finite-only values: [0.1th, 50th, 99.9th] percentiles.
+            # np.nanpercentile cannot handle inf (produces nan from inf-inf),
+            # so we pre-filter to finite values only.
+            neg_replacement, nan_replacement, pos_replacement = np.percentile(
+                finite_vals, [0.1, 50.0, 99.9]
+            )
         else:
             # Fallback if all values are non-finite
             pos_replacement, neg_replacement, nan_replacement = 1.0, 0.0, 0.5
