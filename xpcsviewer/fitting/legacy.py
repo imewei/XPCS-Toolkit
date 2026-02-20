@@ -251,11 +251,17 @@ def fit_with_fixed(
 
     fit_val = np.zeros((y.shape[1], 2, num_args))
 
+    # Pre-compute fixed values (concrete) and indices for fitted params
+    fixed_values = bounds[1, :].tolist()  # Upper bounds as fixed values
+    fit_indices = [i for i in range(num_args) if fit_flag[i]]
+
     # Create wrapper function for fixed parameters
+    # Uses a Python list (not np.array) to avoid TracerArrayConversionError
+    # when nlsq JIT-traces this function with JAX tracers as fit_params.
     def wrapper_func(x_data, *fit_params):
-        full_params = np.zeros(num_args)
-        full_params[fit_flag] = fit_params
-        full_params[fix_flag] = bounds[1, fix_flag]  # Use upper bound as fixed value
+        full_params = list(fixed_values)
+        for idx, val in zip(fit_indices, fit_params):
+            full_params[idx] = val
         return base_func(x_data, *full_params)
 
     # Fit each column
@@ -366,11 +372,14 @@ def fit_with_fixed_parallel(
 
     fit_val = np.zeros((num_qvals, 2, num_args))
 
+    # Pre-compute fixed values and fit indices for JIT-safe wrapper
+    fixed_values_par = bounds[1, :].tolist()
+    fit_indices_par = [i for i in range(num_args) if fit_flag[i]]
+
     def wrapper_func(x_data, *fit_params):
-        full_params = np.zeros(num_args)
-        full_params[fit_flag] = fit_params
-        full_params[fix_flag] = bounds[1, fix_flag]
-        # Note: Do NOT use ensure_numpy() here - this function is JIT-traced by nlsq
+        full_params = list(fixed_values_par)
+        for idx, val in zip(fit_indices_par, fit_params):
+            full_params[idx] = val
         return base_func(x_data, *full_params)
 
     fit_args = []
@@ -563,11 +572,14 @@ def fit_with_fixed_sequential(
     fit_val = np.zeros((y.shape[1], 2, num_args))
     fit_methods = []
 
+    # Pre-compute fixed values and fit indices for JIT-safe wrapper
+    fixed_values_seq = bounds[1, :].tolist()
+    fit_indices_seq = [i for i in range(num_args) if fit_flag[i]]
+
     def wrapper_func(x_data, *fit_params):
-        full_params = np.zeros(num_args)
-        full_params[fit_flag] = fit_params
-        full_params[fix_flag] = bounds[1, fix_flag]
-        # Note: Do NOT use ensure_numpy() here - this function is JIT-traced by nlsq
+        full_params = list(fixed_values_seq)
+        for idx, val in zip(fit_indices_seq, fit_params):
+            full_params[idx] = val
         return base_func(x_data, *full_params)
 
     # Compute expected number of fit parameters (True values in fit_flag)
