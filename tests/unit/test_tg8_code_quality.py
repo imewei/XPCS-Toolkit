@@ -6,6 +6,7 @@ Covers BUG-035 through BUG-062 (P2 improvements).
 from __future__ import annotations
 
 import math
+import pathlib
 import threading
 from dataclasses import dataclass
 from typing import Any
@@ -13,6 +14,9 @@ from unittest.mock import MagicMock, patch
 
 import numpy as np
 import pytest
+
+# Derive project root from this test file's location
+_PROJECT_ROOT = pathlib.Path(__file__).resolve().parent.parent.parent
 
 # ---------------------------------------------------------------------------
 # Test 1: logger.exception used instead of traceback.print_exc (BUG-035)
@@ -22,11 +26,8 @@ import pytest
 def test_xpcs_viewer_no_traceback_print_exc():
     """Verify xpcs_viewer.py uses logger.exception() not traceback.print_exc()."""
     import ast
-    import pathlib
 
-    viewer_path = pathlib.Path(
-        "/Users/b80985/Projects/xpcsviewer/xpcsviewer/xpcs_viewer.py"
-    )
+    viewer_path = _PROJECT_ROOT / "xpcsviewer" / "xpcs_viewer.py"
     source = viewer_path.read_text()
     tree = ast.parse(source)
 
@@ -109,11 +110,8 @@ def test_nlsq_result_setter_warns_when_native_result_active():
 def test_is_healthy_does_not_use_string_comparison():
     """is_healthy should not use str(status) == 'healthy' fragile string check."""
     import ast
-    import pathlib
 
-    results_path = pathlib.Path(
-        "/Users/b80985/Projects/xpcsviewer/xpcsviewer/fitting/results.py"
-    )
+    results_path = _PROJECT_ROOT / "xpcsviewer" / "fitting" / "results.py"
     source = results_path.read_text()
 
     # Check the string comparison pattern is not present
@@ -166,11 +164,8 @@ def test_device_info_valid_construction():
 def test_device_manager_reset_uses_lock():
     """DeviceManager.reset() should be protected by _lock for thread safety."""
     import ast
-    import pathlib
 
-    device_path = pathlib.Path(
-        "/Users/b80985/Projects/xpcsviewer/xpcsviewer/backends/_device.py"
-    )
+    device_path = _PROJECT_ROOT / "xpcsviewer" / "backends" / "_device.py"
     source = device_path.read_text()
     tree = ast.parse(source)
 
@@ -337,11 +332,8 @@ def test_worker_stats_validates_counts():
 def test_completed_tasks_bounded():
     """_completed_tasks should have a max-size bound to prevent memory growth (BUG-062)."""
     import ast
-    import pathlib
 
-    unified_path = pathlib.Path(
-        "/Users/b80985/Projects/xpcsviewer/xpcsviewer/threading/unified_threading.py"
-    )
+    unified_path = _PROJECT_ROOT / "xpcsviewer" / "threading" / "unified_threading.py"
     source = unified_path.read_text()
 
     # Check that there's a size check/bound on _completed_tasks
