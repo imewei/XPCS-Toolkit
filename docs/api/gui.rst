@@ -173,6 +173,31 @@ Convenience functions for building Qt layouts programmatically.
    :members:
    :no-index:
 
+SVG Icon System
+~~~~~~~~~~~~~~~
+
+Scalable SVG icons with theme-aware color replacement.
+
+The icon system provides runtime SVG loading with automatic ``currentColor``
+replacement, ensuring icons match the active light or dark theme.
+Icons are cached after first load for efficient reuse across the UI.
+
+.. automodule:: xpcsviewer.gui.icons
+   :members:
+   :no-index:
+
+Category Tab Bar
+~~~~~~~~~~~~~~~~
+
+Visual tab grouping with category separators.
+
+Overlays painted separator lines between logical tab groups (Scattering,
+Correlation, Utilities) so users can visually parse the 12-tab interface.
+
+.. automodule:: xpcsviewer.gui.widgets.category_tab_bar
+   :members:
+   :no-index:
+
 Initialization Validator
 ~~~~~~~~~~~~~~~~~~~~~~~~
 

@@ -68,3 +68,14 @@ Progress Management
    :members:
    :undoc-members:
    :show-inheritance:
+
+Bayesian Fit Worker
+-------------------
+
+Background worker for NumPyro NUTS sampling, keeping the GUI responsive
+during long Bayesian inference runs.
+
+.. automodule:: xpcsviewer.threading.bayesian_worker
+   :members:
+   :undoc-members:
+   :show-inheritance:

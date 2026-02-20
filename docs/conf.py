@@ -83,6 +83,8 @@ _INTERNAL_QT_MODULES = [
     "xpcsviewer.gui.qt_compat",
     "xpcsviewer.gui.layout_helpers",
     "xpcsviewer.gui.initialization_validator",
+    "xpcsviewer.gui.icons",
+    "xpcsviewer.gui.widgets.category_tab_bar",
     "xpcsviewer.helper.listmodel",
     "xpcsviewer.viewer_kernel",
     "xpcsviewer.file_locator",
@@ -261,6 +263,8 @@ autodoc_mock_imports = [
     "xpcsviewer.gui.widgets.command_palette",
     "xpcsviewer.gui.widgets.toast_notification",
     "xpcsviewer.gui.widgets.drag_drop_list",
+    "xpcsviewer.gui.widgets.category_tab_bar",
+    "xpcsviewer.gui.icons",
     # Threading modules (name conflicts with stdlib threading; all depend on Qt)
     "xpcsviewer.threading",
     "xpcsviewer.threading.async_workers",
@@ -271,6 +275,7 @@ autodoc_mock_imports = [
     "xpcsviewer.threading.unified_threading",
     "xpcsviewer.threading.cleanup_optimized",
     "xpcsviewer.threading.progress_manager",
+    "xpcsviewer.threading.bayesian_worker",
     # SimpleMask modules (depend on Qt/PyQtGraph)
     "xpcsviewer.simplemask",
     "xpcsviewer.simplemask.simplemask_window",

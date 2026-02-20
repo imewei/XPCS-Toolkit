@@ -93,6 +93,28 @@ Input validation utilities for data integrity checks.
    :members:
    :no-index:
 
+Exceptions
+----------
+
+Custom exception hierarchy for XPCS-specific error handling.
+
+The validation system uses ``XPCSValidationError`` for structured error
+reporting. Analysis modules catch these exceptions to skip incompatible
+files gracefully rather than silently trimming data.
+
+.. automodule:: xpcsviewer.utils.exceptions
+   :members:
+   :no-index:
+
+Common Checks
+-------------
+
+Lightweight guard functions for quick input pre-checks.
+
+.. automodule:: xpcsviewer.utils.common_checks
+   :members:
+   :no-index:
+
 Data Processing
 ---------------
 

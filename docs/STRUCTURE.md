@@ -1,6 +1,6 @@
 # XPCS Viewer Documentation Structure
 
-**Last Updated:** February 18, 2026
+**Last Updated:** February 20, 2026
 
 ## Documentation Tree
 
@@ -129,7 +129,7 @@ geometry parameters).
 ## Building Documentation
 
 ```bash
-cd /Users/b80985/Projects/xpcsviewer
+cd /path/to/xpcsviewer
 
 # Build HTML
 uv run sphinx-build -b html docs docs/_build
