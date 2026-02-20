@@ -3,6 +3,7 @@ import numpy as np
 from xpcsviewer.plothandler.plot_constants import BASIC_COLORS as colors
 from xpcsviewer.plothandler.plot_constants import EXTENDED_MARKERS as shapes
 from xpcsviewer.utils.logging_config import get_logger
+from xpcsviewer.utils.exceptions import XPCSValidationError
 from xpcsviewer.utils.validation import (
     get_file_label_safe,
     validate_array_compatibility,
@@ -64,18 +65,13 @@ def plot(xf_list, hdl, q_range, offset, plot_type=3):
         y = fit_summary["fit_val"][:, 0, 1]
         e = fit_summary["fit_val"][:, 1, 1]
 
-        # Ensure all arrays have the same length to avoid boolean index mismatch
+        # Validate all arrays have the same length (raises on mismatch)
         file_label = get_file_label_safe(xf)
-        is_compatible, min_length, _warning_msg = validate_array_compatibility(
-            x, y, e, file_label=file_label
-        )
-        if not is_compatible:
+        try:
+            validate_array_compatibility(x, y, e, file_label=file_label)
+        except XPCSValidationError as exc:
+            logger.warning(f"Skipping file {file_label}: {exc}")
             continue
-
-        # Trim arrays to minimum length if needed
-        x = x[:min_length]
-        y = y[:min_length]
-        e = e[:min_length]
 
         # Vectorized filtering of failed fittings
         valid_idx = e > 0
