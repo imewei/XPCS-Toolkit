@@ -1,0 +1,100 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.13.9, pytest-9.0.2, pluggy-1.6.0
+benchmark: 5.2.3 (defaults: timer=time.perf_counter disable_gc=False min_rounds=5 min_time=0.000005 max_time=1.0 calibration_precision=10 warmup=False warmup_iterations=100000)
+PySide6 6.10.2 -- Qt runtime 6.10.2 -- Qt compiled 6.10.2
+rootdir: /Users/b80985/Projects/xpcsviewer
+configfile: pyproject.toml
+plugins: benchmark-5.2.3, mock-3.15.1, jaxtyping-0.3.9, xdist-3.8.0, timeout-2.4.0, metadata-3.1.1, html-4.2.0, hypothesis-6.151.9, qt-4.5.0, sugar-1.1.1, cov-7.0.0
+timeout: 120.0s
+timeout method: thread
+timeout func_only: False
+collected 2056 items
+
+tests/analysis/g2_analysis/test_g2_analysis.py ............              [  0%]
+tests/analysis/g2_analysis/test_g2mod.py ............................... [  2%]
+....                                                                     [  2%]
+tests/analysis/saxs_analysis/test_saxs_analysis.py ............          [  2%]
+tests/analysis/twotime_analysis/test_twotime_analysis.py ............... [  3%]
+                                                                         [  3%]
+tests/benchmarks/performance/test_batch_vectorize.py .......             [  3%]
+tests/benchmarks/performance/test_bottleneck_analysis.py ..........F.... [  4%]
+...                                                                      [  4%]
+tests/benchmarks/performance/test_c2_baseline.py ......                  [  5%]
+tests/benchmarks/performance/test_calibration_baseline.py ....           [  5%]
+tests/benchmarks/performance/test_fitting_jit.py ....                    [  5%]
+tests/benchmarks/performance/test_hotpath_baseline.py .................. [  6%]
+...........                                                              [  6%]
+tests/benchmarks/performance/test_memory_efficiency.py .........         [  7%]
+tests/benchmarks/performance/test_models_baseline.py ......              [  7%]
+tests/benchmarks/performance/test_saxs_baseline.py .....                 [  7%]
+tests/end_to_end/test_jax_migration_workflows.py .........               [  8%]
+tests/error_handling/test_data_validation_errors.py .................... [  9%]
+........                                                                 [  9%]
+tests/error_handling/test_edge_cases.py ...........................      [ 10%]
+tests/error_handling/test_error_injection_framework.py ............      [ 11%]
+tests/error_handling/test_file_io_errors.py ..........................   [ 12%]
+tests/error_handling/test_framework_validation.py ....................   [ 13%]
+tests/gui_interactive/test_analysis_tabs.py ....................         [ 14%]
+tests/gui_interactive/test_error_handling.py .......................     [ 15%]
+tests/gui_interactive/test_file_operations.py ..................         [ 16%]
+tests/gui_interactive/test_main_window.py ......Fatal Python error: Segmentation fault
+
+Thread 0x000000017604f000 (most recent call first):
+  File "/Users/b80985/.local/share/uv/python/cpython-3.13.9-macos-aarch64-none/lib/python3.13/threading.py", line 363 in wait
+  File "/Users/b80985/.local/share/uv/python/cpython-3.13.9-macos-aarch64-none/lib/python3.13/threading.py", line 659 in wait
+  File "/Users/b80985/.local/share/uv/python/cpython-3.13.9-macos-aarch64-none/lib/python3.13/threading.py", line 1342 in run
+  File "/Users/b80985/.local/share/uv/python/cpython-3.13.9-macos-aarch64-none/lib/python3.13/threading.py", line 1043 in _bootstrap_inner
+  File "/Users/b80985/.local/share/uv/python/cpython-3.13.9-macos-aarch64-none/lib/python3.13/threading.py", line 1014 in _bootstrap
+
+Thread 0x000000017d57b000 (most recent call first):
+  File "/Users/b80985/.local/share/uv/python/cpython-3.13.9-macos-aarch64-none/lib/python3.13/threading.py", line 363 in wait
+  File "/Users/b80985/.local/share/uv/python/cpython-3.13.9-macos-aarch64-none/lib/python3.13/threading.py", line 659 in wait
+  File "/Users/b80985/Projects/xpcsviewer/.venv/lib/python3.13/site-packages/tqdm/_monitor.py", line 60 in run
+  File "/Users/b80985/.local/share/uv/python/cpython-3.13.9-macos-aarch64-none/lib/python3.13/threading.py", line 1043 in _bootstrap_inner
+  File "/Users/b80985/.local/share/uv/python/cpython-3.13.9-macos-aarch64-none/lib/python3.13/threading.py", line 1014 in _bootstrap
+
+Current thread 0x00000001fc957080 (most recent call first):
+  File "/Users/b80985/Projects/xpcsviewer/.venv/lib/python3.13/site-packages/pyqtgraph/graphicsItems/PlotItem/PlotItem.py", line 235 in __init__
+  File "/Users/b80985/Projects/xpcsviewer/.venv/lib/python3.13/site-packages/pyqtgraph/graphicsItems/GraphicsLayout.py", line 72 in addPlot
+  File "/Users/b80985/Projects/xpcsviewer/xpcsviewer/module/g2mod.py", line 651 in pg_plot_from_data
+  File "/Users/b80985/Projects/xpcsviewer/xpcsviewer/xpcs_viewer.py", line 1342 in apply_g2_result
+  File "/Users/b80985/Projects/xpcsviewer/xpcsviewer/xpcs_viewer.py", line 1245 in on_async_plot_ready
+  File "/Users/b80985/Projects/xpcsviewer/xpcsviewer/threading/async_kernel.py", line 345 in _on_plot_ready
+  File "/Users/b80985/Projects/xpcsviewer/xpcsviewer/threading/async_kernel.py", line 298 in <lambda>
+  File "/Users/b80985/Projects/xpcsviewer/.venv/lib/python3.13/site-packages/pytestqt/qt_compat.py", line 160 in exec
+  File "/Users/b80985/Projects/xpcsviewer/.venv/lib/python3.13/site-packages/pytestqt/wait_signal.py", line 58 in wait
+  File "/Users/b80985/Projects/xpcsviewer/.venv/lib/python3.13/site-packages/pytestqt/qtbot.py", line 503 in wait
+  File "/Users/b80985/Projects/xpcsviewer/tests/gui_interactive/conftest.py", line 562 in click_tab
+  File "/Users/b80985/Projects/xpcsviewer/tests/gui_interactive/test_main_window.py", line 158 in test_g2_analysis_tab
+  File "/Users/b80985/Projects/xpcsviewer/.venv/lib/python3.13/site-packages/_pytest/python.py", line 166 in pytest_pyfunc_call
+  File "/Users/b80985/Projects/xpcsviewer/.venv/lib/python3.13/site-packages/pluggy/_callers.py", line 121 in _multicall
+  File "/Users/b80985/Projects/xpcsviewer/.venv/lib/python3.13/site-packages/pluggy/_manager.py", line 120 in _hookexec
+  File "/Users/b80985/Projects/xpcsviewer/.venv/lib/python3.13/site-packages/pluggy/_hooks.py", line 512 in __call__
+  File "/Users/b80985/Projects/xpcsviewer/.venv/lib/python3.13/site-packages/_pytest/python.py", line 1720 in runtest
+  File "/Users/b80985/Projects/xpcsviewer/.venv/lib/python3.13/site-packages/_pytest/runner.py", line 179 in pytest_runtest_call
+  File "/Users/b80985/Projects/xpcsviewer/.venv/lib/python3.13/site-packages/pluggy/_callers.py", line 121 in _multicall
+  File "/Users/b80985/Projects/xpcsviewer/.venv/lib/python3.13/site-packages/pluggy/_manager.py", line 120 in _hookexec
+  File "/Users/b80985/Projects/xpcsviewer/.venv/lib/python3.13/site-packages/pluggy/_hooks.py", line 512 in __call__
+  File "/Users/b80985/Projects/xpcsviewer/.venv/lib/python3.13/site-packages/_pytest/runner.py", line 245 in <lambda>
+  File "/Users/b80985/Projects/xpcsviewer/.venv/lib/python3.13/site-packages/_pytest/runner.py", line 353 in from_call
+  File "/Users/b80985/Projects/xpcsviewer/.venv/lib/python3.13/site-packages/_pytest/runner.py", line 244 in call_and_report
+  File "/Users/b80985/Projects/xpcsviewer/.venv/lib/python3.13/site-packages/_pytest/runner.py", line 137 in runtestprotocol
+  File "/Users/b80985/Projects/xpcsviewer/.venv/lib/python3.13/site-packages/_pytest/runner.py", line 118 in pytest_runtest_protocol
+  File "/Users/b80985/Projects/xpcsviewer/.venv/lib/python3.13/site-packages/pluggy/_callers.py", line 121 in _multicall
+  File "/Users/b80985/Projects/xpcsviewer/.venv/lib/python3.13/site-packages/pluggy/_manager.py", line 120 in _hookexec
+  File "/Users/b80985/Projects/xpcsviewer/.venv/lib/python3.13/site-packages/pluggy/_hooks.py", line 512 in __call__
+  File "/Users/b80985/Projects/xpcsviewer/.venv/lib/python3.13/site-packages/_pytest/main.py", line 396 in pytest_runtestloop
+  File "/Users/b80985/Projects/xpcsviewer/.venv/lib/python3.13/site-packages/pluggy/_callers.py", line 121 in _multicall
+  File "/Users/b80985/Projects/xpcsviewer/.venv/lib/python3.13/site-packages/pluggy/_manager.py", line 120 in _hookexec
+  File "/Users/b80985/Projects/xpcsviewer/.venv/lib/python3.13/site-packages/pluggy/_hooks.py", line 512 in __call__
+  File "/Users/b80985/Projects/xpcsviewer/.venv/lib/python3.13/site-packages/_pytest/main.py", line 372 in _main
+  File "/Users/b80985/Projects/xpcsviewer/.venv/lib/python3.13/site-packages/_pytest/main.py", line 318 in wrap_session
+  File "/Users/b80985/Projects/xpcsviewer/.venv/lib/python3.13/site-packages/_pytest/main.py", line 365 in pytest_cmdline_main
+  File "/Users/b80985/Projects/xpcsviewer/.venv/lib/python3.13/site-packages/pluggy/_callers.py", line 121 in _multicall
+  File "/Users/b80985/Projects/xpcsviewer/.venv/lib/python3.13/site-packages/pluggy/_manager.py", line 120 in _hookexec
+  File "/Users/b80985/Projects/xpcsviewer/.venv/lib/python3.13/site-packages/pluggy/_hooks.py", line 512 in __call__
+  File "/Users/b80985/Projects/xpcsviewer/.venv/lib/python3.13/site-packages/_pytest/config/__init__.py", line 199 in main
+  File "/Users/b80985/Projects/xpcsviewer/.venv/lib/python3.13/site-packages/_pytest/config/__init__.py", line 223 in console_main
+  File "/Users/b80985/Projects/xpcsviewer/.venv/bin/pytest", line 10 in <module>
+
+Extension modules: numpy._core._multiarray_umath, numpy.linalg._umath_linalg, markupsafe._speedups, shiboken6.Shiboken, PySide6.QtCore, PySide6.QtGui, PySide6.QtWidgets, PySide6.QtSvg, PySide6.QtOpenGLWidgets, PySide6.QtTest, PySide6.QtOpenGL, sklearn.__check_build._check_build, _cyutility, scipy._cyutility, scipy._lib._ccallback_c, numpy.random._common, numpy.random.bit_generator, numpy.random._bounded_integers, numpy.random._pcg64, numpy.random._mt19937, numpy.random._generator, numpy.random._philox, numpy.random._sfc64, numpy.random.mtrand, charset_normalizer.md, scipy.sparse._sparsetools, _csparsetools, scipy.sparse._csparsetools, psutil._psutil_osx, scipy.special._ufuncs_cxx, scipy.special._ellip_harm_2, scipy.special._special_ufuncs, scipy.special._gufuncs, scipy.special._ufuncs, scipy.special._specfun, scipy.special._comb, scipy.linalg._fblas, scipy.linalg._flapack, scipy.linalg.cython_lapack, scipy.linalg._cythonized_array_utils, scipy.linalg._solve_toeplitz, scipy.linalg._batched_linalg, scipy.linalg._decomp_lu_cython, scipy.linalg._matfuncs_schur_sqrtm, scipy.linalg._matfuncs_expm, scipy.linalg._linalg_pythran, scipy.linalg.cython_blas, scipy.linalg._decomp_update, scipy.sparse.linalg._dsolve._superlu, scipy.sparse.linalg._eigen.arpack._arpacklib, scipy.sparse.linalg._propack, scipy.spatial._ckdtree, scipy._lib.messagestream, scipy.spatial._qhull, scipy.spatial._voronoi, scipy.spatial._hausdorff, scipy.spatial._distance_wrap, scipy.spatial.transform._rotation_cy, scipy.spatial.transform._rigid_transform_cy, scipy.optimize._group_columns, scipy.optimize._trlib._trlib, scipy.optimize._lbfgsb, _moduleTNC, scipy.optimize._moduleTNC, scipy.optimize._slsqplib, scipy.optimize._minpack, scipy.optimize._lsq.givens_elimination, scipy.optimize._zeros, scipy._lib._uarray._uarray, scipy.linalg._decomp_interpolative, scipy.optimize._bglu_dense, scipy.optimize._lsap, scipy.optimize._direct, scipy.integrate._odepack, scipy.integrate._quadpack, scipy.integrate._vode, scipy.integrate._dop, scipy.interpolate._fitpack, scipy.interpolate._dfitpack, scipy.interpolate._dierckx, scipy.interpolate._ppoly, scipy.interpolate._interpnd, scipy.interpolate._rbfinterp_pythran, scipy.interpolate._rgi_cython, scipy.special.cython_special, scipy.stats._stats, scipy.stats._biasedurn, scipy.stats._stats_pythran, scipy.stats._levy_stable.levyst, scipy.stats._ansari_swilk_statistics, scipy.sparse.csgraph._tools, scipy.sparse.csgraph._shortest_path, scipy.sparse.csgraph._traversal, scipy.sparse.csgraph._min_spanning_tree, scipy.sparse.csgraph._flow, scipy.sparse.csgraph._matching, scipy.sparse.csgraph._reordering, scipy.stats._sobol, scipy.stats._qmc_cy, scipy.stats._rcont.rcont, scipy.stats._qmvnt_cy, scipy.ndimage._nd_image, scipy.ndimage._rank_filter_1d, _ni_label, scipy.ndimage._ni_label, pandas._libs._cyutility, pandas._libs.tslibs.ccalendar, pandas._libs.tslibs.np_datetime, pandas._libs.tslibs.dtypes, pandas._libs.tslibs.base, pandas._libs.tslibs.nattype, pandas._libs.tslibs.timezones, pandas._libs.properties, pandas._libs.tslibs.fields, pandas._libs.tslibs.timedeltas, pandas._libs.tslibs.tzconversion, pandas._libs.tslibs.timestamps, pandas._libs.tslibs.offsets, pandas._libs.tslibs.strptime, pandas._libs.tslibs.parsing, pandas._libs.tslibs.conversion, pandas._libs.tslibs.period, pandas._libs.tslibs.vectorized, pandas._libs.ops_dispatch, pandas._libs.missing, pandas._libs.hashtable, pandas._libs.algos, pandas._libs.interval, pandas._libs.lib, pandas._libs.ops, pandas._libs.hashing, pandas._libs.arrays, pandas._libs.tslib, pandas._libs.sparse, pandas._libs.internals, pandas._libs.indexing, pandas._libs.index, pandas._libs.writers, pandas._libs.join, pandas._libs.window.aggregations, pandas._libs.window.indexers, pandas._libs.reshape, pandas._libs.groupby, pandas._libs.json, pandas._libs.parsers, pandas._libs.testing, sklearn._cyutility, sklearn.utils._isfinite, sklearn.utils.sparsefuncs_fast, sklearn.utils.murmurhash, sklearn.utils._openmp_helpers, sklearn.metrics.cluster._expected_mutual_info_fast, sklearn.metrics._dist_metrics, sklearn.metrics._pairwise_distances_reduction._datasets_pair, sklearn.utils._cython_blas, sklearn.metrics._pairwise_distances_reduction._base, sklearn.metrics._pairwise_distances_reduction._middle_term_computer, sklearn.utils._heap, sklearn.utils._sorting, sklearn.metrics._pairwise_distances_reduction._argkmin, sklearn.metrics._pairwise_distances_reduction._argkmin_classmode, sklearn.utils._vector_sentinel, sklearn.metrics._pairwise_distances_reduction._radius_neighbors, sklearn.metrics._pairwise_distances_reduction._radius_neighbors_classmode, sklearn.metrics._pairwise_fast, sklearn.preprocessing._csr_polynomial_expansion, sklearn.preprocessing._target_encoder_fast, sklearn.utils._fast_dict, sklearn.cluster._hierarchical_fast, sklearn.cluster._k_means_common, sklearn.cluster._k_means_elkan, sklearn.cluster._k_means_lloyd, sklearn.cluster._k_means_minibatch, sklearn.cluster._dbscan_inner, sklearn.neighbors._partition_nodes, sklearn.neighbors._ball_tree, sklearn.neighbors._kd_tree, sklearn.utils.arrayfuncs, sklearn.utils._random, sklearn.utils._seq_dataset, sklearn.linear_model._cd_fast, _loss, sklearn._loss._loss, sklearn.linear_model._sag_fast, sklearn.svm._liblinear, sklearn.svm._libsvm, sklearn.svm._libsvm_sparse, sklearn.utils._weight_vector, sklearn.linear_model._sgd_fast, sklearn.decomposition._online_lda_fast, sklearn.decomposition._cdnmf_fast, sklearn.cluster._hdbscan._tree, sklearn.cluster._hdbscan._linkage, sklearn.cluster._hdbscan._reachability, sklearn._isotonic, sklearn.tree._utils, sklearn.tree._tree, sklearn.tree._partitioner, sklearn.tree._splitter, sklearn.tree._criterion, sklearn.neighbors._quad_tree, sklearn.manifold._barnes_hut_tsne, sklearn.manifold._utils, PySide6.QtDataVisualization, h5py._errors, h5py.defs, h5py._objects, h5py.h5, h5py.utils, h5py.h5t, h5py.h5s, h5py.h5ac, h5py.h5p, h5py.h5r, h5py._npystrings, h5py._proxy, h5py._conv, h5py.h5z, h5py.h5a, h5py.h5d, h5py.h5ds, h5py.h5g, h5py.h5i, h5py.h5o, h5py.h5f, h5py.h5fd, h5py.h5pl, h5py.h5l, h5py._selector, jaxlib.cpu_feature_guard, PIL._imaging, kiwisolver._cext, scipy.io.matlab._mio_utils, scipy.io.matlab._streams, scipy.io.matlab._mio5_utils, scipy.signal._sigtools, scipy.signal._max_len_seq_inner, scipy.signal._upfirdn_apply, scipy.signal._spline, scipy.signal._sosfilt, scipy.signal._peak_finding_utils, scipy.fftpack.convolve, fontTools.misc.bezierTools, fontTools.varLib.iup, PIL._imagingmath (total: 245)

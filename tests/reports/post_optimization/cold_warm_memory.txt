@@ -1,0 +1,72 @@
+17:45:52.762 INFO     utils.logging_config | XPCS Viewer vunknown logging initialized
+17:45:52.921 INFO     fileIO.hdf_reader    | HDF5ConnectionPool initialized: max_size=25, health_check_interval=180.0s
+17:45:53.742 INFO     plothandler.qt_signa | Configured PyQtGraph for Qt compatibility
+17:45:53.771 INFO     utils.logging_config | === System Information ===
+17:45:53.789 INFO     utils.logging_config | Platform: macOS-26.3-arm64-arm-64bit-Mach-O
+17:45:53.789 INFO     utils.logging_config | Python: 3.13.9 (main, Oct 14 2025, 21:10:40) [Clang 20.1.4 ]
+17:45:53.789 INFO     utils.logging_config | Working directory: /Users/b80985/Projects/xpcsviewer
+17:45:53.789 INFO     utils.logging_config | Qt (via qtpy): 6.10.2
+17:45:53.789 INFO     utils.logging_config | NumPy: 2.3.5
+17:45:53.789 INFO     utils.logging_config | SciPy: 1.17.0
+17:45:53.789 INFO     utils.logging_config | === End System Information ===
+17:45:53.791 INFO     tests                | XPCS Viewer test package initialized
+============================= test session starts ==============================
+platform darwin -- Python 3.13.9, pytest-9.0.2, pluggy-1.6.0 -- /Users/b80985/Projects/xpcsviewer/.venv/bin/python3
+cachedir: .pytest_cache
+benchmark: 5.2.3 (defaults: timer=time.perf_counter disable_gc=False min_rounds=5 min_time=0.000005 max_time=1.0 calibration_precision=10 warmup=False warmup_iterations=100000)
+metadata: {'Python': '3.13.9', 'Platform': 'macOS-26.3-arm64-arm-64bit-Mach-O', 'Packages': {'pytest': '9.0.2', 'pluggy': '1.6.0'}, 'Plugins': {'benchmark': '5.2.3', 'mock': '3.15.1', 'jaxtyping': '0.3.9', 'xdist': '3.8.0', 'timeout': '2.4.0', 'metadata': '3.1.1', 'html': '4.2.0', 'hypothesis': '6.151.9', 'qt': '4.5.0', 'sugar': '1.1.1', 'cov': '7.0.0'}}
+hypothesis profile 'default'
+PySide6 6.10.2 -- Qt runtime 6.10.2 -- Qt compiled 6.10.2
+rootdir: /Users/b80985/Projects/xpcsviewer
+configfile: pyproject.toml
+plugins: benchmark-5.2.3, mock-3.15.1, jaxtyping-0.3.9, xdist-3.8.0, timeout-2.4.0, metadata-3.1.1, html-4.2.0, hypothesis-6.151.9, qt-4.5.0, sugar-1.1.1, cov-7.0.0
+timeout: 300.0s
+timeout method: thread
+timeout func_only: False
+collecting ... collected 29 items / 20 deselected / 9 selected
+
+tests/benchmarks/performance/test_hotpath_baseline.py::TestQmapBaseline::test_qmap_transmission_cold_warm
+  Q-map 512x512 cold: 134.8ms
+  Q-map 512x512 warm: 4.28ms +/- 0.73ms
+PASSED
+tests/benchmarks/performance/test_hotpath_baseline.py::TestQmapBaseline::test_qmap_transmission_memory
+  Q-map 512x512 peak memory: 12.02 MB
+PASSED
+tests/benchmarks/performance/test_hotpath_baseline.py::TestTwotimeBaseline::test_c2_clean_memory
+  C2 clean 500x500 peak memory: 5.22 MB
+PASSED
+tests/benchmarks/performance/test_hotpath_baseline.py::TestG2VectorizedBaseline::test_ensemble_statistics_memory
+  G2 ensemble stats peak memory: 1.67 MB
+PASSED
+tests/benchmarks/performance/test_hotpath_baseline.py::TestG2VectorizedBaseline::test_g2_interpolation_cold_warm
+  G2 interp cold: 354.5ms
+  G2 interp warm: 0.43ms +/- 0.02ms
+PASSED
+tests/benchmarks/performance/test_hotpath_baseline.py::TestNLSQBaseline::test_nlsq_cold_warm 17:45:57.504 WARNING  fitting.nlsq         | nlsq_optimize completed in 1830.06ms
+
+  NLSQ single_exp cold: 1830.3ms
+  NLSQ single_exp warm: 463.0ms +/- 2.1ms
+PASSED
+tests/benchmarks/performance/test_hotpath_baseline.py::TestNLSQBaseline::test_nlsq_memory 17:46:01.737 WARNING  fitting.nlsq         | nlsq_optimize completed in 809.70ms
+
+  NLSQ single_exp peak memory: 1.08 MB
+PASSED
+tests/benchmarks/performance/test_hotpath_baseline.py::TestFFTCacheBaseline::test_fft_memory
+  FFT 10k frames peak memory: 0.5224 MB
+PASSED
+tests/benchmarks/performance/test_hotpath_baseline.py::TestFFTCacheBaseline::test_saxs_log_memory
+  SAXS log 512x512 peak memory: 4.25 MB
+PASSED
+
+============================= slowest 10 durations =============================
+5.25s call     tests/benchmarks/performance/test_hotpath_baseline.py::TestNLSQBaseline::test_nlsq_cold_warm
+0.90s call     tests/benchmarks/performance/test_hotpath_baseline.py::TestNLSQBaseline::test_nlsq_memory
+0.43s call     tests/benchmarks/performance/test_hotpath_baseline.py::TestG2VectorizedBaseline::test_g2_interpolation_cold_warm
+0.28s call     tests/benchmarks/performance/test_hotpath_baseline.py::TestQmapBaseline::test_qmap_transmission_cold_warm
+0.10s call     tests/benchmarks/performance/test_hotpath_baseline.py::TestFFTCacheBaseline::test_saxs_log_memory
+0.09s teardown tests/benchmarks/performance/test_hotpath_baseline.py::TestNLSQBaseline::test_nlsq_cold_warm
+0.09s teardown tests/benchmarks/performance/test_hotpath_baseline.py::TestNLSQBaseline::test_nlsq_memory
+0.09s teardown tests/benchmarks/performance/test_hotpath_baseline.py::TestFFTCacheBaseline::test_fft_memory
+0.09s call     tests/benchmarks/performance/test_hotpath_baseline.py::TestFFTCacheBaseline::test_fft_memory
+0.09s teardown tests/benchmarks/performance/test_hotpath_baseline.py::TestFFTCacheBaseline::test_saxs_log_memory
+======================= 9 passed, 20 deselected in 8.34s =======================

@@ -1,0 +1,95 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.13.9, pytest-9.0.2, pluggy-1.6.0 -- /Users/b80985/Projects/xpcsviewer/.venv/bin/python3
+cachedir: .pytest_cache
+benchmark: 5.2.3 (defaults: timer=time.perf_counter disable_gc=False min_rounds=5 min_time=0.000005 max_time=1.0 calibration_precision=10 warmup=False warmup_iterations=100000)
+metadata: {'Python': '3.13.9', 'Platform': 'macOS-26.3-arm64-arm-64bit-Mach-O', 'Packages': {'pytest': '9.0.2', 'pluggy': '1.6.0'}, 'Plugins': {'benchmark': '5.2.3', 'mock': '3.15.1', 'jaxtyping': '0.3.9', 'xdist': '3.8.0', 'timeout': '2.4.0', 'metadata': '3.1.1', 'html': '4.2.0', 'hypothesis': '6.151.9', 'qt': '4.5.0', 'sugar': '1.1.1', 'cov': '7.0.0'}}
+hypothesis profile 'default'
+PySide6 6.10.2 -- Qt runtime 6.10.2 -- Qt compiled 6.10.2
+rootdir: /Users/b80985/Projects/xpcsviewer
+configfile: pyproject.toml
+plugins: benchmark-5.2.3, mock-3.15.1, jaxtyping-0.3.9, xdist-3.8.0, timeout-2.4.0, metadata-3.1.1, html-4.2.0, hypothesis-6.151.9, qt-4.5.0, sugar-1.1.1, cov-7.0.0
+timeout: 300.0s
+timeout method: thread
+timeout func_only: False
+collecting ... collected 67 items
+
+tests/jax_migration/numerical/test_cpu_gpu_equivalence.py::TestCPUGPUNumericalEquivalence::test_basic_array_operations_equivalence SKIPPED [  1%]
+tests/jax_migration/numerical/test_cpu_gpu_equivalence.py::TestCPUGPUNumericalEquivalence::test_arctan2_equivalence SKIPPED [  2%]
+tests/jax_migration/numerical/test_cpu_gpu_equivalence.py::TestCPUGPUNumericalEquivalence::test_hypot_equivalence SKIPPED [  4%]
+tests/jax_migration/numerical/test_cpu_gpu_equivalence.py::TestCPUGPUNumericalEquivalence::test_meshgrid_equivalence SKIPPED [  5%]
+tests/jax_migration/numerical/test_cpu_gpu_equivalence.py::TestQMapLikeComputation::test_qmap_computation_equivalence SKIPPED [  7%]
+tests/jax_migration/numerical/test_cpu_gpu_equivalence.py::TestBackendAbstractionEquivalence::test_numpy_jax_backend_equivalence PASSED [  8%]
+tests/jax_migration/numerical/test_cpu_gpu_equivalence.py::TestBackendAbstractionEquivalence::test_statistical_operations_equivalence PASSED [ 10%]
+tests/jax_migration/numerical/test_fitting_equivalence.py::TestModelFunctionEquivalence::test_single_exp_func_matches_reference PASSED [ 11%]
+tests/jax_migration/numerical/test_fitting_equivalence.py::TestModelFunctionEquivalence::test_stretched_exp_func_matches_reference PASSED [ 13%]
+tests/jax_migration/numerical/test_fitting_equivalence.py::TestModelFunctionEquivalence::test_double_exp_func_matches_reference PASSED [ 14%]
+tests/jax_migration/numerical/test_fitting_equivalence.py::TestModelFunctionEquivalence::test_power_law_func_matches_reference PASSED [ 16%]
+tests/jax_migration/numerical/test_fitting_equivalence.py::TestNLSQEquivalence::test_nlsq_matches_scipy_single_exp PASSED [ 17%]
+tests/jax_migration/numerical/test_fitting_equivalence.py::TestNLSQEquivalence::test_nlsq_recovers_true_parameters PASSED [ 19%]
+tests/jax_migration/numerical/test_fitting_equivalence.py::TestChiSquaredEquivalence::test_chi_squared_calculation PASSED [ 20%]
+tests/jax_migration/numerical/test_fitting_equivalence.py::TestCovarianceEquivalence::test_covariance_shape PASSED [ 22%]
+tests/jax_migration/numerical/test_fitting_equivalence.py::TestCovarianceEquivalence::test_covariance_is_symmetric PASSED [ 23%]
+tests/jax_migration/numerical/test_fitting_equivalence.py::TestCovarianceEquivalence::test_covariance_diagonal_is_positive PASSED [ 25%]
+tests/jax_migration/numerical/test_partition_equivalence.py::TestPartitionNumericalEquivalence::test_linear_partition_numpy_baseline PASSED [ 26%]
+tests/jax_migration/numerical/test_partition_equivalence.py::TestPartitionNumericalEquivalence::test_logarithmic_partition_numpy_baseline PASSED [ 28%]
+tests/jax_migration/numerical/test_partition_equivalence.py::TestPartitionNumericalEquivalence::test_phi_partition_numpy_baseline PASSED [ 29%]
+tests/jax_migration/numerical/test_partition_equivalence.py::TestPartitionNumericalEquivalence::test_linear_partition_jax_equivalence PASSED [ 31%]
+tests/jax_migration/numerical/test_partition_equivalence.py::TestPartitionNumericalEquivalence::test_logarithmic_partition_jax_equivalence PASSED [ 32%]
+tests/jax_migration/numerical/test_partition_equivalence.py::TestPartitionNumericalEquivalence::test_phi_partition_jax_equivalence PASSED [ 34%]
+tests/jax_migration/numerical/test_partition_equivalence.py::TestPartitionNumericalEquivalence::test_phi_partition_with_offset_jax_equivalence PASSED [ 35%]
+tests/jax_migration/numerical/test_partition_equivalence.py::TestPartitionNumericalEquivalence::test_phi_partition_with_symmetry_jax_equivalence PASSED [ 37%]
+tests/jax_migration/numerical/test_partition_equivalence.py::TestCombinePartitionsEquivalence::test_combine_partitions_numpy_baseline PASSED [ 38%]
+tests/jax_migration/numerical/test_partition_equivalence.py::TestCombinePartitionsEquivalence::test_combine_partitions_jax_equivalence PASSED [ 40%]
+tests/jax_migration/numerical/test_partition_equivalence.py::TestCombinePartitionsEquivalence::test_partition_output_is_numpy PASSED [ 41%]
+tests/jax_migration/numerical/test_partition_equivalence.py::TestCombinePartitionsEquivalence::test_partition_output_is_numpy_with_jax PASSED [ 43%]
+tests/jax_migration/numerical/test_partition_equivalence.py::TestPartitionNumericStability::test_partition_with_sparse_mask PASSED [ 44%]
+tests/jax_migration/numerical/test_partition_equivalence.py::TestPartitionNumericStability::test_partition_with_extreme_values PASSED [ 46%]
+tests/jax_migration/numerical/test_partition_equivalence.py::TestPartitionNumericStability::test_partition_consistency_across_sizes PASSED [ 47%]
+tests/jax_migration/numerical/test_qmap_equivalence.py::TestQmapNumericalEquivalence::test_transmission_qmap_numpy_baseline PASSED [ 49%]
+tests/jax_migration/numerical/test_qmap_equivalence.py::TestQmapNumericalEquivalence::test_reflection_qmap_numpy_baseline PASSED [ 50%]
+tests/jax_migration/numerical/test_qmap_equivalence.py::TestQmapNumericalEquivalence::test_transmission_qmap_jax_equivalence PASSED [ 52%]
+tests/jax_migration/numerical/test_qmap_equivalence.py::TestQmapNumericalEquivalence::test_reflection_qmap_jax_equivalence PASSED [ 53%]
+tests/jax_migration/numerical/test_qmap_equivalence.py::TestQmapNumericalEquivalence::test_qmap_beam_center_variations PASSED [ 55%]
+tests/jax_migration/numerical/test_qmap_equivalence.py::TestQmapNumericalEquivalence::test_qmap_detector_distance_variations PASSED [ 56%]
+tests/jax_migration/numerical/test_qmap_equivalence.py::TestQmapNumericalEquivalence::test_qmap_energy_variations PASSED [ 58%]
+tests/jax_migration/numerical/test_qmap_equivalence.py::TestQmapNumericalEquivalence::test_qmap_large_array PASSED [ 59%]
+tests/jax_migration/numerical/test_qmap_equivalence.py::TestQmapNumericalEquivalence::test_qmap_output_is_numpy PASSED [ 61%]
+tests/jax_migration/numerical/test_qmap_equivalence.py::TestQmapNumericalEquivalence::test_qmap_output_is_numpy_with_jax PASSED [ 62%]
+tests/jax_migration/precision/test_angular_computations.py::TestArctan2Precision::test_arctan2_quadrant_boundaries PASSED [ 64%]
+tests/jax_migration/precision/test_angular_computations.py::TestArctan2Precision::test_arctan2_small_angles PASSED [ 65%]
+tests/jax_migration/precision/test_angular_computations.py::TestThetaPhiPrecision::test_phi_map_full_circle PASSED [ 67%]
+tests/jax_migration/precision/test_angular_computations.py::TestThetaPhiPrecision::test_q_map_increases_from_center PASSED [ 68%]
+tests/jax_migration/precision/test_angular_computations.py::TestSinCosPrecision::test_sin_cos_identity PASSED [ 70%]
+tests/jax_migration/precision/test_angular_computations.py::TestSinCosPrecision::test_angle_to_q_precision PASSED [ 71%]
+tests/jax_migration/precision/test_angular_computations.py::TestHypotPrecision::test_hypot_pythagorean PASSED [ 73%]
+tests/jax_migration/precision/test_angular_computations.py::TestHypotPrecision::test_hypot_small_values PASSED [ 74%]
+tests/jax_migration/precision/test_angular_computations.py::TestHypotPrecision::test_hypot_large_values PASSED [ 76%]
+tests/jax_migration/precision/test_float32_vs_float64.py::TestFloat64Default::test_jax_x64_enabled PASSED [ 77%]
+tests/jax_migration/precision/test_float32_vs_float64.py::TestFloat64Default::test_linspace_produces_float64 PASSED [ 79%]
+tests/jax_migration/precision/test_float32_vs_float64.py::TestFloat64Default::test_array_creation_float64 PASSED [ 80%]
+tests/jax_migration/precision/test_float32_vs_float64.py::TestFloat32VsFloat64Precision::test_trigonometric_precision PASSED [ 82%]
+tests/jax_migration/precision/test_float32_vs_float64.py::TestFloat32VsFloat64Precision::test_cumulative_sum_precision PASSED [ 83%]
+tests/jax_migration/precision/test_float32_vs_float64.py::TestFloat32VsFloat64Precision::test_exponential_precision PASSED [ 85%]
+tests/jax_migration/precision/test_float32_vs_float64.py::TestQMapPrecision::test_qmap_precision_float64 PASSED [ 86%]
+tests/jax_migration/precision/test_float32_vs_float64.py::TestQMapPrecision::test_qmap_small_angle_precision PASSED [ 88%]
+tests/jax_migration/precision/test_float32_vs_float64.py::TestFittingPrecision::test_nlsq_residual_precision PASSED [ 89%]
+tests/jax_migration/precision/test_qmap_tolerance.py::TestQMapTolerance::test_qmap_numpy_jax_equivalence PASSED [ 91%]
+tests/jax_migration/precision/test_qmap_tolerance.py::TestQMapTolerance::test_qmap_reproducibility PASSED [ 92%]
+tests/jax_migration/precision/test_qmap_tolerance.py::TestQMapTolerance::test_qmap_different_parameters PASSED [ 94%]
+tests/jax_migration/precision/test_qmap_tolerance.py::TestPartitionTolerance::test_partition_numpy_jax_equivalence PASSED [ 95%]
+tests/jax_migration/precision/test_qmap_tolerance.py::TestWavelengthPrecision::test_energy_to_wavelength_precision PASSED [ 97%]
+tests/jax_migration/precision/test_qmap_tolerance.py::TestWavelengthPrecision::test_qmap_wavelength_consistency PASSED [ 98%]
+tests/jax_migration/precision/test_qmap_tolerance.py::TestPixelPositionPrecision::test_pixel_grid_precision PASSED [100%]
+
+============================= slowest 10 durations =============================
+6.55s call     tests/jax_migration/precision/test_float32_vs_float64.py::TestFittingPrecision::test_nlsq_residual_precision
+4.33s call     tests/jax_migration/numerical/test_fitting_equivalence.py::TestNLSQEquivalence::test_nlsq_matches_scipy_single_exp
+2.29s call     tests/jax_migration/numerical/test_partition_equivalence.py::TestPartitionNumericStability::test_partition_consistency_across_sizes
+1.49s call     tests/jax_migration/numerical/test_fitting_equivalence.py::TestCovarianceEquivalence::test_covariance_is_symmetric
+1.27s call     tests/jax_migration/numerical/test_fitting_equivalence.py::TestChiSquaredEquivalence::test_chi_squared_calculation
+1.25s call     tests/jax_migration/numerical/test_fitting_equivalence.py::TestNLSQEquivalence::test_nlsq_recovers_true_parameters
+1.21s call     tests/jax_migration/numerical/test_fitting_equivalence.py::TestCovarianceEquivalence::test_covariance_diagonal_is_positive
+1.07s call     tests/jax_migration/numerical/test_fitting_equivalence.py::TestCovarianceEquivalence::test_covariance_shape
+1.02s call     tests/jax_migration/numerical/test_partition_equivalence.py::TestPartitionNumericalEquivalence::test_linear_partition_jax_equivalence
+0.61s call     tests/jax_migration/numerical/test_partition_equivalence.py::TestPartitionNumericalEquivalence::test_logarithmic_partition_jax_equivalence
+======================== 62 passed, 5 skipped in 50.74s ========================

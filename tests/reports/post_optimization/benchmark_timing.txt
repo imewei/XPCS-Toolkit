@@ -1,0 +1,80 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.13.9, pytest-9.0.2, pluggy-1.6.0 -- /Users/b80985/Projects/xpcsviewer/.venv/bin/python3
+cachedir: .pytest_cache
+benchmark: 5.2.3 (defaults: timer=time.perf_counter disable_gc=False min_rounds=5 min_time=0.000005 max_time=1.0 calibration_precision=10 warmup=False warmup_iterations=100000)
+metadata: {'Python': '3.13.9', 'Platform': 'macOS-26.3-arm64-arm-64bit-Mach-O', 'Packages': {'pytest': '9.0.2', 'pluggy': '1.6.0'}, 'Plugins': {'benchmark': '5.2.3', 'mock': '3.15.1', 'jaxtyping': '0.3.9', 'xdist': '3.8.0', 'timeout': '2.4.0', 'metadata': '3.1.1', 'html': '4.2.0', 'hypothesis': '6.151.9', 'qt': '4.5.0', 'sugar': '1.1.1', 'cov': '7.0.0'}}
+hypothesis profile 'default'
+PySide6 6.10.2 -- Qt runtime 6.10.2 -- Qt compiled 6.10.2
+rootdir: /Users/b80985/Projects/xpcsviewer
+configfile: pyproject.toml
+plugins: benchmark-5.2.3, mock-3.15.1, jaxtyping-0.3.9, xdist-3.8.0, timeout-2.4.0, metadata-3.1.1, html-4.2.0, hypothesis-6.151.9, qt-4.5.0, sugar-1.1.1, cov-7.0.0
+timeout: 300.0s
+timeout method: thread
+timeout func_only: False
+collecting ... collected 29 items / 1 deselected / 28 selected
+
+tests/benchmarks/performance/test_hotpath_baseline.py::TestQmapBaseline::test_qmap_transmission_correctness SKIPPED [  3%]
+tests/benchmarks/performance/test_hotpath_baseline.py::TestQmapBaseline::test_qmap_transmission_timing PASSED [  7%]
+tests/benchmarks/performance/test_hotpath_baseline.py::TestQmapBaseline::test_qmap_transmission_cold_warm SKIPPED [ 10%]
+tests/benchmarks/performance/test_hotpath_baseline.py::TestQmapBaseline::test_qmap_transmission_memory SKIPPED [ 14%]
+tests/benchmarks/performance/test_hotpath_baseline.py::TestTwotimeBaseline::test_c2_clean_nan_to_num_correctness SKIPPED [ 17%]
+tests/benchmarks/performance/test_hotpath_baseline.py::TestTwotimeBaseline::test_c2_clean_nan_to_num_timing PASSED [ 21%]
+tests/benchmarks/performance/test_hotpath_baseline.py::TestTwotimeBaseline::test_c2_clean_interpolate_timing PASSED [ 25%]
+tests/benchmarks/performance/test_hotpath_baseline.py::TestTwotimeBaseline::test_c2_clean_memory SKIPPED [ 28%]
+tests/benchmarks/performance/test_hotpath_baseline.py::TestG2VectorizedBaseline::test_baseline_correction_timing PASSED [ 32%]
+tests/benchmarks/performance/test_hotpath_baseline.py::TestG2VectorizedBaseline::test_batch_normalization_timing PASSED [ 35%]
+tests/benchmarks/performance/test_hotpath_baseline.py::TestG2VectorizedBaseline::test_ensemble_statistics_timing PASSED [ 39%]
+tests/benchmarks/performance/test_hotpath_baseline.py::TestG2VectorizedBaseline::test_ensemble_statistics_memory SKIPPED [ 42%]
+tests/benchmarks/performance/test_hotpath_baseline.py::TestG2VectorizedBaseline::test_g2_interpolation_jax_timing PASSED [ 46%]
+tests/benchmarks/performance/test_hotpath_baseline.py::TestG2VectorizedBaseline::test_g2_interpolation_cold_warm SKIPPED [ 50%]
+tests/benchmarks/performance/test_hotpath_baseline.py::TestSaxsBaseline::test_q_binning_correctness SKIPPED [ 53%]
+tests/benchmarks/performance/test_hotpath_baseline.py::TestSaxsBaseline::test_q_binning_timing PASSED [ 57%]
+tests/benchmarks/performance/test_hotpath_baseline.py::TestSaxsBaseline::test_background_subtraction_timing PASSED [ 60%]
+tests/benchmarks/performance/test_hotpath_baseline.py::TestSaxsBaseline::test_batch_analysis_timing PASSED [ 64%]
+tests/benchmarks/performance/test_hotpath_baseline.py::TestSaxsBaseline::test_q_binning_large_detector PASSED [ 67%]
+tests/benchmarks/performance/test_hotpath_baseline.py::TestNLSQBaseline::test_nlsq_single_exp_correctness SKIPPED [ 71%]
+tests/benchmarks/performance/test_hotpath_baseline.py::TestNLSQBaseline::test_nlsq_single_exp_timing PASSED [ 75%]
+tests/benchmarks/performance/test_hotpath_baseline.py::TestNLSQBaseline::test_nlsq_cold_warm SKIPPED [ 78%]
+tests/benchmarks/performance/test_hotpath_baseline.py::TestNLSQBaseline::test_nlsq_memory SKIPPED [ 82%]
+tests/benchmarks/performance/test_hotpath_baseline.py::TestFFTCacheBaseline::test_fft_computation_timing PASSED [ 85%]
+tests/benchmarks/performance/test_hotpath_baseline.py::TestFFTCacheBaseline::test_fft_memory SKIPPED [ 89%]
+tests/benchmarks/performance/test_hotpath_baseline.py::TestFFTCacheBaseline::test_fft_large_timing PASSED [ 92%]
+tests/benchmarks/performance/test_hotpath_baseline.py::TestFFTCacheBaseline::test_saxs_log_computation_timing PASSED [ 96%]
+tests/benchmarks/performance/test_hotpath_baseline.py::TestFFTCacheBaseline::test_saxs_log_memory SKIPPED [100%]
+
+
+----------------------------------------------------------- benchmark: 15 tests -----------------------------------------------------------
+Name (time in us)                              Mean                StdDev                     Min                     Max            Rounds
+-------------------------------------------------------------------------------------------------------------------------------------------
+test_background_subtraction_timing           6.1037 (1.0)          2.3842 (1.0)            5.6660 (1.0)          140.9580 (1.27)      19819
+test_baseline_correction_timing              9.8272 (1.61)         2.4606 (1.03)           9.1250 (1.61)         111.0000 (1.0)       38278
+test_batch_normalization_timing             68.8952 (11.29)       10.4068 (4.36)          64.6250 (11.41)        306.2080 (2.76)       7740
+test_batch_analysis_timing                  70.2981 (11.52)       12.7936 (5.37)          66.0420 (11.66)        433.2080 (3.90)       6013
+test_fft_computation_timing                142.7271 (23.38)       17.7249 (7.43)         132.9170 (23.46)        761.1250 (6.86)       4623
+test_q_binning_timing                      382.4888 (62.66)       40.6611 (17.05)        356.3750 (62.90)      1,045.7080 (9.42)       2226
+test_g2_interpolation_jax_timing           483.6418 (79.24)      128.7093 (53.98)        392.2920 (69.24)        702.6250 (6.33)          5
+test_ensemble_statistics_timing            990.1844 (162.23)      75.0345 (31.47)        917.5000 (161.93)     1,783.5000 (16.07)       862
+test_saxs_log_computation_timing         1,093.0958 (179.09)      57.1146 (23.96)      1,036.3750 (182.91)     1,794.7910 (16.17)       932
+test_fft_large_timing                    1,151.8569 (188.71)      60.6617 (25.44)      1,069.0410 (188.68)     1,489.9170 (13.42)       611
+test_qmap_transmission_timing            4,928.1408 (807.40)   2,159.9808 (905.96)     3,381.0830 (596.73)    10,043.9170 (90.49)         8
+test_c2_clean_nan_to_num_timing          8,681.7998 (>1000.0)  2,018.6393 (846.68)     7,464.2920 (>1000.0)   22,365.8750 (201.49)       67
+test_c2_clean_interpolate_timing         9,911.2418 (>1000.0)  4,788.4242 (>1000.0)    6,313.5410 (>1000.0)   16,068.1250 (144.76)        5
+test_q_binning_large_detector           48,759.5647 (>1000.0)  2,289.1031 (960.12)    44,345.3750 (>1000.0)   53,720.6670 (483.97)       20
+test_nlsq_single_exp_timing            468,253.0170 (>1000.0)  7,115.2658 (>1000.0)  460,847.7090 (>1000.0)  480,007.4170 (>1000.0)       5
+-------------------------------------------------------------------------------------------------------------------------------------------
+
+Legend:
+  Outliers: 1 Standard Deviation from Mean; 1.5 IQR (InterQuartile Range) from 1st Quartile and 3rd Quartile.
+  OPS: Operations Per Second, computed as 1 / Mean
+============================= slowest 10 durations =============================
+4.75s call     tests/benchmarks/performance/test_hotpath_baseline.py::TestNLSQBaseline::test_nlsq_single_exp_timing
+1.18s call     tests/benchmarks/performance/test_hotpath_baseline.py::TestQmapBaseline::test_qmap_transmission_timing
+1.08s call     tests/benchmarks/performance/test_hotpath_baseline.py::TestSaxsBaseline::test_q_binning_large_detector
+1.02s call     tests/benchmarks/performance/test_hotpath_baseline.py::TestFFTCacheBaseline::test_saxs_log_computation_timing
+0.86s call     tests/benchmarks/performance/test_hotpath_baseline.py::TestG2VectorizedBaseline::test_ensemble_statistics_timing
+0.85s call     tests/benchmarks/performance/test_hotpath_baseline.py::TestSaxsBaseline::test_q_binning_timing
+0.71s call     tests/benchmarks/performance/test_hotpath_baseline.py::TestFFTCacheBaseline::test_fft_large_timing
+0.66s call     tests/benchmarks/performance/test_hotpath_baseline.py::TestFFTCacheBaseline::test_fft_computation_timing
+0.61s call     tests/benchmarks/performance/test_hotpath_baseline.py::TestTwotimeBaseline::test_c2_clean_nan_to_num_timing
+0.54s call     tests/benchmarks/performance/test_hotpath_baseline.py::TestG2VectorizedBaseline::test_batch_normalization_timing
+================ 15 passed, 13 skipped, 1 deselected in 15.62s =================
