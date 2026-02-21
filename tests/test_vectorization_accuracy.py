@@ -364,13 +364,15 @@ class NumericalAccuracyValidator:
             q, intensity, q_min, q_max, num_bins
         )
 
-        # Compare non-zero bins
+        # Compare non-zero bins (relative tolerance for large-magnitude data)
         valid_mask = (binned_I_manual != 0) & (binned_I_vec != 0)
         if np.any(valid_mask):
-            max_diff = np.max(
-                np.abs(binned_I_manual[valid_mask] - binned_I_vec[valid_mask])
+            results[f"{case_name}_q_binning"] = np.allclose(
+                binned_I_manual[valid_mask],
+                binned_I_vec[valid_mask],
+                rtol=self.tolerance,
+                atol=self.tolerance,
             )
-            results[f"{case_name}_q_binning"] = max_diff < self.tolerance
         else:
             results[f"{case_name}_q_binning"] = True
 
