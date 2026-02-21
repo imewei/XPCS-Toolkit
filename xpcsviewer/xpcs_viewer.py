@@ -788,7 +788,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         """
         logger.debug(f"Theme changed to {theme}, refreshing plots")
         # Recolor SVG icons for the new theme
-        from xpcsviewer.gui.icons import clear_icon_cache, set_icon_color
+        from xpcsviewer.gui.icons import clear_icon_cache, get_icon, set_icon_color
 
         text_color = self.theme_manager.get_color("text_primary")
         set_icon_color(text_color)
