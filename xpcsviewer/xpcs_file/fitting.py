@@ -1,6 +1,10 @@
 """Fitting functions for XPCS analysis.
 
 This module provides fitting functions for G2 correlation analysis.
+
+These functions are JIT-traced by nlsq (a JAX-based curve fitting library),
+so they must use jax.numpy operations instead of numpy to avoid
+TracerArrayConversionError when nlsq traces them with JAX tracers.
 """
 
 from __future__ import annotations
@@ -8,6 +12,7 @@ from __future__ import annotations
 import os
 import re
 
+import jax.numpy as jnp
 import numpy as np
 
 
@@ -33,7 +38,7 @@ def single_exp_all(x, a, b, c, d):
     float or ndarray
         Computed value of the single exponential model.
     """
-    return a * np.exp(-2 * (x / b) ** c) + d
+    return a * jnp.exp(-2 * (x / b) ** c) + d
 
 
 def double_exp_all(x, a, b1, c1, d, b2, c2, f):
@@ -64,8 +69,8 @@ def double_exp_all(x, a, b1, c1, d, b2, c2, f):
     float or ndarray
         Computed value of the double exponential model.
     """
-    t1 = np.exp(-1 * (x / b1) ** c1) * f
-    t2 = np.exp(-1 * (x / b2) ** c2) * (1 - f)
+    t1 = jnp.exp(-1 * (x / b1) ** c1) * f
+    t2 = jnp.exp(-1 * (x / b2) ** c2) * (1 - f)
     return a * (t1 + t2) ** 2 + d
 
 
