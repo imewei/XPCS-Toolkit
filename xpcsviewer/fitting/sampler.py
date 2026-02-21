@@ -49,6 +49,7 @@ try:
     import numpyro
     import numpyro.distributions as dist
     from numpyro.infer import MCMC, NUTS
+    from numpyro.infer.initialization import init_to_value
 
     NUMPYRO_AVAILABLE = True
 except ImportError:
@@ -99,7 +100,23 @@ def _run_mcmc(
     config: SamplerConfig,
     init_params: dict[str, float] | None = None,
 ) -> tuple[MCMC, dict]:
-    """Run MCMC sampling with optional warm-start initialization."""
+    """Run MCMC sampling with optional warm-start initialization.
+
+    Parameters
+    ----------
+    model : callable
+        NumPyro model function
+    model_args : tuple
+        Positional arguments for the model
+    config : SamplerConfig
+        Sampler configuration
+    init_params : dict, optional
+        Initial parameter values in **constrained** (natural) space,
+        e.g. from NLSQ warm-start. Passed to NumPyro's
+        ``init_to_value`` which handles the constrained→unconstrained
+        transform internally and falls back to ``init_to_uniform``
+        for any sample sites not in ``init_params``.
+    """
     check_numpyro()
 
     # Set random seed
@@ -109,17 +126,37 @@ def _run_mcmc(
         logger.info(f"MCMC PRNG seed (user-specified): {seed}")
     else:
         # Use time-based seed for non-deterministic runs (BUG-020).
-        # Log the seed so results can be reproduced if needed.
+        # BUG-E fix: Store actual seed in config for reproducibility.
+        # Previously, the time-based seed was only logged but not stored,
+        # so FitResult.to_dict() exported random_seed=null.
         seed = int(time.time_ns() % 2**31)
         rng_key = jax.random.PRNGKey(seed)
         logger.info(f"MCMC PRNG seed (time-based): {seed}")
+        config.random_seed = seed
+
+    # BUG-A fix: Use init_to_value() for warm-start initialization.
+    # This accepts constrained (natural) values from NLSQ and handles
+    # the transform to unconstrained space internally. It also falls
+    # back to init_to_uniform for any sample sites not in init_params
+    # (e.g. 'sigma' when yerr is None).
+    #
+    # Previously, constrained NLSQ values were passed directly as
+    # init_params to mcmc.run(), but NUTS expects unconstrained values.
+    # This caused NUTS to start at exp(value) instead of value for
+    # LogNormal priors, making the warm-start ineffective.
+    if init_params is not None:
+        init_strategy = init_to_value(values=init_params)
+    else:
+        init_strategy = None  # Use NUTS default (init_to_uniform)
 
     # Configure NUTS sampler
-    kernel = NUTS(
-        model,
-        target_accept_prob=config.target_accept_prob,
-        max_tree_depth=config.max_tree_depth,
-    )
+    kernel_kwargs = {
+        "target_accept_prob": config.target_accept_prob,
+        "max_tree_depth": config.max_tree_depth,
+    }
+    if init_strategy is not None:
+        kernel_kwargs["init_strategy"] = init_strategy
+    kernel = NUTS(model, **kernel_kwargs)
 
     # Create MCMC instance
     mcmc = MCMC(
@@ -129,29 +166,10 @@ def _run_mcmc(
         num_chains=config.num_chains,
     )
 
-    # Run sampling
-    if init_params is not None:
-        # Convert init_params to JAX arrays with per-chain jitter (BUG-021).
-        # Broadcasting identical values to all chains makes R-hat diagnostics
-        # meaningless: chains start at the same point so R-hat is trivially 1.0.
-        # Instead, add small Gaussian jitter (0.01 * normal) so each chain
-        # starts from a distinct point while staying close to the warm-start.
-        init_params_jax = {}
-        # Split the rng_key into per-parameter subkeys for reproducible jitter
-        param_keys = list(init_params.keys())
-        subkeys = jax.random.split(rng_key, num=len(param_keys))
-        for subkey, k in zip(subkeys, param_keys):
-            v = init_params[k]
-            val = jnp.array(v)
-            if config.num_chains > 1:
-                shape = (config.num_chains,) + val.shape
-                # Add small Gaussian jitter per chain instead of broadcasting
-                jitter = 0.01 * jax.random.normal(subkey, shape=shape)
-                val = val + jitter
-            init_params_jax[k] = val
-        mcmc.run(rng_key, *model_args, init_params=init_params_jax)
-    else:
-        mcmc.run(rng_key, *model_args)
+    # BUG-D fix: Request num_steps to compute max_treedepth_reached.
+    # Previously hardcoded to 0 with the comment "NumPyro doesn't track
+    # this directly", but num_steps IS available via extra_fields.
+    mcmc.run(rng_key, *model_args, extra_fields=("num_steps",))
 
     return mcmc, mcmc.get_samples()
 
@@ -205,7 +223,7 @@ def _build_fit_result(
     arviz_data = az.from_numpyro(mcmc)
 
     # Get diagnostics
-    summary = az.summary(arviz_data, var_names=param_names)
+    summary = az.summary(arviz_data, var_names=param_names, round_to="none")
 
     # Extract diagnostics
     r_hat = {}
@@ -219,7 +237,22 @@ def _build_fit_result(
             ess_tail[name] = int(summary.loc[name, "ess_tail"])  # type: ignore
 
     # Count divergences
-    num_divergent = int(np.sum(mcmc.get_extra_fields()["diverging"]))
+    extra = mcmc.get_extra_fields()
+    num_divergent = int(np.sum(extra["diverging"]))
+
+    # BUG-D fix: Compute max_treedepth_reached from num_steps.
+    # Previously hardcoded to 0. NumPyro provides num_steps via
+    # extra_fields — steps hitting 2^max_tree_depth - 1 indicate
+    # the sampler exhausted its tree depth budget.
+    max_treedepth_reached = 0
+    if "num_steps" in extra and config is not None:
+        max_steps = 2**config.max_tree_depth - 1
+        max_treedepth_reached = int(np.sum(extra["num_steps"] >= max_steps))
+        if max_treedepth_reached > 0:
+            logger.warning(
+                f"{max_treedepth_reached} samples hit max_tree_depth="
+                f"{config.max_tree_depth}. Consider increasing max_tree_depth."
+            )
 
     # Compute BFMI per Technical Guidelines
     bfmi = compute_bfmi(arviz_data)
@@ -229,7 +262,7 @@ def _build_fit_result(
         ess_bulk=ess_bulk,
         ess_tail=ess_tail,
         divergences=num_divergent,
-        max_treedepth_reached=0,  # NumPyro doesn't track this directly
+        max_treedepth_reached=max_treedepth_reached,
         bfmi=bfmi,
     )
 
@@ -539,8 +572,10 @@ def run_stretched_exp_fit(
 def run_power_law_fit(
     q: ArrayLike,
     tau: ArrayLike | FitResult,
+    tau_err: ArrayLike | None = None,
     stability: Literal["auto", "check", False] = "auto",
     auto_bounds: bool = False,
+    bounds: dict[str, tuple[float, float]] | None = None,
     **kwargs,
 ) -> FitResult:
     """Run power law fit with NLSQ warm-start.
@@ -551,10 +586,17 @@ def run_power_law_fit(
         Q values
     tau : array_like or FitResult
         Relaxation times (or FitResult with tau samples)
+    tau_err : array_like, optional
+        Measurement uncertainties on tau values from G2 fitting
     stability : str, optional
         NLSQ stability mode: 'auto', 'check', or False (default: 'auto')
     auto_bounds : bool, optional
         Use NLSQ auto-bounds inference (default: False)
+    bounds : dict, optional
+        Override NLSQ warm-start bounds. Keys are parameter names
+        (``"tau0"``, ``"alpha"``), values are ``(min, max)`` tuples.
+        If ``None``, uses defaults: ``tau0=(1e-6, 1e6)``,
+        ``alpha=(0.0, 10.0)``.
     **kwargs
         Sampler configuration
 
@@ -576,17 +618,21 @@ def run_power_law_fit(
         )
 
     tau = np.asarray(tau)
-    tau_err = None
+    if tau_err is not None:
+        tau_err = np.asarray(tau_err)
 
     config = _extract_config(kwargs)
     param_names = ["tau0", "alpha"]
 
     # NLSQ warm-start with NLSQ 0.6.0 features
     logger.info("Running NLSQ warm-start for power law fit")
-    p0 = {"tau0": 1.0, "alpha": 2.0}
-    bounds = {
-        "tau0": (1e-6, 1e6),
-        "alpha": (0.0, 10.0),
+    default_bounds = {"tau0": (1e-6, 1e6), "alpha": (0.0, 10.0)}
+    if bounds is not None:
+        default_bounds.update(bounds)
+    bounds = default_bounds
+    p0 = {
+        "tau0": 1.0,
+        "alpha": np.clip(2.0, bounds["alpha"][0], bounds["alpha"][1]),
     }
 
     nlsq_result = nlsq_optimize(

@@ -16,7 +16,7 @@ Public API:
     fit_single_exp(x, y, yerr=None, **kwargs) -> FitResult
     fit_double_exp(x, y, yerr=None, **kwargs) -> FitResult
     fit_stretched_exp(x, y, yerr=None, **kwargs) -> FitResult
-    fit_power_law(q, tau, **kwargs) -> FitResult
+    fit_power_law(q, tau, tau_err=None, **kwargs) -> FitResult
     nlsq_fit(model_fn, x, y, yerr, p0, bounds, **kwargs) -> NLSQResult
     SamplerConfig
     FitResult
@@ -136,6 +136,7 @@ def fit_stretched_exp(
 def fit_power_law(
     q: ArrayLike,
     tau: ArrayLike | FitResult,
+    tau_err: ArrayLike | None = None,
     **kwargs,
 ) -> FitResult:
     """Fit power law Q-dependence of relaxation time.
@@ -148,6 +149,8 @@ def fit_power_law(
         Q values
     tau : array_like or FitResult
         Relaxation times (or FitResult with tau samples)
+    tau_err : array_like, optional
+        Measurement uncertainties on tau values from G2 fitting
     **kwargs
         Sampler configuration (see SamplerConfig)
 
@@ -158,7 +161,7 @@ def fit_power_law(
     """
     from .sampler import run_power_law_fit
 
-    return run_power_law_fit(q, tau, **kwargs)
+    return run_power_law_fit(q, tau, tau_err=tau_err, **kwargs)
 
 
 def nlsq_fit(

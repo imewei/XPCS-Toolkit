@@ -67,11 +67,10 @@ class BayesianFitWorker(BaseAsyncWorker):
         self.emit_status(f"Running Bayesian fit (Q={self.q_value:.4g})...")
 
         if self.context == "diffusion":
-            # fit_power_law(q, tau, **kwargs) — pass yerr as tau_err kwarg
-            kwargs = dict(self.sampler_kwargs)
-            if self.yerr is not None:
-                kwargs["tau_err"] = self.yerr
-            fit_result = self.fit_func(self.x, self.y, **kwargs)
+            # fit_power_law(q, tau, tau_err=..., **kwargs)
+            fit_result = self.fit_func(
+                self.x, self.y, tau_err=self.yerr, **self.sampler_kwargs
+            )
         else:
             # fit_single_exp / fit_double_exp: (x, y, yerr, **kwargs)
             fit_result = self.fit_func(self.x, self.y, self.yerr, **self.sampler_kwargs)

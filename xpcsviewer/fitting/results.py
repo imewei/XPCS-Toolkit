@@ -818,6 +818,16 @@ class FitResult:
     def get_hdi(self, param: str, prob: float = 0.94) -> tuple[float, float]:
         """Get highest density interval for parameter.
 
+        Uses ArviZ's ``az.hdi()`` for the true HDI (shortest interval
+        containing ``prob`` probability mass). Falls back to an equal-tailed
+        percentile interval when ArviZ is unavailable.
+
+        .. note::
+            For skewed posteriors (e.g. LogNormal tau), the true HDI can be
+            significantly narrower than the equal-tailed interval. The previous
+            implementation always used percentiles, which over-estimated
+            uncertainty for skewed parameters (BUG-C fix).
+
         Parameters
         ----------
         param : str
@@ -835,15 +845,25 @@ class FitResult:
 
         samples = self.samples[param]
 
-        # Simple percentile-based HDI approximation
-        alpha = 1 - prob
-        lower_pct = 100 * (alpha / 2)
-        upper_pct = 100 * (1 - alpha / 2)
+        # BUG-C fix: Use ArviZ for true HDI computation instead of
+        # equal-tailed percentile interval. For symmetric distributions
+        # they are identical; for skewed distributions (LogNormal tau),
+        # the HDI is up to ~35% narrower.
+        try:
+            import arviz as az
 
-        return (
-            float(np.percentile(samples, lower_pct)),
-            float(np.percentile(samples, upper_pct)),
-        )
+            hdi_result = az.hdi(samples, hdi_prob=prob)
+            return (float(hdi_result[0]), float(hdi_result[1]))
+        except (ImportError, Exception):
+            # Fallback: equal-tailed interval (wider for skewed posteriors)
+            alpha = 1 - prob
+            lower_pct = 100 * (alpha / 2)
+            upper_pct = 100 * (1 - alpha / 2)
+
+            return (
+                float(np.percentile(samples, lower_pct)),
+                float(np.percentile(samples, upper_pct)),
+            )
 
     def get_samples(self, param: str) -> np.ndarray:
         """Get posterior samples for parameter.
@@ -865,9 +885,11 @@ class FitResult:
     def predict(self, x: ArrayLike) -> tuple[np.ndarray, np.ndarray]:
         """Generate posterior predictive samples.
 
-        Note: This requires the model function to be stored or passed.
-        Default implementation returns zeros. Override in subclass or
-        use the visualization module directly.
+        .. note::
+            This method requires a model function which is not stored in
+            ``FitResult``. Use :meth:`plot_posterior_predictive` with an
+            explicit model function, or compute predictions manually from
+            :meth:`get_samples`.
 
         Parameters
         ----------
@@ -878,10 +900,18 @@ class FitResult:
         -------
         tuple[ndarray, ndarray]
             (mean prediction, std prediction)
+
+        Raises
+        ------
+        NotImplementedError
+            Always raised. Use ``plot_posterior_predictive(model, x, y)``
+            or compute predictions from posterior samples directly.
         """
-        x = np.asarray(x)
-        # Placeholder - actual implementation requires model function
-        return np.zeros_like(x), np.zeros_like(x)
+        raise NotImplementedError(
+            "FitResult.predict() requires a model function. Use "
+            "plot_posterior_predictive() with an explicit model, or compute "
+            "predictions from get_samples() directly."
+        )
 
     def to_dict(self) -> dict:
         """Convert to serializable dictionary.
