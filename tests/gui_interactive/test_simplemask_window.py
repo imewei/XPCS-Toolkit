@@ -4,6 +4,8 @@ Tests the SimpleMask window launch, data loading, and basic interactions
 from the XPCS Viewer.
 """
 
+from unittest.mock import patch
+
 import numpy as np
 import pytest
 from PySide6 import QtCore, QtWidgets
@@ -184,9 +186,10 @@ class TestSimpleMaskFromViewer:
         # Ensure no window exists
         gui_main_window._simplemask_window = None
 
-        # Call open_simplemask
-        gui_main_window.open_simplemask()
-        qtbot.wait(100)
+        # Patch _get_simplemask_data to avoid Mock geometry values hitting qmap
+        with patch.object(gui_main_window, "_get_simplemask_data", return_value=(None, None)):
+            gui_main_window.open_simplemask()
+            qtbot.wait(100)
 
         # Check window was created
         assert gui_main_window._simplemask_window is not None
@@ -196,8 +199,9 @@ class TestSimpleMaskFromViewer:
         """open_simplemask should show the window."""
         gui_main_window._simplemask_window = None
 
-        gui_main_window.open_simplemask()
-        qtbot.wait(100)
+        with patch.object(gui_main_window, "_get_simplemask_data", return_value=(None, None)):
+            gui_main_window.open_simplemask()
+            qtbot.wait(100)
 
         assert gui_main_window._simplemask_window.isVisible()
 
@@ -205,13 +209,14 @@ class TestSimpleMaskFromViewer:
         """Calling open_simplemask twice should reuse the window."""
         gui_main_window._simplemask_window = None
 
-        gui_main_window.open_simplemask()
-        qtbot.wait(50)
-        first_window = gui_main_window._simplemask_window
+        with patch.object(gui_main_window, "_get_simplemask_data", return_value=(None, None)):
+            gui_main_window.open_simplemask()
+            qtbot.wait(50)
+            first_window = gui_main_window._simplemask_window
 
-        gui_main_window.open_simplemask()
-        qtbot.wait(50)
-        second_window = gui_main_window._simplemask_window
+            gui_main_window.open_simplemask()
+            qtbot.wait(50)
+            second_window = gui_main_window._simplemask_window
 
         assert first_window is second_window
 
@@ -219,8 +224,9 @@ class TestSimpleMaskFromViewer:
         """SimpleMask window should have reference to parent viewer."""
         gui_main_window._simplemask_window = None
 
-        gui_main_window.open_simplemask()
-        qtbot.wait(100)
+        with patch.object(gui_main_window, "_get_simplemask_data", return_value=(None, None)):
+            gui_main_window.open_simplemask()
+            qtbot.wait(100)
 
         assert gui_main_window._simplemask_window.parent_viewer is gui_main_window
 

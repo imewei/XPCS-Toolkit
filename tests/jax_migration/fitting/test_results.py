@@ -196,15 +196,10 @@ class TestFitResult:
         assert isinstance(d["samples"]["tau"], list)  # Converted from array
 
     def test_predict_placeholder(self, sample_result: FitResult) -> None:
-        """Test predict method returns placeholder."""
+        """Test predict raises NotImplementedError (requires model function)."""
         x = np.linspace(0, 10, 20)
-        mean, std = sample_result.predict(x)
-
-        assert len(mean) == 20
-        assert len(std) == 20
-        # Placeholder returns zeros
-        np.testing.assert_array_equal(mean, 0)
-        np.testing.assert_array_equal(std, 0)
+        with pytest.raises(NotImplementedError, match="model function"):
+            sample_result.predict(x)
 
 
 class TestFitResultVisualizationMethods:

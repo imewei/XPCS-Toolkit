@@ -5,6 +5,9 @@ Tests environment variable overrides for backend selection (US5).
 
 from __future__ import annotations
 
+import subprocess
+import sys
+
 import pytest
 
 
@@ -35,21 +38,35 @@ class TestEnvVarOverrides:
         backend = get_backend()
         assert backend.name == "numpy"
 
-    def test_jax_platforms_cpu(self, monkeypatch) -> None:
-        """Test JAX_PLATFORMS=cpu forces CPU execution."""
-        monkeypatch.setenv("XPCS_USE_JAX", "1")
-        monkeypatch.setenv("JAX_PLATFORMS", "cpu")
+    def test_jax_platforms_cpu(self) -> None:
+        """Test JAX_PLATFORMS=cpu forces CPU execution.
 
-        from xpcsviewer.backends import _reset_backend, get_backend
-
-        _reset_backend()
-
-        backend = get_backend()
-        assert backend.name == "jax"
-        # Even with JAX, should be on CPU
-        import jax
-
-        assert jax.devices()[0].platform == "cpu"
+        JAX_PLATFORMS must be set before JAX is imported, so this test
+        uses a subprocess to ensure a fresh Python process.
+        """
+        result = subprocess.run(
+            [
+                sys.executable,
+                "-c",
+                (
+                    "import os; "
+                    "os.environ['JAX_PLATFORMS'] = 'cpu'; "
+                    "os.environ['XPCS_USE_JAX'] = '1'; "
+                    "import jax; "
+                    "platform = jax.devices()[0].platform; "
+                    "print(platform); "
+                    "assert platform == 'cpu', "
+                    "f'Expected cpu, got {platform}'"
+                ),
+            ],
+            capture_output=True,
+            text=True,
+            timeout=30,
+        )
+        assert result.returncode == 0, (
+            f"JAX_PLATFORMS=cpu subprocess failed:\n"
+            f"stdout: {result.stdout}\nstderr: {result.stderr}"
+        )
 
     def test_xpcs_gpu_fallback_respected(self, monkeypatch) -> None:
         """Test XPCS_GPU_FALLBACK enables CPU fallback."""
