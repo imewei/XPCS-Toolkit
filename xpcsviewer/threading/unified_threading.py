@@ -458,7 +458,7 @@ class UnifiedThreadingManager(QObject):
                     # _monitor_system runs on a raw threading.Thread, so
                     # emitting Qt signals directly is unsafe.
                     _pressure_value = memory_pressure.value
-                    QMetaObject.invokeMethod(  # type: ignore[call-overload]
+                    QMetaObject.invokeMethod(
                         self,
                         "_emit_memory_pressure_queued",
                         Qt.ConnectionType.QueuedConnection,
@@ -487,7 +487,7 @@ class UnifiedThreadingManager(QObject):
         # Marshal signal emission to the Qt main thread (SRE-1).
         # _balance_thread_pools is called from _monitor_system which runs on
         # a raw threading.Thread.
-        QMetaObject.invokeMethod(  # type: ignore[call-overload]
+        QMetaObject.invokeMethod(
             self,
             "_emit_load_changed_queued",
             Qt.ConnectionType.QueuedConnection,

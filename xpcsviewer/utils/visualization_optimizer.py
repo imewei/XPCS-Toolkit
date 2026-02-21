@@ -721,7 +721,7 @@ class AdvancedGUIRenderer:
         self._pending_updates: dict[
             str, tuple[Callable, tuple[Any, ...], dict[str, Any]]
         ] = {}
-        self._batch_timer = None
+        self._batch_timer: bool | None = None
         self._batch_interval_ms = 16  # ~60 FPS
 
         self.memory_manager = get_memory_manager()

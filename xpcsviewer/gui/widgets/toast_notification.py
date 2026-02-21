@@ -171,10 +171,13 @@ class ToastManager:
         # Set up auto-dismiss with weakref to avoid preventing GC
         if duration_ms > 0:
             ref = weakref.ref(toast)
-            QTimer.singleShot(
-                duration_ms,
-                lambda: self._dismiss_toast(ref()) if ref() is not None else None,
-            )
+
+            def _auto_dismiss() -> None:
+                widget = ref()
+                if widget is not None:
+                    self._dismiss_toast(widget)
+
+            QTimer.singleShot(duration_ms, _auto_dismiss)
 
     def show_info(self, message: str) -> None:
         """Show an info toast."""

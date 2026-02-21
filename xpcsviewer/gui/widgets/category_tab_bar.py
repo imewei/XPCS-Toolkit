@@ -59,8 +59,9 @@ class CategorySeparatorFilter(QtCore.QObject):
     def set_dark_mode(self, dark: bool) -> None:
         """Update separator color for the current theme."""
         self._dark_mode = dark
-        if self.parent():
-            self.parent().update()
+        parent = self.parent()
+        if parent is not None and isinstance(parent, QtWidgets.QWidget):
+            parent.update()
 
     def eventFilter(self, obj: QtCore.QObject, event: QtCore.QEvent) -> bool:
         """Paint category separators after the tab bar paints itself."""
@@ -71,6 +72,7 @@ class CategorySeparatorFilter(QtCore.QObject):
 
             # Let the tab bar paint itself via the C++ virtual (avoids
             # re-entering this event filter, which would cause recursion).
+            assert isinstance(event, QtGui.QPaintEvent)
             type(tab_bar).paintEvent(tab_bar, event)
 
             # Overlay separators
