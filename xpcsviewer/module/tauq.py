@@ -58,12 +58,20 @@ def plot(xf_list, hdl, q_range, offset, plot_type=3):
             continue
 
         s = scale_factors[n]
-        x = fit_summary["q_val"]
-        # Ensure x is a numpy array (convert from list if necessary)
-        if not hasattr(x, "shape"):
-            x = np.array(x)
-        y = fit_summary["fit_val"][:, 0, 1]
-        e = fit_summary["fit_val"][:, 1, 1]
+
+        # Prefer filtered tauq data (validity-checked, within q_range)
+        # produced by fit_tauq. Fall back to full G2 fit_val when tauq
+        # keys are absent (e.g. fit_tauq returned early with no valid data).
+        if "tauq_q" in fit_summary:
+            x = np.asarray(fit_summary["tauq_q"])
+            y = np.asarray(fit_summary["tauq_tau"])
+            e = np.asarray(fit_summary["tauq_tau_err"])
+        else:
+            x = fit_summary["q_val"]
+            if not hasattr(x, "shape"):
+                x = np.array(x)
+            y = fit_summary["fit_val"][:, 0, 1]
+            e = fit_summary["fit_val"][:, 1, 1]
 
         # Validate all arrays have the same length (raises on mismatch)
         file_label = get_file_label_safe(xf)
@@ -73,7 +81,8 @@ def plot(xf_list, hdl, q_range, offset, plot_type=3):
             logger.warning(f"Skipping file {file_label}: {exc}")
             continue
 
-        # Vectorized filtering of failed fittings
+        # Filter invalid points (redundant for tauq path but needed
+        # for the fit_val fallback where sigma=0 marks failed fits)
         valid_idx = e > 0
         if not np.any(valid_idx):
             logger.debug(

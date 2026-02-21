@@ -4005,25 +4005,36 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
             return None
 
         fit_summary = xf.fit_summary
-        q = np.asarray(fit_summary["q_val"])
-        fit_val = np.asarray(fit_summary["fit_val"])
-        tau = fit_val[:, 0, 1]
-        tau_err = fit_val[:, 1, 1]
 
-        # Trim to consistent length
-        min_len = min(len(q), len(tau), len(tau_err))
-        q, tau, tau_err = q[:min_len], tau[:min_len], tau_err[:min_len]
+        # Prefer filtered tauq data (already Q-range-clipped and validity-
+        # checked by fit_tauq).  Fall back to raw G2 fit_val when tauq keys
+        # are absent (e.g. user clicks "Fit Bayesian" before "fit plot").
+        if "tauq_q" in fit_summary:
+            q = np.asarray(fit_summary["tauq_q"])
+            tau = np.asarray(fit_summary["tauq_tau"])
+            tau_err = np.asarray(fit_summary["tauq_tau_err"])
+        else:
+            q = np.asarray(fit_summary["q_val"])
+            fit_val = np.asarray(fit_summary["fit_val"])
+            tau = fit_val[:, 0, 1]
+            tau_err = fit_val[:, 1, 1]
 
-        # Apply Q-range filter from UI
-        try:
-            q_min = float(self.tauq_qmin.text())
-            q_max = float(self.tauq_qmax.text())
-        except (ValueError, AttributeError):
-            q_min, q_max = q.min(), q.max()
+            # Trim to consistent length
+            min_len = min(len(q), len(tau), len(tau_err))
+            q, tau, tau_err = q[:min_len], tau[:min_len], tau_err[:min_len]
 
-        q_mask = (q >= q_min) & (q <= q_max)
-        # Validity filter
-        valid = q_mask & (tau_err > 0) & np.isfinite(tau) & np.isfinite(tau_err)
+            # Apply Q-range filter from UI (tauq path already applies this)
+            try:
+                q_min = float(self.tauq_qmin.text())
+                q_max = float(self.tauq_qmax.text())
+            except (ValueError, AttributeError):
+                q_min, q_max = q.min(), q.max()
+
+            q_mask = (q >= q_min) & (q <= q_max)
+            q, tau, tau_err = q[q_mask], tau[q_mask], tau_err[q_mask]
+
+        # Validity filter (redundant for tauq path but needed for fallback)
+        valid = (tau_err > 0) & np.isfinite(tau) & np.isfinite(tau_err)
 
         if not np.any(valid):
             self.statusbar.showMessage("No valid diffusion data in Q-range", 2000)
@@ -4048,6 +4059,25 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
 
         self._diff_bayesian_data = (q, tau, tau_err)
 
+        # Convert UI bounds (NLSQ b-convention) to Bayesian alpha-convention.
+        # NLSQ: a * x^b  (b < 0 for diffusion)
+        # Bayesian: tau0 * q^(-alpha)  (alpha > 0), so alpha = -b
+        sampler_kwargs: dict = {}
+        try:
+            a_min = float(self.tauq_amin.text())
+            a_max = float(self.tauq_amax.text())
+            b_min = float(self.tauq_bmin.text())
+            b_max = float(self.tauq_bmax.text())
+            # b ∈ [b_min, b_max] → alpha ∈ [-b_max, -b_min]
+            alpha_min = max(0.0, -b_max)
+            alpha_max = max(alpha_min + 0.01, -b_min)
+            sampler_kwargs["bounds"] = {
+                "tau0": (max(1e-6, a_min), max(a_min + 1e-6, a_max)),
+                "alpha": (alpha_min, alpha_max),
+            }
+        except (ValueError, AttributeError):
+            pass  # Use defaults in run_power_law_fit
+
         worker = BayesianFitWorker(
             fit_func=fit_power_law,
             x=q,
@@ -4056,6 +4086,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
             q_index=-1,
             q_value=0.0,
             context="diffusion",
+            sampler_kwargs=sampler_kwargs,
         )
         worker.signals.finished.connect(self._on_diff_bayesian_finished)
         worker.signals.error.connect(self._on_diff_bayesian_error)
@@ -4081,7 +4112,19 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
 
         converged = self._diff_bayesian_result.diagnostics.converged
         status = "converged" if converged else "NOT converged"
-        self.statusbar.showMessage(f"Bayesian power-law fit done ({status})", 4000)
+
+        # Show parameter estimates with NLSQ-equivalent conversion:
+        # Bayesian uses tau0 * q^(-alpha), NLSQ uses a * x^b, so b = -alpha.
+        summary = self._diff_bayesian_result.summary
+        try:
+            alpha = summary.loc["alpha", "mean"]
+            tau0 = summary.loc["tau0", "mean"]
+            param_str = f"  tau0={tau0:.3g}, alpha={alpha:.3f} (b={-alpha:.3f})"
+        except (KeyError, TypeError):
+            param_str = ""
+        self.statusbar.showMessage(
+            f"Bayesian power-law fit done ({status}){param_str}", 6000
+        )
 
     def _on_diff_bayesian_error(self, worker_id, error_msg, _tb, _retry):
         """Handle diffusion Bayesian fit error."""

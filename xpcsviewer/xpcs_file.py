@@ -2348,7 +2348,9 @@ class XpcsFile:
             "tauq_q": x_valid,
             "tauq_tau": y_valid,
             "tauq_tau_err": sigma_valid,
-            "tauq_fit_line": fit_line[0] if fitting_success else np.ones_like(fit_x),
+            "tauq_fit_line": {"fit_x": fit_x, "fit_y": fit_line[0]}
+            if fitting_success
+            else None,
             "tauq_fit_val": fit_val[0]
             if fitting_success
             else np.zeros((2, len(fit_flag))),
