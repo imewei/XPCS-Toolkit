@@ -324,14 +324,16 @@ class TestBugE_SeedStorage:
         y = 1.0 + 0.3 * np.exp(-2 * x / 1.0)
 
         result = fit_single_exp(
-            x, y, num_warmup=50, num_samples=50, num_chains=1,
+            x,
+            y,
+            num_warmup=50,
+            num_samples=50,
+            num_chains=1,
         )
 
         exported = result.to_dict()
         seed = exported["sampler_config"]["random_seed"]
-        assert seed is not None, (
-            "to_dict() should export the actual seed, not None"
-        )
+        assert seed is not None, "to_dict() should export the actual seed, not None"
         assert isinstance(seed, int)
 
 
@@ -372,7 +374,8 @@ class TestEndToEndWarmStart:
         y = y_true + 0.005 * np.random.randn(len(x))
 
         result = fit_single_exp(
-            x, y,
+            x,
+            y,
             num_warmup=200,
             num_samples=500,
             num_chains=2,
@@ -434,9 +437,7 @@ class TestBugG_PowerLawTauErr:
         from xpcsviewer.fitting import fit_power_law
 
         sig = inspect.signature(fit_power_law)
-        assert "tau_err" in sig.parameters, (
-            "fit_power_law is missing tau_err parameter"
-        )
+        assert "tau_err" in sig.parameters, "fit_power_law is missing tau_err parameter"
         param = sig.parameters["tau_err"]
         assert param.default is None, "tau_err should default to None"
 

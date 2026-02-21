@@ -68,7 +68,9 @@ class TestSafeJsonWrite:
         """Temp file is cleaned up when os.replace fails."""
         target = tmp_path / "out.json"
 
-        with patch("xpcsviewer.utils.atomic_io.os.replace", side_effect=OSError("mock")):
+        with patch(
+            "xpcsviewer.utils.atomic_io.os.replace", side_effect=OSError("mock")
+        ):
             with pytest.raises(OSError, match="mock"):
                 safe_json_write(target, {"fail": True})
 

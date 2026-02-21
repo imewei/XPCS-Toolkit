@@ -634,9 +634,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         self.shortcut_manager.register_shortcut(
             "next_tab", "Ctrl+PgDown", self._next_tab
         )
-        self.shortcut_manager.register_shortcut(
-            "prev_tab", "Ctrl+PgUp", self._prev_tab
-        )
+        self.shortcut_manager.register_shortcut("prev_tab", "Ctrl+PgUp", self._prev_tab)
 
         # Register actions in command palette
         self._register_command_palette_actions()

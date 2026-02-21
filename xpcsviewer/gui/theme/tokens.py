@@ -77,7 +77,6 @@ class TypographyTokens:
     size_xxl: int = 24
 
 
-
 @dataclass(frozen=True)
 class ThemeDefinition:
     """Complete theme definition."""

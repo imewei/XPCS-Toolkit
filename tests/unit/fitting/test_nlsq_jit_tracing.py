@@ -122,8 +122,8 @@ class TestNlsqJitTracing:
         """double_exp_all must work with nlsq.curve_fit (JIT-traced)."""
         x = np.linspace(0.001, 10.0, 48)
         f = 0.6
-        t1 = np.exp(-(x / 1.0) ** 1.0) * f
-        t2 = np.exp(-(x / 5.0) ** 1.5) * (1 - f)
+        t1 = np.exp(-((x / 1.0) ** 1.0)) * f
+        t2 = np.exp(-((x / 5.0) ** 1.5)) * (1 - f)
         y = 0.3 * (t1 + t2) ** 2 + 1.0
         bounds = (
             [0.0, 0.001, 0.5, 0.8, 0.001, 0.5, 0.0],
@@ -147,9 +147,7 @@ class TestNlsqJitTracing:
         y = 1e-7 * x ** (-2.0)
         bounds = ([1e-15, -4.0], [1e-2, 0.0])
 
-        popt, pcov = curve_fit(
-            power_law, x, y, p0=[1e-7, -2.0], bounds=bounds
-        )
+        popt, pcov = curve_fit(power_law, x, y, p0=[1e-7, -2.0], bounds=bounds)
         assert popt is not None
         assert len(popt) == 2
         assert abs(popt[1] - (-2.0)) < 0.1

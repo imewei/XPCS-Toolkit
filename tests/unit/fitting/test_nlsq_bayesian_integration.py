@@ -41,7 +41,7 @@ def _make_synthetic_data(
     """Generate synthetic power-law diffusion data with known parameters."""
     rng = np.random.default_rng(seed)
     q = np.logspace(-2, -0.5, n_q)
-    tau_true = TRUE_TAU0 * q ** TRUE_B  # = TRUE_TAU0 * q^(-TRUE_ALPHA)
+    tau_true = TRUE_TAU0 * q**TRUE_B  # = TRUE_TAU0 * q^(-TRUE_ALPHA)
     tau_err = np.abs(tau_true) * noise_frac
     tau = tau_true + rng.normal(0, tau_err)
     # Ensure positive tau (physical constraint)
@@ -61,14 +61,22 @@ class TestNLSQPowerLaw:
         """fit_with_fixed(power_law) must recover a and b from synthetic data."""
         q, tau, tau_err = _make_synthetic_data()
 
-        bounds = np.array([[1e-15, -4.0], [1e-2, 0.0]])  # [[a_min, b_min], [a_max, b_max]]
+        bounds = np.array(
+            [[1e-15, -4.0], [1e-2, 0.0]]
+        )  # [[a_min, b_min], [a_max, b_max]]
         fit_flag = np.array([True, True])
         fit_x = np.logspace(-2.1, -0.4, 50)
         p0 = np.array([1e-5, -2.0])
 
         fit_line, fit_val = fit_with_fixed(
-            power_law, q, tau[:, np.newaxis], tau_err[:, np.newaxis],
-            bounds, fit_flag, fit_x, p0=p0,
+            power_law,
+            q,
+            tau[:, np.newaxis],
+            tau_err[:, np.newaxis],
+            bounds,
+            fit_flag,
+            fit_x,
+            p0=p0,
         )
 
         a_fit = fit_val[0, 0, 0]
@@ -90,8 +98,14 @@ class TestNLSQPowerLaw:
         p0 = np.array([1e-5, -2.0])  # b should be fixed at -2.0, not 0.0
 
         _fit_line, fit_val = fit_with_fixed(
-            power_law, q, tau[:, np.newaxis], tau_err[:, np.newaxis],
-            bounds, fit_flag, fit_x, p0=p0,
+            power_law,
+            q,
+            tau[:, np.newaxis],
+            tau_err[:, np.newaxis],
+            bounds,
+            fit_flag,
+            fit_x,
+            p0=p0,
         )
 
         b_fixed = fit_val[0, 0, 1]
@@ -109,8 +123,14 @@ class TestNLSQPowerLaw:
         fit_x = np.logspace(-2.1, -0.4, 50)
 
         _fit_line, fit_val = fit_with_fixed(
-            power_law, q, tau[:, np.newaxis], tau_err[:, np.newaxis],
-            bounds, fit_flag, fit_x, p0=None,
+            power_law,
+            q,
+            tau[:, np.newaxis],
+            tau_err[:, np.newaxis],
+            bounds,
+            fit_flag,
+            fit_x,
+            p0=None,
         )
 
         b_fixed = fit_val[0, 0, 1]
@@ -134,8 +154,12 @@ class TestBayesianPowerLaw:
         q, tau, tau_err = _make_synthetic_data()
 
         result = run_power_law_fit(
-            q, tau, tau_err=tau_err,
-            num_warmup=200, num_samples=500, num_chains=1,
+            q,
+            tau,
+            tau_err=tau_err,
+            num_warmup=200,
+            num_samples=500,
+            num_chains=1,
             random_seed=42,
         )
 
@@ -165,9 +189,13 @@ class TestBayesianPowerLaw:
 
         # Tight bounds around true values
         result = run_power_law_fit(
-            q, tau, tau_err=tau_err,
+            q,
+            tau,
+            tau_err=tau_err,
             bounds={"tau0": (1e-7, 1e-3), "alpha": (1.5, 2.5)},
-            num_warmup=200, num_samples=500, num_chains=1,
+            num_warmup=200,
+            num_samples=500,
+            num_chains=1,
             random_seed=42,
         )
 
@@ -196,15 +224,25 @@ class TestNLSQBayesianConsistency:
         p0 = np.array([1e-5, -2.0])
 
         _fit_line, fit_val = fit_with_fixed(
-            power_law, q, tau[:, np.newaxis], tau_err[:, np.newaxis],
-            bounds_nlsq, fit_flag, fit_x, p0=p0,
+            power_law,
+            q,
+            tau[:, np.newaxis],
+            tau_err[:, np.newaxis],
+            bounds_nlsq,
+            fit_flag,
+            fit_x,
+            p0=p0,
         )
         b_nlsq = fit_val[0, 0, 1]
 
         # Bayesian fit
         result = run_power_law_fit(
-            q, tau, tau_err=tau_err,
-            num_warmup=200, num_samples=500, num_chains=1,
+            q,
+            tau,
+            tau_err=tau_err,
+            num_warmup=200,
+            num_samples=500,
+            num_chains=1,
             random_seed=42,
         )
         alpha_bayesian = result.summary.loc["alpha", "mean"]
@@ -289,9 +327,7 @@ class TestBugH_ExtractionDataSource:
         from pathlib import Path
 
         viewer_path = (
-            Path(__file__).parent.parent.parent.parent
-            / "xpcsviewer"
-            / "xpcs_viewer.py"
+            Path(__file__).parent.parent.parent.parent / "xpcsviewer" / "xpcs_viewer.py"
         )
         source = viewer_path.read_text()
 

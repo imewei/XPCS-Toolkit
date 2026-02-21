@@ -63,9 +63,7 @@ def clamp_preferences(prefs: UserPreferences) -> list[str]:
 
     # Validate theme
     if prefs.theme not in ("light", "dark", "system"):
-        warnings.append(
-            f"Invalid theme '{prefs.theme}', reset to 'system'"
-        )
+        warnings.append(f"Invalid theme '{prefs.theme}', reset to 'system'")
         prefs.theme = "system"
 
     # Validate and clamp toast duration
@@ -75,10 +73,14 @@ def clamp_preferences(prefs: UserPreferences) -> list[str]:
         warnings.append("Non-numeric toast_duration_ms, reset to 3000")
         prefs.toast_duration_ms = 3000
     if prefs.toast_duration_ms < 1000:
-        warnings.append(f"toast_duration_ms {prefs.toast_duration_ms} too low, clamped to 1000")
+        warnings.append(
+            f"toast_duration_ms {prefs.toast_duration_ms} too low, clamped to 1000"
+        )
         prefs.toast_duration_ms = 1000
     elif prefs.toast_duration_ms > 10000:
-        warnings.append(f"toast_duration_ms {prefs.toast_duration_ms} too high, clamped to 10000")
+        warnings.append(
+            f"toast_duration_ms {prefs.toast_duration_ms} too high, clamped to 10000"
+        )
         prefs.toast_duration_ms = 10000
 
     return warnings

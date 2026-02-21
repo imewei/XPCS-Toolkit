@@ -40,9 +40,7 @@ def safe_json_write(path: str | Path, data: dict, *, indent: int = 2) -> None:
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
 
-    fd, tmp_path = tempfile.mkstemp(
-        dir=path.parent, prefix=".tmp_", suffix=".json"
-    )
+    fd, tmp_path = tempfile.mkstemp(dir=path.parent, prefix=".tmp_", suffix=".json")
     try:
         with os.fdopen(fd, "w", encoding="utf-8") as f:
             json.dump(data, f, indent=indent)

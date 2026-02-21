@@ -187,7 +187,9 @@ class TestSimpleMaskFromViewer:
         gui_main_window._simplemask_window = None
 
         # Patch _get_simplemask_data to avoid Mock geometry values hitting qmap
-        with patch.object(gui_main_window, "_get_simplemask_data", return_value=(None, None)):
+        with patch.object(
+            gui_main_window, "_get_simplemask_data", return_value=(None, None)
+        ):
             gui_main_window.open_simplemask()
             qtbot.wait(100)
 
@@ -199,7 +201,9 @@ class TestSimpleMaskFromViewer:
         """open_simplemask should show the window."""
         gui_main_window._simplemask_window = None
 
-        with patch.object(gui_main_window, "_get_simplemask_data", return_value=(None, None)):
+        with patch.object(
+            gui_main_window, "_get_simplemask_data", return_value=(None, None)
+        ):
             gui_main_window.open_simplemask()
             qtbot.wait(100)
 
@@ -209,7 +213,9 @@ class TestSimpleMaskFromViewer:
         """Calling open_simplemask twice should reuse the window."""
         gui_main_window._simplemask_window = None
 
-        with patch.object(gui_main_window, "_get_simplemask_data", return_value=(None, None)):
+        with patch.object(
+            gui_main_window, "_get_simplemask_data", return_value=(None, None)
+        ):
             gui_main_window.open_simplemask()
             qtbot.wait(50)
             first_window = gui_main_window._simplemask_window
@@ -224,7 +230,9 @@ class TestSimpleMaskFromViewer:
         """SimpleMask window should have reference to parent viewer."""
         gui_main_window._simplemask_window = None
 
-        with patch.object(gui_main_window, "_get_simplemask_data", return_value=(None, None)):
+        with patch.object(
+            gui_main_window, "_get_simplemask_data", return_value=(None, None)
+        ):
             gui_main_window.open_simplemask()
             qtbot.wait(100)
 

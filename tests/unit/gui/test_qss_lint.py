@@ -10,7 +10,9 @@ from pathlib import Path
 import pytest
 
 # Directory containing all QSS files
-_STYLES_DIR = Path(__file__).resolve().parents[3] / "xpcsviewer" / "gui" / "theme" / "styles"
+_STYLES_DIR = (
+    Path(__file__).resolve().parents[3] / "xpcsviewer" / "gui" / "theme" / "styles"
+)
 
 # Collect all QSS files for parametrization
 _QSS_FILES = sorted(_STYLES_DIR.glob("*.qss"))
@@ -105,9 +107,8 @@ class TestQssDuplicateSelectors:
             else:
                 seen[selector] = line_no
 
-        assert not duplicates, (
-            f"Duplicate selectors in {qss_path.name}:\n"
-            + "\n".join(duplicates)
+        assert not duplicates, f"Duplicate selectors in {qss_path.name}:\n" + "\n".join(
+            duplicates
         )
 
 

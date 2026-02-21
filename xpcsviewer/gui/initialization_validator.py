@@ -446,9 +446,7 @@ class RobustGuiStarter:
             if not overall_valid:
                 # Advisory: log error but don't block startup (user may still
                 # be able to work with partial initialization).
-                logger.error(
-                    "GUI validation failed — check warnings above for details"
-                )
+                logger.error("GUI validation failed — check warnings above for details")
 
             return overall_valid
 

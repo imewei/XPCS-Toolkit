@@ -440,9 +440,9 @@ class TestPerChainJitter:
 
                     # Verify init_strategy was passed to NUTS
                     nuts_call_kwargs = mock_nuts.call_args[1]
-                    assert nuts_call_kwargs.get("init_strategy") == "mock_init_strategy", (
-                        "init_to_value result must be passed as init_strategy to NUTS"
-                    )
+                    assert (
+                        nuts_call_kwargs.get("init_strategy") == "mock_init_strategy"
+                    ), "init_to_value result must be passed as init_strategy to NUTS"
 
     def test_jitter_magnitude_preserves_scale(self):
         """Jitter at 1% scale does not corrupt the warm-start value significantly."""

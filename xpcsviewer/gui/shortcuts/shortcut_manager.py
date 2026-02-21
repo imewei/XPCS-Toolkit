@@ -70,8 +70,7 @@ class ShortcutManager(QObject):
         if key_str in self._key_to_id:
             existing_id = self._key_to_id[key_str]
             logger.warning(
-                "Shortcut key '%s' already registered to '%s'; "
-                "rejecting '%s'",
+                "Shortcut key '%s' already registered to '%s'; rejecting '%s'",
                 key_str,
                 existing_id,
                 shortcut_id,

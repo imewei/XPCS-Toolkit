@@ -76,13 +76,9 @@ class CategorySeparatorFilter(QtCore.QObject):
             # Overlay separators
             painter = QtGui.QPainter(tab_bar)
             try:
-                painter.setRenderHint(
-                    QtGui.QPainter.RenderHint.Antialiasing, False
-                )
+                painter.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing, False)
 
-                sep_color = (
-                    _SEP_COLOR_DARK if self._dark_mode else _SEP_COLOR_LIGHT
-                )
+                sep_color = _SEP_COLOR_DARK if self._dark_mode else _SEP_COLOR_LIGHT
                 pen = QtGui.QPen(sep_color, _SEP_WIDTH)
                 pen.setCapStyle(Qt.PenCapStyle.RoundCap)
                 painter.setPen(pen)

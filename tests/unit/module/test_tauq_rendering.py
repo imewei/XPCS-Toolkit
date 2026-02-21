@@ -97,10 +97,12 @@ class TestBugF_FitLineRendering:
         tau = np.array([1.0, 0.5, 0.25])
         tau_err = np.array([0.1, 0.05, 0.02])
         fit_x = np.logspace(-2.1, -1.4, 50)
-        fit_y = 100 * fit_x**(-2.0)
+        fit_y = 100 * fit_x ** (-2.0)
 
         xf = _make_xf(
-            q, tau, tau_err,
+            q,
+            tau,
+            tau_err,
             tauq_success=True,
             fit_line_x=fit_x,
             fit_line_y=fit_y,
@@ -137,7 +139,9 @@ class TestBugF_FitLineRendering:
         tau_err = np.array([0.1, 0.05])
 
         xf = _make_xf(
-            q, tau, tau_err,
+            q,
+            tau,
+            tau_err,
             tauq_success=True,
             fit_line_x=None,
             fit_line_y=None,

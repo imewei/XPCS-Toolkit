@@ -294,6 +294,7 @@ class AsyncViewerKernel(QObject):
 
     def _submit_plot_worker(self, worker, operation_id: str) -> str:
         """Submit a plot worker and set up signal connections."""
+
         # Create bound slots so we can disconnect them later
         def finished_slot(result):
             return self._on_plot_ready(operation_id, result)
