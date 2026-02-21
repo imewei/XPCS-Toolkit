@@ -254,6 +254,9 @@ verify_memory_optimization.py
 validate_temp_*.py
 run_phase*_temp.py
 
+# Git worktrees
+.worktrees/
+
 # Claude Code specific settings
 .claude/
 .serena/
