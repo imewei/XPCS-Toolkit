@@ -91,24 +91,22 @@ class DragDropListView(QListView):
         Args:
             event: The drop event
         """
-        # Get the target drop position
-        drop_index = self.indexAt(event.position().toPoint())
-
-        # Calculate the target row
-        if drop_index.isValid():
-            target_row = drop_index.row()
-        else:
-            # Dropped at the end
-            model = self.model()
-            target_row = model.rowCount() - 1 if model else 0
+        from_index = self._drag_start_index
 
         # Call parent implementation to perform the actual move
         super().dropEvent(event)
 
-        # Emit signal if we have a valid start index and it changed
-        if self._drag_start_index is not None and self._drag_start_index != target_row:
-            logger.debug(f"Item moved from {self._drag_start_index} to {target_row}")
-            self.items_reordered.emit(self._drag_start_index, target_row)
+        # Determine actual new position from current selection
+        if from_index is not None:
+            indexes = self.selectedIndexes()
+            if indexes:
+                target_row = indexes[0].row()
+            else:
+                target_row = from_index  # fallback: no change
+
+            if from_index != target_row:
+                logger.debug(f"Item moved from {from_index} to {target_row}")
+                self.items_reordered.emit(from_index, target_row)
 
         self._drag_start_index = None
 
@@ -174,15 +172,10 @@ class DragDropListView(QListView):
             # QStringListModel support
             strings = model.stringList()
             item = strings.pop(from_index)
-            # Adjust target index if moving down (indices shift after pop)
-            # When moving down, the target index is already correct after pop
-            # When moving up, target index doesn't need adjustment
-            if to_index > from_index:
-                # After removing item at from_index, target is now one less
-                # But we want to insert AFTER the item at to_index
-                # So no adjustment needed for "insert at position"
-                pass
-            strings.insert(to_index, item)
+            # After pop, indices above from_index shift down by one.
+            # When moving down, adjust to_index to compensate.
+            insert_at = to_index if to_index <= from_index else to_index - 1
+            strings.insert(insert_at, item)
             model.setStringList(strings)
             self.items_reordered.emit(from_index, to_index)
             return True

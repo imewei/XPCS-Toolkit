@@ -76,10 +76,6 @@ class TypographyTokens:
     size_xl: int = 18
     size_xxl: int = 24
 
-    # Font weights
-    weight_normal: int = 400
-    weight_medium: int = 500
-    weight_bold: int = 700
 
 
 @dataclass(frozen=True)

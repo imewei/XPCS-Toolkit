@@ -11,6 +11,8 @@ from dataclasses import asdict, dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
 
+from xpcsviewer.utils.atomic_io import safe_json_write
+
 logger = logging.getLogger(__name__)
 
 
@@ -119,9 +121,9 @@ class SessionManager:
         Returns:
             True if save successful, False otherwise
         """
-        session_path = get_session_path()
-
         try:
+            session_path = get_session_path()
+
             # Update timestamp
             session.timestamp = datetime.now(UTC).isoformat()
 
@@ -138,8 +140,7 @@ class SessionManager:
                 "analysis_params": asdict(session.analysis_params),
             }
 
-            with open(session_path, "w", encoding="utf-8") as f:
-                json.dump(data, f, indent=2)
+            safe_json_write(session_path, data)
 
             logger.debug(
                 f"Session saved successfully: tab={session.active_tab}, "
@@ -151,6 +152,8 @@ class SessionManager:
             logger.error(f"Failed to save session: {e}")
             return False
 
+    _SUPPORTED_VERSIONS = {"1.0"}
+
     def load_session(self) -> SessionState | None:
         """
         Load session state from disk.
@@ -159,20 +162,26 @@ class SessionManager:
             SessionState if valid session exists, None otherwise
         """
         self._warnings = []
-        session_path = get_session_path()
-
-        if not session_path.exists():
-            logger.debug("No session file found")
-            return None
 
         try:
+            session_path = get_session_path()
+
+            if not session_path.exists():
+                logger.debug("No session file found")
+                return None
+
             with open(session_path, encoding="utf-8") as f:
                 data = json.load(f)
 
+            if not isinstance(data, dict):
+                logger.warning("Session file is not a JSON object")
+                return None
+
             # Validate version
             version = data.get("version", "1.0")
-            if version != "1.0":
-                logger.info(f"Migrating session from version {version}")
+            if version not in self._SUPPORTED_VERSIONS:
+                logger.warning(f"Unknown session version {version!r}, ignoring")
+                return None
 
             # Parse target files and validate existence
             target_files: list[FileEntry] = []

@@ -7,9 +7,12 @@ are visible in both light and dark modes.  Falls back to QStyle standard icons
 if SVG files are not found.
 """
 
+import logging
 from pathlib import Path
 
 from xpcsviewer.gui.qt_compat import QIcon, QPixmap, QStyle
+
+logger = logging.getLogger(__name__)
 
 _ICONS_DIR = Path(__file__).parent.parent / "ui" / "resources" / "icons"
 
@@ -38,6 +41,11 @@ _FALLBACK_ICONS = {
     "moon": QStyle.StandardPixmap.SP_ComputerIcon,
     "activity": QStyle.StandardPixmap.SP_ComputerIcon,
     "grid-mask": QStyle.StandardPixmap.SP_FileDialogContentsView,
+    "tab-scattering": QStyle.StandardPixmap.SP_FileIcon,
+    "tab-diagnostics": QStyle.StandardPixmap.SP_MessageBoxInformation,
+    "tab-correlation": QStyle.StandardPixmap.SP_FileDialogDetailedView,
+    "tab-analysis": QStyle.StandardPixmap.SP_ComputerIcon,
+    "tab-setup": QStyle.StandardPixmap.SP_FileDialogInfoView,
 }
 
 _icon_cache: dict[str, QIcon] = {}
@@ -102,6 +110,7 @@ def get_icon(name: str, style: QStyle | None = None) -> QIcon:
         return icon
 
     # Last resort: empty icon
+    logger.warning("No icon found for '%s'", name)
     return QIcon()
 
 

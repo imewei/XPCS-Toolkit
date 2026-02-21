@@ -35,8 +35,8 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
-# Ensure non-interactive backend for embedded canvases
-matplotlib.use("QtAgg")
+# NOTE: Do not call matplotlib.use() here — backend is managed by
+# plothandler/matplot_qt.py or the application entry point.
 
 
 # ---------------------------------------------------------------------------
@@ -159,6 +159,12 @@ class BayesianDiagnosisWindow(QMainWindow):
         # Give most space to tabs
         splitter.setStretchFactor(0, 5)
         splitter.setStretchFactor(1, 1)
+
+        # Track the init-time figures so closeEvent can clean them up
+        # even if _update_arviz_diagnostics replaces the canvas figures.
+        self._original_figures = [self._pp_canvas.figure] + [
+            c.figure for c in self._arviz_canvases.values()
+        ]
 
         # Store axis labels (customisable per context)
         self._xlabel = "x"
@@ -294,6 +300,8 @@ class BayesianDiagnosisWindow(QMainWindow):
             logger.exception("Failed to generate ArviZ diagnostics")
             return
 
+        import matplotlib.pyplot as plt
+
         for name, canvas in self._arviz_canvases.items():
             fig = figures.get(name)
             if fig is None:
@@ -310,18 +318,25 @@ class BayesianDiagnosisWindow(QMainWindow):
                 canvas.draw()
                 continue
 
-            # Replace the canvas figure with the ArviZ-generated one
+            # Close the old figure before replacing to prevent leak
+            old_fig = canvas.figure
             canvas.figure = fig
             fig.set_canvas(canvas)
             fig.tight_layout()
             canvas.draw()
+            plt.close(old_fig)
 
     def closeEvent(self, event: Any) -> None:
         """Clean up matplotlib figures to avoid memory leaks."""
         import matplotlib.pyplot as plt
 
-        # Close all figures owned by our canvases
+        # Close current canvas figures
         for canvas in self._arviz_canvases.values():
             plt.close(canvas.figure)
         plt.close(self._pp_canvas.figure)
+
+        # Also close init-time figures that may have been swapped out
+        for fig in self._original_figures:
+            plt.close(fig)
+
         super().closeEvent(event)

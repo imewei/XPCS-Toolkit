@@ -146,18 +146,15 @@ class CommandPalette(QDialog):
         self._search_input.setFocus()
         super().show()
 
-        # Center over parent
-        # Center over parent
+        # Center horizontally over parent, offset ~100px from top
         if self.parent():
             from typing import cast
 
             parent_widget = cast(QWidget, self.parent())
-            parent_rect = parent_widget.rect()
-            x = parent_rect.center().x() - self.width() // 2
-            y = parent_rect.top() + 100
+            center = parent_widget.mapToGlobal(parent_widget.rect().center())
             self.move(
-                parent_widget.mapToGlobal(self.pos()).x() + x - self.pos().x(),
-                parent_widget.mapToGlobal(self.pos()).y() + y - self.pos().y(),
+                center.x() - self.width() // 2,
+                center.y() - parent_widget.height() // 2 + 100,
             )
 
     def hide(self) -> None:
@@ -184,7 +181,10 @@ class CommandPalette(QDialog):
 
         query_lower = query.lower()
 
-        for action in self._actions.values():
+        sorted_actions = sorted(
+            self._actions.values(), key=lambda a: (a.category, a.name)
+        )
+        for action in sorted_actions:
             # Check if enabled
             if action.enabled is not None and not action.enabled():
                 continue

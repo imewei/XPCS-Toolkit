@@ -37,6 +37,7 @@ def set_button_style(button: QPushButton, style: ButtonStyle) -> None:
     # Force style refresh
     button.style().unpolish(button)
     button.style().polish(button)
+    button.update()
 
 
 def set_button_size(button: QPushButton, size: ButtonSize) -> None:
@@ -54,6 +55,7 @@ def set_button_size(button: QPushButton, size: ButtonSize) -> None:
 
     button.style().unpolish(button)
     button.style().polish(button)
+    button.update()
 
 
 def set_card_style(group_box: QGroupBox, enabled: bool = True) -> None:
@@ -70,6 +72,7 @@ def set_card_style(group_box: QGroupBox, enabled: bool = True) -> None:
     group_box.setProperty("cardStyle", "true" if enabled else None)
     group_box.style().unpolish(group_box)
     group_box.style().polish(group_box)
+    group_box.update()
 
 
 def set_control_row(widget: QWidget, enabled: bool = True) -> None:
@@ -86,6 +89,7 @@ def set_control_row(widget: QWidget, enabled: bool = True) -> None:
     widget.setProperty("controlRow", "true" if enabled else None)
     widget.style().unpolish(widget)
     widget.style().polish(widget)
+    widget.update()
 
 
 def set_density(widget: QWidget, density: Literal["normal", "compact"]) -> None:
@@ -106,6 +110,7 @@ def set_density(widget: QWidget, density: Literal["normal", "compact"]) -> None:
 
     widget.style().unpolish(widget)
     widget.style().polish(widget)
+    widget.update()
 
 
 def apply_destructive_buttons(widget: QWidget, button_names: list[str]) -> None:
@@ -149,6 +154,7 @@ def set_button_role(button: QPushButton, role: str) -> None:
     button.setProperty("buttonRole", role)
     button.style().unpolish(button)
     button.style().polish(button)
+    button.update()
 
 
 def apply_primary_buttons(widget: QWidget, button_names: list[str]) -> None:
@@ -175,3 +181,4 @@ def set_settings_panel(group_box: QGroupBox) -> None:
     group_box.setProperty("settingsPanel", "true")
     group_box.style().unpolish(group_box)
     group_box.style().polish(group_box)
+    group_box.update()

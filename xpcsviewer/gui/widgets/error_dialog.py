@@ -59,6 +59,8 @@ class ErrorDialog(QDialog):
         super().__init__(parent)
         self._retry_callback = retry_callback
         self._details = details
+        self.details_widget = None
+        self.toggle_details_btn = None
 
         self.setObjectName("errorDialog")
         self.setWindowTitle(title)
@@ -152,6 +154,8 @@ class ErrorDialog(QDialog):
 
     def _toggle_details(self) -> None:
         """Toggle visibility of details section."""
+        if self.details_widget is None:
+            return
         is_visible = self.details_widget.isVisible()
         self.details_widget.setVisible(not is_visible)
         self.toggle_details_btn.setText(

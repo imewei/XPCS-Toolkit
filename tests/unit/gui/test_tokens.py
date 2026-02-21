@@ -123,11 +123,12 @@ class TestTypographyTokens:
         ]
         assert sizes == sorted(sizes), "Font sizes should be in ascending order"
 
-    def test_font_weights_are_valid(self):
-        """Font weights should be valid CSS font-weight values."""
-        assert 100 <= TYPOGRAPHY_TOKENS.weight_normal <= 400
-        assert 400 <= TYPOGRAPHY_TOKENS.weight_medium <= 600
-        assert 600 <= TYPOGRAPHY_TOKENS.weight_bold <= 900
+    def test_typography_has_no_weight_fields(self):
+        """TypographyTokens should not have weight_* fields (removed — Qt
+        QSS does not support CSS font-weight numeric values)."""
+        assert not hasattr(TYPOGRAPHY_TOKENS, "weight_normal")
+        assert not hasattr(TYPOGRAPHY_TOKENS, "weight_medium")
+        assert not hasattr(TYPOGRAPHY_TOKENS, "weight_bold")
 
 
 class TestThemeDefinition:

@@ -4,10 +4,13 @@ Keyboard shortcut management for XPCS-TOOLKIT GUI.
 This module provides centralized shortcut registration and management.
 """
 
-from typing import Callable
+import logging
+from collections.abc import Callable
 
 # Qt imports via compatibility layer
 from xpcsviewer.gui.qt_compat import QKeySequence, QObject, QShortcut, QWidget, Signal
+
+logger = logging.getLogger(__name__)
 
 
 class ShortcutManager(QObject):
@@ -31,6 +34,7 @@ class ShortcutManager(QObject):
         """
         super().__init__(parent)
         self._shortcuts: dict[str, QShortcut] = {}
+        self._key_to_id: dict[str, str] = {}
         self._parent_widget = parent
 
     def register_shortcut(
@@ -61,11 +65,25 @@ class ShortcutManager(QObject):
         if isinstance(key_sequence, str):
             key_sequence = QKeySequence(key_sequence)
 
+        # Detect key-sequence conflicts with existing shortcuts
+        key_str = key_sequence.toString()
+        if key_str in self._key_to_id:
+            existing_id = self._key_to_id[key_str]
+            logger.warning(
+                "Shortcut key '%s' already registered to '%s'; "
+                "rejecting '%s'",
+                key_str,
+                existing_id,
+                shortcut_id,
+            )
+            return False
+
         shortcut = QShortcut(key_sequence, self._parent_widget)
         shortcut.activated.connect(callback)
         shortcut.activated.connect(lambda: self.shortcut_triggered.emit(shortcut_id))
 
         self._shortcuts[shortcut_id] = shortcut
+        self._key_to_id[key_str] = shortcut_id
         return True
 
     def unregister_shortcut(self, shortcut_id: str) -> bool:
@@ -82,6 +100,9 @@ class ShortcutManager(QObject):
             return False
 
         shortcut = self._shortcuts.pop(shortcut_id)
+        # Remove reverse key mapping
+        key_str = shortcut.key().toString()
+        self._key_to_id.pop(key_str, None)
         shortcut.setEnabled(False)
         shortcut.deleteLater()
         return True

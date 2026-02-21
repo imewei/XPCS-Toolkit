@@ -216,14 +216,6 @@ class GuiInitializationValidator:
         except Exception as e:
             issues.append(f"Failed to validate child widgets: {e}")
 
-        # Check signal connections
-        try:
-            # Verify that main window can process events
-            QtWidgets.QApplication.processEvents()
-            logger.debug("✅ Event processing functional")
-        except Exception as e:
-            issues.append(f"Event processing failed: {e}")
-
         if issues:
             for issue in issues:
                 logger.warning(f"GUI component issue: {issue}")
@@ -354,11 +346,7 @@ class RobustGuiStarter:
         """
 
         def setup_operation():
-            # Configure Qt application attributes
-            QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True)
-            QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps, True)
-
-            # Configure for better stability
+            # Configure for better stability (Qt6 enables HiDPI natively)
             QtWidgets.QApplication.setAttribute(
                 QtCore.Qt.AA_DontCreateNativeWidgetSiblings, True
             )
@@ -456,7 +444,11 @@ class RobustGuiStarter:
             overall_valid = env_valid and components_valid and async_valid
 
             if not overall_valid:
-                raise RuntimeError("GUI validation failed - see warnings for details")
+                # Advisory: log error but don't block startup (user may still
+                # be able to work with partial initialization).
+                logger.error(
+                    "GUI validation failed — check warnings above for details"
+                )
 
             return overall_valid
 

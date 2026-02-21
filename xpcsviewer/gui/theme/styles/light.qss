@@ -9,70 +9,70 @@
 
 /* Tooltips with warm border */
 QToolTip {
-    border-color: #C4C3BE;
+    border-color: @border_strong;
 }
 
 /* Disabled button — warm gray */
 QPushButton:disabled {
-    background-color: #C4C3BE;
-    color: #8A8A84;
+    background-color: @border_strong;
+    color: @text_placeholder;
 }
 
 /* Scrollbar handles — warm gray */
 QScrollBar::handle:vertical,
 QScrollBar::handle:horizontal {
-    background-color: #C4C3BE;
+    background-color: @border_strong;
 }
 
 QScrollBar::handle:vertical:hover,
 QScrollBar::handle:horizontal:hover {
-    background-color: #8A8A84;
+    background-color: @text_placeholder;
 }
 
 /* Alternating list rows */
 QListView::item:alternate {
-    background-color: #F0EFEC;
+    background-color: @background_secondary;
 }
 
 /* GroupBox title — warm secondary */
 QGroupBox::title {
-    color: #64645F;
+    color: @text_secondary;
 }
 
 /* Input placeholders */
 QLineEdit::placeholder {
-    color: #8A8A84;
+    color: @text_placeholder;
 }
 
 /* Tab refinements */
 QTabBar::tab:selected {
-    background-color: #FAFAF8;
-    color: #1A1A1A;
+    background-color: @background_primary;
+    color: @text_primary;
 }
 
 QTabBar::tab:!selected {
-    color: #64645F;
+    color: @text_secondary;
 }
 
 /* Progress bar chunk — teal */
 QProgressBar::chunk {
-    background-color: #0D9488;
+    background-color: @accent_primary;
 }
 
 /* Spin box buttons — warm surfaces */
 QSpinBox::up-button, QDoubleSpinBox::up-button,
 QSpinBox::down-button, QDoubleSpinBox::down-button {
-    background-color: #F0EFEC;
+    background-color: @background_secondary;
 }
 
 QSpinBox::up-button:hover, QDoubleSpinBox::up-button:hover,
 QSpinBox::down-button:hover, QDoubleSpinBox::down-button:hover {
-    background-color: #E2E1DD;
+    background-color: @border_subtle;
 }
 
 /* Slider groove */
 QSlider::groove:horizontal {
-    background-color: #E2E1DD;
+    background-color: @border_subtle;
 }
 
 /* TreeView branch indicators */
@@ -84,22 +84,22 @@ QTreeView::branch:has-children:closed {
 
 /* Table headers — warm surface */
 QHeaderView::section {
-    background-color: #F0EFEC;
-    color: #1A1A1A;
+    background-color: @background_secondary;
+    color: @text_primary;
     border: none;
-    border-bottom: 1px solid #C4C3BE;
+    border-bottom: 1px solid @border_strong;
     padding: 6px 8px;
     font-weight: 500;
 }
 
 QHeaderView::section:hover {
-    background-color: #E2E1DD;
+    background-color: @border_subtle;
 }
 
 /* Table corner button */
 QTableView QTableCornerButton::section {
-    background-color: #F0EFEC;
+    background-color: @background_secondary;
     border: none;
-    border-bottom: 1px solid #C4C3BE;
-    border-right: 1px solid #C4C3BE;
+    border-bottom: 1px solid @border_strong;
+    border-right: 1px solid @border_strong;
 }

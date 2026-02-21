@@ -22,7 +22,7 @@ TAB_INDEX_CATEGORY = {
     5: "Correlation",
     6: "Correlation",
     7: "Analysis",
-    8: "Correlation",  # Two-Time
+    8: "Analysis",  # Two-Time (grouped with Diffusion)
     9: "Setup",
     10: "Setup",
     11: "Setup",
@@ -69,30 +69,36 @@ class CategorySeparatorFilter(QtCore.QObject):
             if not isinstance(tab_bar, QtWidgets.QTabBar):
                 return False
 
-            # Let the tab bar paint first
-            tab_bar.paintEvent(event)
+            # Let the tab bar paint itself via the C++ virtual (avoids
+            # re-entering this event filter, which would cause recursion).
+            type(tab_bar).paintEvent(tab_bar, event)
 
             # Overlay separators
             painter = QtGui.QPainter(tab_bar)
-            painter.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing, False)
+            try:
+                painter.setRenderHint(
+                    QtGui.QPainter.RenderHint.Antialiasing, False
+                )
 
-            sep_color = _SEP_COLOR_DARK if self._dark_mode else _SEP_COLOR_LIGHT
-            pen = QtGui.QPen(sep_color, _SEP_WIDTH)
-            pen.setCapStyle(Qt.PenCapStyle.RoundCap)
-            painter.setPen(pen)
+                sep_color = (
+                    _SEP_COLOR_DARK if self._dark_mode else _SEP_COLOR_LIGHT
+                )
+                pen = QtGui.QPen(sep_color, _SEP_WIDTH)
+                pen.setCapStyle(Qt.PenCapStyle.RoundCap)
+                painter.setPen(pen)
 
-            for idx in _CATEGORY_START_INDICES:
-                if idx >= tab_bar.count():
-                    continue
-                rect = tab_bar.tabRect(idx)
-                if rect.isNull():
-                    continue
-                x = rect.left()
-                top = rect.top() + _SEP_MARGIN_TOP
-                bottom = rect.bottom() - _SEP_MARGIN_BOTTOM
-                painter.drawLine(x, top, x, bottom)
-
-            painter.end()
+                for idx in _CATEGORY_START_INDICES:
+                    if idx >= tab_bar.count():
+                        continue
+                    rect = tab_bar.tabRect(idx)
+                    if rect.isNull():
+                        continue
+                    x = rect.left()
+                    top = rect.top() + _SEP_MARGIN_TOP
+                    bottom = rect.bottom() - _SEP_MARGIN_BOTTOM
+                    painter.drawLine(x, top, x, bottom)
+            finally:
+                painter.end()
             return True  # event handled (we already called paintEvent)
 
         return False

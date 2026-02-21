@@ -483,6 +483,14 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         action_progress.setToolTip("Show progress dialog (Ctrl+Shift+P)")
         action_progress.triggered.connect(self.show_progress_dialog)
 
+        # Store toolbar actions for icon refresh on theme change
+        self._toolbar_actions = {
+            "folder-open": action_open,
+            "refresh": action_reload,
+            "play-circle": action_plot,
+            "activity": action_progress,
+        }
+
         toolbar.addSeparator()
 
         # Mask Editor button
@@ -623,9 +631,11 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         )
 
         # Tab navigation shortcuts
-        self.shortcut_manager.register_shortcut("next_tab", "Ctrl+Tab", self._next_tab)
         self.shortcut_manager.register_shortcut(
-            "prev_tab", "Ctrl+Shift+Tab", self._prev_tab
+            "next_tab", "Ctrl+PgDown", self._next_tab
+        )
+        self.shortcut_manager.register_shortcut(
+            "prev_tab", "Ctrl+PgUp", self._prev_tab
         )
 
         # Register actions in command palette
@@ -783,6 +793,11 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         text_color = self.theme_manager.get_color("text_primary")
         set_icon_color(text_color)
         clear_icon_cache()
+        # Refresh toolbar action icons with new theme color
+        if hasattr(self, "_toolbar_actions"):
+            style = self.style()
+            for icon_name, action in self._toolbar_actions.items():
+                action.setIcon(get_icon(icon_name, style))
         # Update tab bar separator color for the new theme
         if hasattr(self, "_category_tab_bar"):
             self._category_tab_bar.set_dark_mode(theme == "dark")
@@ -1020,17 +1035,26 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
                 return widget.currentIndex()
             return default
 
-        # Collect analysis parameters from UI widgets - extract VALUES, not widgets
+        # Map stability combobox index to metric name
+        _stab_metric_map = {0: "mean", 1: "sigma", 2: "contrast"}
+        stab_idx = get_combobox_index("cb_stab_type", 0)
+
+        # Collect analysis parameters from UI widgets — extract VALUES, not widgets.
+        # Fields without widget mappings (intensity_t_normalize, diffusion_model,
+        # twotime_symmetric, qmap_show_rings) keep their dataclass defaults.
         analysis_params = AnalysisParameters(
             saxs2d_colormap=get_combobox_text("cb_saxs2D_cmap", "viridis"),
             saxs2d_auto_level=get_checkbox_state("saxs2d_autolevel", True),
             saxs2d_log_scale=get_checkbox_state("saxs2d_log_scale", False),
             saxs1d_log_x=get_checkbox_state("saxs1d_log_x", False),
             saxs1d_log_y=get_checkbox_state("saxs1d_log_y", True),
+            stability_metric=_stab_metric_map.get(stab_idx, "mean"),
             g2_fit_function=get_combobox_text("g2_fitting_function", "single_exp"),
             g2_q_index=get_combobox_index("g2_q_selection", 0),
             g2_show_fit=get_checkbox_state("g2_show_fit", True),
             twotime_selected_q=get_combobox_index("comboBox_twotime_selection", 0),
+            twotime_colormap=get_combobox_text("cb_twotime_cmap", "viridis"),
+            qmap_colormap=get_combobox_text("cb_qmap_cmap", "viridis"),
         )
 
         return SessionState(
@@ -1198,8 +1222,8 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         """Set up keyboard shortcut to show progress dialog."""
         from xpcsviewer.gui.qt_compat import QKeySequence, QShortcut
 
-        # Ctrl+P to show progress dialog
-        shortcut = QShortcut(QKeySequence("Ctrl+P"), self)
+        # Ctrl+Shift+P to show progress dialog (Ctrl+P is command palette)
+        shortcut = QShortcut(QKeySequence("Ctrl+Shift+P"), self)
         shortcut.activated.connect(self.show_progress_dialog)
 
     def show_progress_dialog(self):
@@ -3959,6 +3983,9 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
             self._g2_diagnosis_window = BayesianDiagnosisWindow(
                 parent=self, title="G2 Bayesian Diagnosis"
             )
+            self._g2_diagnosis_window.destroyed.connect(
+                lambda: setattr(self, "_g2_diagnosis_window", None)
+            )
 
         win = self._g2_diagnosis_window
         win.set_axis_labels("Delay time (s)", "g2")
@@ -4151,6 +4178,9 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         if self._diff_diagnosis_window is None:
             self._diff_diagnosis_window = BayesianDiagnosisWindow(
                 parent=self, title="Diffusion Bayesian Diagnosis"
+            )
+            self._diff_diagnosis_window.destroyed.connect(
+                lambda: setattr(self, "_diff_diagnosis_window", None)
             )
 
         win = self._diff_diagnosis_window

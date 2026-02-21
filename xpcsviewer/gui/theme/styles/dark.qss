@@ -9,134 +9,134 @@
 
 /* Disabled button — muted blue-gray */
 QPushButton:disabled {
-    background-color: #3D4149;
-    color: #5A5D63;
+    background-color: @border_strong;
+    color: @text_disabled;
 }
 
 /* Selected items — bright teal with dark text */
 QListView::item:selected,
 QTreeView::item:selected,
 QTableView::item:selected {
-    background-color: #2DD4BF;
-    color: #191B1F;
+    background-color: @accent_primary;
+    color: @background_primary;
 }
 
 /* Scrollbar handles — blue-gray */
 QScrollBar::handle:vertical,
 QScrollBar::handle:horizontal {
-    background-color: #3D4149;
+    background-color: @border_strong;
 }
 
 QScrollBar::handle:vertical:hover,
 QScrollBar::handle:horizontal:hover {
-    background-color: #5A5D63;
+    background-color: @text_disabled;
 }
 
 /* Scrollbar background */
 QScrollBar:vertical,
 QScrollBar:horizontal {
-    background-color: #23262B;
+    background-color: @background_secondary;
 }
 
 /* Tab bar — dark instrument panel */
 QTabBar::tab:selected {
-    background-color: #191B1F;
-    color: #E8E8E4;
+    background-color: @background_primary;
+    color: @text_primary;
 }
 
 QTabBar::tab:!selected {
-    background-color: #23262B;
-    color: #7A7D83;
+    background-color: @background_secondary;
+    color: @text_placeholder;
 }
 
 QTabBar::tab:hover:!selected {
-    background-color: #2D3139;
+    background-color: @background_elevated;
 }
 
 /* Input fields — blue-gray */
 QLineEdit, QTextEdit, QComboBox {
-    background-color: #23262B;
-    border-color: #3D4149;
+    background-color: @background_secondary;
+    border-color: @border_strong;
 }
 
 QLineEdit:focus, QTextEdit:focus, QComboBox:focus {
-    border-color: #2DD4BF;
+    border-color: @accent_primary;
 }
 
 /* Combo box dropdown */
 QComboBox::drop-down {
-    border-left: 1px solid #3D4149;
+    border-left: 1px solid @border_strong;
 }
 
 QComboBox QAbstractItemView {
-    background-color: #23262B;
-    border-color: #3D4149;
+    background-color: @background_secondary;
+    border-color: @border_strong;
 }
 
 /* Group box — blue-gray panel */
 QGroupBox {
-    background-color: #23262B;
-    border-color: #3D4149;
+    background-color: @background_secondary;
+    border-color: @border_strong;
 }
 
 QGroupBox::title {
-    color: #7A7D83;
+    color: @text_placeholder;
 }
 
 /* Spin box — blue-gray */
 QSpinBox, QDoubleSpinBox {
-    background-color: #23262B;
-    border-color: #3D4149;
+    background-color: @background_secondary;
+    border-color: @border_strong;
 }
 
 QSpinBox::up-button, QDoubleSpinBox::up-button,
 QSpinBox::down-button, QDoubleSpinBox::down-button {
-    background-color: #2D3139;
+    background-color: @background_elevated;
 }
 
 QSpinBox::up-button:hover, QDoubleSpinBox::up-button:hover,
 QSpinBox::down-button:hover, QDoubleSpinBox::down-button:hover {
-    background-color: #3D4149;
+    background-color: @border_strong;
 }
 
 /* Slider groove */
 QSlider::groove:horizontal {
-    background-color: #2D3139;
+    background-color: @background_elevated;
 }
 
 /* Progress bar — teal phosphor */
 QProgressBar {
-    background-color: #2D3139;
-    border-color: #3D4149;
+    background-color: @background_elevated;
+    border-color: @border_strong;
 }
 
 QProgressBar::chunk {
-    background-color: #2DD4BF;
+    background-color: @accent_primary;
 }
 
 /* Checkbox and radio — blue-gray unchecked */
 QCheckBox::indicator:unchecked,
 QRadioButton::indicator:unchecked {
-    border-color: #5A5D63;
-    background-color: #23262B;
+    border-color: @text_disabled;
+    background-color: @background_secondary;
 }
 
 /* Tooltips — elevated blue-gray */
 QToolTip {
-    background-color: #2D3139;
-    border-color: #3D4149;
+    background-color: @background_elevated;
+    border-color: @border_strong;
 }
 
 /* Menu bar — blue-gray */
 QMenuBar {
-    background-color: #23262B;
-    border-bottom-color: #2D3139;
+    background-color: @background_secondary;
+    border-bottom-color: @background_elevated;
 }
 
 /* Status bar — blue-gray */
 QStatusBar {
-    background-color: #23262B;
-    border-top-color: #2D3139;
+    background-color: @background_secondary;
+    border-top-color: @background_elevated;
 }
 
 /* TreeView branch indicators */
@@ -148,53 +148,53 @@ QTreeView::branch:has-children:closed {
 
 /* Alternating list rows */
 QListView::item:alternate {
-    background-color: #23262B;
+    background-color: @background_secondary;
 }
 
 /* Table headers — blue-gray */
 QHeaderView::section {
-    background-color: #23262B;
-    color: #E8E8E4;
+    background-color: @background_secondary;
+    color: @text_primary;
     border: none;
-    border-bottom: 1px solid #3D4149;
+    border-bottom: 1px solid @border_strong;
     padding: 6px 8px;
     font-weight: 500;
 }
 
 QHeaderView::section:hover {
-    background-color: #2D3139;
+    background-color: @background_elevated;
 }
 
 /* Table corner button */
 QTableView QTableCornerButton::section {
-    background-color: #23262B;
+    background-color: @background_secondary;
     border: none;
-    border-bottom: 1px solid #3D4149;
-    border-right: 1px solid #3D4149;
+    border-bottom: 1px solid @border_strong;
+    border-right: 1px solid @border_strong;
 }
 
 /* Tree and list views — blue-gray */
 QTreeView, QListView {
-    background-color: #23262B;
-    border-color: #3D4149;
+    background-color: @background_secondary;
+    border-color: @border_strong;
 }
 
 /* Menu — elevated blue-gray with teal selection */
 QMenu {
-    background-color: #2D3139;
-    border-color: #3D4149;
+    background-color: @background_elevated;
+    border-color: @border_strong;
 }
 
 QMenu::item:selected {
-    background-color: #2DD4BF;
-    color: #191B1F;
+    background-color: @accent_primary;
+    color: @background_primary;
 }
 
 /* Splitter handles — teal on hover */
 QSplitter::handle {
-    background-color: #3D4149;
+    background-color: @border_strong;
 }
 
 QSplitter::handle:hover {
-    background-color: #2DD4BF;
+    background-color: @accent_primary;
 }

@@ -67,6 +67,7 @@ def apply_group_box_styling(
 
     group_box.style().unpolish(group_box)
     group_box.style().polish(group_box)
+    group_box.update()
 
 
 def set_button_role(
@@ -92,6 +93,7 @@ def set_button_role(
 
     button.style().unpolish(button)
     button.style().polish(button)
+    button.update()
 
 
 def create_separator(
@@ -303,3 +305,4 @@ def _apply_compact_density_to_sidebars(main_window: QWidget) -> None:
             widget.setProperty("density", "compact")
             widget.style().unpolish(widget)
             widget.style().polish(widget)
+            widget.update()

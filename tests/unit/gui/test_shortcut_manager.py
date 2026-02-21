@@ -191,3 +191,48 @@ class TestShortcutExecution:
             shortcut.activated.emit()
 
         assert blocker.args == ["test.shortcut"]
+
+
+class TestShortcutConflictDetection:
+    """Tests for key sequence conflict detection."""
+
+    @pytest.fixture
+    def window_and_manager(self, qtbot):
+        """Create window and manager for testing."""
+        window = QMainWindow()
+        qtbot.addWidget(window)
+        manager = ShortcutManager(parent=window)
+        return window, manager
+
+    def test_same_key_different_id_rejected(self, window_and_manager):
+        """Registering the same key sequence under a different ID should fail."""
+        window, manager = window_and_manager
+
+        result1 = manager.register_shortcut("action_a", "Ctrl+K", lambda: None)
+        result2 = manager.register_shortcut("action_b", "Ctrl+K", lambda: None)
+
+        assert result1 is True
+        assert result2 is False
+        assert "action_a" in manager._shortcuts
+        assert "action_b" not in manager._shortcuts
+
+    def test_same_key_same_id_rejected_as_duplicate(self, window_and_manager):
+        """Re-registering the same ID (even same key) should fail."""
+        window, manager = window_and_manager
+
+        result1 = manager.register_shortcut("action_a", "Ctrl+K", lambda: None)
+        result2 = manager.register_shortcut("action_a", "Ctrl+K", lambda: None)
+
+        assert result1 is True
+        assert result2 is False
+
+    def test_unregister_frees_key(self, window_and_manager):
+        """After unregistering, the key sequence should be available again."""
+        window, manager = window_and_manager
+
+        manager.register_shortcut("action_a", "Ctrl+K", lambda: None)
+        manager.unregister_shortcut("action_a")
+
+        result = manager.register_shortcut("action_b", "Ctrl+K", lambda: None)
+        assert result is True
+        assert "action_b" in manager._shortcuts

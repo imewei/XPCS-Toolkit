@@ -11,6 +11,8 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Literal
 
+from xpcsviewer.utils.atomic_io import safe_json_write
+
 logger = logging.getLogger(__name__)
 
 # Type alias for theme mode
@@ -44,31 +46,42 @@ def get_preferences_path() -> Path:
     return home_dir / "preferences.json"
 
 
-def validate_preferences(prefs: UserPreferences) -> list[str]:
+def clamp_preferences(prefs: UserPreferences) -> list[str]:
     """
-    Validate user preferences.
+    Validate and clamp user preferences in-place.
+
+    Invalid fields are corrected to safe defaults rather than
+    discarding the entire preferences object.
 
     Args:
-        prefs: UserPreferences to validate
+        prefs: UserPreferences to validate and fix
 
     Returns:
-        list of validation error messages (empty if valid)
+        list of warning messages for fields that were clamped
     """
-    errors = []
+    warnings: list[str] = []
 
     # Validate theme
     if prefs.theme not in ("light", "dark", "system"):
-        errors.append(
-            f"Invalid theme '{prefs.theme}', must be 'light', 'dark', or 'system'"
+        warnings.append(
+            f"Invalid theme '{prefs.theme}', reset to 'system'"
         )
+        prefs.theme = "system"
 
-    # Validate toast duration
-    if not 1000 <= prefs.toast_duration_ms <= 10000:
-        errors.append(
-            f"toast_duration_ms must be between 1000 and 10000, got {prefs.toast_duration_ms}"
-        )
+    # Validate and clamp toast duration
+    try:
+        prefs.toast_duration_ms = int(prefs.toast_duration_ms)
+    except (TypeError, ValueError):
+        warnings.append("Non-numeric toast_duration_ms, reset to 3000")
+        prefs.toast_duration_ms = 3000
+    if prefs.toast_duration_ms < 1000:
+        warnings.append(f"toast_duration_ms {prefs.toast_duration_ms} too low, clamped to 1000")
+        prefs.toast_duration_ms = 1000
+    elif prefs.toast_duration_ms > 10000:
+        warnings.append(f"toast_duration_ms {prefs.toast_duration_ms} too high, clamped to 10000")
+        prefs.toast_duration_ms = 10000
 
-    return errors
+    return warnings
 
 
 def load_preferences() -> UserPreferences:
@@ -78,21 +91,24 @@ def load_preferences() -> UserPreferences:
     Returns:
         UserPreferences instance (defaults if file missing or invalid)
     """
-    prefs_path = get_preferences_path()
-
-    if not prefs_path.exists():
-        logger.debug("Preferences file not found, using defaults")
-        return UserPreferences()
-
     try:
+        prefs_path = get_preferences_path()
+
+        if not prefs_path.exists():
+            logger.debug("Preferences file not found, using defaults")
+            return UserPreferences()
+
         with open(prefs_path, encoding="utf-8") as f:
             data = json.load(f)
+
+        if not isinstance(data, dict):
+            logger.warning("Preferences file is not a JSON object, using defaults")
+            return UserPreferences()
 
         # Handle migration from older versions if needed
         version = data.get("version", "1.0")
         if version != "1.0":
             logger.info(f"Migrating preferences from version {version}")
-            # Future migration logic would go here
 
         # Create preferences from loaded data
         prefs = UserPreferences(
@@ -105,11 +121,10 @@ def load_preferences() -> UserPreferences:
             version=data.get("version", "1.0"),
         )
 
-        # Validate and fix if needed
-        errors = validate_preferences(prefs)
-        if errors:
-            logger.warning(f"Invalid preferences, using defaults: {errors}")
-            return UserPreferences()
+        # Clamp invalid fields rather than discarding everything
+        warnings = clamp_preferences(prefs)
+        if warnings:
+            logger.warning(f"Preferences clamped: {warnings}")
 
         logger.debug("Loaded user preferences successfully")
         return prefs
@@ -132,18 +147,14 @@ def save_preferences(prefs: UserPreferences) -> bool:
     Returns:
         True if save successful, False otherwise
     """
-    # Validate before saving
-    errors = validate_preferences(prefs)
-    if errors:
-        logger.error(f"Cannot save invalid preferences: {errors}")
-        return False
-
-    prefs_path = get_preferences_path()
+    # Clamp before saving so the on-disk file is always valid
+    warnings = clamp_preferences(prefs)
+    if warnings:
+        logger.warning(f"Preferences clamped before save: {warnings}")
 
     try:
-        data = asdict(prefs)
-        with open(prefs_path, "w", encoding="utf-8") as f:
-            json.dump(data, f, indent=2)
+        prefs_path = get_preferences_path()
+        safe_json_write(prefs_path, asdict(prefs))
         logger.debug("Saved user preferences successfully")
         return True
 

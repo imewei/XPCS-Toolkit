@@ -91,6 +91,9 @@ class ThemeManager(QObject):
             - Emits theme_changed signal
             - Persists preference to disk
         """
+        if mode == self._current_mode:
+            return
+
         self._current_mode = mode
 
         # Save preference
@@ -293,6 +296,8 @@ class ThemeManager(QObject):
             "grid.color": colors.plot_grid,
             "legend.facecolor": colors.background_elevated,
             "legend.edgecolor": colors.border_subtle,
+            "savefig.facecolor": colors.plot_background,
+            "savefig.edgecolor": colors.plot_background,
         }
 
     def apply_to_pyqtgraph(self) -> None:

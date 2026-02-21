@@ -6,6 +6,7 @@ operation feedback, errors, and warnings.
 """
 
 import logging
+import weakref
 from enum import Enum
 
 # Qt imports via compatibility layer
@@ -18,6 +19,7 @@ from xpcsviewer.gui.qt_compat import (
     Qt,
     QTimer,
     QWidget,
+    Signal,
 )
 
 logger = logging.getLogger(__name__)
@@ -34,6 +36,8 @@ class ToastType(Enum):
 
 class ToastWidget(QFrame):
     """Individual toast notification widget with fade animation."""
+
+    dismissed = Signal()
 
     def __init__(
         self,
@@ -85,7 +89,7 @@ class ToastWidget(QFrame):
     def mousePressEvent(self, event) -> None:
         """Handle click to dismiss."""
         if self._dismissible:
-            self.close()
+            self.dismissed.emit()
         super().mousePressEvent(event)
 
     def get_opacity(self) -> float:
@@ -106,6 +110,8 @@ class ToastManager:
 
     Handles creating, displaying, stacking, and dismissing toasts.
     """
+
+    _MAX_TOASTS = 5
 
     def __init__(self, parent: QWidget) -> None:
         """
@@ -139,6 +145,10 @@ class ToastManager:
         if duration_ms is None:
             duration_ms = self._default_duration_ms
 
+        # Enforce stack limit — dismiss oldest first
+        while len(self._toasts) >= self._MAX_TOASTS:
+            self._dismiss_toast(self._toasts[0])
+
         toast = ToastWidget(
             message=message,
             toast_type=toast_type,
@@ -146,6 +156,9 @@ class ToastManager:
             dismissible=dismissible,
             parent=self._parent,
         )
+
+        # Connect click-dismiss signal to manager
+        toast.dismissed.connect(lambda: self._dismiss_toast(toast))
 
         self._toasts.append(toast)
         self._position_toasts()
@@ -155,9 +168,13 @@ class ToastManager:
             f"Toast shown: [{toast_type.value}] {message[:50]}{'...' if len(message) > 50 else ''}"
         )
 
-        # Set up auto-dismiss
+        # Set up auto-dismiss with weakref to avoid preventing GC
         if duration_ms > 0:
-            QTimer.singleShot(duration_ms, lambda: self._dismiss_toast(toast))
+            ref = weakref.ref(toast)
+            QTimer.singleShot(
+                duration_ms,
+                lambda: self._dismiss_toast(ref()) if ref() is not None else None,
+            )
 
     def show_info(self, message: str) -> None:
         """Show an info toast."""

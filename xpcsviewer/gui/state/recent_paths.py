@@ -4,12 +4,15 @@ Recent paths management for XPCS-TOOLKIT GUI.
 This module handles tracking and persisting recently accessed directories.
 """
 
+import copy
 import json
 import logging
 import os
 from dataclasses import asdict, dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
+
+from xpcsviewer.utils.atomic_io import safe_json_write
 
 logger = logging.getLogger(__name__)
 
@@ -59,15 +62,20 @@ class RecentPathsManager:
 
     def _load(self) -> None:
         """Load recent paths from disk."""
-        file_path = get_recent_paths_file()
-
-        if not file_path.exists():
-            self._state = RecentPathsState(max_entries=self._max_entries)
-            return
-
         try:
+            file_path = get_recent_paths_file()
+
+            if not file_path.exists():
+                self._state = RecentPathsState(max_entries=self._max_entries)
+                return
+
             with open(file_path, encoding="utf-8") as f:
                 data = json.load(f)
+
+            if not isinstance(data, dict):
+                logger.warning("Recent paths file is not a JSON object")
+                self._state = RecentPathsState(max_entries=self._max_entries)
+                return
 
             paths = []
             for entry in data.get("paths", []):
@@ -95,17 +103,16 @@ class RecentPathsManager:
         if self._state is None:
             return False
 
-        file_path = get_recent_paths_file()
-
         try:
+            file_path = get_recent_paths_file()
+
             data = {
                 "version": self._state.version,
                 "max_entries": self._state.max_entries,
                 "paths": [asdict(p) for p in self._state.paths],
             }
 
-            with open(file_path, "w", encoding="utf-8") as f:
-                json.dump(data, f, indent=2)
+            safe_json_write(file_path, data)
 
             logger.debug("Recent paths saved")
             return True
@@ -124,6 +131,9 @@ class RecentPathsManager:
         if self._state is None:
             self._state = RecentPathsState(max_entries=self._max_entries)
 
+        # Save old state for rollback on save failure
+        old_paths = copy.deepcopy(self._state.paths)
+
         # Normalize path
         path = str(Path(path).resolve())
         now = datetime.now(UTC).isoformat()
@@ -136,7 +146,8 @@ class RecentPathsManager:
                 # Move to front
                 self._state.paths.remove(existing)
                 self._state.paths.insert(0, existing)
-                self._save()
+                if not self._save():
+                    self._state.paths = old_paths
                 return
 
         # Add new path
@@ -147,7 +158,8 @@ class RecentPathsManager:
         if len(self._state.paths) > self._state.max_entries:
             self._state.paths = self._state.paths[: self._state.max_entries]
 
-        self._save()
+        if not self._save():
+            self._state.paths = old_paths
 
     def get_recent_paths(self) -> list[RecentPath]:
         """
