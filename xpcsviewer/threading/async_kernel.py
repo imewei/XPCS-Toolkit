@@ -295,11 +295,14 @@ class AsyncViewerKernel(QObject):
     def _submit_plot_worker(self, worker, operation_id: str) -> str:
         """Submit a plot worker and set up signal connections."""
         # Create bound slots so we can disconnect them later
-        finished_slot = lambda result: self._on_plot_ready(operation_id, result)
-        error_slot = lambda wid, msg, tb, retry: self._on_operation_error(
-            operation_id, msg, tb
-        )
-        cancelled_slot = lambda wid, reason: self._on_operation_cancelled(operation_id)
+        def finished_slot(result):
+            return self._on_plot_ready(operation_id, result)
+
+        def error_slot(wid, msg, tb, retry):
+            return self._on_operation_error(operation_id, msg, tb)
+
+        def cancelled_slot(wid, reason):
+            return self._on_operation_cancelled(operation_id)
 
         worker.signals.finished.connect(finished_slot)
         worker.signals.error.connect(error_slot)
