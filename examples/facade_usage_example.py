@@ -49,7 +49,7 @@ def example_schema_validation():
 
     # Demonstrate validation - this will raise ValueError
     try:
-        invalid_qmap = QMapSchema(
+        QMapSchema(
             sqmap=sqmap,
             dqmap=dqmap[:50, :50],  # Wrong shape!
             phis=phis,

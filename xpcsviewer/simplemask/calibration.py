@@ -157,8 +157,6 @@ def compute_center_from_ring(
     Raises:
         ValueError: If no ring pixels detected or insufficient points.
     """
-    backend = get_backend()
-
     # Apply mask
     if mask is not None:
         valid_image = np.where(mask, image, np.nan)

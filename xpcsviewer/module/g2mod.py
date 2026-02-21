@@ -914,8 +914,6 @@ def compute_g2_ensemble_statistics(g2_data_list, include_median: bool = False):
     g2_data_list = [ensure_numpy(arr) for arr in g2_data_list]
     # Stack all data for vectorized operations
     g2_stack = np.stack(g2_data_list, axis=0)  # [batch, time, q_values]
-    num_q = g2_stack.shape[2]
-
     # Vectorized statistical computations — O(B·T·Q) operations only.
     # np.median is intentionally excluded from the default path: it requires a
     # full O(B·T·Q·log B) partial sort and accounts for 85% of this function's
