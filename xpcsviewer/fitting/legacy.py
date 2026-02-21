@@ -246,13 +246,21 @@ def fit_with_fixed(
     # Process boundaries for fitting parameters only
     bounds_fit = bounds[:, fit_flag]
 
-    # Initial guess for fitting parameters
-    p0 = np.mean(bounds_fit, axis=0) if p0 is None else np.array(p0)[fit_flag]
+    # Preserve full initial guess before slicing to free params.
+    # Fixed parameters use their p0 value (data-driven) or the midpoint
+    # of bounds when p0 is absent — NOT the upper bound.
+    if p0 is not None:
+        full_p0 = np.array(p0)
+    else:
+        full_p0 = np.mean(bounds, axis=0)
+
+    # Slice to free parameters for optimizer
+    p0 = full_p0[fit_flag]
 
     fit_val = np.zeros((y.shape[1], 2, num_args))
 
-    # Pre-compute fixed values (concrete) and indices for fitted params
-    fixed_values = bounds[1, :].tolist()  # Upper bounds as fixed values
+    # Fixed parameter values: use initial guess (semantically correct)
+    fixed_values = full_p0.tolist()
     fit_indices = [i for i in range(num_args) if fit_flag[i]]
 
     # Create wrapper function for fixed parameters
@@ -290,7 +298,7 @@ def fit_with_fixed(
                 errors = np.where(np.isfinite(errors), errors, np.abs(popt) * 0.1)
 
             fit_val[n, 1, fit_flag] = errors
-            fit_val[n, 0, fix_flag] = bounds[1, fix_flag]
+            fit_val[n, 0, fix_flag] = full_p0[fix_flag]
             fit_val[n, 1, fix_flag] = 0
 
         except Exception as e:
@@ -368,12 +376,18 @@ def fit_with_fixed_parallel(
     num_qvals = y.shape[1]
 
     bounds_fit = bounds[:, fit_flag]
-    p0 = np.mean(bounds_fit, axis=0) if p0 is None else np.array(p0)[fit_flag]
+
+    # Preserve full initial guess for fixed parameter values
+    if p0 is not None:
+        full_p0 = np.array(p0)
+    else:
+        full_p0 = np.mean(bounds, axis=0)
+    p0 = full_p0[fit_flag]
 
     fit_val = np.zeros((num_qvals, 2, num_args))
 
-    # Pre-compute fixed values and fit indices for JIT-safe wrapper
-    fixed_values_par = bounds[1, :].tolist()
+    # Fixed parameter values: use initial guess (not upper bound)
+    fixed_values_par = full_p0.tolist()
     fit_indices_par = [i for i in range(num_args) if fit_flag[i]]
 
     def wrapper_func(x_data, *fit_params):
@@ -409,7 +423,7 @@ def fit_with_fixed_parallel(
             if success:
                 fit_val[col_idx, 0, fit_flag] = popt
                 fit_val[col_idx, 1, fit_flag] = errors
-                fit_val[col_idx, 0, fix_flag] = bounds[1, fix_flag]
+                fit_val[col_idx, 0, fix_flag] = full_p0[fix_flag]
                 fit_val[col_idx, 1, fix_flag] = 0
             else:
                 fit_val[col_idx, 0, :] = np.mean(bounds, axis=0)
@@ -567,13 +581,19 @@ def fit_with_fixed_sequential(
 
     num_args = len(fit_flag)
     bounds_fit = bounds[:, fit_flag]
-    p0 = np.mean(bounds_fit, axis=0) if p0 is None else np.array(p0)[fit_flag]
+
+    # Preserve full initial guess for fixed parameter values
+    if p0 is not None:
+        full_p0 = np.array(p0)
+    else:
+        full_p0 = np.mean(bounds, axis=0)
+    p0 = full_p0[fit_flag]
 
     fit_val = np.zeros((y.shape[1], 2, num_args))
     fit_methods = []
 
-    # Pre-compute fixed values and fit indices for JIT-safe wrapper
-    fixed_values_seq = bounds[1, :].tolist()
+    # Fixed parameter values: use initial guess (not upper bound)
+    fixed_values_seq = full_p0.tolist()
     fit_indices_seq = [i for i in range(num_args) if fit_flag[i]]
 
     def wrapper_func(x_data, *fit_params):
@@ -621,7 +641,7 @@ def fit_with_fixed_sequential(
             if not np.all(np.isfinite(errors)):
                 errors = np.where(np.isfinite(errors), errors, np.abs(popt) * 0.1)
             fit_val[n, 1, fit_flag] = errors
-            fit_val[n, 0, fix_flag] = bounds[1, fix_flag]
+            fit_val[n, 0, fix_flag] = full_p0[fix_flag]
             fit_val[n, 1, fix_flag] = 0
 
         except Exception as e:
