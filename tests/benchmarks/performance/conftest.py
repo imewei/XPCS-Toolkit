@@ -13,6 +13,9 @@ from typing import Any, Callable
 import numpy as np
 import pytest
 
+# Apply performance marker to all tests in this directory
+pytestmark = pytest.mark.performance
+
 
 @dataclass
 class BenchmarkResult:

@@ -11,6 +11,8 @@ import time
 import numpy as np
 import pytest
 
+pytestmark = pytest.mark.performance
+
 # Check if JAX is available
 try:
     import jax
@@ -77,8 +79,9 @@ class TestJITWarmup:
             times.append(time.perf_counter() - start)
 
         # All cached calls should have similar timing
-        # (within 10x of each other for reasonable consistency)
-        assert max(times) < 10 * min(times) + 0.001  # Add small epsilon
+        # (within 10x of each other for reasonable consistency).
+        # Use 10ms epsilon to absorb OS scheduling jitter on CI runners.
+        assert max(times) < 10 * min(times) + 0.010
 
     def test_jit_with_different_shapes_recompiles(self, jax_backend_active) -> None:
         """Test JIT recompiles for different input shapes."""

@@ -9,6 +9,9 @@ import os
 
 import pytest
 
+# Apply performance marker to all tests in this directory
+pytestmark = pytest.mark.performance
+
 
 @pytest.fixture
 def jax_backend_active(monkeypatch):
