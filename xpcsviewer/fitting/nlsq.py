@@ -32,7 +32,7 @@ def nlsq_optimize(
     yerr: ArrayLike | None,
     p0: dict[str, float],
     bounds: dict[str, tuple[float, float]],
-    preset: Literal["fast", "robust", "global", "streaming", "large"] = "robust",
+    workflow: Literal["auto", "auto_global", "hpc"] = "auto_global",
     *,
     auto_bounds: bool = False,
     stability: Literal["auto", "check", False] = False,
@@ -55,8 +55,8 @@ def nlsq_optimize(
             ``absolute_sigma=True`` is passed to the solver.
         p0: Initial parameter guesses as ``{name: value}``.
         bounds: Parameter bounds as ``{name: (lower, upper)}``.
-        preset: NLSQ solver preset. One of ``"fast"``,
-            ``"robust"``, ``"global"``, ``"streaming"``, ``"large"``.
+        workflow: NLSQ solver workflow. One of ``"auto"`` (fast),
+            ``"auto_global"`` (robust, default), ``"hpc"`` (streaming).
         auto_bounds: If True, let NLSQ infer bounds from data.
         stability: Numerical stability mode. ``"auto"`` applies
             automatic fixes, ``"check"`` only diagnoses, ``False``
@@ -77,7 +77,7 @@ def nlsq_optimize(
         ...     x=delay, y=g2, yerr=g2_err,
         ...     p0={"a": 0.3, "b": 1.0},
         ...     bounds={"a": (0, 1), "b": (1e-6, 1e6)},
-        ...     preset="robust",
+        ...     workflow="auto_global",
         ... )
         >>> print(f"converged={result.converged}, chi2={result.chi_squared:.3f}")
     """
@@ -107,7 +107,7 @@ def nlsq_optimize(
             sigma=yerr,
             absolute_sigma=yerr is not None,
             bounds=(lower, upper),
-            preset=preset,
+            workflow=workflow,
             auto_bounds=auto_bounds,
             stability=stability,
             fallback=fallback,

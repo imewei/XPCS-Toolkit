@@ -171,7 +171,7 @@ def nlsq_fit(
     yerr: ArrayLike | None,
     p0: dict[str, float],
     bounds: dict[str, tuple[float, float]],
-    preset: str = "robust",
+    workflow: str = "auto_global",
     *,
     auto_bounds: bool = False,
     stability: str | bool = False,
@@ -195,14 +195,12 @@ def nlsq_fit(
         Initial parameter guess {name: value}
     bounds : dict
         Parameter bounds {name: (min, max)}
-    preset : {'fast', 'robust', 'global', 'streaming', 'large'}, optional
-        NLSQ preset configuration (default: 'robust'):
+    workflow : {'auto', 'auto_global', 'hpc'}, optional
+        NLSQ workflow configuration (default: 'auto_global'):
 
-        - 'fast': Single-start for speed
-        - 'robust': Multi-start with 5 starts
-        - 'global': Thorough search with 20 starts
-        - 'streaming': For large datasets
-        - 'large': Auto-detect dataset size
+        - 'auto': Fast single-start
+        - 'auto_global': Robust multi-start (default)
+        - 'hpc': Streaming for large datasets
 
     auto_bounds : bool, optional
         Enable automatic bounds inference (default: False)
@@ -238,7 +236,7 @@ def nlsq_fit(
 
     >>> result = nlsq_fit(
     ...     model_fn, x, y, yerr, p0, bounds,
-    ...     preset='robust',
+    ...     workflow='auto_global',
     ...     stability='auto',
     ...     fallback=True,
     ...     compute_diagnostics=True,

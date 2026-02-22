@@ -127,7 +127,7 @@ class TestNLSQEquivalence:
             "contrast": (0.0, 1.0),
         }
 
-        result = nlsq_optimize(single_exp_func, x, y, yerr, p0, bounds, preset="fast")
+        result = nlsq_optimize(single_exp_func, x, y, yerr, p0, bounds, workflow="auto")
 
         # Compare results - should be very close
         np.testing.assert_allclose(result.params["tau"], popt_scipy[0], rtol=0.1)
@@ -153,7 +153,7 @@ class TestNLSQEquivalence:
             "contrast": (0.0, 1.0),
         }
 
-        result = nlsq_optimize(single_exp_func, x, y, yerr, p0, bounds, preset="fast")
+        result = nlsq_optimize(single_exp_func, x, y, yerr, p0, bounds, workflow="auto")
 
         # Check recovered values are close to true values
         assert np.abs(result.params["tau"] - true_tau) < 0.2
@@ -177,7 +177,7 @@ class TestChiSquaredEquivalence:
             "contrast": (0.0, 1.0),
         }
 
-        result = nlsq_optimize(single_exp_func, x, y, yerr, p0, bounds, preset="fast")
+        result = nlsq_optimize(single_exp_func, x, y, yerr, p0, bounds, workflow="auto")
 
         # Calculate chi-squared manually
         y_fit = single_exp_func(
@@ -215,7 +215,7 @@ class TestCovarianceEquivalence:
             "contrast": (0.0, 1.0),
         }
 
-        result = nlsq_optimize(single_exp_func, x, y, yerr, p0, bounds, preset="fast")
+        result = nlsq_optimize(single_exp_func, x, y, yerr, p0, bounds, workflow="auto")
 
         # Covariance should be (n_params, n_params)
         assert result.covariance.shape == (3, 3)
@@ -233,7 +233,7 @@ class TestCovarianceEquivalence:
             "contrast": (0.0, 1.0),
         }
 
-        result = nlsq_optimize(single_exp_func, x, y, yerr, p0, bounds, preset="fast")
+        result = nlsq_optimize(single_exp_func, x, y, yerr, p0, bounds, workflow="auto")
 
         # Covariance should be symmetric
         np.testing.assert_allclose(result.covariance, result.covariance.T, rtol=1e-6)
@@ -251,7 +251,7 @@ class TestCovarianceEquivalence:
             "contrast": (0.0, 1.0),
         }
 
-        result = nlsq_optimize(single_exp_func, x, y, yerr, p0, bounds, preset="fast")
+        result = nlsq_optimize(single_exp_func, x, y, yerr, p0, bounds, workflow="auto")
 
         # Diagonal elements (variances) should be positive
         assert np.all(np.diag(result.covariance) >= 0)

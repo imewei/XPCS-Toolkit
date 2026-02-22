@@ -48,7 +48,7 @@ class TestNLSQConvergence:
             "contrast": (0.0, 1.0),
         }
 
-        result = nlsq_optimize(single_exp_func, x, y, yerr, p0, bounds, preset="fast")
+        result = nlsq_optimize(single_exp_func, x, y, yerr, p0, bounds, workflow="auto")
 
         assert isinstance(result, NLSQResult)
         # Check fit is reasonable even if "converged" flag may be False
@@ -99,7 +99,7 @@ class TestNLSQConvergence:
             "contrast": (0.0, 1.0),
         }
 
-        result = nlsq_optimize(single_exp_func, x, y, yerr, p0, bounds, preset="fast")
+        result = nlsq_optimize(single_exp_func, x, y, yerr, p0, bounds, workflow="auto")
 
         assert result.covariance is not None
         assert result.covariance.shape == (3, 3)
@@ -118,7 +118,7 @@ class TestNLSQConvergence:
             "contrast": (0.0, 1.0),
         }
 
-        result = nlsq_optimize(single_exp_func, x, y, yerr, p0, bounds, preset="fast")
+        result = nlsq_optimize(single_exp_func, x, y, yerr, p0, bounds, workflow="auto")
 
         if result.is_fallback:
             pytest.skip("NLSQ returned fallback (JAX tracing incompatibility)")
@@ -139,7 +139,7 @@ class TestNLSQConvergence:
             "contrast": (0.0, 1.0),
         }
 
-        result = nlsq_optimize(single_exp_func, x, y, yerr, p0, bounds, preset="fast")
+        result = nlsq_optimize(single_exp_func, x, y, yerr, p0, bounds, workflow="auto")
 
         if result.is_fallback:
             pytest.skip("NLSQ returned fallback (JAX tracing incompatibility)")
@@ -160,7 +160,7 @@ class TestNLSQConvergence:
             "contrast": (0.0, 1.0),
         }
 
-        result = nlsq_optimize(single_exp_func, x, y, yerr, p0, bounds, preset="fast")
+        result = nlsq_optimize(single_exp_func, x, y, yerr, p0, bounds, workflow="auto")
 
         assert hasattr(result, "pcov_valid")
         assert hasattr(result, "pcov_message")
@@ -185,7 +185,7 @@ class TestNLSQEdgeCases:
             "contrast": (0.0, 1.0),
         }
 
-        result = nlsq_optimize(single_exp_func, x, y, None, p0, bounds, preset="fast")
+        result = nlsq_optimize(single_exp_func, x, y, None, p0, bounds, workflow="auto")
 
         assert isinstance(result, NLSQResult)
         # Check we get reasonable parameters even without yerr
@@ -207,7 +207,7 @@ class TestNLSQEdgeCases:
             "contrast": (0.0, 1.0),
         }
 
-        result = nlsq_optimize(single_exp_func, x, y, yerr, p0, bounds, preset="robust")
+        result = nlsq_optimize(single_exp_func, x, y, yerr, p0, bounds, workflow="auto_global")
 
         if result.is_fallback:
             pytest.skip("NLSQ returned fallback (JAX tracing incompatibility)")
