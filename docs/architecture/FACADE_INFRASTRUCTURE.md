@@ -428,7 +428,6 @@ To add a new facade method:
 
 - **Architecture Analysis:** `docs/architecture/dependency_analysis.md`
 - **Integration Catalog:** `docs/architecture/integration_catalog.md`
-- **Example Usage:** `examples/facade_usage_example.py`
 - **Backend Abstraction:** `xpcsviewer/backends/README.md`
 
 ---
