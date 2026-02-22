@@ -6,6 +6,7 @@ GUI responsiveness by moving heavy operations to background threads.
 """
 
 from .async_kernel import AsyncDataPreloader, AsyncViewerKernel
+from .batch_bayesian_coordinator import BatchBayesianCoordinator
 from .async_workers import (
     BaseAsyncWorker,
     ComputationWorker,
@@ -46,6 +47,8 @@ from .unified_threading import (
 __all__ = [
     # Async components
     "AsyncDataPreloader",
+    # Batch Bayesian coordinator
+    "BatchBayesianCoordinator",
     # GUI integration
     "AsyncMethodMixin",
     "AsyncViewerKernel",

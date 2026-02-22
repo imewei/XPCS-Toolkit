@@ -158,18 +158,21 @@ def _run_mcmc(
         kernel_kwargs["init_strategy"] = init_strategy
     kernel = NUTS(model, **kernel_kwargs)
 
-    # Create MCMC instance
+    # Create MCMC instance — run chains sequentially on single-device systems
+    # to avoid NumPyro's "not enough devices" UserWarning.
+    chain_method = "sequential" if jax.local_device_count() < config.num_chains else "parallel"
     mcmc = MCMC(
         kernel,
         num_warmup=config.num_warmup,
         num_samples=config.num_samples,
         num_chains=config.num_chains,
+        chain_method=chain_method,
     )
 
     # BUG-D fix: Request num_steps to compute max_treedepth_reached.
     # Previously hardcoded to 0 with the comment "NumPyro doesn't track
     # this directly", but num_steps IS available via extra_fields.
-    mcmc.run(rng_key, *model_args, extra_fields=("num_steps",))
+    mcmc.run(rng_key, *model_args, extra_fields=("num_steps", "energy"))
 
     return mcmc, mcmc.get_samples()
 

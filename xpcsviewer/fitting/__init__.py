@@ -253,7 +253,7 @@ def nlsq_fit(
         yerr,
         p0,
         bounds,
-        preset=cast(Any, preset),
+        workflow=cast(Any, workflow),
         auto_bounds=auto_bounds,
         stability=cast(Any, stability),
         fallback=fallback,
@@ -406,6 +406,9 @@ def minimize_with_grad(
     )
 
 
+# Bayesian batch assembly
+from .bayesian_assembly import assemble_fit_summary
+
 # Re-export legacy fitting functions for xpcs_file.py compatibility
 from .legacy import (
     double_exp,
@@ -465,6 +468,8 @@ __all__ = [
     "plot_posterior_predictive",
     "plot_comparison",
     "save_figure",
+    # Bayesian batch assembly
+    "assemble_fit_summary",
     # Legacy fitting functions
     "single_exp",
     "double_exp",
