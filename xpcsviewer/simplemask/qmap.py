@@ -23,6 +23,8 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
+from xpcsviewer.fileIO.qmap_utils import Q_UNIT_DISPLAY
+
 # Energy to wavevector constant: lambda (Angstrom) = 12.39841984 / E (keV)
 E2KCONST = 12.39841984
 
@@ -434,9 +436,9 @@ def _compute_transmission_qmap_backend(
     qmap_unit = {
         "phi": "deg",
         "TTH": "deg",
-        "q": "Å⁻¹",
-        "qx": "Å⁻¹",
-        "qy": "Å⁻¹",
+        "q": Q_UNIT_DISPLAY,
+        "qx": Q_UNIT_DISPLAY,
+        "qy": Q_UNIT_DISPLAY,
         "x": "pixel",
         "y": "pixel",
     }
@@ -704,11 +706,11 @@ def _compute_reflection_qmap_backend(
         "TTH": "deg",
         "tth": "deg",
         "alpha_f": "deg",
-        "qx": "Å⁻¹",
-        "qy": "Å⁻¹",
-        "qz": "Å⁻¹",
-        "qr": "Å⁻¹",
-        "q": "Å⁻¹",
+        "qx": Q_UNIT_DISPLAY,
+        "qy": Q_UNIT_DISPLAY,
+        "qz": Q_UNIT_DISPLAY,
+        "qr": Q_UNIT_DISPLAY,
+        "q": Q_UNIT_DISPLAY,
         "x": "pixel",
         "y": "pixel",
     }

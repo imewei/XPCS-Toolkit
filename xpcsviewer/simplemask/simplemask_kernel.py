@@ -17,6 +17,7 @@ from pyqtgraph.Qt import QtCore
 from xpcsviewer.backends._conversions import ensure_numpy
 from xpcsviewer.simplemask.area_mask import MaskAssemble
 from xpcsviewer.simplemask.pyqtgraph_mod import ImageViewROI, LineROI
+from xpcsviewer.fileIO.qmap_utils import Q_UNIT_DISPLAY
 from xpcsviewer.simplemask.qmap import compute_qmap
 from xpcsviewer.simplemask.utils import (
     check_consistency,
@@ -298,7 +299,7 @@ class SimpleMaskKernel:
                 else None
             )
             if self.qmap is not None and q_val is not None:
-                msg += f", q={q_val[row, col]:.4f} Å⁻¹"
+                msg += f", q={q_val[row, col]:.4f} {Q_UNIT_DISPLAY}"
             if self.detector_image is not None:
                 intensity = self.detector_image[row, col]
                 msg += f", I={intensity:.1f}"

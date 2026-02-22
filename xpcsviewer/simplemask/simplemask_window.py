@@ -38,6 +38,7 @@ from xpcsviewer.simplemask.drawing_tools import (
     get_tool_color,
 )
 from xpcsviewer.simplemask.pyqtgraph_mod import ImageViewROI
+from xpcsviewer.fileIO.qmap_utils import Q_UNIT_DISPLAY
 from xpcsviewer.simplemask.simplemask_kernel import SimpleMaskKernel
 from xpcsviewer.simplemask.ui.simplemask_ui import setup_ui
 
@@ -528,9 +529,9 @@ class SimpleMaskWindow(QMainWindow):
             q_min = np.nanmin(qmap["q"])
             q_max = np.nanmax(qmap["q"])
             self.status_bar.showMessage(
-                f"Q-map generated: {q_min:.4f} - {q_max:.4f} Å⁻¹"
+                f"Q-map generated: {q_min:.4f} - {q_max:.4f} {Q_UNIT_DISPLAY}"
             )
-            logger.info(f"Generated Q-map: q range [{q_min:.4f}, {q_max:.4f}] Å⁻¹")
+            logger.info(f"Generated Q-map: q range [{q_min:.4f}, {q_max:.4f}] {Q_UNIT_DISPLAY}")
 
             # Update info label to show successful state
             if self._detector_image is not None:

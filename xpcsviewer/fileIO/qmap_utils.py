@@ -26,6 +26,53 @@ def _log_qmap_shape(qmap: dict | None, prefix: str = "QMap") -> None:
     )
 
 
+# ── Unit string constants and normalization ──────────────────────────
+# HDF5 files from different beamlines / software versions store q-units
+# in various encodings: "1/A", "Å⁻¹", double-encoded UTF-8, Latin-1, etc.
+# Normalise them all to a single canonical Unicode representation.
+
+#: Canonical display string for inverse Ångström.
+Q_UNIT_DISPLAY = "Å⁻¹"
+
+# Map common representations found in HDF5 files to the canonical form.
+_UNIT_ALIASES: dict[str, str] = {
+    "1/A": Q_UNIT_DISPLAY,
+    "1/Ang": Q_UNIT_DISPLAY,
+    "A^-1": Q_UNIT_DISPLAY,
+    "Ang^-1": Q_UNIT_DISPLAY,
+    "1/nm": "nm⁻¹",
+    "nm^-1": "nm⁻¹",
+}
+
+# Double-encoded Å: UTF-8 bytes of Å (C3 85) misread as Latin-1 → "Ã\x85"
+_DOUBLE_ENCODED_A_RING = "\u00c3\u0085"  # Ã + <control char>
+
+
+def _normalize_unit(unit: str) -> str:
+    """Normalize a unit string to canonical Unicode form."""
+    stripped = unit.strip()
+    if stripped in _UNIT_ALIASES:
+        return _UNIT_ALIASES[stripped]
+    # Fix double-encoded Å (UTF-8 bytes interpreted as Latin-1)
+    if _DOUBLE_ENCODED_A_RING in stripped:
+        try:
+            fixed = stripped.encode("latin-1").decode("utf-8")
+            return fixed
+        except (UnicodeEncodeError, UnicodeDecodeError):
+            pass
+    return stripped
+
+
+def _decode_unit(raw: bytes) -> str:
+    """Decode a raw byte string from HDF5 into a canonical unit string."""
+    try:
+        decoded = raw.decode("utf-8")
+    except UnicodeDecodeError:
+        # Fallback: try Latin-1 (always succeeds, 1 byte → 1 char)
+        decoded = raw.decode("latin-1")
+    return _normalize_unit(decoded)
+
+
 # Detector and beam constants
 DEFAULT_DETECTOR_SIZE = 1024
 DEFAULT_BEAM_CENTER = DEFAULT_DETECTOR_SIZE // 2  # 512
@@ -128,7 +175,13 @@ class QMap:
             if isinstance(info["map_names"][0], bytes):
                 info["map_names"] = [item.decode("utf-8") for item in info["map_names"]]
             if isinstance(info["map_units"][0], bytes):
-                info["map_units"] = [item.decode("utf-8") for item in info["map_units"]]
+                info["map_units"] = [
+                    _decode_unit(item) for item in info["map_units"]
+                ]
+            else:
+                info["map_units"] = [
+                    _normalize_unit(item) for item in info["map_units"]
+                ]
 
             # Ensure beam center values are proper Python floats to avoid "invalid index to scalar variable" errors
             # HDF5 can return various numpy scalar types that may not work correctly in arithmetic operations
@@ -215,7 +268,7 @@ class QMap:
             "static_index_mapping": np.arange(10),
             "dynamic_index_mapping": np.arange(10),
             "map_names": ["q", "phi"],
-            "map_units": ["1/A", "degree"],
+            "map_units": [Q_UNIT_DISPLAY, "degree"],
         }
         return defaults.get(key, np.array([0]))
 
@@ -275,8 +328,8 @@ class QMap:
         self.k0 = 2 * np.pi / (12.398 / self.X_energy)
         self.extent = (-0.01, 0.01, -0.01, 0.01)
         self.qmap = {"q": np.ones((10, 10))}
-        self.qmap_units = {"q": "1/A"}
-        self.qbin_labels = ["q=0.01 1/A"]
+        self.qmap_units = {"q": Q_UNIT_DISPLAY}
+        self.qbin_labels = [f"q=0.01 {Q_UNIT_DISPLAY}"]
 
         # Add critical missing attributes for reshape_phi_analysis
         self.sqlist = np.linspace(0.01, 0.1, 10)
@@ -290,7 +343,7 @@ class QMap:
         self.dqmap = np.ones((10, 10), dtype=np.int32)
         self.sqmap = np.ones((10, 10), dtype=np.int32)
         self.map_names = ["q", "phi"]
-        self.map_units = ["1/A", "degree"]
+        self.map_units = [Q_UNIT_DISPLAY, "degree"]
         self.is_loaded = False
         logger.warning(f"Created minimal fallback qmap for {self.fname}")
 
@@ -639,9 +692,9 @@ class QMap:
         qmap_unit = {
             "phi": "°",
             "alpha": "°",
-            "q": "Å⁻¹",
-            "qx": "Å⁻¹",
-            "qy": "Å⁻¹",
+            "q": Q_UNIT_DISPLAY,
+            "qx": Q_UNIT_DISPLAY,
+            "qy": Q_UNIT_DISPLAY,
             "x": "pixel",
             "y": "pixel",
             "r_pixel": "pixel",

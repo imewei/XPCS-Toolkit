@@ -56,7 +56,7 @@ from .fileIO.hdf_reader import (
     read_metadata_to_dict,
 )
 from .fileIO.hdf_reader_enhanced import get_enhanced_hdf5_reader
-from .fileIO.qmap_utils import get_qmap
+from .fileIO.qmap_utils import Q_UNIT_DISPLAY, get_qmap
 from .fitting import fit_with_fixed, fit_with_fixed_parallel, fit_with_fixed_sequential
 from .module.twotime_utils import get_c2_stream, get_single_c2_from_hdf
 from .utils.exceptions import XPCSFileError, convert_exception
@@ -1333,7 +1333,7 @@ class XpcsFile:
     def norm_saxs_data(self, q, Iq, norm_method=None):
         assert norm_method in (None, "q2", "q4", "I0")
         if norm_method is None:
-            return q, Iq, "q (Å⁻¹)", "Intensity"
+            return q, Iq, f"q ({Q_UNIT_DISPLAY})", "Intensity"
         ylabel = "Intensity"
         if norm_method == "q2":
             Iq = Iq * np.square(q)
@@ -1345,7 +1345,7 @@ class XpcsFile:
             baseline = Iq[0]
             Iq = Iq / baseline
             ylabel = ylabel + " / I_0"
-        xlabel = "q (Å⁻¹)"
+        xlabel = f"q ({Q_UNIT_DISPLAY})"
         return q, Iq, xlabel, ylabel
 
     def get_twotime_qbin_labels(self):
