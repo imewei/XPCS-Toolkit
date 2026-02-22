@@ -222,6 +222,9 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         self._apply_layout_improvements()
         self.timer = QtCore.QTimer()
 
+        # Must be initialized before load_path() which checks it
+        self._g2_batch_coordinator: object | None = None
+
         if path is not None:
             self.start_wd = path
             self.load_path(path)
@@ -269,7 +272,6 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         self._g2_bayesian_worker_active: bool = False
         self._g2_bayesian_model_func = None
         self._g2_bayesian_data: tuple | None = None
-        self._g2_batch_coordinator: object | None = None
 
         # Bayesian fitting state — Diffusion
         self._diff_bayesian_result = None
