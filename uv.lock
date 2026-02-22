@@ -2771,6 +2771,15 @@ dev = [
     { name = "sphinxcontrib-mermaid" },
     { name = "twine" },
 ]
+docs = [
+    { name = "furo" },
+    { name = "myst-parser" },
+    { name = "sphinx" },
+    { name = "sphinx-autodoc-typehints" },
+    { name = "sphinx-copybutton" },
+    { name = "sphinx-design" },
+    { name = "sphinxcontrib-mermaid" },
+]
 test = [
     { name = "pytest" },
     { name = "pytest-cov" },
@@ -2839,6 +2848,15 @@ dev = [
     { name = "sphinx-design", specifier = ">=0.7.0" },
     { name = "sphinxcontrib-mermaid", specifier = ">=2.0.0" },
     { name = "twine", specifier = ">=6.2.0" },
+]
+docs = [
+    { name = "furo", specifier = ">=2025.12.19" },
+    { name = "myst-parser", specifier = ">=5.0.0" },
+    { name = "sphinx", specifier = ">=9.1.0" },
+    { name = "sphinx-autodoc-typehints", specifier = ">=3.6.0" },
+    { name = "sphinx-copybutton", specifier = ">=0.5.2" },
+    { name = "sphinx-design", specifier = ">=0.7.0" },
+    { name = "sphinxcontrib-mermaid", specifier = ">=2.0.0" },
 ]
 test = [
     { name = "pytest", specifier = ">=9.0.0" },
