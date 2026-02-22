@@ -14,10 +14,10 @@ Features:
 - Verify structured logging patterns
 
 Usage:
-    python scripts/validate_logging.py
-    python scripts/validate_logging.py --fix-imports
-    python scripts/validate_logging.py --report-format json
-    python scripts/validate_logging.py --exclude tests/
+    python scripts/validation/validate_logging.py
+    python scripts/validation/validate_logging.py --fix-imports
+    python scripts/validation/validate_logging.py --report-format json
+    python scripts/validation/validate_logging.py --exclude tests/
 """
 
 import argparse
@@ -627,7 +627,7 @@ repos:
     hooks:
       - id: validate-logging
         name: Validate Logging Standards
-        entry: python scripts/validate_logging.py
+        entry: python scripts/validation/validate_logging.py
         language: system
         types: [python]
         pass_filenames: false
