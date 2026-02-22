@@ -591,9 +591,7 @@ class TestBugH_SamplesKeyOrder:
         x_data = np.linspace(0.01, 1.0, 20)
         y_data = single_exp_func(x_data, 0.5, 1.0, 0.3)
 
-        plot_posterior_predictive(
-            result, single_exp_func, x_data, y_data, ax=ax
-        )
+        plot_posterior_predictive(result, single_exp_func, x_data, y_data, ax=ax)
 
         # The median fit at x=0.01 should be close to baseline + contrast
         # ≈ 1.3, NOT ≈ 0.8 (which would indicate scrambled params)

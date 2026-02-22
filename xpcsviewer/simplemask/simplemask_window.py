@@ -531,7 +531,9 @@ class SimpleMaskWindow(QMainWindow):
             self.status_bar.showMessage(
                 f"Q-map generated: {q_min:.4f} - {q_max:.4f} {Q_UNIT_DISPLAY}"
             )
-            logger.info(f"Generated Q-map: q range [{q_min:.4f}, {q_max:.4f}] {Q_UNIT_DISPLAY}")
+            logger.info(
+                f"Generated Q-map: q range [{q_min:.4f}, {q_max:.4f}] {Q_UNIT_DISPLAY}"
+            )
 
             # Update info label to show successful state
             if self._detector_image is not None:

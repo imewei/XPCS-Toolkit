@@ -175,9 +175,7 @@ class QMap:
             if isinstance(info["map_names"][0], bytes):
                 info["map_names"] = [item.decode("utf-8") for item in info["map_names"]]
             if isinstance(info["map_units"][0], bytes):
-                info["map_units"] = [
-                    _decode_unit(item) for item in info["map_units"]
-                ]
+                info["map_units"] = [_decode_unit(item) for item in info["map_units"]]
             else:
                 info["map_units"] = [
                     _normalize_unit(item) for item in info["map_units"]

@@ -183,9 +183,7 @@ def improve_control_panel_layout(group_box: QGroupBox) -> None:
         layout.setSpacing(4)
 
     # Shrink-to-content vertically so plots get remaining space
-    group_box.setSizePolicy(
-        QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Maximum
-    )
+    group_box.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Maximum)
 
     apply_group_box_styling(group_box, "panel")
 
@@ -235,9 +233,7 @@ def rearrange_g2_fitting_buttons(main_window: QWidget) -> None:
     Moves 'Fit All Q' below 'Plot Diagnosis' and adds a 'Q-bin:' label
     above 'Fit Bayesian' for clarity.
     """
-    grid_12: QGridLayout | None = main_window.findChild(
-        QGridLayout, "gridLayout_12"
-    )
+    grid_12: QGridLayout | None = main_window.findChild(QGridLayout, "gridLayout_12")
     if grid_12 is None:
         return
 
@@ -255,7 +251,11 @@ def rearrange_g2_fitting_buttons(main_window: QWidget) -> None:
     # Using removeWidget (not setParent(None)) preserves the native
     # window handle and input-method context — critical for QSpinBox.
     widgets_to_move = [
-        btn_bayesian, btn_diagnosis, sb_qidx, btn_all_q, sb_workers,
+        btn_bayesian,
+        btn_diagnosis,
+        sb_qidx,
+        btn_all_q,
+        sb_workers,
     ]
     for w in widgets_to_move:
         if w is not None:
@@ -294,9 +294,7 @@ def rearrange_diffusion_tab(main_window: QWidget) -> None:
 
 def _rearrange_diffusion_controls(main_window: QWidget) -> None:
     """Compact groupBox_5: params col 0, buttons col 1, options col 2."""
-    grid_38: QGridLayout | None = main_window.findChild(
-        QGridLayout, "gridLayout_38"
-    )
+    grid_38: QGridLayout | None = main_window.findChild(QGridLayout, "gridLayout_38")
     if grid_38 is None:
         return
 
@@ -360,9 +358,7 @@ def _rearrange_diffusion_controls(main_window: QWidget) -> None:
 
 def _rearrange_diffusion_grid(main_window: QWidget) -> None:
     """Move tauq_msg below groupBox_5; maximise plot row height."""
-    grid_22: QGridLayout | None = main_window.findChild(
-        QGridLayout, "gridLayout_22"
-    )
+    grid_22: QGridLayout | None = main_window.findChild(QGridLayout, "gridLayout_22")
     tauq_msg = main_window.findChild(QWidget, "tauq_msg")
     if grid_22 is None or tauq_msg is None:
         return
@@ -392,9 +388,7 @@ def _style_tauq_msg(main_window: QWidget) -> None:
         return
 
     tauq_msg.setFixedHeight(80)
-    tauq_msg.setSizePolicy(
-        QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed
-    )
+    tauq_msg.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
 
     # Thin scrollbar via stylesheet
     tauq_msg.setStyleSheet(
@@ -429,13 +423,9 @@ def _style_tauq_msg(main_window: QWidget) -> None:
     # Enable horizontal scrollbar only when needed
     tree = tauq_msg
     if hasattr(tree, "setHorizontalScrollBarPolicy"):
-        tree.setHorizontalScrollBarPolicy(
-            Qt.ScrollBarPolicy.ScrollBarAsNeeded
-        )
+        tree.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
     if hasattr(tree, "setVerticalScrollBarPolicy"):
-        tree.setVerticalScrollBarPolicy(
-            Qt.ScrollBarPolicy.ScrollBarAsNeeded
-        )
+        tree.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
 
 
 def optimize_g2map_tab(main_window: QWidget) -> None:
@@ -462,9 +452,7 @@ def optimize_g2map_tab(main_window: QWidget) -> None:
     tab_g2map = main_window.findChild(QWidget, "tab_g2map")
     if tab_g2map:
         for gb in tab_g2map.findChildren(QGroupBox):
-            gb.setSizePolicy(
-                QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Maximum
-            )
+            gb.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Maximum)
             gb_layout = gb.layout()
             if gb_layout:
                 gb_layout.setContentsMargins(4, 14, 4, 2)
