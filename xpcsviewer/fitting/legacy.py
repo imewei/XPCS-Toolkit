@@ -11,13 +11,12 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor, as_completed
-from typing import TYPE_CHECKING, Any, cast
+from typing import Any, cast
 
 import numpy as np
 from nlsq import curve_fit
 from numpy.typing import NDArray
 
-from xpcsviewer.backends import get_backend
 from xpcsviewer.backends._conversions import ensure_numpy
 from xpcsviewer.utils.log_utils import log_timing
 from xpcsviewer.utils.logging_config import get_logger
@@ -25,29 +24,34 @@ from xpcsviewer.utils.logging_config import get_logger
 logger = get_logger(__name__)
 
 
-# BUG-026: Closure-based factory functions.
-# Each factory calls get_backend() ONCE at construction time and captures the
-# backend object in the closure. Subsequent curve_fit evaluations do not call
-# get_backend() again, avoiding repeated backend-lookup overhead on every
-# residual evaluation during optimization.
+# Model factory functions for nlsq.curve_fit.
+# Each factory imports jax.numpy directly because NLSQ JIT-traces model
+# functions with JAX regardless of the xpcsviewer backend setting.
 
 
 def make_single_exp() -> Callable[..., NDArray[np.floating[Any]]]:
-    """Factory: create a single exponential closure with backend bound at construction."""
-    b = get_backend()  # Called once here, captured in closure
+    """Factory: create a single exponential closure.
+
+    Uses ``jax.numpy`` directly because ``nlsq.curve_fit`` JIT-traces
+    model functions with JAX regardless of the xpcsviewer backend setting.
+    """
+    import jax.numpy as jnp
 
     def _single_exp(
         x: NDArray[np.floating[Any]], tau: float, bkg: float, cts: float
     ) -> NDArray[np.floating[Any]]:
-        # Note: Do NOT use ensure_numpy() here - this function is JIT-traced by nlsq
-        return cts * b.exp(-2 * b.array(x) / tau) + bkg  # type: ignore[return-value]
+        return cts * jnp.exp(-2 * jnp.asarray(x) / tau) + bkg  # type: ignore[return-value]
 
     return _single_exp
 
 
 def make_double_exp() -> Callable[..., NDArray[np.floating[Any]]]:
-    """Factory: create a double exponential closure with backend bound at construction."""
-    b = get_backend()  # Called once here, captured in closure
+    """Factory: create a double exponential closure.
+
+    Uses ``jax.numpy`` directly because ``nlsq.curve_fit`` JIT-traces
+    model functions with JAX regardless of the xpcsviewer backend setting.
+    """
+    import jax.numpy as jnp
 
     def _double_exp(
         x: NDArray[np.floating[Any]],
@@ -57,29 +61,35 @@ def make_double_exp() -> Callable[..., NDArray[np.floating[Any]]]:
         tau2: float,
         cts2: float,
     ) -> NDArray[np.floating[Any]]:
-        xa: Any = b.array(x)
-        # Note: Do NOT use ensure_numpy() here - this function is JIT-traced by nlsq
-        return cts1 * b.exp(-2 * xa / tau1) + cts2 * b.exp(-2 * xa / tau2) + bkg
+        xa: Any = jnp.asarray(x)
+        return cts1 * jnp.exp(-2 * xa / tau1) + cts2 * jnp.exp(-2 * xa / tau2) + bkg
 
     return _double_exp
 
 
 def make_single_exp_all() -> Callable[..., NDArray[np.floating[Any]]]:
-    """Factory: create a single_exp_all closure with backend bound at construction."""
-    b = get_backend()  # Called once here, captured in closure
+    """Factory: create a single_exp_all closure.
+
+    Uses ``jax.numpy`` directly because ``nlsq.curve_fit`` JIT-traces
+    model functions with JAX regardless of the xpcsviewer backend setting.
+    """
+    import jax.numpy as jnp
 
     def _single_exp_all(
         x: NDArray[np.floating[Any]], a: float, b_: float, c: float, d: float
     ) -> NDArray[np.floating[Any]]:
-        # Note: Do NOT use ensure_numpy() here - this function is JIT-traced by nlsq
-        return a * b.exp(-2 * b.array(x) / b_) + c + d  # type: ignore[return-value]
+        return a * jnp.exp(-2 * jnp.asarray(x) / b_) + c + d  # type: ignore[return-value]
 
     return _single_exp_all
 
 
 def make_double_exp_all() -> Callable[..., NDArray[np.floating[Any]]]:
-    """Factory: create a double_exp_all closure with backend bound at construction."""
-    b = get_backend()  # Called once here, captured in closure
+    """Factory: create a double_exp_all closure.
+
+    Uses ``jax.numpy`` directly because ``nlsq.curve_fit`` JIT-traces
+    model functions with JAX regardless of the xpcsviewer backend setting.
+    """
+    import jax.numpy as jnp
 
     def _double_exp_all(
         x: NDArray[np.floating[Any]],
@@ -90,18 +100,15 @@ def make_double_exp_all() -> Callable[..., NDArray[np.floating[Any]]]:
         e: float,
         f: float,
     ) -> NDArray[np.floating[Any]]:
-        xa: Any = b.array(x)
-        # Note: Do NOT use ensure_numpy() here - this function is JIT-traced by nlsq
-        return a * b.exp(-2 * xa / b_) + c * b.exp(-2 * xa / d) + e + f
+        xa: Any = jnp.asarray(x)
+        return a * jnp.exp(-2 * xa / b_) + c * jnp.exp(-2 * xa / d) + e + f
 
     return _double_exp_all
 
 
 # ---------------------------------------------------------------------------
 # Backward-compatible module-level functions (kept for callers that import them
-# directly by name). These now delegate to per-call factory closures so that
-# get_backend() is invoked once per import, not once per curve_fit evaluation.
-# Callers that need the performance benefit should use make_*() factories directly.
+# directly by name). These delegate to per-call factory closures.
 # ---------------------------------------------------------------------------
 _single_exp_fn: Callable[..., NDArray[np.floating[Any]]] | None = None
 _double_exp_fn: Callable[..., NDArray[np.floating[Any]]] | None = None
@@ -130,7 +137,7 @@ def single_exp(
     """Single exponential model for G2 correlation function.
 
     Delegates to a module-level closure created once via make_single_exp().
-    get_backend() is NOT called per evaluation (BUG-026).
+    Uses jax.numpy directly for NLSQ JIT compatibility.
     """
     global _single_exp_fn
     if _single_exp_fn is None:
@@ -149,7 +156,7 @@ def double_exp(
     """Double exponential model for G2 correlation function.
 
     Delegates to a module-level closure created once via make_double_exp().
-    get_backend() is NOT called per evaluation (BUG-026).
+    Uses jax.numpy directly for NLSQ JIT compatibility.
     """
     global _double_exp_fn
     if _double_exp_fn is None:
@@ -163,7 +170,7 @@ def single_exp_all(
     """Single exponential with all parameters.
 
     Delegates to a module-level closure created once via make_single_exp_all().
-    get_backend() is NOT called per evaluation (BUG-026).
+    Uses jax.numpy directly for NLSQ JIT compatibility.
     """
     global _single_exp_all_fn
     if _single_exp_all_fn is None:
@@ -183,7 +190,7 @@ def double_exp_all(
     """Double exponential with all parameters.
 
     Delegates to a module-level closure created once via make_double_exp_all().
-    get_backend() is NOT called per evaluation (BUG-026).
+    Uses jax.numpy directly for NLSQ JIT compatibility.
     """
     global _double_exp_all_fn
     if _double_exp_all_fn is None:
@@ -700,12 +707,12 @@ def vectorized_parameter_estimation(
         idx = np.argmin(np.abs(y - (y_min + amp / np.e)))
         tau = x[idx] if idx > 0 else x[len(x) // 2]
 
-        # JAX-N-08: Capture backend once in closure instead of calling
-        # get_backend() on every residual evaluation during optimization.
-        _b = get_backend()
+        # NLSQ JIT-traces model functions with JAX internally, so the
+        # model must use jax.numpy ops regardless of the xpcsviewer backend.
+        import jax.numpy as jnp
 
         def _model_func(x_val, tau_val, bkg_val, cts_val):
-            return cts_val * _b.exp(-2 * _b.array(x_val) / tau_val) + bkg_val
+            return cts_val * jnp.exp(-2 * jnp.asarray(x_val) / tau_val) + bkg_val
 
         result = curve_fit(
             _model_func,

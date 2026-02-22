@@ -447,35 +447,21 @@ class TestBug026LegacyModelFactory:
             err_msg="Factory single_exp must match manual calculation",
         )
 
-    def test_backend_called_once_not_per_evaluation(self, monkeypatch):
-        """get_backend() must be called once at factory construction, not per call."""
+    def test_factory_uses_jnp_independent_of_backend(self, monkeypatch):
+        """Model factories must use jnp directly, independent of xpcsviewer backend."""
         import xpcsviewer.fitting.legacy as legacy_module
 
-        call_count = 0
-        original_get_backend = legacy_module.get_backend
+        # Factory should work regardless of backend setting
+        monkeypatch.setenv("XPCS_USE_JAX", "false")
 
-        def counting_get_backend():
-            nonlocal call_count
-            call_count += 1
-            return original_get_backend()
-
-        monkeypatch.setattr(legacy_module, "get_backend", counting_get_backend)
-
-        # Build the factory -- get_backend is called once here
         fn = legacy_module.make_single_exp()
-        calls_after_construction = call_count
 
-        # Evaluate the function multiple times -- no additional get_backend calls
         x = np.array([1.0, 2.0, 3.0])
-        fn(x, 1.0, 1.0, 0.3)
-        fn(x, 2.0, 1.0, 0.5)
-        fn(x, 0.5, 1.1, 0.2)
-
-        calls_after_evaluations = call_count
-
-        assert calls_after_construction == 1, (
-            "get_backend() must be called exactly once at factory construction"
-        )
-        assert calls_after_evaluations == calls_after_construction, (
-            "get_backend() must NOT be called during function evaluation (BUG-026)"
+        result = fn(x, 1.0, 1.0, 0.3)
+        expected = 0.3 * np.exp(-2 * x / 1.0) + 1.0
+        np.testing.assert_allclose(
+            np.asarray(result),
+            expected,
+            rtol=1e-5,
+            err_msg="Factory must produce correct results independent of backend",
         )
