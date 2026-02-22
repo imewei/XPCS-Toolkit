@@ -20,7 +20,9 @@ All notable changes to this project will be documented in this file.
 - Category tab bar with separator lines between tab groups
 - 12-tab layout: G2 View, G2 Fit, G2 Map as separate tabs
 - Bayesian inference worker with NUTS diagnosis dialog
+- Q-bin spinbox with per-Q navigation and subplot highlight in G2 Fit tab
 - ROI handles and Q-map colormap selector in SimpleMask
+- `Q_UNIT_DISPLAY` constant and unit normalization helpers for consistent Q-unit rendering
 - Comprehensive structured logging (rate limiting, JSON aggregation, `@log_timing`)
 - Type-safe schema dataclasses for HDF5 data validation
 - HDF5 facade with connection pooling and batch reading
@@ -32,10 +34,14 @@ All notable changes to this project will be documented in this file.
 ### Changed
 
 - G2 tab split into three tabs (G2 View, G2 Fit, G2 Map)
+- Compact layout for G2 Fit (2-column grid), Diffusion (3-column controls, 80px tauq_msg), and G2 Map tabs
 - NLSQ `preset` parameter renamed to `workflow`
 - Fitting backend migrated from scipy to NLSQ 0.6.0 library
+- NLSQ sampler falls back to `init_to_uniform` with 1.5x warmup when health score is low
+- `param_names` field added to NLSQResult and FitResult for canonical parameter ordering
 - Exception-based validation replaces tuple-return pattern (`XPCSValidationError`)
 - Lambda slots replaced with named functions in async kernel
+- `NoFontMerging` font strategy restricted to macOS only (fixes Unicode glyph rendering on Linux)
 - `scripts/` reorganized into `build/`, `screenshots/`, `validation/` subdirectories
 - `examples/` directory removed (content covered by notebooks)
 - `validation/` directory consolidated into `scripts/validation/`
@@ -44,6 +50,9 @@ All notable changes to this project will be documented in this file.
 
 - NLSQResult delegation: handle `confidence_intervals` as method or property
 - NLSQResult delegation: handle `prediction_interval` returning `(n, 2)` array
+- NLSQ fallback to uniform initialization when warm-start params are unreliable
+- `param_names` ordering: prevent alphabetical dict-key scrambling in posterior predictive plots
+- Q-unit double-encoded UTF-8 Angstrom bytes from HDF5 (Latin-1 fallback decode)
 - JAX `TracerArrayConversionError` in model functions (use `jnp.exp` not `np.exp`)
 - MCMC warm-start: use `init_to_value` instead of partial `init_params`
 - Power-law fitting: correct `tau_err` and `bounds` API
@@ -52,6 +61,7 @@ All notable changes to this project will be documented in this file.
 - Qt main thread safety and resource leak prevention
 - 38 P0/P1/P2 GUI issues from deep RCA analysis
 - Batch coordinator initialization order (before `load_path`)
+- Deterministic GPU fallback tests and PyQt6 compatibility coverage
 - Type safety improvements across widgets and threading modules
 - Concurrency deadlocks and signal safety in threading layer
 
@@ -62,12 +72,14 @@ All notable changes to this project will be documented in this file.
 - `@jax.jit` applied to NLSQ model functions
 - `vmap`/`scan`/`fori_loop` added to JAX backend
 - HDF5 connection pooling and batch reading
+- Tighter container margins and reduced splitter handles across all tabs
 
 ### Documentation
 
 - Tutorial notebooks rewritten as self-contained with synthetic data
-- Gallery screenshots refreshed for 12-tab layout
+- Gallery screenshots refreshed for 12-tab compact layout
 - API docs added for icons, category tab bar, Bayesian worker, exceptions
+- Fitting and threading Sphinx references updated
 - Fitting module Sphinx docs with NLSQResult metric docstrings
 - Architecture docs: dependency analysis, integration catalog
 
