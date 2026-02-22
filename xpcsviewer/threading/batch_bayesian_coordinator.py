@@ -106,17 +106,13 @@ class BatchBayesianCoordinator(QObject):
             lambda result, qi=q_idx: self._on_worker_finished(qi, result)
         )
         worker.signals.error.connect(
-            lambda _wid, msg, _tb, _retry, qi=q_idx: self._on_worker_error(
-                qi, msg
-            )
+            lambda _wid, msg, _tb, _retry, qi=q_idx: self._on_worker_error(qi, msg)
         )
 
         self._active_count += 1
         self._thread_pool.start(worker)
 
-    def _on_worker_finished(
-        self, q_idx: int, result: dict[str, Any] | None
-    ) -> None:
+    def _on_worker_finished(self, q_idx: int, result: dict[str, Any] | None) -> None:
         """Handle a successful worker completion."""
         self._active_count -= 1
         self._completed += 1
@@ -140,9 +136,7 @@ class BatchBayesianCoordinator(QObject):
         self._completed += 1
         self._results[q_idx] = None
 
-        logger.warning(
-            "Bayesian fit failed for Q-index %d: %s", q_idx, error_msg
-        )
+        logger.warning("Bayesian fit failed for Q-index %d: %s", q_idx, error_msg)
         self.single_q_error.emit(q_idx, error_msg)
         self.progress.emit(
             self._completed,

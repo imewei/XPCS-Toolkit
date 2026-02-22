@@ -207,7 +207,9 @@ class TestNLSQEdgeCases:
             "contrast": (0.0, 1.0),
         }
 
-        result = nlsq_optimize(single_exp_func, x, y, yerr, p0, bounds, workflow="auto_global")
+        result = nlsq_optimize(
+            single_exp_func, x, y, yerr, p0, bounds, workflow="auto_global"
+        )
 
         if result.is_fallback:
             pytest.skip("NLSQ returned fallback (JAX tracing incompatibility)")

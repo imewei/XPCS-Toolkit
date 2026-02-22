@@ -160,7 +160,9 @@ def _run_mcmc(
 
     # Create MCMC instance — run chains sequentially on single-device systems
     # to avoid NumPyro's "not enough devices" UserWarning.
-    chain_method = "sequential" if jax.local_device_count() < config.num_chains else "parallel"
+    chain_method = (
+        "sequential" if jax.local_device_count() < config.num_chains else "parallel"
+    )
     mcmc = MCMC(
         kernel,
         num_warmup=config.num_warmup,

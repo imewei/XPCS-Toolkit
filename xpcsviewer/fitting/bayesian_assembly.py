@@ -146,11 +146,7 @@ def assemble_fit_summary(
         ``fit_line``, ``fit_x``, ``label``.
     """
     num_q = len(q_arr)
-    nparams = (
-        _SINGLE_EXP_NPARAMS
-        if fit_func_name == "single"
-        else _DOUBLE_EXP_NPARAMS
-    )
+    nparams = _SINGLE_EXP_NPARAMS if fit_func_name == "single" else _DOUBLE_EXP_NPARAMS
     extract_fn = (
         _extract_single_exp_params
         if fit_func_name == "single"
@@ -182,9 +178,7 @@ def assemble_fit_summary(
             )
             succeeded += 1
         except (KeyError, ValueError) as exc:
-            logger.warning(
-                "Failed to extract params for Q-index %d: %s", q_idx, exc
-            )
+            logger.warning("Failed to extract params for Q-index %d: %s", q_idx, exc)
             failed += 1
 
     logger.info(

@@ -55,27 +55,21 @@ class TestBatchBayesianCoordinator:
     def test_launches_bounded_workers(self, mock_thread_pool):
         """Should launch min(max_concurrent, total) workers initially."""
         specs = self._make_specs(10)
-        coord = BatchBayesianCoordinator(
-            specs, mock_thread_pool, max_concurrent=3
-        )
+        coord = BatchBayesianCoordinator(specs, mock_thread_pool, max_concurrent=3)
         coord.start()
         assert len(mock_thread_pool.started_workers) == 3
 
     def test_launches_all_if_fewer_than_max(self, mock_thread_pool):
         """If total < max_concurrent, launch all."""
         specs = self._make_specs(2)
-        coord = BatchBayesianCoordinator(
-            specs, mock_thread_pool, max_concurrent=4
-        )
+        coord = BatchBayesianCoordinator(specs, mock_thread_pool, max_concurrent=4)
         coord.start()
         assert len(mock_thread_pool.started_workers) == 2
 
     def test_cancel_stops_launching(self, mock_thread_pool):
         """After cancel(), no more workers should be launched."""
         specs = self._make_specs(10)
-        coord = BatchBayesianCoordinator(
-            specs, mock_thread_pool, max_concurrent=2
-        )
+        coord = BatchBayesianCoordinator(specs, mock_thread_pool, max_concurrent=2)
         coord.start()
         initial_count = len(mock_thread_pool.started_workers)
 
@@ -90,9 +84,7 @@ class TestBatchBayesianCoordinator:
     def test_error_continues_batch(self, mock_thread_pool, qtbot):
         """A failed Q-bin should store None and continue."""
         specs = self._make_specs(2)
-        coord = BatchBayesianCoordinator(
-            specs, mock_thread_pool, max_concurrent=2
-        )
+        coord = BatchBayesianCoordinator(specs, mock_thread_pool, max_concurrent=2)
         coord.start()
 
         # Simulate first worker error, second success
@@ -111,9 +103,7 @@ class TestBatchBayesianCoordinator:
     def test_progress_signal_emitted(self, mock_thread_pool, qtbot):
         """Progress signal should be emitted after each completion."""
         specs = self._make_specs(3)
-        coord = BatchBayesianCoordinator(
-            specs, mock_thread_pool, max_concurrent=3
-        )
+        coord = BatchBayesianCoordinator(specs, mock_thread_pool, max_concurrent=3)
         coord.start()
 
         with qtbot.waitSignal(coord.progress, timeout=1000) as blocker:
@@ -126,9 +116,7 @@ class TestBatchBayesianCoordinator:
     def test_single_q_error_signal(self, mock_thread_pool, qtbot):
         """single_q_error should be emitted on worker failure."""
         specs = self._make_specs(2)
-        coord = BatchBayesianCoordinator(
-            specs, mock_thread_pool, max_concurrent=2
-        )
+        coord = BatchBayesianCoordinator(specs, mock_thread_pool, max_concurrent=2)
         coord.start()
 
         with qtbot.waitSignal(coord.single_q_error, timeout=1000) as blocker:
@@ -139,9 +127,7 @@ class TestBatchBayesianCoordinator:
     def test_max_concurrent_enforced(self, mock_thread_pool):
         """Should never exceed max_concurrent active workers."""
         specs = self._make_specs(6)
-        coord = BatchBayesianCoordinator(
-            specs, mock_thread_pool, max_concurrent=2
-        )
+        coord = BatchBayesianCoordinator(specs, mock_thread_pool, max_concurrent=2)
         coord.start()
         assert len(mock_thread_pool.started_workers) == 2
 

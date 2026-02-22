@@ -194,9 +194,7 @@ class TestAssembleFitSummary:
         """Empty results dict should produce all-zero arrays."""
         q_arr = np.linspace(0.001, 0.01, 3)
         t_el = np.logspace(-5, 1, 50)
-        summary = assemble_fit_summary(
-            {}, q_arr, t_el, "single", _identity_model
-        )
+        summary = assemble_fit_summary({}, q_arr, t_el, "single", _identity_model)
         assert summary["fit_val"].shape == (3, 2, _SINGLE_EXP_NPARAMS)
         assert np.all(summary["fit_val"] == 0.0)
 
