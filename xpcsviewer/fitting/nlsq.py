@@ -24,7 +24,7 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-@log_timing(threshold_ms=500)
+@log_timing(threshold_ms=5_000)
 def nlsq_optimize(
     model_fn: Callable,
     x: ArrayLike,

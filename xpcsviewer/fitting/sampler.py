@@ -221,8 +221,9 @@ def _build_fit_result(
     x: np.ndarray | None = None,
 ) -> FitResult:
     """Build FitResult from MCMC output."""
-    # Convert samples to numpy
-    samples_np = {k: np.asarray(v) for k, v in samples.items() if k in param_names}
+    # Convert samples to numpy, preserving param_names order so that
+    # dict key iteration matches the model function's signature.
+    samples_np = {k: np.asarray(samples[k]) for k in param_names if k in samples}
 
     # Convert to ArviZ InferenceData first (needed for summary and BFMI)
     arviz_data = az.from_numpyro(mcmc)
@@ -254,10 +255,16 @@ def _build_fit_result(
         max_steps = 2**config.max_tree_depth - 1
         max_treedepth_reached = int(np.sum(extra["num_steps"] >= max_steps))
         if max_treedepth_reached > 0:
-            logger.warning(
-                f"{max_treedepth_reached} samples hit max_tree_depth="
-                f"{config.max_tree_depth}. Consider increasing max_tree_depth."
+            total_samples = len(extra["num_steps"])
+            pct = 100.0 * max_treedepth_reached / max(total_samples, 1)
+            msg = (
+                f"{max_treedepth_reached}/{total_samples} samples "
+                f"({pct:.1f}%) hit max_tree_depth={config.max_tree_depth}"
             )
+            if pct > 1.0:
+                logger.warning(f"{msg}. Consider increasing max_tree_depth.")
+            else:
+                logger.debug(msg)
 
     # Compute BFMI per Technical Guidelines
     bfmi = compute_bfmi(arviz_data)
@@ -273,6 +280,7 @@ def _build_fit_result(
 
     return FitResult(
         samples=samples_np,
+        param_names=param_names,
         summary=summary,
         diagnostics=diagnostics,
         nlsq_init=nlsq_init,
@@ -282,7 +290,7 @@ def _build_fit_result(
     )
 
 
-@log_timing(threshold_ms=2000)
+@log_timing(threshold_ms=60_000)
 def run_single_exp_fit(
     x: ArrayLike,
     y: ArrayLike,
@@ -345,31 +353,34 @@ def run_single_exp_fit(
     )
     nlsq_init = nlsq_result.params
 
-    # Log warning if NLSQ fit is unhealthy
-    if not nlsq_result.is_healthy:
+    # Determine warm-start viability
+    use_warm_start = nlsq_result.is_healthy
+    if not use_warm_start:
         health_score = nlsq_result.health_score
         logger.warning(
-            f"NLSQ warm-start may be unreliable: health_score={health_score}"
+            f"NLSQ warm-start unreliable (health_score={health_score}); "
+            "falling back to init_to_uniform with boosted warmup"
         )
+        config.num_warmup = int(config.num_warmup * 1.5)
 
     # Convert to JAX arrays
     x_jax = jnp.asarray(x)
     y_jax = jnp.asarray(y)
     yerr_jax = jnp.asarray(yerr) if yerr is not None else None
 
-    # Run MCMC with warm-start
+    # Run MCMC with warm-start (or uniform init if NLSQ failed)
     logger.info("Running NUTS sampling")
     mcmc, samples = _run_mcmc(
         single_exp_model,
         (x_jax, y_jax, yerr_jax),
         config,
-        init_params=nlsq_init,
+        init_params=nlsq_init if use_warm_start else None,
     )
 
     return _build_fit_result(mcmc, samples, nlsq_init, param_names, config=config, x=x)
 
 
-@log_timing(threshold_ms=2000)
+@log_timing(threshold_ms=60_000)
 def run_double_exp_fit(
     x: ArrayLike,
     y: ArrayLike,
@@ -440,47 +451,53 @@ def run_double_exp_fit(
     )
     nlsq_init = nlsq_result.params
 
-    # Log warning if NLSQ fit is unhealthy
-    if not nlsq_result.is_healthy:
+    # Determine warm-start viability
+    use_warm_start = nlsq_result.is_healthy
+    if not use_warm_start:
         health_score = nlsq_result.health_score
         logger.warning(
-            f"NLSQ warm-start may be unreliable: health_score={health_score}"
+            f"NLSQ warm-start unreliable (health_score={health_score}); "
+            "falling back to init_to_uniform with boosted warmup"
         )
+        config.num_warmup = int(config.num_warmup * 1.5)
 
     # Convert to JAX arrays
     x_jax = jnp.asarray(x)
     y_jax = jnp.asarray(y)
     yerr_jax = jnp.asarray(yerr) if yerr is not None else None
 
-    # Run MCMC with warm-start
+    # Run MCMC with warm-start (or uniform init if NLSQ failed)
     logger.info("Running NUTS sampling")
-    # BUG-022: Sort tau1/tau2 before computing tau2_factor.
-    # NLSQ may return tau1 > tau2 which would make tau2_factor negative,
-    # causing invalid init params for the double_exp_model parameterization
-    # (which enforces tau2 = tau1 * (1 + tau2_factor) with tau2_factor > 0).
-    tau_vals = sorted([nlsq_init["tau1"], nlsq_init["tau2"]])
-    tau1_sorted = tau_vals[0]
-    tau2_sorted = tau_vals[1]
-    # Clamp tau2_factor to avoid extreme values from NLSQ warm-start
-    tau2_factor = max(0.01, min(tau2_sorted / tau1_sorted - 1, 1000.0))
-
-    mcmc, samples = _run_mcmc(
-        double_exp_model,
-        (x_jax, y_jax, yerr_jax),
-        config,
-        init_params={
+    init_params = None
+    if use_warm_start:
+        # BUG-022: Sort tau1/tau2 before computing tau2_factor.
+        # NLSQ may return tau1 > tau2 which would make tau2_factor negative,
+        # causing invalid init params for the double_exp_model parameterization
+        # (which enforces tau2 = tau1 * (1 + tau2_factor) with tau2_factor > 0).
+        tau_vals = sorted([nlsq_init["tau1"], nlsq_init["tau2"]])
+        tau1_sorted = tau_vals[0]
+        tau2_sorted = tau_vals[1]
+        # Clamp tau2_factor to avoid extreme values from NLSQ warm-start
+        tau2_factor = max(0.01, min(tau2_sorted / tau1_sorted - 1, 1000.0))
+        init_params = {
             "tau1": tau1_sorted,  # BUG-022: use sorted tau1 (always the smaller value)
             "tau2_factor": tau2_factor,
             "baseline": nlsq_init["baseline"],
             "contrast1": nlsq_init["contrast1"],
             "contrast2": nlsq_init["contrast2"],
-        },
+        }
+
+    mcmc, samples = _run_mcmc(
+        double_exp_model,
+        (x_jax, y_jax, yerr_jax),
+        config,
+        init_params=init_params,
     )
 
     return _build_fit_result(mcmc, samples, nlsq_init, param_names, config=config, x=x)
 
 
-@log_timing(threshold_ms=2000)
+@log_timing(threshold_ms=60_000)
 def run_stretched_exp_fit(
     x: ArrayLike,
     y: ArrayLike,
@@ -544,36 +561,42 @@ def run_stretched_exp_fit(
     )
     nlsq_init = nlsq_result.params
 
-    # Log warning if NLSQ fit is unhealthy
-    if not nlsq_result.is_healthy:
+    # Determine warm-start viability
+    use_warm_start = nlsq_result.is_healthy
+    if not use_warm_start:
         health_score = nlsq_result.health_score
         logger.warning(
-            f"NLSQ warm-start may be unreliable: health_score={health_score}"
+            f"NLSQ warm-start unreliable (health_score={health_score}); "
+            "falling back to init_to_uniform with boosted warmup"
         )
+        config.num_warmup = int(config.num_warmup * 1.5)
 
     # Convert to JAX arrays
     x_jax = jnp.asarray(x)
     y_jax = jnp.asarray(y)
     yerr_jax = jnp.asarray(yerr) if yerr is not None else None
 
-    # JAX-N-06: Clamp beta from NLSQ init to avoid boundary issues in NUTS.
-    # Beta near 0 or 1 causes numerical instability in the stretched exp model.
-    if "beta" in nlsq_init:
-        nlsq_init["beta"] = max(0.05, min(0.95, nlsq_init["beta"]))
+    init_params = None
+    if use_warm_start:
+        # JAX-N-06: Clamp beta from NLSQ init to avoid boundary issues in NUTS.
+        # Beta near 0 or 1 causes numerical instability in the stretched exp model.
+        if "beta" in nlsq_init:
+            nlsq_init["beta"] = max(0.05, min(0.95, nlsq_init["beta"]))
+        init_params = nlsq_init
 
-    # Run MCMC with warm-start
+    # Run MCMC (uniform init if NLSQ failed, warm-start otherwise)
     logger.info("Running NUTS sampling")
     mcmc, samples = _run_mcmc(
         stretched_exp_model,
         (x_jax, y_jax, yerr_jax),
         config,
-        init_params=nlsq_init,
+        init_params=init_params,
     )
 
     return _build_fit_result(mcmc, samples, nlsq_init, param_names, config=config, x=x)
 
 
-@log_timing(threshold_ms=2000)
+@log_timing(threshold_ms=60_000)
 def run_power_law_fit(
     q: ArrayLike,
     tau: ArrayLike | FitResult,
@@ -653,25 +676,28 @@ def run_power_law_fit(
     )
     nlsq_init = nlsq_result.params
 
-    # Log warning if NLSQ fit is unhealthy
-    if not nlsq_result.is_healthy:
+    # Determine warm-start viability
+    use_warm_start = nlsq_result.is_healthy
+    if not use_warm_start:
         health_score = nlsq_result.health_score
         logger.warning(
-            f"NLSQ warm-start may be unreliable: health_score={health_score}"
+            f"NLSQ warm-start unreliable (health_score={health_score}); "
+            "falling back to init_to_uniform with boosted warmup"
         )
+        config.num_warmup = int(config.num_warmup * 1.5)
 
     # Convert to JAX arrays
     q_jax = jnp.asarray(q)
     tau_jax = jnp.asarray(tau)
     tau_err_jax = jnp.asarray(tau_err) if tau_err is not None else None
 
-    # Run MCMC with warm-start
+    # Run MCMC (uniform init if NLSQ failed, warm-start otherwise)
     logger.info("Running NUTS sampling")
     mcmc, samples = _run_mcmc(
         power_law_model,
         (q_jax, tau_jax, tau_err_jax),
         config,
-        init_params=nlsq_init,
+        init_params=nlsq_init if use_warm_start else None,
     )
 
     return _build_fit_result(mcmc, samples, nlsq_init, param_names, config=config, x=q)

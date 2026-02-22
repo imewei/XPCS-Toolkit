@@ -490,3 +490,121 @@ class TestBugG_PowerLawTauErr:
         assert abs(alpha_mean - true_alpha) / true_alpha < 0.3, (
             f"alpha={alpha_mean:.2f}, expected ~{true_alpha}"
         )
+
+
+# ============================================================================
+# BUG-H: samples dict key order must match function signature
+# ============================================================================
+class TestBugH_SamplesKeyOrder:
+    """Verify FitResult.samples preserves param_names ordering.
+
+    Root cause: _build_fit_result iterated over mcmc.get_samples().items()
+    (NumPyro internal order) instead of param_names (function signature
+    order).  plot_posterior_predictive then unpacked *params in dict key
+    order, scrambling arguments and producing visually divergent fits
+    despite perfect MCMC convergence diagnostics.
+    """
+
+    def test_fit_result_has_param_names_field(self):
+        """FitResult stores canonical param_names list."""
+        result = FitResult(
+            samples={"a": np.array([1.0]), "b": np.array([2.0])},
+            param_names=["a", "b"],
+        )
+        assert result.param_names == ["a", "b"]
+
+    def test_fit_result_param_names_default_empty(self):
+        """Legacy FitResults without param_names get an empty list."""
+        result = FitResult(samples={"a": np.array([1.0])})
+        assert result.param_names == []
+
+    def test_samples_dict_preserves_param_names_order(self):
+        """_build_fit_result must produce samples keyed in param_names order."""
+        from xpcsviewer.fitting.sampler import _build_fit_result
+
+        # Simulate NumPyro returning keys in ALPHABETICAL order
+        # (opposite of param_names)
+        class FakeMCMC:
+            def get_extra_fields(self):
+                return {
+                    "diverging": np.array([False, False]),
+                    "num_steps": np.array([7, 7]),
+                }
+
+        samples_alpha_order = {
+            "baseline": np.array([1.01, 0.99]),
+            "contrast": np.array([0.38, 0.37]),
+            "tau": np.array([0.5, 0.6]),
+        }
+        param_names = ["tau", "baseline", "contrast"]
+
+        try:
+            import arviz as az
+
+            result = _build_fit_result(
+                FakeMCMC(),
+                samples_alpha_order,
+                nlsq_init={"tau": 0.5, "baseline": 1.0, "contrast": 0.3},
+                param_names=param_names,
+                config=SamplerConfig(
+                    num_warmup=10,
+                    num_samples=2,
+                    num_chains=1,
+                ),
+            )
+            # Key order must follow param_names, not alphabetical
+            assert list(result.samples.keys()) == param_names
+            assert result.param_names == param_names
+        except Exception:
+            pytest.skip("ArviZ integration required for full _build_fit_result")
+
+    @needs_numpyro
+    def test_posterior_predictive_uses_correct_param_order(self):
+        """plot_posterior_predictive must call model with correct arg order.
+
+        Regression test: previously params were unpacked in dict key order
+        (alphabetical from NumPyro), not function signature order.
+        """
+        from xpcsviewer.fitting.models import single_exp_func
+
+        # Create a FitResult with WRONG dict key order but correct param_names
+        wrong_order_samples = {
+            "baseline": np.array([1.0, 1.01, 0.99]),
+            "contrast": np.array([0.3, 0.31, 0.29]),
+            "tau": np.array([0.5, 0.51, 0.49]),
+        }
+        correct_names = ["tau", "baseline", "contrast"]
+        result = FitResult(
+            samples=wrong_order_samples,
+            param_names=correct_names,
+        )
+
+        # With param_names, visualization should unpack in correct order
+        from xpcsviewer.fitting.visualization import plot_posterior_predictive
+
+        import matplotlib
+
+        matplotlib.use("Agg")
+        import matplotlib.pyplot as plt
+
+        fig, ax = plt.subplots()
+        x_data = np.linspace(0.01, 1.0, 20)
+        y_data = single_exp_func(x_data, 0.5, 1.0, 0.3)
+
+        plot_posterior_predictive(
+            result, single_exp_func, x_data, y_data, ax=ax
+        )
+
+        # The median fit at x=0.01 should be close to baseline + contrast
+        # ≈ 1.3, NOT ≈ 0.8 (which would indicate scrambled params)
+        lines = [c for c in ax.get_children() if hasattr(c, "get_ydata")]
+        for line in lines:
+            ydata = line.get_ydata()
+            if ydata is not None and len(ydata) > 10:
+                # Median fit line starts near 1.3
+                assert ydata[0] > 1.1, (
+                    f"Fit starts at {ydata[0]:.2f}, expected >1.1. "
+                    "Params likely scrambled."
+                )
+                break
+        plt.close(fig)

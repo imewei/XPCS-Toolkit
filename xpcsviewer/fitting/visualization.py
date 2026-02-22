@@ -419,8 +419,9 @@ def plot_posterior_predictive(
     # Plot data
     ax.scatter(x_data, y_data, c="k", s=20, alpha=0.7, label="Data", zorder=3)
 
-    # Generate posterior predictive samples
-    param_names = list(result.samples.keys())
+    # Generate posterior predictive samples — use canonical param_names
+    # (matches model function signature) to avoid positional arg mismatch.
+    param_names = result.param_names or list(result.samples.keys())
     n_samples = len(result.samples[param_names[0]])
 
     # Determine effective draw count per Technical Guidelines
@@ -645,8 +646,8 @@ def plot_comparison(
         )
     ax.plot(x_pred, y_nlsq, "C0-", lw=2, label="NLSQ fit")
 
-    # Bayesian fit
-    param_names = list(bayesian_result.samples.keys())
+    # Bayesian fit — use canonical param_names to avoid positional arg mismatch.
+    param_names = bayesian_result.param_names or list(bayesian_result.samples.keys())
     n_samples = len(bayesian_result.samples[param_names[0]])
     indices = np.random.choice(n_samples, min(100, n_samples), replace=False)
 

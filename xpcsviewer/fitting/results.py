@@ -743,6 +743,9 @@ class FitResult:
     ----------
     samples : dict[str, ndarray]
         Posterior samples {param_name: (n_samples,)}
+    param_names : list[str]
+        Canonical parameter order matching the model function signature.
+        Used by visualization to ensure correct positional argument mapping.
     summary : DataFrame
         Summary statistics per parameter
     diagnostics : FitDiagnostics
@@ -758,6 +761,7 @@ class FitResult:
     """
 
     samples: dict[str, np.ndarray]
+    param_names: list[str] = field(default_factory=list)
     summary: pd.DataFrame | None = None
     diagnostics: FitDiagnostics = field(default_factory=FitDiagnostics)
     nlsq_init: dict[str, float] = field(default_factory=dict)
