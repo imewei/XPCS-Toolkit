@@ -121,26 +121,19 @@ jobs:
         echo "[OK] Package built"
 
     - name: Validate package
-      env:
-        UV_SYSTEM_PYTHON: "0"  # Override global setting to use venv
       run: |
-        # Create venv for validation with pip included
-        uv venv .venv --seed
-        source .venv/bin/activate
-        pip install twine
-        twine check dist/* --strict
+        # Validate package metadata with twine (matches ci.yml pattern)
+        uvx twine check dist/* --strict
 
         echo "[INFO] Package files:"
         ls -la dist/
 
-        # Test wheel installation in separate venv
-        deactivate
-        uv venv test_env --seed
-        source test_env/bin/activate
-        pip install dist/*.whl
-        python -c "import xpcsviewer; print(f'[OK] Version: {xpcsviewer.__version__}')"
-        deactivate
-        rm -rf test_env .venv
+        # Test wheel installation in clean environment
+        uv venv test_env
+        UV_SYSTEM_PYTHON=0 uv pip install --python test_env/bin/python dist/*.whl
+        export QT_QPA_PLATFORM=offscreen
+        test_env/bin/python -c "import xpcsviewer; print(f'[OK] Version: {xpcsviewer.__version__}')"
+        rm -rf test_env
 
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
@@ -190,19 +183,18 @@ jobs:
 
     - name: Create test venv and install wheel
       env:
-        UV_SYSTEM_PYTHON: "0"
         PYTHONIOENCODING: utf-8
         PYTHONUTF8: 1
       shell: bash
       run: |
-        uv venv test_env --python ${{ matrix.python-version }} --seed
+        uv venv test_env --python ${{ matrix.python-version }}
         if [ "${{ matrix.os }}" = "windows-latest" ]; then
-          source test_env/Scripts/activate
+          PYTHON_BIN=test_env/Scripts/python
         else
-          source test_env/bin/activate
+          PYTHON_BIN=test_env/bin/python
         fi
-        pip install dist/*.whl
-        python -c "import xpcsviewer; print(f'[OK] XPCS Viewer {xpcsviewer.__version__} installed')"
+        UV_SYSTEM_PYTHON=0 uv pip install --python "$PYTHON_BIN" dist/*.whl
+        "$PYTHON_BIN" -c "import xpcsviewer; print(f'[OK] XPCS Viewer {xpcsviewer.__version__} installed')"
 
     - name: Test CLI commands
       env:
@@ -216,14 +208,14 @@ jobs:
         fi
 
         if [ "${{ matrix.os }}" = "windows-latest" ]; then
-          source test_env/Scripts/activate
+          BIN_DIR=test_env/Scripts
         else
-          source test_env/bin/activate
+          BIN_DIR=test_env/bin
         fi
 
         echo "[INFO] Testing CLI commands..."
-        xpcsviewer-gui --help || echo "[WARNING] xpcsviewer-gui command failed"
-        xpcsviewer --help || echo "[WARNING] xpcsviewer command failed"
+        "$BIN_DIR/xpcsviewer-gui" --help || echo "[WARNING] xpcsviewer-gui command failed"
+        "$BIN_DIR/xpcsviewer" --help || echo "[WARNING] xpcsviewer command failed"
         echo "[OK] CLI command tests completed"
 
     - name: Test basic import
@@ -232,12 +224,12 @@ jobs:
       shell: bash
       run: |
         if [ "${{ matrix.os }}" = "windows-latest" ]; then
-          source test_env/Scripts/activate
+          PYTHON_BIN=test_env/Scripts/python
         else
-          source test_env/bin/activate
+          PYTHON_BIN=test_env/bin/python
         fi
 
-        python -c "
+        "$PYTHON_BIN" -c "
         import xpcsviewer
         from xpcsviewer.file_locator import FileLocator
         from xpcsviewer.viewer_kernel import ViewerKernel
@@ -291,7 +283,7 @@ jobs:
           ### 🚀 Quick Start
           ```bash
           xpcsviewer-gui path_to_hdf_directory
-          # Aliases: pyxpcsviewer, xpcs-toolkit, xpcs-viewer
+          # or: xpcsviewer path_to_hdf_directory
           ```
 
           ### 📝 Changes

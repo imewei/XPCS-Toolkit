@@ -194,7 +194,7 @@ jobs:
             uv run pytest -m "(unit or integration) and not slow and not gui" \
               --cov=xpcsviewer --cov-report=xml --cov-report=term-missing \
               --cov-context=test --tb=short --maxfail=5 --cov-fail-under=11 \
-              -n auto --dist=worksteal \
+              -n auto --dist=loadscope \
               || (echo "[ERROR] Core tests failed" && exit 1)
             ;;
           "performance")
@@ -204,11 +204,11 @@ jobs:
               || (echo "[ERROR] Performance tests failed" && exit 1)
             ;;
           *)
-            echo "[INFO] Running full test suite (excluding stress, system-dependent, and GUI tests)..."
-            uv run pytest -m "not (stress or system_dependent or gui)" \
+            echo "[INFO] Running full test suite (excluding stress, system-dependent, performance, and GUI tests)..."
+            uv run pytest -m "not (stress or system_dependent or performance or gui)" \
               --cov=xpcsviewer --cov-report=xml --cov-report=term-missing \
               --cov-context=test --tb=short --durations=10 --maxfail=10 --cov-fail-under=11 \
-              -n auto --dist=worksteal \
+              -n auto --dist=loadscope \
               || (echo "[ERROR] Full test suite failed" && exit 1)
             ;;
         esac
@@ -349,11 +349,6 @@ jobs:
         uvx pip-audit --desc --format=json --output=pip-audit-report.json --ignore-vuln GHSA-4xh5-x5gv-qwph || true
         uvx pip-audit --desc --ignore-vuln GHSA-4xh5-x5gv-qwph
 
-    - name: Check dependencies with safety
-      run: |
-        uvx safety check --json --output safety-report.json || echo "Safety check completed with warnings"
-        uvx safety check --short-report || echo "Safety check completed with warnings"
-
     - name: Upload security reports
       uses: actions/upload-artifact@v4
       if: always()
@@ -362,7 +357,6 @@ jobs:
         path: |
           bandit-report.json
           pip-audit-report.json
-          safety-report.json
         retention-days: 30
 
   # Status check job - always runs
