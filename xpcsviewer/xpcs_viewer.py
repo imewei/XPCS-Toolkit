@@ -269,6 +269,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         self._g2_bayesian_worker_active: bool = False
         self._g2_bayesian_model_func = None
         self._g2_bayesian_data: tuple | None = None
+        self._g2_batch_coordinator: object | None = None
 
         # Bayesian fitting state — Diffusion
         self._diff_bayesian_result = None
@@ -311,6 +312,24 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         self.btn_diff_bayesian.clicked.connect(self._fit_diff_bayesian)
         self.btn_diff_diagnosis.clicked.connect(self._show_diff_diagnosis)
 
+        # Batch Bayesian fitting UI — programmatically added (viewer_ui.py is
+        # auto-generated and must not be edited).
+        from qtpy.QtWidgets import QPushButton, QSpinBox
+
+        self.btn_g2_bayesian_all = QPushButton("Fit All Q", self.groupBox_2)
+        self.btn_g2_bayesian_all.setObjectName("btn_g2_bayesian_all")
+        self.gridLayout_12.addWidget(self.btn_g2_bayesian_all, 0, 12, 1, 1)
+
+        self.sb_g2_bayesian_workers = QSpinBox(self.groupBox_2)
+        self.sb_g2_bayesian_workers.setObjectName("sb_g2_bayesian_workers")
+        self.sb_g2_bayesian_workers.setMinimum(1)
+        self.sb_g2_bayesian_workers.setMaximum(8)
+        self.sb_g2_bayesian_workers.setValue(4)
+        self.sb_g2_bayesian_workers.setToolTip("Max concurrent Bayesian workers")
+        self.gridLayout_12.addWidget(self.sb_g2_bayesian_workers, 2, 12, 1, 1)
+
+        self.btn_g2_bayesian_all.clicked.connect(self._fit_g2_bayesian_all)
+
         # Disable Bayesian buttons if NumPyro is not available
         try:
             from .fitting.models import NUMPYRO_AVAILABLE
@@ -321,9 +340,11 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
                     self.btn_g2_diagnosis,
                     self.btn_diff_bayesian,
                     self.btn_diff_diagnosis,
+                    self.btn_g2_bayesian_all,
                 ):
                     btn.setEnabled(False)
                     btn.setToolTip("NumPyro not installed")
+                self.sb_g2_bayesian_workers.setEnabled(False)
         except ImportError:
             pass
 
@@ -3400,6 +3421,8 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         self._g2_bayesian_model_func = None
         self._diff_bayesian_result = None
         self._diff_bayesian_data = None
+        if self._g2_batch_coordinator is not None:
+            self._cancel_g2_bayesian_batch()
         if hasattr(self, "btn_g2_diagnosis"):
             self.btn_g2_diagnosis.setEnabled(False)
         if hasattr(self, "btn_diff_diagnosis"):
@@ -3958,6 +3981,202 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         self.btn_g2_bayesian.setText("Fit Bayesian")
         logger.error("Bayesian G2 fit failed: %s", error_msg)
         self.statusbar.showMessage(f"Bayesian fit failed: {error_msg[:80]}", 4000)
+
+    # ------------------------------------------------------------------
+    # Batched all-Q Bayesian fitting
+    # ------------------------------------------------------------------
+
+    def _extract_g2_all_for_bayesian(self):
+        """Extract data for ALL valid Q-bins.
+
+        Returns
+        -------
+        tuple or None
+            ``(specs, q_arr, t_el, fit_func_name)`` on success,
+            where *specs* is a list of dicts for
+            :class:`BatchBayesianCoordinator`, or ``None`` on failure.
+        """
+        if not self._guard_no_data("g2"):
+            return None
+
+        rows = self.get_selected_rows()
+        xf_list = self.vk.get_xf_list(rows)
+
+        from .module import g2mod
+
+        p = self.check_g2_number()
+        q_range = (p[0], p[1])
+        t_range = (p[2], p[3])
+
+        result = g2mod.get_data(xf_list, q_range=q_range, t_range=t_range)
+        if result[0] is False:
+            self.statusbar.showMessage("No G2 data available", 2000)
+            return None
+
+        q, tel, g2, g2_err, _labels = result
+
+        q_arr = np.asarray(q[0])
+        x = np.asarray(tel[0])
+
+        _, _, fit_func_name = self.check_g2_fitting_number()
+
+        from .fitting import fit_double_exp, fit_single_exp
+
+        fit_func = fit_single_exp if fit_func_name == "single" else fit_double_exp
+
+        specs: list[dict] = []
+        for q_idx in range(len(q_arr)):
+            y = np.asarray(g2[0][:, q_idx])
+            yerr = np.asarray(g2_err[0][:, q_idx])
+            valid = np.isfinite(y) & np.isfinite(yerr) & (yerr > 0)
+            if not np.any(valid):
+                continue
+            specs.append(
+                {
+                    "q_idx": q_idx,
+                    "x": x[valid],
+                    "y": y[valid],
+                    "yerr": yerr[valid],
+                    "q_value": float(q_arr[q_idx]),
+                    "fit_func": fit_func,
+                }
+            )
+
+        if not specs:
+            self.statusbar.showMessage("No valid Q-bins for Bayesian fitting", 2000)
+            return None
+
+        return specs, q_arr, x, fit_func_name
+
+    def _fit_g2_bayesian_all(self):
+        """Launch batched Bayesian (NUTS) fit for all Q-bins."""
+        if self._g2_batch_coordinator is not None:
+            self._cancel_g2_bayesian_batch()
+            return
+
+        extracted = self._extract_g2_all_for_bayesian()
+        if extracted is None:
+            return
+
+        specs, q_arr, t_el, fit_func_name = extracted
+
+        from .fitting.models import double_exp_func, single_exp_func
+        from .threading.batch_bayesian_coordinator import BatchBayesianCoordinator
+
+        if fit_func_name == "single":
+            self._g2_bayesian_model_func = single_exp_func
+        else:
+            self._g2_bayesian_model_func = double_exp_func
+
+        # Store metadata for assembly
+        self._g2_batch_q_arr = q_arr
+        self._g2_batch_t_el = t_el
+        self._g2_batch_fit_func_name = fit_func_name
+
+        max_workers = self.sb_g2_bayesian_workers.value()
+        coordinator = BatchBayesianCoordinator(
+            q_specs=specs,
+            thread_pool=self.thread_pool,
+            max_concurrent=max_workers,
+            parent=self,
+        )
+        self._g2_batch_coordinator = coordinator
+
+        coordinator.progress.connect(self._on_g2_batch_progress)
+        coordinator.all_finished.connect(self._on_g2_batch_finished)
+        coordinator.single_q_finished.connect(self._on_g2_batch_single_q_done)
+        coordinator.single_q_error.connect(self._on_g2_batch_single_q_error)
+
+        # UI feedback
+        self.btn_g2_bayesian_all.setText("Cancel")
+        self.btn_g2_bayesian.setEnabled(False)
+        self.sb_g2_bayesian_workers.setEnabled(False)
+
+        total = coordinator.total
+        self.progress_manager.start_operation(
+            "bayesian_batch_g2",
+            f"Bayesian fitting {total} Q-bins",
+            total=total,
+            is_cancellable=True,
+        )
+
+        coordinator.start()
+
+    def _on_g2_batch_progress(self, completed, total, msg):
+        """Update progress during batch Bayesian fitting."""
+        self.progress_manager.update_progress(
+            "bayesian_batch_g2", completed, total, msg
+        )
+
+    def _on_g2_batch_single_q_done(self, q_idx, result):
+        """Store individual Q-bin result for diagnosis access."""
+        if result is not None:
+            self._g2_bayesian_results[q_idx] = result.get("fit_result")
+
+    def _on_g2_batch_single_q_error(self, q_idx, error_msg):
+        """Log individual Q-bin failure."""
+        logger.warning("Batch Bayesian: Q-index %d failed: %s", q_idx, error_msg)
+
+    def _on_g2_batch_finished(self, results):
+        """Assemble fit_summary from batch results and refresh plots."""
+        from .fitting.bayesian_assembly import assemble_fit_summary
+
+        # Extract FitResult from worker result dicts
+        fit_results: dict[int, object | None] = {}
+        for q_idx, res in results.items():
+            if res is not None:
+                fit_results[q_idx] = res.get("fit_result")
+            else:
+                fit_results[q_idx] = None
+
+        fit_summary = assemble_fit_summary(
+            results=fit_results,
+            q_arr=self._g2_batch_q_arr,
+            t_el=self._g2_batch_t_el,
+            fit_func_name=self._g2_batch_fit_func_name,
+            model_func=self._g2_bayesian_model_func,
+        )
+
+        # Store on the first target file (same attribute NLSQ writes to)
+        rows = self.get_selected_rows()
+        xf_list = self.vk.get_xf_list(rows)
+        if xf_list:
+            xf_list[0].fit_summary = fit_summary
+
+        succeeded = sum(1 for v in fit_results.values() if v is not None)
+        total = len(fit_results)
+
+        # Complete progress
+        self.progress_manager.complete_operation(
+            "bayesian_batch_g2",
+            success=True,
+            final_message=f"Bayesian fit: {succeeded}/{total} Q-bins succeeded",
+        )
+
+        # Restore UI state
+        self._g2_batch_coordinator = None
+        self.btn_g2_bayesian_all.setText("Fit All Q")
+        self.btn_g2_bayesian.setEnabled(True)
+        self.sb_g2_bayesian_workers.setEnabled(True)
+        self.btn_g2_diagnosis.setEnabled(bool(self._g2_bayesian_results))
+
+        # Refresh tau-q tab
+        try:
+            self.init_diffusion()
+        except Exception:
+            logger.debug("Could not refresh tau-q tab after batch fit", exc_info=True)
+
+    def _cancel_g2_bayesian_batch(self):
+        """Cancel the running batch Bayesian fitting."""
+        if self._g2_batch_coordinator is not None:
+            self._g2_batch_coordinator.cancel()
+            self.progress_manager.complete_operation(
+                "bayesian_batch_g2", success=False, final_message="Batch cancelled"
+            )
+            self._g2_batch_coordinator = None
+            self.btn_g2_bayesian_all.setText("Fit All Q")
+            self.btn_g2_bayesian.setEnabled(True)
+            self.sb_g2_bayesian_workers.setEnabled(True)
 
     def _show_g2_diagnosis(self):
         """Show or create the G2 Bayesian diagnosis window."""
