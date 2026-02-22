@@ -49,9 +49,7 @@ class TestGPUToCPUFallback:
 
         DeviceManager.reset()
         dm = DeviceManager()
-
-        if dm.gpu_available:
-            pytest.skip("GPU is available, cannot test fallback error")
+        dm._gpu_available = False
 
         config = DeviceConfig(
             preferred_device=DeviceType.GPU,
@@ -158,9 +156,7 @@ class TestFallbackLogging:
 
         DeviceManager.reset()
         dm = DeviceManager()
-
-        if dm.gpu_available:
-            pytest.skip("GPU is available, cannot test fallback logging")
+        dm._gpu_available = False
 
         with caplog.at_level(logging.WARNING):
             dm.configure(

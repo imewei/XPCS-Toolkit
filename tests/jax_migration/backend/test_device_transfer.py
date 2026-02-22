@@ -198,9 +198,7 @@ class TestGPUFallback:
 
         DeviceManager.reset()
         dm = DeviceManager()
-
-        if dm.gpu_available:
-            pytest.skip("GPU is available, cannot test fallback error")
+        dm._gpu_available = False
 
         config = DeviceConfig(
             preferred_device=DeviceType.GPU,
