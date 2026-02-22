@@ -468,7 +468,8 @@ def sanitize_path(
             name_hash = hashlib.sha256(p.name.encode()).hexdigest()[:8]
             path_str = str(p.parent / f"{name_hash}{p.suffix}")
 
-    return path_str
+    # Normalize to forward slashes for cross-platform log consistency
+    return path_str.replace("\\", "/")
 
 
 def get_session_context() -> dict[str, str]:
