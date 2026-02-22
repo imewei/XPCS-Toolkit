@@ -54,6 +54,7 @@ from .threading.async_kernel import AsyncDataPreloader, AsyncViewerKernel
 from .threading.progress_manager import ProgressManager
 from .utils import get_logger, log_system_info, sanitize_path, setup_exception_logging
 from .utils.log_utils import RateLimitedLogger
+from .fileIO.qmap_utils import Q_UNIT_DISPLAY
 from .viewer_kernel import ViewerKernel
 from .viewer_ui import Ui_mainWindow as Ui
 
@@ -219,7 +220,6 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         self._register_shortcuts()
         self._setup_drag_drop_list()
         self._apply_button_styles()
-        self._apply_layout_improvements()
         self.timer = QtCore.QTimer()
 
         # Must be initialized before load_path() which checks it
@@ -273,6 +273,10 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         self._g2_bayesian_model_func = None
         self._g2_bayesian_data: tuple | None = None
 
+        # Grid metadata for Q-bin subplot highlighting
+        self._g2_fitting_num_col: int = 4
+        self._g2_fitting_plot_type: str = "multiple"
+
         # Bayesian fitting state — Diffusion
         self._diff_bayesian_result = None
         self._diff_diagnosis_window = None
@@ -289,6 +293,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         self.show_g2_fit_summary.clicked.connect(self.show_g2_fit_summary_func)
         self.btn_g2_export.clicked.connect(self.export_g2)
         self.btn_g2_refit.clicked.connect(self.refit_g2)
+        self.btn_g2_refit.setText("Fit")
         self.pushButton_6.clicked.connect(self.saxs2d_roi_add)  # ROI Add button
         self.saxs2d_autolevel.stateChanged.connect(self.update_saxs2d_level)
         self.btn_deselect.clicked.connect(self.clear_target_selection)
@@ -311,6 +316,10 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         # Bayesian fitting connections
         self.btn_g2_bayesian.clicked.connect(self._fit_g2_bayesian)
         self.btn_g2_diagnosis.clicked.connect(self._show_g2_diagnosis)
+        self.sb_g2_bayesian_qidx.valueChanged.connect(self._on_g2_qbin_changed)
+        # Set initial button labels to reflect default Q-bin 0
+        self.btn_g2_bayesian.setText("Fit Q-0")
+        self.btn_g2_diagnosis.setText("Diagnosis Q-0 (no fit)")
         self.btn_diff_bayesian.clicked.connect(self._fit_diff_bayesian)
         self.btn_diff_diagnosis.clicked.connect(self._show_diff_diagnosis)
 
@@ -360,6 +369,10 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         # Add keyboard shortcut to show progress dialog
         self.setup_async_connections()
         self.setup_progress_shortcut()
+
+        # Apply layout improvements AFTER all dynamic widgets are created
+        # (e.g. btn_g2_bayesian_all at line ~322 must exist before rearrangement)
+        self._apply_layout_improvements()
 
         self.load_default_setting()
 
@@ -1636,14 +1649,18 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
 
     def update_plot_sync(self, tab_name):
         """Synchronous plot update (original behavior)."""
-        # Special handling for diffusion tab - always update the pre-plot
+        # Special handling for diffusion tab - update the pre-plot only
         if tab_name == "diffusion":
             try:
                 self.init_diffusion()
                 logger.debug("Diffusion pre-plot updated")
             except Exception as e:
                 logger.exception(f"Failed to update diffusion pre-plot: {e}")
-            # Don't return here - still allow the normal plot_diffusion to be called
+            return  # View-only on tab switch; fitting via "Fit Plot" button
+
+        # g2 fitting tab is view-only on switch; fitting via "Fit" button
+        if tab_name == "g2_fitting":
+            return
 
         func = getattr(self, "plot_" + tab_name)
         try:
@@ -2102,6 +2119,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
 
         # Create a splitter for the three-panel layout
         splitter = QtWidgets.QSplitter(QtCore.Qt.Orientation.Horizontal)
+        splitter.setObjectName("splitter_g2map")
 
         # Panel 1: G2 Map (2D view)
         g2map_widget = QtWidgets.QWidget()
@@ -2140,6 +2158,12 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         profile_layout.addWidget(profile_label)
         profile_layout.addWidget(self.pg_g2map_profile)
         splitter.addWidget(profile_widget)
+
+        # Equal space for all three panels
+        splitter.setStretchFactor(0, 1)
+        splitter.setStretchFactor(1, 1)
+        splitter.setStretchFactor(2, 1)
+        splitter.setChildrenCollapsible(False)
 
         main_layout.addWidget(splitter)
 
@@ -2944,13 +2968,20 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         self.tree = worker.get_pg_tree()
         self.tree.show()
 
-    def init_g2(self, qd, tel):
-        if qd is None or tel is None:
+    def init_g2(self, qd_per_file, tel):
+        if qd_per_file is None or tel is None:
             return
 
-        # Update Bayesian Q-index spinbox range
-        if hasattr(self, "sb_g2_bayesian_qidx") and len(qd) > 0:
-            self.sb_g2_bayesian_qidx.setMaximum(len(qd) - 1)
+        # Update Bayesian Q-index spinbox range.
+        # qd_per_file is a list of per-file Q-arrays; use the first file's array length
+        # to get the actual number of Q-bins.
+        if hasattr(self, "sb_g2_bayesian_qidx") and len(qd_per_file) > 0:
+            num_qbins = len(qd_per_file[0])
+            self.sb_g2_bayesian_qidx.setMaximum(max(num_qbins - 1, 0))
+
+        # Store grid metadata for Q-bin subplot highlighting
+        self._g2_fitting_num_col = self.sb_g2_column.value()
+        self._g2_fitting_plot_type = self.g2_plot_type.currentText()
 
         q_auto = self.g2_qauto.isChecked()
         t_auto = self.g2_tauto.isChecked()
@@ -2970,8 +3001,8 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
             self.g2_tmax.setText(to_e(t_max * 1.1))
 
         if q_auto:
-            self.g2_qmin.setValue(np.min(qd) / 1.1)
-            self.g2_qmax.setValue(np.max(qd) * 1.1)
+            self.g2_qmin.setValue(np.min(qd_per_file) / 1.1)
+            self.g2_qmax.setValue(np.max(qd_per_file) * 1.1)
 
     def plot_g2(self, dryrun=False):
         """
@@ -3027,8 +3058,8 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         self.pushButton_4.setDisabled(True)
         self.pushButton_4.setText("plotting")
         try:
-            qd, tel = self.vk.plot_g2(handler=self.mp_g2, **kwargs)
-            self.init_g2(qd, tel)
+            qd_per_file, tel = self.vk.plot_g2(handler=self.mp_g2, **kwargs)
+            self.init_g2(qd_per_file, tel)
             # Note: Fitting/diffusion is handled in the g2 fitting tab now
         except Exception:
             logger.exception("Error in plot_g2")
@@ -3044,7 +3075,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         parameter values are updated even if fitting parameters haven't changed.
         Plots to the g2 fitting tab.
         """
-        logger.info("Refit G2 button clicked - forcing new fit calculation")
+        logger.info("Fit G2 button clicked - forcing new fit calculation")
 
         p = self.check_g2_number()
         bounds, fit_flag, fit_func = self.check_g2_fitting_number()
@@ -3076,18 +3107,18 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
             return
 
         self.btn_g2_refit.setDisabled(True)
-        self.btn_g2_refit.setText("refitting")
+        self.btn_g2_refit.setText("fitting...")
         try:
-            qd, tel = self.vk.plot_g2(handler=self.mp_g2_fitting, **kwargs)
-            self.init_g2(qd, tel)
+            qd_per_file, tel = self.vk.plot_g2(handler=self.mp_g2_fitting, **kwargs)
+            self.init_g2(qd_per_file, tel)
             self.init_diffusion()
-            self.statusbar.showMessage("G2 refitting completed successfully", 2000)
+            self.statusbar.showMessage("G2 fitting completed successfully", 2000)
         except Exception:
             logger.exception("Error in refit_g2")
-            self.statusbar.showMessage("G2 refitting failed", 2000)
+            self.statusbar.showMessage("G2 fitting failed", 2000)
         finally:
             self.btn_g2_refit.setEnabled(True)
-            self.btn_g2_refit.setText("refit")
+            self.btn_g2_refit.setText("Fit")
 
     def plot_g2_fitting(self, dryrun=False):
         """
@@ -3140,8 +3171,8 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
             return kwargs
 
         try:
-            qd, tel = self.vk.plot_g2(handler=self.mp_g2_fitting, **kwargs)
-            self.init_g2(qd, tel)
+            qd_per_file, tel = self.vk.plot_g2(handler=self.mp_g2_fitting, **kwargs)
+            self.init_g2(qd_per_file, tel)
             self.init_diffusion()
         except Exception:
             logger.exception("Error in plot_g2_fitting")
@@ -3910,6 +3941,127 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         _, _, fit_func_name = self.check_g2_fitting_number()
         return x[valid], y[valid], yerr[valid], q_idx, q_value, fit_func_name
 
+    def _on_g2_qbin_changed(self, q_idx):
+        """Handle Q-bin spinbox value change in g2 fitting tab.
+
+        Updates button labels, highlights the subplot, shows Q-value
+        in the status bar, and refreshes the diagnosis window.
+        """
+        # 1. Update button labels to reflect the selected Q-bin.
+        #    This provides immediate, visible confirmation that the
+        #    spinbox value is connected to the Bayesian actions.
+        self.btn_g2_bayesian.setText(f"Fit Q-{q_idx}")
+        has_result = q_idx in self._g2_bayesian_results
+        self.btn_g2_diagnosis.setEnabled(has_result)
+        if has_result:
+            self.btn_g2_diagnosis.setText(f"Diagnosis Q-{q_idx}")
+        else:
+            self.btn_g2_diagnosis.setText(f"Diagnosis Q-{q_idx} (no fit)")
+
+        # 2. Highlight subplot (works even without file selection)
+        highlighted = self._highlight_g2_subplot(q_idx)
+
+        # 3. Show Q-value in status bar
+        q_label = ""
+        rows = self.get_selected_rows()
+        if rows and self.vk:
+            try:
+                xf_list = self.vk.get_xf_list(rows=rows, filter_atype="Multitau")
+                if xf_list:
+                    q_arr = xf_list[0].qd
+                    if q_idx < len(q_arr):
+                        q_label = f"q = {q_arr[q_idx]:.4g} {Q_UNIT_DISPLAY}"
+            except Exception:
+                pass
+
+        if q_label:
+            self.statusbar.showMessage(f"Q-bin {q_idx}: {q_label}", 3000)
+        elif not highlighted:
+            self.statusbar.showMessage(
+                f"Q-bin {q_idx} selected \u2014 click 'Fit' to generate the plot",
+                3000,
+            )
+
+        # 4. Auto-update diagnosis window if open
+        if (
+            self._g2_diagnosis_window is not None
+            and self._g2_diagnosis_window.isVisible()
+        ):
+            if has_result:
+                extracted = self._extract_g2_for_bayesian()
+                if extracted is not None:
+                    x, y, yerr, _, q_value, _ = extracted
+                    fit_result = self._g2_bayesian_results[q_idx]
+                    self._g2_bayesian_data = (x, y, yerr, q_idx, q_value)
+                    self._update_g2_diagnosis(fit_result, x, y, yerr, q_value)
+            else:
+                # Show placeholder in diagnosis window title
+                title = f"G2 Bayesian Diagnosis \u2014 Q-bin {q_idx} (no fit yet)"
+                self._g2_diagnosis_window.setWindowTitle(title)
+
+    def _highlight_g2_subplot(self, q_idx):
+        """Highlight the selected Q-bin subplot in the g2 fitting plot grid.
+
+        Returns True if a subplot was highlighted, False otherwise.
+        """
+        if not hasattr(self, "mp_g2_fitting"):
+            return False
+        hdl = self.mp_g2_fitting
+
+        # Only meaningful for "multiple" plot type (one panel per Q-bin)
+        plot_type = getattr(self, "_g2_fitting_plot_type", "multiple")
+        if plot_type != "multiple":
+            return False
+
+        # No subplots yet (plot not generated)
+        if not hdl.ci.rows:
+            return False
+
+        num_col = getattr(self, "_g2_fitting_num_col", 4)
+
+        # Clear all subplot borders, then highlight selected one
+        for row_dict in hdl.ci.rows.values():
+            for item in row_dict.values():
+                if hasattr(item, "getViewBox"):
+                    item.getViewBox().setBorder(None)
+
+        # Compute grid position for selected Q-bin
+        target_row = q_idx // num_col
+        target_col = q_idx % num_col
+        item = hdl.getItem(target_row, target_col)
+        if item is None or not hasattr(item, "getViewBox"):
+            return False
+
+        item.getViewBox().setBorder(pg.mkPen("#FF5722", width=4))
+
+        # Auto-scroll the fitting tab scroll area so the subplot is visible
+        self._scroll_to_g2_subplot(hdl, item)
+        return True
+
+    def _scroll_to_g2_subplot(self, hdl, item):
+        """Scroll the g2 fitting scroll area to ensure *item* is visible."""
+        try:
+            scene_rect = item.getViewBox().sceneBoundingRect()
+            widget_point = hdl.mapFromScene(scene_rect.center())
+
+            # Walk up from the plot widget to find the enclosing QScrollArea
+            scroll_area = hdl.parent()
+            while scroll_area is not None:
+                if isinstance(scroll_area, QtWidgets.QScrollArea):
+                    break
+                scroll_area = scroll_area.parent()
+
+            if scroll_area is not None:
+                viewport_h = scroll_area.viewport().height()
+                scroll_area.ensureVisible(
+                    int(widget_point.x()),
+                    int(widget_point.y()),
+                    0,
+                    viewport_h // 3,
+                )
+        except Exception:
+            pass  # Non-critical: highlighting still works without scroll
+
     def _fit_g2_bayesian(self):
         """Launch Bayesian (NUTS) fit for the selected Q-bin."""
         if self._g2_bayesian_worker_active:
@@ -3949,7 +4101,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
 
         self._g2_bayesian_worker_active = True
         self.btn_g2_bayesian.setEnabled(False)
-        self.btn_g2_bayesian.setText("fitting...")
+        self.btn_g2_bayesian.setText(f"Fitting Q-{q_idx}...")
         self.statusbar.showMessage(f"Bayesian fit running for Q={q_value:.4g}...", 0)
         self.thread_pool.start(worker)
 
@@ -3957,7 +4109,8 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         """Handle successful G2 Bayesian fit."""
         self._g2_bayesian_worker_active = False
         self.btn_g2_bayesian.setEnabled(True)
-        self.btn_g2_bayesian.setText("Fit Bayesian")
+        q_idx_current = self.sb_g2_bayesian_qidx.value()
+        self.btn_g2_bayesian.setText(f"Fit Q-{q_idx_current}")
 
         if result is None:
             self.statusbar.showMessage("Bayesian fit returned no result", 2000)
@@ -3968,7 +4121,9 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         q_value = result["q_value"]
 
         self._g2_bayesian_results[q_idx] = fit_result
+        # Update diagnosis button to reflect availability
         self.btn_g2_diagnosis.setEnabled(True)
+        self.btn_g2_diagnosis.setText(f"Diagnosis Q-{q_idx_current}")
 
         converged = fit_result.diagnostics.converged
         status = "converged" if converged else "NOT converged"
@@ -3980,7 +4135,8 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         """Handle G2 Bayesian fit error."""
         self._g2_bayesian_worker_active = False
         self.btn_g2_bayesian.setEnabled(True)
-        self.btn_g2_bayesian.setText("Fit Bayesian")
+        q_idx_current = self.sb_g2_bayesian_qidx.value()
+        self.btn_g2_bayesian.setText(f"Fit Q-{q_idx_current}")
         logger.error("Bayesian G2 fit failed: %s", error_msg)
         self.statusbar.showMessage(f"Bayesian fit failed: {error_msg[:80]}", 4000)
 
@@ -4160,7 +4316,15 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         self.btn_g2_bayesian_all.setText("Fit All Q")
         self.btn_g2_bayesian.setEnabled(True)
         self.sb_g2_bayesian_workers.setEnabled(True)
-        self.btn_g2_diagnosis.setEnabled(bool(self._g2_bayesian_results))
+        q_idx_current = self.sb_g2_bayesian_qidx.value()
+        self.btn_g2_bayesian.setText(f"Fit Q-{q_idx_current}")
+        has_result = q_idx_current in self._g2_bayesian_results
+        self.btn_g2_diagnosis.setEnabled(has_result)
+        self.btn_g2_diagnosis.setText(
+            f"Diagnosis Q-{q_idx_current}"
+            if has_result
+            else f"Diagnosis Q-{q_idx_current} (no fit)"
+        )
 
         # Refresh tau-q tab
         try:
@@ -4179,19 +4343,29 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
             self.btn_g2_bayesian_all.setText("Fit All Q")
             self.btn_g2_bayesian.setEnabled(True)
             self.sb_g2_bayesian_workers.setEnabled(True)
+            q_idx_current = self.sb_g2_bayesian_qidx.value()
+            self.btn_g2_bayesian.setText(f"Fit Q-{q_idx_current}")
 
     def _show_g2_diagnosis(self):
-        """Show or create the G2 Bayesian diagnosis window."""
-        if self._g2_bayesian_data is None:
-            self.statusbar.showMessage("No Bayesian fit data available", 2000)
-            return
+        """Show or create the G2 Bayesian diagnosis window.
 
-        x, y, yerr, q_idx, q_value = self._g2_bayesian_data
+        Uses the current spinbox Q-bin value so the diagnosis window
+        always reflects the user's current selection.
+        """
+        q_idx = self.sb_g2_bayesian_qidx.value()
         fit_result = self._g2_bayesian_results.get(q_idx)
         if fit_result is None:
-            self.statusbar.showMessage("No fit result for this Q-index", 2000)
+            self.statusbar.showMessage(
+                f"No Bayesian fit result for Q-bin {q_idx} — run Fit first", 3000
+            )
             return
 
+        # Extract fresh data for the current Q-bin
+        extracted = self._extract_g2_for_bayesian()
+        if extracted is None:
+            return
+        x, y, yerr, _, q_value, _ = extracted
+        self._g2_bayesian_data = (x, y, yerr, q_idx, q_value)
         self._update_g2_diagnosis(fit_result, x, y, yerr, q_value)
 
     def _update_g2_diagnosis(self, fit_result, x, y, yerr, q_value):
@@ -4449,9 +4623,15 @@ def main_gui(path=None, label_style=None):
     # (EXC_ARM_DA_ALIGN at 0x0bad4007) when Core Text tries to render
     # emoji glyphs via CopyEmojiImage during QLabel paint events.
     # NoFontMerging prevents Qt from falling back to Apple Color Emoji.
-    font = app.font()
-    font.setStyleStrategy(QtGui.QFont.StyleStrategy.NoFontMerging)
-    app.setFont(font)
+    # Only apply on macOS — on Linux this breaks Unicode glyph rendering
+    # (e.g. Å in "Å⁻¹") because the primary font may lack certain glyphs
+    # and Qt cannot fall back to a font that has them.
+    import sys
+
+    if sys.platform == "darwin":
+        font = app.font()
+        font.setStyleStrategy(QtGui.QFont.StyleStrategy.NoFontMerging)
+        app.setFont(font)
 
     logger.info("Qt Application created")
 
