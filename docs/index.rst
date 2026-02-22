@@ -178,12 +178,17 @@ Gallery
       .. image:: https://raw.githubusercontent.com/imewei/XPCSViewer/master/docs/images/twotime.png
          :alt: Interactive two-time correlation analysis
 
-   10. **Average -- File Averaging Toolbox**
+   10. **Q-Map -- Q-Space Mapping**
+
+       .. image:: https://raw.githubusercontent.com/imewei/XPCSViewer/master/docs/images/qmap.png
+          :alt: Q-space mapping and partitioning
+
+   11. **Average -- File Averaging Toolbox**
 
        .. image:: https://raw.githubusercontent.com/imewei/XPCSViewer/master/docs/images/average.png
           :alt: Advanced file averaging capabilities
 
-   11. **Metadata -- HDF5 Explorer**
+   12. **Metadata -- HDF5 Explorer**
 
        .. image:: https://raw.githubusercontent.com/imewei/XPCSViewer/master/docs/images/hdf_info.png
           :alt: File structure and metadata viewer

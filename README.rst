@@ -154,13 +154,17 @@ Development
 
 .. code-block:: bash
 
-   # Clone and install
+   # Clone and install (uv recommended)
    git clone https://github.com/imewei/XPCSViewer.git
    cd XPCSViewer
+   make dev-setup          # installs package + dev/test/docs extras + pre-commit hooks
+
+   # Or with pip
    pip install -e .[dev]
 
    # Run tests
-   make test
+   make test               # parallel tests (excl. GUI)
+   make test-fast          # fast tests excluding slow markers
 
    # Build docs
    make docs
@@ -330,12 +334,17 @@ Gallery
    .. image:: https://raw.githubusercontent.com/imewei/XPCSViewer/master/docs/images/twotime.png
       :alt: Interactive two-time correlation analysis
 
-10. **Average -- File Averaging Toolbox**
+10. **Q-Map -- Q-Space Mapping**
+
+    .. image:: https://raw.githubusercontent.com/imewei/XPCSViewer/master/docs/images/qmap.png
+       :alt: Q-space mapping and partitioning
+
+11. **Average -- File Averaging Toolbox**
 
     .. image:: https://raw.githubusercontent.com/imewei/XPCSViewer/master/docs/images/average.png
        :alt: Advanced file averaging capabilities
 
-11. **Metadata -- HDF5 Explorer**
+12. **Metadata -- HDF5 Explorer**
 
     .. image:: https://raw.githubusercontent.com/imewei/XPCSViewer/master/docs/images/hdf_info.png
        :alt: File structure and metadata viewer
@@ -343,4 +352,4 @@ Gallery
 License
 -------
 
-MIT License. See `CONTRIBUTING.rst <CONTRIBUTING.rst>`_ for development guidelines.
+MIT License. See `CONTRIBUTING.md <CONTRIBUTING.md>`_ for development guidelines.

@@ -310,6 +310,17 @@ For backward compatibility with older code:
 
 .. autofunction:: xpcsviewer.fitting.vectorized_residual_analysis
 
+Bayesian Assembly
+-----------------
+
+Batch all-Q Bayesian fitting coordinator. Converts per-Q NumPyro posteriors
+into the legacy ``FitResult`` format used by the GUI.
+
+.. automodule:: xpcsviewer.fitting.bayesian_assembly
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 See Also
 --------
 

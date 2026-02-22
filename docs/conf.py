@@ -105,7 +105,7 @@ try:
     version = xpcsviewer.__version__
 except ImportError:
     # Fallback version if package can't be imported
-    version = "0.1.2"
+    version = "0.1.3-dev"
 
 # Simple logger for docs build
 logging.info(f"Building documentation for XPCS Viewer version {version}")
@@ -159,7 +159,7 @@ master_doc = "index"
 
 # General information about the project.
 project = "XPCS Viewer"
-project_copyright = "2025, Miaoqi Chu & Wei Chen"
+project_copyright = "2025-2026, Miaoqi Chu & Wei Chen"
 author = "Miaoqi Chu & Wei Chen"
 
 # The version info for the project you're documenting, acts as replacement
@@ -276,6 +276,7 @@ autodoc_mock_imports = [
     "xpcsviewer.threading.cleanup_optimized",
     "xpcsviewer.threading.progress_manager",
     "xpcsviewer.threading.bayesian_worker",
+    "xpcsviewer.threading.batch_bayesian_coordinator",
     # SimpleMask modules (depend on Qt/PyQtGraph)
     "xpcsviewer.simplemask",
     "xpcsviewer.simplemask.simplemask_window",
@@ -430,7 +431,7 @@ texinfo_documents = [
         "XPCS Viewer Documentation",
         author,
         "xpcsviewer",
-        "One line description of project.",
+        "Python toolkit for X-ray Photon Correlation Spectroscopy data analysis and visualization.",
         "Miscellaneous",
     ),
 ]
