@@ -38,7 +38,7 @@ Basic NLSQ fitting:
        model, x_data, y_data, y_errors,
        p0={'tau': 1.0, 'baseline': 1.0, 'contrast': 0.3},
        bounds={'tau': (0.01, 100), 'baseline': (0.9, 1.1), 'contrast': (0.1, 0.5)},
-       preset='robust',
+       workflow='auto_global',
    )
 
    print(f"R² = {result.r_squared:.4f}")
@@ -68,6 +68,8 @@ Fitting Functions
 .. autofunction:: fit_power_law
 
 .. autofunction:: nlsq_fit
+
+.. autofunction:: assemble_fit_summary
 
 Result Classes
 ~~~~~~~~~~~~~~
@@ -208,7 +210,7 @@ The ``nlsq_fit`` function supports advanced NLSQ 0.6.0 options:
 
    result = nlsq_fit(
        model_fn, x, y, yerr, p0, bounds,
-       preset='robust',          # 'fast', 'robust', 'global', 'streaming', 'large'
+       workflow='auto_global',   # 'auto', 'auto_global', 'hpc'
        auto_bounds=True,         # Automatic bounds inference from data
        stability='auto',         # 'auto', 'check', or False
        fallback=True,            # Enable fallback strategies
@@ -217,34 +219,28 @@ The ``nlsq_fit`` function supports advanced NLSQ 0.6.0 options:
    )
 
    # Access diagnostics
-   if result.model_diagnostics:
-       print(result.model_diagnostics)
+   if result.diagnostics:
+       print(result.diagnostics)
 
-Presets
-~~~~~~~
+Workflows
+~~~~~~~~~
 
 .. list-table::
    :header-rows: 1
-   :widths: 15 60 25
+   :widths: 20 55 25
 
-   * - Preset
+   * - Workflow
      - Description
      - Use Case
-   * - ``fast``
-     - Single-start optimization
+   * - ``auto``
+     - Automatic strategy selection
      - Quick fits, good initial guess
-   * - ``robust``
-     - Multi-start with 5 starts (default)
-     - General use
-   * - ``global``
-     - Thorough search with 20 starts
-     - Complex optimization landscapes
-   * - ``streaming``
-     - Streaming for large datasets
-     - N > 100,000 points
-   * - ``large``
-     - Auto-detect and use appropriate strategy
-     - Unknown dataset size
+   * - ``auto_global``
+     - Multi-start global optimization (default)
+     - General use, robust fitting
+   * - ``hpc``
+     - High-performance computing strategy
+     - Large datasets, batch fitting
 
 Models
 ------

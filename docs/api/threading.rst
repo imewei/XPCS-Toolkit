@@ -79,3 +79,14 @@ during long Bayesian inference runs.
    :members:
    :undoc-members:
    :show-inheritance:
+
+Batch Bayesian Coordinator
+--------------------------
+
+Coordinates batch all-Q Bayesian fitting, running NUTS sampling
+across multiple Q bins with progress tracking.
+
+.. automodule:: xpcsviewer.threading.batch_bayesian_coordinator
+   :members:
+   :undoc-members:
+   :show-inheritance:
