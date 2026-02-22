@@ -175,11 +175,12 @@ exclude = ["tests*", "docs*", "validation*", "scripts*"]
 
 [tool.setuptools.package-data]
 "xpcsviewer" = [
-    "py.typed",
     "configure/*.json",
     "ui/*.ui",
     "ui/resources/*.qrc",
     "ui/resources/*.png",
+    "ui/resources/icons/*.svg",
+    "ui/resources/icons/*.png",
     "gui/theme/styles/*.qss",
 ]
 
@@ -187,6 +188,8 @@ exclude = ["tests*", "docs*", "validation*", "scripts*"]
 "share/xpcsviewer/docs_images" = [
     "docs/images/average.png",
     "docs/images/diffusion.png",
+    "docs/images/g2_fit.png",
+    "docs/images/g2_map.png",
     "docs/images/g2mod.png",
     "docs/images/hdf_info.png",
     "docs/images/intt.png",
@@ -280,26 +283,6 @@ filterwarnings = [
 ]
 timeout = 300
 timeout_method = "thread"
-
-[tool.black]
-line-length = 88
-target-version = ['py313']
-include = '\.pyi?$'
-extend-exclude = '''
-/(
-    \.git
-  | \.eggs
-  | \.hg
-  | \.mypy_cache
-  | \.tox
-  | \.venv
-  | _build
-  | buck-out
-  | build
-  | dist
-  | venv
-)/
-'''
 
 [tool.ruff]
 line-length = 88
@@ -411,7 +394,7 @@ omit = [
     "xpcsviewer/icons_rc.py",
     "*/validation/*",
     "*/scripts/*",
-    "xpcsviewer/cli.py",
+    "xpcsviewer/cli/*",
     "xpcsviewer/viewer_ui.py",
     "xpcsviewer/ui/resources/*",
     "xpcsviewer/default_setting.py",
