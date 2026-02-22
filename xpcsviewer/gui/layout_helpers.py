@@ -7,6 +7,9 @@ of the application at runtime, complementing the QSS styling.
 
 from typing import Literal
 
+from qtpy.QtCore import Qt
+from qtpy.QtWidgets import QGridLayout, QScrollArea, QSizePolicy, QSplitter
+
 # Qt imports via compatibility layer
 from xpcsviewer.gui.qt_compat import (
     QFrame,
@@ -176,8 +179,13 @@ def improve_control_panel_layout(group_box: QGroupBox) -> None:
     """
     layout = group_box.layout()
     if layout:
-        layout.setContentsMargins(12, 20, 12, 12)
-        layout.setSpacing(8)
+        layout.setContentsMargins(4, 14, 4, 4)
+        layout.setSpacing(4)
+
+    # Shrink-to-content vertically so plots get remaining space
+    group_box.setSizePolicy(
+        QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Maximum
+    )
 
     apply_group_box_styling(group_box, "panel")
 
@@ -217,8 +225,250 @@ def improve_tab_content_spacing(tab_widget: QWidget) -> None:
         if page:
             layout = page.layout()
             if layout:
-                layout.setContentsMargins(8, 8, 8, 8)
-                layout.setSpacing(8)
+                layout.setContentsMargins(2, 2, 2, 2)
+                layout.setSpacing(2)
+
+
+def rearrange_g2_fitting_buttons(main_window: QWidget) -> None:
+    """Rearrange g2 fitting Bayesian controls in gridLayout_12.
+
+    Moves 'Fit All Q' below 'Plot Diagnosis' and adds a 'Q-bin:' label
+    above 'Fit Bayesian' for clarity.
+    """
+    grid_12: QGridLayout | None = main_window.findChild(
+        QGridLayout, "gridLayout_12"
+    )
+    if grid_12 is None:
+        return
+
+    # Find widgets by objectName
+    btn_bayesian = main_window.findChild(QPushButton, "btn_g2_bayesian")
+    btn_diagnosis = main_window.findChild(QPushButton, "btn_g2_diagnosis")
+    btn_all_q = main_window.findChild(QPushButton, "btn_g2_bayesian_all")
+    sb_qidx = main_window.findChild(QWidget, "sb_g2_bayesian_qidx")
+    sb_workers = main_window.findChild(QWidget, "sb_g2_bayesian_workers")
+
+    if not all([btn_bayesian, btn_diagnosis, sb_qidx]):
+        return
+
+    # Remove widgets from layout without detaching parent.
+    # Using removeWidget (not setParent(None)) preserves the native
+    # window handle and input-method context — critical for QSpinBox.
+    widgets_to_move = [
+        btn_bayesian, btn_diagnosis, sb_qidx, btn_all_q, sb_workers,
+    ]
+    for w in widgets_to_move:
+        if w is not None:
+            grid_12.removeWidget(w)
+
+    # Create Q-bin label
+    q_label = QLabel("Q-bin:")
+    q_label.setObjectName("label_g2_bayesian_qbin")
+
+    # Re-add in new arrangement (cols 11-12)
+    # Row 0: Q-bin label + spinbox
+    grid_12.addWidget(q_label, 0, 11, 1, 1)
+    grid_12.addWidget(sb_qidx, 0, 12, 1, 1)
+    # Row 1: Fit Bayesian (full width)
+    grid_12.addWidget(btn_bayesian, 1, 11, 1, 2)
+    # Row 2: Plot Diagnosis (full width)
+    grid_12.addWidget(btn_diagnosis, 2, 11, 1, 2)
+    # Row 3: Fit All Q + workers spinbox
+    if btn_all_q is not None:
+        grid_12.addWidget(btn_all_q, 3, 11, 1, 1)
+    if sb_workers is not None:
+        grid_12.addWidget(sb_workers, 3, 12, 1, 1)
+
+
+def rearrange_diffusion_tab(main_window: QWidget) -> None:
+    """Rearrange the Diffusion tab for a compact, plot-dominant layout.
+
+    1. Inside groupBox_5: params and controls side-by-side in one row.
+    2. Move tauq_msg below groupBox_5 at full width with thin scrollbar.
+    3. Maximise plot area, minimise control/metadata chrome.
+    """
+    _rearrange_diffusion_controls(main_window)
+    _rearrange_diffusion_grid(main_window)
+    _style_tauq_msg(main_window)
+
+
+def _rearrange_diffusion_controls(main_window: QWidget) -> None:
+    """Compact groupBox_5: params col 0, buttons col 1, options col 2."""
+    grid_38: QGridLayout | None = main_window.findChild(
+        QGridLayout, "gridLayout_38"
+    )
+    if grid_38 is None:
+        return
+
+    # Drain all items, keyed by objectName
+    layouts: dict[str, object] = {}
+    widgets: dict[str, QWidget] = {}
+    while grid_38.count():
+        item = grid_38.takeAt(0)
+        if item.layout():
+            layouts[item.layout().objectName()] = item.layout()
+        elif item.widget():
+            widgets[item.widget().objectName()] = item.widget()
+
+    grid_21 = layouts.get("gridLayout_21")  # a / b / q params
+    grid_15 = layouts.get("gridLayout_15")  # plot_type + offset
+    btn_fit = widgets.get("pushButton_8")
+    btn_export = widgets.get("btn_export_diffusion")
+    btn_bayesian = widgets.get("btn_diff_bayesian")
+    btn_diagnosis = widgets.get("btn_diff_diagnosis")
+
+    # Col 0: params (spans all rows)
+    if grid_21:
+        grid_38.addLayout(grid_21, 0, 0, 3, 1)
+
+    # Col 1: action buttons stacked vertically
+    if btn_fit:
+        btn_fit.setMinimumSize(0, 0)
+        grid_38.addWidget(btn_fit, 0, 1)
+    if btn_export:
+        btn_export.setMinimumSize(0, 0)
+        grid_38.addWidget(btn_export, 1, 1)
+    if btn_bayesian:
+        btn_bayesian.setMinimumSize(0, 0)
+        grid_38.addWidget(btn_bayesian, 2, 1)
+
+    # Col 2: options + diagnosis
+    if grid_15:
+        grid_38.addLayout(grid_15, 0, 2, 2, 1)
+    if btn_diagnosis:
+        btn_diagnosis.setMinimumSize(0, 0)
+        grid_38.addWidget(btn_diagnosis, 2, 2)
+
+    grid_38.setColumnStretch(0, 3)
+    grid_38.setColumnStretch(1, 1)
+    grid_38.setColumnStretch(2, 1)
+    grid_38.setContentsMargins(2, 2, 2, 2)
+    grid_38.setSpacing(2)
+
+    # Make groupBox_5 as compact as possible vertically
+    group_box_5 = main_window.findChild(QGroupBox, "groupBox_5")
+    if group_box_5 is not None:
+        group_box_5.setSizePolicy(
+            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Maximum
+        )
+        # Tight margins: minimal top (just enough for title), zero elsewhere
+        gb_layout = group_box_5.layout()
+        if gb_layout is not None:
+            gb_layout.setContentsMargins(4, 14, 4, 2)
+            gb_layout.setSpacing(2)
+
+
+def _rearrange_diffusion_grid(main_window: QWidget) -> None:
+    """Move tauq_msg below groupBox_5; maximise plot row height."""
+    grid_22: QGridLayout | None = main_window.findChild(
+        QGridLayout, "gridLayout_22"
+    )
+    tauq_msg = main_window.findChild(QWidget, "tauq_msg")
+    if grid_22 is None or tauq_msg is None:
+        return
+
+    # Remove tauq_msg from gridLayout_39 (inside groupBox_5)
+    parent = tauq_msg.parentWidget()
+    if parent is not None and parent.layout() is not None:
+        parent.layout().removeWidget(tauq_msg)
+
+    # Add to tab grid: row 2, spanning both plot columns
+    grid_22.addWidget(tauq_msg, 2, 0, 1, 2)
+
+    # Row stretch: plots take all flexible space; rows 1-2 fixed to content
+    grid_22.setRowStretch(0, 1)
+    grid_22.setRowStretch(1, 0)
+    grid_22.setRowStretch(2, 0)
+
+    # Tighten outer grid spacing
+    grid_22.setContentsMargins(4, 4, 4, 4)
+    grid_22.setSpacing(4)
+
+
+def _style_tauq_msg(main_window: QWidget) -> None:
+    """Configure tauq_msg with fixed height and thin scrollbar."""
+    tauq_msg = main_window.findChild(QWidget, "tauq_msg")
+    if tauq_msg is None:
+        return
+
+    tauq_msg.setFixedHeight(80)
+    tauq_msg.setSizePolicy(
+        QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed
+    )
+
+    # Thin scrollbar via stylesheet
+    tauq_msg.setStyleSheet(
+        "QTreeWidget QScrollBar:vertical {"
+        "  width: 6px;"
+        "  background: transparent;"
+        "}"
+        "QTreeWidget QScrollBar::handle:vertical {"
+        "  background: rgba(128, 128, 128, 0.4);"
+        "  border-radius: 3px;"
+        "  min-height: 20px;"
+        "}"
+        "QTreeWidget QScrollBar::add-line:vertical,"
+        "QTreeWidget QScrollBar::sub-line:vertical {"
+        "  height: 0px;"
+        "}"
+        "QScrollBar:vertical {"
+        "  width: 6px;"
+        "  background: transparent;"
+        "}"
+        "QScrollBar::handle:vertical {"
+        "  background: rgba(128, 128, 128, 0.4);"
+        "  border-radius: 3px;"
+        "  min-height: 20px;"
+        "}"
+        "QScrollBar::add-line:vertical,"
+        "QScrollBar::sub-line:vertical {"
+        "  height: 0px;"
+        "}"
+    )
+
+    # Enable horizontal scrollbar only when needed
+    tree = tauq_msg
+    if hasattr(tree, "setHorizontalScrollBarPolicy"):
+        tree.setHorizontalScrollBarPolicy(
+            Qt.ScrollBarPolicy.ScrollBarAsNeeded
+        )
+    if hasattr(tree, "setVerticalScrollBarPolicy"):
+        tree.setVerticalScrollBarPolicy(
+            Qt.ScrollBarPolicy.ScrollBarAsNeeded
+        )
+
+
+def optimize_g2map_tab(main_window: QWidget) -> None:
+    """Optimize the G2 Map tab for equal panel sizing and tight layout.
+
+    Forces the three splitter panels (G2 Map, Q-map, G2 Profile) to share
+    space equally and minimises internal padding.
+    """
+    splitter: QSplitter | None = main_window.findChild(QSplitter, "splitter_g2map")
+    if splitter is None:
+        return
+
+    # Tighten each panel's internal layout margins
+    for i in range(splitter.count()):
+        child = splitter.widget(i)
+        if child and child.layout():
+            child.layout().setContentsMargins(0, 0, 0, 0)
+            child.layout().setSpacing(2)
+
+    # Force equal initial sizes (Qt normalises proportionally)
+    splitter.setSizes([10000, 10000, 10000])
+
+    # Constrain the controls groupbox to shrink-to-content
+    tab_g2map = main_window.findChild(QWidget, "tab_g2map")
+    if tab_g2map:
+        for gb in tab_g2map.findChildren(QGroupBox):
+            gb.setSizePolicy(
+                QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Maximum
+            )
+            gb_layout = gb.layout()
+            if gb_layout:
+                gb_layout.setContentsMargins(4, 14, 4, 2)
+                gb_layout.setSpacing(4)
 
 
 def apply_all_layout_improvements(main_window: QWidget) -> None:
@@ -255,6 +505,15 @@ def apply_all_layout_improvements(main_window: QWidget) -> None:
         if group_box:
             improve_control_panel_layout(group_box)
 
+    # Rearrange G2 Fitting tab Bayesian controls
+    rearrange_g2_fitting_buttons(main_window)
+
+    # Rearrange Diffusion tab layout
+    rearrange_diffusion_tab(main_window)
+
+    # Optimize G2 Map tab: equal panel sizes, tight margins
+    optimize_g2map_tab(main_window)
+
     # Apply compact density to sidebar panels
     _apply_compact_density_to_sidebars(main_window)
 
@@ -262,6 +521,9 @@ def apply_all_layout_improvements(main_window: QWidget) -> None:
     tab_widget = main_window.findChild(QWidget, "tabWidget")
     if tab_widget:
         improve_tab_content_spacing(tab_widget)
+
+    # Final pass: tighten scroll areas, splitters, inner layouts
+    _tighten_all_containers(main_window)
 
 
 def add_visual_separator_before_action(
@@ -306,3 +568,28 @@ def _apply_compact_density_to_sidebars(main_window: QWidget) -> None:
             widget.style().unpolish(widget)
             widget.style().polish(widget)
             widget.update()
+
+
+def _tighten_all_containers(main_window: QWidget) -> None:
+    """Remove padding from scroll areas, splitters, and inner layouts.
+
+    This is a final pass that catches all remaining whitespace sources
+    that tab-level and groupbox-level optimizations miss.
+    """
+    # 1. Remove frames from all QScrollArea widgets (removes 1-2px border)
+    for sa in main_window.findChildren(QScrollArea):
+        sa.setFrameShape(QFrame.Shape.NoFrame)
+        # Tighten the scroll area's own content margins
+        inner = sa.widget()
+        if inner and inner.layout():
+            inner.layout().setContentsMargins(0, 0, 0, 0)
+            inner.layout().setSpacing(0)
+
+    # 2. Reduce splitter handle widths (default ~5px → 2px)
+    for sp in main_window.findChildren(QSplitter):
+        sp.setHandleWidth(2)
+
+    # 3. Tighten the QTabWidget's own internal margins
+    tab_widget = main_window.findChild(QWidget, "tabWidget")
+    if tab_widget:
+        tab_widget.setContentsMargins(0, 0, 0, 0)  # type: ignore[arg-type]
