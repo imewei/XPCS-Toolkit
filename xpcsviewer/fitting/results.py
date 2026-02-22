@@ -496,12 +496,12 @@ class NLSQResult:
         if self.native_result is not None and hasattr(
             self.native_result, "confidence_intervals"
         ):
-            # Cast to dict in case it's a method or other type in strict mypy
-            from typing import cast
-
-            return cast(
-                dict[str, tuple[float, float]], self.native_result.confidence_intervals
-            )
+            ci = self.native_result.confidence_intervals
+            # Handle both property (dict) and method (callable) on native_result
+            if callable(ci):
+                ci = ci()
+            if isinstance(ci, dict):
+                return ci
         return self._confidence_intervals
 
     @confidence_intervals.setter
@@ -648,8 +648,15 @@ class NLSQResult:
         """
         x = np.asarray(x)
         if self.native_result is not None:
-            lower, upper = self.native_result.prediction_interval(x=x, alpha=alpha)
-            return np.asarray(lower), np.asarray(upper)
+            pi = self.native_result.prediction_interval(x=x, alpha=alpha)
+            pi = np.asarray(pi)
+            # Handle both (n, 2) array and (2, n) array formats
+            if pi.ndim == 2 and pi.shape[-1] == 2:
+                return pi[:, 0], pi[:, 1]
+            elif pi.ndim == 2 and pi.shape[0] == 2:
+                return pi[0], pi[1]
+            # Fallback: try direct unpack
+            return pi[0], pi[1]
 
         # Fallback: return simple prediction +/- 2*rmse (rough approximation)
         predictions = self.predictions
