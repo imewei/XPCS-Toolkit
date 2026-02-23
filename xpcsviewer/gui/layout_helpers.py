@@ -274,31 +274,31 @@ def rearrange_g2_fitting_buttons(main_window: QWidget) -> None:
     bayes_group = QGroupBox("Bayesian Fitting", parent)
     bayes_group.setObjectName("groupBox_bayesian")
     bayes_layout = QVBoxLayout(bayes_group)
-    bayes_layout.setContentsMargins(4, 14, 4, 4)
-    bayes_layout.setSpacing(4)
+    bayes_layout.setContentsMargins(2, 10, 2, 2)
+    bayes_layout.setSpacing(2)
 
-    # Row of 4 action buttons
-    btn_row = QHBoxLayout()
-    btn_row.setSpacing(4)
-    for btn in (btn_bayesian, btn_all_q, btn_diagnosis, btn_plot_all):
-        if btn is not None:
-            btn.setMinimumSize(0, 0)
-            btn_row.addWidget(btn)
-    bayes_layout.addLayout(btn_row)
-
-    # Config row: Q-bin, Workers, Warmup, Samples, Chains
+    # Row 1: Config spinboxes (Q-bin, Warmup, Samples, Chains, Workers)
     config_row = QHBoxLayout()
-    config_row.setSpacing(4)
+    config_row.setSpacing(2)
     _add_labeled_spinbox(config_row, "Q-bin:", sb_qidx)
-    _add_labeled_spinbox(config_row, "Workers:", sb_workers)
     _add_labeled_spinbox(config_row, "Warmup:", sb_warmup)
     _add_labeled_spinbox(config_row, "Samples:", sb_samples)
     _add_labeled_spinbox(config_row, "Chains:", sb_chains)
+    _add_labeled_spinbox(config_row, "Workers:", sb_workers)
     config_row.addStretch()
     bayes_layout.addLayout(config_row)
 
+    # Row 2: 4 action buttons in a horizontal row
+    btn_row = QHBoxLayout()
+    btn_row.setSpacing(2)
+    for btn in (btn_bayesian, btn_diagnosis, btn_all_q, btn_plot_all):
+        if btn is not None:
+            btn.setMinimumSize(0, 0)
+            btn.setMaximumHeight(24)
+            btn_row.addWidget(btn)
+    bayes_layout.addLayout(btn_row)
+
     # --- Insert below the NLSQ grid in gridLayout_14 --------------------
-    # gridLayout_12 occupies row 0 in gridLayout_14; add Bayesian at row 1
     grid_14.addWidget(bayes_group, 3, 0, 1, 1)
 
 
