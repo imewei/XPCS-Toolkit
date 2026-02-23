@@ -30,6 +30,8 @@ def main():
     viewer.resize(1280, 800)
     viewer.show()
     app.processEvents()
+    viewer._set_theme("dark")
+    app.processEvents()
     time.sleep(0.3)
 
     # Map desired filenames to tab indices (matching current 12-tab layout)

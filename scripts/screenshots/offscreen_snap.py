@@ -55,6 +55,8 @@ def main() -> int:
     viewer = XpcsViewer()
     viewer.show()
     process(app)
+    viewer._set_theme("dark")
+    process(app)
 
     outdir = pathlib.Path("screenshots/offscreen")
     snap(viewer, "00_initial", outdir)

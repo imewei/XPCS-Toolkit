@@ -112,13 +112,6 @@ Quick Start
    authors
    history
 
-.. toctree::
-   :hidden:
-   :caption: Legacy Redirects
-
-   user_guide/index
-   developer/index
-
 ----
 
 Gallery
