@@ -123,62 +123,62 @@ Gallery
 
    1. **SAXS 2D -- Integrated Scattering Pattern**
 
-      .. image:: https://raw.githubusercontent.com/imewei/XPCSViewer/master/docs/images/saxs2d.png
+      .. image:: images/saxs2d.png
          :alt: 2D SAXS pattern visualization
 
    2. **SAXS 1D -- Radial Reduction and Analysis**
 
-      .. image:: https://raw.githubusercontent.com/imewei/XPCSViewer/master/docs/images/saxs1d.png
+      .. image:: images/saxs1d.png
          :alt: Radially averaged 1D SAXS data
 
    3. **Stability -- Sample Stability Assessment**
 
-      .. image:: https://raw.githubusercontent.com/imewei/XPCSViewer/master/docs/images/stability.png
+      .. image:: images/stability.png
          :alt: Temporal stability analysis across time sections
 
    4. **I(t) -- Intensity vs Time Series**
 
-      .. image:: https://raw.githubusercontent.com/imewei/XPCSViewer/master/docs/images/intt.png
+      .. image:: images/intt.png
          :alt: Intensity fluctuation monitoring
 
    5. **g2 -- Correlation Function Viewer**
 
-      .. image:: https://raw.githubusercontent.com/imewei/XPCSViewer/master/docs/images/g2mod.png
+      .. image:: images/g2mod.png
          :alt: Multi-tau correlation function display
 
    6. **g2 Fit -- Correlation Fitting**
 
-      .. image:: https://raw.githubusercontent.com/imewei/XPCSViewer/master/docs/images/g2_fit.png
+      .. image:: images/g2_fit.png
          :alt: G2 single/double exponential fitting
 
    7. **g2 Map -- Correlation Map**
 
-      .. image:: https://raw.githubusercontent.com/imewei/XPCSViewer/master/docs/images/g2_map.png
+      .. image:: images/g2_map.png
          :alt: G2 correlation map across Q values
 
    8. **Diffusion -- tau(q) Characterization**
 
-      .. image:: https://raw.githubusercontent.com/imewei/XPCSViewer/master/docs/images/diffusion.png
+      .. image:: images/diffusion.png
          :alt: Diffusion coefficient analysis
 
    9. **Two-Time -- Correlation Maps**
 
-      .. image:: https://raw.githubusercontent.com/imewei/XPCSViewer/master/docs/images/twotime.png
+      .. image:: images/twotime.png
          :alt: Interactive two-time correlation analysis
 
    10. **Q-Map -- Q-Space Mapping**
 
-       .. image:: https://raw.githubusercontent.com/imewei/XPCSViewer/master/docs/images/qmap.png
+       .. image:: images/qmap.png
           :alt: Q-space mapping and partitioning
 
    11. **Average -- File Averaging Toolbox**
 
-       .. image:: https://raw.githubusercontent.com/imewei/XPCSViewer/master/docs/images/average.png
+       .. image:: images/average.png
           :alt: Advanced file averaging capabilities
 
    12. **Metadata -- HDF5 Explorer**
 
-       .. image:: https://raw.githubusercontent.com/imewei/XPCSViewer/master/docs/images/hdf_info.png
+       .. image:: images/hdf_info.png
           :alt: File structure and metadata viewer
 
 Indices and Tables

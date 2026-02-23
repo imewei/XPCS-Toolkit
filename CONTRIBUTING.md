@@ -16,7 +16,7 @@ cd xpcsviewer
 
 # Install with uv
 uv sync
-make dev-setup
+make install-hooks
 
 # Create branch
 git checkout -b your-feature-name

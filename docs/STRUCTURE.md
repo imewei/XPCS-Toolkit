@@ -79,16 +79,8 @@ docs/
 │   ├── logging.rst                   # Logging setup and env vars
 │   └── performance.rst               # Performance tuning
 │
-├── user_guide/                       # Legacy redirect (content moved to tutorials/ and how-to/)
-│   ├── index.rst                     # Redirect page → Diataxis sections
-│   ├── installation.rst              # → how-to/installation.rst
-│   ├── quickstart.rst                # → tutorials/quickstart.rst
-│   ├── simplemask.rst                # → how-to/mask_editor_guide.rst
-│   └── examples.rst                  # → how-to/examples.rst
-│
-└── developer/                        # Legacy redirect (content moved to explanation/ and architecture/)
-    ├── index.rst                     # Redirect page → Diataxis sections
-    └── optimization.rst              # → explanation/index.rst (referenced)
+└── developer/                        # Retained content (referenced from explanation/)
+    └── optimization.rst              # Performance profiling and optimization guide
 ```
 
 ## Diataxis Framework
