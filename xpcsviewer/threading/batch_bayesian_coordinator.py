@@ -54,7 +54,9 @@ class BatchBayesianCoordinator(QObject):
         self._completed = 0
         self._total = len(q_specs)
         self._cancelled = False
-        self._workers: list[Any] = []
+        # Maps q_idx → worker for active workers only; entries are removed
+        # on completion to avoid holding references to finished QRunnables.
+        self._active_workers: dict[int, Any] = {}
 
     @property
     def total(self) -> int:
@@ -73,7 +75,7 @@ class BatchBayesianCoordinator(QObject):
     def cancel(self) -> None:
         """Stop launching new workers and cancel active ones."""
         self._cancelled = True
-        for worker in self._workers:
+        for worker in self._active_workers.values():
             if hasattr(worker, "cancel"):
                 worker.cancel()
         logger.info("Batch Bayesian fitting cancelled")
@@ -99,7 +101,7 @@ class BatchBayesianCoordinator(QObject):
             context="g2",
             sampler_kwargs=spec.get("sampler_kwargs"),
         )
-        self._workers.append(worker)
+        self._active_workers[q_idx] = worker
 
         # Use default arguments to capture q_idx in closures
         worker.signals.finished.connect(
@@ -108,12 +110,16 @@ class BatchBayesianCoordinator(QObject):
         worker.signals.error.connect(
             lambda _wid, msg, _tb, _retry, qi=q_idx: self._on_worker_error(qi, msg)
         )
+        worker.signals.cancelled.connect(
+            lambda _wid, _reason, qi=q_idx: self._on_worker_cancelled(qi)
+        )
 
         self._active_count += 1
         self._thread_pool.start(worker)
 
     def _on_worker_finished(self, q_idx: int, result: dict[str, Any] | None) -> None:
         """Handle a successful worker completion."""
+        self._active_workers.pop(q_idx, None)
         self._active_count -= 1
         self._completed += 1
         self._results[q_idx] = result
@@ -132,6 +138,7 @@ class BatchBayesianCoordinator(QObject):
 
     def _on_worker_error(self, q_idx: int, error_msg: str) -> None:
         """Handle a worker failure — store None and continue."""
+        self._active_workers.pop(q_idx, None)
         self._active_count -= 1
         self._completed += 1
         self._results[q_idx] = None
@@ -142,6 +149,26 @@ class BatchBayesianCoordinator(QObject):
             self._completed,
             self._total,
             f"Q-bin {q_idx} failed ({self._completed}/{self._total})",
+        )
+
+        if self._completed >= self._total:
+            self.all_finished.emit(self._results)
+        else:
+            self._launch_next()
+
+    def _on_worker_cancelled(self, q_idx: int) -> None:
+        """Handle a cancelled worker — treat as failure to keep accounting correct."""
+        self._active_workers.pop(q_idx, None)
+        self._active_count -= 1
+        self._completed += 1
+        self._results[q_idx] = None
+
+        logger.info("Bayesian fit cancelled for Q-index %d", q_idx)
+        self.single_q_error.emit(q_idx, "Cancelled")
+        self.progress.emit(
+            self._completed,
+            self._total,
+            f"Q-bin {q_idx} cancelled ({self._completed}/{self._total})",
         )
 
         if self._completed >= self._total:

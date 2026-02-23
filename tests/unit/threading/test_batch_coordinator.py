@@ -124,6 +124,39 @@ class TestBatchBayesianCoordinator:
 
         assert blocker.args == [1, "boom"]
 
+    def test_cancelled_worker_counts_toward_completion(self, mock_thread_pool, qtbot):
+        """A cancelled worker should decrement accounting like an error."""
+        specs = self._make_specs(2)
+        coord = BatchBayesianCoordinator(specs, mock_thread_pool, max_concurrent=2)
+        coord.start()
+
+        # Simulate first worker cancelled, second finished
+        coord._on_worker_cancelled(0)
+        assert coord._results[0] is None
+        assert coord._completed == 1
+        assert coord._active_count == 1
+
+        with qtbot.waitSignal(coord.all_finished, timeout=1000):
+            coord._on_worker_finished(1, {"fit_result": MagicMock()})
+
+        assert coord._completed == 2
+        assert coord._results[0] is None
+        assert coord._results[1] is not None
+
+    def test_all_workers_cancelled_emits_all_finished(self, mock_thread_pool, qtbot):
+        """If every worker is cancelled, all_finished should still fire."""
+        specs = self._make_specs(2)
+        coord = BatchBayesianCoordinator(specs, mock_thread_pool, max_concurrent=2)
+        coord.start()
+
+        coord._on_worker_cancelled(0)
+
+        with qtbot.waitSignal(coord.all_finished, timeout=1000):
+            coord._on_worker_cancelled(1)
+
+        assert coord._completed == 2
+        assert all(v is None for v in coord._results.values())
+
     def test_max_concurrent_enforced(self, mock_thread_pool):
         """Should never exceed max_concurrent active workers."""
         specs = self._make_specs(6)

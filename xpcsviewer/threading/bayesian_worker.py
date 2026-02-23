@@ -2,11 +2,16 @@
 
 Runs NLSQ warm-start → NUTS sampling off the main thread so the GUI
 remains responsive during long MCMC runs.
+
+Note: NumPyro's ``MCMC.run()`` is not interruptible — once a chain
+starts, the worker cannot check for cancellation until the sampler
+returns.  Cancellation is checked before and after the sampler call.
 """
 
 from __future__ import annotations
 
 import logging
+import time
 from typing import Any
 
 from .async_workers import BaseAsyncWorker
@@ -57,14 +62,26 @@ class BayesianFitWorker(BaseAsyncWorker):
         self.sampler_kwargs = sampler_kwargs or {}
 
     def do_work(self) -> dict[str, Any]:
-        """Execute the Bayesian fit and return a result dict."""
+        """Execute the Bayesian fit and return a result dict.
+
+        The NUTS sampler call is not interruptible — cancellation is
+        checked immediately before and after.  The status message is
+        updated to indicate the non-interruptible phase so that the
+        user understands why "Cancel" may appear unresponsive.
+        """
         logger.info(
             "BayesianFitWorker started: context=%s, q_index=%d, q_value=%.4g",
             self.context,
             self.q_index,
             self.q_value,
         )
-        self.emit_status(f"Running Bayesian fit (Q={self.q_value:.4g})...")
+
+        self.check_cancelled()
+
+        self.emit_status(
+            f"NUTS sampling Q={self.q_value:.4g} (not interruptible)..."
+        )
+        t0 = time.monotonic()
 
         if self.context == "diffusion":
             # fit_power_law(q, tau, tau_err=..., **kwargs)
@@ -74,6 +91,11 @@ class BayesianFitWorker(BaseAsyncWorker):
         else:
             # fit_single_exp / fit_double_exp: (x, y, yerr, **kwargs)
             fit_result = self.fit_func(self.x, self.y, self.yerr, **self.sampler_kwargs)
+
+        elapsed = time.monotonic() - t0
+        logger.info(
+            "NUTS completed for Q-index %d (%.1fs)", self.q_index, elapsed
+        )
 
         self.check_cancelled()
 
