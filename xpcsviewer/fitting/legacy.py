@@ -60,7 +60,7 @@ def make_double_exp() -> Callable[..., NDArray[np.floating[Any]]]:
         cts1: float,
         tau2: float,
         cts2: float,
-    ) -> NDArray[np.floating[Any]]:
+    ) -> Any:
         xa: Any = jnp.asarray(x)
         return cts1 * jnp.exp(-2 * xa / tau1) + cts2 * jnp.exp(-2 * xa / tau2) + bkg
 
@@ -99,7 +99,7 @@ def make_double_exp_all() -> Callable[..., NDArray[np.floating[Any]]]:
         d: float,
         e: float,
         f: float,
-    ) -> NDArray[np.floating[Any]]:
+    ) -> Any:
         xa: Any = jnp.asarray(x)
         return a * jnp.exp(-2 * xa / b_) + c * jnp.exp(-2 * xa / d) + e + f
 

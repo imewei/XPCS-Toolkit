@@ -8,7 +8,14 @@ of the application at runtime, complementing the QSS styling.
 from typing import Literal
 
 from qtpy.QtCore import Qt
-from qtpy.QtWidgets import QGridLayout, QScrollArea, QSizePolicy, QSplitter
+from qtpy.QtWidgets import (
+    QGridLayout,
+    QHBoxLayout,
+    QScrollArea,
+    QSizePolicy,
+    QSplitter,
+    QVBoxLayout,
+)
 
 # Qt imports via compatibility layer
 from xpcsviewer.gui.qt_compat import (
@@ -228,85 +235,82 @@ def improve_tab_content_spacing(tab_widget: QWidget) -> None:
 
 
 def rearrange_g2_fitting_buttons(main_window: QWidget) -> None:
-    """Rearrange g2 fitting Bayesian controls in gridLayout_12.
+    """Move Bayesian controls out of gridLayout_12 into a separate group.
 
-    Moves 'Fit All Q' below 'Plot Diagnosis' and adds a 'Q-bin:' label
-    above 'Fit Bayesian' for clarity.
+    Creates a 'Bayesian Fitting' QGroupBox with all four action buttons
+    in a horizontal row, plus sampler configuration below.  The new group
+    is added underneath the NLSQ parameter grid inside groupBox_2.
     """
     grid_12: QGridLayout | None = main_window.findChild(QGridLayout, "gridLayout_12")
-    if grid_12 is None:
+    grid_14: QGridLayout | None = main_window.findChild(QGridLayout, "gridLayout_14")
+    if grid_12 is None or grid_14 is None:
         return
 
-    # Find widgets by objectName
+    # --- Collect Bayesian widgets ----------------------------------------
     btn_bayesian = main_window.findChild(QPushButton, "btn_g2_bayesian")
     btn_diagnosis = main_window.findChild(QPushButton, "btn_g2_diagnosis")
     btn_all_q = main_window.findChild(QPushButton, "btn_g2_bayesian_all")
     btn_plot_all = main_window.findChild(QPushButton, "btn_g2_plot_all_q")
     sb_qidx = main_window.findChild(QWidget, "sb_g2_bayesian_qidx")
     sb_workers = main_window.findChild(QWidget, "sb_g2_bayesian_workers")
-
-    if not all([btn_bayesian, btn_diagnosis, sb_qidx]):
-        return
-
-    # Remove widgets from layout without detaching parent.
-    # Using removeWidget (not setParent(None)) preserves the native
-    # window handle and input-method context — critical for QSpinBox.
-    widgets_to_move = [
-        btn_bayesian,
-        btn_diagnosis,
-        sb_qidx,
-        btn_all_q,
-        btn_plot_all,
-        sb_workers,
-    ]
-    for w in widgets_to_move:
-        if w is not None:
-            grid_12.removeWidget(w)
-
-    # Create Q-bin label
-    q_label = QLabel("Q-bin:")
-    q_label.setObjectName("label_g2_bayesian_qbin")
-
-    # Re-add in new arrangement (cols 11-12)
-    # Row 0: Q-bin label + spinbox
-    grid_12.addWidget(q_label, 0, 11, 1, 1)
-    grid_12.addWidget(sb_qidx, 0, 12, 1, 1)
-    # Row 1: Fit Bayesian (full width)
-    grid_12.addWidget(btn_bayesian, 1, 11, 1, 2)
-    # Row 2: Plot Diagnosis (full width)
-    grid_12.addWidget(btn_diagnosis, 2, 11, 1, 2)
-    # Row 3: Fit All Q + workers spinbox
-    if btn_all_q is not None:
-        grid_12.addWidget(btn_all_q, 3, 11, 1, 1)
-    if sb_workers is not None:
-        grid_12.addWidget(sb_workers, 3, 12, 1, 1)
-    # Row 4: Plot All Q (full width)
-    if btn_plot_all is not None:
-        grid_12.addWidget(btn_plot_all, 4, 11, 1, 2)
-
-    # Find sampler config widgets
     sb_warmup = main_window.findChild(QWidget, "sb_g2_bayesian_warmup")
     sb_samples = main_window.findChild(QWidget, "sb_g2_bayesian_samples")
     sb_chains = main_window.findChild(QWidget, "sb_g2_bayesian_chains")
 
-    # Row 5: Warmup label + spinbox
-    if sb_warmup is not None:
-        grid_12.removeWidget(sb_warmup)
-        lbl_warmup = QLabel("Warmup:")
-        grid_12.addWidget(lbl_warmup, 5, 11, 1, 1)
-        grid_12.addWidget(sb_warmup, 5, 12, 1, 1)
-    # Row 6: Samples label + spinbox
-    if sb_samples is not None:
-        grid_12.removeWidget(sb_samples)
-        lbl_samples = QLabel("Samples:")
-        grid_12.addWidget(lbl_samples, 6, 11, 1, 1)
-        grid_12.addWidget(sb_samples, 6, 12, 1, 1)
-    # Row 7: Chains label + spinbox
-    if sb_chains is not None:
-        grid_12.removeWidget(sb_chains)
-        lbl_chains = QLabel("Chains:")
-        grid_12.addWidget(lbl_chains, 7, 11, 1, 1)
-        grid_12.addWidget(sb_chains, 7, 12, 1, 1)
+    if btn_bayesian is None or btn_diagnosis is None or sb_qidx is None:
+        return
+
+    # Remove from gridLayout_12 (preserves native window handle)
+    for w in (
+        btn_bayesian, btn_diagnosis, btn_all_q, btn_plot_all,
+        sb_qidx, sb_workers, sb_warmup, sb_samples, sb_chains,
+    ):
+        if w is not None:
+            grid_12.removeWidget(w)
+
+    # --- Build the new Bayesian group box --------------------------------
+    group_box_2 = main_window.findChild(QGroupBox, "groupBox_2")
+    parent = group_box_2 if group_box_2 is not None else main_window
+    bayes_group = QGroupBox("Bayesian Fitting", parent)
+    bayes_group.setObjectName("groupBox_bayesian")
+    bayes_layout = QVBoxLayout(bayes_group)
+    bayes_layout.setContentsMargins(4, 14, 4, 4)
+    bayes_layout.setSpacing(4)
+
+    # Row of 4 action buttons
+    btn_row = QHBoxLayout()
+    btn_row.setSpacing(4)
+    for btn in (btn_bayesian, btn_all_q, btn_diagnosis, btn_plot_all):
+        if btn is not None:
+            btn.setMinimumSize(0, 0)
+            btn_row.addWidget(btn)
+    bayes_layout.addLayout(btn_row)
+
+    # Config row: Q-bin, Workers, Warmup, Samples, Chains
+    config_row = QHBoxLayout()
+    config_row.setSpacing(4)
+    _add_labeled_spinbox(config_row, "Q-bin:", sb_qidx)
+    _add_labeled_spinbox(config_row, "Workers:", sb_workers)
+    _add_labeled_spinbox(config_row, "Warmup:", sb_warmup)
+    _add_labeled_spinbox(config_row, "Samples:", sb_samples)
+    _add_labeled_spinbox(config_row, "Chains:", sb_chains)
+    config_row.addStretch()
+    bayes_layout.addLayout(config_row)
+
+    # --- Insert below the NLSQ grid in gridLayout_14 --------------------
+    # gridLayout_12 occupies row 0 in gridLayout_14; add Bayesian at row 1
+    grid_14.addWidget(bayes_group, 3, 0, 1, 1)
+
+
+def _add_labeled_spinbox(
+    layout: QHBoxLayout, label_text: str, spinbox: QWidget | None
+) -> None:
+    """Add a label + spinbox pair to a horizontal layout (skips if None)."""
+    if spinbox is None:
+        return
+    lbl = QLabel(label_text)
+    layout.addWidget(lbl)
+    layout.addWidget(spinbox)
 
 
 def rearrange_diffusion_tab(main_window: QWidget) -> None:
@@ -328,14 +332,18 @@ def _rearrange_diffusion_controls(main_window: QWidget) -> None:
         return
 
     # Drain all items, keyed by objectName
-    layouts: dict[str, object] = {}
+    layouts: dict[str, QLayout] = {}
     widgets: dict[str, QWidget] = {}
     while grid_38.count():
         item = grid_38.takeAt(0)
-        if item.layout():
-            layouts[item.layout().objectName()] = item.layout()
-        elif item.widget():
-            widgets[item.widget().objectName()] = item.widget()
+        if item is None:
+            continue
+        child_widget = item.widget()
+        if child_widget is not None:
+            widgets[child_widget.objectName()] = child_widget
+        else:
+            child_layout = item.layout()
+            layouts[child_layout.objectName()] = child_layout
 
     grid_21 = layouts.get("gridLayout_21")  # a / b / q params
     grid_15 = layouts.get("gridLayout_15")  # plot_type + offset
@@ -394,8 +402,9 @@ def _rearrange_diffusion_grid(main_window: QWidget) -> None:
 
     # Remove tauq_msg from gridLayout_39 (inside groupBox_5)
     parent = tauq_msg.parentWidget()
-    if parent is not None and parent.layout() is not None:
-        parent.layout().removeWidget(tauq_msg)
+    parent_layout = parent.layout() if parent is not None else None
+    if parent_layout is not None:
+        parent_layout.removeWidget(tauq_msg)
 
     # Add to tab grid: row 2, spanning both plot columns
     grid_22.addWidget(tauq_msg, 2, 0, 1, 2)
@@ -470,9 +479,10 @@ def optimize_g2map_tab(main_window: QWidget) -> None:
     # Tighten each panel's internal layout margins
     for i in range(splitter.count()):
         child = splitter.widget(i)
-        if child and child.layout():
-            child.layout().setContentsMargins(0, 0, 0, 0)
-            child.layout().setSpacing(2)
+        child_layout = child.layout() if child else None
+        if child_layout is not None:
+            child_layout.setContentsMargins(0, 0, 0, 0)
+            child_layout.setSpacing(2)
 
     # Force equal initial sizes (Qt normalises proportionally)
     splitter.setSizes([10000, 10000, 10000])
@@ -598,9 +608,10 @@ def _tighten_all_containers(main_window: QWidget) -> None:
         sa.setFrameShape(QFrame.Shape.NoFrame)
         # Tighten the scroll area's own content margins
         inner = sa.widget()
-        if inner and inner.layout():
-            inner.layout().setContentsMargins(0, 0, 0, 0)
-            inner.layout().setSpacing(0)
+        inner_layout = inner.layout() if inner else None
+        if inner_layout is not None:
+            inner_layout.setContentsMargins(0, 0, 0, 0)
+            inner_layout.setSpacing(0)
 
     # 2. Reduce splitter handle widths (default ~5px → 2px)
     for sp in main_window.findChildren(QSplitter):
@@ -609,4 +620,4 @@ def _tighten_all_containers(main_window: QWidget) -> None:
     # 3. Tighten the QTabWidget's own internal margins
     tab_widget = main_window.findChild(QWidget, "tabWidget")
     if tab_widget:
-        tab_widget.setContentsMargins(0, 0, 0, 0)  # type: ignore[arg-type]
+        tab_widget.setContentsMargins(0, 0, 0, 0)
