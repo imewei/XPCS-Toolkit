@@ -4266,10 +4266,14 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         else:
             self._g2_bayesian_model_func = double_exp_func
 
-        # Store metadata for assembly
+        # Store metadata for assembly — capture target xf now so results
+        # are stored on the correct file even if selection changes during batch
         self._g2_batch_q_arr = q_arr
         self._g2_batch_t_el = t_el
         self._g2_batch_fit_func_name = fit_func_name
+        rows = self.get_selected_rows()
+        xf_list = self.vk.get_xf_list(rows)
+        self._g2_batch_target_xf = xf_list[0] if xf_list else None
 
         max_workers = self.sb_g2_bayesian_workers.value()
         coordinator = BatchBayesianCoordinator(
@@ -4338,12 +4342,11 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
             model_func=self._g2_bayesian_model_func,
         )
 
-        # Store on the first target file — DUAL STORAGE
-        rows = self.get_selected_rows()
-        xf_list = self.vk.get_xf_list(rows)
-        if xf_list:
-            xf_list[0].bayesian_fit_summary = fit_summary    # Bayesian owns this
-            xf_list[0].bayesian_results = dict(fit_results)  # Per-Q FitResult objects
+        # Store on the target file captured at batch start — DUAL STORAGE
+        xf = getattr(self, "_g2_batch_target_xf", None)
+        if xf is not None:
+            xf.bayesian_fit_summary = fit_summary    # Bayesian owns this
+            xf.bayesian_results = dict(fit_results)  # Per-Q FitResult objects
             # Do NOT touch xf.fit_summary — NLSQ owns that
 
         succeeded = sum(1 for v in fit_results.values() if v is not None)
@@ -4504,6 +4507,8 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
 
         from .fitting.viz import export_bayesian_csv, export_bayesian_diagnostics
 
+        failures: list[str] = []
+
         # 1. CSV parameters
         try:
             export_bayesian_csv(
@@ -4514,6 +4519,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
             )
         except Exception:
             logger.exception("CSV export failed")
+            failures.append("CSV")
 
         # 2. PDF figure
         try:
@@ -4525,6 +4531,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
             )
         except Exception:
             logger.exception("Figure export failed")
+            failures.append("PDF/PNG")
 
         # 3. netCDF diagnostics
         if br is not None:
@@ -4534,10 +4541,16 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
                 )
             except Exception:
                 logger.exception("netCDF export failed")
+                failures.append("netCDF")
 
-        self.statusbar.showMessage(
-            f"Exported Bayesian results to {out_dir}", 5000
-        )
+        if failures:
+            self.statusbar.showMessage(
+                f"Export partially failed ({', '.join(failures)}); see log", 5000
+            )
+        else:
+            self.statusbar.showMessage(
+                f"Exported Bayesian results to {out_dir}", 5000
+            )
 
     def _show_g2_diagnosis(self):
         """Show or create the G2 Bayesian diagnosis window.

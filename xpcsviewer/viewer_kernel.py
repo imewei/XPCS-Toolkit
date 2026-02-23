@@ -534,17 +534,18 @@ class ViewerKernel(FileLocator):
             logger.info(
                 f"Found {len(short_list)} files with G2 fitting results for diffusion analysis"
             )
-            if hdl is not None:
-                logger.debug("Calling tauq.plot_pre with files")
-                _get_module("tauq").plot_pre(short_list, hdl)
-                logger.debug("tauq.plot_pre completed")
-            else:
-                logger.warning("hdl is None, cannot call tauq.plot_pre")
-
-            # Restore original fit_summary
-            for xf in xf_list:
-                if id(xf) in _restore:
-                    xf.fit_summary = _restore[id(xf)]
+            try:
+                if hdl is not None:
+                    logger.debug("Calling tauq.plot_pre with files")
+                    _get_module("tauq").plot_pre(short_list, hdl)
+                    logger.debug("tauq.plot_pre completed")
+                else:
+                    logger.warning("hdl is None, cannot call tauq.plot_pre")
+            finally:
+                # Restore original fit_summary even if an exception is raised
+                for xf in xf_list:
+                    if id(xf) in _restore:
+                        xf.fit_summary = _restore[id(xf)]
 
     def plot_tauq(
         self,
@@ -573,23 +574,24 @@ class ViewerKernel(FileLocator):
                 _restore[id(xf)] = xf.fit_summary
                 xf.fit_summary = xf.bayesian_fit_summary
 
-        result = {}
-        for x in xf_list:
-            if x.fit_summary is None:
-                logger.info("g2 fitting is not available for %s", x.fname)
-            else:
-                x.fit_tauq(q_range, bounds, fit_flag, force_refit=force_refit)
-                result[x.label] = x.get_fitting_info(mode="tauq_fitting")
+        try:
+            result = {}
+            for x in xf_list:
+                if x.fit_summary is None:
+                    logger.info("g2 fitting is not available for %s", x.fname)
+                else:
+                    x.fit_tauq(q_range, bounds, fit_flag, force_refit=force_refit)
+                    result[x.label] = x.get_fitting_info(mode="tauq_fitting")
 
-        if len(result) > 0:
-            _get_module("tauq").plot(
-                xf_list, hdl=hdl, q_range=q_range, offset=offset, plot_type=plot_type
-            )
-
-        # Restore original fit_summary
-        for xf in xf_list:
-            if id(xf) in _restore:
-                xf.fit_summary = _restore[id(xf)]
+            if len(result) > 0:
+                _get_module("tauq").plot(
+                    xf_list, hdl=hdl, q_range=q_range, offset=offset, plot_type=plot_type
+                )
+        finally:
+            # Restore original fit_summary even if an exception is raised
+            for xf in xf_list:
+                if id(xf) in _restore:
+                    xf.fit_summary = _restore[id(xf)]
 
         return result
 

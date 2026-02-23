@@ -157,7 +157,10 @@ def assemble_fit_summary(
     fit_val = np.zeros((num_q, 2, nparams))
 
     # Generate fit_x from t_el range (matching NLSQ behavior)
-    fit_x = np.linspace(t_el.min(), t_el.max(), max(200, len(t_el) * 2))
+    # Cap at 500 points for visualization — keeps main-thread overhead low
+    # even for datasets with thousands of time points and many Q-bins
+    _FIT_LINE_POINTS = 500
+    fit_x = np.linspace(t_el.min(), t_el.max(), min(_FIT_LINE_POINTS, max(200, len(t_el) * 2)))
     fit_line = np.zeros((num_q, len(fit_x)))
 
     succeeded = 0

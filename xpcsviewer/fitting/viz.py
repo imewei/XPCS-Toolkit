@@ -29,7 +29,7 @@ def plot_bayesian_all_q(
     g2_err: NDArray | None,
     *,
     data_t_el: NDArray | None = None,
-    confidence: float = 0.95,
+    confidence: float = 0.95,  # noqa: ARG001 — reserved for CI band rendering
 ) -> Figure | None:
     """Generate all-Q overlay figure with Bayesian fit lines and CI bands.
 
@@ -172,6 +172,9 @@ def export_bayesian_diagnostics(
         logger.warning("No ArviZ data available for export")
         return
 
-    first_key = next(iter(datasets))
-    datasets[first_key].to_netcdf(str(path))
-    logger.info("Exported ArviZ diagnostics to %s (%d Q-bins available)", path, len(datasets))
+    # Write one netCDF file per Q-bin to preserve all diagnostics
+    for q_idx, idata in sorted(datasets.items()):
+        q_path = path.with_stem(f"{path.stem}_q{q_idx:03d}")
+        idata.to_netcdf(str(q_path))
+
+    logger.info("Exported ArviZ diagnostics to %s (%d Q-bin files)", path.parent, len(datasets))
