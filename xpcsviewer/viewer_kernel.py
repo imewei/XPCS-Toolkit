@@ -484,10 +484,22 @@ class ViewerKernel(FileLocator):
         xf_list = g2_compatible_list
         logger.debug(f"Filtered to {len(xf_list)} G2-compatible files")
 
+        # For tau-q, prefer Bayesian results when available
+        _restore: dict[int, object] = {}
+        for xf in xf_list:
+            if getattr(xf, "bayesian_fit_summary", None) is not None:
+                _restore[id(xf)] = xf.fit_summary
+                xf.fit_summary = xf.bayesian_fit_summary
+
         short_list = [xf for xf in xf_list if xf.fit_summary is not None]
         logger.debug(f"Found {len(short_list)} files with fit_summary")
 
         if len(short_list) == 0:
+            # Restore original fit_summary before early return
+            for xf in xf_list:
+                if id(xf) in _restore:
+                    xf.fit_summary = _restore[id(xf)]
+
             logger.warning(
                 f"No files with G2 fitting results found for diffusion analysis. "
                 f"Found {len(xf_list)} G2-compatible files but none have been fitted."
@@ -529,6 +541,11 @@ class ViewerKernel(FileLocator):
             else:
                 logger.warning("hdl is None, cannot call tauq.plot_pre")
 
+            # Restore original fit_summary
+            for xf in xf_list:
+                if id(xf) in _restore:
+                    xf.fit_summary = _restore[id(xf)]
+
     def plot_tauq(
         self,
         hdl=None,
@@ -548,6 +565,14 @@ class ViewerKernel(FileLocator):
         xf_list = self.get_xf_list(
             rows=rows, filter_atype="Multitau", filter_fitted=True
         )
+
+        # For tau-q, prefer Bayesian results when available
+        _restore: dict[int, object] = {}
+        for xf in xf_list:
+            if getattr(xf, "bayesian_fit_summary", None) is not None:
+                _restore[id(xf)] = xf.fit_summary
+                xf.fit_summary = xf.bayesian_fit_summary
+
         result = {}
         for x in xf_list:
             if x.fit_summary is None:
@@ -560,6 +585,11 @@ class ViewerKernel(FileLocator):
             _get_module("tauq").plot(
                 xf_list, hdl=hdl, q_range=q_range, offset=offset, plot_type=plot_type
             )
+
+        # Restore original fit_summary
+        for xf in xf_list:
+            if id(xf) in _restore:
+                xf.fit_summary = _restore[id(xf)]
 
         return result
 

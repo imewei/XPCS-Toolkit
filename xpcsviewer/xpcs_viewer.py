@@ -4295,11 +4295,13 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
             model_func=self._g2_bayesian_model_func,
         )
 
-        # Store on the first target file (same attribute NLSQ writes to)
+        # Store on the first target file — DUAL STORAGE
         rows = self.get_selected_rows()
         xf_list = self.vk.get_xf_list(rows)
         if xf_list:
-            xf_list[0].fit_summary = fit_summary
+            xf_list[0].bayesian_fit_summary = fit_summary    # Bayesian owns this
+            xf_list[0].bayesian_results = dict(fit_results)  # Per-Q FitResult objects
+            # Do NOT touch xf.fit_summary — NLSQ owns that
 
         succeeded = sum(1 for v in fit_results.values() if v is not None)
         total = len(fit_results)
@@ -4331,6 +4333,12 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
             self.init_diffusion()
         except Exception:
             logger.debug("Could not refresh tau-q tab after batch fit", exc_info=True)
+
+        # Auto-refresh G2 Fit tab with Bayesian overlay
+        try:
+            self.plot_g2_fitting()
+        except Exception:
+            logger.debug("Could not refresh G2 Fit tab after batch fit", exc_info=True)
 
     def _cancel_g2_bayesian_batch(self):
         """Cancel the running batch Bayesian fitting."""
