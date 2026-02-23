@@ -409,6 +409,9 @@ def minimize_with_grad(
 # Bayesian batch assembly
 from .bayesian_assembly import assemble_fit_summary
 
+# Bayesian all-Q visualization and export
+from .viz import export_bayesian_csv, export_bayesian_diagnostics, plot_bayesian_all_q
+
 # Re-export legacy fitting functions for xpcs_file.py compatibility
 from .legacy import (
     double_exp,
@@ -470,6 +473,10 @@ __all__ = [
     "save_figure",
     # Bayesian batch assembly
     "assemble_fit_summary",
+    # Bayesian all-Q visualization and export
+    "plot_bayesian_all_q",
+    "export_bayesian_csv",
+    "export_bayesian_diagnostics",
     # Legacy fitting functions
     "single_exp",
     "double_exp",

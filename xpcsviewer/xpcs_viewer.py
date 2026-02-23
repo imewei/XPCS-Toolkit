@@ -339,6 +339,28 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         self.sb_g2_bayesian_workers.setToolTip("Max concurrent Bayesian workers")
         self.gridLayout_12.addWidget(self.sb_g2_bayesian_workers, 2, 12, 1, 1)
 
+        # Sampler configuration spinboxes
+        self.sb_g2_bayesian_warmup = QSpinBox(self.groupBox_2)
+        self.sb_g2_bayesian_warmup.setObjectName("sb_g2_bayesian_warmup")
+        self.sb_g2_bayesian_warmup.setMinimum(100)
+        self.sb_g2_bayesian_warmup.setMaximum(5000)
+        self.sb_g2_bayesian_warmup.setValue(500)
+        self.sb_g2_bayesian_warmup.setToolTip("NUTS warmup steps")
+
+        self.sb_g2_bayesian_samples = QSpinBox(self.groupBox_2)
+        self.sb_g2_bayesian_samples.setObjectName("sb_g2_bayesian_samples")
+        self.sb_g2_bayesian_samples.setMinimum(200)
+        self.sb_g2_bayesian_samples.setMaximum(10000)
+        self.sb_g2_bayesian_samples.setValue(1000)
+        self.sb_g2_bayesian_samples.setToolTip("NUTS sample count")
+
+        self.sb_g2_bayesian_chains = QSpinBox(self.groupBox_2)
+        self.sb_g2_bayesian_chains.setObjectName("sb_g2_bayesian_chains")
+        self.sb_g2_bayesian_chains.setMinimum(1)
+        self.sb_g2_bayesian_chains.setMaximum(8)
+        self.sb_g2_bayesian_chains.setValue(4)
+        self.sb_g2_bayesian_chains.setToolTip("NUTS chain count")
+
         self.btn_g2_bayesian_all.clicked.connect(self._fit_g2_bayesian_all)
 
         # Disable Bayesian buttons if NumPyro is not available
@@ -356,6 +378,9 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
                     btn.setEnabled(False)
                     btn.setToolTip("NumPyro not installed")
                 self.sb_g2_bayesian_workers.setEnabled(False)
+                self.sb_g2_bayesian_warmup.setEnabled(False)
+                self.sb_g2_bayesian_samples.setEnabled(False)
+                self.sb_g2_bayesian_chains.setEnabled(False)
         except ImportError:
             pass
 
@@ -4182,6 +4207,12 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
 
         fit_func = fit_single_exp if fit_func_name == "single" else fit_double_exp
 
+        sampler_kwargs = {
+            "num_warmup": self.sb_g2_bayesian_warmup.value(),
+            "num_samples": self.sb_g2_bayesian_samples.value(),
+            "num_chains": self.sb_g2_bayesian_chains.value(),
+        }
+
         specs: list[dict] = []
         for q_idx in range(len(q_arr)):
             y = np.asarray(g2[0][:, q_idx])
@@ -4197,6 +4228,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
                     "yerr": yerr[valid],
                     "q_value": float(q_arr[q_idx]),
                     "fit_func": fit_func,
+                    "sampler_kwargs": sampler_kwargs,
                 }
             )
 
@@ -4249,6 +4281,9 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         self.btn_g2_bayesian_all.setText("Cancel")
         self.btn_g2_bayesian.setEnabled(False)
         self.sb_g2_bayesian_workers.setEnabled(False)
+        self.sb_g2_bayesian_warmup.setEnabled(False)
+        self.sb_g2_bayesian_samples.setEnabled(False)
+        self.sb_g2_bayesian_chains.setEnabled(False)
 
         total = coordinator.total
         self.progress_manager.start_operation(
@@ -4318,6 +4353,9 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         self.btn_g2_bayesian_all.setText("Fit All Q")
         self.btn_g2_bayesian.setEnabled(True)
         self.sb_g2_bayesian_workers.setEnabled(True)
+        self.sb_g2_bayesian_warmup.setEnabled(True)
+        self.sb_g2_bayesian_samples.setEnabled(True)
+        self.sb_g2_bayesian_chains.setEnabled(True)
         q_idx_current = self.sb_g2_bayesian_qidx.value()
         self.btn_g2_bayesian.setText(f"Fit Q-{q_idx_current}")
         has_result = q_idx_current in self._g2_bayesian_results
@@ -4351,6 +4389,9 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
             self.btn_g2_bayesian_all.setText("Fit All Q")
             self.btn_g2_bayesian.setEnabled(True)
             self.sb_g2_bayesian_workers.setEnabled(True)
+            self.sb_g2_bayesian_warmup.setEnabled(True)
+            self.sb_g2_bayesian_samples.setEnabled(True)
+            self.sb_g2_bayesian_chains.setEnabled(True)
             q_idx_current = self.sb_g2_bayesian_qidx.value()
             self.btn_g2_bayesian.setText(f"Fit Q-{q_idx_current}")
 
