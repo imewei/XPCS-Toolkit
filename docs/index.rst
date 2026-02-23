@@ -69,49 +69,44 @@ Quick Start
        q, t_el, g2, g2_err, labels = xf.get_g2_data()
        print(f"Q bins: {len(q)}, Delay points: {len(t_el)}")
 
-----
-
-Contents
---------
-
 .. toctree::
-   :maxdepth: 2
+   :hidden:
    :caption: Tutorials
 
    tutorials/index
 
 .. toctree::
-   :maxdepth: 2
+   :hidden:
    :caption: How-To Guides
 
    how-to/index
 
 .. toctree::
-   :maxdepth: 2
+   :hidden:
    :caption: API Reference
 
    api/index
 
 .. toctree::
-   :maxdepth: 2
+   :hidden:
    :caption: Explanation
 
    explanation/index
 
 .. toctree::
-   :maxdepth: 2
+   :hidden:
    :caption: Architecture
 
    architecture/index
 
 .. toctree::
-   :maxdepth: 1
+   :hidden:
    :caption: Operations
 
    operations/index
 
 .. toctree::
-   :maxdepth: 1
+   :hidden:
    :caption: Project Info
 
    authors

@@ -57,34 +57,29 @@ Installation
 
 .. code-block:: bash
 
-   # Basic installation
-   pip install xpcsviewer
+   # Install from PyPI
+   pip install xpcsviewer-gui
 
-   # Complete installation with all features and tools
-   pip install xpcsviewer[all]
+   # Or install with uv (recommended)
+   uv pip install xpcsviewer-gui
 
-   # Install with specific optional dependencies
-   pip install xpcsviewer[dev]        # Development tools
-   pip install xpcsviewer[docs]       # Documentation building
-   pip install xpcsviewer[validation] # Profiling and validation tools
-   pip install xpcsviewer[performance] # Performance analysis tools
+JAX and all scientific dependencies (NumPyro, ArviZ, interpax, etc.) are
+included automatically — no extras needed.
 
 GPU Acceleration (Optional)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-For GPU-accelerated computations on NVIDIA GPUs with CUDA 12+:
+Default installation uses CPU-only JAX. For GPU acceleration on Linux with
+an NVIDIA GPU and system CUDA 12+ or 13+:
 
 .. code-block:: bash
 
-   # Install JAX CPU backend (default)
-   pip install xpcsviewer[jax]
+   # Auto-detect system CUDA version (from repo checkout)
+   make install-jax-gpu
 
-   # For GPU acceleration, install JAX with CUDA support
-   # This uses your system's CUDA installation (requires CUDA 12+)
-   pip install jax[cuda12-local]
-
-   # Or for CUDA 13+
-   pip install jax[cuda13-local]
+   # Or manually install JAX with CUDA support
+   pip install jax[cuda12-local]    # System CUDA 12.x
+   pip install jax[cuda13-local]    # System CUDA 13.x
 
 **Verify GPU detection:**
 
@@ -157,10 +152,13 @@ Development
    # Clone and install (uv recommended)
    git clone https://github.com/imewei/XPCSViewer.git
    cd XPCSViewer
-   make dev-setup          # installs package + dev/test/docs extras + pre-commit hooks
 
-   # Or with pip
-   pip install -e .[dev]
+   # With uv (recommended) — installs package + dev/test dependencies
+   uv sync
+   make install-hooks      # install pre-commit + commit-msg hooks
+
+   # Or with pip (editable install, no dev dependencies)
+   pip install -e .
 
    # Run tests
    make test               # parallel tests (excl. GUI)
