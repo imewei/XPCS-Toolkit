@@ -310,6 +310,13 @@ For backward compatibility with older code:
 
 .. autofunction:: xpcsviewer.fitting.vectorized_residual_analysis
 
+Bayesian Visualization
+~~~~~~~~~~~~~~~~~~~~~~
+
+.. automodule:: xpcsviewer.fitting.viz
+   :members:
+   :undoc-members:
+
 Bayesian Assembly
 -----------------
 

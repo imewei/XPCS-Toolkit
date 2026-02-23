@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+
+- "Plot All Q" button in G2 Fit tab for all-Q Bayesian overlay visualization
+- Export button: CSV parameters, PDF/PNG figures, netCDF ArviZ diagnostics
+- Sampler config spinboxes (warmup, samples, chains) for batch Bayesian fitting
+- `fitting.viz` module: `plot_bayesian_all_q`, `export_bayesian_csv`, `export_bayesian_diagnostics`
+
+### Fixed
+
+- Bayesian fit results now stored on `bayesian_fit_summary` (no longer overwritten by NLSQ)
+- G2 Fit tab auto-refreshes after "Fit All Q" batch completes
+- Diffusion tab prefers Bayesian fit results when available
+- Sampler kwargs (warmup, samples, chains) now forwarded to batch workers
+
 ## [0.1.3] - 2026-02-22
 
 ### Added
