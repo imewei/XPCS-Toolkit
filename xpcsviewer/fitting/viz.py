@@ -28,6 +28,7 @@ def plot_bayesian_all_q(
     g2_data: NDArray | None,
     g2_err: NDArray | None,
     *,
+    data_t_el: NDArray | None = None,
     confidence: float = 0.95,
 ) -> Figure | None:
     """Generate all-Q overlay figure with Bayesian fit lines and CI bands.
@@ -40,6 +41,12 @@ def plot_bayesian_all_q(
         Raw G2 correlation data.
     g2_err : ndarray, shape (num_t, num_q)
         G2 measurement uncertainties.
+    data_t_el : ndarray or None
+        Time axis matching ``g2_data`` rows.  When the caller applies a
+        ``t_range`` filter the resulting array may be shorter than the
+        summary's ``t_el``.  Pass the filtered time array here so that
+        data points are plotted at the correct times.  Falls back to
+        ``bayesian_summary["t_el"]`` when *None*.
     confidence : float
         Confidence level for CI bands (default 0.95).
 
@@ -58,7 +65,7 @@ def plot_bayesian_all_q(
     fit_line = bayesian_summary["fit_line"]
     fit_x = bayesian_summary["fit_x"]
     q_val = bayesian_summary["q_val"]
-    t_el = bayesian_summary["t_el"]
+    t_el = data_t_el if data_t_el is not None else bayesian_summary["t_el"]
     num_q = len(q_val)
 
     fig, ax = plt.subplots(figsize=(10, 7))

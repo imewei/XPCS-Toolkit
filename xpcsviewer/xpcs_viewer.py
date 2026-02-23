@@ -3491,6 +3491,8 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
             self.btn_g2_diagnosis.setEnabled(False)
         if hasattr(self, "btn_diff_diagnosis"):
             self.btn_diff_diagnosis.setEnabled(False)
+        if hasattr(self, "btn_g2_plot_all_q"):
+            self.btn_g2_plot_all_q.setEnabled(False)
 
         # Trigger plot update to show proper empty states since no files are auto-added
         self.update_plot()
@@ -4399,6 +4401,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
             self.sb_g2_bayesian_warmup.setEnabled(True)
             self.sb_g2_bayesian_samples.setEnabled(True)
             self.sb_g2_bayesian_chains.setEnabled(True)
+            self.btn_g2_plot_all_q.setEnabled(False)
             q_idx_current = self.sb_g2_bayesian_qidx.value()
             self.btn_g2_bayesian.setText(f"Fit Q-{q_idx_current}")
 
@@ -4428,13 +4431,14 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         if result[0] is False:
             self.statusbar.showMessage("No G2 data available", 2000)
             return
-        _, _, g2, g2_err, _ = result
+        _, tel, g2, g2_err, _ = result
         g2_data = np.asarray(g2[0])
         g2_err_data = np.asarray(g2_err[0])
+        data_t_el = np.asarray(tel[0])
 
         from .fitting.viz import plot_bayesian_all_q
 
-        fig = plot_bayesian_all_q(bfs, g2_data, g2_err_data)
+        fig = plot_bayesian_all_q(bfs, g2_data, g2_err_data, data_t_el=data_t_el)
         if fig is None:
             return
 
@@ -4442,14 +4446,21 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
 
     def _show_bayesian_plot_dialog(self, fig, xf):
         """Display matplotlib figure in a QDialog with export button."""
+        import matplotlib.pyplot as plt
         from matplotlib.backends.backend_qtagg import (
             FigureCanvasQTAgg,
             NavigationToolbar2QT,
         )
+        from qtpy.QtCore import Qt
         from qtpy.QtWidgets import QDialog, QHBoxLayout, QPushButton, QVBoxLayout
+
+        # Close existing dialog if open (single-instance pattern)
+        if getattr(self, "_bayesian_plot_dialog", None) is not None:
+            self._bayesian_plot_dialog.close()
 
         dialog = QDialog(self)
         dialog.setWindowTitle("Bayesian All-Q Fit Results")
+        dialog.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
         dialog.resize(1000, 700)
 
         layout = QVBoxLayout(dialog)
@@ -4467,6 +4478,13 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         btn_row.addWidget(btn_export)
         layout.addLayout(btn_row)
 
+        # Track dialog lifecycle and clean up matplotlib figure on close
+        self._bayesian_plot_dialog = dialog
+        dialog.destroyed.connect(lambda: plt.close(fig))
+        dialog.destroyed.connect(
+            lambda: setattr(self, "_bayesian_plot_dialog", None)
+        )
+
         dialog.show()
 
     def _export_bayesian(self, xf, fig):
@@ -4479,6 +4497,9 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
 
         out_dir = Path(out_dir)
         bfs = xf.bayesian_fit_summary
+        if bfs is None:
+            self.statusbar.showMessage("Fit summary is no longer available", 3000)
+            return
         br = xf.bayesian_results
 
         from .fitting.viz import export_bayesian_csv, export_bayesian_diagnostics
