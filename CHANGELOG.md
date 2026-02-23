@@ -4,24 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.1.3] - 2026-02-23
+
 ### Added
 
 - "Plot All Q" button in G2 Fit tab for all-Q Bayesian overlay visualization
 - Export button: CSV parameters, PDF/PNG figures, netCDF ArviZ diagnostics
 - Sampler config spinboxes (warmup, samples, chains) for batch Bayesian fitting
 - `fitting.viz` module: `plot_bayesian_all_q`, `export_bayesian_csv`, `export_bayesian_diagnostics`
-
-### Fixed
-
-- Bayesian fit results now stored on `bayesian_fit_summary` (no longer overwritten by NLSQ)
-- G2 Fit tab auto-refreshes after "Fit All Q" batch completes
-- Diffusion tab prefers Bayesian fit results when available
-- Sampler kwargs (warmup, samples, chains) now forwarded to batch workers
-
-## [0.1.3] - 2026-02-22
-
-### Added
-
 - Batch all-Q Bayesian fitting with GUI integration
   - `fitting/bayesian_assembly.py` coordinator for per-Q NUTS sampling
   - Batch fitting dialog in G2 Fit tab with progress tracking
@@ -64,6 +54,10 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
+- Bayesian fit results now stored on `bayesian_fit_summary` (no longer overwritten by NLSQ)
+- G2 Fit tab auto-refreshes after "Fit All Q" batch completes
+- Diffusion tab prefers Bayesian fit results when available
+- Sampler kwargs (warmup, samples, chains) now forwarded to batch workers
 - NLSQResult delegation: handle `confidence_intervals` as method or property
 - NLSQResult delegation: handle `prediction_interval` returning `(n, 2)` array
 - NLSQ fallback to uniform initialization when warm-start params are unreliable
@@ -98,6 +92,11 @@ All notable changes to this project will be documented in this file.
 - Fitting and threading Sphinx references updated
 - Fitting module Sphinx docs with NLSQResult metric docstrings
 - Architecture docs: dependency analysis, integration catalog
+- Installation docs updated to `xpcsviewer-gui` package name
+- Dark-theme gallery screenshots
+- Furo toctree cleanup (hidden sidebar navigation)
+- Legacy redirect pages removed
+- AGENTS.md and CONTRIBUTING.md modernized
 
 ## [0.1.2] - 2026-01-06
 

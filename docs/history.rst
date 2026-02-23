@@ -6,9 +6,13 @@ See the full changelog in `CHANGELOG.md <https://github.com/imewei/xpcsviewer/bl
 Recent Changes
 --------------
 
-Version 0.1.3 (2026-02-22)
+Version 0.1.3 (2026-02-23)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+- "Plot All Q" button in G2 Fit tab for all-Q Bayesian overlay visualization
+- Export button: CSV parameters, PDF/PNG figures, netCDF ArviZ diagnostics
+- Sampler config spinboxes (warmup, samples, chains) for batch Bayesian fitting
+- ``fitting.viz`` module: ``plot_bayesian_all_q``, ``export_bayesian_csv``, ``export_bayesian_diagnostics``
 - Batch all-Q Bayesian fitting with GUI integration (``bayesian_assembly.py``)
 - NLSQ 0.6.0 adoption: R², adjusted R², RMSE, MAE, AIC, BIC metrics
 - Confidence intervals and prediction intervals for fitted parameters
@@ -17,9 +21,14 @@ Version 0.1.3 (2026-02-22)
 - 12-tab layout: G2 View, G2 Fit, G2 Map as separate tabs
 - Q-bin spinbox with per-Q navigation in G2 Fit tab
 - Compact layouts for G2 Fit, Diffusion, and G2 Map tabs
+- Bayesian fit results stored on ``bayesian_fit_summary`` (no longer overwritten by NLSQ)
+- G2 Fit tab auto-refreshes after "Fit All Q" batch completes
+- Diffusion tab prefers Bayesian fit results when available
 - JAX ``TracerArrayConversionError`` fix in NLSQ model functions
 - Exception-based validation (``XPCSValidationError``)
 - Tutorial notebooks rewritten as self-contained with synthetic data
+- Installation docs updated to ``xpcsviewer-gui`` package name
+- Dark-theme gallery screenshots
 - Performance: hot path optimization for G2, SAXS 1D, twotime modules
 
 Version 0.1.2 (2026-01-06)
