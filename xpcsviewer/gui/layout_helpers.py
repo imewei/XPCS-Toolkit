@@ -274,8 +274,8 @@ def rearrange_g2_fitting_buttons(main_window: QWidget) -> None:
     bayes_group = QGroupBox("Bayesian Fitting", parent)
     bayes_group.setObjectName("groupBox_bayesian")
     bayes_layout = QVBoxLayout(bayes_group)
-    bayes_layout.setContentsMargins(2, 10, 2, 2)
-    bayes_layout.setSpacing(2)
+    bayes_layout.setContentsMargins(2, 2, 2, 2)
+    bayes_layout.setSpacing(1)
 
     # Row 1: Config spinboxes (Q-bin, Warmup, Samples, Chains, Workers)
     config_row = QHBoxLayout()
@@ -293,8 +293,7 @@ def rearrange_g2_fitting_buttons(main_window: QWidget) -> None:
     btn_row.setSpacing(2)
     for btn in (btn_bayesian, btn_diagnosis, btn_all_q, btn_plot_all):
         if btn is not None:
-            btn.setMinimumSize(0, 0)
-            btn.setMaximumHeight(24)
+            btn.setMinimumSize(0, 28)
             btn_row.addWidget(btn)
     bayes_layout.addLayout(btn_row)
 
