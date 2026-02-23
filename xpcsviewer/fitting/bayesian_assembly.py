@@ -189,6 +189,7 @@ def assemble_fit_summary(
     )
 
     return {
+        "source": "bayesian",
         "fit_func": fit_func_name,
         "fit_val": fit_val,
         "t_el": t_el,

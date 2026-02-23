@@ -213,6 +213,8 @@ class XpcsFile:
                 self.__dict__[k] = v
         self.hdf_info = None
         self.fit_summary = None
+        self.bayesian_fit_summary = None  # Bayesian posterior means (legacy format)
+        self.bayesian_results = None      # dict[int, FitResult] per-Q posteriors
         self.c2_all_data = None
         self.c2_kwargs = None
 
