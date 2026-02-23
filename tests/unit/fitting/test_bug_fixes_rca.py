@@ -520,6 +520,10 @@ class TestBugH_SamplesKeyOrder:
 
     def test_samples_dict_preserves_param_names_order(self):
         """_build_fit_result must produce samples keyed in param_names order."""
+        from unittest.mock import MagicMock, patch
+
+        import pandas as pd
+
         from xpcsviewer.fitting.sampler import _build_fit_result
 
         # Simulate NumPyro returning keys in ALPHABETICAL order
@@ -538,9 +542,31 @@ class TestBugH_SamplesKeyOrder:
         }
         param_names = ["tau", "baseline", "contrast"]
 
-        try:
-            import arviz as az
+        # Mock ArviZ functions so _build_fit_result can complete
+        # without a real NumPyro MCMC object
+        fake_summary = pd.DataFrame(
+            {
+                "r_hat": [1.0, 1.0, 1.0],
+                "ess_bulk": [100, 100, 100],
+                "ess_tail": [80, 80, 80],
+            },
+            index=param_names,
+        )
 
+        with (
+            patch(
+                "xpcsviewer.fitting.sampler.az.from_numpyro",
+                return_value=MagicMock(),
+            ),
+            patch(
+                "xpcsviewer.fitting.sampler.az.summary",
+                return_value=fake_summary,
+            ),
+            patch(
+                "xpcsviewer.fitting.sampler.az.bfmi",
+                return_value=np.array([0.9]),
+            ),
+        ):
             result = _build_fit_result(
                 FakeMCMC(),
                 samples_alpha_order,
@@ -552,11 +578,13 @@ class TestBugH_SamplesKeyOrder:
                     num_chains=1,
                 ),
             )
-            # Key order must follow param_names, not alphabetical
-            assert list(result.samples.keys()) == param_names
-            assert result.param_names == param_names
-        except Exception:
-            pytest.skip("ArviZ integration required for full _build_fit_result")
+
+        # Key order must follow param_names, not alphabetical
+        assert list(result.samples.keys()) == param_names
+        assert result.param_names == param_names
+        # Verify diagnostics were populated
+        assert result.diagnostics is not None
+        assert result.diagnostics.divergences == 0
 
     @needs_numpyro
     def test_posterior_predictive_uses_correct_param_order(self):
