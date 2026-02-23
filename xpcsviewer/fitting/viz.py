@@ -3,6 +3,7 @@
 Provides matplotlib figures for batch Bayesian fitting results
 and export to CSV, PDF, and netCDF formats.
 """
+
 from __future__ import annotations
 
 import csv
@@ -20,7 +21,15 @@ logger = logging.getLogger(__name__)
 
 # Column names for single and double exponential legacy fit_val format
 _SINGLE_COLS = ("contrast", "tau", "stretching", "baseline")
-_DOUBLE_COLS = ("contrast1", "tau1", "stretch1", "baseline", "tau2", "contrast2", "stretch2")
+_DOUBLE_COLS = (
+    "contrast1",
+    "tau1",
+    "stretch1",
+    "baseline",
+    "tau2",
+    "contrast2",
+    "stretch2",
+)
 
 
 def plot_bayesian_all_q(
@@ -85,8 +94,15 @@ def plot_bayesian_all_q(
         y_cat = np.concatenate(all_y)
         c_cat = np.concatenate(all_c)
         ax.scatter(
-            t_cat, y_cat, c=c_cat, cmap=cmap, norm=norm,
-            s=9, alpha=0.5, edgecolors="none", rasterized=True,
+            t_cat,
+            y_cat,
+            c=c_cat,
+            cmap=cmap,
+            norm=norm,
+            s=9,
+            alpha=0.5,
+            edgecolors="none",
+            rasterized=True,
         )
 
     # --- Batch fit lines with a single LineCollection ---
@@ -201,4 +217,6 @@ def export_bayesian_diagnostics(
         q_path = path.with_stem(f"{path.stem}_q{q_idx:03d}")
         idata.to_netcdf(str(q_path))
 
-    logger.info("Exported ArviZ diagnostics to %s (%d Q-bin files)", path.parent, len(datasets))
+    logger.info(
+        "Exported ArviZ diagnostics to %s (%d Q-bin files)", path.parent, len(datasets)
+    )

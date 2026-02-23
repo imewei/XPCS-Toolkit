@@ -163,7 +163,9 @@ def assemble_fit_summary(
     # Cap at 500 points for visualization — keeps main-thread overhead low
     # even for datasets with thousands of time points and many Q-bins
     _FIT_LINE_POINTS = 500
-    fit_x = np.linspace(t_el.min(), t_el.max(), min(_FIT_LINE_POINTS, max(200, len(t_el) * 2)))
+    fit_x = np.linspace(
+        t_el.min(), t_el.max(), min(_FIT_LINE_POINTS, max(200, len(t_el) * 2))
+    )
     fit_line = np.full((num_q, len(fit_x)), np.nan)
 
     # Track which Q-bins failed (True = failed)

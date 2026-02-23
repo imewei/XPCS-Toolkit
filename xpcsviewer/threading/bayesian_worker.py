@@ -78,9 +78,7 @@ class BayesianFitWorker(BaseAsyncWorker):
 
         self.check_cancelled()
 
-        self.emit_status(
-            f"NUTS sampling Q={self.q_value:.4g} (not interruptible)..."
-        )
+        self.emit_status(f"NUTS sampling Q={self.q_value:.4g} (not interruptible)...")
         t0 = time.monotonic()
 
         if self.context == "diffusion":
@@ -93,9 +91,7 @@ class BayesianFitWorker(BaseAsyncWorker):
             fit_result = self.fit_func(self.x, self.y, self.yerr, **self.sampler_kwargs)
 
         elapsed = time.monotonic() - t0
-        logger.info(
-            "NUTS completed for Q-index %d (%.1fs)", self.q_index, elapsed
-        )
+        logger.info("NUTS completed for Q-index %d (%.1fs)", self.q_index, elapsed)
 
         self.check_cancelled()
 

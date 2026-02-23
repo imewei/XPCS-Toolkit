@@ -1,4 +1,5 @@
 """Tests for dual fit_summary storage on XpcsFile."""
+
 import numpy as np
 import pytest
 
@@ -9,6 +10,7 @@ class TestDualStorage:
     def test_bayesian_fit_summary_initialized_none(self):
         """bayesian_fit_summary starts as None."""
         from unittest.mock import MagicMock
+
         xf = MagicMock()
         xf.bayesian_fit_summary = None
         xf.bayesian_results = None
@@ -18,6 +20,7 @@ class TestDualStorage:
     def test_dual_storage_independence(self):
         """Setting bayesian_fit_summary must not affect fit_summary."""
         from unittest.mock import MagicMock
+
         xf = MagicMock()
         xf.fit_summary = {"source": "nlsq", "fit_func": "single"}
         xf.bayesian_fit_summary = {"source": "bayesian", "fit_func": "single"}
@@ -34,9 +37,21 @@ class TestAssembleFitSummarySource:
         from unittest.mock import MagicMock
 
         fr = MagicMock()
-        fr.get_mean.side_effect = lambda k: {"contrast": 0.3, "tau": 1.0, "baseline": 1.0}[k]
-        fr.get_std.side_effect = lambda k: {"contrast": 0.01, "tau": 0.1, "baseline": 0.01}[k]
-        fr.samples = {"contrast": np.ones(10) * 0.3, "tau": np.ones(10), "baseline": np.ones(10)}
+        fr.get_mean.side_effect = lambda k: {
+            "contrast": 0.3,
+            "tau": 1.0,
+            "baseline": 1.0,
+        }[k]
+        fr.get_std.side_effect = lambda k: {
+            "contrast": 0.01,
+            "tau": 0.1,
+            "baseline": 0.01,
+        }[k]
+        fr.samples = {
+            "contrast": np.ones(10) * 0.3,
+            "tau": np.ones(10),
+            "baseline": np.ones(10),
+        }
 
         from xpcsviewer.fitting.models import single_exp_func
 
@@ -55,9 +70,17 @@ class TestAssembleFitSummarySource:
         from unittest.mock import MagicMock
 
         fr = MagicMock()
-        fr.get_mean.side_effect = lambda k: {"contrast": 0.3, "tau": 1.0, "baseline": 1.0}[k]
+        fr.get_mean.side_effect = lambda k: {
+            "contrast": 0.3,
+            "tau": 1.0,
+            "baseline": 1.0,
+        }[k]
         fr.get_std.side_effect = lambda k: 0.01
-        fr.samples = {"contrast": np.ones(10) * 0.3, "tau": np.ones(10), "baseline": np.ones(10)}
+        fr.samples = {
+            "contrast": np.ones(10) * 0.3,
+            "tau": np.ones(10),
+            "baseline": np.ones(10),
+        }
 
         from xpcsviewer.fitting.models import single_exp_func
 

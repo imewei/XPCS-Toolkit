@@ -585,7 +585,11 @@ class ViewerKernel(FileLocator):
 
             if len(result) > 0:
                 _get_module("tauq").plot(
-                    xf_list, hdl=hdl, q_range=q_range, offset=offset, plot_type=plot_type
+                    xf_list,
+                    hdl=hdl,
+                    q_range=q_range,
+                    offset=offset,
+                    plot_type=plot_type,
                 )
         finally:
             # Restore original fit_summary even if an exception is raised

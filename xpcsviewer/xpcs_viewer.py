@@ -4416,7 +4416,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         # Store on the target file captured at batch start — DUAL STORAGE
         xf = getattr(self, "_g2_batch_target_xf", None)
         if xf is not None:
-            xf.bayesian_fit_summary = fit_summary    # Bayesian owns this
+            xf.bayesian_fit_summary = fit_summary  # Bayesian owns this
             xf.bayesian_results = dict(fit_results)  # Per-Q FitResult objects
             # Do NOT touch xf.fit_summary — NLSQ owns that
 
@@ -4514,8 +4514,10 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
                     "(fit q=%.4g-%.4g t=%.4g-%.4g, "
                     "current q=%.4g-%.4g t=%.4g-%.4g); "
                     "using fit-time ranges for consistency",
-                    *fit_q_range, *fit_t_range,
-                    *current_q_range, *current_t_range,
+                    *fit_q_range,
+                    *fit_t_range,
+                    *current_q_range,
+                    *current_t_range,
                 )
                 self.statusbar.showMessage(
                     "Range changed since fit — using fit-time ranges", 3000
@@ -4578,9 +4580,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         # Track dialog lifecycle and clean up matplotlib figure on close
         self._bayesian_plot_dialog = dialog
         dialog.destroyed.connect(lambda: plt.close(fig))
-        dialog.destroyed.connect(
-            lambda: setattr(self, "_bayesian_plot_dialog", None)
-        )
+        dialog.destroyed.connect(lambda: setattr(self, "_bayesian_plot_dialog", None))
 
         dialog.show()
 
@@ -4641,9 +4641,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         # 3. netCDF diagnostics
         if br is not None:
             try:
-                export_bayesian_diagnostics(
-                    out_dir / "bayesian_diagnostics.nc", br
-                )
+                export_bayesian_diagnostics(out_dir / "bayesian_diagnostics.nc", br)
             except Exception:
                 logger.exception("netCDF export failed")
                 failures.append("netCDF")
@@ -4653,9 +4651,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
                 f"Export partially failed ({', '.join(failures)}); see log", 5000
             )
         else:
-            self.statusbar.showMessage(
-                f"Exported Bayesian results to {out_dir}", 5000
-            )
+            self.statusbar.showMessage(f"Exported Bayesian results to {out_dir}", 5000)
 
     def _show_g2_diagnosis(self):
         """Show or create the G2 Bayesian diagnosis window.

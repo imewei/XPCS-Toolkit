@@ -1,4 +1,5 @@
 """Tests for Bayesian all-Q visualization and export."""
+
 import numpy as np
 import pytest
 
@@ -9,6 +10,7 @@ class TestPlotBayesianAllQ:
     def test_returns_figure(self):
         """Must return a matplotlib Figure with axes."""
         import matplotlib
+
         matplotlib.use("Agg")
         from xpcsviewer.fitting.viz import plot_bayesian_all_q
 
@@ -27,16 +29,19 @@ class TestPlotBayesianAllQ:
         assert fig is not None
         assert len(fig.axes) >= 1
         import matplotlib.pyplot as plt
+
         plt.close(fig)
 
     def test_returns_none_without_data(self):
         """Must return None when bayesian_summary is None."""
         from xpcsviewer.fitting.viz import plot_bayesian_all_q
+
         assert plot_bayesian_all_q(None, None) is None
 
     def test_skips_failed_q_bins(self):
         """LineCollection should exclude Q-bins flagged as failed."""
         import matplotlib
+
         matplotlib.use("Agg")
         from matplotlib.collections import LineCollection
         from xpcsviewer.fitting.viz import plot_bayesian_all_q
@@ -69,11 +74,13 @@ class TestPlotBayesianAllQ:
         assert len(line_collections[0].get_segments()) == 2
 
         import matplotlib.pyplot as plt
+
         plt.close(fig)
 
     def test_failure_indicator_shown(self):
         """Title should include success count when failed_mask is present."""
         import matplotlib
+
         matplotlib.use("Agg")
         from xpcsviewer.fitting.viz import plot_bayesian_all_q
 
@@ -96,6 +103,7 @@ class TestPlotBayesianAllQ:
         assert "succeeded" in title
 
         import matplotlib.pyplot as plt
+
         plt.close(fig)
 
 
@@ -106,9 +114,11 @@ class TestExportBayesianResults:
         """Must write a CSV with parameter columns."""
         from xpcsviewer.fitting.viz import export_bayesian_csv
 
-        fit_val = np.array([
-            [[0.3, 1.0, 1.0, 1.0], [0.01, 0.1, 0.01, 0.01]],
-        ])
+        fit_val = np.array(
+            [
+                [[0.3, 1.0, 1.0, 1.0], [0.01, 0.1, 0.01, 0.01]],
+            ]
+        )
         q_val = np.array([0.01])
 
         path = tmp_path / "params.csv"
@@ -122,10 +132,12 @@ class TestExportBayesianResults:
         """CSV should include status column when failed_mask is provided."""
         from xpcsviewer.fitting.viz import export_bayesian_csv
 
-        fit_val = np.array([
-            [[0.3, 1.0, 1.0, 1.0], [0.01, 0.1, 0.01, 0.01]],
-            [[np.nan] * 4, [np.nan] * 4],
-        ])
+        fit_val = np.array(
+            [
+                [[0.3, 1.0, 1.0, 1.0], [0.01, 0.1, 0.01, 0.01]],
+                [[np.nan] * 4, [np.nan] * 4],
+            ]
+        )
         q_val = np.array([0.01, 0.02])
         failed_mask = np.array([False, True])
 

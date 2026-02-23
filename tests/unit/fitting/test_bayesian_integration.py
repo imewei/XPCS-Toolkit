@@ -1,4 +1,5 @@
 """Integration test: batch Bayesian -> dual storage -> plot -> export."""
+
 import numpy as np
 import pytest
 from unittest.mock import MagicMock
@@ -90,10 +91,12 @@ class TestBayesianIntegration:
         """Exported CSV must contain all Q-bins and parameters."""
         from xpcsviewer.fitting.viz import export_bayesian_csv
 
-        fit_val = np.array([
-            [[0.3, 1.0, 1.0, 1.0], [0.01, 0.1, 0.01, 0.01]],
-            [[0.25, 2.0, 1.0, 1.02], [0.02, 0.2, 0.01, 0.02]],
-        ])
+        fit_val = np.array(
+            [
+                [[0.3, 1.0, 1.0, 1.0], [0.01, 0.1, 0.01, 0.01]],
+                [[0.25, 2.0, 1.0, 1.02], [0.02, 0.2, 0.01, 0.02]],
+            ]
+        )
         q_val = np.array([0.01, 0.02])
 
         path = tmp_path / "test_params.csv"
