@@ -241,6 +241,7 @@ def rearrange_g2_fitting_buttons(main_window: QWidget) -> None:
     btn_bayesian = main_window.findChild(QPushButton, "btn_g2_bayesian")
     btn_diagnosis = main_window.findChild(QPushButton, "btn_g2_diagnosis")
     btn_all_q = main_window.findChild(QPushButton, "btn_g2_bayesian_all")
+    btn_plot_all = main_window.findChild(QPushButton, "btn_g2_plot_all_q")
     sb_qidx = main_window.findChild(QWidget, "sb_g2_bayesian_qidx")
     sb_workers = main_window.findChild(QWidget, "sb_g2_bayesian_workers")
 
@@ -255,6 +256,7 @@ def rearrange_g2_fitting_buttons(main_window: QWidget) -> None:
         btn_diagnosis,
         sb_qidx,
         btn_all_q,
+        btn_plot_all,
         sb_workers,
     ]
     for w in widgets_to_move:
@@ -278,30 +280,33 @@ def rearrange_g2_fitting_buttons(main_window: QWidget) -> None:
         grid_12.addWidget(btn_all_q, 3, 11, 1, 1)
     if sb_workers is not None:
         grid_12.addWidget(sb_workers, 3, 12, 1, 1)
+    # Row 4: Plot All Q (full width)
+    if btn_plot_all is not None:
+        grid_12.addWidget(btn_plot_all, 4, 11, 1, 2)
 
     # Find sampler config widgets
     sb_warmup = main_window.findChild(QWidget, "sb_g2_bayesian_warmup")
     sb_samples = main_window.findChild(QWidget, "sb_g2_bayesian_samples")
     sb_chains = main_window.findChild(QWidget, "sb_g2_bayesian_chains")
 
-    # Row 4: Warmup label + spinbox
+    # Row 5: Warmup label + spinbox
     if sb_warmup is not None:
         grid_12.removeWidget(sb_warmup)
         lbl_warmup = QLabel("Warmup:")
-        grid_12.addWidget(lbl_warmup, 4, 11, 1, 1)
-        grid_12.addWidget(sb_warmup, 4, 12, 1, 1)
-    # Row 5: Samples label + spinbox
+        grid_12.addWidget(lbl_warmup, 5, 11, 1, 1)
+        grid_12.addWidget(sb_warmup, 5, 12, 1, 1)
+    # Row 6: Samples label + spinbox
     if sb_samples is not None:
         grid_12.removeWidget(sb_samples)
         lbl_samples = QLabel("Samples:")
-        grid_12.addWidget(lbl_samples, 5, 11, 1, 1)
-        grid_12.addWidget(sb_samples, 5, 12, 1, 1)
-    # Row 6: Chains label + spinbox
+        grid_12.addWidget(lbl_samples, 6, 11, 1, 1)
+        grid_12.addWidget(sb_samples, 6, 12, 1, 1)
+    # Row 7: Chains label + spinbox
     if sb_chains is not None:
         grid_12.removeWidget(sb_chains)
         lbl_chains = QLabel("Chains:")
-        grid_12.addWidget(lbl_chains, 6, 11, 1, 1)
-        grid_12.addWidget(sb_chains, 6, 12, 1, 1)
+        grid_12.addWidget(lbl_chains, 7, 11, 1, 1)
+        grid_12.addWidget(sb_chains, 7, 12, 1, 1)
 
 
 def rearrange_diffusion_tab(main_window: QWidget) -> None:

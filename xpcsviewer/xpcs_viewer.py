@@ -363,6 +363,11 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
 
         self.btn_g2_bayesian_all.clicked.connect(self._fit_g2_bayesian_all)
 
+        self.btn_g2_plot_all_q = QPushButton("Plot All Q", self.groupBox_2)
+        self.btn_g2_plot_all_q.setObjectName("btn_g2_plot_all_q")
+        self.btn_g2_plot_all_q.setEnabled(False)  # Enabled after batch completes
+        self.btn_g2_plot_all_q.clicked.connect(self._plot_g2_bayesian_all)
+
         # Disable Bayesian buttons if NumPyro is not available
         try:
             from .fitting.models import NUMPYRO_AVAILABLE
@@ -374,6 +379,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
                     self.btn_diff_bayesian,
                     self.btn_diff_diagnosis,
                     self.btn_g2_bayesian_all,
+                    self.btn_g2_plot_all_q,
                 ):
                     btn.setEnabled(False)
                     btn.setToolTip("NumPyro not installed")
@@ -4356,6 +4362,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         self.sb_g2_bayesian_warmup.setEnabled(True)
         self.sb_g2_bayesian_samples.setEnabled(True)
         self.sb_g2_bayesian_chains.setEnabled(True)
+        self.btn_g2_plot_all_q.setEnabled(True)
         q_idx_current = self.sb_g2_bayesian_qidx.value()
         self.btn_g2_bayesian.setText(f"Fit Q-{q_idx_current}")
         has_result = q_idx_current in self._g2_bayesian_results
@@ -4394,6 +4401,122 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
             self.sb_g2_bayesian_chains.setEnabled(True)
             q_idx_current = self.sb_g2_bayesian_qidx.value()
             self.btn_g2_bayesian.setText(f"Fit Q-{q_idx_current}")
+
+    def _plot_g2_bayesian_all(self):
+        """Show all-Q Bayesian fit overlay in a matplotlib dialog."""
+        rows = self.get_selected_rows()
+        xf_list = self.vk.get_xf_list(rows)
+        if not xf_list:
+            self.statusbar.showMessage("No files selected", 2000)
+            return
+
+        xf = xf_list[0]
+        bfs = xf.bayesian_fit_summary
+        if bfs is None:
+            self.statusbar.showMessage(
+                "No Bayesian fit results \u2014 run 'Fit All Q' first", 3000
+            )
+            return
+
+        # Get raw G2 data for overlay
+        from .module import g2mod
+
+        p = self.check_g2_number()
+        result = g2mod.get_data(
+            xf_list, q_range=(p[0], p[1]), t_range=(p[2], p[3])
+        )
+        if result[0] is False:
+            self.statusbar.showMessage("No G2 data available", 2000)
+            return
+        _, _, g2, g2_err, _ = result
+        g2_data = np.asarray(g2[0])
+        g2_err_data = np.asarray(g2_err[0])
+
+        from .fitting.viz import plot_bayesian_all_q
+
+        fig = plot_bayesian_all_q(bfs, g2_data, g2_err_data)
+        if fig is None:
+            return
+
+        self._show_bayesian_plot_dialog(fig, xf)
+
+    def _show_bayesian_plot_dialog(self, fig, xf):
+        """Display matplotlib figure in a QDialog with export button."""
+        from matplotlib.backends.backend_qtagg import (
+            FigureCanvasQTAgg,
+            NavigationToolbar2QT,
+        )
+        from qtpy.QtWidgets import QDialog, QHBoxLayout, QPushButton, QVBoxLayout
+
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Bayesian All-Q Fit Results")
+        dialog.resize(1000, 700)
+
+        layout = QVBoxLayout(dialog)
+        canvas = FigureCanvasQTAgg(fig)
+        toolbar = NavigationToolbar2QT(canvas, dialog)
+
+        layout.addWidget(toolbar)
+        layout.addWidget(canvas)
+
+        # Export button row
+        btn_row = QHBoxLayout()
+        btn_export = QPushButton("Export Results")
+        btn_export.clicked.connect(lambda: self._export_bayesian(xf, fig))
+        btn_row.addStretch()
+        btn_row.addWidget(btn_export)
+        layout.addLayout(btn_row)
+
+        dialog.show()
+
+    def _export_bayesian(self, xf, fig):
+        """Export Bayesian results: CSV + PDF + netCDF."""
+        from qtpy.QtWidgets import QFileDialog
+
+        out_dir = QFileDialog.getExistingDirectory(self, "Select Export Directory")
+        if not out_dir:
+            return
+
+        out_dir = Path(out_dir)
+        bfs = xf.bayesian_fit_summary
+        br = xf.bayesian_results
+
+        from .fitting.viz import export_bayesian_csv, export_bayesian_diagnostics
+
+        # 1. CSV parameters
+        try:
+            export_bayesian_csv(
+                out_dir / "bayesian_params.csv",
+                bfs["fit_val"],
+                bfs["q_val"],
+                bfs["fit_func"],
+            )
+        except Exception:
+            logger.exception("CSV export failed")
+
+        # 2. PDF figure
+        try:
+            fig.savefig(
+                out_dir / "bayesian_all_q.pdf", dpi=300, bbox_inches="tight"
+            )
+            fig.savefig(
+                out_dir / "bayesian_all_q.png", dpi=150, bbox_inches="tight"
+            )
+        except Exception:
+            logger.exception("Figure export failed")
+
+        # 3. netCDF diagnostics
+        if br is not None:
+            try:
+                export_bayesian_diagnostics(
+                    out_dir / "bayesian_diagnostics.nc", br
+                )
+            except Exception:
+                logger.exception("netCDF export failed")
+
+        self.statusbar.showMessage(
+            f"Exported Bayesian results to {out_dir}", 5000
+        )
 
     def _show_g2_diagnosis(self):
         """Show or create the G2 Bayesian diagnosis window.
