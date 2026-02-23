@@ -104,4 +104,5 @@ class BayesianFitWorker(BaseAsyncWorker):
             "q_index": self.q_index,
             "q_value": self.q_value,
             "context": self.context,
+            "elapsed_s": elapsed,
         }
