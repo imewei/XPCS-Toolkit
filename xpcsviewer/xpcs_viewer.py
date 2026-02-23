@@ -4435,9 +4435,9 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
             self.statusbar.showMessage("No G2 data available", 2000)
             return
         _, tel, g2, g2_err, _ = result
-        g2_data = np.asarray(g2[0])
-        g2_err_data = np.asarray(g2_err[0])
-        data_t_el = np.asarray(tel[0])
+        g2_data = np.asarray(g2[0], dtype=np.float64)
+        g2_err_data = np.asarray(g2_err[0], dtype=np.float64)
+        data_t_el = np.asarray(tel[0], dtype=np.float64)
 
         from .fitting.viz import plot_bayesian_all_q
 
@@ -4498,7 +4498,10 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         if not out_dir:
             return
 
-        out_dir = Path(out_dir)
+        out_dir = Path(out_dir).resolve()
+        if not out_dir.is_dir():
+            self.statusbar.showMessage("Selected path is not a directory", 3000)
+            return
         bfs = xf.bayesian_fit_summary
         if bfs is None:
             self.statusbar.showMessage("Fit summary is no longer available", 3000)
@@ -4521,17 +4524,24 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
             logger.exception("CSV export failed")
             failures.append("CSV")
 
-        # 2. PDF figure
-        try:
-            fig.savefig(
-                out_dir / "bayesian_all_q.pdf", dpi=300, bbox_inches="tight"
-            )
-            fig.savefig(
-                out_dir / "bayesian_all_q.png", dpi=150, bbox_inches="tight"
-            )
-        except Exception:
-            logger.exception("Figure export failed")
+        # 2. PDF figure — guard against closed figure (dialog may have been
+        # destroyed between opening and clicking export)
+        import matplotlib.pyplot as plt
+
+        if not plt.fignum_exists(fig.number):
+            logger.warning("Figure was already closed; skipping figure export")
             failures.append("PDF/PNG")
+        else:
+            try:
+                fig.savefig(
+                    out_dir / "bayesian_all_q.pdf", dpi=300, bbox_inches="tight"
+                )
+                fig.savefig(
+                    out_dir / "bayesian_all_q.png", dpi=150, bbox_inches="tight"
+                )
+            except Exception:
+                logger.exception("Figure export failed")
+                failures.append("PDF/PNG")
 
         # 3. netCDF diagnostics
         if br is not None:

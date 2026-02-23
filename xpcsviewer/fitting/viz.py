@@ -26,10 +26,10 @@ _DOUBLE_COLS = ("contrast1", "tau1", "stretch1", "baseline", "tau2", "contrast2"
 def plot_bayesian_all_q(
     bayesian_summary: dict[str, Any] | None,
     g2_data: NDArray | None,
-    g2_err: NDArray | None,
+    g2_err: NDArray | None,  # noqa: ARG001 — reserved for CI band rendering
     *,
     data_t_el: NDArray | None = None,
-    confidence: float = 0.95,  # noqa: ARG001 — reserved for CI band rendering
+    confidence: float = 0.95,  # noqa: ARG001
 ) -> Figure | None:
     """Generate all-Q overlay figure with Bayesian fit lines and CI bands.
 
@@ -60,6 +60,7 @@ def plot_bayesian_all_q(
 
     import matplotlib.pyplot as plt
     from matplotlib.cm import ScalarMappable
+    from matplotlib.collections import LineCollection
     from matplotlib.colors import Normalize
 
     fit_line = bayesian_summary["fit_line"]
@@ -70,24 +71,42 @@ def plot_bayesian_all_q(
 
     fig, ax = plt.subplots(figsize=(10, 7))
     norm = Normalize(vmin=q_val.min(), vmax=q_val.max())
-    cmap = plt.cm.viridis
+    cmap = plt.get_cmap("viridis")
 
+    # --- Batch data points with a single scatter call ---
+    all_t: list[np.ndarray] = []
+    all_y: list[np.ndarray] = []
+    all_c: list[np.ndarray] = []
+    for qi in range(min(num_q, g2_data.shape[1])):
+        valid = np.isfinite(g2_data[:, qi])
+        n_valid = int(valid.sum())
+        if n_valid > 0:
+            all_t.append(t_el[valid])
+            all_y.append(g2_data[valid, qi])
+            all_c.append(np.full(n_valid, q_val[qi]))
+
+    if all_t:
+        t_cat = np.concatenate(all_t)
+        y_cat = np.concatenate(all_y)
+        c_cat = np.concatenate(all_c)
+        ax.scatter(
+            t_cat, y_cat, c=c_cat, cmap=cmap, norm=norm,
+            s=9, alpha=0.5, edgecolors="none", rasterized=True,
+        )
+
+    # --- Batch fit lines with a single LineCollection ---
+    segments = []
+    seg_colors = []
     for qi in range(num_q):
-        color = cmap(norm(q_val[qi]))
-        label = f"Q={q_val[qi]:.4f}"
-
-        # Data points with error bars
-        if g2_data.shape[1] > qi and g2_err.shape[1] > qi:
-            valid = np.isfinite(g2_data[:, qi])
-            ax.errorbar(
-                t_el[valid], g2_data[valid, qi], yerr=g2_err[valid, qi],
-                fmt="o", color=color, markersize=3, alpha=0.5,
-                capsize=0, elinewidth=0.5, label=label,
-            )
-
-        # Fit line
         if np.any(np.isfinite(fit_line[qi])):
-            ax.plot(fit_x, fit_line[qi], "-", color=color, linewidth=1.5)
+            pts = np.column_stack([fit_x, fit_line[qi]])
+            segments.append(pts)
+            seg_colors.append(cmap(norm(q_val[qi])))
+
+    if segments:
+        lc = LineCollection(segments, colors=seg_colors, linewidths=1.5)
+        ax.add_collection(lc)
+        ax.autoscale_view()
 
     ax.set_xscale("log")
     ax.set_xlabel("Delay time (s)")
