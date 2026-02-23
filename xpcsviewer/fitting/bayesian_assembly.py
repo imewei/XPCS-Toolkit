@@ -143,7 +143,9 @@ def assemble_fit_summary(
     dict
         fit_summary dict with keys: ``fit_func``, ``fit_val``, ``t_el``,
         ``q_val``, ``q_range``, ``t_range``, ``bounds``, ``fit_flag``,
-        ``fit_line``, ``fit_x``, ``label``.
+        ``fit_line``, ``fit_x``, ``label``, ``failed_mask``.
+        Failed Q-bins have NaN in ``fit_val``/``fit_line`` and
+        ``failed_mask[q_idx] == True``.
     """
     num_q = len(q_arr)
     nparams = _SINGLE_EXP_NPARAMS if fit_func_name == "single" else _DOUBLE_EXP_NPARAMS
@@ -154,14 +156,18 @@ def assemble_fit_summary(
     )
 
     # fit_val shape: [num_q, 2, nparams] — dim 1 is [value, error]
-    fit_val = np.zeros((num_q, 2, nparams))
+    # NaN default: failed Q-bins stay NaN so downstream isfinite() filters skip them
+    fit_val = np.full((num_q, 2, nparams), np.nan)
 
     # Generate fit_x from t_el range (matching NLSQ behavior)
     # Cap at 500 points for visualization — keeps main-thread overhead low
     # even for datasets with thousands of time points and many Q-bins
     _FIT_LINE_POINTS = 500
     fit_x = np.linspace(t_el.min(), t_el.max(), min(_FIT_LINE_POINTS, max(200, len(t_el) * 2)))
-    fit_line = np.zeros((num_q, len(fit_x)))
+    fit_line = np.full((num_q, len(fit_x)), np.nan)
+
+    # Track which Q-bins failed (True = failed)
+    failed_mask = np.ones(num_q, dtype=bool)
 
     succeeded = 0
     failed = 0
@@ -179,6 +185,7 @@ def assemble_fit_summary(
             fit_line[q_idx, :] = np.asarray(
                 _compute_fit_line(model_func, fit_x, fr, fit_func_name)
             )
+            failed_mask[q_idx] = False
             succeeded += 1
         except (KeyError, ValueError) as exc:
             logger.warning("Failed to extract params for Q-index %d: %s", q_idx, exc)
@@ -204,4 +211,5 @@ def assemble_fit_summary(
         "fit_line": fit_line,
         "fit_x": fit_x,
         "label": label,
+        "failed_mask": failed_mask,
     }

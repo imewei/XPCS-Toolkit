@@ -53,7 +53,7 @@ class TestBayesianIntegration:
         g2 = np.random.rand(50, 2) + 1.0
         g2_err = np.ones((50, 2)) * 0.01
 
-        fig = plot_bayesian_all_q(summary, g2, g2_err)
+        fig = plot_bayesian_all_q(summary, g2)
         assert fig is not None
         import matplotlib.pyplot as plt
 
@@ -80,7 +80,7 @@ class TestBayesianIntegration:
         g2_err = np.ones((30, 2)) * 0.01
         data_t_el = np.linspace(0.01, 0.8, 30)  # Filtered time axis
 
-        fig = plot_bayesian_all_q(summary, g2, g2_err, data_t_el=data_t_el)
+        fig = plot_bayesian_all_q(summary, g2, data_t_el=data_t_el)
         assert fig is not None
         import matplotlib.pyplot as plt
 

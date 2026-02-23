@@ -270,7 +270,10 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         self._g2_bayesian_results: dict[int, object] = {}
         self._g2_diagnosis_window = None
         self._g2_bayesian_worker_active: bool = False
-        self._g2_bayesian_model_func = None
+        self._g2_bayesian_model_func = None  # single-Q only
+        self._g2_batch_model_func = None  # batch all-Q only
+        self._g2_batch_q_range: tuple[float, float] | None = None
+        self._g2_batch_t_range: tuple[float, float] | None = None
         self._g2_bayesian_data: tuple | None = None
 
         # Grid metadata for Q-bin subplot highlighting
@@ -3483,6 +3486,13 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         self._g2_bayesian_results = {}
         self._g2_bayesian_data = None
         self._g2_bayesian_model_func = None
+        self._g2_batch_model_func = None
+        self._g2_batch_q_range = None
+        self._g2_batch_t_range = None
+        self._g2_batch_t_el = None
+        self._g2_batch_q_arr = None
+        self._g2_batch_fit_func_name = None
+        self._g2_batch_target_xf = None
         self._diff_bayesian_result = None
         self._diff_bayesian_data = None
         if self._g2_batch_coordinator is not None:
@@ -4262,12 +4272,16 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         from .threading.batch_bayesian_coordinator import BatchBayesianCoordinator
 
         if fit_func_name == "single":
-            self._g2_bayesian_model_func = single_exp_func
+            self._g2_batch_model_func = single_exp_func
         else:
-            self._g2_bayesian_model_func = double_exp_func
+            self._g2_batch_model_func = double_exp_func
 
-        # Store metadata for assembly — capture target xf now so results
-        # are stored on the correct file even if selection changes during batch
+        # Store metadata for assembly — capture target xf and range settings
+        # now so results are stored on the correct file even if selection
+        # changes during batch, and so we can detect t_range/q_range drift
+        p = self.check_g2_number()
+        self._g2_batch_q_range = (p[0], p[1])
+        self._g2_batch_t_range = (p[2], p[3])
         self._g2_batch_q_arr = q_arr
         self._g2_batch_t_el = t_el
         self._g2_batch_fit_func_name = fit_func_name
@@ -4339,7 +4353,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
             q_arr=self._g2_batch_q_arr,
             t_el=self._g2_batch_t_el,
             fit_func_name=self._g2_batch_fit_func_name,
-            model_func=self._g2_bayesian_model_func,
+            model_func=self._g2_batch_model_func,
         )
 
         # Store on the target file captured at batch start — DUAL STORAGE
@@ -4424,24 +4438,46 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
             )
             return
 
-        # Get raw G2 data for overlay
+        # Get raw G2 data for overlay — use the SAME ranges that were used
+        # during fitting so scatter points align with fit curves
         from .module import g2mod
 
         p = self.check_g2_number()
+        current_q_range = (p[0], p[1])
+        current_t_range = (p[2], p[3])
+
+        # Warn if the user changed q_range or t_range since fitting
+        fit_q_range = self._g2_batch_q_range
+        fit_t_range = self._g2_batch_t_range
+        if fit_q_range is not None and fit_t_range is not None:
+            if current_q_range != fit_q_range or current_t_range != fit_t_range:
+                logger.warning(
+                    "Plot range differs from fit range "
+                    "(fit q=%.4g-%.4g t=%.4g-%.4g, "
+                    "current q=%.4g-%.4g t=%.4g-%.4g); "
+                    "using fit-time ranges for consistency",
+                    *fit_q_range, *fit_t_range,
+                    *current_q_range, *current_t_range,
+                )
+                self.statusbar.showMessage(
+                    "Range changed since fit — using fit-time ranges", 3000
+                )
+                current_q_range = fit_q_range
+                current_t_range = fit_t_range
+
         result = g2mod.get_data(
-            xf_list, q_range=(p[0], p[1]), t_range=(p[2], p[3])
+            xf_list, q_range=current_q_range, t_range=current_t_range
         )
         if result[0] is False:
             self.statusbar.showMessage("No G2 data available", 2000)
             return
-        _, tel, g2, g2_err, _ = result
+        _, tel, g2, _g2_err, _ = result
         g2_data = np.asarray(g2[0], dtype=np.float64)
-        g2_err_data = np.asarray(g2_err[0], dtype=np.float64)
         data_t_el = np.asarray(tel[0], dtype=np.float64)
 
         from .fitting.viz import plot_bayesian_all_q
 
-        fig = plot_bayesian_all_q(bfs, g2_data, g2_err_data, data_t_el=data_t_el)
+        fig = plot_bayesian_all_q(bfs, g2_data, data_t_el=data_t_el)
         if fig is None:
             return
 
@@ -4519,6 +4555,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
                 bfs["fit_val"],
                 bfs["q_val"],
                 bfs["fit_func"],
+                failed_mask=bfs.get("failed_mask"),
             )
         except Exception:
             logger.exception("CSV export failed")
