@@ -153,8 +153,9 @@ class TestQMapCacheNoCopy:
         """compute_transmission_qmap must not call copy.deepcopy on cache hit."""
         from xpcsviewer.simplemask import qmap as qmap_module
 
-        # Inspect the source: deep copy should be gone
-        src = inspect.getsource(qmap_module.compute_transmission_qmap)
+        # Use inspect.unwrap to bypass any __wrapped__ poisoning from other tests
+        func = inspect.unwrap(qmap_module.compute_transmission_qmap)
+        src = inspect.getsource(func)
         assert "deepcopy" not in src, (
             "compute_transmission_qmap must not deep-copy the cached result (BUG-055). "
             "Return the cached dict directly since the arrays are already frozen."
@@ -164,7 +165,8 @@ class TestQMapCacheNoCopy:
         """compute_reflection_qmap must not call copy.deepcopy on cache hit."""
         from xpcsviewer.simplemask import qmap as qmap_module
 
-        src = inspect.getsource(qmap_module.compute_reflection_qmap)
+        func = inspect.unwrap(qmap_module.compute_reflection_qmap)
+        src = inspect.getsource(func)
         assert "deepcopy" not in src, (
             "compute_reflection_qmap must not deep-copy the cached result (BUG-055). "
             "Return the cached dict directly since the arrays are already frozen."

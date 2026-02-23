@@ -6,6 +6,22 @@ See the full changelog in `CHANGELOG.md <https://github.com/imewei/xpcsviewer/bl
 Recent Changes
 --------------
 
+Version 0.1.3 (2026-02-22)
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- Batch all-Q Bayesian fitting with GUI integration (``bayesian_assembly.py``)
+- NLSQ 0.6.0 adoption: R², adjusted R², RMSE, MAE, AIC, BIC metrics
+- Confidence intervals and prediction intervals for fitted parameters
+- SVG icon system with theme-aware ``currentColor`` replacement and caching
+- Category tab bar with separator lines between tab groups
+- 12-tab layout: G2 View, G2 Fit, G2 Map as separate tabs
+- Q-bin spinbox with per-Q navigation in G2 Fit tab
+- Compact layouts for G2 Fit, Diffusion, and G2 Map tabs
+- JAX ``TracerArrayConversionError`` fix in NLSQ model functions
+- Exception-based validation (``XPCSValidationError``)
+- Tutorial notebooks rewritten as self-contained with synthetic data
+- Performance: hot path optimization for G2, SAXS 1D, twotime modules
+
 Version 0.1.2 (2026-01-06)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 

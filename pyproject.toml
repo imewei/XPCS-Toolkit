@@ -206,6 +206,7 @@ exclude = ["tests*", "docs*", "validation*", "scripts*"]
     "docs/images/saxs2d.png",
     "docs/images/stability.png",
     "docs/images/twotime.png",
+    "docs/images/qmap.png",
 ]
 "share/xpcsviewer/test_artifacts" = [
     "tests/artifacts/offscreen_snap.png",

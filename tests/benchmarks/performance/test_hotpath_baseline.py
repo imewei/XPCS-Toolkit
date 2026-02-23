@@ -235,11 +235,6 @@ class TestQmapBaseline:
 
     def test_qmap_transmission_timing(self, qmap_geometry: dict, benchmark) -> None:
         """Benchmark transmission Q-map (512x512)."""
-        from xpcsviewer.simplemask.qmap import compute_transmission_qmap
-
-        # Clear LRU cache to measure actual computation
-        compute_transmission_qmap.__wrapped__ = None  # noqa: won't work, ignore
-
         g = qmap_geometry
 
         def run():
