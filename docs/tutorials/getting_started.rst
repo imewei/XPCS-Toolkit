@@ -22,7 +22,7 @@ Install xpcsviewer in a virtual environment:
 
    uv sync           # If using uv (recommended)
    # or
-   pip install xpcsviewer
+   pip install xpcsviewer-gui
 
 You will also need an XPCS HDF5 result file produced by a correlator (e.g.,
 the APS multi-tau or two-time pipeline). The file follows the NeXus convention.

@@ -52,7 +52,7 @@ Quick Start
 .. code-block:: bash
 
    # Install
-   pip install xpcsviewer
+   pip install xpcsviewer-gui
 
    # Launch GUI
    xpcsviewer-gui /path/to/hdf/data
