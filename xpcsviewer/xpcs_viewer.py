@@ -4154,6 +4154,16 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
 
         self._g2_bayesian_data = (x, y, yerr, q_idx, q_value)
 
+        warmup = self.sb_g2_bayesian_warmup.value()
+        samples = self.sb_g2_bayesian_samples.value()
+        chains = self.sb_g2_bayesian_chains.value()
+        logger.info(
+            "Fit Q-%d: spinbox values warmup=%d, samples=%d, chains=%d",
+            q_idx,
+            warmup,
+            samples,
+            chains,
+        )
         worker = BayesianFitWorker(
             fit_func=fit_func,
             x=x,
@@ -4162,6 +4172,11 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
             q_index=q_idx,
             q_value=q_value,
             context="g2",
+            sampler_kwargs={
+                "num_warmup": warmup,
+                "num_samples": samples,
+                "num_chains": chains,
+            },
         )
         worker.signals.finished.connect(self._on_g2_bayesian_finished)
         worker.signals.error.connect(self._on_g2_bayesian_error)
@@ -4789,10 +4804,16 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
 
         self._diff_bayesian_data = (q, tau, tau_err)
 
+        # Forward MCMC config from G2 Bayesian spinboxes (shared controls).
+        sampler_kwargs: dict = {
+            "num_warmup": self.sb_g2_bayesian_warmup.value(),
+            "num_samples": self.sb_g2_bayesian_samples.value(),
+            "num_chains": self.sb_g2_bayesian_chains.value(),
+        }
+
         # Convert UI bounds (NLSQ b-convention) to Bayesian alpha-convention.
         # NLSQ: a * x^b  (b < 0 for diffusion)
         # Bayesian: tau0 * q^(-alpha)  (alpha > 0), so alpha = -b
-        sampler_kwargs: dict = {}
         try:
             a_min = float(self.tauq_amin.text())
             a_max = float(self.tauq_amax.text())

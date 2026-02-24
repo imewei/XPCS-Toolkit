@@ -158,10 +158,17 @@ def _run_mcmc(
         kernel_kwargs["init_strategy"] = init_strategy
     kernel = NUTS(model, **kernel_kwargs)
 
-    # Create MCMC instance — run chains sequentially on single-device systems
-    # to avoid NumPyro's "not enough devices" UserWarning.
+    # Create MCMC instance — use vectorized (vmap) on single-device systems
+    # to run chains in parallel, or pmap when multiple devices are available.
     chain_method = (
-        "sequential" if jax.local_device_count() < config.num_chains else "parallel"
+        "vectorized" if jax.local_device_count() < config.num_chains else "parallel"
+    )
+    logger.info(
+        "MCMC config: warmup=%d, samples=%d, chains=%d, chain_method=%s",
+        config.num_warmup,
+        config.num_samples,
+        config.num_chains,
+        chain_method,
     )
     mcmc = MCMC(
         kernel,
@@ -176,7 +183,17 @@ def _run_mcmc(
     # this directly", but num_steps IS available via extra_fields.
     mcmc.run(rng_key, *model_args, extra_fields=("num_steps", "energy"))
 
-    return mcmc, mcmc.get_samples()
+    samples = mcmc.get_samples()
+    first_key = next(iter(samples))
+    n_draws = len(samples[first_key])
+    logger.info(
+        "MCMC completed: %d total draws (%d chains x %d samples), chain_method=%s",
+        n_draws,
+        config.num_chains,
+        config.num_samples,
+        chain_method,
+    )
+    return mcmc, samples
 
 
 def compute_bfmi(arviz_data) -> float | None:
@@ -658,10 +675,28 @@ def run_power_law_fit(
     if bounds is not None:
         default_bounds.update(bounds)
     bounds = default_bounds
-    p0 = {
-        "tau0": 1.0,
-        "alpha": np.clip(2.0, bounds["alpha"][0], bounds["alpha"][1]),
-    }
+
+    # Data-driven initial guess via log-log linear regression.
+    # power_law: tau = tau0 * q^(-alpha) → log(tau) = log(tau0) - alpha*log(q)
+    pos = (q > 0) & (tau > 0)
+    if np.sum(pos) >= 2:
+        log_q = np.log(q[pos])
+        log_tau = np.log(tau[pos])
+        slope, intercept = np.polyfit(log_q, log_tau, 1)
+        p0_alpha = float(np.clip(-slope, bounds["alpha"][0], bounds["alpha"][1]))
+        p0_tau0 = float(
+            np.clip(np.exp(intercept), bounds["tau0"][0], bounds["tau0"][1])
+        )
+        logger.info(
+            "Power law p0 from log-log regression: tau0=%.3g, alpha=%.3f",
+            p0_tau0,
+            p0_alpha,
+        )
+    else:
+        p0_tau0 = 1.0
+        p0_alpha = float(np.clip(2.0, bounds["alpha"][0], bounds["alpha"][1]))
+
+    p0 = {"tau0": p0_tau0, "alpha": p0_alpha}
 
     nlsq_result = nlsq_optimize(
         power_law_func,
@@ -676,12 +711,29 @@ def run_power_law_fit(
     )
     nlsq_init = nlsq_result.params
 
-    # Determine warm-start viability
+    # Determine warm-start viability.
+    # For sparse data (typical of power-law / diffusion fits), NLSQ
+    # diagnostics are often unavailable (health_score=0), even when
+    # the optimizer converged.  Accept warm-start when NLSQ converged
+    # and chi² is finite, falling back only on true failure.
     use_warm_start = nlsq_result.is_healthy
+    if (
+        not use_warm_start
+        and nlsq_result.converged
+        and np.isfinite(nlsq_result.chi_squared)
+    ):
+        logger.info(
+            "NLSQ diagnostics unavailable (health_score=%d) but fit converged "
+            "(chi2=%.3g); accepting warm-start",
+            nlsq_result.health_score,
+            nlsq_result.chi_squared,
+        )
+        use_warm_start = True
     if not use_warm_start:
         health_score = nlsq_result.health_score
         logger.warning(
-            f"NLSQ warm-start unreliable (health_score={health_score}); "
+            f"NLSQ warm-start unreliable (health_score={health_score}, "
+            f"converged={nlsq_result.converged}); "
             "falling back to init_to_uniform with boosted warmup"
         )
         config.num_warmup = int(config.num_warmup * 1.5)
