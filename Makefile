@@ -467,8 +467,8 @@ verify:
 	@echo "$(BOLD)Step 2/3: Type checking$(RESET)"
 	@$(RUN_CMD) mypy $(PACKAGE_NAME) || (echo "$(RED)Type check failed!$(RESET)" && exit 1)
 	@echo ""
-	@echo "$(BOLD)Step 3/3: Full test suite (excl. GUI)$(RESET)"
-	@$(RUN_CMD) $(PYTEST) --ignore=$(TEST_DIR)/gui_interactive/ $(PARALLEL_OPTS) || (echo "$(RED)Tests failed!$(RESET)" && exit 1)
+	@echo "$(BOLD)Step 3/3: Full test suite (excl. GUI & GPU)$(RESET)"
+	@$(RUN_CMD) $(PYTEST) --ignore=$(TEST_DIR)/gui_interactive/ -m "not gpu" $(PARALLEL_OPTS) || (echo "$(RED)Tests failed!$(RESET)" && exit 1)
 	@echo ""
 	@echo "$(BOLD)$(GREEN)====== ALL CHECKS PASSED - SAFE TO PUSH ======$(RESET)"
 

@@ -24,11 +24,6 @@ class TestQmapGradients:
 
     def test_qmap_gradient_wrt_beam_center(self) -> None:
         """Test gradient of Q-map with respect to beam center."""
-        from xpcsviewer.backends import get_backend
-
-        backend = get_backend()
-        if backend.name != "jax":
-            pytest.skip("Gradient computation only applies to JAX backend")
 
         # Define a simple Q-map-like function for testing gradients
         def q_at_point(center_x, center_y, px, py, pix_dim, det_dist, k0):
@@ -58,11 +53,6 @@ class TestQmapGradients:
 
     def test_qmap_gradient_wrt_detector_distance(self) -> None:
         """Test gradient of Q-map with respect to detector distance."""
-        from xpcsviewer.backends import get_backend
-
-        backend = get_backend()
-        if backend.name != "jax":
-            pytest.skip("Gradient computation only applies to JAX backend")
 
         def q_at_point(det_dist, center_x, center_y, px, py, pix_dim, k0):
             """Compute Q at a single point given detector distance."""
@@ -89,11 +79,6 @@ class TestQmapGradients:
 
     def test_qmap_value_and_grad(self) -> None:
         """Test value_and_grad for Q-map computation."""
-        from xpcsviewer.backends import get_backend
-
-        backend = get_backend()
-        if backend.name != "jax":
-            pytest.skip("Gradient computation only applies to JAX backend")
 
         def total_q_squared(center_x, center_y, pixels, pix_dim, det_dist, k0):
             """Sum of Q^2 over all pixels (differentiable loss function)."""
@@ -128,11 +113,10 @@ class TestQmapGradients:
 
     def test_backend_grad_wrapper(self) -> None:
         """Test backend.grad wrapper for gradient computation."""
-        from xpcsviewer.backends import get_backend
+        from xpcsviewer.backends import get_backend, set_backend
 
+        set_backend("jax")
         backend = get_backend()
-        if backend.name != "jax":
-            pytest.skip("Gradient computation only applies to JAX backend")
 
         def simple_loss(x):
             return backend.sum(x**2)
@@ -151,11 +135,10 @@ class TestQmapGradients:
 
     def test_backend_value_and_grad_wrapper(self) -> None:
         """Test backend.value_and_grad wrapper."""
-        from xpcsviewer.backends import get_backend
+        from xpcsviewer.backends import get_backend, set_backend
 
+        set_backend("jax")
         backend = get_backend()
-        if backend.name != "jax":
-            pytest.skip("Gradient computation only applies to JAX backend")
 
         def simple_loss(x):
             return backend.sum(x**2)
@@ -183,11 +166,6 @@ class TestGradientNumericalAccuracy:
 
     def test_gradient_finite_difference_comparison(self) -> None:
         """Test JAX gradients match finite difference approximation."""
-        from xpcsviewer.backends import get_backend
-
-        backend = get_backend()
-        if backend.name != "jax":
-            pytest.skip("Gradient comparison only applies to JAX backend")
 
         def loss_fn(x):
             return jnp.sum(jnp.sin(x) * jnp.cos(x))
@@ -212,11 +190,6 @@ class TestGradientNumericalAccuracy:
 
     def test_second_order_gradients(self) -> None:
         """Test second-order gradients (Hessian)."""
-        from xpcsviewer.backends import get_backend
-
-        backend = get_backend()
-        if backend.name != "jax":
-            pytest.skip("Hessian computation only applies to JAX backend")
 
         def simple_loss(x):
             return jnp.sum(x**3)

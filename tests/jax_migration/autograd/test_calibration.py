@@ -25,11 +25,6 @@ class TestBeamCenterCalibration:
 
     def test_beam_center_optimization_simple(self) -> None:
         """Test simple beam center optimization with synthetic data."""
-        from xpcsviewer.backends import get_backend
-
-        backend = get_backend()
-        if backend.name != "jax":
-            pytest.skip("Calibration optimization only applies to JAX backend")
 
         # True beam center
         true_cx, true_cy = 128.5, 127.3
@@ -66,11 +61,6 @@ class TestBeamCenterCalibration:
 
     def test_beam_center_optimization_with_noise(self) -> None:
         """Test beam center optimization with noisy data."""
-        from xpcsviewer.backends import get_backend
-
-        backend = get_backend()
-        if backend.name != "jax":
-            pytest.skip("Calibration optimization only applies to JAX backend")
 
         # True beam center
         true_cx, true_cy = 256.0, 256.0
@@ -119,11 +109,6 @@ class TestBeamCenterCalibration:
         This tests that gradient-based optimization COULD work, not that it converges.
         Actual optimization may need specialized optimizers for ill-conditioned problems.
         """
-        from xpcsviewer.backends import get_backend
-
-        backend = get_backend()
-        if backend.name != "jax":
-            pytest.skip("Calibration optimization only applies to JAX backend")
 
         # True parameters
         true_dist = 5000.0  # mm
@@ -180,11 +165,6 @@ class TestCalibrationConvergence:
 
     def test_convergence_rate(self) -> None:
         """Test that optimization converges at expected rate."""
-        from xpcsviewer.backends import get_backend
-
-        backend = get_backend()
-        if backend.name != "jax":
-            pytest.skip("Convergence test only applies to JAX backend")
 
         # Simple quadratic loss (known convergence properties)
         true_params = jnp.array([10.0, 20.0])
@@ -213,11 +193,6 @@ class TestCalibrationConvergence:
 
     def test_saddle_point_escape(self) -> None:
         """Test that optimization can escape saddle points."""
-        from xpcsviewer.backends import get_backend
-
-        backend = get_backend()
-        if backend.name != "jax":
-            pytest.skip("Saddle point test only applies to JAX backend")
 
         # Loss with saddle point at origin: x^2 - y^2
         # Adding regularization to make it bounded
@@ -261,12 +236,6 @@ class TestOptimixIntegration:
             import optimistix as optx
         except ImportError:
             pytest.skip("Optimistix not installed")
-
-        from xpcsviewer.backends import get_backend
-
-        backend = get_backend()
-        if backend.name != "jax":
-            pytest.skip("Optimistix test only applies to JAX backend")
 
         # Simple quadratic
         true_params = jnp.array([5.0, -3.0])

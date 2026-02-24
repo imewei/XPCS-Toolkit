@@ -16,6 +16,7 @@ except (ImportError, RuntimeError):
     GPU_AVAILABLE = False
 
 
+@pytest.mark.gpu
 @pytest.mark.skipif(not GPU_AVAILABLE, reason="GPU not available")
 class TestGPULaunch:
     """Tests for GPU system launch."""
@@ -105,6 +106,7 @@ class TestGPUDetection:
 class TestGPUMemoryInfo:
     """Tests for GPU memory information."""
 
+    @pytest.mark.gpu
     @pytest.mark.skipif(not GPU_AVAILABLE, reason="GPU not available")
     def test_memory_info_available(self, monkeypatch) -> None:
         """Test memory info is available on GPU systems."""

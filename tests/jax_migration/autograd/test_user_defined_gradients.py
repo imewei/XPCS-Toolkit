@@ -24,11 +24,6 @@ class TestUserDefinedGradients:
 
     def test_custom_loss_function_gradient(self) -> None:
         """Test gradient of user-defined loss function."""
-        from xpcsviewer.backends import get_backend
-
-        backend = get_backend()
-        if backend.name != "jax":
-            pytest.skip("User-defined gradients only apply to JAX backend")
 
         # User-defined custom loss
         def custom_loss(params, data, target):
@@ -54,11 +49,6 @@ class TestUserDefinedGradients:
 
     def test_custom_g2_model_gradient(self) -> None:
         """Test gradient for custom g2 correlation model."""
-        from xpcsviewer.backends import get_backend
-
-        backend = get_backend()
-        if backend.name != "jax":
-            pytest.skip("Custom model gradients only apply to JAX backend")
 
         def g2_model(params, tau):
             """g2 = baseline + contrast * exp(-2*(tau/tau_c)^beta)"""
@@ -88,11 +78,6 @@ class TestUserDefinedGradients:
 
     def test_value_and_grad_custom_function(self) -> None:
         """Test value_and_grad for custom function."""
-        from xpcsviewer.backends import get_backend
-
-        backend = get_backend()
-        if backend.name != "jax":
-            pytest.skip("Value and grad only applies to JAX backend")
 
         def custom_objective(x):
             """User-defined objective with multiple terms."""
@@ -123,11 +108,10 @@ class TestGradientAPIUsability:
 
     def test_backend_grad_with_argnums(self) -> None:
         """Test backend.grad with multiple arguments."""
-        from xpcsviewer.backends import get_backend
+        from xpcsviewer.backends import get_backend, set_backend
 
+        set_backend("jax")
         backend = get_backend()
-        if backend.name != "jax":
-            pytest.skip("Gradient API only applies to JAX backend")
 
         def multi_arg_loss(x, y, z):
             return jnp.sum(x**2) + 2 * jnp.sum(y**2) + 3 * jnp.sum(z**2)
@@ -150,11 +134,6 @@ class TestGradientAPIUsability:
 
     def test_jit_combined_with_grad(self) -> None:
         """Test JIT compilation combined with gradient computation."""
-        from xpcsviewer.backends import get_backend
-
-        backend = get_backend()
-        if backend.name != "jax":
-            pytest.skip("JIT+grad only applies to JAX backend")
 
         def loss_fn(params):
             return jnp.sum(params**2)
@@ -177,11 +156,6 @@ class TestGradientAPIUsability:
 
     def test_gradient_through_control_flow(self) -> None:
         """Test gradients work through JAX control flow primitives."""
-        from xpcsviewer.backends import get_backend
-
-        backend = get_backend()
-        if backend.name != "jax":
-            pytest.skip("Control flow gradients only apply to JAX backend")
 
         def loss_with_cond(x):
             """Loss with conditional logic."""
@@ -202,11 +176,6 @@ class TestGradientEdgeCases:
 
     def test_gradient_nan_handling(self) -> None:
         """Test gradient handling of NaN values."""
-        from xpcsviewer.backends import get_backend
-
-        backend = get_backend()
-        if backend.name != "jax":
-            pytest.skip("NaN handling only applies to JAX backend")
 
         def safe_log_loss(x):
             """Log loss with safe handling."""
@@ -223,11 +192,6 @@ class TestGradientEdgeCases:
 
     def test_gradient_large_array(self) -> None:
         """Test gradient computation on large arrays."""
-        from xpcsviewer.backends import get_backend
-
-        backend = get_backend()
-        if backend.name != "jax":
-            pytest.skip("Large array gradients only apply to JAX backend")
 
         def large_array_loss(x):
             return jnp.mean(x**2)
@@ -252,11 +216,6 @@ class TestGradientEdgeCases:
 
     def test_gradient_matrix_operations(self) -> None:
         """Test gradients through matrix operations match finite differences."""
-        from xpcsviewer.backends import get_backend
-
-        backend = get_backend()
-        if backend.name != "jax":
-            pytest.skip("Matrix gradients only apply to JAX backend")
 
         def matrix_loss(A):
             """Loss involving matrix multiplication."""
