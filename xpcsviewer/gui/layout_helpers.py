@@ -262,8 +262,15 @@ def rearrange_g2_fitting_buttons(main_window: QWidget) -> None:
 
     # Remove from gridLayout_12 (preserves native window handle)
     for w in (
-        btn_bayesian, btn_diagnosis, btn_all_q, btn_plot_all,
-        sb_qidx, sb_workers, sb_warmup, sb_samples, sb_chains,
+        btn_bayesian,
+        btn_diagnosis,
+        btn_all_q,
+        btn_plot_all,
+        sb_qidx,
+        sb_workers,
+        sb_warmup,
+        sb_samples,
+        sb_chains,
     ):
         if w is not None:
             grid_12.removeWidget(w)
@@ -277,25 +284,20 @@ def rearrange_g2_fitting_buttons(main_window: QWidget) -> None:
     bayes_layout.setContentsMargins(2, 2, 2, 2)
     bayes_layout.setSpacing(1)
 
-    # Row 1: Config spinboxes (Q-bin, Warmup, Samples, Chains, Workers)
-    config_row = QHBoxLayout()
-    config_row.setSpacing(2)
-    _add_labeled_spinbox(config_row, "Q-bin:", sb_qidx)
-    _add_labeled_spinbox(config_row, "Warmup:", sb_warmup)
-    _add_labeled_spinbox(config_row, "Samples:", sb_samples)
-    _add_labeled_spinbox(config_row, "Chains:", sb_chains)
-    _add_labeled_spinbox(config_row, "Workers:", sb_workers)
-    config_row.addStretch()
-    bayes_layout.addLayout(config_row)
-
-    # Row 2: 4 action buttons in a horizontal row
-    btn_row = QHBoxLayout()
-    btn_row.setSpacing(2)
-    for btn in (btn_bayesian, btn_diagnosis, btn_all_q, btn_plot_all):
+    # Single row: config spinboxes + action buttons
+    row = QHBoxLayout()
+    row.setSpacing(2)
+    _add_labeled_spinbox(row, "Q-bin:", sb_qidx)
+    _add_labeled_spinbox(row, "Warmup:", sb_warmup)
+    _add_labeled_spinbox(row, "Samples:", sb_samples)
+    _add_labeled_spinbox(row, "Chains:", sb_chains)
+    _add_labeled_spinbox(row, "Workers:", sb_workers)
+    for btn in (btn_bayesian, btn_diagnosis):
         if btn is not None:
             btn.setMinimumSize(0, 28)
-            btn_row.addWidget(btn)
-    bayes_layout.addLayout(btn_row)
+            row.addWidget(btn)
+    row.addStretch()
+    bayes_layout.addLayout(row)
 
     # --- Insert below the NLSQ grid in gridLayout_14 --------------------
     grid_14.addWidget(bayes_group, 3, 0, 1, 1)

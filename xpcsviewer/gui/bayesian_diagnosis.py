@@ -17,7 +17,13 @@ import matplotlib
 import numpy as np
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg
 from matplotlib.figure import Figure
-from qtpy.QtWidgets import QGridLayout
+from qtpy.QtWidgets import (
+    QFileDialog,
+    QGridLayout,
+    QHBoxLayout,
+    QPushButton,
+    QScrollArea,
+)
 
 from xpcsviewer.gui.qt_compat import (
     QLabel,
@@ -136,21 +142,61 @@ class BayesianDiagnosisWindow(QMainWindow):
         pp_layout = QVBoxLayout(self._pp_widget)
         self._pp_canvas = FigureCanvasQTAgg(Figure(figsize=(7, 4)))
         pp_layout.addWidget(self._pp_canvas)
+        # Export buttons for Tab 1
+        pp_btn_row = QHBoxLayout()
+        pp_btn_row.addStretch()
+        self._btn_export_fit_plot = QPushButton("Export Plot")
+        self._btn_export_fit_plot.setToolTip("Save fit + 95% CI plot as PNG/PDF")
+        self._btn_export_fit_plot.clicked.connect(self._export_fit_plot)
+        pp_btn_row.addWidget(self._btn_export_fit_plot)
+        self._btn_export_fit_data = QPushButton("Export Data")
+        self._btn_export_fit_data.setToolTip(
+            "Save raw data, fitted curve, 95% CI, and residuals as CSV"
+        )
+        self._btn_export_fit_data.clicked.connect(self._export_fit_data)
+        pp_btn_row.addWidget(self._btn_export_fit_data)
+        pp_layout.addLayout(pp_btn_row)
         self._tabs.addTab(self._pp_widget, "Fit + 95% CI")
 
         # Tab 2: ArviZ diagnostics (2x3 grid inside scroll area)
+        diag_container = QWidget()
+        diag_container_layout = QVBoxLayout(diag_container)
+        diag_container_layout.setContentsMargins(0, 0, 0, 0)
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
         self._diag_widget = QWidget()
         self._diag_layout = QGridLayout(self._diag_widget)
+        self._diag_layout.setContentsMargins(4, 4, 4, 4)
+        self._diag_layout.setSpacing(6)
         self._arviz_canvases: dict[str, FigureCanvasQTAgg] = {}
         for idx, name in enumerate(self._ARVIZ_PLOT_NAMES):
-            canvas = FigureCanvasQTAgg(Figure(figsize=(4, 3)))
+            canvas = FigureCanvasQTAgg(Figure(figsize=(5, 4)))
+            canvas.setMinimumSize(420, 360)
             canvas.setSizePolicy(
                 QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding
             )
             row, col = divmod(idx, 3)
             self._diag_layout.addWidget(canvas, row, col)
             self._arviz_canvases[name] = canvas
-        self._tabs.addTab(self._diag_widget, "MCMC Diagnostics")
+        scroll.setWidget(self._diag_widget)
+        diag_container_layout.addWidget(scroll)
+        # Export buttons for Tab 2
+        diag_btn_row = QHBoxLayout()
+        diag_btn_row.addStretch()
+        self._btn_export_diag_plots = QPushButton("Export Plots")
+        self._btn_export_diag_plots.setToolTip(
+            "Save all 6 diagnostic plots as individual PNGs"
+        )
+        self._btn_export_diag_plots.clicked.connect(self._export_diag_plots)
+        diag_btn_row.addWidget(self._btn_export_diag_plots)
+        self._btn_export_traces = QPushButton("Export Traces")
+        self._btn_export_traces.setToolTip(
+            "Save ArviZ InferenceData as netCDF for further analysis"
+        )
+        self._btn_export_traces.clicked.connect(self._export_traces)
+        diag_btn_row.addWidget(self._btn_export_traces)
+        diag_container_layout.addLayout(diag_btn_row)
+        self._tabs.addTab(diag_container, "MCMC Diagnostics")
 
         # --- Convergence summary ---
         self._summary = ConvergenceSummaryWidget()
@@ -169,6 +215,13 @@ class BayesianDiagnosisWindow(QMainWindow):
         # Store axis labels (customisable per context)
         self._xlabel = "x"
         self._ylabel = "y"
+        # Store latest results for export
+        self._result: FitResult | None = None
+        self._model_func: Any = None
+        self._x_data: np.ndarray | None = None
+        self._y_data: np.ndarray | None = None
+        self._yerr: np.ndarray | None = None
+        self._q_value: float | None = None
 
     # ------------------------------------------------------------------
     # Public API
@@ -209,6 +262,12 @@ class BayesianDiagnosisWindow(QMainWindow):
         if title is not None:
             self.setWindowTitle(title)
 
+        self._result = result
+        self._model_func = model_func
+        self._x_data = np.asarray(x_data)
+        self._y_data = np.asarray(y_data)
+        self._yerr = np.asarray(yerr) if yerr is not None else None
+        self._q_value = q_value
         self._update_posterior_predictive(
             result, model_func, x_data, y_data, yerr, q_value
         )
@@ -253,9 +312,13 @@ class BayesianDiagnosisWindow(QMainWindow):
         else:
             ax.scatter(x_data, y_data, c="k", s=20, alpha=0.7, label="Data", zorder=3)
 
-        # Use the fitting visualization (it will plot on our existing axes)
-        # We pass ax so it draws on top of our data
-        x_pred = np.linspace(x_data.min(), x_data.max(), 200)
+        # Log-spaced prediction for smooth curve on log-x axis
+        pos = x_data[x_data > 0]
+        if len(pos) < 2:
+            x_pred = np.linspace(x_data.min(), x_data.max(), 200)
+        else:
+            x_pred = np.geomspace(pos.min(), pos.max(), 200)
+
         plot_posterior_predictive(
             result,
             model_func,
@@ -266,7 +329,6 @@ class BayesianDiagnosisWindow(QMainWindow):
         )
 
         # Remove the duplicate "Data" scatter that plot_posterior_predictive adds
-        # by keeping only the first Data legend entry
         handles, labels = ax.get_legend_handles_labels()
         seen: set[str] = set()
         unique_handles, unique_labels = [], []
@@ -277,6 +339,7 @@ class BayesianDiagnosisWindow(QMainWindow):
                 unique_labels.append(lbl)
         ax.legend(unique_handles, unique_labels)
 
+        ax.set_xscale("log")
         ax.set_xlabel(self._xlabel)
         ax.set_ylabel(self._ylabel)
         subtitle = f"Q = {q_value:.4g}" if q_value is not None else ""
@@ -293,14 +356,14 @@ class BayesianDiagnosisWindow(QMainWindow):
             logger.warning("No ArviZ data available — skipping diagnostic plots")
             return
 
+        import matplotlib.pyplot as plt
+
         var_names = list(result.samples.keys())
         try:
             figures = generate_arviz_diagnostics(result.arviz_data, var_names=var_names)
         except Exception:
             logger.exception("Failed to generate ArviZ diagnostics")
             return
-
-        import matplotlib.pyplot as plt
 
         for name, canvas in self._arviz_canvases.items():
             fig = figures.get(name)
@@ -322,9 +385,130 @@ class BayesianDiagnosisWindow(QMainWindow):
             old_fig = canvas.figure
             canvas.figure = fig
             fig.set_canvas(canvas)
-            fig.tight_layout()
+            # Reduce font sizes so labels fit within the canvas
+            for ax in fig.get_axes():
+                ax.tick_params(labelsize=8)
+                ax.xaxis.label.set_size(9)
+                ax.yaxis.label.set_size(9)
+                if ax.get_title():
+                    ax.title.set_size(9)
+            fig.tight_layout(pad=1.2, h_pad=1.0, w_pad=1.0)
             canvas.draw()
             plt.close(old_fig)
+
+    # ------------------------------------------------------------------
+    # Export handlers
+    # ------------------------------------------------------------------
+
+    def _export_fit_plot(self) -> None:
+        """Save the Fit + 95% CI plot to file."""
+        path, _ = QFileDialog.getSaveFileName(
+            self,
+            "Export Fit Plot",
+            "bayesian_fit.png",
+            "PNG (*.png);;PDF (*.pdf);;SVG (*.svg)",
+        )
+        if not path:
+            return
+        fig = self._pp_canvas.figure
+        fig.savefig(path, dpi=300, bbox_inches="tight")
+        logger.info("Exported fit plot to %s", path)
+
+    def _export_fit_data(self) -> None:
+        """Save raw data, fitted curve, 95% CI, and residuals as CSV."""
+        if (
+            self._result is None
+            or self._x_data is None
+            or self._y_data is None
+            or self._model_func is None
+        ):
+            return
+        path, _ = QFileDialog.getSaveFileName(
+            self,
+            "Export Fit Data",
+            "bayesian_fit.csv",
+            "CSV (*.csv)",
+        )
+        if not path:
+            return
+        import csv
+        from pathlib import Path
+
+        result = self._result
+        param_names = result.param_names or list(result.samples.keys())
+        n_samples = len(result.samples[param_names[0]])
+        x = self._x_data
+        model = self._model_func
+
+        # Compute posterior predictions at each data point
+        predictions = np.empty((n_samples, len(x)))
+        for i in range(n_samples):
+            params = [result.samples[name][i] for name in param_names]
+            predictions[i] = model(x, *params)
+
+        y_fit = np.median(predictions, axis=0)
+        ci_lower = np.percentile(predictions, 2.5, axis=0)
+        ci_upper = np.percentile(predictions, 97.5, axis=0)
+        residual = self._y_data - y_fit
+
+        with Path(path).open("w", newline="") as f:
+            writer = csv.writer(f)
+            # Header with metadata comment
+            f.write(f"# Q = {self._q_value}\n" if self._q_value is not None else "")
+            header = [
+                self._xlabel,
+                self._ylabel,
+                "yerr",
+                "fit_median",
+                "ci_lower_2.5%",
+                "ci_upper_97.5%",
+                "residual",
+            ]
+            writer.writerow(header)
+            for j in range(len(x)):
+                row = [
+                    f"{x[j]:.6g}",
+                    f"{self._y_data[j]:.6g}",
+                    f"{self._yerr[j]:.6g}" if self._yerr is not None else "",
+                    f"{y_fit[j]:.6g}",
+                    f"{ci_lower[j]:.6g}",
+                    f"{ci_upper[j]:.6g}",
+                    f"{residual[j]:.6g}",
+                ]
+                writer.writerow(row)
+
+        logger.info("Exported fit data (%d points) to %s", len(x), path)
+
+    def _export_diag_plots(self) -> None:
+        """Save all 6 diagnostic plots as individual files."""
+        from pathlib import Path
+
+        dir_path = QFileDialog.getExistingDirectory(self, "Select Export Directory")
+        if not dir_path:
+            return
+        out = Path(dir_path)
+        for name, canvas in self._arviz_canvases.items():
+            fig = canvas.figure
+            filepath = out / f"mcmc_{name}.png"
+            fig.savefig(str(filepath), dpi=300, bbox_inches="tight")
+        logger.info(
+            "Exported %d diagnostic plots to %s", len(self._arviz_canvases), out
+        )
+
+    def _export_traces(self) -> None:
+        """Save ArviZ InferenceData as netCDF."""
+        if self._result is None or self._result.arviz_data is None:
+            return
+        path, _ = QFileDialog.getSaveFileName(
+            self,
+            "Export Traces (netCDF)",
+            "mcmc_traces.nc",
+            "netCDF (*.nc)",
+        )
+        if not path:
+            return
+        self._result.arviz_data.to_netcdf(path)
+        logger.info("Exported ArviZ traces to %s", path)
 
     def closeEvent(self, event: Any) -> None:
         """Clean up matplotlib figures to avoid memory leaks."""

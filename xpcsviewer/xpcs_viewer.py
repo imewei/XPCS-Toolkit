@@ -339,7 +339,9 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
 
         self.btn_g2_bayesian_all = QPushButton("Fit All Q", self.groupBox_2)
         self.btn_g2_bayesian_all.setObjectName("btn_g2_bayesian_all")
-        self.gridLayout_12.addWidget(self.btn_g2_bayesian_all, 0, 12, 1, 1)
+        self.btn_g2_bayesian_all.setVisible(
+            False
+        )  # Hidden from GUI; kept for scripting
 
         self.sb_g2_bayesian_workers = QSpinBox(self.groupBox_2)
         self.sb_g2_bayesian_workers.setObjectName("sb_g2_bayesian_workers")
@@ -376,6 +378,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         self.btn_g2_plot_all_q = QPushButton("Plot All Q", self.groupBox_2)
         self.btn_g2_plot_all_q.setObjectName("btn_g2_plot_all_q")
         self.btn_g2_plot_all_q.setEnabled(False)  # Enabled after batch completes
+        self.btn_g2_plot_all_q.setVisible(False)  # Hidden from GUI; kept for scripting
         self.btn_g2_plot_all_q.clicked.connect(self._plot_g2_bayesian_all)
 
         # Disable Bayesian buttons if NumPyro is not available
