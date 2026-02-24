@@ -331,7 +331,16 @@ class ViewerKernel(FileLocator):
 
     @log_timing(threshold_ms=500)
     def plot_g2map(
-        self, g2map_hdl, qmap_hdl, g2_hdl, rows=None, qbin=0, normalization=False
+        self,
+        g2map_hdl,
+        qmap_hdl,
+        g2_hdl,
+        rows=None,
+        qbin=0,
+        normalization=False,
+        g2map_cmap="jet",
+        g2map_scale="linear",
+        qmap_cmap="tab20b",
     ):
         """
         Generate G2 2D map visualization.
@@ -353,6 +362,12 @@ class ViewerKernel(FileLocator):
             Index of Q-bin for profile display
         normalization : bool
             If True, apply baseline normalization to G2 data
+        g2map_cmap : str
+            Matplotlib colormap name for the G2 map (default: "jet")
+        g2map_scale : str
+            Scale type for the G2 map: "linear" or "log" (default: "linear")
+        qmap_cmap : str
+            Matplotlib colormap name for the Q-map (default: "tab20b")
 
         Notes
         -----
@@ -364,10 +379,17 @@ class ViewerKernel(FileLocator):
             return
 
         xf_obj = xf_list[0]
-        # Set G2 map image
-        g2map_hdl.setImage(ensure_numpy(xf_obj.get_offseted_g2(normalization).T))
-        # Set cropped Q-map image
+
+        # G2 map image with optional log scale
+        g2_data = ensure_numpy(xf_obj.get_offseted_g2(normalization).T)
+        if g2map_scale == "log":
+            g2_data = np.log10(np.clip(g2_data, 1e-10, None))
+        g2map_hdl.setImage(g2_data)
+        g2map_hdl.setColorMap(pg.colormap.getFromMatplotlib(g2map_cmap))
+
+        # Cropped Q-map image
         qmap_hdl.setImage(ensure_numpy(xf_obj.get_cropped_qmap("dqmap")))
+        qmap_hdl.setColorMap(pg.colormap.getFromMatplotlib(qmap_cmap))
 
         # Plot G2 profile for selected Q-bin
         g2_hdl.clear()

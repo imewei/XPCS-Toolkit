@@ -2170,7 +2170,10 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         g2map_layout = QtWidgets.QVBoxLayout(g2map_widget)
         g2map_label = QtWidgets.QLabel("G2 Map")
         g2map_label.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
-        self.pg_g2map = pg.ImageView()
+        g2map_plot = pg.PlotItem(
+            labels={"bottom": "Q-bin index", "left": "Delay index"}
+        )
+        self.pg_g2map = pg.ImageView(view=g2map_plot)
         self.pg_g2map.ui.histogram.hide()
         self.pg_g2map.ui.roiBtn.hide()
         self.pg_g2map.ui.menuBtn.hide()
@@ -2229,6 +2232,28 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
 
         controls_layout.addStretch()
 
+        # G2 map colormap
+        _g2map_cmaps = ["jet", "hot", "plasma", "viridis", "magma", "gray"]
+        controls_layout.addWidget(QtWidgets.QLabel("G2 cmap:"))
+        self.cb_g2map_cmap = QtWidgets.QComboBox()
+        self.cb_g2map_cmap.addItems(_g2map_cmaps)
+        self.cb_g2map_cmap.setCurrentText("jet")
+        controls_layout.addWidget(self.cb_g2map_cmap)
+
+        # G2 map scale (linear / log)
+        controls_layout.addWidget(QtWidgets.QLabel("Scale:"))
+        self.cb_g2map_scale = QtWidgets.QComboBox()
+        self.cb_g2map_scale.addItems(["linear", "log"])
+        controls_layout.addWidget(self.cb_g2map_scale)
+
+        # Q-map colormap
+        _qmap_cmaps = ["tab20b", "jet", "hot", "plasma", "viridis", "magma", "gray"]
+        controls_layout.addWidget(QtWidgets.QLabel("Q cmap:"))
+        self.cb_g2map_qmap_cmap = QtWidgets.QComboBox()
+        self.cb_g2map_qmap_cmap.addItems(_qmap_cmaps)
+        self.cb_g2map_qmap_cmap.setCurrentText("tab20b")
+        controls_layout.addWidget(self.cb_g2map_qmap_cmap)
+
         # Plot button
         self.btn_plot_g2map = QtWidgets.QPushButton("Update G2 Map")
         self.btn_plot_g2map.clicked.connect(self.plot_g2_map)
@@ -2241,6 +2266,11 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
 
         # Connect Q-bin spinbox to update profile
         self.spinBox_g2map_qbin.valueChanged.connect(self._update_g2map_profile)
+
+        # Changing colormap or scale re-plots immediately (same as SAXS2D)
+        self.cb_g2map_cmap.currentIndexChanged.connect(self.plot_g2_map)
+        self.cb_g2map_scale.currentIndexChanged.connect(self.plot_g2_map)
+        self.cb_g2map_qmap_cmap.currentIndexChanged.connect(self.plot_g2_map)
 
         logger.info("g2 map tab initialized")
 
@@ -2618,11 +2648,29 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
             if hasattr(self, "checkBox_g2map_normalize")
             else False
         )
+        g2map_cmap = (
+            self.cb_g2map_cmap.currentText()
+            if hasattr(self, "cb_g2map_cmap")
+            else "jet"
+        )
+        g2map_scale = (
+            self.cb_g2map_scale.currentText()
+            if hasattr(self, "cb_g2map_scale")
+            else "linear"
+        )
+        qmap_cmap = (
+            self.cb_g2map_qmap_cmap.currentText()
+            if hasattr(self, "cb_g2map_qmap_cmap")
+            else "tab20b"
+        )
 
         kwargs = {
             "rows": rows,
             "qbin": qbin,
             "normalize": normalize,
+            "g2map_cmap": g2map_cmap,
+            "g2map_scale": g2map_scale,
+            "qmap_cmap": qmap_cmap,
         }
 
         if dryrun:
@@ -2644,6 +2692,9 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
                 rows=rows,
                 qbin=qbin,
                 normalization=normalize,
+                g2map_cmap=g2map_cmap,
+                g2map_scale=g2map_scale,
+                qmap_cmap=qmap_cmap,
             )
             self.statusbar.showMessage("G2 map updated successfully")
         except Exception as e:
