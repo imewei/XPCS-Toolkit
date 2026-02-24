@@ -4685,16 +4685,29 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
             )
             return
 
-        # Extract fresh data for the current Q-bin
+        # Extract fresh data for the current Q-bin (uses q_idx from spinbox
+        # which we already captured above — safe from race conditions)
         extracted = self._extract_g2_for_bayesian()
         if extracted is None:
             return
-        x, y, yerr, _, q_value, _ = extracted
+        x, y, yerr, extracted_q_idx, q_value, _ = extracted
+
+        # Guard against spinbox change between our read and extraction
+        if extracted_q_idx != q_idx:
+            fit_result = self._g2_bayesian_results.get(extracted_q_idx)
+            if fit_result is None:
+                self.statusbar.showMessage(
+                    f"No Bayesian fit for Q-bin {extracted_q_idx}", 3000
+                )
+                return
+            q_idx = extracted_q_idx
+
         self._g2_bayesian_data = (x, y, yerr, q_idx, q_value)
         self._update_g2_diagnosis(fit_result, x, y, yerr, q_value)
 
     def _update_g2_diagnosis(self, fit_result, x, y, yerr, q_value):
         """Create/update the G2 diagnosis window with current results."""
+        from .fitting.models import double_exp_func, single_exp_func
         from .gui.bayesian_diagnosis import BayesianDiagnosisWindow
 
         if self._g2_diagnosis_window is None:
@@ -4705,11 +4718,26 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
                 lambda: setattr(self, "_g2_diagnosis_window", None)
             )
 
+        # Resolve model_func from fit_result's param_names to avoid stale
+        # reference if user changed fitting function between fit and diagnosis
+        param_names = fit_result.param_names
+        if set(param_names) == {"tau", "baseline", "contrast"}:
+            model_func = single_exp_func
+        elif set(param_names) == {"tau1", "tau2", "baseline", "contrast1", "contrast2"}:
+            model_func = double_exp_func
+        else:
+            model_func = self._g2_bayesian_model_func
+        if model_func is None:
+            self.statusbar.showMessage(
+                "No model function available — re-fit first", 3000
+            )
+            return
+
         win = self._g2_diagnosis_window
         win.set_axis_labels("Delay time (s)", "g2")
         win.update_results(
             result=fit_result,
-            model_func=self._g2_bayesian_model_func,
+            model_func=model_func,
             x_data=x,
             y_data=y,
             yerr=yerr,
