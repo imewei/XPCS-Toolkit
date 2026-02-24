@@ -121,6 +121,11 @@ def configure_test_environment():
     # Set Qt platform for headless testing
     os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
+    # Force CPU-only JAX for parallel test execution (pytest-xdist).
+    # Multiple workers competing for GPU memory causes CUDA_ERROR_OPERATING_SYSTEM.
+    # Tests needing GPU can override via monkeypatch.
+    os.environ.setdefault("JAX_PLATFORMS", "cpu")
+
     # Enable test mode to disable background threads
     os.environ["XPCS_TEST_MODE"] = "1"
 
