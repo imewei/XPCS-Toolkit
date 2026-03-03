@@ -197,12 +197,12 @@ def _run_mcmc(
 
 
 def compute_bfmi(arviz_data) -> float | None:
-    """Compute BFMI from ArviZ InferenceData.
+    """Compute BFMI from ArviZ DataTree.
 
     Parameters
     ----------
-    arviz_data : az.InferenceData
-        InferenceData object from MCMC sampling
+    arviz_data : DataTree
+        ArviZ DataTree object from MCMC sampling
 
     Returns
     -------
@@ -242,7 +242,7 @@ def _build_fit_result(
     # dict key iteration matches the model function's signature.
     samples_np = {k: np.asarray(samples[k]) for k in param_names if k in samples}
 
-    # Convert to ArviZ InferenceData first (needed for summary and BFMI)
+    # Convert to ArviZ DataTree first (needed for summary and BFMI)
     arviz_data = az.from_numpyro(mcmc)
 
     # Get diagnostics

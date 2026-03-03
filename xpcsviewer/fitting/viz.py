@@ -189,7 +189,7 @@ def export_bayesian_diagnostics(
     path: Path | str,
     bayesian_results: dict[int, Any],
 ) -> None:
-    """Export ArviZ InferenceData to netCDF for all Q-bins.
+    """Export ArviZ DataTree to netCDF for all Q-bins.
 
     Parameters
     ----------

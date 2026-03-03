@@ -492,8 +492,8 @@ def generate_arviz_diagnostics(
 
     Parameters
     ----------
-    trace : az.InferenceData
-        ArviZ InferenceData object from MCMC
+    trace : DataTree
+        ArviZ DataTree object from MCMC
     var_names : list, optional
         Parameter names to plot (default: all)
     output_dir : str or Path, optional

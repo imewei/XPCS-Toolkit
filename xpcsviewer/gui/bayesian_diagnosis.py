@@ -190,7 +190,7 @@ class BayesianDiagnosisWindow(QMainWindow):
         diag_btn_row.addWidget(self._btn_export_diag_plots)
         self._btn_export_traces = QPushButton("Export Traces")
         self._btn_export_traces.setToolTip(
-            "Save ArviZ InferenceData as netCDF for further analysis"
+            "Save ArviZ data as netCDF for further analysis"
         )
         self._btn_export_traces.clicked.connect(self._export_traces)
         diag_btn_row.addWidget(self._btn_export_traces)
@@ -495,7 +495,7 @@ class BayesianDiagnosisWindow(QMainWindow):
         )
 
     def _export_traces(self) -> None:
-        """Save ArviZ InferenceData as netCDF."""
+        """Save ArviZ DataTree as netCDF."""
         if self._result is None or self._result.arviz_data is None:
             return
         path, _ = QFileDialog.getSaveFileName(

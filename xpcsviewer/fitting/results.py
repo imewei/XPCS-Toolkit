@@ -16,11 +16,11 @@ logger = logging.getLogger(__name__)
 import numpy as np
 
 if TYPE_CHECKING:
-    import arviz as az
     import pandas as pd
     from nlsq.diagnostics import ModelHealthReport
     from nlsq.result import CurveFitResult
     from numpy.typing import ArrayLike
+    from xarray import DataTree
 
 
 def safe_version(package_name: str) -> str:
@@ -752,7 +752,7 @@ class FitResult:
         Convergence diagnostics
     nlsq_init : dict[str, float]
         NLSQ warm-start point estimates
-    arviz_data : InferenceData
+    arviz_data : DataTree
         ArviZ-compatible data for plotting (FR-015)
     config : SamplerConfig | None
         Sampler configuration used for this fit (per Technical Guidelines)
@@ -765,7 +765,7 @@ class FitResult:
     summary: pd.DataFrame | None = None
     diagnostics: FitDiagnostics = field(default_factory=FitDiagnostics)
     nlsq_init: dict[str, float] = field(default_factory=dict)
-    arviz_data: az.InferenceData | None = None
+    arviz_data: DataTree | None = None
     config: SamplerConfig | None = None  # Per Technical Guidelines
     x: np.ndarray | None = None  # For data_metadata
 
