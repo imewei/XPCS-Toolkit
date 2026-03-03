@@ -1,4 +1,3 @@
-import os
 import random
 import time
 
@@ -197,10 +196,14 @@ class MplCanvas(FigureCanvasQTAgg):
         self.obj = None
 
     def adjust_canvas_size(self, num_col, num_row):
-        t = self.parent().parent().parent()
+        t = self.parent()
+        if t is not None:
+            t = t.parent()
+        if t is not None:
+            t = t.parent()
         aspect = 1 / 1.618 if t is None else t.height() / self.width()
 
-        min_size = t.height() - 20
+        min_size = (t.height() - 20) if t is not None else 400
         width = self.width()
         canvas_size = max(min_size, int(width / num_col * aspect * num_row))
         self.setMinimumSize(QtCore.QSize(0, canvas_size))

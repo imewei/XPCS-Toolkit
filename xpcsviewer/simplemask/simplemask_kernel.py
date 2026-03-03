@@ -15,9 +15,9 @@ import pyqtgraph as pg
 from pyqtgraph.Qt import QtCore
 
 from xpcsviewer.backends._conversions import ensure_numpy
+from xpcsviewer.fileIO.qmap_utils import Q_UNIT_DISPLAY
 from xpcsviewer.simplemask.area_mask import MaskAssemble
 from xpcsviewer.simplemask.pyqtgraph_mod import ImageViewROI, LineROI
-from xpcsviewer.fileIO.qmap_utils import Q_UNIT_DISPLAY
 from xpcsviewer.simplemask.qmap import compute_qmap
 from xpcsviewer.simplemask.utils import (
     check_consistency,
@@ -212,10 +212,14 @@ class SimpleMaskKernel:
 
         mask = self.mask.astype(np.uint8)
 
-        with h5py.File(save_name, "w") as hf:
-            hf.create_dataset("mask", data=mask, compression="lzf")
-            hf.attrs["shape"] = self.shape
-            hf.attrs["version"] = __version__
+        try:
+            with h5py.File(save_name, "w") as hf:
+                hf.create_dataset("mask", data=mask, compression="lzf")
+                hf.attrs["shape"] = self.shape
+                hf.attrs["version"] = __version__
+        except OSError as e:
+            logger.error(f"Failed to save mask to {save_name}: {e}")
+            raise
 
     def load_mask(self, fname: str, key: str = "mask") -> bool:
         """Load mask from HDF5 file.

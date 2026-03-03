@@ -344,7 +344,8 @@ def _rearrange_diffusion_controls(main_window: QWidget) -> None:
             widgets[child_widget.objectName()] = child_widget
         else:
             child_layout = item.layout()
-            layouts[child_layout.objectName()] = child_layout
+            if child_layout is not None:
+                layouts[child_layout.objectName()] = child_layout
 
     grid_21 = layouts.get("gridLayout_21")  # a / b / q params
     grid_15 = layouts.get("gridLayout_15")  # plot_type + offset

@@ -3,7 +3,6 @@ import json
 import os
 import shutil
 import time
-import traceback
 from pathlib import Path
 
 # Third-party imports
@@ -28,6 +27,7 @@ from .backends._conversions import ensure_numpy
 
 # Import async components
 from .constants import MIN_AVERAGING_FILES
+from .fileIO.qmap_utils import Q_UNIT_DISPLAY
 from .gui.layout_helpers import apply_all_layout_improvements
 from .gui.shortcuts.shortcut_manager import ShortcutManager
 
@@ -54,7 +54,6 @@ from .threading.async_kernel import AsyncDataPreloader, AsyncViewerKernel
 from .threading.progress_manager import ProgressManager
 from .utils import get_logger, log_system_info, sanitize_path, setup_exception_logging
 from .utils.log_utils import RateLimitedLogger
-from .fileIO.qmap_utils import Q_UNIT_DISPLAY
 from .viewer_kernel import ViewerKernel
 from .viewer_ui import Ui_mainWindow as Ui
 
@@ -517,7 +516,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
     def _init_toolbar(self):
         """Initialize the main toolbar with custom SVG icons."""
         from xpcsviewer.gui.icons import get_icon, set_icon_color
-        from xpcsviewer.gui.qt_compat import Qt, QSize, QToolBar, QToolButton
+        from xpcsviewer.gui.qt_compat import QSize, Qt, QToolBar, QToolButton
 
         # Set initial icon color from current theme
         text_color = self.theme_manager.get_color("text_primary")
@@ -1891,6 +1890,8 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         return None
 
     def saxs2d_mouseMoved(self, pos):
+        if self.vk is None:
+            return
         if self.pg_saxs.view.sceneBoundingRect().contains(pos):
             mouse_point = self.pg_saxs.getView().mapSceneToView(pos)
             x, y = int(mouse_point.x()), int(mouse_point.y())
@@ -2282,8 +2283,8 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         """
         from xpcsviewer.gui.icons import get_icon
         from xpcsviewer.gui.widgets.category_tab_bar import (
-            CategorySeparatorFilter,
             TAB_INDEX_CATEGORY,
+            CategorySeparatorFilter,
         )
 
         tab_labels = [
@@ -2779,6 +2780,8 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         return None
 
     def show_dataset(self):
+        if self.vk is None:
+            return
         rows = self.get_selected_rows()
         self.tree = self.vk.get_pg_tree(rows)
         if self.tree:
@@ -3791,7 +3794,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
 
     def reorder_target(self, direction="up"):
         rows = self.get_selected_rows()
-        if len(rows) != 1 or len(self.vk.target) <= 1:
+        if self.vk is None or len(rows) != 1 or len(self.vk.target) <= 1:
             return
         idx = self.vk.reorder_target(rows[0], direction)
         self.list_view_target.setCurrentIndex(idx)
