@@ -14,7 +14,7 @@ build:
 sphinx:
   configuration: docs/conf.py
   builder: html
-  fail_on_warning: false
+  fail_on_warning: true
 
 # Install the package (all runtime deps are in core dependencies now)
 # plus docs-specific build tools from requirements.txt

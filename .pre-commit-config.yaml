@@ -90,7 +90,8 @@ exclude: |
     dist/.*|
     build/.*|
     docs/_build/.*|
-    .*\.pyc
+    .*\.pyc|
+    xpcsviewer_qa_report\.md
   )$
 
 ci:
