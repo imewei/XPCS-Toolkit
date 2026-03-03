@@ -413,7 +413,9 @@ Test 4 (single-chunk path): agrees with reference PASS
 | 2026-03-03 | 3 | team-lead | OPT-004: wired callers at lines 579, 795 to `_compute_saxs_log_jax`; restored `_compute_saxs_log_standard` as pure-NumPy fallback | `xpcs_file.py` |
 | 2026-03-03 | 4 | systems | Phase 4 verification: BUG-001 fix (5 tests, PASS, max_err=0.00); OPT-004 (max_err=2.38e-07, 4.51× at 2048×2048); 812/813 tests pass | OPTIMIZATION_LEDGER.md |
 | 2026-03-03 | 4 | team-lead | Independently confirmed failing test passes in isolation (1 passed, ordering issue, pre-existing); kernel logic verified directly (dtype=float32, allclose rtol=1e-5, all-zeros→0.0) | — |
+| 2026-03-03 | 4 | debugger | Final Phase 4 sign-off: BUG-001 beamstop scenario max_err=0.00; OPT-004 no-recompile (20 calls max=19.8ms), JIT cache reuse confirmed (310ms compile → 1.5ms cache); 10/10 correctness + 22/22 unit tests all PASS | — |
 | 2026-03-03 | 5 | systems | Drafted OPTIMIZATION_REPORT.md (Phase 5 pre-draft); OPT-003 investigation complete — 5 defects found in existing parallel path, fix plan sent to lead | `OPTIMIZATION_REPORT.md` |
+| 2026-03-03 | 5 | team-lead | Final commit b658cc5: all 5 source files + OPTIMIZATION_LEDGER.md + OPTIMIZATION_REPORT.md. 161/161 core+analysis tests pass. Swarm complete. | all |
 
 ## Phase 4 — Verification Summary
 
