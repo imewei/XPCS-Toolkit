@@ -540,7 +540,6 @@ class LockFreeStateValidator:
 
     def cleanup_destroyed_objects(self) -> int:
         """Clean up state records for destroyed objects."""
-        len(self._state_records)
         live_object_ids = {id(obj) for obj in self._tracked_objects if obj is not None}
 
         # Remove records for destroyed objects

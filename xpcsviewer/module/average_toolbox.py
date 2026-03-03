@@ -321,9 +321,9 @@ class AverageToolbox(QtCore.QRunnable):
                 if flag:
                     for key in fields:
                         if key != "saxs_1d":
-                            data = xf.__getattr__(key)
+                            data = getattr(xf, key)
                         else:
-                            data = xf.__getattr__("saxs_1d")["data_raw"]
+                            data = getattr(xf, "saxs_1d")["data_raw"]
                         if result[key] is None:
                             result[key] = data.copy()  # Ensure we own the data
                             mask[m] = 1
@@ -473,9 +473,9 @@ class AverageToolbox(QtCore.QRunnable):
                     file_result = {}
                     for key in fields:
                         if key != "saxs_1d":
-                            file_result[key] = xf.__getattr__(key)
+                            file_result[key] = getattr(xf, key)
                         else:
-                            file_result[key] = xf.__getattr__("saxs_1d")["data_raw"]
+                            file_result[key] = getattr(xf, "saxs_1d")["data_raw"]
                     batch_results.append(file_result)
                 else:
                     batch_results.append(None)

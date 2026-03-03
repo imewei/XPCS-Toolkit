@@ -2911,6 +2911,8 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
             return None
 
     def select_bkgfile(self):
+        if self.vk is None:
+            return
         path = self.work_dir.text()
         f = QtWidgets.QFileDialog.getOpenFileName(
             self, caption="select the file for background subtraction", dir=path
@@ -2922,7 +2924,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
             return
 
     def remove_avg_job(self):
-        if self.vk.avg_worker is None:
+        if self.vk is None or self.vk.avg_worker is None:
             return
         self.vk.remove_job()
 
@@ -3002,6 +3004,8 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         self.update_box(self.vk.target, mode="target")
 
     def update_avg_info(self):
+        if self.vk is None:
+            return
         worker = self.vk.avg_worker
         if worker is None:
             self.statusbar.showMessage("no averaging job exists", 1000)
@@ -3021,6 +3025,8 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         self.timer.start()
 
     def start_avg_job(self):
+        if self.vk is None:
+            return
         worker = self.vk.avg_worker
         if worker is None:
             self.statusbar.showMessage("no averaging job exists", 1000)
@@ -3044,6 +3050,8 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         self.update_avg_info()
 
     def avg_kill_job(self):
+        if self.vk is None:
+            return
         worker = self.vk.avg_worker
         if worker is None:
             self.statusbar.showMessage("no averaging job exists", 1000)
@@ -3059,6 +3067,8 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         self.tree.show()
 
     def show_avg_jobinfo(self):
+        if self.vk is None:
+            return
         worker = self.vk.avg_worker
         if worker is None:
             logger.info("no averaging job to show info for")
