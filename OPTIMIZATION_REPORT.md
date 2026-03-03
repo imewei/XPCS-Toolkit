@@ -78,7 +78,7 @@ use the JAX path with NumPy fallback.
   handles all-zero arrays.
 - `_compute_saxs_log_jax()` (lines 843–861): instance wrapper; falls back to
   `_compute_saxs_log_standard` on any JAX failure.
-- Both call sites (lines 579, 795) now use `_compute_saxs_log_jax`.
+- Both call sites (lines 581, 797) now use `_compute_saxs_log_jax`.
 
 **Benchmark (5 warmup + 50 timed runs, GPU):**
 
