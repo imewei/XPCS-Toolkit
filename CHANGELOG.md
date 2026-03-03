@@ -32,6 +32,7 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
+- ArviZ `InferenceData` migrated to xarray `DataTree` for ArviZ 1.0+ compatibility (`FitResult.arviz_data`, `compute_bfmi`, `generate_arviz_diagnostics`, `bayesian_diagnosis`)
 - 59 ruff auto-fixes: unused imports, `Callable` migration, unnecessary `else` after `return`
 
 ## [0.1.3] - 2026-02-23

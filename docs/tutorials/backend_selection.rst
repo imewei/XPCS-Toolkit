@@ -4,10 +4,6 @@ Backend Selection: JAX vs NumPy
 This tutorial explains the backend abstraction layer, how to switch between
 JAX and NumPy backends, and when to use each for optimal performance.
 
-.. contents:: In this tutorial
-   :local:
-   :depth: 2
-
 Architecture Overview
 ----------------------
 

@@ -181,7 +181,7 @@ flowchart TD
 
     subgraph Results["Result Objects"]
         FR["FitResult<br/>samples + diagnostics"]
-        AZ["ArviZ InferenceData<br/>Posterior plots"]
+        AZ["xarray DataTree<br/>Posterior plots"]
     end
 
     G2 --> NF

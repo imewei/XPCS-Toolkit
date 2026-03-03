@@ -4,10 +4,6 @@ Cookbook: Common Patterns and Recipes
 This page collects short, self-contained recipes for common xpcsviewer tasks.
 Each recipe can be copied and adapted to your workflow.
 
-.. contents:: Recipes
-   :local:
-   :depth: 1
-
 Loading Multiple Files
 -----------------------
 
@@ -319,7 +315,7 @@ Define a custom model and fit with NLSQ:
            "contrast": (0.0, 1.0),
            "beta": (0.1, 2.0),
        },
-       preset="robust",
+       workflow='auto_global',
        stability="auto",
    )
 

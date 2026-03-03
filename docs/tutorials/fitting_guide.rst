@@ -5,10 +5,6 @@ This tutorial covers the full fitting pipeline for XPCS G2 correlation
 functions: from quick NLSQ point estimates to full Bayesian inference with
 NumPyro NUTS.
 
-.. contents:: In this tutorial
-   :local:
-   :depth: 2
-
 Overview of the Fitting Pipeline
 ----------------------------------
 
@@ -132,7 +128,7 @@ Use presets, stability checks, and fallback strategies for difficult data:
        x=t, y=g2_noise, yerr=g2_err,
        p0={"tau": 1.0, "baseline": 1.0, "contrast": 0.3},
        bounds={"tau": (1e-6, 1e6), "baseline": (0.5, 2.0), "contrast": (0, 1)},
-       preset="robust",          # Multi-start with 5 starting points
+       workflow='auto_global',    # Multi-start global optimization
        stability="auto",         # Automatic numerical fixes
        fallback=True,            # Fallback strategies for hard problems
        compute_diagnostics=True, # Enable model health report
@@ -241,8 +237,8 @@ Highest Density Intervals
 ArviZ Integration
 ^^^^^^^^^^^^^^^^^^
 
-The result contains an ArviZ ``InferenceData`` object for advanced
-diagnostics:
+The result contains an xarray ``DataTree`` object (ArviZ 1.0+ format)
+for advanced diagnostics:
 
 .. code-block:: python
 
