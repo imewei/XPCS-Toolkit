@@ -23,7 +23,7 @@ All notable changes to this project will be documented in this file.
 - P2: `self.vk` accessed without None check in 11 GUI methods (averaging, session, saxs2d, etc.)
 - P2: `xf.__getattr__(key)` bypasses `@property` lazy-load in average_toolbox (use `getattr`)
 - P2: `assert` on inconsistent C2 sampling rates replaced with warning + fallback
-- P2: Division by zero in C2 statistics for 1×1 matrices
+- P2: Division by zero in C2 statistics for 1x1 matrices
 - P2: `saxs_2d_data.size` crash when saxs_2d_data is None
 - P2: Off-by-one in `get_qbin_label` bounds check (`>` → `>=`)
 - P2: `_connection_lock` held across `yield` in EnhancedHDF5Reader blocks all concurrent threads
