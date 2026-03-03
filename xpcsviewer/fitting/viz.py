@@ -74,7 +74,10 @@ def plot_bayesian_all_q(
     num_q = len(q_val)
 
     fig, ax = plt.subplots(figsize=(10, 7))
-    norm = Normalize(vmin=q_val.min(), vmax=q_val.max())
+    q_min, q_max = q_val.min(), q_val.max()
+    if q_min == q_max:
+        q_max = q_min + 1.0
+    norm = Normalize(vmin=q_min, vmax=q_max)
     cmap = plt.get_cmap("viridis")
 
     # --- Batch data points with a single scatter call ---

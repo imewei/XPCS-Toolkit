@@ -38,7 +38,8 @@ class ThreadingIntegrator:
                 main_window, "statusBar", None
             )
             if statusbar:
-                self.progress_manager.set_statusbar(statusbar())
+                widget = statusbar() if callable(statusbar) else statusbar
+                self.progress_manager.set_statusbar(widget)
 
         logger.info("ThreadingIntegrator initialized")
 

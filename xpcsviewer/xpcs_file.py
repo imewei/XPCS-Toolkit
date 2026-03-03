@@ -16,7 +16,6 @@ from __future__ import annotations
 import hashlib
 import os
 import re
-import time
 import uuid
 import warnings
 
@@ -89,8 +88,8 @@ _cached_enhanced_hdf5_reader = None
 
 def _get_cached_singletons():
     """Return cached (memory_manager, memory_predictor, lazy_loader, hdf5_reader)."""
-    global _cached_memory_manager, _cached_memory_predictor  # noqa: PLW0603
-    global _cached_lazy_loader, _cached_enhanced_hdf5_reader  # noqa: PLW0603
+    global _cached_memory_manager, _cached_memory_predictor
+    global _cached_lazy_loader, _cached_enhanced_hdf5_reader
     if _cached_memory_manager is None:
         _cached_memory_manager = get_memory_manager()
         _cached_memory_predictor = get_memory_predictor()
@@ -1654,6 +1653,8 @@ class XpcsFile:
                 self.fit_summary = cached_fit
                 return self.fit_summary
 
+        if bounds is None:
+            raise ValueError("bounds must be provided for G2 fitting")
         assert len(bounds) == 2
         if fit_func == "single":
             assert len(bounds[0]) == SINGLE_EXP_PARAMS, (
@@ -2243,7 +2244,9 @@ class XpcsFile:
         except (IndexError, KeyError, ValueError) as e:
             logger.error(f"Array indexing error in fit_tauq: {e}")
             tauq_result = {"tauq_success": False}
-            self._computation_cache[tauq_cache_key] = tauq_result
+            self._memory_manager.cache_put(
+                tauq_full_cache_key, tauq_result, CacheType.COMPUTATION
+            )
             self.fit_summary.update(tauq_result)
             return self.fit_summary
 

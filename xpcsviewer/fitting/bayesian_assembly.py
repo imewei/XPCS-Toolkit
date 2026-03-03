@@ -97,15 +97,14 @@ def _compute_fit_line(
             fit_result.get_mean("baseline"),
             fit_result.get_mean("contrast"),
         )
-    else:
-        return model_func(
-            fit_x,
-            fit_result.get_mean("tau1"),
-            fit_result.get_mean("tau2"),
-            fit_result.get_mean("baseline"),
-            fit_result.get_mean("contrast1"),
-            fit_result.get_mean("contrast2"),
-        )
+    return model_func(
+        fit_x,
+        fit_result.get_mean("tau1"),
+        fit_result.get_mean("tau2"),
+        fit_result.get_mean("baseline"),
+        fit_result.get_mean("contrast1"),
+        fit_result.get_mean("contrast2"),
+    )
 
 
 def assemble_fit_summary(
@@ -159,13 +158,22 @@ def assemble_fit_summary(
     # NaN default: failed Q-bins stay NaN so downstream isfinite() filters skip them
     fit_val = np.full((num_q, 2, nparams), np.nan)
 
-    # Generate fit_x from t_el range (matching NLSQ behavior)
+    # Generate fit_x from t_el range (matching NLSQ behavior with logspace)
     # Cap at 500 points for visualization — keeps main-thread overhead low
     # even for datasets with thousands of time points and many Q-bins
     _FIT_LINE_POINTS = 500
-    fit_x = np.linspace(
-        t_el.min(), t_el.max(), min(_FIT_LINE_POINTS, max(200, len(t_el) * 2))
-    )
+    if len(t_el) == 0:
+        fit_x = np.array([])
+    elif t_el.min() > 0:
+        fit_x = np.logspace(
+            np.log10(t_el.min()),
+            np.log10(t_el.max()),
+            min(_FIT_LINE_POINTS, max(200, len(t_el) * 2)),
+        )
+    else:
+        fit_x = np.linspace(
+            t_el.min(), t_el.max(), min(_FIT_LINE_POINTS, max(200, len(t_el) * 2))
+        )
     fit_line = np.full((num_q, len(fit_x)), np.nan)
 
     # Track which Q-bins failed (True = failed)

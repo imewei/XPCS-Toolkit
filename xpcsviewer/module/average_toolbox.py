@@ -12,7 +12,7 @@ from shutil import copyfile
 import numpy as np
 import pyqtgraph as pg
 from sklearn.cluster import KMeans as sk_kmeans
-from tqdm import trange
+from tqdm import tqdm, trange
 
 # Qt imports via compatibility layer
 from xpcsviewer.gui.qt_compat import QObject, QtCore, Slot
@@ -558,9 +558,9 @@ def _process_file_for_average(args):
             result = {}
             for key in fields:
                 if key != "saxs_1d":
-                    result[key] = xf.at(key)
+                    result[key] = getattr(xf, key)
                 else:
-                    data = xf.at("saxs_1d")["data_raw"]
+                    data = getattr(xf, "saxs_1d")["data_raw"]
                     scale = xf.abs_cross_section_scale
                     if scale is None:
                         scale = 1.0
@@ -647,7 +647,7 @@ def do_average(
         try:
             with ProcessPoolExecutor(max_workers=n_jobs) as executor:
                 results_parallel = list(
-                    trange(
+                    tqdm(
                         executor.map(_process_file_for_average, args_list),
                         total=tot_num,
                         desc="Processing files",

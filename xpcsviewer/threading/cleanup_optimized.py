@@ -77,6 +77,7 @@ class ObjectRegistry:
 
 # Global object registry
 _object_registry = None
+_singleton_lock = threading.Lock()
 
 
 @log_timing(threshold_ms=100)
@@ -94,7 +95,7 @@ class CleanupScheduler:
 
     def __init__(self):
         self.cleanup_tasks: list[dict[str, Any]] = []
-        self._lock = threading.Lock()
+        self._lock = threading.RLock()
 
     def schedule_cleanup(self, task_name: str, cleanup_func, delay: float = 0.0):
         """Schedule a cleanup task."""
@@ -194,7 +195,9 @@ def get_cleanup_system() -> OptimizedCleanupSystem:
     """Get or create the global cleanup system instance."""
     global _cleanup_system  # noqa: PLW0603 - intentional singleton pattern
     if _cleanup_system is None:
-        _cleanup_system = OptimizedCleanupSystem()
+        with _singleton_lock:
+            if _cleanup_system is None:
+                _cleanup_system = OptimizedCleanupSystem()
     return _cleanup_system
 
 
@@ -247,7 +250,9 @@ def get_object_registry() -> ObjectRegistry:
     """Get or create the global object registry."""
     global _object_registry  # noqa: PLW0603 - intentional singleton pattern
     if _object_registry is None:
-        _object_registry = ObjectRegistry()
+        with _singleton_lock:
+            if _object_registry is None:
+                _object_registry = ObjectRegistry()
     return _object_registry
 
 

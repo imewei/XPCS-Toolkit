@@ -473,9 +473,7 @@ class StabilityPlotWorker(BaseAsyncWorker):
 
         # Import stability module
 
-        # Extract stability data
-        self.plot_kwargs.get("plot_type", 2)
-        self.plot_kwargs.get("plot_norm", 0)
+        # Extract stability data (passed through via self.plot_kwargs)
 
         # Process the stability data
         logger.info(
