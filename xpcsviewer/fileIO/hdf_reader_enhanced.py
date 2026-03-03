@@ -522,21 +522,23 @@ class EnhancedHDF5Reader:
     @contextmanager
     def get_file_connection(self, file_path: str):
         """Get HDF5 file connection with connection pooling."""
+        # Acquire the lock only for the dict lookup / insertion, then
+        # release it before yielding so concurrent threads are not blocked
+        # during the caller's (potentially long) HDF5 I/O.
         with self._connection_lock:
-            if file_path in self._connections:
-                file_obj = self._connections[file_path]
-                if file_obj.id.valid:
-                    yield file_obj
-                    return
-
-            # Create new connection
-            try:
-                file_obj = h5py.File(file_path, "r")
-                self._connections[file_path] = file_obj
-                yield file_obj
-            except Exception as e:
-                logger.error(f"Failed to open HDF5 file {file_path}: {e}")
-                raise
+            file_obj = self._connections.get(file_path)
+            if file_obj is not None and not file_obj.id.valid:
+                del self._connections[file_path]
+                file_obj = None
+            if file_obj is None:
+                try:
+                    file_obj = h5py.File(file_path, "r")
+                    self._connections[file_path] = file_obj
+                except Exception as e:
+                    logger.error(f"Failed to open HDF5 file {file_path}: {e}")
+                    raise
+        # Lock released — yield outside the critical section
+        yield file_obj
 
     @log_timing(threshold_ms=500)
     def read_dataset(
