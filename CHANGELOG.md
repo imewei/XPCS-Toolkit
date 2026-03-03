@@ -4,6 +4,36 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+
+- P0: `trange(executor.map(...))` crash in averaging toolbox (trange expects int, not iterator)
+- P0: `xf.at(key)` crash in averaging toolbox (XpcsFile has no `.at()` method)
+- P1: Twotime HDF5 index off-by-one (`idx[3:]` → `idx[4:]` for `"dq_001"` keys)
+- P1: `_computation_cache` attribute missing in XpcsFile tauq path (use `cache_put` instead)
+- P1: Missing bounds `None` check before `assert len(bounds) == 2` in XpcsFile
+- P1: `np.linspace` used for fit_x on log-x G2 plots in bayesian_assembly (use `np.logspace`)
+- P1: `Normalize(vmin, vmax)` crash when `q_min == q_max` in fitting viz
+- P1: `threading.Lock` deadlock in CleanupScheduler on re-entry (switched to `RLock`)
+- P1: Race condition in singleton initialization for cleanup system (double-checked locking)
+- P1: `_restore_session` crashes when `self.vk` is None due to missing data path
+- P1: Missing leading `/` in `c2_g2` HDF5 path in `aps_8idi.py` key map
+- P2: `statusbar()` call fails when statusbar is a QStatusBar widget, not callable
+- P2: Null parent chain crash in matplot_qt and pyqtgraph plothandlers
+- P2: Null `child_layout` access in `layout_helpers.py`
+- P2: `self.vk` accessed without None check in 11 GUI methods (averaging, session, saxs2d, etc.)
+- P2: `xf.__getattr__(key)` bypasses `@property` lazy-load in average_toolbox (use `getattr`)
+- P2: `assert` on inconsistent C2 sampling rates replaced with warning + fallback
+- P2: Division by zero in C2 statistics for 1×1 matrices
+- P2: `saxs_2d_data.size` crash when saxs_2d_data is None
+- P2: Off-by-one in `get_qbin_label` bounds check (`>` → `>=`)
+- P2: `_connection_lock` held across `yield` in EnhancedHDF5Reader blocks all concurrent threads
+- P2: Unhandled OSError in SimpleMask `save_mask()` h5py write
+- P3: Dead `len()` call in `state_validator.py`
+
+### Changed
+
+- 59 ruff auto-fixes: unused imports, `Callable` migration, unnecessary `else` after `return`
+
 ## [0.1.3] - 2026-02-23
 
 ### Added
