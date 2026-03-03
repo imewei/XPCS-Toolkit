@@ -173,10 +173,51 @@ class SAXSLogProcessor(StreamingProcessor):
     def __init__(self, chunk_size_mb: float = 50.0, epsilon: float = 1e-10):
         super().__init__(chunk_size_mb)
         self.epsilon = epsilon
+        # Set by process_array_streaming before process_chunk is called.
+        self._global_min: float = epsilon
+
+    def process_array_streaming(
+        self, data: np.ndarray, output_dtype: np.dtype | None = None
+    ) -> np.ndarray:
+        """
+        Two-pass streaming log transform that uses the global minimum positive
+        value (across all chunks) as the replacement for non-positive pixels.
+
+        Pass 1 — find global_min across all chunks.
+        Pass 2 — apply log10 with non-positive pixels replaced by global_min.
+
+        This overrides the single-pass base implementation to fix a correctness
+        bug where using a per-chunk local minimum would produce wrong values for
+        non-positive pixels in chunks whose local minimum differs from the global
+        minimum (e.g. detector beamstop surrounded by high-intensity regions).
+        """
+        # Pass 1: find global minimum positive value across all chunks
+        chunk_slices = calculate_chunk_slices(
+            data.shape, data.dtype, self.chunk_size_mb
+        )
+
+        global_min = np.inf
+        for slice_obj in chunk_slices:
+            chunk = data[slice_obj]
+            pos_vals = chunk[chunk > 0]
+            if pos_vals.size > 0:
+                chunk_min = float(pos_vals.min())
+                if chunk_min < global_min:
+                    global_min = chunk_min
+
+        self._global_min = max(global_min if np.isfinite(global_min) else self.epsilon, self.epsilon)
+        logger.debug(f"SAXSLogProcessor global_min = {self._global_min:.6g}")
+
+        # Pass 2: apply log transform using global_min (delegates to base class loop)
+        return super().process_array_streaming(data, output_dtype)
 
     def process_chunk(self, chunk: np.ndarray, chunk_info: ChunkInfo) -> np.ndarray:
         """
         Process SAXS data chunk with logarithmic transformation.
+
+        Uses the global minimum positive value (set by ``process_array_streaming``
+        pass 1) as the replacement for non-positive pixels so that all chunks
+        use a consistent floor value.
 
         Parameters
         ----------
@@ -190,24 +231,10 @@ class SAXSLogProcessor(StreamingProcessor):
         np.ndarray
             Log-transformed chunk
         """
-        # Create a copy to avoid modifying input
-        saxs_chunk = chunk.copy()
-
-        # Apply log transformation with safe handling of non-positive values
+        saxs_chunk = chunk.astype(np.float32)
         positive_mask = saxs_chunk > 0
-
-        if np.any(positive_mask):
-            # Find minimum positive value for replacement
-            min_positive = np.min(saxs_chunk[positive_mask])
-            replacement_value = max(min_positive, self.epsilon)
-        else:
-            replacement_value = self.epsilon
-
-        # Replace non-positive values
-        saxs_chunk[~positive_mask] = replacement_value
-
-        # Apply log10 transformation
-        log_chunk = np.log10(saxs_chunk).astype(np.float32)
+        saxs_chunk[~positive_mask] = self._global_min
+        log_chunk = np.log10(saxs_chunk)
 
         logger.debug(
             f"Processed chunk {chunk_info.index + 1}/{chunk_info.total_chunks}: "

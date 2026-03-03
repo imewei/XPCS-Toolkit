@@ -219,34 +219,35 @@ def pg_plot_stability(
             legend.anchor(itemPos=(1, 0), parentPos=(1, 0), offset=(0, 0))
 
         t.setMouseEnabled(x=False, y=y_auto)
+        # Set axis labels once during setup (hoisted out of the m×n inner loop)
+        t.setLabel("bottom", "tau (s)")
+        t.setLabel("left", "g2")
 
+    color_len = len(colors)
+    symbol_len = len(symbols)
     for m in range(num_data):
         # default base line to be 1.0; used for non-fitting or fit error cases
         baseline_offset = np.ones(num_qval)
 
+        color = colors[frame_indices[m] % color_len]
+        symbol = symbols[frame_indices[m] % symbol_len]
+
         for n in range(num_qval):
-            color = colors[frame_indices[m] % len(colors)]
             label = None
             if plot_type == "multiple":
                 ax = axes[n]
-                title = qbin_labels[n]
                 label = f"frame={int(labels[m])}"
                 if m == 0:
-                    ax.setTitle(title)
+                    ax.setTitle(qbin_labels[n])
             elif plot_type == "single":
                 ax = axes[m]
                 # overwrite color; use the same color for the same set;
-                color = colors[n % len(colors)]
-                title = str(labels[m])
-                ax.setTitle(title)
+                color = colors[n % color_len]
+                if m == 0 or n == 0:
+                    ax.setTitle(str(labels[m]))
             elif plot_type == "single-combined":
                 ax = axes[0]
                 label = str(labels[m]) + qbin_labels[n]
-
-            ax.setLabel("bottom", "tau (s)")
-            ax.setLabel("left", "g2")
-
-            symbol = symbols[frame_indices[m] % len(symbols)]
 
             x = tel
             # normalize baseline
@@ -409,10 +410,16 @@ def pg_plot(
             t.addLegend(offset=(-1, 1), labelTextSize="9pt", verSpacing=-10)
 
         t.setMouseEnabled(x=False, y=y_auto)
+        # Set axis labels once during setup (hoisted out of the m×n inner loop)
+        t.setLabel("bottom", "tau (s)")
+        t.setLabel("left", "g2")
 
+    color_len = len(colors)
+    symbol_len = len(symbols)
     for m in range(num_data):
         # default base line to be 1.0; used for non-fitting or fit error cases
         baseline_offset = np.ones(num_qval)
+        fit_summary = None
         if show_fit:
             # Extract force_refit parameter from kwargs
             force_refit = kwargs.get("force_refit", False)
@@ -456,30 +463,25 @@ def pg_plot(
                         # Fallback to default baseline if shape doesn't match
                         baseline_offset = np.ones(num_qval)
 
+        color = colors[rows[m] % color_len]
+        symbol = symbols[rows[m] % symbol_len]
+
         for n in range(num_qval):
-            color = colors[rows[m] % len(colors)]
             label = None
             if plot_type == "multiple":
                 ax = axes[n]
-                title = labels[m][n]
                 label = xf_list[m].label
                 if m == 0:
-                    ax.setTitle(title)
+                    ax.setTitle(labels[m][n])
             elif plot_type == "single":
                 ax = axes[m]
                 # overwrite color; use the same color for the same set;
-                color = colors[n % len(colors)]
-                title = xf_list[m].label
-                # label = labels[m][n]
-                ax.setTitle(title)
+                color = colors[n % color_len]
+                if n == 0:
+                    ax.setTitle(xf_list[m].label)
             elif plot_type == "single-combined":
                 ax = axes[0]
                 label = xf_list[m].label + labels[m][n]
-
-            ax.setLabel("bottom", "tau (s)")
-            ax.setLabel("left", "g2")
-
-            symbol = symbols[rows[m] % len(symbols)]
 
             x = tel[m]
             # normalize baseline
@@ -654,7 +656,12 @@ def pg_plot_from_data(
         if show_label:
             t.addLegend(offset=(-1, 1), labelTextSize="9pt", verSpacing=-10)
         t.setMouseEnabled(x=False, y=y_auto)
+        # Set axis labels once during setup (hoisted out of the m×n inner loop)
+        t.setLabel("bottom", "tau (s)")
+        t.setLabel("left", "g2")
 
+    color_len = len(colors)
+    symbol_len = len(symbols)
     for m in range(num_data):
         baseline_offset = np.ones(num_qval)
 
@@ -675,29 +682,26 @@ def pg_plot_from_data(
                 except (IndexError, TypeError, KeyError):
                     baseline_offset = np.ones(num_qval)
 
+        color = colors[rows[m] % color_len]
+        symbol = symbols[rows[m] % symbol_len]
+
         for n in range(num_qval):
-            color = colors[rows[m] % len(colors)]
             label = None
             if plot_type == "multiple":
                 ax = axes[n]
-                title = labels[m][n] if labels and m < len(labels) else ""
                 if m == 0:
-                    ax.setTitle(title)
+                    ax.setTitle(labels[m][n] if labels and m < len(labels) else "")
             elif plot_type == "single":
                 ax = axes[m]
-                color = colors[n % len(colors)]
-                title = labels[m][0] if labels and m < len(labels) else ""
-                ax.setTitle(title)
+                color = colors[n % color_len]
+                if n == 0:
+                    ax.setTitle(labels[m][0] if labels and m < len(labels) else "")
             elif plot_type == "single-combined":
                 ax = axes[0]
                 label = labels[m][n] if labels and m < len(labels) else ""
             else:
                 ax = axes[n % len(axes)]
 
-            ax.setLabel("bottom", "tau (s)")
-            ax.setLabel("left", "g2")
-
-            symbol = symbols[rows[m] % len(symbols)]
             x = tel[m]
             y = g2[m][:, n] - baseline_offset[n] + 1.0 + m * offset
             y_err = g2_err[m][:, n]

@@ -385,8 +385,10 @@ class AverageToolbox(QtCore.QRunnable):
         prev_percentage = 0
 
         # Process files in batches
+        # Cap at 4 workers: h5py holds the GIL during reads so extra threads
+        # add context-switch overhead rather than I/O concurrency.
         with ThreadPoolExecutor(
-            max_workers=min(len(batches), multiprocessing.cpu_count())
+            max_workers=min(len(batches), 4)
         ) as executor:
             # Submit batch jobs
             future_to_batch = {}
@@ -415,13 +417,14 @@ class AverageToolbox(QtCore.QRunnable):
                     batch_results, batch_baselines = future.result()
 
                     # Merge batch results into main result
+                    # Write baseline at file's original index m so that
+                    # completion order (as_completed) does not corrupt ordering.
                     for m, (file_result, baseline_val) in zip(
                         batch_indices,
                         zip(batch_results, batch_baselines, strict=False),
                         strict=False,
                     ):
-                        self.baseline[self.ptr] = baseline_val
-                        self.ptr += 1
+                        self.baseline[m] = baseline_val
 
                         if file_result is not None:
                             for key in fields:
@@ -451,11 +454,15 @@ class AverageToolbox(QtCore.QRunnable):
 
                 except Exception as e:
                     logger.error(f"Batch processing failed: {e}")
-                    # Handle batch failure - mark files as invalid
+                    # Handle batch failure - mark files as invalid at their
+                    # original index so ordering matches the successful path.
                     for _m in batch_indices:
-                        self.baseline[self.ptr] = 0
-                        self.ptr += 1
+                        self.baseline[_m] = 0
                         self.signals.values.emit((self.jid, 0))
+
+        # Set ptr to tot_num after all batches complete so update_plot slices
+        # self.baseline[:self.ptr] correctly regardless of completion order.
+        self.ptr = tot_num
 
     def _process_batch(self, batch_indices, fields, validate_g2_baseline, avg_qindex):
         """Process a batch of files"""
@@ -463,6 +470,11 @@ class AverageToolbox(QtCore.QRunnable):
         batch_baselines = []
 
         for m in batch_indices:
+            # DEFECT 1: check kill flag once per file so long batches can be
+            # interrupted without waiting for the entire batch to finish.
+            if self.is_killed.is_set():
+                return None, []
+
             fname = self.model[m]
             try:
                 xf = XF(os.path.join(self.work_dir, fname), fields=fields)
@@ -479,6 +491,11 @@ class AverageToolbox(QtCore.QRunnable):
                     batch_results.append(file_result)
                 else:
                     batch_results.append(None)
+
+                # DEFECT 4: release XpcsFile memory immediately, mirroring the
+                # sequential path cleanup at lines 338-341.
+                xf.clear_cache()
+                del xf
 
             except Exception as e:
                 logger.error(f"file {fname} is damaged or failed to load, skip: {e}")
