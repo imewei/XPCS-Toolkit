@@ -11,7 +11,6 @@ Functions:
 import numpy as np
 import pyqtgraph as pg
 
-from xpcsviewer.backends import get_backend
 from xpcsviewer.backends._conversions import ensure_numpy
 from xpcsviewer.utils.logging_config import get_logger
 

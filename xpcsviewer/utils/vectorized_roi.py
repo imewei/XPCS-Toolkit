@@ -340,9 +340,8 @@ class VectorizedROICalculator(ABC):
 
             # Return as NumPy array
             return ensure_numpy(result)
-        else:
-            # NumPy fallback for non-JAX backend
-            return np.sum(frames * roi_mask[np.newaxis, ...], axis=(1, 2))
+        # NumPy fallback for non-JAX backend
+        return np.sum(frames * roi_mask[np.newaxis, ...], axis=(1, 2))
 
 
 class PieROICalculator(VectorizedROICalculator):

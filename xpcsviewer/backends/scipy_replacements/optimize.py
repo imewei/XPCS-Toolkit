@@ -7,8 +7,9 @@ optax for gradient-based optimization.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Callable
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 
@@ -111,7 +112,6 @@ def _minimize_optimistix(
     learning_rate: float = 0.01,
 ) -> OptimizeResult:
     """Minimization using optimistix."""
-    import jax
     import jax.numpy as jnp
     import optimistix as optx
 

@@ -15,7 +15,6 @@ Functions:
 import datetime
 import os
 import threading
-import time
 import traceback
 
 # Local imports

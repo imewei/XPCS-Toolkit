@@ -7,7 +7,7 @@ interpax library for GPU-accelerated interpolation.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Literal
 
 import numpy as np
 

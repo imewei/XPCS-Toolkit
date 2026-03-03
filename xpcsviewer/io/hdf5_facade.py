@@ -40,7 +40,6 @@ logger = get_logger(__name__)
 class HDF5ValidationError(Exception):
     """Raised when HDF5 data fails schema validation."""
 
-    pass
 
 
 class HDF5Facade:

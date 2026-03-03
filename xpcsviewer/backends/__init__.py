@@ -75,7 +75,7 @@ def _detect_backend() -> str:
     if use_jax == "true":
         try:
             _configure_jax()
-            import jax  # noqa: F401
+            import jax
 
             return "jax"
         except ImportError as e:
@@ -87,7 +87,7 @@ def _detect_backend() -> str:
     # Auto-detect
     try:
         _configure_jax()
-        import jax  # noqa: F401
+        import jax
 
         return "jax"
     except ImportError:
@@ -206,17 +206,17 @@ from .io_adapter import (
 )
 
 __all__ = [
-    "get_backend",
-    "set_backend",
-    "reset_backend",
     "BackendProtocol",
-    "DeviceManager",
     "DeviceConfig",
+    "DeviceManager",
     "DeviceType",
-    "ensure_numpy",
-    "ensure_backend_array",
-    "PyQtGraphAdapter",
     "HDF5Adapter",
     "MatplotlibAdapter",
+    "PyQtGraphAdapter",
     "create_adapters",
+    "ensure_backend_array",
+    "ensure_numpy",
+    "get_backend",
+    "reset_backend",
+    "set_backend",
 ]

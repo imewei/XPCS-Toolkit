@@ -752,7 +752,6 @@ class ViewerKernel(FileLocator):
 
     def switch_saxs1d_line(self, mp_hdl, lb_type):
         """Switch SAXS 1D line builder type (stub for future implementation)."""
-        pass
 
     @log_timing(threshold_ms=1000)
     def plot_twotime(self, hdl, rows=None, **kwargs):

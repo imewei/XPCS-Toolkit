@@ -140,18 +140,15 @@ def get_recommended_package() -> str | None:
     if cuda_major == 13:
         if sm_version >= 7.5:
             return "jax[cuda13-local]"
-        else:
-            _logger.debug(f"GPU SM {sm_version} doesn't support CUDA 13")
-            return None
-    elif cuda_major == 12:
+        _logger.debug(f"GPU SM {sm_version} doesn't support CUDA 13")
+        return None
+    if cuda_major == 12:
         if sm_version >= 5.2:
             return "jax[cuda12-local]"
-        else:
-            _logger.debug(f"GPU SM {sm_version} too old for CUDA 12")
-            return None
-    else:
-        _logger.debug(f"CUDA {cuda_major} not supported")
+        _logger.debug(f"GPU SM {sm_version} too old for CUDA 12")
         return None
+    _logger.debug(f"CUDA {cuda_major} not supported")
+    return None
 
 
 def check_gpu_availability(warn: bool = True) -> bool:
@@ -214,7 +211,7 @@ def _print_gpu_warning(
     cuda_major: int | None,
 ) -> None:
     """Print warning about GPU acceleration availability."""
-    print(f"\nGPU ACCELERATION AVAILABLE")
+    print("\nGPU ACCELERATION AVAILABLE")
     print("===========================")
     print(f"GPU: {gpu_name} (SM {sm_version})")
     print(f"System CUDA: {cuda_version or 'Not found'}")

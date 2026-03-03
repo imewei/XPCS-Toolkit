@@ -19,7 +19,6 @@ from typing import Any
 # Third-party imports
 import h5py
 import numpy as np
-import psutil
 
 from xpcsviewer.constants import (
     CACHE_ENTRY_TIMEOUT,

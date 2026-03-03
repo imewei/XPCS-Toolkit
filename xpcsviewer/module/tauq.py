@@ -2,8 +2,8 @@ import numpy as np
 
 from xpcsviewer.plothandler.plot_constants import BASIC_COLORS as colors
 from xpcsviewer.plothandler.plot_constants import EXTENDED_MARKERS as shapes
-from xpcsviewer.utils.logging_config import get_logger
 from xpcsviewer.utils.exceptions import XPCSValidationError
+from xpcsviewer.utils.logging_config import get_logger
 from xpcsviewer.utils.validation import (
     get_file_label_safe,
     validate_array_compatibility,

@@ -13,7 +13,6 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Any
 
-import matplotlib
 import numpy as np
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg
 from matplotlib.figure import Figure

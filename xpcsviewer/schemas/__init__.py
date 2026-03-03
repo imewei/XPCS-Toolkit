@@ -22,9 +22,9 @@ from .validators import (
 )
 
 __all__ = [
-    "QMapSchema",
-    "GeometryMetadata",
     "G2Data",
-    "PartitionSchema",
+    "GeometryMetadata",
     "MaskSchema",
+    "PartitionSchema",
+    "QMapSchema",
 ]

@@ -13,7 +13,6 @@ import numpy as np
 if TYPE_CHECKING:
     from numpy.typing import ArrayLike
 
-    from xpcsviewer.backends import ensure_numpy
 
 
 def gaussian_filter(
@@ -69,7 +68,6 @@ def _gaussian_filter_jax(
 ) -> Any:
     """JAX implementation of Gaussian filter using separable convolution."""
     import jax.numpy as jnp
-    from jax import lax
 
     arr = jnp.asarray(input_array)
     ndim = arr.ndim
@@ -115,7 +113,6 @@ def _gaussian_filter_1d_jax(
 ):
     """Apply 1D Gaussian filter along specified axis using JAX."""
     import jax.numpy as jnp
-    from jax import lax
 
     # Compute kernel size
     radius = int(truncate * sigma + 0.5)

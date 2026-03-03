@@ -13,7 +13,6 @@ import os
 import re
 
 import jax.numpy as jnp
-import numpy as np
 
 
 def single_exp_all(x, a, b, c, d):

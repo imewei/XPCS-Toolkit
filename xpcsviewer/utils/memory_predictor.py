@@ -12,7 +12,6 @@ from dataclasses import dataclass
 from typing import Any
 
 import numpy as np
-import psutil
 
 from xpcsviewer.constants import (
     LOW_CONFIDENCE_THRESHOLD,
@@ -494,7 +493,7 @@ def record_operation_memory(
     No-op when MONITORING_ENABLED is False.
     """
     if not MONITORING_ENABLED:
-        return
+        return None
     return get_memory_predictor().record_operation(
         operation_type,
         input_size_mb,

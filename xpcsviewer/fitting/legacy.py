@@ -679,7 +679,6 @@ def robust_curve_fit(
     x = ensure_numpy(x)
     y = ensure_numpy(y)
     try:
-        from typing import Any
 
         result: Any = curve_fit(func, x, y, **kwargs)
         if hasattr(result, "popt"):

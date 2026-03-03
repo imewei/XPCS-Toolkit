@@ -10,9 +10,10 @@ import threading
 import time
 import weakref
 from collections import OrderedDict
+from collections.abc import Callable
 from contextlib import contextmanager
 from enum import Enum
-from typing import Any, Callable
+from typing import Any
 
 import numpy as np
 import psutil
@@ -126,9 +127,7 @@ class UnifiedMemoryManager:
         self._current_memory_mb = 0.0
         self._peak_memory_mb = 0.0
         # Per-partition running totals — avoids O(n) sum on every cache_put
-        self._partition_usage_mb: dict[CacheType, float] = {
-            cache_type: 0.0 for cache_type in CacheType
-        }
+        self._partition_usage_mb: dict[CacheType, float] = dict.fromkeys(CacheType, 0.0)
         self._memory_history: list[tuple[float, float]] = []  # (timestamp, memory_mb)
 
         # Thread safety

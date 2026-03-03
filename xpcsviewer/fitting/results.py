@@ -653,7 +653,7 @@ class NLSQResult:
             # Handle both (n, 2) array and (2, n) array formats
             if pi.ndim == 2 and pi.shape[-1] == 2:
                 return pi[:, 0], pi[:, 1]
-            elif pi.ndim == 2 and pi.shape[0] == 2:
+            if pi.ndim == 2 and pi.shape[0] == 2:
                 return pi[0], pi[1]
             # Fallback: try direct unpack
             return pi[0], pi[1]

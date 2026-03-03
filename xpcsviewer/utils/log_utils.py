@@ -291,10 +291,9 @@ class RateLimitedLogger:
             # Consume a token and log
             self._buckets[msg_key] = (tokens - 1, now, 0)
             return True
-        else:
-            # Suppress and increment counter
-            self._buckets[msg_key] = (tokens, now, suppressed + 1)
-            return False
+        # Suppress and increment counter
+        self._buckets[msg_key] = (tokens, now, suppressed + 1)
+        return False
 
     def _log(self, level: int, msg: str, *args: object, **kwargs: object) -> bool:
         """Internal logging method with rate limiting."""

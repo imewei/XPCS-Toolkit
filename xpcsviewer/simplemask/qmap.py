@@ -10,20 +10,17 @@ Ported from pySimpleMask with backend abstraction for JAX support.
 from __future__ import annotations
 
 import logging
+from collections.abc import Callable
 from functools import lru_cache
-from typing import TYPE_CHECKING, Any, Callable
+from typing import Any
 
 import numpy as np
 
 from xpcsviewer.backends import get_backend
 from xpcsviewer.backends._conversions import ensure_numpy
-
-if TYPE_CHECKING:
-    from numpy.typing import NDArray
+from xpcsviewer.fileIO.qmap_utils import Q_UNIT_DISPLAY
 
 logger = logging.getLogger(__name__)
-
-from xpcsviewer.fileIO.qmap_utils import Q_UNIT_DISPLAY
 
 # Energy to wavevector constant: lambda (Angstrom) = 12.39841984 / E (keV)
 E2KCONST = 12.39841984
@@ -276,18 +273,17 @@ def compute_q_sum_squared(
         alpha = jnp.arctan(r / det_dist)
         q = jnp.sin(alpha) * k0
         return jnp.sum(q**2)
-    else:
-        # NumPy fallback
-        positions_arr = np.array(pixel_positions)  # type: ignore[assignment]  # shape (N, 2)
-        q_vals: Any = np.array(
-            [
-                compute_q_at_pixel(
-                    center_x, center_y, float(px), float(py), energy, pix_dim, det_dist
-                )
-                for px, py in positions_arr
-            ]
-        )
-        return float(np.sum(q_vals**2))
+    # NumPy fallback
+    positions_arr = np.array(pixel_positions)  # type: ignore[assignment]  # shape (N, 2)
+    q_vals: Any = np.array(
+        [
+            compute_q_at_pixel(
+                center_x, center_y, float(px), float(py), energy, pix_dim, det_dist
+            )
+            for px, py in positions_arr
+        ]
+    )
+    return float(np.sum(q_vals**2))
 
 
 def create_q_objective(

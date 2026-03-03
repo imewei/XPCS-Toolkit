@@ -13,6 +13,7 @@ import numpy as np
 from numpy.typing import NDArray
 
 from xpcsviewer.backends._conversions import ensure_numpy
+from xpcsviewer.fileIO.qmap_utils import Q_UNIT_DISPLAY
 
 # Qt imports via compatibility layer
 from xpcsviewer.gui.qt_compat import (
@@ -38,7 +39,6 @@ from xpcsviewer.simplemask.drawing_tools import (
     get_tool_color,
 )
 from xpcsviewer.simplemask.pyqtgraph_mod import ImageViewROI
-from xpcsviewer.fileIO.qmap_utils import Q_UNIT_DISPLAY
 from xpcsviewer.simplemask.simplemask_kernel import SimpleMaskKernel
 from xpcsviewer.simplemask.ui.simplemask_ui import setup_ui
 

@@ -81,7 +81,6 @@ class MaskBase:
 
     def evaluate(self, **kwargs: Any) -> None:
         """Evaluate mask (base method)."""
-        pass
 
     def describe(self) -> str:
         """Return description of mask statistics."""

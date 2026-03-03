@@ -18,7 +18,6 @@ from xpcsviewer.gui.qt_compat import (
     QObject,
     QProgressBar,
     QPushButton,
-    Qt,
     QtCore,
     QTimer,
     QtWidgets,
