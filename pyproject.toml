@@ -93,10 +93,7 @@ dependencies = [
     # Probabilistic programming
     "numpyro>=0.20.0",
     # Bayesian diagnostics and visualization
-    "arviz>=0.23.0",
-    "arviz-base>=0.8.0",
-    "arviz-stats>=0.8.0",
-    "arviz-plots>=0.8.0",
+    "arviz>=1.0.0",
     # Fitting
     "nlsq>=0.6.0",
     # I/O and data
@@ -300,7 +297,7 @@ timeout_method = "thread"
 
 [tool.ruff]
 line-length = 88
-target-version = "py313"
+target-version = "py312"
 exclude = [
     ".bzr",
     ".direnv",
@@ -495,4 +492,4 @@ local = false
 # pip 25.2 tarfile extraction vulnerability - fix planned for pip 25.3+
 id = "GHSA-4xh5-x5gv-qwph"
 reason = "No fix available yet - planned for pip 25.3. Mitigation: only install packages from trusted sources (PyPI)."
-expires = "2026-03-15"  # Extended review date for pip 25.3 release
+expires = "2026-06-15"  # Extended review date for pip fix
