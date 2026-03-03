@@ -755,6 +755,9 @@ class XpcsFile:
             logger.debug("Using cached SAXS 2D log data from unified memory manager")
             self.saxs_2d_log_data = cached_log_data
         else:
+            if self.saxs_2d_data is None:
+                logger.error("SAXS 2D data is None; cannot compute log version")
+                return
             if chunk_processing and self.saxs_2d_data.size > 10**7:  # >10M elements
                 logger.info("Computing SAXS 2D log data using optimized streaming")
                 self.saxs_2d_log_data = self._compute_saxs_log_streaming(

@@ -352,10 +352,14 @@ def get_all_c2_from_hdf(
 
     c2_all = np.array([res[0] for res in result])
     sampling_rate_all = {res[1] for res in result}
-    assert len(sampling_rate_all) == 1, (
-        f"Sampling rate not consistent {sampling_rate_all}"
-    )
-    sampling_rate = next(iter(sampling_rate_all))
+    if len(sampling_rate_all) != 1:
+        # Inconsistent rates across C2 matrices — use the minimum (finest
+        # resolution) and warn rather than crashing with AssertionError.
+        logger.warning(
+            "Sampling rates are not consistent across C2 matrices: "
+            f"{sampling_rate_all}. Using minimum rate as fallback."
+        )
+    sampling_rate = min(sampling_rate_all)
     c2_result = {
         "c2_all": c2_all,
         "delta_t": 1.0 * sampling_rate,  # put absolute time in xpcs_file
@@ -663,7 +667,11 @@ def compute_c2_statistics_vectorized(c2_matrices):
     diagonal_sum = stats["trace"]  # Already computed
     off_diagonal_sum = total_sum - diagonal_sum
     off_diagonal_count = n * (n - 1)
-    stats["off_diagonal_mean"] = off_diagonal_sum / off_diagonal_count
+    # Guard against n==1 (1x1 matrix has no off-diagonal elements)
+    if off_diagonal_count > 0:
+        stats["off_diagonal_mean"] = off_diagonal_sum / off_diagonal_count
+    else:
+        stats["off_diagonal_mean"] = np.full_like(off_diagonal_sum, np.nan)
 
     return stats
 
