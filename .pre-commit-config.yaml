@@ -102,5 +102,5 @@ ci:
   autoupdate_branch: ''
   autoupdate_commit_msg: '[pre-commit.ci] pre-commit autoupdate'
   autoupdate_schedule: weekly
-  skip: [mypy-check]  # Skip mypy in CI for speed
+  skip: [ruff-check, ruff-format, mypy-check, docs-build]  # Skip system hooks in pre-commit.ci
   submodules: false
