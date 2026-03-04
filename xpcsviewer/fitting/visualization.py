@@ -16,7 +16,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-
     import matplotlib.pyplot as plt
     from matplotlib.figure import Figure
 
@@ -472,6 +471,34 @@ def plot_posterior_predictive(
     return ax
 
 
+def _extract_figure(plot_obj):
+    """Extract matplotlib Figure from ArviZ 1.0 PlotCollection/PlotMatrix or legacy axes."""
+    # ArviZ 1.0: PlotCollection/PlotMatrix have .viz DataTree with figure
+    if hasattr(plot_obj, "viz"):
+        viz = plot_obj.viz
+        if hasattr(viz, "ds") and "figure" in viz.ds:
+            return viz.ds["figure"].item()
+        if hasattr(viz, "__getitem__"):
+            try:
+                return viz["figure"].item()
+            except (KeyError, AttributeError, ValueError):
+                pass
+
+    # Legacy ArviZ: axes with .figure attribute
+    if hasattr(plot_obj, "figure"):
+        return plot_obj.figure
+
+    # Array of axes
+    if hasattr(plot_obj, "__iter__"):
+        import numpy as np
+
+        axes_flat = np.asarray(plot_obj).flatten()
+        if len(axes_flat) > 0 and hasattr(axes_flat[0], "figure"):
+            return axes_flat[0].figure
+
+    return None
+
+
 def generate_arviz_diagnostics(
     trace,
     var_names=None,
@@ -518,20 +545,10 @@ def generate_arviz_diagnostics(
 
     results = {}
 
-    # Define plot functions
+    # Define plot functions — ArviZ 1.0 returns PlotCollection/PlotMatrix
     plots = [
-        (
-            "pair",
-            lambda: az.plot_pair(
-                trace, var_names=var_names, marginals=True, divergences=True
-            ),
-        ),
-        (
-            "forest",
-            lambda: az.plot_forest(
-                trace, var_names=var_names, combined=True, hdi_prob=0.95
-            ),
-        ),
+        ("pair", lambda: az.plot_pair(trace, var_names=var_names)),
+        ("forest", lambda: az.plot_forest(trace, var_names=var_names, combined=True)),
         ("energy", lambda: az.plot_energy(trace)),
         ("autocorr", lambda: az.plot_autocorr(trace, var_names=var_names)),
         ("rank", lambda: az.plot_rank(trace, var_names=var_names)),
@@ -540,19 +557,11 @@ def generate_arviz_diagnostics(
 
     for plot_name, plot_func in plots:
         try:
-            axes = plot_func()
+            plot_obj = plot_func()
 
-            # Get figure from axes
-            if hasattr(axes, "figure"):
-                fig = axes.figure
-            elif hasattr(axes, "__iter__"):
-                # Array of axes
-                import numpy as np
-
-                axes_flat = np.asarray(axes).flatten()
-                fig = axes_flat[0].figure if len(axes_flat) > 0 else None
-            else:
-                fig = None
+            # ArviZ 1.0 returns PlotCollection/PlotMatrix with savefig()
+            # Extract matplotlib figure for return or saving
+            fig = _extract_figure(plot_obj)
 
             if fig is not None:
                 if output_dir is not None:
