@@ -29,6 +29,7 @@ All notable changes to this project will be documented in this file.
 - P2: `_connection_lock` held across `yield` in EnhancedHDF5Reader blocks all concurrent threads
 - P2: Unhandled OSError in SimpleMask `save_mask()` h5py write
 - P3: Dead `len()` call in `state_validator.py`
+- Flaky window state signal test in GUI interactive tests
 
 ### Changed
 
@@ -39,6 +40,8 @@ All notable changes to this project will be documented in this file.
 ### Removed
 
 - 16 flaky GUI tests: always-pass assertions (`assert True`, `len >= 0`, `or True`), race conditions (5–10 ms waits), and empty test bodies from `tests/gui_interactive/`
+- Obsolete test frameworks, legacy validation scripts, and unused goldens (20+ files deleted)
+- Offscreen golden snapshot test execution from CI workflow
 
 ### Documentation
 
@@ -51,6 +54,7 @@ All notable changes to this project will be documented in this file.
 - Consolidated `dev`, `docs`, and `test` dependency extra groups into base requirements
 - CI: skip local hooks in pre-commit.ci, remove obsolete documentation group references
 - Updated offscreen plotting golden image for snapshot tests
+- Updated `sphinx-autodoc-typehints` and `tifffile` dependencies in `uv.lock`
 
 ## [0.1.3] - 2026-02-23
 
