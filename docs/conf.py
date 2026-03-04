@@ -391,11 +391,32 @@ htmlhelp_basename = "xpcsviewerdoc"
 
 # -- Options for LaTeX output ------------------------------------------
 
+latex_engine = "xelatex"
+latex_use_xindy = False
 latex_elements = {
-    # The paper size ('letterpaper' or 'a4paper').
-    # The font size ('10pt', '11pt' or '12pt').
-    # Additional stuff for the LaTeX preamble.
-    # Latex figure (float) alignment
+    "preamble": r"""
+\usepackage{newunicodechar}
+\newunicodechar{⚠}{\textbf{!}}
+\newunicodechar{🔧}{\textbf{*}}
+\newunicodechar{✅}{\textbf{+}}
+\newunicodechar{❌}{\textbf{x}}
+\newunicodechar{📊}{\textbf{=}}
+\newunicodechar{📈}{\textbf{\^{}}}
+\newunicodechar{🔄}{\textbf{@}}
+\newunicodechar{💡}{\textbf{i}}
+\newunicodechar{🎯}{\textbf{>}}
+\newunicodechar{📦}{\textbf{[\,]}}
+\newunicodechar{🚀}{\textbf{>>}}
+\newunicodechar{⚡}{\textbf{\#}}
+\newunicodechar{🔍}{\textbf{?}}
+\newunicodechar{📝}{\textbf{N}}
+\newunicodechar{🛠}{\textbf{T}}
+\newunicodechar{📁}{\textbf{F}}
+\newunicodechar{🗂}{\textbf{D}}
+\newunicodechar{🧪}{\textbf{t}}
+\newunicodechar{✨}{\textbf{*}}
+\newunicodechar{🔴}{\textbf{o}}
+""",
 }
 
 # Grouping the document tree into LaTeX files. List of tuples
@@ -406,7 +427,7 @@ latex_documents = [
         master_doc,
         "xpcsviewer.tex",
         "XPCS Viewer Documentation",
-        "Miaoqi Chu & Wei Chen",
+        r"Miaoqi Chu \& Wei Chen",
         "manual",
     ),
 ]
