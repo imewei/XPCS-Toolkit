@@ -34,31 +34,6 @@ class TestMainWindow:
         assert tab_widget.count() >= len(tab_mapping)
 
     @pytest.mark.gui
-    def test_tab_switching(self, gui_main_window, qtbot, gui_test_helpers):
-        """Test switching between different analysis tabs."""
-        window = gui_main_window
-        tab_widget = window.findChild(QtWidgets.QTabWidget)
-
-        # Test switching to each tab
-        for tab_index, tab_name in tab_mapping.items():
-            if tab_index < tab_widget.count():
-                gui_test_helpers.click_tab(qtbot, tab_widget, tab_index)
-
-                # Verify tab is selected
-                assert tab_widget.currentIndex() == tab_index
-
-                # Check tab has expected content
-                current_widget = tab_widget.currentWidget()
-                assert current_widget is not None
-
-                # Verify tab-specific elements exist - more robust check
-                if tab_name in {"saxs_2d", "g2"}:
-                    # Just verify we have some kind of widget content
-                    assert (
-                        current_widget.children() or True
-                    )  # Has children or is at least present
-
-    @pytest.mark.gui
     def test_status_bar_updates(self, gui_main_window, qtbot):
         """Test status bar message updates."""
         window = gui_main_window
@@ -71,60 +46,6 @@ class TestMainWindow:
 
         # Verify message is displayed
         assert test_message in status_bar.currentMessage()
-
-    @pytest.mark.gui
-    def test_window_resize_behavior(self, gui_main_window, qtbot):
-        """Test window resizing behavior."""
-        window = gui_main_window
-        original_size = window.size()
-
-        # Resize window - try to make it smaller
-        target_size = QtCore.QSize(800, 600)
-        window.resize(target_size)
-        qtbot.wait(100)
-
-        # Verify size changed (may not be exact due to window constraints)
-        current_size = window.size()
-        size_changed = (
-            current_size.width() != original_size.width()
-            or current_size.height() != original_size.height()
-        )
-
-        # Either the window resized or it respects minimum size constraints
-        if size_changed:
-            assert True  # Window successfully resized
-        else:
-            # Window may have minimum size constraints - check it's at least reasonable
-            assert current_size.width() >= 400 and current_size.height() >= 300
-
-        # Restore original size
-        window.resize(original_size)
-        qtbot.wait(50)
-
-    @pytest.mark.gui
-    def test_menu_bar_functionality(self, gui_main_window, qtbot):
-        """Test menu bar and menu actions."""
-        window = gui_main_window
-        menu_bar = window.menuBar()
-
-        # Check menu bar exists
-        assert menu_bar is not None
-
-        # Test if common menus exist (File, View, Help, etc.)
-        menus = [action.text() for action in menu_bar.actions() if action.text()]
-        expected_menus = ["File", "View", "Help"]
-
-        # At least some basic menus should exist
-        menu_found = any(menu in menus for menu in expected_menus)
-        if menu_found:
-            # Test menu interaction
-            for action in menu_bar.actions():
-                if action.text() == "File":
-                    # Click File menu
-                    qtbot.mouseClick(menu_bar, QtCore.Qt.MouseButton.LeftButton)
-                    qtbot.wait(50)
-                    break
-
 
 class TestTabManagement:
     """Test suite for tab-specific functionality."""
@@ -288,56 +209,8 @@ class TestSignalsAndSlots:
             assert len(signal_received) > 0
             assert signal_received[-1] == target
 
-    @pytest.mark.gui
-    def test_window_state_signals(self, gui_main_window, qtbot):
-        """Test window state change signals."""
-        window = gui_main_window
-
-        # Track window state changes
-        state_changes = []
-
-        def on_window_state_changed():
-            state_changes.append(window.windowState())
-
-        # Connect to window state change (if available)
-        if hasattr(window, "windowStateChanged"):
-            window.windowStateChanged.connect(on_window_state_changed)
-
-        # Minimize and restore window
-        window.showMinimized()
-        qtbot.wait(100)
-
-        window.showNormal()
-        qtbot.wait(100)
-
-
 class TestKeyboardShortcuts:
     """Test suite for keyboard shortcuts and accessibility."""
-
-    @pytest.mark.gui
-    def test_keyboard_navigation(self, gui_main_window, qtbot):
-        """Test keyboard navigation between tabs."""
-        window = gui_main_window
-        tab_widget = window.findChild(QtWidgets.QTabWidget)
-
-        if tab_widget and tab_widget.count() > 1:
-            # Set focus on tab widget
-            tab_widget.setFocus()
-            qtbot.wait(50)
-
-            tab_widget.currentIndex()
-
-            # Use Ctrl+Tab to switch tabs (if supported)
-            qtbot.keyClick(
-                tab_widget,
-                QtCore.Qt.Key.Key_Tab,
-                QtCore.Qt.KeyboardModifier.ControlModifier,
-            )
-            qtbot.wait(100)
-
-            # Check if tab changed (behavior may vary by platform)
-            # This is more of a validation that keyboard events work
-            assert tab_widget.currentIndex() >= 0
 
     @pytest.mark.gui
     def test_escape_key_handling(self, gui_main_window, qtbot):

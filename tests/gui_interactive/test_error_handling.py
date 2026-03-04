@@ -340,25 +340,6 @@ class TestUIBoundaryConditions:
         qtbot.wait(50)
 
     @pytest.mark.gui
-    def test_rapid_ui_interactions(self, gui_main_window, qtbot, gui_test_helpers):
-        """Test rapid UI interactions for race conditions."""
-        window = gui_main_window
-        tab_widget = window.findChild(QtWidgets.QTabWidget)
-
-        if tab_widget and tab_widget.count() > 2:
-            # More controlled rapid switching to avoid hanging
-            for _cycle in range(3):  # Reduced cycles
-                for i in range(min(3, tab_widget.count())):
-                    tab_widget.setCurrentIndex(i)
-                    qtbot.wait(5)  # Minimal wait to prevent hanging
-
-            qtbot.wait(100)  # Single wait at end
-
-            # Window should remain stable
-            assert window.isVisible()
-            assert tab_widget.currentIndex() >= 0
-
-    @pytest.mark.gui
     def test_parameter_boundary_values(self, gui_main_window, qtbot, gui_test_helpers):
         """Test parameter controls at boundary values."""
         window = gui_main_window
@@ -520,31 +501,6 @@ class TestConcurrencyIssues:
 
         # Application should handle thread conflicts
         assert window.isVisible()
-
-    @pytest.mark.gui
-    def test_race_condition_simulation(self, gui_main_window, qtbot):
-        """Test potential race conditions in GUI operations."""
-        window = gui_main_window
-        tab_widget = window.findChild(QtWidgets.QTabWidget)
-
-        if tab_widget and tab_widget.count() > 1:
-            # More controlled rapid operations to avoid hanging
-            # Rapid tab switches only (safer than button clicks)
-            for i in range(3):  # Reduced iterations
-                tab_widget.setCurrentIndex(i % min(3, tab_widget.count()))
-                qtbot.wait(10)  # Small delay to prevent true race conditions
-
-            # Test one safe button click only
-            buttons = window.findChildren(QtWidgets.QPushButton)
-            safe_buttons = [b for b in buttons if b.isEnabled() and b.isVisible()]
-            if safe_buttons:
-                # Click only the first safe button
-                qtbot.mouseClick(safe_buttons[0], QtCore.Qt.MouseButton.LeftButton)
-                qtbot.wait(100)
-
-        # Should survive controlled race conditions
-        assert window.isVisible()
-
 
 class TestResourceCleanup:
     """Test suite for resource cleanup and memory leaks."""

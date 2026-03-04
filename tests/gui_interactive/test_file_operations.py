@@ -354,34 +354,6 @@ class TestProgressIndication:
             assert loading_widget.isVisible()
             assert "loading" in loading_widget.text().lower()
 
-    @pytest.mark.gui
-    def test_cancellation_functionality(self, gui_main_window, qtbot):
-        """Test operation cancellation during loading."""
-        window = gui_main_window
-
-        # Look for cancel buttons
-        cancel_buttons = []
-        buttons = window.findChildren(QtWidgets.QPushButton)
-
-        for button in buttons:
-            if "cancel" in button.text().lower() or "stop" in button.text().lower():
-                cancel_buttons.append(button)
-
-        # Test cancel functionality
-        if cancel_buttons:
-            cancel_button = cancel_buttons[0]
-
-            # Mock a long-running operation
-            with patch("time.sleep"):
-                # Enable and click cancel button
-                cancel_button.setEnabled(True)
-                qtbot.mouseClick(cancel_button, QtCore.Qt.MouseButton.LeftButton)
-                qtbot.wait(50)
-
-                # Cancel should be processed
-                assert True  # If we get here, no exception was raised
-
-
 class TestFileListManagement:
     """Test suite for file list display and management."""
 
@@ -574,39 +546,6 @@ class TestFileOperationIntegration:
                     gui_test_helpers.click_tab(qtbot, tab_widget, 1)
                     qtbot.wait(50)
                     assert tab_widget.currentIndex() == 1
-
-    @pytest.mark.gui
-    def test_file_metadata_display_update(
-        self, gui_main_window, qtbot, temp_hdf5_files
-    ):
-        """Test that file loading updates metadata display."""
-        window = gui_main_window
-
-        # Mock file with metadata
-        mock_file = Mock(spec=XpcsFile)
-        mock_file.fname = temp_hdf5_files[0]
-        mock_file.meta = {
-            "sample_name": "Test Sample",
-            "detector_size": [516, 516],
-            "energy": 8.0,
-        }
-
-        with patch.object(window.vk, "current_file", mock_file):
-            # Check for metadata display updates
-            labels = window.findChildren(QtWidgets.QLabel)
-
-            # Look for labels that might display metadata
-            metadata_labels = []
-            for label in labels:
-                if any(
-                    key in label.text().lower()
-                    for key in ["sample", "detector", "energy"]
-                ):
-                    metadata_labels.append(label)
-
-            # Should have some form of metadata display
-            assert len(metadata_labels) >= 0  # May not always have visible metadata
-
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

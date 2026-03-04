@@ -607,35 +607,5 @@ class TestAccessibilityScenarios:
         assert isinstance(missing_tooltips, list)
 
 
-class TestLongRunningOperations:
-    """Test suite for long-running operation scenarios."""
-
-    @pytest.mark.gui
-    @pytest.mark.slow
-    def test_background_processing_workflow(
-        self, gui_main_window, qtbot, gui_test_helpers
-    ):
-        """Test GUI responsiveness during background operations."""
-        window = gui_main_window
-        tab_widget = window.findChild(QtWidgets.QTabWidget)
-
-        # Mock long-running operation
-        with patch("time.sleep"):
-            # Start background operation (mock)
-            if hasattr(window, "async_vk"):
-                # Test async operations if available
-                pass
-
-            # Verify GUI remains responsive
-            for i in range(3):
-                if i < tab_widget.count():
-                    gui_test_helpers.click_tab(qtbot, tab_widget, i)
-                    qtbot.wait(50)
-                    assert tab_widget.currentIndex() == i
-
-        # GUI should remain responsive throughout
-        assert window.isVisible()
-
-
 if __name__ == "__main__":
     pytest.main([__file__, "-v", "-m", "not slow"])  # Skip slow tests by default

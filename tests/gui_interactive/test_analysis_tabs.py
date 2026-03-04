@@ -32,8 +32,7 @@ class TestSAXS2DTab:
         assert len(plot_widgets) > 0
 
         # Check for control widgets (colorbar, zoom controls, etc.)
-        control_widgets = current_widget.findChildren(QtWidgets.QPushButton)
-        assert len(control_widgets) >= 0  # May have control buttons
+        current_widget.findChildren(QtWidgets.QPushButton)
 
     @pytest.mark.gui
     def test_saxs_2d_image_display(

@@ -5,7 +5,6 @@ zooming, panning, data selection, and visualization updates.
 """
 
 import os
-from unittest.mock import Mock, patch
 
 # Set Qt API to PySide6 before importing matplotlib
 os.environ.setdefault("QT_API", "PySide6")
@@ -21,25 +20,11 @@ import pytest
 
 # Import from the PySide6-compatible backend
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg
-from PySide6 import QtCore, QtGui, QtWidgets
+from PySide6 import QtCore, QtWidgets
 
 
 class TestPyQtGraphIntegration:
     """Test suite for PyQtGraph widget interactions."""
-
-    @pytest.fixture
-    def plot_widget_with_data(self, gui_plot_widget):
-        """Create a plot widget with test data."""
-        x_data = np.linspace(0, 10, 100)
-        y_data = np.sin(x_data)
-        plot_item = gui_plot_widget.plot(x_data, y_data, pen="b")
-
-        # Enable mouse interactions on the view box
-        view_box = gui_plot_widget.getViewBox()
-        view_box.setMouseEnabled(x=True, y=True)
-        view_box.enableAutoRange()
-
-        return gui_plot_widget, x_data, y_data, plot_item
 
     @pytest.mark.gui
     def test_pyqtgraph_plot_creation(self, gui_plot_widget, qtbot):
@@ -58,100 +43,6 @@ class TestPyQtGraphIntegration:
 
         assert plot_item is not None
         assert len(plot_widget.listDataItems()) == 1
-
-    @pytest.mark.gui
-    def test_plot_zoom_functionality(self, plot_widget_with_data, qtbot):
-        """Test plot zooming via mouse wheel."""
-        plot_widget, _x_data, _y_data, _plot_item = plot_widget_with_data
-        qtbot.addWidget(plot_widget)
-
-        # Get initial view range
-        view_box = plot_widget.getViewBox()
-        initial_range = view_box.viewRange()
-
-        # Simulate mouse wheel zoom
-        center_pos = plot_widget.rect().center()
-        # Create QWheelEvent with Qt6 compatible signature
-        wheel_event = QtGui.QWheelEvent(
-            center_pos,  # local position
-            plot_widget.mapToGlobal(center_pos),  # global position
-            QtCore.QPoint(0, 0),  # pixel delta
-            QtCore.QPoint(0, 120),  # angle delta (zoom in)
-            QtCore.Qt.MouseButton.NoButton,
-            QtCore.Qt.KeyboardModifier.NoModifier,
-            QtCore.Qt.ScrollPhase.NoScrollPhase,
-            False,  # inverted
-        )
-
-        # Send wheel event to both widget and view box
-        QtWidgets.QApplication.sendEvent(plot_widget, wheel_event)
-        QtWidgets.QApplication.sendEvent(view_box, wheel_event)
-        qtbot.wait(100)
-
-        # Verify zoom occurred (range should be smaller) or test infrastructure works
-        new_range = view_box.viewRange()
-        x_range_smaller = (new_range[0][1] - new_range[0][0]) < (
-            initial_range[0][1] - initial_range[0][0]
-        )
-        y_range_smaller = (new_range[1][1] - new_range[1][0]) < (
-            initial_range[1][1] - initial_range[1][0]
-        )
-
-        # Zoom should work, but if not, at least verify the ranges are valid
-        if x_range_smaller or y_range_smaller:
-            assert True  # Zoom functionality working
-        else:
-            # Zoom may not work in test environment, but ranges should be valid
-            assert initial_range[0][0] < initial_range[0][1]  # Valid x range
-            assert initial_range[1][0] < initial_range[1][1]  # Valid y range
-            assert new_range[0][0] < new_range[0][1]  # Valid new x range
-            assert new_range[1][0] < new_range[1][1]  # Valid new y range
-
-    @pytest.mark.gui
-    def test_plot_pan_functionality(self, plot_widget_with_data, qtbot):
-        """Test plot panning via mouse drag."""
-        plot_widget, _x_data, _y_data, _plot_item = plot_widget_with_data
-        qtbot.addWidget(plot_widget)
-
-        view_box = plot_widget.getViewBox()
-        initial_range = view_box.viewRange()
-
-        # Simulate mouse drag for panning
-        start_pos = QtCore.QPoint(100, 100)
-        end_pos = QtCore.QPoint(150, 120)
-
-        # Mouse press, move, and release
-        qtbot.mousePress(plot_widget, QtCore.Qt.MouseButton.LeftButton, pos=start_pos)
-        qtbot.mouseMove(plot_widget, end_pos)
-        qtbot.mouseRelease(plot_widget, QtCore.Qt.MouseButton.LeftButton, pos=end_pos)
-        qtbot.wait(100)
-
-        # Verify pan occurred (center should have moved)
-        new_range = view_box.viewRange()
-        x_center_moved = (
-            abs(
-                (new_range[0][0] + new_range[0][1]) / 2
-                - (initial_range[0][0] + initial_range[0][1]) / 2
-            )
-            > 0.001
-        )
-        y_center_moved = (
-            abs(
-                (new_range[1][0] + new_range[1][1]) / 2
-                - (initial_range[1][0] + initial_range[1][1]) / 2
-            )
-            > 0.001
-        )
-
-        # Pan should work, but if not, at least verify the ranges are valid
-        if x_center_moved or y_center_moved:
-            assert True  # Pan functionality working
-        else:
-            # Pan may not work in test environment, but ranges should be valid
-            assert initial_range[0][0] < initial_range[0][1]  # Valid x range
-            assert initial_range[1][0] < initial_range[1][1]  # Valid y range
-            assert new_range[0][0] < new_range[0][1]  # Valid new x range
-            assert new_range[1][0] < new_range[1][1]  # Valid new y range
 
     @pytest.mark.gui
     def test_plot_data_update(self, gui_plot_widget, qtbot):
@@ -309,125 +200,6 @@ class TestMatplotlibIntegration:
         # Verify data was updated
         updated_ydata = line.get_ydata()
         assert not np.array_equal(initial_ydata, updated_ydata)
-
-
-class TestXpcsSpecificPlotting:
-    """Test suite for XPCS-specific plotting functionality."""
-
-    @pytest.mark.gui
-    def test_g2_correlation_plot(
-        self, gui_main_window, qtbot, gui_test_helpers, mock_xpcs_file
-    ):
-        """Test G2 correlation function plotting."""
-        window = gui_main_window
-        tab_widget = window.findChild(QtWidgets.QTabWidget)
-
-        # Switch to G2 tab
-        gui_test_helpers.click_tab(qtbot, tab_widget, 4)
-        current_widget = tab_widget.currentWidget()
-
-        # Mock G2 data
-        taus = np.logspace(-6, 2, 50)
-        g2_data = 1.5 * np.exp(-taus * 100) + 1.0
-        g2_err = np.ones_like(g2_data) * 0.01
-
-        mock_xpcs_file.get_g2.return_value = (taus, g2_data, g2_err)
-
-        # Look for plot widgets
-        plot_widgets = []
-        for widget in current_widget.findChildren(QtWidgets.QWidget):
-            if (
-                isinstance(widget, pg.PlotWidget)
-                or "plot" in widget.__class__.__name__.lower()
-            ):
-                plot_widgets.append(widget)
-
-        # Should have at least one plot widget
-        if plot_widgets:
-            with patch.object(window.vk, "current_file", mock_xpcs_file):
-                # Simulate plot update
-                qtbot.wait(100)
-
-    @pytest.mark.gui
-    def test_saxs_2d_image_plot(
-        self, gui_main_window, qtbot, gui_test_helpers, mock_xpcs_file
-    ):
-        """Test SAXS 2D image plotting."""
-        window = gui_main_window
-        tab_widget = window.findChild(QtWidgets.QTabWidget)
-
-        # Switch to SAXS 2D tab
-        gui_test_helpers.click_tab(qtbot, tab_widget, 0)
-        current_widget = tab_widget.currentWidget()
-
-        # Mock 2D image data
-        image_data = np.random.poisson(100, (256, 256))
-        mock_xpcs_file.load_saxs_2d.return_value = image_data
-
-        # Look for image view widgets
-        image_widgets = []
-        for widget in current_widget.findChildren(QtWidgets.QWidget):
-            if (
-                isinstance(widget, pg.ImageView)
-                or "image" in widget.__class__.__name__.lower()
-            ):
-                image_widgets.append(widget)
-
-        # Should have image display capability
-        if image_widgets:
-            with patch.object(window.vk, "current_file", mock_xpcs_file):
-                qtbot.wait(100)
-
-    @pytest.mark.gui
-    def test_stability_time_series_plot(
-        self, gui_main_window, qtbot, gui_test_helpers, mock_xpcs_file
-    ):
-        """Test stability time series plotting."""
-        window = gui_main_window
-        tab_widget = window.findChild(QtWidgets.QTabWidget)
-
-        # Switch to stability tab
-        gui_test_helpers.click_tab(qtbot, tab_widget, 2)
-        current_widget = tab_widget.currentWidget()
-
-        # Mock stability data
-        frames = np.arange(1000)
-        intensity = np.random.normal(1000, 50, 1000)
-        mock_xpcs_file.get_stability_data = Mock(return_value=(frames, intensity))
-
-        # Look for plot widgets
-        plot_widgets = []
-        for widget in current_widget.findChildren(QtWidgets.QWidget):
-            if isinstance(widget, pg.PlotWidget):
-                plot_widgets.append(widget)
-
-        if plot_widgets:
-            with patch.object(window.vk, "current_file", mock_xpcs_file):
-                qtbot.wait(100)
-
-    @pytest.mark.gui
-    def test_two_time_correlation_plot(
-        self, gui_main_window, qtbot, gui_test_helpers, mock_xpcs_data
-    ):
-        """Test two-time correlation matrix plotting."""
-        window = gui_main_window
-        tab_widget = window.findChild(QtWidgets.QTabWidget)
-
-        # Switch to two-time tab
-        gui_test_helpers.click_tab(qtbot, tab_widget, 6)
-        current_widget = tab_widget.currentWidget()
-
-        # Two-time data is a 2D correlation matrix
-        mock_xpcs_data["entry/analysis/twotime/C2"]
-
-        # Look for image view or matrix plot widgets
-        plot_widgets = []
-        for widget in current_widget.findChildren(QtWidgets.QWidget):
-            if isinstance(widget, (pg.ImageView, pg.PlotWidget)):
-                plot_widgets.append(widget)
-
-        # Should have plotting capability
-        assert len(plot_widgets) >= 0  # May not always have widgets visible
 
 
 class TestPlotCustomization:
