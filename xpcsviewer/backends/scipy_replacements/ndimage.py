@@ -14,7 +14,6 @@ if TYPE_CHECKING:
     from numpy.typing import ArrayLike
 
 
-
 def gaussian_filter(
     input_array: ArrayLike,
     sigma: float | tuple[float, ...],

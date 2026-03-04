@@ -41,7 +41,6 @@ class HDF5ValidationError(Exception):
     """Raised when HDF5 data fails schema validation."""
 
 
-
 class HDF5Facade:
     """Unified facade for HDF5 I/O operations with schema validation.
 

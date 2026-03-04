@@ -578,9 +578,7 @@ class XpcsFile:
             if _cached_log_early is not None:
                 self.saxs_2d_log_data = _cached_log_early
             else:
-                self.saxs_2d_log_data = self._compute_saxs_log_jax(
-                    self.saxs_2d_data
-                )
+                self.saxs_2d_log_data = self._compute_saxs_log_jax(self.saxs_2d_data)
             self._saxs_data_loaded = True
             return
 
@@ -794,9 +792,7 @@ class XpcsFile:
                 )
             else:
                 # JAX GPU log computation (falls back to NumPy on any failure)
-                self.saxs_2d_log_data = self._compute_saxs_log_jax(
-                    self.saxs_2d_data
-                )
+                self.saxs_2d_log_data = self._compute_saxs_log_jax(self.saxs_2d_data)
 
             # Cache log data using unified memory manager if reasonable size
             if (
@@ -852,7 +848,11 @@ class XpcsFile:
             from xpcsviewer.backends._conversions import ensure_numpy
 
             kernel = _get_jax_saxs_log()
-            data_f32 = saxs_data.astype(np.float32) if saxs_data.dtype != np.float32 else saxs_data
+            data_f32 = (
+                saxs_data.astype(np.float32)
+                if saxs_data.dtype != np.float32
+                else saxs_data
+            )
             result = ensure_numpy(kernel(jnp.asarray(data_f32)))
             logger.debug("SAXS log: JAX GPU path used")
             return result

@@ -387,9 +387,7 @@ class AverageToolbox(QtCore.QRunnable):
         # Process files in batches
         # Cap at 4 workers: h5py holds the GIL during reads so extra threads
         # add context-switch overhead rather than I/O concurrency.
-        with ThreadPoolExecutor(
-            max_workers=min(len(batches), 4)
-        ) as executor:
+        with ThreadPoolExecutor(max_workers=min(len(batches), 4)) as executor:
             # Submit batch jobs
             future_to_batch = {}
             for batch_indices in batches:

@@ -205,7 +205,9 @@ class SAXSLogProcessor(StreamingProcessor):
                 if chunk_min < global_min:
                     global_min = chunk_min
 
-        self._global_min = max(global_min if np.isfinite(global_min) else self.epsilon, self.epsilon)
+        self._global_min = max(
+            global_min if np.isfinite(global_min) else self.epsilon, self.epsilon
+        )
         logger.debug(f"SAXSLogProcessor global_min = {self._global_min:.6g}")
 
         # Pass 2: apply log transform using global_min (delegates to base class loop)

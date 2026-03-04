@@ -255,9 +255,9 @@ def _build_fit_result(
 
     for name in param_names:
         if name in summary.index:
-            r_hat[name] = float(summary.loc[name, "r_hat"])  # type: ignore
-            ess_bulk[name] = int(summary.loc[name, "ess_bulk"])  # type: ignore
-            ess_tail[name] = int(summary.loc[name, "ess_tail"])  # type: ignore
+            r_hat[name] = float(summary.loc[name, "r_hat"])
+            ess_bulk[name] = int(summary.loc[name, "ess_bulk"])
+            ess_tail[name] = int(summary.loc[name, "ess_tail"])
 
     # Count divergences
     extra = mcmc.get_extra_fields()

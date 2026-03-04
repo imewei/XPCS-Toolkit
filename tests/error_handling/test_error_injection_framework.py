@@ -560,7 +560,9 @@ class TestSystematicErrorScenarios:
 
         # Analyze results
         for result in results:
-            assert result.execution_time < 30.0  # Should complete quickly (relaxed for slow CI runners)
+            assert (
+                result.execution_time < 30.0
+            )  # Should complete quickly (relaxed for slow CI runners)
             assert len(result.unexpected_errors) <= 1  # Minimal unexpected errors
 
     def test_memory_exhaustion_scenarios(self, error_temp_dir):

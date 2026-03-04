@@ -1171,7 +1171,11 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         # Restore target files from session.
         # Guard against self.vk being None when data_path was absent or
         # load_path() was skipped (e.g. directory no longer exists).
-        if self.vk is not None and hasattr(session, "target_files") and session.target_files:
+        if (
+            self.vk is not None
+            and hasattr(session, "target_files")
+            and session.target_files
+        ):
             sorted_files = sorted(session.target_files, key=lambda f: f.order)
             for entry in sorted_files:
                 if os.path.isfile(entry.path):
