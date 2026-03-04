@@ -2,7 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Unreleased]
+## [0.1.5] - 2026-03-04
+
+### Added
+
+- GPU acceleration setup: `gpu_cuda12` and `gpu_cuda13` optional dependency groups in pyproject.toml
+- `check_plugin_conflicts()` in `utils/device.py` for detecting dual-plugin and version-mismatch issues
+- `make gpu-diagnose` target for troubleshooting GPU plugin conflicts, version mismatches, and system CUDA
+- `make gpu-check` now includes SVD computation test to verify GPU compute works end-to-end
+- `make env-info` now includes GPU diagnostics output
+- GPU troubleshooting table and platform support table in README.rst and installation docs
 
 ### Fixed
 
@@ -33,6 +42,9 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
+- GPU install targets now uninstall all 6 JAX/CUDA packages before reinstalling (prevents PJRT plugin conflicts)
+- `_print_gpu_warning()` in `utils/device.py` now shows full uninstall command and detected plugin issues
+- `get_device_info()` returns `plugin_issues` field for runtime plugin conflict detection
 - ArviZ `InferenceData` migrated to xarray `DataTree` for ArviZ 1.0+ compatibility (`FitResult.arviz_data`, `compute_bfmi`, `generate_arviz_diagnostics`, `bayesian_diagnosis`)
 - 59 ruff auto-fixes: unused imports, `Callable` migration, unnecessary `else` after `return`
 - Ruff auto-formatting applied across codebase
