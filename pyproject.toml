@@ -75,34 +75,71 @@ keywords = ["XPCS", "X-ray", "photon correlation spectroscopy", "synchrotron", "
 dependencies = [
     # GUI framework
     "pyside6>=6.10.2",
-    "pyqtgraph>=0.14.0",
-    "qtpy>=2.4.0",
-    # Core scientific
-    "numpy>=2.3.0",
-    "scipy>=1.17.0",
-    "pandas>=3.0.0",
-    "scikit-learn>=1.8.0",
-    "scikit-image>=0.26.0",
-    "matplotlib>=3.10.0",
-    # JAX compute engine
-    "jax>=0.8.0",
-    "jaxlib>=0.8.0",
-    "interpax>=0.3.0",
-    "optimistix>=0.1.0",
-    "optax>=0.2.0",
-    # Probabilistic programming
-    "numpyro>=0.20.0",
-    # Bayesian diagnostics and visualization
-    "arviz>=1.0.0",
+    "pyqtgraph>=0.14",
+    "qtpy>=2.4",
+    # Core scientific computing
+    "numpy>=2.3",
+    "scipy>=1.17",
+    "pandas>=3.0",
+    "scikit-learn>=1.8",
+    "scikit-image>=0.26",
+    # JAX ecosystem
+    "jax>=0.8",
+    "jaxlib>=0.8",
+    "interpax>=0.3",
+    "optimistix>=0.1",
+    "optax>=0.2",
+    # Bayesian inference
+    "numpyro>=0.20",
+    "arviz>=1.0",
     # Fitting
-    "nlsq>=0.6.0",
-    # I/O and data
-    "h5py>=3.15.0",
-    "hdf5plugin>=6.0.0",
-    # Utilities
-    "joblib>=1.5.0",
+    "nlsq>=0.6",
+    # Data handling
+    "h5py>=3.15",
+    "hdf5plugin>=6.0",
+    # Plotting
+    "matplotlib>=3.10",
+    # System utilities
+    "joblib>=1.5",
     "tqdm>=4.67.1",
-    "psutil>=7.2.0",
+    "psutil>=7.2",
+    # Testing
+    "coverage[toml]>=7.13",
+    "pytest>=9.0",
+    "pytest-cov>=7.0",
+    "pytest-xdist[psutil]>=3.8",
+    "pytest-benchmark>=5.2",
+    "pytest-mock>=3.15",
+    "pytest-timeout>=2.4",
+    "pytest-sugar>=1.1",
+    "pytest-html>=4.2",
+    "pytest-qt>=4.5",
+    "hypothesis>=6.148",
+    # Linting and type checking
+    "mypy>=1.19",
+    "ruff>=0.15",
+    "bandit[toml]>=1.9",
+    "pre-commit>=4.5",
+    # Build and publish
+    "build>=1.4",
+    "twine>=6.2",
+    # Documentation
+    "sphinx>=9.1",
+    "furo>=2025.12.19",
+    "myst-parser>=5.0",
+    "sphinx-autodoc-typehints>=3.6",
+    "sphinx-copybutton>=0.5.2",
+    "sphinx-design>=0.7",
+    "sphinxcontrib-mermaid>=2.0",
+    # Profiling
+    "memory-profiler>=0.61",
+    "line-profiler>=5.0; sys_platform != 'win32'",
+    "pympler>=1.1",
+    # Notebooks
+    "nbconvert>=7.17",
+    "ipykernel>=7.2",
+    "ipywidgets>=8.1.8",
+    "jupyterlab>=4.4",
 ]
 
 [project.scripts]
@@ -119,61 +156,6 @@ xpcsviewer-gui = "xpcsviewer.cli_main:main_gui"
 [tool.uv]
 # Prefer uv-managed Python to guarantee reproducible environments
 python-preference = "managed"
-# Default groups to install with `uv sync`
-default-groups = ["dev", "test"]
-
-[dependency-groups]
-dev = [
-    "coverage[toml]>=7.13.0",
-    "pytest>=9.0.0",
-    "pytest-cov>=7.0.0",
-    "pytest-xdist[psutil]>=3.8.0",
-    "pytest-benchmark>=5.2.0",
-    "pytest-mock>=3.15.0",
-    "pytest-timeout>=2.4.0",
-    "pytest-sugar>=1.1.0",
-    "pytest-html>=4.2.0",
-    "pytest-qt>=4.5.0",
-    "hypothesis>=6.148.0",
-    "mypy>=1.19.0",
-    "ruff>=0.15.0",
-    "bandit[toml]>=1.9.0",
-    "pre-commit>=4.5.0",
-    "build>=1.4.0",
-    "twine>=6.2.0",
-    "sphinx>=9.1.0",
-    "furo>=2025.12.19",
-    "myst-parser>=5.0.0",
-    "sphinx-autodoc-typehints>=3.6.0",
-    "sphinx-copybutton>=0.5.2",
-    "sphinx-design>=0.7.0",
-    "sphinxcontrib-mermaid>=2.0.0",
-    "memory-profiler>=0.61.0",
-    "line-profiler>=5.0.0; sys_platform != 'win32'",
-    "pympler>=1.1",
-    "nbconvert>=7.17.0",
-    "ipykernel>=7.2.0",
-    "ipywidgets>=8.1.8",
-    "jupyterlab>=4.4.0",
-]
-test = [
-    "pytest>=9.0.0",
-    "pytest-qt>=4.5.0",
-    "pytest-xdist[psutil]>=3.8.0",
-    "pytest-timeout>=2.4.0",
-    "pytest-sugar>=1.1.0",
-    "pytest-mock>=3.15.0",
-    "pytest-cov>=7.0.0",
-]
-docs = [
-    "sphinx>=9.1.0",
-    "furo>=2025.12.19",
-    "myst-parser>=5.0.0",
-    "sphinx-autodoc-typehints>=3.6.0",
-    "sphinx-copybutton>=0.5.2",
-    "sphinx-design>=0.7.0",
-    "sphinxcontrib-mermaid>=2.0.0",
-]
 
 [tool.setuptools_scm]
 version_scheme = "python-simplified-semver"
