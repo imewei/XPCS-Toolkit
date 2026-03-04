@@ -51,10 +51,18 @@ keywords = ["XPCS", "X-ray", "photon correlation spectroscopy", "synchrotron", "
 #     make install-jax-gpu-cuda13   # Force CUDA 13 (requires system CUDA 13.x)
 #     make install-jax-gpu-cuda12   # Force CUDA 12 (requires system CUDA 12.x)
 #
-#   Manual install (uses system CUDA):
-#     pip uninstall -y jax jaxlib
+#   Manual install (uninstall ALL existing JAX/CUDA packages first):
+#     pip uninstall -y jax jaxlib jax-cuda13-plugin jax-cuda13-pjrt \
+#                      jax-cuda12-plugin jax-cuda12-pjrt
 #     pip install "jax[cuda13-local]"  # If system has CUDA 13.x
 #     pip install "jax[cuda12-local]"  # If system has CUDA 12.x
+#
+#   Or with project extras (ensures matching versions):
+#     pip install "xpcsviewer-gui[gpu_cuda13]"   # CUDA 13
+#     pip install "xpcsviewer-gui[gpu_cuda12]"   # CUDA 12
+#
+#   IMPORTANT: Never install both cuda12 and cuda13 plugins simultaneously.
+#   Only ONE CUDA plugin set can be active — having both causes PJRT conflicts.
 #
 #   GPU Compatibility:
 #     CUDA 13 (SM 7.5+): RTX 20xx/30xx/40xx, T4, A100, H100, L40
@@ -69,8 +77,6 @@ keywords = ["XPCS", "X-ray", "photon correlation spectroscopy", "synchrotron", "
 #   Verify your CUDA installation:
 #     nvcc --version        # Should show CUDA 12.x or 13.x
 #     nvidia-smi            # Should show your GPU
-#
-# See README.rst for detailed GPU installation guide
 # ============================================================================
 dependencies = [
     # GUI framework
@@ -140,6 +146,18 @@ dependencies = [
     "ipykernel>=7.2",
     "ipywidgets>=8.1.8",
     "jupyterlab>=4.4",
+]
+
+[project.optional-dependencies]
+gpu_cuda13 = [
+    # CUDA 13 GPU support — versions must match jaxlib
+    "jax-cuda13-plugin>=0.8.0",
+    "jax-cuda13-pjrt>=0.8.0",
+]
+gpu_cuda12 = [
+    # CUDA 12 GPU support — versions must match jaxlib
+    "jax-cuda12-plugin>=0.8.0",
+    "jax-cuda12-pjrt>=0.8.0",
 ]
 
 [project.scripts]

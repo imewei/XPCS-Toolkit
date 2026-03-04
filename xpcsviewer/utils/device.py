@@ -151,6 +151,57 @@ def get_recommended_package() -> str | None:
     return None
 
 
+def check_plugin_conflicts() -> list[str]:
+    """Check for known JAX CUDA plugin conflicts.
+
+    Returns
+    -------
+    list[str]
+        List of issue descriptions (empty = no issues).
+
+    Examples
+    --------
+    >>> issues = check_plugin_conflicts()
+    >>> for issue in issues:
+    ...     print(f"WARNING: {issue}")
+    """
+    issues = []
+    try:
+        import importlib.metadata as md
+
+        jaxlib_v = md.version("jaxlib")
+
+        cuda12 = cuda13 = None
+        try:
+            cuda12 = md.version("jax-cuda12-plugin")
+        except md.PackageNotFoundError:
+            pass
+        try:
+            cuda13 = md.version("jax-cuda13-plugin")
+        except md.PackageNotFoundError:
+            pass
+
+        # Check for dual plugin conflict
+        if cuda12 and cuda13:
+            issues.append(
+                f"Both cuda12 ({cuda12}) and cuda13 ({cuda13}) plugins installed. "
+                "Only ONE can be active — this causes PJRT registration conflicts."
+            )
+
+        # Check for version mismatch
+        for name, version in [("cuda12", cuda12), ("cuda13", cuda13)]:
+            if version and version != jaxlib_v:
+                issues.append(
+                    f"jax-{name}-plugin {version} != jaxlib {jaxlib_v}. "
+                    "Plugin version must exactly match jaxlib."
+                )
+
+    except Exception as e:
+        _logger.debug(f"Plugin conflict check failed: {e}")
+
+    return issues
+
+
 def check_gpu_availability(warn: bool = True) -> bool:
     """Check if GPU is available but not being used by JAX.
 
@@ -188,6 +239,10 @@ def check_gpu_availability(warn: bool = True) -> bool:
 
         if using_gpu:
             _logger.debug(f"JAX is using GPU: {devices}")
+            # Check for plugin issues even when GPU works
+            issues = check_plugin_conflicts()
+            for issue in issues:
+                _logger.warning(f"Plugin issue: {issue}")
             return True
 
         # GPU available but not being used
@@ -216,6 +271,13 @@ def _print_gpu_warning(
     print(f"GPU: {gpu_name} (SM {sm_version})")
     print(f"System CUDA: {cuda_version or 'Not found'}")
     print("JAX backend: CPU-only")
+
+    issues = check_plugin_conflicts()
+    if issues:
+        print("\nIssues detected:")
+        for issue in issues:
+            print(f"  - {issue}")
+
     print()
 
     if cuda_major is None:
@@ -229,7 +291,11 @@ def _print_gpu_warning(
         print("  make install-jax-gpu")
         print()
         print("Or manually:")
-        print("  pip uninstall -y jax jaxlib")
+        print(
+            "  pip uninstall -y jax jaxlib "
+            "jax-cuda13-plugin jax-cuda13-pjrt "
+            "jax-cuda12-plugin jax-cuda12-pjrt"
+        )
         print(f'  pip install "{pkg}"')
 
     print("\nSee README.rst for details.\n")
@@ -252,6 +318,7 @@ def get_device_info() -> dict:
         - system_cuda_version: System CUDA version string
         - system_cuda_major: System CUDA major version (int)
         - recommended_package: Recommended JAX package
+        - plugin_issues: List of detected plugin conflict descriptions
 
     Examples
     --------
@@ -271,6 +338,7 @@ def get_device_info() -> dict:
         "system_cuda_version": None,
         "system_cuda_major": None,
         "recommended_package": None,
+        "plugin_issues": [],
     }
 
     # JAX info
@@ -296,7 +364,8 @@ def get_device_info() -> dict:
     info["system_cuda_version"] = cuda_version
     info["system_cuda_major"] = cuda_major
 
-    # Recommended package
+    # Recommended package and plugin health
     info["recommended_package"] = get_recommended_package()
+    info["plugin_issues"] = check_plugin_conflicts()
 
     return info

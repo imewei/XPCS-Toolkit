@@ -69,24 +69,90 @@ included automatically — no extras needed.
 GPU Acceleration (Optional)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Default installation uses CPU-only JAX. For GPU acceleration on Linux with
-an NVIDIA GPU and system CUDA 12+ or 13+:
+**Performance Impact:** 20-100x speedup for large datasets (>1M points)
+
+**Prerequisites:**
+
+- NVIDIA GPU with SM >= 5.2 (Maxwell or newer)
+- System CUDA 12.x or 13.x installed (``nvcc`` in PATH)
+
+**Quick Install (Recommended):**
 
 .. code-block:: bash
 
-   # Auto-detect system CUDA version (from repo checkout)
+   # Auto-detect system CUDA version and install matching JAX
    make install-jax-gpu
 
-   # Or manually install JAX with CUDA support
-   pip install jax[cuda12-local]    # System CUDA 12.x
-   pip install jax[cuda13-local]    # System CUDA 13.x
+This detects your system CUDA version, validates GPU compatibility,
+removes any conflicting packages, installs the correct JAX GPU package,
+and verifies GPU detection.
 
-**Verify GPU detection:**
+**Manual Install:**
 
 .. code-block:: bash
 
-   python -c "import jax; print(jax.devices())"
-   # Expected output: [CudaDevice(id=0), ...]
+   # 1. Check your CUDA version
+   nvcc --version    # Note: release 12.x or 13.x
+
+   # 2. Remove ALL existing JAX/CUDA packages (prevents plugin conflicts)
+   pip uninstall -y jax jaxlib \
+       jax-cuda13-plugin jax-cuda13-pjrt \
+       jax-cuda12-plugin jax-cuda12-pjrt
+
+   # 3. Install matching package
+   pip install "jax[cuda13-local]"   # For CUDA 13.x (SM >= 7.5)
+   pip install "jax[cuda12-local]"   # For CUDA 12.x (SM >= 5.2)
+
+   # 4. Verify
+   python -c "import jax; print(jax.default_backend(), jax.devices())"
+   # Expected: gpu [CudaDevice(id=0)]
+
+**Troubleshooting:**
+
+.. list-table::
+   :header-rows: 1
+   :widths: 35 30 35
+
+   * - Symptom
+     - Cause
+     - Fix
+   * - ``plugin version X is not compatible with jaxlib Y``
+     - Plugin/jaxlib version mismatch
+     - Uninstall all, reinstall: ``make install-jax-gpu``
+   * - ``PJRT_Api already exists for device type cuda``
+     - Both cuda12 and cuda13 plugins installed
+     - Uninstall all, reinstall only ONE
+   * - ``nvcc not found``
+     - CUDA toolkit missing or not in PATH
+     - ``sudo apt install nvidia-cuda-toolkit`` or ``export PATH=/usr/local/cuda/bin:$PATH``
+   * - ``Backend: cpu`` (GPU exists)
+     - GPU JAX packages not installed
+     - ``make install-jax-gpu``
+   * - ``libcuda.so not found``
+     - CUDA libs not in LD_LIBRARY_PATH
+     - ``export LD_LIBRARY_PATH=/usr/local/cuda/lib64:$LD_LIBRARY_PATH``
+
+**Platform Support:**
+
+.. list-table::
+   :header-rows: 1
+   :widths: 30 20 50
+
+   * - Platform
+     - GPU
+     - Notes
+   * - Linux x86_64/aarch64
+     - Full
+     - System CUDA 12.x or 13.x
+   * - Windows WSL2
+     - Experimental
+     - Linux wheels
+   * - macOS
+     - CPU-only
+     - No NVIDIA support
+   * - Windows native
+     - CPU-only
+     - No pre-built wheels
 
 **Environment variables for control:**
 

@@ -150,7 +150,8 @@ Crash-safe JSON writes via atomic file replacement.
 Device Detection
 ----------------
 
-GPU detection, system CUDA discovery, and JAX backend diagnostics.
+GPU detection, system CUDA discovery, JAX backend diagnostics, and
+CUDA plugin conflict detection.
 
 .. automodule:: xpcsviewer.utils.device
    :members:
