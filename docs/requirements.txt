@@ -1,7 +1,7 @@
 # Documentation build requirements for XPCS Toolkit
-# Python >=3.12; prefer `uv sync --group docs` locally, RTD uses pip.
+# Python >=3.12; prefer `uv sync` locally, RTD uses pip.
 
-# Core Sphinx dependencies (kept in sync with pyproject [project.optional-dependencies].docs)
+# Core Sphinx dependencies (kept in sync with pyproject.toml [project].dependencies)
 sphinx>=9.1.0
 furo>=2025.12.19
 myst-parser>=5.0.0

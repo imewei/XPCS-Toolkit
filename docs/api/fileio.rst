@@ -11,7 +11,11 @@ HDF5 Reader
 Optimized HDF5 file reading with connection pooling and batch operations.
 Supports both synchronous and asynchronous reading patterns.
 
-See :mod:`xpcsviewer.fileIO.hdf_reader` for complete API documentation.
+.. automodule:: xpcsviewer.fileIO.hdf_reader
+   :members:
+   :undoc-members:
+   :show-inheritance:
+   :no-index:
 
 Enhanced HDF5 Reader
 --------------------
@@ -19,7 +23,11 @@ Enhanced HDF5 Reader
 Advanced HDF5 reader with additional caching and performance optimizations.
 Built on top of the base HDF5 reader with extended functionality.
 
-See :mod:`xpcsviewer.fileIO.hdf_reader_enhanced` for complete API documentation.
+.. automodule:: xpcsviewer.fileIO.hdf_reader_enhanced
+   :members:
+   :undoc-members:
+   :show-inheritance:
+   :no-index:
 
 Q-space Mapping
 ---------------
@@ -27,7 +35,11 @@ Q-space Mapping
 Detector geometry calculations and Q-space coordinate transformations.
 Essential for converting pixel coordinates to reciprocal space.
 
-See :mod:`xpcsviewer.fileIO.qmap_utils` for complete API documentation.
+.. automodule:: xpcsviewer.fileIO.qmap_utils
+   :members:
+   :undoc-members:
+   :show-inheritance:
+   :no-index:
 
 APS 8-IDI Beamline Support
 --------------------------
@@ -35,11 +47,19 @@ APS 8-IDI Beamline Support
 Beamline-specific data structure definitions and format handlers.
 Supports both "nexus" and legacy data formats from APS-8IDI.
 
-See :mod:`xpcsviewer.fileIO.aps_8idi` for complete API documentation.
+.. automodule:: xpcsviewer.fileIO.aps_8idi
+   :members:
+   :undoc-members:
+   :show-inheritance:
+   :no-index:
 
 File Type Utilities
 -------------------
 
 File format detection and validation utilities for XPCS data files.
 
-See :mod:`xpcsviewer.fileIO.ftype_utils` for complete API documentation.
+.. automodule:: xpcsviewer.fileIO.ftype_utils
+   :members:
+   :undoc-members:
+   :show-inheritance:
+   :no-index:

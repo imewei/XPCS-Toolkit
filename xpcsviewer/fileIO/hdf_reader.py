@@ -396,15 +396,16 @@ class HDF5ConnectionPool:
         health monitoring, LRU management, and performance tracking.
 
         Lock ordering guarantee (BUG-008):
-        All lock acquisitions follow a strict total order:
-            _pool_lock  (pool-level operations)
-        File locks (_get_file_lock) are never held at the same time as
-        _pool_lock.  Health checks and memory-pressure adaptation that require
-        _pool_lock are performed **before** acquiring any file lock so the
-        ordering is always: pool operations → yield (no lock held).  This
-        eliminates the deadlock where Thread A holds _pool_lock (via a yield
-        inside the old `with self._pool_lock:` block) while Thread B waits
-        for _pool_lock from inside its own file_lock critical section.
+        All lock acquisitions follow a strict total order —
+        ``_pool_lock`` (pool-level operations) first.
+        File locks (``_get_file_lock``) are never held at the same time as
+        ``_pool_lock``.  Health checks and memory-pressure adaptation that
+        require ``_pool_lock`` are performed **before** acquiring any file
+        lock so the ordering is always: pool operations then yield (no lock
+        held).  This eliminates the deadlock where Thread A holds
+        ``_pool_lock`` (via a yield inside the old ``with self._pool_lock:``
+        block) while Thread B waits for ``_pool_lock`` from inside its own
+        file_lock critical section.
 
         Parameters
         ----------
