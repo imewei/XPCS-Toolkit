@@ -279,13 +279,14 @@ class TestSignalsAndSlots:
 
             tab_widget.currentChanged.connect(on_tab_changed)
 
-            # Change tab
-            tab_widget.setCurrentIndex(1)
+            # Ensure we start from a different tab, then switch to target
+            target = 1 if tab_widget.currentIndex() != 1 else 0
+            tab_widget.setCurrentIndex(target)
             qtbot.wait(100)
 
             # Verify signal was emitted
             assert len(signal_received) > 0
-            assert signal_received[-1] == 1
+            assert signal_received[-1] == target
 
     @pytest.mark.gui
     def test_window_state_signals(self, gui_main_window, qtbot):
