@@ -36,7 +36,7 @@ class TestGenerateArvizDiagnostics:
             "contrast": np.random.normal(0.3, 0.02, (n_chains, n_samples)),
         }
 
-        return az.from_dict(posterior=posterior_samples)
+        return az.from_dict({"posterior": posterior_samples})
 
     def test_returns_dict(self, mock_trace) -> None:
         """Test function returns dictionary."""
@@ -113,7 +113,7 @@ class TestDiagnosticPlotContent:
         posterior = {
             "x": np.random.normal(0, 1, (2, 50)),
         }
-        return az.from_dict(posterior=posterior)
+        return az.from_dict({"posterior": posterior})
 
     def test_figures_have_axes(self, simple_trace) -> None:
         """Test generated figures have axes."""
