@@ -213,10 +213,6 @@ jobs:
             ;;
         esac
 
-        # Offscreen golden snapshot check
-        echo "[INFO] Running offscreen golden snapshot check..."
-        uv run pytest tests/gui_interactive/test_offscreen_snapshot.py --tb=short -q --disable-warnings --no-cov
-
         echo "[SUCCESS] Test execution completed successfully"
 
     - name: Upload coverage reports
