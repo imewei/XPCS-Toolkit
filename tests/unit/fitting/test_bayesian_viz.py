@@ -44,6 +44,7 @@ class TestPlotBayesianAllQ:
 
         matplotlib.use("Agg")
         from matplotlib.collections import LineCollection
+
         from xpcsviewer.fitting.viz import plot_bayesian_all_q
 
         # 3 Q-bins, Q-index 1 failed

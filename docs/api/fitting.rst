@@ -310,12 +310,25 @@ For backward compatibility with older code:
 
 .. autofunction:: xpcsviewer.fitting.vectorized_residual_analysis
 
+NUTS Sampler
+~~~~~~~~~~~~
+
+NumPyro NUTS sampler with NLSQ warm-start for Bayesian parameter estimation.
+
+.. automodule:: xpcsviewer.fitting.sampler
+   :members:
+   :no-index:
+
 Bayesian Visualization
 ~~~~~~~~~~~~~~~~~~~~~~
 
 .. automodule:: xpcsviewer.fitting.viz
    :members:
    :undoc-members:
+
+.. automodule:: xpcsviewer.fitting.visualization
+   :members:
+   :no-index:
 
 Bayesian Assembly
 -----------------

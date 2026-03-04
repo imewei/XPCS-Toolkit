@@ -288,7 +288,7 @@ def curve_fit(
     Parameters
     ----------
     f : callable
-        Model function: f(x, *params)
+        Model function: ``f(x, *params)``
     xdata : array-like
         Independent variable
     ydata : array-like

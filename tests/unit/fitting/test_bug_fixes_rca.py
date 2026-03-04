@@ -608,9 +608,9 @@ class TestBugH_SamplesKeyOrder:
         )
 
         # With param_names, visualization should unpack in correct order
-        from xpcsviewer.fitting.visualization import plot_posterior_predictive
-
         import matplotlib
+
+        from xpcsviewer.fitting.visualization import plot_posterior_predictive
 
         matplotlib.use("Agg")
         import matplotlib.pyplot as plt

@@ -400,7 +400,6 @@ class TestLogTiming:
         @log_timing()
         def documented_function():
             """This is the docstring."""
-            pass
 
         assert documented_function.__name__ == "documented_function"
         assert "docstring" in documented_function.__doc__

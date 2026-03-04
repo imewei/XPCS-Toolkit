@@ -1,8 +1,9 @@
 """Integration test: batch Bayesian -> dual storage -> plot -> export."""
 
+from unittest.mock import MagicMock
+
 import numpy as np
 import pytest
-from unittest.mock import MagicMock
 
 
 class TestBayesianIntegration:
@@ -110,8 +111,9 @@ class TestBayesianIntegration:
 
     def test_dual_storage_independence(self):
         """Setting bayesian_fit_summary must not affect fit_summary on XpcsFile."""
-        from xpcsviewer.xpcs_file import XpcsFile
         from unittest.mock import patch
+
+        from xpcsviewer.xpcs_file import XpcsFile
 
         with patch.object(XpcsFile, "__init__", lambda self: None):
             xf = XpcsFile.__new__(XpcsFile)

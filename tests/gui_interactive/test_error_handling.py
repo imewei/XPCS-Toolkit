@@ -502,6 +502,7 @@ class TestConcurrencyIssues:
         # Application should handle thread conflicts
         assert window.isVisible()
 
+
 class TestResourceCleanup:
     """Test suite for resource cleanup and memory leaks."""
 

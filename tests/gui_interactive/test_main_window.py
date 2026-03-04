@@ -47,6 +47,7 @@ class TestMainWindow:
         # Verify message is displayed
         assert test_message in status_bar.currentMessage()
 
+
 class TestTabManagement:
     """Test suite for tab-specific functionality."""
 
@@ -208,6 +209,7 @@ class TestSignalsAndSlots:
             # Verify signal was emitted
             assert len(signal_received) > 0
             assert signal_received[-1] == target
+
 
 class TestKeyboardShortcuts:
     """Test suite for keyboard shortcuts and accessibility."""

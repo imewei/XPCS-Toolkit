@@ -845,6 +845,7 @@ class XpcsFile:
         """
         try:
             import jax.numpy as jnp
+
             from xpcsviewer.backends._conversions import ensure_numpy
 
             kernel = _get_jax_saxs_log()

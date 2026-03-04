@@ -34,6 +34,23 @@ All notable changes to this project will be documented in this file.
 
 - ArviZ `InferenceData` migrated to xarray `DataTree` for ArviZ 1.0+ compatibility (`FitResult.arviz_data`, `compute_bfmi`, `generate_arviz_diagnostics`, `bayesian_diagnosis`)
 - 59 ruff auto-fixes: unused imports, `Callable` migration, unnecessary `else` after `return`
+- Ruff auto-formatting applied across codebase
+
+### Removed
+
+- 16 flaky GUI tests: always-pass assertions (`assert True`, `len >= 0`, `or True`), race conditions (5–10 ms waits), and empty test bodies from `tests/gui_interactive/`
+
+### Documentation
+
+- API docs coverage expanded: 8 utils modules (atomic_io, device, health_monitor, memory_predictor, reliability_manager, startup_optimizer, state_validator, visualization_optimizer), 3 scipy_replacements submodules, fitting sampler, fitting visualization, and schema validators
+- LaTeX/PDF build configured: XeLaTeX engine with Unicode character support
+- Fixed `curve_fit` docstring RST emphasis warning in scipy_replacements
+
+### Build
+
+- Consolidated `dev`, `docs`, and `test` dependency extra groups into base requirements
+- CI: skip local hooks in pre-commit.ci, remove obsolete documentation group references
+- Updated offscreen plotting golden image for snapshot tests
 
 ## [0.1.3] - 2026-02-23
 

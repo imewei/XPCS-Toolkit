@@ -63,7 +63,7 @@ def set_icon_color(color: str) -> None:
     Args:
         color: Hex color string (e.g. '#E8E8E4' for dark theme text).
     """
-    global _current_color  # noqa: PLW0603
+    global _current_color
     _current_color = color
 
 

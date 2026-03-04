@@ -39,7 +39,7 @@ _shutting_down = False
 
 def safe_shutdown():
     """Safely shutdown the application to prevent segfaults."""
-    global _shutting_down  # noqa: PLW0603 - intentional for graceful shutdown coordination
+    global _shutting_down
     if _shutting_down:
         return
     _shutting_down = True

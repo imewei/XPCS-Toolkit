@@ -354,6 +354,7 @@ class TestProgressIndication:
             assert loading_widget.isVisible()
             assert "loading" in loading_widget.text().lower()
 
+
 class TestFileListManagement:
     """Test suite for file list display and management."""
 
@@ -546,6 +547,7 @@ class TestFileOperationIntegration:
                     gui_test_helpers.click_tab(qtbot, tab_widget, 1)
                     qtbot.wait(50)
                     assert tab_widget.currentIndex() == 1
+
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

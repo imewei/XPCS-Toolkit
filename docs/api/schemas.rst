@@ -127,6 +127,15 @@ are converted to tuples internally.
    d["sqmap"] = modified_array
    new_qmap = QMapSchema.from_dict(d)
 
+Validators
+----------
+
+Validation helper functions used by schema ``__post_init__`` methods.
+
+.. automodule:: xpcsviewer.schemas.validators
+   :members:
+   :no-index:
+
 See Also
 --------
 

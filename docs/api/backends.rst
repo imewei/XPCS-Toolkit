@@ -123,6 +123,28 @@ Singleton manager for compute device selection and GPU/CPU placement.
    :members:
    :no-index:
 
+SciPy Replacements
+-------------------
+
+JAX-compatible replacements for SciPy functions using interpax, optimistix,
+and optax. Used by the SimpleMask module for GPU-accelerated operations.
+
+.. automodule:: xpcsviewer.backends.scipy_replacements
+   :members:
+   :no-index:
+
+.. automodule:: xpcsviewer.backends.scipy_replacements.interpolate
+   :members:
+   :no-index:
+
+.. automodule:: xpcsviewer.backends.scipy_replacements.ndimage
+   :members:
+   :no-index:
+
+.. automodule:: xpcsviewer.backends.scipy_replacements.optimize
+   :members:
+   :no-index:
+
 See Also
 --------
 

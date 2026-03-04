@@ -33,8 +33,9 @@ class TestAssembleFitSummarySource:
 
     def test_source_field_present(self):
         """Assembled fit_summary must have source='bayesian'."""
-        from xpcsviewer.fitting.bayesian_assembly import assemble_fit_summary
         from unittest.mock import MagicMock
+
+        from xpcsviewer.fitting.bayesian_assembly import assemble_fit_summary
 
         fr = MagicMock()
         fr.get_mean.side_effect = lambda k: {
@@ -66,8 +67,9 @@ class TestAssembleFitSummarySource:
 
     def test_q_range_t_range_forwarded(self):
         """q_range and t_range args must appear in output."""
-        from xpcsviewer.fitting.bayesian_assembly import assemble_fit_summary
         from unittest.mock import MagicMock
+
+        from xpcsviewer.fitting.bayesian_assembly import assemble_fit_summary
 
         fr = MagicMock()
         fr.get_mean.side_effect = lambda k: {

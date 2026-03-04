@@ -133,7 +133,7 @@ class SimpleMaskWindow(QMainWindow):
         # Drawing tool actions (toolbar)
         for tool_key, action in self.tool_actions.items():
             action.triggered.connect(
-                lambda checked, k=tool_key: self._on_tool_selected(k)  # noqa: ARG005
+                lambda checked, k=tool_key: self._on_tool_selected(k)
             )
 
         # Eraser action (toolbar)

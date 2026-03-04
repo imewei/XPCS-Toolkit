@@ -314,7 +314,7 @@ class SimpleMaskKernel:
     def show_saxs(
         self,
         cmap: str = "jet",
-        log: bool = True,  # noqa: ARG002 - kept for API compatibility
+        log: bool = True,
         plot_center: bool = True,
     ) -> None:
         """Display detector image with optional beam center marker.
@@ -393,7 +393,7 @@ class SimpleMaskKernel:
 
         return mask_p
 
-    def add_drawing(  # noqa: PLR0912 - branches needed for different shape types
+    def add_drawing(
         self,
         sl_type: Literal[
             "Rectangle", "Circle", "Ellipse", "Polygon", "Line"

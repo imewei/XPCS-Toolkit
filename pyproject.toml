@@ -329,27 +329,37 @@ ignore = [
     "RET504",  # unnecessary variable assignment before return
     "S101",    # use of assert
     "PLR0913", # too many arguments
+    "PLC0415", # import-outside-top-level (lazy imports for startup perf)
+    "PLR2004", # magic-value-comparison (scientific constants)
+    "E402",    # module-import-not-at-top-of-file (conditional imports)
+    "PLR0915", # too-many-statements (complex GUI methods)
+    "PLR0912", # too-many-branches
+    "PLW0603", # global-statement (singleton patterns)
+    "PLW0602", # global-variable-not-assigned
 ]
 
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["F401"]
-"tests/*" = ["B", "C", "E", "F", "W", "S", "ARG", "PLR", "PLC", "SIM", "RUF", "UP", "PLW", "SLF001", "T201"]
+"tests/*" = ["B", "C", "E", "F", "W", "S", "ARG", "PLR", "PLC", "SIM", "RUF", "UP", "PLW", "SLF001", "T201", "PIE"]
 "validation/*" = ["T201", "S101", "S", "PLR", "PLC", "F401", "SIM"]
 "scripts/*" = ["T201", "PLR"]
-"xpcsviewer/cli/*" = ["PLR", "PLC", "ARG"]
+"xpcsviewer/cli/*" = ["PLR", "PLC", "ARG", "T201"]
 "xpcsviewer/cli_main.py" = ["PLR", "PLC", "ARG"]
 "xpcsviewer/constants/__init__.py" = ["RUF022"]
+"xpcsviewer/backends/*" = ["ARG", "SIM108", "B905", "RUF", "F401"]
+"xpcsviewer/fitting/*" = ["ARG", "SIM108", "SIM103", "B905", "RUF", "F401", "PLW0108"]
 "xpcsviewer/fileIO/*" = ["E402", "PLR", "SIM", "S", "PLW", "PLC", "UP", "ARG", "RUF"]
 "xpcsviewer/file_locator.py" = ["PLR"]
-"xpcsviewer/gui/*" = ["PLR", "PLC", "ARG", "SIM", "F841"]
-"xpcsviewer/utils/*" = ["PLR", "PLC", "SIM", "ARG", "B", "RUF", "PLW", "S"]
-"xpcsviewer/helper/*" = ["PLR", "PLC", "ARG", "SIM"]
-"xpcsviewer/module/*" = ["PLR", "PLC", "ARG", "SIM", "UP", "RUF", "B", "PLW"]
+"xpcsviewer/gui/*" = ["PLR", "PLC", "ARG", "SIM", "F841", "RUF"]
+"xpcsviewer/utils/*" = ["PLR", "PLC", "SIM", "ARG", "B", "RUF", "PLW", "S", "T201"]
+"xpcsviewer/helper/*" = ["PLR", "PLC", "ARG", "SIM", "T201"]
+"xpcsviewer/module/*" = ["PLR", "PLC", "ARG", "SIM", "UP", "RUF", "B", "PLW", "T201", "S110"]
+"xpcsviewer/simplemask/*" = ["ARG", "SIM", "T201", "B905", "PLR", "PLC", "PLW", "RUF002"]
 "xpcsviewer/plothandler/*" = ["PLR", "PLC", "ARG", "SIM", "S", "RUF", "B", "PLW"]
-"xpcsviewer/threading/*" = ["PLR", "PLC", "ARG", "SIM", "RUF"]
+"xpcsviewer/threading/*" = ["PLR", "PLC", "ARG", "SIM", "RUF", "PLW0108"]
 "xpcsviewer/constants/*" = ["RUF022"]
-"xpcsviewer/xpcs_file.py" = ["PLR", "PLC", "PLW", "ARG", "SIM"]
-"xpcsviewer/xpcs_viewer.py" = ["PLR", "PLC", "ARG", "S608", "RUF034"]
+"xpcsviewer/xpcs_file.py" = ["PLR", "PLC", "PLW", "ARG", "SIM", "RUF002"]
+"xpcsviewer/xpcs_viewer.py" = ["PLR", "PLC", "ARG", "SIM", "S110", "S608", "RUF034", "T201", "PLW0108", "B905"]
 "xpcsviewer/xpcs_file/__init__.py" = ["PLC", "RUF022"]
 "xpcsviewer/xpcs_file/fitting.py" = ["PLR"]
 "xpcsviewer/xpcs_file/memory.py" = ["F811"]

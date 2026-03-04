@@ -130,12 +130,14 @@ class QMapSchema:
                 raise ValueError("Mask values must be 0 or 1")
 
         # Partition map validation (if provided)
-        if self.partition_map is not None:
-            if self.partition_map.shape != self.sqmap.shape:
-                raise ValueError(
-                    f"Partition map shape {self.partition_map.shape} must match "
-                    f"Q-map shape {self.sqmap.shape}"
-                )
+        if (
+            self.partition_map is not None
+            and self.partition_map.shape != self.sqmap.shape
+        ):
+            raise ValueError(
+                f"Partition map shape {self.partition_map.shape} must match "
+                f"Q-map shape {self.sqmap.shape}"
+            )
 
     @classmethod
     def from_dict(cls, data: dict) -> QMapSchema:
@@ -605,12 +607,11 @@ class PartitionSchema:
             )
 
         # Mask validation (if provided)
-        if self.mask is not None:
-            if self.mask.shape != self.partition_map.shape:
-                raise ValueError(
-                    f"mask shape {self.mask.shape} must match partition_map "
-                    f"shape {self.partition_map.shape}"
-                )
+        if self.mask is not None and self.mask.shape != self.partition_map.shape:
+            raise ValueError(
+                f"mask shape {self.mask.shape} must match partition_map "
+                f"shape {self.partition_map.shape}"
+            )
 
         # Method validation (if provided)
         if self.method is not None and self.method not in ("linear", "log"):

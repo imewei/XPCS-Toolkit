@@ -138,6 +138,82 @@ Optimized data processing utilities.
    :members:
    :no-index:
 
+Atomic I/O
+----------
+
+Crash-safe JSON writes via atomic file replacement.
+
+.. automodule:: xpcsviewer.utils.atomic_io
+   :members:
+   :no-index:
+
+Device Detection
+----------------
+
+GPU detection, system CUDA discovery, and JAX backend diagnostics.
+
+.. automodule:: xpcsviewer.utils.device
+   :members:
+   :no-index:
+
+Health Monitoring
+-----------------
+
+Background health monitoring for resource usage and reliability metrics.
+
+.. automodule:: xpcsviewer.utils.health_monitor
+   :members:
+   :no-index:
+
+Memory Prediction
+-----------------
+
+Predictive memory pressure detection for proactive memory management
+in XPCS data analysis workflows.
+
+.. automodule:: xpcsviewer.utils.memory_predictor
+   :members:
+   :no-index:
+
+Reliability Manager
+-------------------
+
+Unified entry point for enabling and configuring reliability features.
+
+.. automodule:: xpcsviewer.utils.reliability_manager
+   :members:
+   :no-index:
+
+Startup Optimization
+--------------------
+
+Application startup performance optimization via lazy loading,
+parallel initialization, and resource preloading.
+
+.. automodule:: xpcsviewer.utils.startup_optimizer
+   :members:
+   :no-index:
+
+State Validation
+----------------
+
+Lock-free state consistency validation using atomic operations
+and weak references.
+
+.. automodule:: xpcsviewer.utils.state_validator
+   :members:
+   :no-index:
+
+Visualization Optimization
+--------------------------
+
+Performance optimization for the visualization layer including
+PyQtGraph and matplotlib backends.
+
+This module conditionally imports PyQtGraph and cannot be introspected
+during the documentation build.  See the source at
+``xpcsviewer/utils/visualization_optimizer.py`` for the full API.
+
 See Also
 --------
 

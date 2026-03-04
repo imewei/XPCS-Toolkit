@@ -30,7 +30,7 @@ from xpcsviewer.simplemask.drawing_tools import DRAWING_TOOLS, ERASER_TOOL
 from xpcsviewer.simplemask.pyqtgraph_mod import ImageViewROI
 
 
-def setup_ui(window) -> None:  # noqa: PLR0915 - UI setup requires many statements
+def setup_ui(window) -> None:
     """Set up the SimpleMask window UI.
 
     Creates a layout with:
@@ -224,7 +224,7 @@ def setup_ui(window) -> None:  # noqa: PLR0915 - UI setup requires many statemen
     window.resize(1200, 800)
 
 
-def _setup_toolbar(window) -> None:  # noqa: PLR0915 - UI setup requires many statements
+def _setup_toolbar(window) -> None:
     """Set up the main toolbar with drawing tools and actions.
 
     Args:

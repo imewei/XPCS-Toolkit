@@ -20,7 +20,7 @@ _vmem_cache_timestamp: float = 0.0
 
 def _get_virtual_memory() -> psutil._common.svmem:
     """Return psutil.virtual_memory(), cached with a 2-second TTL."""
-    global _vmem_cache_result, _vmem_cache_timestamp  # noqa: PLW0603
+    global _vmem_cache_result, _vmem_cache_timestamp
     now = time.monotonic()
     if _vmem_cache_result is None or (now - _vmem_cache_timestamp) >= _VMEM_CACHE_TTL:
         _vmem_cache_result = psutil.virtual_memory()
@@ -117,7 +117,7 @@ def get_cached_memory_monitor() -> MemoryMonitor:
     MemoryMonitor
         Singleton memory monitor instance
     """
-    global _memory_monitor  # noqa: PLW0603 - intentional singleton pattern
+    global _memory_monitor
     if _memory_monitor is None:
         _memory_monitor = MemoryMonitor()
     return _memory_monitor

@@ -38,7 +38,7 @@ _xpcs_file_class = None
 
 
 def __getattr__(name):
-    global _xpcs_file_class  # noqa: PLW0603
+    global _xpcs_file_class
     if name == "XpcsFile":
         if _xpcs_file_class is None:
             import importlib.util

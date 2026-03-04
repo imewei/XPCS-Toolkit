@@ -163,8 +163,8 @@ class MaskFile(MaskBase):
     def __init__(
         self,
         shape: tuple[int, int] = (512, 1024),
-        fname: str | None = None,  # noqa: ARG002 - kept for API compatibility
-        **kwargs,  # noqa: ARG002 - kept for API compatibility
+        fname: str | None = None,
+        **kwargs,
     ) -> None:
         super().__init__(shape=shape)
         self.mtype = "file"
