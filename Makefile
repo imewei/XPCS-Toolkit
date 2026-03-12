@@ -603,16 +603,13 @@ gpu-check:
 	@echo "$(BOLD)$(BLUE)GPU Verification$(RESET)"
 	@echo "================"
 	@$(PYTHON) -c "\
-	import sys; \
-	import jax; \
+	import sys, jax, jax.numpy as jnp; \
 	v = jax.__version__; \
 	b = jax.default_backend(); \
 	d = jax.devices(); \
 	gpu = sum(1 for x in d if 'cuda' in str(x).lower()); \
 	print(f'JAX {v}  backend={b}  devices={gpu} GPU'); \
-	if b != 'gpu': \
-	    print('WARNING: Not using GPU'); sys.exit(1); \
-	import jax.numpy as jnp; \
+	(b == 'gpu') or (print('WARNING: Not using GPU'), sys.exit(1)); \
 	s = jnp.linalg.svd(jnp.eye(3))[1]; \
 	print(f'SVD check: {s}'); \
 	print('All checks passed')"
