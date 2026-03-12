@@ -4,9 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [0.1.6] - 2026-03-12
 
+### Fixed
+
+- Python syntax error in Makefile `gpu-check` target (inline `if` with line continuations)
+
 ### Changed
 
 - CI: bump `astral-sh/setup-uv` from v4 to v7 across all GitHub Actions workflows
+- CI: bump GitHub Actions to latest majors (`checkout` v5→v6, `upload-artifact` v4→v7, `download-artifact` v5→v8, `cache` v4→v5, `codecov-action` v4→v5, `action-gh-release` v1→v2)
 
 ## [0.1.5] - 2026-03-04
 
