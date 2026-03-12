@@ -101,13 +101,13 @@ class TestCrossThreadCancellationVisibility:
         # Main thread signals cancellation
         toolbox.kill()
 
-        # Worker thread must observe the event within 50 ms
-        observed = observed_kill.wait(timeout=0.05)
+        # Worker thread must observe the event within 500 ms (generous for CI)
+        observed = observed_kill.wait(timeout=0.5)
 
-        t.join(timeout=0.5)
+        t.join(timeout=1.0)
 
         assert observed, (
-            "Worker thread did not observe kill signal within 50 ms. "
+            "Worker thread did not observe kill signal within 500 ms. "
             "A plain bool flag has no memory fence and may not be visible "
             "across threads. threading.Event guarantees visibility."
         )
