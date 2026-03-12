@@ -43,7 +43,7 @@ jobs:
     timeout-minutes: 20
 
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
       with:
         fetch-depth: 0
 
@@ -88,7 +88,7 @@ jobs:
         find docs/_build/html/ -name "*.html" | head -10
 
     - name: Upload docs artifacts
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: docs-build-${{ github.sha }}
         path: docs/_build/html
@@ -96,7 +96,7 @@ jobs:
 
     - name: Upload docs artifacts (PR preview)
       if: github.event_name == 'pull_request'
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: docs-preview-pr-${{ github.event.number }}
         path: docs/_build/html
@@ -110,7 +110,7 @@ jobs:
 
     steps:
     - name: Download built docs
-      uses: actions/download-artifact@v5
+      uses: actions/download-artifact@v8
       with:
         name: ${{ github.event_name == 'pull_request' && format('docs-preview-pr-{0}', github.event.number) || format('docs-build-{0}', github.sha) }}
         path: _site
@@ -124,7 +124,7 @@ jobs:
         output: link-check-report.md
 
     - name: Upload link check report
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       if: always()
       with:
         name: link-check-report-${{ github.sha }}

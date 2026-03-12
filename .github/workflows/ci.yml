@@ -53,7 +53,7 @@ jobs:
     timeout-minutes: 5
 
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
 
     - name: Install uv
       uses: astral-sh/setup-uv@v7
@@ -71,7 +71,7 @@ jobs:
         echo "[OK] Dependencies installed with uv"
 
     - name: Cache pre-commit environments
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       with:
         path: ~/.cache/pre-commit
         key: pre-commit-${{ runner.os }}-${{ hashFiles('.pre-commit-config.yaml') }}
@@ -120,7 +120,7 @@ jobs:
             python-version: "3.13"
 
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
       with:
         fetch-depth: 0
 
@@ -216,7 +216,7 @@ jobs:
         echo "[SUCCESS] Test execution completed successfully"
 
     - name: Upload coverage reports
-      uses: codecov/codecov-action@v4
+      uses: codecov/codecov-action@v5
       if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.13' && (steps.test-level.outputs.level == 'core' || steps.test-level.outputs.level == 'full')
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
@@ -262,7 +262,7 @@ jobs:
     timeout-minutes: 10
 
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
       with:
         fetch-depth: 0
 
@@ -307,7 +307,7 @@ jobs:
         rm -rf test_env
 
     - name: Upload build artifacts
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: dist-${{ github.sha }}
         path: dist/
@@ -321,7 +321,7 @@ jobs:
     continue-on-error: true
 
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
 
     - name: Install uv
       uses: astral-sh/setup-uv@v7
@@ -346,7 +346,7 @@ jobs:
         uvx pip-audit --desc --ignore-vuln GHSA-4xh5-x5gv-qwph
 
     - name: Upload security reports
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       if: always()
       with:
         name: security-reports-${{ github.sha }}
