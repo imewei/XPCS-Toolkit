@@ -284,8 +284,7 @@ class TestPgPlotFunction:
                 y_range=[1, 3],
                 plot_type="multiple",
             )
-            # Function should complete without error
-            assert True
+            # Function completed without error
         except Exception as e:
             # If it fails, ensure it's not due to basic structure issues
             assert "get_data" not in str(e), f"Basic structure error: {e}"

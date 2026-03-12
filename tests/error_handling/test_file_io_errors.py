@@ -568,7 +568,7 @@ class TestErrorRecoveryAndCleanup:
         error_logs = [
             record for record in caplog.records if record.levelname == "ERROR"
         ]
-        assert len(error_logs) >= 0  # At least some error logging should occur
+        assert len(error_logs) > 0, "Corrupted HDF5 should produce error logs"
 
     def test_graceful_degradation_under_errors(self, error_temp_dir, error_injector):
         """Test graceful degradation when components fail."""

@@ -383,7 +383,7 @@ class TestQMapComputeQmap:
 
         # Should contain q and phi mappings
         assert "q" in qmap_dict or "phi" in qmap_dict
-        assert len(units_dict) >= 0
+        assert len(units_dict) > 0, "units_dict should have entries"
 
 
 class TestQMapCreateQbinLabels:
@@ -405,7 +405,7 @@ class TestQMapCreateQbinLabels:
         labels = qmap.create_qbin_labels()
 
         assert isinstance(labels, list)
-        assert len(labels) >= 0
+        assert len(labels) > 0, "qbin labels should be non-empty"
 
         # Labels should be strings
         if labels:
