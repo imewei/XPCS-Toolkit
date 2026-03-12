@@ -1940,7 +1940,7 @@ name = "line-profiler"
 version = "5.0.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "typing-extensions", marker = "sys_platform != 'win32'" },
+    { name = "typing-extensions" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/03/b6/6d18ad201417a9c5168995541d0fd7981b5652b2b34f6e46a3a93c0f1beb/line_profiler-5.0.2.tar.gz", hash = "sha256:8d8a990c84c64bcde45af22af502d17bc0ae107be405ce41bba92af5c39c0000", size = 407075, upload-time = "2026-02-23T23:31:20.698Z" }
 wheels = [
@@ -2443,7 +2443,7 @@ wheels = [
 
 [[package]]
 name = "nlsq"
-version = "0.6.10"
+version = "0.6.11"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "asv" },
@@ -2493,9 +2493,9 @@ dependencies = [
     { name = "wheel" },
     { name = "xxhash" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/94/df/7648b77134686af9755917b8d6725176eed2b106b4fa928321667c6a964b/nlsq-0.6.10.tar.gz", hash = "sha256:d75e07cb1755ddc210ea9af5bb88f6b0f05d7ab34580738fe65cb49241270fef", size = 2145155, upload-time = "2026-03-10T07:30:49.915Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/b9/c7/8828779c5d951950570e3f774cf35a6df05f58d6f22c4f462c00e393fcda/nlsq-0.6.11.tar.gz", hash = "sha256:38555a6c3ab10e2fd7a4d22814130f605573676893d8239787c1e4ef6284790f", size = 2147053, upload-time = "2026-03-12T21:23:25.565Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/7d/f6/878642445d87dbac3396790658965264db06639a82246fe879d25aeed111/nlsq-0.6.10-py3-none-any.whl", hash = "sha256:320c6cbd71641a089f0831b5498ebb0bb4d77f1ac44b425a605f5c8d35057d21", size = 649845, upload-time = "2026-03-10T07:30:48.184Z" },
+    { url = "https://files.pythonhosted.org/packages/39/db/edeba7e5a4c6f939408814c56613b8d06e4d574ecebb7a6ee5484620cff8/nlsq-0.6.11-py3-none-any.whl", hash = "sha256:31e1536680593ba792640ec258ffe090ffee9f20e6fe8d493a52b34264977e21", size = 649910, upload-time = "2026-03-12T21:23:23.83Z" },
 ]
 
 [[package]]
