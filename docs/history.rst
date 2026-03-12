@@ -6,6 +6,11 @@ See the full changelog in `CHANGELOG.md <https://github.com/imewei/xpcsviewer/bl
 Recent Changes
 --------------
 
+Version 0.1.6 (2026-03-12)
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- CI: bump ``astral-sh/setup-uv`` from v4 to v7 across all GitHub Actions workflows
+
 Version 0.1.3 (2026-02-23)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 

@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.6] - 2026-03-12
+
+### Changed
+
+- CI: bump `astral-sh/setup-uv` from v4 to v7 across all GitHub Actions workflows
+
 ## [0.1.5] - 2026-03-04
 
 ### Added
