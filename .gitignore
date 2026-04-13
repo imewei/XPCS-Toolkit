@@ -262,6 +262,7 @@ run_phase*_temp.py
 
 # Claude Code specific settings
 .claude/
+.claude-progress.md
 .serena/
 agent-os/
 .specify/
