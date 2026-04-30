@@ -167,7 +167,7 @@ def compute_center_from_ring(
     # Determine threshold
     if intensity_threshold is None:
         valid_values = valid_image[~np.isnan(valid_image)]
-        intensity_threshold = np.mean(valid_values) + 2 * np.std(valid_values)
+        intensity_threshold = float(np.mean(valid_values) + 2 * np.std(valid_values))
 
     # Find ring pixels
     ring_mask = valid_image > intensity_threshold
