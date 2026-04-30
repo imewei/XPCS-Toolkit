@@ -47,13 +47,35 @@ if os.environ.get("BUILDING_DOCS") and not TYPE_CHECKING:
     plot_constants = types.ModuleType("xpcsviewer.plothandler.plot_constants")
     qt_signal_fixes = types.ModuleType("xpcsviewer.plothandler.qt_signal_fixes")
 else:
-    try:
-        from . import matplot_qt, plot_constants, pyqtgraph_handler, qt_signal_fixes
-        from .matplot_qt import MplCanvas, MplCanvasBar, MplCanvasBarH, MplCanvasBarV
-        from .pyqtgraph_handler import ImageViewDev, ImageViewPlotItem, PlotWidgetDev
-    except ImportError:
-        # Fallback for missing dependencies
-        pass
+
+    def __getattr__(name):
+        """Lazily load matplotlib and pyqtgraph backends to improve startup time."""
+        if name in ("MplCanvas", "MplCanvasBar", "MplCanvasBarH"):
+            import importlib
+
+            module = importlib.import_module("xpcsviewer.plothandler.matplot_qt")
+            return getattr(module, name)
+        if name == "MplCanvasBarV":
+            from .lazy_proxy import LazyMplCanvasBarV
+
+            return LazyMplCanvasBarV
+        if name in ("ImageViewDev", "ImageViewPlotItem", "PlotWidgetDev"):
+            import importlib
+
+            module = importlib.import_module("xpcsviewer.plothandler.pyqtgraph_handler")
+            return getattr(module, name)
+        if name in (
+            "matplot_qt",
+            "plot_constants",
+            "pyqtgraph_handler",
+            "qt_signal_fixes",
+        ):
+            import importlib
+
+            return importlib.import_module(f"xpcsviewer.plothandler.{name}")
+
+        raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
 
 __all__ = [
     "ImageViewDev",

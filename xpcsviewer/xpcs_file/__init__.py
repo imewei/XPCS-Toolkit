@@ -16,14 +16,7 @@ from __future__ import annotations
 # Cache utilities
 from xpcsviewer.xpcs_file.cache import CacheItem, DataCache
 
-# Fitting functions
-from xpcsviewer.xpcs_file.fitting import (
-    create_id,
-    double_exp_all,
-    power_law,
-    single_exp_all,
-)
-
+# Fitting functions are loaded lazily via __getattr__ to avoid eager JAX import
 # Memory monitoring utilities
 from xpcsviewer.xpcs_file.memory import (
     MemoryMonitor,
@@ -39,6 +32,13 @@ _xpcs_file_class = None
 
 def __getattr__(name):
     global _xpcs_file_class
+
+    if name in ("create_id", "double_exp_all", "power_law", "single_exp_all"):
+        import importlib
+
+        module = importlib.import_module("xpcsviewer.xpcs_file.fitting")
+        return getattr(module, name)
+
     if name == "XpcsFile":
         if _xpcs_file_class is None:
             import importlib.util

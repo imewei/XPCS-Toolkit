@@ -2,7 +2,10 @@
 import os
 import weakref
 from types import ModuleType
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from .module.average_toolbox import AverageToolbox
 
 # Third-party imports
 import numpy as np
@@ -12,7 +15,6 @@ import pyqtgraph as pg
 from .backends import ensure_numpy
 from .constants import MEMORY_CLEANUP_TIMEOUT_S
 from .file_locator import FileLocator
-from .module.average_toolbox import AverageToolbox
 from .utils.log_utils import log_timing
 from .utils.logging_config import get_logger
 from .xpcs_file import MemoryMonitor, XpcsFile
@@ -114,6 +116,7 @@ class ViewerKernel(FileLocator):
         self.meta: dict[str, Any] = {}
         self.reset_meta()
         self.path = path
+        # Plotting and analysis state
         self.avg_worker: AverageToolbox | None = None
         self.avg_worker_active: dict[int, Any] = {}
 

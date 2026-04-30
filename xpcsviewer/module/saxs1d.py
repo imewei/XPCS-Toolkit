@@ -18,8 +18,7 @@ import pyqtgraph as pg
 from xpcsviewer.backends._conversions import ensure_numpy
 from xpcsviewer.utils.logging_config import get_logger
 
-# Local imports
-from ..plothandler.matplot_qt import get_color_marker
+from ..plothandler.plot_constants import get_color_marker
 
 logger = get_logger(__name__)
 

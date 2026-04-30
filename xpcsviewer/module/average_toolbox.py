@@ -11,7 +11,8 @@ from shutil import copyfile
 # Third-party imports
 import numpy as np
 import pyqtgraph as pg
-from sklearn.cluster import KMeans as sk_kmeans
+
+# sklearn is imported lazily inside functions to avoid eager loading
 from tqdm import tqdm, trange
 
 # Qt imports via compatibility layer
@@ -49,6 +50,8 @@ def average_plot_cluster(self, hdl1, num_clusters=2):
     else:
         logger.info("using avg cache")
         intt_minmax = self.meta["avg_intt_minmax"]
+
+    from sklearn.cluster import KMeans as sk_kmeans
 
     y_pred = sk_kmeans(n_clusters=num_clusters).fit_predict(intt_minmax.T)
     freq = np.bincount(y_pred)

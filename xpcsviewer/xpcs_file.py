@@ -38,10 +38,6 @@ from xpcsviewer.constants import (
     WORKER_THRESHOLD_MEDIUM,
 )
 
-# Note: single_exp_all, double_exp_all, power_law are imported from xpcs_file subpackage.
-# Use absolute path to subpackage modules to avoid circular import with xpcs_file/__init__.py.
-from xpcsviewer.xpcs_file.fitting import double_exp_all, power_law, single_exp_all
-
 # Import extracted utilities from xpcs_file subpackage
 from xpcsviewer.xpcs_file.memory import MemoryMonitor
 
@@ -56,7 +52,6 @@ from .fileIO.hdf_reader import (
 )
 from .fileIO.hdf_reader_enhanced import get_enhanced_hdf5_reader
 from .fileIO.qmap_utils import Q_UNIT_DISPLAY, get_qmap
-from .fitting import fit_with_fixed, fit_with_fixed_parallel, fit_with_fixed_sequential
 from .module.twotime_utils import get_c2_stream, get_single_c2_from_hdf
 from .utils.exceptions import XPCSFileError, convert_exception
 from .utils.lazy_loader import LazyHDF5Array, get_lazy_loader, register_lazy_hdf5
@@ -1706,6 +1701,12 @@ class XpcsFile:
                 self.fit_summary = cached_fit
                 return self.fit_summary
 
+        from xpcsviewer.fitting import (
+            fit_with_fixed,
+            fit_with_fixed_parallel,
+        )
+        from xpcsviewer.xpcs_file.fitting import double_exp_all, single_exp_all
+
         if bounds is None:
             raise ValueError("bounds must be provided for G2 fitting")
         assert len(bounds) == 2
@@ -1876,6 +1877,8 @@ class XpcsFile:
         """
         logger.info(f"Starting sequential G2 fitting with {g2.shape[1]} q-values")
 
+        from xpcsviewer.fitting import fit_with_fixed, fit_with_fixed_sequential
+
         # Use the new sequential fitting approach
         try:
             fit_line, fit_val, _fit_methods = fit_with_fixed_sequential(
@@ -1904,6 +1907,8 @@ class XpcsFile:
         Maintains full backward compatibility.
         """
         try:
+            from xpcsviewer.fitting import fit_with_fixed
+
             # Use the original fit_with_fixed function
             g2_single = g2_col.reshape(-1, 1)
             sigma_single = sigma_col.reshape(-1, 1)
@@ -2046,6 +2051,8 @@ class XpcsFile:
             func = double_exp
         else:
             # Try dynamic import for other function names
+            from xpcsviewer.xpcs_file.fitting import double_exp_all, single_exp_all
+
             try:
                 if fit_func == "single_exp_all":
                     func = single_exp_all
@@ -2063,6 +2070,8 @@ class XpcsFile:
         )
 
         # Perform fitting using parallel or sequential method
+        from xpcsviewer.fitting import fit_with_fixed, fit_with_fixed_parallel
+
         if use_parallel_actual:
             logger.info(
                 f"Using parallel G2 fitting with {max_workers or 'auto'} workers"
@@ -2378,6 +2387,9 @@ class XpcsFile:
                 np.log10(np.min(x_valid) / 1.1), np.log10(np.max(x_valid) * 1.1), 128
             )
             self._memory_manager.cache_put(x_range_key, fit_x, CacheType.COMPUTATION)
+
+        from xpcsviewer.fitting import fit_with_fixed
+        from xpcsviewer.xpcs_file.fitting import power_law
 
         fit_line, fit_val = fit_with_fixed(
             power_law,
