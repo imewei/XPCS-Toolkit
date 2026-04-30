@@ -626,7 +626,7 @@ class TestQtErrorDetectionPerformance:
     """Test performance of Qt error detection framework."""
 
     @pytest.mark.timeout(30)  # Add timeout to prevent hanging
-    def test_error_capture_performance(self, qt_error_capture):
+    def test_error_capture_performance(self, qt_error_capture, qapp):
         """Test performance of error capture mechanism."""
         import os
 
@@ -647,7 +647,8 @@ class TestQtErrorDetectionPerformance:
                 widget.deleteLater()
 
             # Process events to ensure cleanup
-            QtWidgets.QApplication.processEvents()
+            qapp.processEvents()
+            QtCore.QCoreApplication.sendPostedEvents(None, QtCore.QEvent.DeferredDelete)
 
         elapsed_time = time.time() - start_time
 
@@ -657,7 +658,7 @@ class TestQtErrorDetectionPerformance:
         assert elapsed_time < max_time
 
     @pytest.mark.timeout(60)  # Increase timeout for memory test
-    def test_memory_usage_during_error_detection(self):
+    def test_memory_usage_during_error_detection(self, qapp):
         """Test memory usage during error detection."""
         import os
 
@@ -684,7 +685,10 @@ class TestQtErrorDetectionPerformance:
                     widget.deleteLater()
 
                 # Process events to ensure cleanup between batches
-                QtWidgets.QApplication.processEvents()
+                qapp.processEvents()
+                QtCore.QCoreApplication.sendPostedEvents(
+                    None, QtCore.QEvent.DeferredDelete
+                )
 
         final_memory = MemoryTestUtils.get_memory_usage()
         memory_increase = final_memory - initial_memory

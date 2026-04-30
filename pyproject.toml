@@ -90,8 +90,8 @@ dependencies = [
     "scikit-learn>=1.8",
     "scikit-image>=0.26",
     # JAX ecosystem
-    "jax>=0.8",
-    "jaxlib>=0.8",
+    "jax>=0.8, <0.10",
+    "jaxlib>=0.8, <0.10",
     "interpax>=0.3",
     "optimistix>=0.1",
     "optax>=0.2",
@@ -403,11 +403,6 @@ warn_redundant_casts = true
 warn_unused_ignores = true
 warn_unreachable = true
 strict_equality = true
-
-[[tool.mypy.overrides]]
-module = "tests.*"
-allow_untyped_defs = true
-disable_error_code = ["attr-defined", "name-defined"]
 
 [tool.coverage.run]
 source = ["xpcsviewer"]

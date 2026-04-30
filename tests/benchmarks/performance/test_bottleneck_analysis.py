@@ -564,7 +564,7 @@ class TestBottleneck3BatchNormalization:
 #             → two separate partial-sort passes over an array of up to N^2 values.
 #             + np.median(finite_values) → third partial-sort pass.
 #             Each call to np.percentile on 250k values ≈ 2.5ms.
-#   Proposed: np.nanpercentile(c2, [0.1, 50.0, 99.9]) — single-pass triple percentile.
+#   Proposed: np.percentile(finite_values, [0.1, 50.0, 99.9]) — single-pass triple percentile.
 #             Or: use np.nanmin / np.nanmax for the ±inf replacement (no sort needed).
 # ===========================================================================
 
@@ -598,26 +598,18 @@ def c2_clean_baseline(c2: np.ndarray) -> np.ndarray:
 
 
 def c2_clean_candidate(c2: np.ndarray) -> np.ndarray:
-    """Proposed fix: single nanpercentile call (one sort pass for all three values)."""
-    # np.nanpercentile on the full matrix avoids the boolean-index copy of finite_values.
-    # A single call with three q values does one sort instead of three.
-    pcts = np.nanpercentile(c2, [0.1, 50.0, 99.9])
-    neg_replacement, nan_replacement, pos_replacement = (
-        float(pcts[0]),
-        float(pcts[1]),
-        float(pcts[2]),
-    )
-
-    # Short-circuit: if no non-finite values, return early (same as current early-exit)
-    if (
-        np.isfinite(neg_replacement)
-        and np.isfinite(nan_replacement)
-        and np.isfinite(pos_replacement)
-    ):
-        return np.nan_to_num(
-            c2, nan=nan_replacement, posinf=pos_replacement, neginf=neg_replacement
+    """Proposed fix: one finite filtering pass and one triple-percentile call."""
+    finite_values = c2[np.isfinite(c2)]
+    if finite_values.size:
+        neg_replacement, nan_replacement, pos_replacement = np.percentile(
+            finite_values, [0.1, 50.0, 99.9]
         )
-    return np.nan_to_num(c2, nan=0.5, posinf=1.0, neginf=0.0)
+    else:
+        pos_replacement, neg_replacement, nan_replacement = 1.0, 0.0, 0.5
+
+    return np.nan_to_num(
+        c2, nan=nan_replacement, posinf=pos_replacement, neginf=neg_replacement
+    )
 
 
 class TestBottleneck4C2Percentile:
@@ -654,12 +646,12 @@ class TestBottleneck4C2Percentile:
         assert result is not None
 
     def test_candidate_timing(self, c2_data, benchmark):
-        """Candidate timing — single nanpercentile call."""
+        """Candidate timing — single percentile call."""
         result = benchmark(c2_clean_candidate, c2_data)
         assert result is not None
 
     def test_speedup_ratio(self, c2_data):
-        """Single nanpercentile should be at least 2x faster than three separate calls."""
+        """Single percentile call should be faster than three separate calls."""
         n_iters = 50
         t_base = _timeit(lambda: c2_clean_baseline(c2_data), n=n_iters)
         t_cand = _timeit(lambda: c2_clean_candidate(c2_data), n=n_iters)
