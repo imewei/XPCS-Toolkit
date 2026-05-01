@@ -1,0 +1,10 @@
+ignore:
+  - "tests"
+  - "docs"
+  - "notebooks"
+  - "scripts"
+  - ".github"
+  - "pyproject.toml"
+  - "uv.lock"
+  - "Makefile"
+  - "codecov.yml"
