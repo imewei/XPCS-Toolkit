@@ -403,6 +403,7 @@ warn_redundant_casts = true
 warn_unused_ignores = true
 warn_unreachable = true
 strict_equality = true
+disable_error_code = ["annotation-unchecked"]
 
 [tool.coverage.run]
 source = ["xpcsviewer"]

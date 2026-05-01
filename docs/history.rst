@@ -6,6 +6,12 @@ See the full changelog in `CHANGELOG.md <https://github.com/imewei/xpcsviewer/bl
 Recent Changes
 --------------
 
+Version 0.1.7 (2026-05-01)
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- Constrain JAX versions and optimize performance benchmarks
+- Add codecov configuration to ignore non-code paths
+
 Version 0.1.6 (2026-03-12)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
