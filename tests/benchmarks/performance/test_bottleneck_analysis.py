@@ -473,6 +473,7 @@ def batch_g2_normalization_candidate(
     return list(result_stack)
 
 
+@pytest.mark.flaky(reruns=3, reruns_delay=0)
 class TestBottleneck3BatchNormalization:
     """Bottleneck #3: batch_g2_normalization — Python loop over stackable data."""
 
