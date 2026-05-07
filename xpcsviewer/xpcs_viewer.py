@@ -1004,6 +1004,21 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
             except Exception:
                 logger.debug("async_vk shutdown failed during close", exc_info=True)
 
+        # Shutdown UnifiedThreadingManager BEFORE waiting for QThreadPool workers.
+        # Its _monitor_system() thread runs outside the pool and can fire
+        # QMetaObject.invokeMethod calls after Qt objects begin teardown if we
+        # drain the pool first (P1-14).
+        try:
+            from xpcsviewer.threading.unified_threading import (
+                shutdown_unified_threading,
+            )
+
+            shutdown_unified_threading()
+        except Exception:
+            logger.debug(
+                "UnifiedThreadingManager shutdown failed during close", exc_info=True
+            )
+
         # Wait for all thread-pool workers to finish before allowing the GUI
         # objects to be destroyed.  Without this, signals fired from
         # background threads can reach already-deleted C++ QObjects and
@@ -1333,9 +1348,9 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         if self.async_vk:
             self.async_vk.cancel_operation(operation_id)
 
-        # Remove from active operations
-        if operation_id in self.active_plot_operations:
-            del self.active_plot_operations[operation_id]
+        # Remove from active operations — pop() avoids KeyError if on_async_plot_ready
+        # already removed the entry (P1-02).
+        self.active_plot_operations.pop(operation_id, None)
 
     def on_async_plot_ready(self, operation_id: str, result):
         """Handle async plot completion."""
@@ -1371,8 +1386,9 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
             )
             self.toast_manager.show_error(f"Plot error: {e!s}")
 
-        # Clean up
-        del self.active_plot_operations[operation_id]
+        # Clean up — use pop() to avoid KeyError if operation was already
+        # removed by a concurrent cancel_async_operation call (P1-02).
+        self.active_plot_operations.pop(operation_id, None)
 
     def on_async_operation_error(
         self, operation_id: str, error_msg: str, traceback_str: str
@@ -4939,6 +4955,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         )
         worker.signals.finished.connect(self._on_diff_bayesian_finished)
         worker.signals.error.connect(self._on_diff_bayesian_error)
+        worker.signals.cancelled.connect(self._on_diff_bayesian_cancelled)
 
         self._diff_bayesian_worker_active = True
         self.btn_diff_bayesian.setEnabled(False)
@@ -4982,6 +4999,14 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         self.btn_diff_bayesian.setText("Fit Bayesian")
         logger.error("Bayesian diffusion fit failed: %s", error_msg)
         self.statusbar.showMessage(f"Bayesian fit failed: {error_msg[:80]}", 4000)
+
+    def _on_diff_bayesian_cancelled(self, worker_id, reason):
+        """Handle diffusion Bayesian fit cancellation (P1-04)."""
+        self._diff_bayesian_worker_active = False
+        self.btn_diff_bayesian.setEnabled(True)
+        self.btn_diff_bayesian.setText("Fit Bayesian")
+        logger.info("Bayesian diffusion fit cancelled: %s", reason)
+        self.statusbar.showMessage("Bayesian fit cancelled", 3000)
 
     def _show_diff_diagnosis(self):
         """Show or create the diffusion Bayesian diagnosis window."""

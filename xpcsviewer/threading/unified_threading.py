@@ -301,8 +301,13 @@ class UnifiedThreadingManager(QObject):
         # Get appropriate thread pool (lazily created on first access)
         pool = self._get_pool(task.task_type)
 
-        # Submit to thread pool
-        future = pool.submit(self._execute_task, task)
+        # Submit to thread pool — guard against RuntimeError raised when shutdown
+        # races with an in-flight submit_task() call (Codex Major #3).
+        try:
+            future = pool.submit(self._execute_task, task)
+        except RuntimeError:
+            logger.debug("Task %s dropped: pool shutting down", task.task_id)
+            return
 
         # Track active task
         with self._task_lock:
@@ -311,6 +316,7 @@ class UnifiedThreadingManager(QObject):
         # Add completion callback
         future.add_done_callback(lambda f: self._handle_task_completion(task, f))
 
+    @Slot(str, str)
     def _emit_task_started_queued(self, task_id: str, task_type: str) -> None:
         """Emit task_started signal via QueuedConnection to ensure main-thread delivery.
 
@@ -320,10 +326,12 @@ class UnifiedThreadingManager(QObject):
         """
         self.task_started.emit(task_id, task_type)
 
+    @Slot(str, str)
     def _emit_task_failed_queued(self, task_id: str, error_msg: str) -> None:
         """Emit task_failed signal via QueuedConnection (BUG-007)."""
         self.task_failed.emit(task_id, error_msg)
 
+    @Slot(str, object)
     def _emit_task_completed_queued(self, task_id: str, result: object) -> None:
         """Emit task_completed signal via QueuedConnection (BUG-007)."""
         self.task_completed.emit(task_id, result)
@@ -509,7 +517,10 @@ class UnifiedThreadingManager(QObject):
     def _adjust_pool_size(self, task_type: TaskType, delta: int):
         """Safely adjust thread pool size."""
         pool = self._get_pool(task_type)
-        current_workers = pool._max_workers
+        # Use stored config rather than pool._max_workers (private CPython attr, P2-07).
+        current_workers = self._pool_configs.get(task_type, {}).get(
+            "max_workers", self.max_workers
+        )
         new_size = max(1, min(self.max_workers, current_workers + delta))
 
         if new_size != current_workers:
@@ -560,10 +571,17 @@ class UnifiedThreadingManager(QObject):
             "memory_percent": memory.percent,
             "memory_available_gb": memory.available / (1024**3),
             # Thread pool status (only includes pools that have been created)
+            # Use stored config for max_workers; fall back to getattr for the
+            # thread count so a future Python that removes _threads doesn't crash
+            # (P2-07 — avoid relying on private CPython ThreadPoolExecutor attrs).
             "thread_pools": {
                 task_type.value: {
-                    "max_workers": pool._max_workers,
-                    "active_workers": len([t for t in pool._threads if t.is_alive()]),
+                    "max_workers": self._pool_configs.get(task_type, {}).get(
+                        "max_workers", 0
+                    ),
+                    "active_workers": len(
+                        [t for t in getattr(pool, "_threads", set()) if t.is_alive()]
+                    ),
                 }
                 for task_type, pool in self._thread_pools.items()
             },
@@ -578,10 +596,12 @@ class UnifiedThreadingManager(QObject):
         if self._monitor_thread:
             self._monitor_thread.join(timeout=2.0)
 
-        # Shutdown thread pools
+        # Shutdown thread pools without blocking — cancel pending futures and let
+        # running futures finish in daemon threads (Python 3.9+ API, Codex Major #2).
+        # wait=True would block indefinitely if a stuck task never returns.
         for task_type, pool in self._thread_pools.items():
             logger.debug(f"Shutting down {task_type.value} thread pool")
-            pool.shutdown(wait=True, timeout=5.0)
+            pool.shutdown(wait=False, cancel_futures=True)
 
         logger.info("UnifiedThreadingManager shutdown complete")
 
@@ -607,8 +627,17 @@ def get_unified_threading_manager() -> UnifiedThreadingManager:
 
 
 def shutdown_unified_threading():
-    """Shutdown the global threading manager."""
+    """Shutdown the global threading manager.
+
+    Nulls the global pointer INSIDE the lock before calling shutdown() so that
+    any concurrent get_unified_threading_manager() or submit_task() call sees
+    None immediately rather than a mid-shutdown instance (Codex Major #3).
+    """
     global _global_threading_manager  # noqa: PLW0603 - intentional singleton pattern
-    if _global_threading_manager:
-        _global_threading_manager.shutdown()
-        _global_threading_manager = None
+    with _global_threading_manager_lock:
+        manager = _global_threading_manager
+        _global_threading_manager = (
+            None  # Visible to other threads before shutdown begins
+        )
+    if manager is not None:
+        manager.shutdown()

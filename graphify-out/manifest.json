@@ -724,8 +724,8 @@
     "hash": "cbb3d65e89106fefa7e73790dad8a3b3"
   },
   "/Users/b80985/Projects/xpcsviewer/tests/benchmarks/performance/test_bottleneck_analysis.py": {
-    "mtime": 1777584964.162888,
-    "hash": "962b57f9b7665426757991e233ee6bb8"
+    "mtime": 1778097846.9664276,
+    "hash": "c1ad901763e297574a0b1891bc47e880"
   },
   "/Users/b80985/Projects/xpcsviewer/tests/benchmarks/performance/test_batch_vectorize.py": {
     "mtime": 1767868750.8067436,
@@ -828,8 +828,8 @@
     "hash": "9639f250728dcfab9ec00c1273bfc61c"
   },
   "/Users/b80985/Projects/xpcsviewer/xpcsviewer/xpcs_viewer.py": {
-    "mtime": 1773331856.3157125,
-    "hash": "7d5ce84fcb4a17c5fe4d5ce2bd759371"
+    "mtime": 1778110447.6158006,
+    "hash": "d3aea6e716cbbfe4695eb01d290d75a2"
   },
   "/Users/b80985/Projects/xpcsviewer/xpcsviewer/icons_rc.py": {
     "mtime": 1767668105.876917,
@@ -852,8 +852,8 @@
     "hash": "b4f8a05b5ed95d2e1e3ecefc0481b287"
   },
   "/Users/b80985/Projects/xpcsviewer/xpcsviewer/viewer_kernel.py": {
-    "mtime": 1777580133.7363212,
-    "hash": "aae3d3cc8ff460f087d00b3765dc6a53"
+    "mtime": 1778110418.481363,
+    "hash": "d912071be1bc4fc7fca0f4d5427a24e5"
   },
   "/Users/b80985/Projects/xpcsviewer/xpcsviewer/default_setting.py": {
     "mtime": 1767517095.1040254,
@@ -1192,8 +1192,8 @@
     "hash": "0859b777ac27cdda398de786572d8c37"
   },
   "/Users/b80985/Projects/xpcsviewer/xpcsviewer/schemas/validators.py": {
-    "mtime": 1773331856.3067358,
-    "hash": "f62d080c4f838416e06aa6c5dc2877c2"
+    "mtime": 1778111107.7566564,
+    "hash": "143b35243c27e58d7f89f0465b546cdf"
   },
   "/Users/b80985/Projects/xpcsviewer/xpcsviewer/schemas/__init__.py": {
     "mtime": 1773331856.3063865,
@@ -1316,8 +1316,8 @@
     "hash": "0b4276bcd5104e64e97584458c5cbc82"
   },
   "/Users/b80985/Projects/xpcsviewer/xpcsviewer/threading/cleanup_optimized.py": {
-    "mtime": 1773331856.309701,
-    "hash": "965e014e72db1562934ceda65fdd2edc"
+    "mtime": 1778110379.8787034,
+    "hash": "7fcc34f52d14299b8bb6c053fae67b2a"
   },
   "/Users/b80985/Projects/xpcsviewer/xpcsviewer/threading/plot_workers.py": {
     "mtime": 1773331856.3104048,
@@ -1328,8 +1328,8 @@
     "hash": "a43d209608f19fd65c9edfb298bec8a5"
   },
   "/Users/b80985/Projects/xpcsviewer/xpcsviewer/threading/async_workers.py": {
-    "mtime": 1771363092.2122242,
-    "hash": "f31f6b73a0cf5233fe1e2f79c81c16b0"
+    "mtime": 1778111128.2482476,
+    "hash": "1648b2f4870136c62a4c6f9488638192"
   },
   "/Users/b80985/Projects/xpcsviewer/xpcsviewer/threading/bayesian_worker.py": {
     "mtime": 1772424387.0498903,
@@ -1348,12 +1348,12 @@
     "hash": "9b9e9febcc240ab7a2eaa6b7a0c78905"
   },
   "/Users/b80985/Projects/xpcsviewer/xpcsviewer/threading/unified_threading.py": {
-    "mtime": 1771783353.4771793,
-    "hash": "8825accfa40b46738d90fc14f86fde00"
+    "mtime": 1778111112.7115185,
+    "hash": "38624369272b9243bdc2632bc0998eb6"
   },
   "/Users/b80985/Projects/xpcsviewer/xpcsviewer/threading/async_kernel.py": {
-    "mtime": 1771783353.4764187,
-    "hash": "0dea47f272c0cae4dff46ba5a32026e4"
+    "mtime": 1778110609.6665506,
+    "hash": "0d90196f348f68adf598369da64842e6"
   },
   "/Users/b80985/Projects/xpcsviewer/xpcsviewer/threading/batch_bayesian_coordinator.py": {
     "mtime": 1772424387.0497544,

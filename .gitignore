@@ -33,7 +33,6 @@ MANIFEST
 *.spec
 
 # Installer logs
-pip-log.txt
 pip-delete-this-directory.txt
 
 # Unit test / coverage reports
@@ -52,10 +51,8 @@ coverage.xml
 .pytest_cache/
 cover/
 bandit_report.json
-bandit-report.json
 .benchmarks/
 .nlsq_cache/
-.claude
 .ruff_cache/
 test-*/
 
@@ -64,7 +61,6 @@ test-*/
 *.pot
 
 # Django stuff:
-*.log
 local_settings.py
 db.sqlite3
 db.sqlite3-journal
@@ -186,8 +182,6 @@ Thumbs.db
 *.bak
 RELEASE_GUIDE.md
 WARP.md
-CLAUDE.md
-AGENTS.md
 
 # QA reports
 xpcsviewer_qa_report.md
@@ -204,10 +198,6 @@ scripts/claude_quality_report.py
 scripts/claude_summary_display.py
 CODE_QUALITY_REPORT.md
 benchmark-results.json
-# Trigger fresh CI run - Wed Sep 10 09:22:37 CDT 2025
-# Final CI alignment - Wed Sep 10 09:27:52 CDT 2025
-# Force CI update - Wed Sep 10 09:32:42 CDT 2025
-# Import sorting fix applied - Wed Sep 10 09:53:48 CDT 2025
 
 # XPCS Toolkit Specific Files
 # ===========================
@@ -260,15 +250,22 @@ run_phase*_temp.py
 # Git worktrees
 .worktrees/
 
-# Claude Code specific settings
+# AI Agent Infrastructure & Settings
+.agent/
+.agents/
 .claude/
 .claude-progress.md
-.serena/
-agent-os/
-.specify/
 .code/
+.codex/
 .gemini/
-.agent/
+.remember/
+.serena/
+.specify/
+.research-log.jsonl
+agent-os/
+AGENTS.md
+CLAUDE.md
+GEMINI.md
 specs/
 # Graphify semantic cache (ephemeral build artifacts)
 graphify-out/cache/

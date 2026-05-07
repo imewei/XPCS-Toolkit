@@ -120,6 +120,7 @@ dependencies = [
     "pytest-sugar>=1.1",
     "pytest-html>=4.2",
     "pytest-qt>=4.5",
+    "pytest-rerunfailures>=14.0",
     "hypothesis>=6.148",
     # Linting and type checking
     "mypy>=1.19",

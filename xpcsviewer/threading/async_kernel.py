@@ -384,7 +384,7 @@ class AsyncViewerKernel(QObject):
         """Emit progress signal for operations."""
         # Find operation_id for this worker_id
         operation_id = None
-        for op_id, w_id in self.active_operations.items():
+        for op_id, w_id in list(self.active_operations.items()):
             if w_id == worker_id:
                 operation_id = op_id
                 break
@@ -473,11 +473,15 @@ class AsyncDataPreloader(QObject):
         self.preload_queue = files_to_load
         self.is_preloading = True
 
-        # Start async loading
-        self.async_kernel.load_files_async(files_to_load, operation_id="preload_data")
-
-        # Connect to completion
+        # Connect ALL terminal signals BEFORE submitting the worker so a fast
+        # synchronous completion cannot fire the signal before the slot exists
+        # (Codex Major #1 — connect-before-submit race).
         self.async_kernel.data_loaded.connect(self._on_preload_completed)
+        self.async_kernel.operation_error.connect(self._on_preload_error)
+        self.async_kernel.operation_cancelled.connect(self._on_preload_cancelled)
+
+        # Submit after all slots are registered.
+        self.async_kernel.load_files_async(files_to_load, operation_id="preload_data")
 
         logger.info(f"Started preloading {len(files_to_load)} files")
 
@@ -490,24 +494,51 @@ class AsyncDataPreloader(QObject):
             return self.cache[file_path]
         return None
 
+    def _cleanup_preload_connections(self) -> None:
+        """Disconnect all three terminal signal slots from the current preload.
+
+        Must be called on every terminal path (completed / error / cancelled)
+        so no stale connections survive into the next preload cycle (Codex Major #1).
+        """
+        for sig, slot in (
+            (self.async_kernel.data_loaded, self._on_preload_completed),
+            (self.async_kernel.operation_error, self._on_preload_error),
+            (self.async_kernel.operation_cancelled, self._on_preload_cancelled),
+        ):
+            try:
+                sig.disconnect(slot)
+            except (RuntimeError, TypeError):
+                pass
+
     def _on_preload_completed(self, operation_id: str, result: list[Any]):
-        """Handle preload completion."""
+        """Handle successful preload completion."""
         if operation_id != "preload_data":
             return
-
-        # Cache the loaded data
+        self._cleanup_preload_connections()
         for i, data in enumerate(result):
             if i < len(self.preload_queue) and data is not None:
-                file_path = self.preload_queue[i]
-                self._add_to_cache(file_path, data)
-
+                self._add_to_cache(self.preload_queue[i], data)
         self.is_preloading = False
         self.preload_queue = []
-
-        # Disconnect signal
-        self.async_kernel.data_loaded.disconnect(self._on_preload_completed)
-
         logger.info("Preloading completed")
+
+    def _on_preload_error(self, operation_id: str, error_msg: str, _tb: str) -> None:
+        """Reset preload state on async error (Codex Major #1)."""
+        if operation_id != "preload_data":
+            return
+        self._cleanup_preload_connections()
+        self.is_preloading = False
+        self.preload_queue = []
+        logger.warning("Preload failed: %s", error_msg)
+
+    def _on_preload_cancelled(self, operation_id: str) -> None:
+        """Reset preload state on cancellation (Codex Major #1)."""
+        if operation_id != "preload_data":
+            return
+        self._cleanup_preload_connections()
+        self.is_preloading = False
+        self.preload_queue = []
+        logger.info("Preload cancelled")
 
     def _add_to_cache(self, file_path: str, data: Any):
         """Add data to cache with LRU eviction."""

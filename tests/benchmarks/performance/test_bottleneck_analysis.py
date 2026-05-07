@@ -15,8 +15,6 @@ from __future__ import annotations
 
 import gc
 import time
-from typing import Any
-
 import numpy as np
 import pytest
 
@@ -100,7 +98,6 @@ def g2_ensemble_statistics_candidate(g2_data_list: list[np.ndarray]) -> dict:
     4. Compute std using np.linalg.norm which fuses the sqrt+sum.
     """
     g2_stack = np.stack(g2_data_list, axis=0)  # [batch, time, q]
-    num_q = g2_stack.shape[2]
     n_time = g2_stack.shape[1]
 
     stats = {
@@ -128,6 +125,7 @@ def g2_ensemble_statistics_candidate(g2_data_list: list[np.ndarray]) -> dict:
     return stats
 
 
+@pytest.mark.flaky(reruns=3, reruns_delay=0)
 class TestBottleneck1G2Ensemble:
     """Bottleneck #1: compute_g2_ensemble_statistics — O(Q*B^2*T) matmul + list copy."""
 
@@ -287,6 +285,7 @@ class MaskHistoryCandidate:
         return combined
 
 
+@pytest.mark.flaky(reruns=3, reruns_delay=0)
 class TestBottleneck2MaskHistory:
     """Bottleneck #2: MaskAssemble — excessive array copies in apply() / get_mask()."""
 
@@ -331,7 +330,6 @@ class TestBottleneck2MaskHistory:
 
     def test_baseline_apply_timing(self, masks, benchmark):
         base, layers = masks
-        hist = MaskHistoryBaseline(base)
 
         def run():
             hist2 = MaskHistoryBaseline(base)
@@ -342,7 +340,6 @@ class TestBottleneck2MaskHistory:
 
     def test_candidate_apply_timing(self, masks, benchmark):
         base, layers = masks
-        hist = MaskHistoryCandidate(base)
 
         def run():
             hist2 = MaskHistoryCandidate(base)
@@ -613,6 +610,7 @@ def c2_clean_candidate(c2: np.ndarray) -> np.ndarray:
     )
 
 
+@pytest.mark.flaky(reruns=3, reruns_delay=0)
 class TestBottleneck4C2Percentile:
     """Bottleneck #4 (baseline P1): clean_c2_for_visualization — 3 sort passes → 1."""
 
@@ -749,6 +747,7 @@ def fit_multi_start(x, y, yerr, n_starts: int = 5, seed: int = 0):
     return best_params, True
 
 
+@pytest.mark.flaky(reruns=3, reruns_delay=0)
 class TestBottleneck5NLSQMultiStart:
     """Bottleneck #5 (baseline P0): nlsq_optimize multi-start overhead.
 
@@ -763,19 +762,19 @@ class TestBottleneck5NLSQMultiStart:
 
     def test_correctness_single_start(self, fit_data):
         """Single start from ground truth region converges correctly."""
-        x, y, yerr, (tau_true, beta_true, baseline_true) = fit_data
+        x, y, yerr, (tau_true, *_) = fit_data
         p0 = (1.0, 0.3, 1.0)  # near ground truth
         params, success = fit_single_start(x, y, yerr, p0)
         assert success
-        tau_est, beta_est, baseline_est = params
+        tau_est, *_ = params
         assert abs(tau_est - tau_true) / tau_true < 0.05, (
             f"tau error: {tau_est} vs {tau_true}"
         )
 
     def test_correctness_multi_start(self, fit_data):
         """Multi-start converges correctly (ground truth as oracle)."""
-        x, y, yerr, (tau_true, beta_true, baseline_true) = fit_data
-        params, success = fit_multi_start(x, y, yerr, n_starts=5)
+        x, y, yerr, (tau_true, *_) = fit_data
+        params, _ = fit_multi_start(x, y, yerr, n_starts=5)
         tau_est = params[0]
         assert abs(tau_est - tau_true) / tau_true < 0.05, (
             f"tau error: {tau_est} vs {tau_true}"

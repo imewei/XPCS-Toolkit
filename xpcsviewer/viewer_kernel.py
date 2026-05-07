@@ -1,5 +1,6 @@
 # Standard library imports
 import os
+import threading
 import weakref
 from types import ModuleType
 from typing import TYPE_CHECKING, Any
@@ -120,10 +121,14 @@ class ViewerKernel(FileLocator):
         self.avg_worker: AverageToolbox | None = None
         self.avg_worker_active: dict[int, Any] = {}
 
-        # Memory-aware caching for current_dset with weak references
+        # Memory-aware caching for current_dset with weak references.
+        # Lock guards all reads/writes: WeakValueDictionary is not thread-safe
+        # because its internal finalizer can delete entries during a concurrent
+        # .get() on another thread (P1-03).
         self._current_dset_cache: weakref.WeakValueDictionary[str, XpcsFile] = (
             weakref.WeakValueDictionary()
         )
+        self._dset_cache_lock = threading.Lock()
         self._plot_kwargs_record: dict[str, Any] = {}
         self._memory_cleanup_threshold = 0.8  # Trigger cleanup at 80% memory usage
 
@@ -201,7 +206,8 @@ class ViewerKernel(FileLocator):
         kernel reset operations.
         """
         # Clear dataset cache
-        self._current_dset_cache.clear()
+        with self._dset_cache_lock:
+            self._current_dset_cache.clear()
 
         # Clear plot kwargs if memory pressure is high
         if MemoryMonitor.is_memory_pressure_high(self._memory_cleanup_threshold):
@@ -801,7 +807,8 @@ class ViewerKernel(FileLocator):
         if current_dset is None or current_dset.fname != xfile.fname:
             logger.debug(f"Dataset changed, loading new qbin labels for {xfile.fname}")
             current_dset = xfile
-            self._current_dset_cache[xfile.fname] = current_dset
+            with self._dset_cache_lock:
+                self._current_dset_cache[xfile.fname] = current_dset
             new_qbin_labels = xfile.get_twotime_qbin_labels()
 
             # Check memory pressure and cleanup if needed
@@ -817,6 +824,11 @@ class ViewerKernel(FileLocator):
         _get_module("twotime").plot_twotime(current_dset, hdl, **kwargs)
         logger.debug(f"Returning new_qbin_labels: {new_qbin_labels}")
         return new_qbin_labels
+
+    def _get_cache_count(self) -> int:
+        """Return current _current_dset_cache size under lock (BUG-C)."""
+        with self._dset_cache_lock:
+            return len(self._current_dset_cache)
 
     def _get_cached_dataset(self, fname: str, fallback_xfile=None):
         """
@@ -843,7 +855,8 @@ class ViewerKernel(FileLocator):
         of unused datasets, helping to manage memory usage for
         large XPCS data collections.
         """
-        cached = self._current_dset_cache.get(fname)
+        with self._dset_cache_lock:
+            cached = self._current_dset_cache.get(fname)
         if cached is not None:
             return cached
         return fallback_xfile
@@ -986,7 +999,7 @@ class ViewerKernel(FileLocator):
         """Get comprehensive memory statistics."""
         used_mb, available_mb = MemoryMonitor.get_memory_usage()
         return {
-            "kernel_cache_items": len(self._current_dset_cache),
+            "kernel_cache_items": self._get_cache_count(),
             "plot_kwargs_items": len(self._plot_kwargs_record),
             "avg_worker_active_items": len(self.avg_worker_active),
             "system_memory_used_mb": used_mb,

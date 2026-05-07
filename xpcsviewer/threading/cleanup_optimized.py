@@ -51,9 +51,16 @@ class ObjectRegistry:
             return self.objects.get(key)
 
     def clear_all(self):
-        """Clear all registered objects."""
+        """Clear all registered objects, calling close() on each (P1-16)."""
         with self._lock:
+            objs = list(self.objects.values())
             self.objects.clear()
+        for obj in objs:
+            if hasattr(obj, "close"):
+                try:
+                    obj.close()
+                except Exception as e:
+                    logger.debug("Cleanup close() error: %s", e)
 
     def get_objects_by_type(self, obj_type: str) -> list[Any]:
         """Get all registered objects of a specific type.
@@ -111,25 +118,26 @@ class CleanupScheduler:
         logger.debug(f"Scheduled cleanup task: {task_name}")
 
     def execute_pending_cleanup(self):
-        """Execute all pending cleanup tasks."""
+        """Execute all pending cleanup tasks.
+
+        Tasks are collected under the lock but executed outside it to prevent
+        deadlock if a task calls schedule_cleanup() (P1-17).
+        """
         current_time = time.time()
-        executed_tasks = []
 
         with self._lock:
-            for task in self.cleanup_tasks[
-                :
-            ]:  # Copy to avoid modification during iteration
-                if current_time >= task["scheduled_time"]:
-                    try:
-                        task["func"]()
-                        executed_tasks.append(task["name"])
-                        self.cleanup_tasks.remove(task)
-                    except Exception as e:
-                        logger.warning(f"Cleanup task {task['name']} failed: {e}")
-                        self.cleanup_tasks.remove(task)
+            due = [t for t in self.cleanup_tasks if current_time >= t["scheduled_time"]]
+            for t in due:
+                self.cleanup_tasks.remove(t)
 
-        if executed_tasks:
-            logger.debug(f"Executed cleanup tasks: {executed_tasks}")
+        for task in due:
+            try:
+                task["func"]()
+            except Exception as e:
+                logger.warning(f"Cleanup task {task['name']} failed: {e}")
+
+        if due:
+            logger.debug(f"Executed cleanup tasks: {[t['name'] for t in due]}")
 
 
 class SmartGarbageCollector:

@@ -523,11 +523,13 @@ class G2Data:
         dict
             Dictionary representation of G2 data
         """
+        # Return defensive copies so callers cannot corrupt the frozen dataclass
+        # internal arrays (P2-02).
         return {
-            "g2": self.g2,
-            "g2_err": self.g2_err,
-            "delay_times": self.delay_times,
-            "q_values": self.q_values,
+            "g2": self.g2.copy(),
+            "g2_err": self.g2_err.copy(),
+            "delay_times": self.delay_times.copy(),
+            "q_values": list(self.q_values),
         }
 
 
