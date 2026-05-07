@@ -9,6 +9,9 @@ Recent Changes
 Unreleased
 ~~~~~~~~~~
 
+Version 0.1.8 (2026-05-07)
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 - Threading reliability: fix race condition in ``AsyncDataPreloader`` slot connection order
 - Threading: thread-safety ``Lock`` around ``ViewerKernel`` dataset cache (``WeakValueDictionary``)
 - Threading: LRU eviction in ``WorkerManager`` result/error storage (cap 100 entries)

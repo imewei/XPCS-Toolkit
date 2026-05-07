@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.1.8] - 2026-05-07
+
 ### Changed
 
 - Threading: fix race condition in `AsyncDataPreloader` — connect `@Slot` targets before worker submission to prevent signal loss under load
