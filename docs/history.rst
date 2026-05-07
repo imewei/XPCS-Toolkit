@@ -6,11 +6,24 @@ See the full changelog in `CHANGELOG.md <https://github.com/imewei/xpcsviewer/bl
 Recent Changes
 --------------
 
+Unreleased
+~~~~~~~~~~
+
+- Threading reliability: fix race condition in ``AsyncDataPreloader`` slot connection order
+- Threading: thread-safety ``Lock`` around ``ViewerKernel`` dataset cache (``WeakValueDictionary``)
+- Threading: LRU eviction in ``WorkerManager`` result/error storage (cap 100 entries)
+- Threading: optimised pool shutdown — cancel pending futures before ``shutdown(wait=False)``
+- Schema: ``G2Data.to_dict()`` returns defensive copies to preserve dataclass immutability
+- Performance benchmarks marked ``@pytest.mark.flaky`` to tolerate CI timing variance
+- Plothandler: ``lazy_proxy.LazyMplCanvasBarV`` defers Matplotlib import until tab shown
+
 Version 0.1.7 (2026-05-01)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 - Constrain JAX versions and optimize performance benchmarks
 - Add codecov configuration to ignore non-code paths
+- Add project logo (``docs/_static/xpcsviewer_logo.jpg``)
+- Add graphify knowledge graph (``graphify-out/``)
 
 Version 0.1.6 (2026-03-12)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~

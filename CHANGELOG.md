@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
+### Changed
+
+- Threading: fix race condition in `AsyncDataPreloader` — connect `@Slot` targets before worker submission to prevent signal loss under load
+- Threading: add `threading.Lock` to `ViewerKernel` dataset cache to prevent `WeakValueDictionary` corruption under concurrent access
+- Threading: LRU eviction in `WorkerManager` result/error storage (cap: 100 entries) to prevent unbounded memory growth
+- Threading: optimised `UnifiedThreadingManager` shutdown — cancel pending futures before `pool.shutdown(wait=False)` to avoid hang on exit
+- Schema: `G2Data.to_dict()` now returns defensive copies of all mutable array fields
+- Performance benchmarks: mark `TestBottleneck*` with `@pytest.mark.flaky(reruns=3)` to tolerate CI timing variance
+- Plothandler: `LazyMplCanvasBarV` in `plothandler/lazy_proxy.py` defers Matplotlib import until `showEvent` to reduce startup latency
+
 ## [0.1.7] - 2026-05-01
 
 ### Changed
