@@ -159,13 +159,21 @@ class DragDropListView(QListView):
         if from_index == to_index:
             return False
 
-        # Use model's moveRows if available (QStringListModel doesn't have it)
-        # Fall back to manual item manipulation
+        # Try the model's native moveRow first. Every QAbstractItemModel defines
+        # moveRow (the base returns False), so check the RESULT and fall through
+        # to the manual paths on failure rather than returning a bare False.
         if hasattr(model, "moveRow"):
             success = model.moveRow(QModelIndex(), from_index, QModelIndex(), to_index)
             if success:
                 self.items_reordered.emit(from_index, to_index)
-            return success
+                return True
+
+        # List-like models (e.g. the app's ListDataModel) expose pop/insert.
+        if hasattr(model, "pop") and hasattr(model, "insert"):
+            item = model.pop(from_index)
+            model.insert(to_index, item)
+            self.items_reordered.emit(from_index, to_index)
+            return True
 
         # Manual fallback for models without moveRow
         if hasattr(model, "stringList") and hasattr(model, "setStringList"):

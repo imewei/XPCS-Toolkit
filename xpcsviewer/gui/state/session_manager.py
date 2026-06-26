@@ -186,8 +186,15 @@ class SessionManager:
             # Parse target files and validate existence
             target_files: list[FileEntry] = []
             for entry in data.get("target_files", []):
+                # Tolerate malformed-but-valid-JSON entries (e.g. a bare string
+                # instead of an object) without aborting the whole restore.
+                if not isinstance(entry, dict):
+                    self._warnings.append(f"Skipping malformed target entry: {entry!r}")
+                    continue
                 path = entry.get("path", "")
                 order = entry.get("order", len(target_files))
+                if not isinstance(order, int):
+                    order = len(target_files)
                 exists = Path(path).exists()
 
                 if not exists:

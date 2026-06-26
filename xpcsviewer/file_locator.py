@@ -132,10 +132,13 @@ class FileLocator:
             # XpcsFile construction can be slow (HDF5 read) — holding the
             # cache lock throughout would block all other threads that need
             # to read or insert different files. (BUG-033)
+            # Test membership, not None: a failed load is cached as None on
+            # purpose so we don't re-read a broken file on every plot update.
             with self._cache_lock:
+                is_cached = full_fname in self.cache
                 xf_obj = self.cache.get(full_fname)
 
-            if xf_obj is None:
+            if not is_cached:
                 # Construct the XpcsFile object outside the lock so HDF5 I/O
                 # does not prevent concurrent cache lookups.
                 xf_obj = create_xpcs_dataset(full_fname, qmap_manager=self.qmap_manager)
@@ -232,9 +235,10 @@ class FileLocator:
         item = self.target.pop(row)
         pos = row - 1 if direction == "up" else row + 1
         self.target.insert(pos, item)
-        idx = self.target.index(pos)
         self.timestamp = str(datetime.datetime.now())
-        return idx
+        # Return the new row index (int); caller converts to QModelIndex.
+        # Boundary no-ops above return -1.
+        return pos
 
     def search(self, val, filter_type="prefix"):
         assert filter_type in [

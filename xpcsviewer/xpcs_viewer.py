@@ -878,6 +878,9 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         # Update tab bar separator color for the new theme
         if hasattr(self, "_category_tab_bar"):
             self._category_tab_bar.set_dark_mode(theme == "dark")
+        # Recolor per-tab category icons (else they stay the old theme's color
+        # and become invisible against the inverted background).
+        self._refresh_tab_icons()
         # Update theme toggle button icon (uses freshly cleared cache)
         self._update_theme_toggle_button()
         self._refresh_all_plots(theme)
@@ -959,19 +962,23 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
             to_index: New position of the item
         """
         logger.info(f"Target list reordered: {from_index} -> {to_index}")
-        # The model has already been updated by the drag-drop operation
-        # Just update the kernel if needed
-        if self.vk is not None:
-            # Re-sync the file order with the viewer kernel
-            model = self.list_view_target.model()
-            if model is not None:
-                # Get all file paths in new order
-                paths = []
-                for row in range(model.rowCount()):
-                    item_text = model.data(model.index(row, 0))
-                    paths.append(item_text)
-                # Update any internal state that tracks file order
-                logger.debug(f"New file order: {paths}")
+        if self.vk is None:
+            return
+        # The target model is a ListDataModel (== self.vk.target), which has no
+        # Qt drag-drop row-move support, so the underlying list is NOT moved for
+        # us — do it here via the list-like API so the backend order matches the
+        # view. ponytail: the up/down buttons (reorder_target) are the reliable
+        # reorder path; full Qt InternalMove would need flags()/moveRows() on
+        # ListDataModel, which is out of scope for this fix.
+        model = self.list_view_target.model()
+        if model is None or not (hasattr(model, "pop") and hasattr(model, "insert")):
+            return
+        size = len(model)
+        if from_index == to_index or not (0 <= from_index < size) or to_index < 0:
+            return
+        item = model.pop(from_index)
+        model.insert(min(to_index, len(model)), item)
+        self.update_plot()
 
     # ---- Session management -------------------------------------------------
 
@@ -1086,14 +1093,14 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         Returns:
             SessionState with current UI and file state
         """
-        # Collect target files
+        # Collect target files. The target model is a ListDataModel (list-like
+        # API: len()/[]); it has no QStandardItemModel-style item()/text().
         target_files = []
         if self.target_model is not None:
-            for row in range(self.target_model.rowCount()):
-                item = self.target_model.item(row)
-                if item is not None:
-                    path = item.text()
-                    target_files.append(FileEntry(path=path, order=row))
+            for row in range(len(self.target_model)):
+                path = self.target_model[row]
+                if path:
+                    target_files.append(FileEntry(path=str(path), order=row))
 
         # Collect window geometry
         geom = self.geometry()
@@ -1488,6 +1495,11 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
             logger.debug("No twotime data to plot")
             return
 
+        # A late worker callback can fire after the workspace was reset/closed.
+        if self.vk is None:
+            logger.debug("ViewerKernel is None; skipping twotime result")
+            return
+
         # Handle info messages
         if isinstance(result, dict) and result.get("type") == "info":
             logger.info(
@@ -1543,6 +1555,11 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         """Apply intensity plot result to the GUI."""
         if result is None:
             logger.debug("No intensity data to plot")
+            return
+
+        # A late worker callback can fire after the workspace was reset/closed.
+        if self.vk is None:
+            logger.debug("ViewerKernel is None; skipping intensity result")
             return
 
         # Handle info messages
@@ -1810,6 +1827,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
                 logger.info(f"Async {tab_name} plot already in progress, skipping")
                 return
 
+        operation_id = None
         try:
             # Get plot parameters
             func = getattr(self, "plot_" + tab_name)
@@ -1883,6 +1901,17 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
 
         except Exception as e:
             logger.error(f"Failed to start async {tab_name} plotting: {e}")
+            # Clear any partially-registered operation so this tab is not left
+            # permanently marked in-progress (which would skip all future
+            # updates via the guard at the top of this method).
+            if operation_id is not None:
+                self.active_plot_operations.pop(operation_id, None)
+                try:
+                    self.progress_manager.complete_operation(
+                        operation_id, False, str(e)
+                    )
+                except Exception:
+                    logger.debug("progress cleanup failed", exc_info=True)
             # Fall back to synchronous plotting
             self.update_plot_sync(tab_name)
 
@@ -1973,6 +2002,9 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         return None
 
     def saxs2d_roi_add(self):
+        if self.vk is None:
+            self.statusbar.showMessage("No directory loaded", 2000)
+            return
         sl_type_idx = self.cb_saxs2D_roi_type.currentIndex()
         color = ("g", "y", "b", "r", "c", "m", "k", "w")[
             self.cb_saxs2D_roi_color.currentIndex()
@@ -2032,6 +2064,9 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         self.vk.switch_saxs1d_line(self.mp_saxs, lb_type)
 
     def saxs1d_export(self):
+        if self.vk is None:
+            self.statusbar.showMessage("No directory loaded", 2000)
+            return
         folder = QtWidgets.QFileDialog.getExistingDirectory(
             self, caption="select a folder to export SAXS profiles"
         )
@@ -2296,15 +2331,34 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
 
         logger.info("g2 map tab initialized")
 
+    def _refresh_tab_icons(self):
+        """(Re)apply theme-colored category icons to each tab.
+
+        Pulls freshly recolored SVG icons from the (possibly just-cleared) icon
+        cache, so it must be called after a theme change as well as at startup.
+        """
+        from xpcsviewer.gui.icons import get_icon
+        from xpcsviewer.gui.widgets.category_tab_bar import TAB_INDEX_CATEGORY
+
+        category_icons = {
+            "Scattering": get_icon("tab-scattering"),
+            "Diagnostics": get_icon("tab-diagnostics"),
+            "Correlation": get_icon("tab-correlation"),
+            "Analysis": get_icon("tab-analysis"),
+            "Setup": get_icon("tab-setup"),
+        }
+        for i in range(self.tabWidget.count()):
+            category = TAB_INDEX_CATEGORY.get(i)
+            if category and category in category_icons:
+                self.tabWidget.setTabIcon(i, category_icons[category])
+
     def _apply_tab_labels(self):
         """Apply scientific notation tab labels with category tooltips.
 
         Also installs the CategoryTabBar for visual group separators and
         sets small category icons on each tab group's first tab.
         """
-        from xpcsviewer.gui.icons import get_icon
         from xpcsviewer.gui.widgets.category_tab_bar import (
-            TAB_INDEX_CATEGORY,
             CategorySeparatorFilter,
         )
 
@@ -2323,23 +2377,13 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
             ("Metadata", "HDF5 metadata browser | Setup"),
         ]
 
-        # Category icon mapping
-        category_icons = {
-            "Scattering": get_icon("tab-scattering"),
-            "Diagnostics": get_icon("tab-diagnostics"),
-            "Correlation": get_icon("tab-correlation"),
-            "Analysis": get_icon("tab-analysis"),
-            "Setup": get_icon("tab-setup"),
-        }
-
         for i, (label, tooltip) in enumerate(tab_labels):
             if i < self.tabWidget.count():
                 self.tabWidget.setTabText(i, label)
                 self.tabWidget.setTabToolTip(i, tooltip)
-                # Set category icon on each tab
-                category = TAB_INDEX_CATEGORY.get(i)
-                if category and category in category_icons:
-                    self.tabWidget.setTabIcon(i, category_icons[category])
+
+        # Apply theme-colored category icons to each tab.
+        self._refresh_tab_icons()
 
         # Install event filter for category separators (avoids setTabBar
         # which destroys existing tabs)
@@ -2960,6 +3004,8 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         self.avg_save_name.setText(os.path.basename(save_name[0]))
 
     def init_average(self):
+        if self.vk is None:
+            return
         if len(self.vk.target) > 0:
             save_path = self.avg_save_path.text()
             if save_path == "":
@@ -2977,6 +3023,9 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
                 self.avg_save_name.setText(save_name)
 
     def submit_job(self):
+        if self.vk is None:
+            self.statusbar.showMessage("No directory loaded", 2000)
+            return
         if len(self.vk.target) < MIN_AVERAGING_FILES:
             self.statusbar.showMessage("select at least 2 files for averaging", 1000)
             return
@@ -3081,6 +3130,10 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
             self.statusbar.showMessage("the selected job isn't running", 1000)
             return
         worker.kill()
+        # Stop the 1 Hz progress-polling timer so it doesn't keep firing
+        # update_avg_info after the job is gone. (ponytail: the finished-job
+        # case would ideally stop on a worker.finished signal; not wired here.)
+        self.timer.stop()
 
     def show_g2_fit_summary_func(self):
         rows = self.get_selected_rows()
@@ -3557,6 +3610,10 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
             logger.debug("Resetting existing ViewerKernel")
             self.vk.set_path(folder)
             self.vk.clear()
+            # clear() only wipes source/source_search; reset_kernel() also clears
+            # the stale target list, cached XpcsFile objects and metadata from the
+            # previous directory so the new dataset starts from a clean state.
+            self.vk.reset_kernel()
 
         # Initialize async kernel after viewer kernel is ready
         self.init_async_kernel()
@@ -3613,6 +3670,8 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
             self.list_view_source.parent().repaint()
         elif mode == "target":
             self.list_view_target.setModel(file_list)
+            # Track the installed model so session save can read the target list.
+            self.target_model = file_list
             self.box_target.setTitle(f"Target: {len(file_list):5d}")
             # on macos, the target box doesn't seem to update; force it
             file_list.layoutChanged.emit()
@@ -3830,7 +3889,12 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         if self.vk is None or len(rows) != 1 or len(self.vk.target) <= 1:
             return
         idx = self.vk.reorder_target(rows[0], direction)
-        self.list_view_target.setCurrentIndex(idx)
+        # idx is the new int row index, or -1 for a boundary no-op. Only reselect
+        # for a valid index; setCurrentIndex needs a QModelIndex, not an int.
+        if isinstance(idx, int) and idx >= 0:
+            model = self.list_view_target.model()
+            if model is not None:
+                self.list_view_target.setCurrentIndex(model.index(idx, 0))
         self.list_view_target.repaint()
         self.update_plot()
         return
