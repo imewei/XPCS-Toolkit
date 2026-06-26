@@ -297,8 +297,7 @@ class AverageToolbox(QtCore.QRunnable):
                         else:
                             file_data[key] = getattr(xf, "saxs_1d")["data_raw"]
                     shapes_ok = all(
-                        result[key] is None
-                        or result[key].shape == file_data[key].shape
+                        result[key] is None or result[key].shape == file_data[key].shape
                         for key in fields
                     )
                     if shapes_ok:
@@ -728,8 +727,7 @@ def do_average(
                 # All-or-nothing: include this file only if every field is
                 # shape-compatible, so per-key normalization stays consistent.
                 shapes_ok = all(
-                    result[key] is None
-                    or result[key].shape == file_result[key].shape
+                    result[key] is None or result[key].shape == file_result[key].shape
                     for key in fields
                 )
                 if shapes_ok:

@@ -348,7 +348,9 @@ def get_all_c2_from_hdf(
     else:
         # Use single thread with a fresh connection for optimization
         with _connection_pool.get_connection(full_path, "r") as f:
-            args_list = [(f, index, max_size, correct_diag, True) for index in idx_toload]
+            args_list = [
+                (f, index, max_size, correct_diag, True) for index in idx_toload
+            ]
             result = [read_single_c2(args) for args in args_list]
 
     c2_all = np.array([res[0] for res in result])
