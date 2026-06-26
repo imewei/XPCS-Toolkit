@@ -1060,8 +1060,8 @@
     "semantic_hash": ""
   },
   "xpcsviewer/backends/scipy_replacements/__init__.py": {
-    "mtime": 1768467397.3748434,
-    "ast_hash": "3951d2f2daec76ea524e1fb21a2fa788",
+    "mtime": 1782482777.4637427,
+    "ast_hash": "621881b29a2c6247d2dbec8343537894",
     "semantic_hash": ""
   },
   "xpcsviewer/backends/scipy_replacements/interpolate.py": {
@@ -1330,8 +1330,8 @@
     "semantic_hash": ""
   },
   "xpcsviewer/io/hdf5_facade.py": {
-    "mtime": 1772582805.8497171,
-    "ast_hash": "238da3aa9e35ae7d15edd050e02a6b11",
+    "mtime": 1782480988.9056468,
+    "ast_hash": "d85aa9fff0c47a72b448b40b0398c0ab",
     "semantic_hash": ""
   },
   "xpcsviewer/module/__init__.py": {
@@ -1605,8 +1605,8 @@
     "semantic_hash": ""
   },
   "xpcsviewer/viewer_kernel.py": {
-    "mtime": 1782448714.6614583,
-    "ast_hash": "9d56fc2346cd3e7a2e8378208281ac31",
+    "mtime": 1782480914.5954888,
+    "ast_hash": "77c50dd2bb80f9d70d7c40c359495891",
     "semantic_hash": ""
   },
   "xpcsviewer/viewer_ui.py": {
@@ -1640,8 +1640,8 @@
     "semantic_hash": ""
   },
   "xpcsviewer/xpcs_viewer.py": {
-    "mtime": 1782449497.8350143,
-    "ast_hash": "26c9689153063863ebc6f8d7f67f753e",
+    "mtime": 1782482435.135678,
+    "ast_hash": "4c3d0a34215b3ba39f070c2834ba218c",
     "semantic_hash": ""
   },
   "docs/STRUCTURE.md": {
@@ -2227,6 +2227,11 @@
   "xpcsviewer/ui/resources/xpcsviewer_logo.png": {
     "mtime": 1767762001.848481,
     "ast_hash": "d53a038be8c299877bd6c4c40be71aec",
+    "semantic_hash": ""
+  },
+  "tests/integration/gui/test_session_target_path_roundtrip.py": {
+    "mtime": 1782482413.8527853,
+    "ast_hash": "5fea9eccbafb0ca28317167a70efd691",
     "semantic_hash": ""
   }
 }

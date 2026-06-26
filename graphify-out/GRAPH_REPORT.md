@@ -1,16 +1,16 @@
 # Graph Report - xpcsviewer  (2026-06-26)
 
 ## Corpus Check
-- 356 files · ~610,560 words
+- 357 files · ~610,980 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 12058 nodes · 19113 edges · 638 communities (487 shown, 151 thin omitted)
-- Extraction: 87% EXTRACTED · 13% INFERRED · 0% AMBIGUOUS · INFERRED: 2436 edges (avg confidence: 0.69)
+- 12067 nodes · 19134 edges · 659 communities (497 shown, 162 thin omitted)
+- Extraction: 87% EXTRACTED · 13% INFERRED · 0% AMBIGUOUS · INFERRED: 2440 edges (avg confidence: 0.69)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `dc2426d0`
+- Built from commit: `b723dfd0`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -485,20 +485,42 @@
 - [[_COMMUNITY_Community 472|Community 472]]
 - [[_COMMUNITY_Community 473|Community 473]]
 - [[_COMMUNITY_Community 474|Community 474]]
+- [[_COMMUNITY_Community 475|Community 475]]
+- [[_COMMUNITY_Community 476|Community 476]]
 - [[_COMMUNITY_Community 477|Community 477]]
+- [[_COMMUNITY_Community 478|Community 478]]
+- [[_COMMUNITY_Community 479|Community 479]]
 - [[_COMMUNITY_Community 480|Community 480]]
 - [[_COMMUNITY_Community 481|Community 481]]
+- [[_COMMUNITY_Community 482|Community 482]]
 - [[_COMMUNITY_Community 483|Community 483]]
 - [[_COMMUNITY_Community 484|Community 484]]
+- [[_COMMUNITY_Community 485|Community 485]]
+- [[_COMMUNITY_Community 486|Community 486]]
+- [[_COMMUNITY_Community 487|Community 487]]
+- [[_COMMUNITY_Community 488|Community 488]]
+- [[_COMMUNITY_Community 489|Community 489]]
+- [[_COMMUNITY_Community 490|Community 490]]
+- [[_COMMUNITY_Community 491|Community 491]]
+- [[_COMMUNITY_Community 492|Community 492]]
 - [[_COMMUNITY_Community 493|Community 493]]
 - [[_COMMUNITY_Community 494|Community 494]]
+- [[_COMMUNITY_Community 495|Community 495]]
+- [[_COMMUNITY_Community 496|Community 496]]
+- [[_COMMUNITY_Community 497|Community 497]]
 - [[_COMMUNITY_Community 498|Community 498]]
+- [[_COMMUNITY_Community 499|Community 499]]
 - [[_COMMUNITY_Community 500|Community 500]]
 - [[_COMMUNITY_Community 501|Community 501]]
+- [[_COMMUNITY_Community 502|Community 502]]
+- [[_COMMUNITY_Community 503|Community 503]]
 - [[_COMMUNITY_Community 504|Community 504]]
+- [[_COMMUNITY_Community 505|Community 505]]
+- [[_COMMUNITY_Community 506|Community 506]]
 - [[_COMMUNITY_Community 507|Community 507]]
 - [[_COMMUNITY_Community 508|Community 508]]
 - [[_COMMUNITY_Community 509|Community 509]]
+- [[_COMMUNITY_Community 510|Community 510]]
 - [[_COMMUNITY_Community 511|Community 511]]
 - [[_COMMUNITY_Community 513|Community 513]]
 - [[_COMMUNITY_Community 514|Community 514]]
@@ -560,7 +582,6 @@
 - [[_COMMUNITY_Community 743|Community 743]]
 - [[_COMMUNITY_Community 744|Community 744]]
 - [[_COMMUNITY_Community 745|Community 745]]
-- [[_COMMUNITY_Community 785|Community 785]]
 - [[_COMMUNITY_Community 819|Community 819]]
 - [[_COMMUNITY_Community 824|Community 824]]
 - [[_COMMUNITY_Community 827|Community 827]]
@@ -646,7 +667,7 @@
 - [[_COMMUNITY_Community 1368|Community 1368]]
 
 ## God Nodes (most connected - your core abstractions)
-1. `XpcsViewer` - 232 edges
+1. `XpcsViewer` - 233 edges
 2. `XpcsFile` - 213 edges
 3. `FitResult` - 135 edges
 4. `ViewerKernel` - 130 edges
@@ -654,8 +675,8 @@
 6. `NLSQResult` - 119 edges
 7. `SimpleMaskKernel` - 104 edges
 8. `JAXBackend` - 103 edges
-9. `ensure_numpy()` - 85 edges
-10. `FileLocator` - 85 edges
+9. `FileLocator` - 87 edges
+10. `ensure_numpy()` - 85 edges
 
 ## Surprising Connections (you probably didn't know these)
 - `FitResult` --occurs_during_test_of--> `Segmentation fault in test_main_window.py::test_g2_analysis_tab`  [INFERRED]
@@ -664,89 +685,89 @@
   docs/api/threading.rst → xpcsviewer/ui/resources/icons/folder-open.svg
 - `Threading Module (Async Workers, Bayesian Worker)` --ui_represents_mask_editor_tab--> `grid-mask icon`  [INFERRED]
   docs/api/threading.rst → xpcsviewer/ui/resources/icons/grid-mask.svg
-- `xpcsviewer.backends` --uses_ensure_numpy--> `TestQmapWorkflow`  [EXTRACTED]
-  /Users/b80985/Projects/xpcsviewer/docs/api/backends.rst → tests/end_to_end/test_jax_migration_workflows.py
 - `MockH5py` --uses--> `XpcsFile`  [INFERRED]
   tests/error_handling/test_data_validation_errors.py → xpcsviewer/xpcs_file.py
+- `MockH5py` --uses--> `XpcsFile`  [INFERRED]
+  tests/error_handling/test_edge_cases.py → xpcsviewer/xpcs_file.py
 
 ## Import Cycles
 - 1-file cycle: `xpcsviewer/module/__init__.py -> xpcsviewer/module/__init__.py`
 - 1-file cycle: `xpcsviewer/utils/__init__.py -> xpcsviewer/utils/__init__.py`
 - 3-file cycle: `xpcsviewer/__init__.py -> xpcsviewer/xpcs_viewer.py -> xpcsviewer/viewer_ui.py -> xpcsviewer/__init__.py`
 
-## Communities (638 total, 151 thin omitted)
+## Communities (659 total, 162 thin omitted)
 
 ### Community 0 - "Community 0"
 Cohesion: 0.02
-Nodes (84): Recompute Q-map from current metadata.          Returns:             Tuple of (q, Execute undo/redo/reset on mask history.          Args:             action: One, Apply a mask type and update current mask.          Args:             target: Ma, Save mask to HDF5 file.          Args:             save_name: Output file path (, Load mask from HDF5 file.          Args:             fname: Path to HDF5 file, Display pixel coordinates and Q values at mouse position.          Args:, Core kernel for SimpleMask operations.      This class manages mask creation, ed, Update geometry parameters and recompute Q-map.          Args:             new_m (+76 more)
+Nodes (72): Recompute Q-map from current metadata.          Returns:             Tuple of (q, Execute undo/redo/reset on mask history.          Args:             action: One, Apply a mask type and update current mask.          Args:             target: Ma, Save mask to HDF5 file.          Args:             save_name: Output file path (, Load mask from HDF5 file.          Args:             fname: Path to HDF5 file, Display pixel coordinates and Q values at mouse position.          Args:, Core kernel for SimpleMask operations.      This class manages mask creation, ed, Update geometry parameters and recompute Q-map.          Args:             new_m (+64 more)
 
 ### Community 1 - "Community 1"
-Cohesion: 0.02
-Nodes (140): BaseAsyncWorker, BasePlotWorker, BUG-007: Signal emissions from ThreadPoolExecutor threads must use invokeMethod, refresh icon, tab-correlation icon, tab-scattering icon, Integration tests for compound bug chains.  Verifies that all 6 cross-component, Integration test for signal safety during shutdown.      Verifies:     - cancel_ (+132 more)
+Cohesion: 0.03
+Nodes (57): BUG-007: Signal emissions from ThreadPoolExecutor threads must use invokeMethod, BUG-008 + BUG-033: Concurrent HDF5 reads from multiple threads do not deadlock., Unit tests for threading signal safety fixes.  Tests for BUG-007, BUG-012, and B, BUG-012: cancel_all_operations() must clean up _signal_connections., After cancel_all_operations(), _signal_connections must be empty and         eac, active_operations must be cleared, and _signal_connections must be         clear, BUG-031: active_workers dict must be protected against concurrent mutation., WorkerManager must have a _workers_lock (or equivalent threading.Lock)         t (+49 more)
 
 ### Community 2 - "Community 2"
 Cohesion: 0.03
-Nodes (61): blemish(), MaskAssemble, Combine this mask with another mask.          Args:             mask: Existing m, Manager for combining multiple mask types with undo/redo support.      Maintains, Apply a mask type and add to history.          Args:             target: Mask ty, Navigate mask history.          Args:             action: One of "undo", "redo",, Get mask from a single worker.          Args:             target: Mask type key, Return a read-only view of the current mask without copying.          For intern (+53 more)
+Nodes (54): MaskAssemble, Manager for combining multiple mask types with undo/redo support.      Maintains, Navigate mask history.          Args:             action: One of "undo", "redo",, MaskAssemble should initialize with workers., apply should add new mask state to history when mask changes., undo should move to previous mask state., undo should not go below mask_ptr_min., redo should move to next mask state. (+46 more)
 
 ### Community 3 - "Community 3"
 Cohesion: 0.02
 Nodes (73): _ensure_jax(), JAXBackend, pi(), JAX backend implementation with GPU and JIT support.  This backend provides GPU-, Create array with linearly spaced values., Create array with logarithmically spaced values., Create coordinate matrices from coordinate vectors., Create zero-filled array with same shape as input. (+65 more)
 
 ### Community 4 - "Community 4"
-Cohesion: 0.02
-Nodes (65): float64, GUI tests for SimpleMask window integration.  Tests the SimpleMask window launch, Tests for unsaved changes tracking., New window should have no unsaved changes., Marking unsaved should update state and title., Marking saved should clear unsaved state., Tests for SimpleMask signal emission., mask_exported signal should exist. (+57 more)
+Cohesion: 0.03
+Nodes (60): float64, GUI tests for SimpleMask window integration.  Tests the SimpleMask window launch, Tests for unsaved changes tracking., New window should have no unsaved changes., Marking unsaved should update state and title., Marking saved should clear unsaved state., Tests for SimpleMask signal emission., mask_exported signal should exist. (+52 more)
 
 ### Community 5 - "Community 5"
 Cohesion: 0.05
 Nodes (51): create_qring(), MaskArray, MaskBase, MaskFile, MaskList, MaskParameter, MaskThreshold, Mask assembly classes for SimpleMask.  This module provides classes for creating (+43 more)
 
 ### Community 6 - "Community 6"
-Cohesion: 0.15
-Nodes (7): Convert to numpy array, loading if necessary., Called by a proxy on access; triggers cleanup under memory pressure., Check if memory cleanup is needed., Clean up unused lazy-loaded data., Load data from HDF5 file, optionally with slicing., Record access for idle-cleanup tracking and notify the loader., Get data slice, with intelligent loading.
+Cohesion: 0.08
+Nodes (19): IntelligentLazyLoader, LazyHDF5Array, Convert to numpy array, loading if necessary., Lazy loading system with memory-pressure-aware cleanup., Register HDF5 dataset for lazy loading.          Parameters         ----------, Get lazy data proxy by key., Called by a proxy on access; triggers cleanup under memory pressure., Check if memory cleanup is needed. (+11 more)
 
 ### Community 7 - "Community 7"
-Cohesion: 0.02
-Nodes (72): Unit tests for ViewerKernel class.  This module provides comprehensive unit test, Test that plot_kwargs_record is properly initialized., Test memory cleanup threshold setting., Test suite for ViewerKernel single average worker., Test average worker is None on init., Test remove_job sets worker to None., Test update_avg_info is safe when no worker exists., Test update_avg_info calls worker.update_plot(). (+64 more)
+Cohesion: 0.03
+Nodes (64): Unit tests for ViewerKernel class.  This module provides comprehensive unit test, Test that plot_kwargs_record is properly initialized., Test memory cleanup threshold setting., Test suite for ViewerKernel single average worker., Test average worker is None on init., Test remove_job sets worker to None., Test update_avg_info is safe when no worker exists., Test update_avg_info calls worker.update_plot(). (+56 more)
 
 ### Community 8 - "Community 8"
 Cohesion: 0.03
-Nodes (35): main, main_gui, setting, take_snapshot, QKeySequence, Ui, Main XPCS Viewer application window.      XpcsViewer provides a comprehensive GU, Set up keyboard shortcut to show progress dialog. (+27 more)
+Nodes (33): main, main_gui, setting, take_snapshot, Ui, Main XPCS Viewer application window.      XpcsViewer provides a comprehensive GU, Show the progress dialog., Cancel an async operation. (+25 more)
 
 ### Community 9 - "Community 9"
-Cohesion: 0.02
-Nodes (143): ABC, dtype, Enum, AccessPattern, IntelligentChunker, Calculate optimal chunk shape for dataset based on access pattern.          Para, HDF5 data access patterns for optimization., Intelligent chunking strategy for HDF5 datasets based on access patterns. (+135 more)
+Cohesion: 0.06
+Nodes (41): MemoryEfficientIterator, Memory-efficient iterator for large arrays with automatic cleanup., calculate_multiple_rois_parallel(), calculate_pie_roi(), calculate_ring_roi(), ParallelROIProcessor, PieROICalculator, Vectorized ROI (Region of Interest) Calculations for XPCS Viewer  This module pr (+33 more)
 
 ### Community 10 - "Community 10"
-Cohesion: 0.04
-Nodes (41): MockH5pyFile, Test handling of incompatible data types., Test handling of infinite and NaN values in data., Test handling of negative values where positive are expected., Test data range validation errors., Test handling of extremely large numerical values., Test handling of invalid correlation times., Test handling of mismatched array dimensions. (+33 more)
+Cohesion: 0.03
+Nodes (47): MockH5py, MockH5pyFile, Data validation error handling tests.  This module tests error conditions relate, Test handling of incompatible data types., Test handling of infinite and NaN values in data., Test handling of negative values where positive are expected., Test data range validation errors., Test handling of extremely large numerical values. (+39 more)
 
 ### Community 11 - "Community 11"
 Cohesion: 0.02
-Nodes (139): CLI modules for XPCS Viewer., MockH5py, Data validation error handling tests.  This module tests error conditions relate, put(), save the result to hdf5 file     Parameters     ----------     save_path: str, get_qmap(), test_qmap_manager(), Configure logger for test sessions with appropriate level. (+131 more)
+Nodes (122): Filter, Formatter, Integration tests for comprehensive logging system.  Tests verify: - JSON format, Verify JSON fields have correct types for aggregation systems., Verify exception information is properly structured., Test session context correlation across log entries (T092)., Verify all logs within a context share the same session_id., Verify nested contexts maintain session continuity. (+114 more)
 
 ### Community 12 - "Community 12"
 Cohesion: 0.02
-Nodes (87): Tests for backend detection and initialization.  Tests FR-001: Automatic device, Test explicit backend setting., Test setting NumPy backend explicitly., Test setting JAX backend explicitly., Test setting invalid backend raises ValueError., Test backend name is case-insensitive., Test backend detection and initialization., Test mathematical operations. (+79 more)
+Nodes (85): module.saxs1d, module.saxs2d, Tests for backend detection and initialization.  Tests FR-001: Automatic device, Test explicit backend setting., Test setting NumPy backend explicitly., Test setting JAX backend explicitly., Test setting invalid backend raises ValueError., Test backend name is case-insensitive. (+77 more)
 
 ### Community 13 - "Community 13"
 Cohesion: 0.05
-Nodes (61): Set the computation backend.      Parameters     ----------     name : str, set_backend(), IEEE 754 float precision fix: round xmap and bin edges to 12 decimal places before digitize, create_test_mask(), create_test_phi_map(), create_test_qmap(), Tests for partition numerical equivalence between NumPy and JAX backends.  This, Test that JAX produces identical linear partition to NumPy. (+53 more)
+Nodes (60): Set the computation backend.      Parameters     ----------     name : str, set_backend(), IEEE 754 float precision fix: round xmap and bin edges to 12 decimal places before digitize, create_test_mask(), create_test_phi_map(), create_test_qmap(), Tests for partition numerical equivalence between NumPy and JAX backends.  This, Test that JAX produces identical linear partition to NumPy. (+52 more)
 
 ### Community 15 - "Community 15"
 Cohesion: 0.03
-Nodes (58): BUG-004 tau clamping NaN, fit_single_exp(), Fit single exponential decay model with Bayesian inference.      Model: y = base, Configuration for NUTS sampler.      Attributes     ----------     num_warmup :, Validate sampler configuration., SamplerConfig, _build_fit_result(), Run MCMC sampling with optional warm-start initialization.      Parameters     - (+50 more)
+Nodes (57): BUG-020 PRNG non-deterministic seed, BUG-021 per-chain init jitter, fit_single_exp(), Fit single exponential decay model with Bayesian inference.      Model: y = base, Configuration for NUTS sampler.      Attributes     ----------     num_warmup :, Validate sampler configuration., SamplerConfig, _build_fit_result() (+49 more)
 
 ### Community 16 - "Community 16"
 Cohesion: 0.07
 Nodes (45): XPCS Analysis Modules (G2, SAXS1D, SAXS2D, Twotime, Stability, I(t), TauQ, Average), NumPy/JAX Backend Abstraction Layer, xpcsviewer.backends.scipy_replacements, Chu et al. 2022 - pyXPCSviewer JSR Paper, Detector Geometry Parameters (bcx, bcy, distance, pixel size, energy), CLI API Reference, GUI Components API Reference, API Reference Index (+37 more)
 
 ### Community 17 - "Community 17"
-Cohesion: 0.03
-Nodes (60): BUG-003 NLSQ sentinel result, NLSQ single_exp cold: 1830.3ms, warm: 463.0ms, End-to-end tests for Bayesian fitting workflow., Test complete Bayesian fitting from data to diagnostics.          Workflow:, Test NLSQ fitting as standalone workflow., TestFittingWorkflow, nlsq_optimize(), Perform non-linear least-squares curve fitting via NLSQ 0.6.0.      Wraps ``nlsq (+52 more)
+Cohesion: 0.04
+Nodes (52): BUG-003 NLSQ sentinel result, NLSQ single_exp cold: 1830.3ms, warm: 463.0ms, End-to-end tests for Bayesian fitting workflow., Test complete Bayesian fitting from data to diagnostics.          Workflow:, Test NLSQ fitting as standalone workflow., TestFittingWorkflow, nlsq_optimize(), Perform non-linear least-squares curve fitting via NLSQ 0.6.0.      Wraps ``nlsq (+44 more)
 
 ### Community 18 - "Community 18"
-Cohesion: 0.03
-Nodes (70): Q-map 512x512 cold: 134.8ms, warm: 4.28ms, Benchmark tests for Q-map computation (T061).  Benchmarks for measuring JIT spee, Benchmarks for partition computation., Create 512x512 Q-map for benchmarking., Create 512x512 mask for benchmarking., Benchmark partition with 36 linear bins., Benchmark partition with 36 log bins., Benchmarks for Q-map computation. (+62 more)
+Cohesion: 0.02
+Nodes (81): Q-map 512x512 cold: 134.8ms, warm: 4.28ms, large_array(), Benchmark tests for Q-map computation (T061).  Benchmarks for measuring JIT spee, Benchmarks for partition computation., Create 512x512 Q-map for benchmarking., Create 512x512 mask for benchmarking., Benchmark partition with 36 linear bins., Benchmark partition with 36 log bins. (+73 more)
 
 ### Community 19 - "Community 19"
 Cohesion: 0.06
@@ -757,52 +778,52 @@ Cohesion: 0.04
 Nodes (44): 1. Rating Table, 2.1 Schema Types (`xpcsviewer/schemas/validators.py`), 2.2 Fitting Types (`xpcsviewer/fitting/results.py`), 2.3 Mask Hierarchy (`xpcsviewer/simplemask/area_mask.py`), 2.4 Backend Types (`xpcsviewer/backends/`), 2.5 Threading Types (`xpcsviewer/threading/`), 2.6 XpcsFile (`xpcsviewer/xpcs_file.py`), 2. Detailed Analysis (+36 more)
 
 ### Community 21 - "Community 21"
-Cohesion: 0.18
-Nodes (14): CacheEntry, get_dataset_info(), get_file_connection(), Enhanced HDF5 Reader with Intelligent Chunking and Read-ahead Caching  This modu, Intelligent read-ahead cache for HDF5 data based on access patterns., Record an access for pattern analysis., Get cached data if available., Enhanced cache entry for HDF5 data. (+6 more)
+Cohesion: 0.06
+Nodes (40): CacheEntry, EnhancedHDF5Reader, get_dataset_info(), get_enhanced_hdf5_reader(), get_enhanced_reader(), get_file_connection(), IntelligentChunker, Enhanced HDF5 Reader with Intelligent Chunking and Read-ahead Caching  This modu (+32 more)
 
 ### Community 22 - "Community 22"
-Cohesion: 0.02
-Nodes (104): BUG-024: FitResult __post_init__ validation, BUG-025: FitDiagnostics __post_init__ validation, FitDiagnostics, FitResult, FitDiagnostics, FitResult, Convergence diagnostics for MCMC sampling.      Attributes     ----------     r_, Validate diagnostic invariants (BUG-025).          Enforces:         - divergenc (+96 more)
+Cohesion: 0.03
+Nodes (53): BUG-024: FitResult __post_init__ validation, FitResult, FitResult, Container for Bayesian fitting results.      Attributes     ----------     sampl, Validate samples invariants at construction (BUG-024).          Enforces:, Get posterior mean for parameter.          Parameters         ----------, Get posterior standard deviation for parameter.          Parameters         ----, Get highest density interval for parameter.          Uses ArviZ's ``az.hdi()`` f (+45 more)
 
 ### Community 23 - "Community 23"
-Cohesion: 0.04
-Nodes (29): Any, Execute body function in a loop from lower to upper.          Sequential fallbac, Set the mask from a coordinate array.          Args:             zero_loc: Array, Load mask from an HDF5 file.          Args:             fname: Path to HDF5 file, Set mask from an array.          Args:             arr: Boolean or integer array, Evaluate mask (base method)., Get the result of a completed operation., Get cached data for a file if available. (+21 more)
+Cohesion: 0.02
+Nodes (65): Any, arrays_compatible(), ensure_backend_array(), get_array_backend(), is_jax_array(), is_numpy_array(), Check if array is a JAX array.      Parameters     ----------     array : Any, Check if array is a NumPy array.      Parameters     ----------     array : Any (+57 more)
 
 ### Community 24 - "Community 24"
 Cohesion: 0.05
-Nodes (40): HDF5ConnectionPool, Enhanced connection pool for HDF5 files with LRU eviction, health monitoring,, Close all connections and clear the pool., Unit tests for HDF5 reader module.  This module provides comprehensive unit test, Test suite for HDF5ConnectionPool initialization., Test HDF5ConnectionPool initialization with default parameters., Test HDF5ConnectionPool initialization with custom parameters., Test suite for HDF5ConnectionPool basic operations. (+32 more)
+Nodes (39): HDF5ConnectionPool, Enhanced connection pool for HDF5 files with LRU eviction, health monitoring,, Close all connections and clear the pool., Force an immediate health check of all connections., Unit tests for HDF5 reader module.  This module provides comprehensive unit test, Test suite for HDF5ConnectionPool initialization., Test HDF5ConnectionPool initialization with default parameters., Test HDF5ConnectionPool initialization with custom parameters. (+31 more)
 
 ### Community 25 - "Community 25"
-Cohesion: 0.05
-Nodes (35): CacheEntry, CacheType, Make space within a specific cache partition using intelligent eviction, Schedule data for intelligent preloading.          Parameters         ----------, Process preload queue during low memory pressure periods, Setup cache memory partitions with intelligent allocation, Start background memory monitoring.          Registers a periodic callback with, Types of cached data for different management strategies. (+27 more)
+Cohesion: 0.04
+Nodes (45): cache_array(), cache_computation(), CacheEntry, CacheType, get_array(), get_computation(), memory_pressure_monitor(), Make space within a specific cache partition using intelligent eviction (+37 more)
 
 ### Community 26 - "Community 26"
 Cohesion: 0.05
 Nodes (44): QCloseEvent, StateValidationLevel, xpcsviewer.utils.reliability, AtomicCounter, get_state_statistics(), get_state_validator(), LockFreeStateValidator, Lock-Free State Consistency Validation for XPCS Viewer.  This module provides hi (+36 more)
 
 ### Community 27 - "Community 27"
-Cohesion: 0.05
-Nodes (30): BUG-006 HDF5 g2 shape axis, Dummy Q values are sequential integers 0..n_q-1., Missing Q values in HDF5 produce correct number of dummy Q entries (BUG-006 entr, read_g2_data generates len(n_q) dummy Q values when q_values key is missing., _make_hdf5_g2_file(), Create a minimal HDF5 file containing G2 data for integration tests.      Return, BUG-006: HDF5Facade must generate dummy Q values with length == shape[1] (n_q ax, HDF5Facade (+22 more)
+Cohesion: 0.06
+Nodes (29): BUG-006 HDF5 g2 shape axis, Dummy Q values are sequential integers 0..n_q-1., Missing Q values in HDF5 produce correct number of dummy Q entries (BUG-006 entr, read_g2_data generates len(n_q) dummy Q values when q_values key is missing., _decode_h5_unit(), HDF5Facade, HDF5ValidationError, Unified HDF5 I/O facade with schema validation.  This module provides a high-lev (+21 more)
 
 ### Community 28 - "Community 28"
 Cohesion: 0.16
 Nodes (8): Validate Fourier transform calculations., Result of a scientific validation test., Validate intensity normalization procedures., Run all validation tests and return comprehensive results., Subtract background from intensities (mock implementation)., Test Fourier transform validation methods., Test that comprehensive validation runs without errors., ValidationResult
 
 ### Community 29 - "Community 29"
-Cohesion: 0.08
-Nodes (12): Restore workspace state from saved session., Show startup dialog with recent directories and options., Load XPCS data from specified directory path.          This method initializes t, Cancel the running batch Bayesian fitting., Initialize the main toolbar with custom SVG icons., Toggle between light and dark theme., Register actions in the command palette., Populate the Recent Directories submenu. (+4 more)
+Cohesion: 0.05
+Nodes (19): QKeySequence, Restore workspace state from saved session., Show startup dialog with recent directories and options., Set up keyboard shortcut to show progress dialog., Rebuild the two-time tab with a side-panel layout.          Restructures from th, Initialize the G2 Map tab with dynamically created widgets., Initialize the G2 Fitting tab with plot and fitting controls.          This meth, Load XPCS data from specified directory path.          This method initializes t (+11 more)
 
 ### Community 30 - "Community 30"
-Cohesion: 0.04
-Nodes (46): MockH5py, Comprehensive file I/O error handling tests.  This module tests error conditions, Test pooled connection health checking with file deletion., Test batch reading with I/O errors., Test chunked dataset reading with errors., Test file info extraction with corrupted metadata., Test XpcsFile error handling., Test lazy loading error handling in XpcsFile. (+38 more)
+Cohesion: 0.05
+Nodes (29): MockH5py, MockH5pyFile, Comprehensive file I/O error handling tests.  This module tests error conditions, Test pooled connection health checking with file deletion., Test XpcsFile error handling., Test XpcsFile initialization with invalid file., Test XpcsFile initialization with missing file., Test lazy loading error handling in XpcsFile. (+21 more)
 
 ### Community 31 - "Community 31"
 Cohesion: 0.08
 Nodes (20): compute_reflection_qmap, compute_reflection_qmap(), Compute Q-map for reflection (grazing incidence) geometry.      Args:         en, Regression tests for Q-map pixel index correctness.  These tests verify that qma, Tests for pixel indices in reflection Q-map., Standard detector geometry for reflection testing., qmap["x"][0,:] should be arange(ncols) for reflection geometry., qmap["y"][:,0] should be arange(nrows) for reflection geometry. (+12 more)
 
 ### Community 32 - "Community 32"
-Cohesion: 0.03
-Nodes (39): safe_shutdown, Test XpcsFile initialization with custom qmap manager., Test XpcsFile initialization with extra fields., Test suite for XpcsFile string representations., Test __repr__ method., Test suite for XpcsFile data access methods., Test get_hdf_info method., Test update_label method. (+31 more)
+Cohesion: 0.02
+Nodes (61): safe_shutdown, Test XpcsFile initialization with custom qmap manager., Test XpcsFile initialization with extra fields., Test suite for XpcsFile string representations., Test __repr__ method., Test suite for XpcsFile data access methods., Test get_hdf_info method., Test update_label method. (+53 more)
 
 ### Community 33 - "Community 33"
 Cohesion: 0.05
@@ -810,35 +831,35 @@ Nodes (41): 1.1 `nlsq_optimize()` → `NLSQResult` — Caller verification, 1.2 
 
 ### Community 34 - "Community 34"
 Cohesion: 0.05
-Nodes (35): folder-open icon, grid-mask icon, Threading Module (Async Workers, Bayesian Worker), cancel_all(), OperationInfo, ProgressDialog, ProgressIndicator, ProgressManager (+27 more)
+Nodes (36): folder-open icon, grid-mask icon, Threading Module (Async Workers, Bayesian Worker), cancel_all(), OperationInfo, ProgressDialog, ProgressIndicator, ProgressManager (+28 more)
 
 ### Community 35 - "Community 35"
-Cohesion: 0.10
-Nodes (17): get_hash(), Extracts the hash from the HDF5 file., Unit tests for QMap utilities module.  This module provides comprehensive unit t, Test suite for get_hash function., Test basic hash generation., Test that hash is consistent for same file properties., Test that hash is different for different files., Test hash generation with file access errors. (+9 more)
+Cohesion: 0.12
+Nodes (14): get_hash(), Extracts the hash from the HDF5 file., Test suite for get_hash function., Test basic hash generation., Test that hash is consistent for same file properties., Test that hash is different for different files., Test hash generation with file access errors., Test get_hash with various path formats. (+6 more)
 
 ### Community 36 - "Community 36"
-Cohesion: 0.02
-Nodes (81): Integration tests for comprehensive logging system.  Tests verify: - JSON format, Verify JSON fields have correct types for aggregation systems., Verify exception information is properly structured., Test session context correlation across log entries (T092)., Verify all logs within a context share the same session_id., Verify nested contexts maintain session continuity., Test path sanitization in log output (T094)., Verify home mode replaces home directory with ~. (+73 more)
+Cohesion: 0.07
+Nodes (21): Verify home mode replaces home directory with ~., Verify hash mode hashes the filename while preserving extension., Verify none mode preserves the full path., Verify None path is handled gracefully., PathLike, _get_sanitize_mode(), Initialize a logging context.          Args:             session_id: Session ID, Update the current file context (path will be sanitized). (+13 more)
 
 ### Community 37 - "Community 37"
-Cohesion: 0.07
-Nodes (19): QMap, Create absolute minimal qmap when everything fails., the saxs1d and stability data are compressed. the values of the empty         st, Fallback method when normal reshape fails., Optimized detector extent calculation with caching.         get the angular exte, Optimized q-bin selection with improved vectorization and caching., Optimized qmap computation with improved vectorization and memory efficiency., Test QMap initialization with exception. (+11 more)
+Cohesion: 0.09
+Nodes (16): QMap, Normalize num_pts to be a 2-element array [n_dim0, n_dim1].          Args:, Get default values for missing qmap keys., Create a minimal default qmap when file doesn't have qmap data., Create absolute minimal qmap when everything fails., the saxs1d and stability data are compressed. the values of the empty         st, Fallback method when normal reshape fails., Optimized detector extent calculation with caching.         get the angular exte (+8 more)
 
 ### Community 38 - "Community 38"
-Cohesion: 0.03
-Nodes (65): ArrayLike, End-to-end tests for visualization workflow., TestVisualizationWorkflow, _compute_fit_line(), Assemble Bayesian fitting results into NLSQ-compatible fit_summary format.  Conv, Compute fitted curve from Bayesian posterior means., fit_double_exp(), fit_power_law() (+57 more)
+Cohesion: 0.06
+Nodes (41): ArrayLike, fit_double_exp(), fit_power_law(), fit_stretched_exp(), nlsq_fit(), Fit stretched exponential (KWW) model with Bayesian inference.      Model: y = b, Fit power law Q-dependence of relaxation time.      Model: tau = tau0 * q^(-alph, JAX-accelerated nonlinear least squares with NLSQ 0.6.0 features.      Parameter (+33 more)
 
 ### Community 39 - "Community 39"
-Cohesion: 0.03
-Nodes (79): QRunnable, QThreadPool, compute_async(), load_files_async(), _on_computation_finished(), _on_data_loaded(), _on_operation_cancelled(), _on_operation_error() (+71 more)
+Cohesion: 0.02
+Nodes (89): BaseAsyncWorker, BasePlotWorker, tab-correlation icon, tab-scattering icon, QRunnable, QThreadPool, AsyncDataPreloader, compute_async() (+81 more)
 
 ### Community 40 - "Community 40"
-Cohesion: 0.25
-Nodes (4): Cancel the worker operation., Cancel a specific worker by ID., Cancel all active workers., Shutdown the WorkerManager gracefully.          Cancels all active workers and c
+Cohesion: 0.04
+Nodes (50): BUG-025: FitDiagnostics __post_init__ validation, FitDiagnostics, FitDiagnostics, Convergence diagnostics for MCMC sampling.      Attributes     ----------     r_, Validate diagnostic invariants (BUG-025).          Enforces:         - divergenc, Check if all diagnostics pass thresholds., Safely retrieve package version for reproducibility tracking.      Per Technical, Convert to serializable dictionary.          Per Technical Guidelines, exports i (+42 more)
 
 ### Community 41 - "Community 41"
-Cohesion: 0.06
-Nodes (38): Path, ArtifactManager, ci_cleanup(), CIEnvironmentDetector, cleanup_ci_artifacts(), collect_test_artifacts(), detect_ci_environment(), generate_ci_reports() (+30 more)
+Cohesion: 0.07
+Nodes (30): ci_cleanup(), CIEnvironmentDetector, cleanup_ci_artifacts(), detect_ci_environment(), generate_ci_reports(), get_ci_environment(), github_step_summary(), pytest_configure_ci_reporting() (+22 more)
 
 ### Community 42 - "Community 42"
 Cohesion: 0.12
@@ -850,11 +871,11 @@ Nodes (9): HealthStatus, Overall system health status levels., Check metrics and
 
 ### Community 44 - "Community 44"
 Cohesion: 0.04
-Nodes (69): generate_synthetic_c2_matrix(), generate_synthetic_saxs_2d(), Generate synthetic two-time correlation (C2) matrix.      Args:         size: Ma, Generate synthetic SAXS 2D detector image with ring patterns.      Args:, configure_ci_environment(), configure_test_environment(), corrupted_hdf5_file(), disk_space_exhausted_environment() (+61 more)
+Nodes (71): generate_synthetic_c2_matrix(), generate_synthetic_saxs_2d(), Generate synthetic two-time correlation (C2) matrix.      Args:         size: Ma, Generate synthetic SAXS 2D detector image with ring patterns.      Args:, configure_ci_environment(), configure_test_environment(), corrupted_hdf5_file(), disk_space_exhausted_environment() (+63 more)
 
 ### Community 45 - "Community 45"
 Cohesion: 0.05
-Nodes (19): Unit tests for XpcsFile class.  This module provides comprehensive unit tests fo, Test that correct fields are loaded based on analysis type., Test suite for create_id function., Test create_id function is called with correct parameters., Test suite for XpcsFile performance characteristics., Test XpcsFile initialization completes within reasonable time., test_analysis_type_fields(), test_load_data_multitau() (+11 more)
+Nodes (20): Unit tests for XpcsFile class.  This module provides comprehensive unit tests fo, Test suite for MemoryMonitor class., Test memory usage retrieval., Test memory pressure calculation., Test memory pressure threshold check., Test that correct fields are loaded based on analysis type., Test array memory estimation., test_analysis_type_fields() (+12 more)
 
 ### Community 46 - "Community 46"
 Cohesion: 0.20
@@ -865,8 +886,8 @@ Cohesion: 0.21
 Nodes (12): Decorator to make tests more reliable., Decorator to validate test environment before running test., Require minimum memory for test., Require minimum disk space for test., Require network connectivity for test., Require display for GUI tests., reliable_test(), require_disk_space() (+4 more)
 
 ### Community 48 - "Community 48"
-Cohesion: 0.06
-Nodes (43): Exception, number, chain_exception(), convert_exception(), handle_exceptions(), XPCS Viewer Exception Hierarchy for Enhanced Error Handling and Reliability.  Th, Base exception for all XPCS Viewer errors.      Provides common functionality fo, Chain exceptions to preserve full error context with zero overhead.      Usage:: (+35 more)
+Cohesion: 0.04
+Nodes (72): Exception, number, chain_exception(), convert_exception(), XPCS Viewer Exception Hierarchy for Enhanced Error Handling and Reliability.  Th, Specific validation failures with detailed field information.      Used for:, Base exception for all XPCS Viewer errors.      Provides common functionality fo, Chain exceptions to preserve full error context with zero overhead.      Usage:: (+64 more)
 
 ### Community 49 - "Community 49"
 Cohesion: 0.06
@@ -877,16 +898,16 @@ Cohesion: 0.05
 Nodes (28): Two-Time Correlation Analysis Validation Tests  This module provides comprehensi, Test that correlation matrix is positive semi-definite, Test that diagonal elements represent one-time correlations, Test time translation invariance for stationary processes, Test relationship between time-averaged and ensemble-averaged correlations, Property-based test for correlation time estimation, # NOTE: This test primarily validates algorithm robustness rather than accuracy, Test mathematical operations on two-time correlation matrices (+20 more)
 
 ### Community 51 - "Community 51"
-Cohesion: 0.07
-Nodes (31): BUG-F: tauq fit line render, BUG-G: tauq error bars use tauq_tau_err, plot(), plot_pre(), Plot G2 fitting parameters versus q in a 2x2 subplot grid.      Displays contras, Plot relaxation time tau versus scattering vector q.      Renders tau(q) with er, TestTauqErrorBars, TestTauqFallback (+23 more)
+Cohesion: 0.04
+Nodes (55): BUG-F: tauq fit line render, BUG-G: tauq error bars use tauq_tau_err, plot(), plot_pre(), Plot G2 fitting parameters versus q in a 2x2 subplot grid.      Displays contras, Plot relaxation time tau versus scattering vector q.      Renders tau(q) with er, _make_hdl(), _make_xf() (+47 more)
 
 ### Community 52 - "Community 52"
 Cohesion: 0.07
-Nodes (24): BatchBayesianCoordinator, Handle a successful worker completion., Handle a worker failure — store None and continue., Handle a cancelled worker — treat as failure to keep accounting correct., Manage parallel Bayesian fits across multiple Q-bins.      Parameters     ------, Launch the initial batch of workers., Stop launching new workers and cancel active ones., Launch the next worker in the queue if available. (+16 more)
+Nodes (25): QObject, BatchBayesianCoordinator, Handle a successful worker completion., Handle a worker failure — store None and continue., Handle a cancelled worker — treat as failure to keep accounting correct., Manage parallel Bayesian fits across multiple Q-bins.      Parameters     ------, Launch the initial batch of workers., Stop launching new workers and cancel active ones. (+17 more)
 
 ### Community 53 - "Community 53"
 Cohesion: 0.09
-Nodes (16): ConnectionStats, Get comprehensive pool statistics., Statistics tracker for HDF5 connections., Test suite for ConnectionStats class., Test ConnectionStats initialization., Test recording connection creation., Test recording connection reuse., Test recording connection eviction. (+8 more)
+Nodes (12): Test suite for ConnectionStats class., Test ConnectionStats initialization., Test recording connection creation., Test recording connection reuse., Test recording connection eviction., Test recording successful health check., Test recording failed health check., Test recording cache miss. (+4 more)
 
 ### Community 54 - "Community 54"
 Cohesion: 0.08
@@ -897,28 +918,28 @@ Cohesion: 0.06
 Nodes (30): cleanup_old_data, export_coverage_trends, CoverageManager, CoverageMetrics, CoverageReport, CoverageTarget, Helper function to save report content., Find the project root directory. (+22 more)
 
 ### Community 56 - "Community 56"
-Cohesion: 0.09
-Nodes (28): cleanup_shared_arrays(), correct_diagonal_c2_vectorized(), create_shared_array(), get_all_c2_from_hdf(), get_all_c2_from_hdf_enhanced(), get_c2_stream(), get_optimal_worker_count(), get_process_pool() (+20 more)
+Cohesion: 0.15
+Nodes (14): cleanup_shared_arrays(), create_shared_array(), get_all_c2_from_hdf(), get_shared_array(), get_single_c2_from_hdf(), Get a previously created shared array by name., Clean up all shared memory arrays., Vectorized C2 matrix reconstruction from half matrix.     Optimized for memory e (+6 more)
 
 ### Community 57 - "Community 57"
-Cohesion: 0.05
-Nodes (29): Tests for ToastManager., Create a main window for testing., ToastManager should be created with parent., ToastManager should start with no toasts., ToastManager should have 3000ms default duration., ToastManager should allow setting default duration., show_toast should create and display a toast., show_toast should accept toast type. (+21 more)
+Cohesion: 0.07
+Nodes (16): Tests for ToastManager., Create a main window for testing., ToastManager should be created with parent., ToastManager should start with no toasts., ToastManager should have 3000ms default duration., ToastManager should allow setting default duration., show_toast should create and display a toast., show_toast should accept toast type. (+8 more)
 
 ### Community 58 - "Community 58"
 Cohesion: 0.06
 Nodes (24): main(), _QtErrorCapture, QtTestRunner, Qt Test Runner for Error Detection.  Specialized test runner for Qt-related erro, Run a single Qt test function with error capture.          Args:             tes, Run a suite of Qt test functions.          Args:             test_functions: Lis, Generate summary of Qt errors across all tests., Specialized test runner for Qt GUI components with error capture. (+16 more)
 
 ### Community 59 - "Community 59"
-Cohesion: 0.02
-Nodes (76): CurveFitResult (native NLSQ 0.6.0), NLSQResult, Result from nonlinear least squares fitting.      This class wraps NLSQ 0.6.0's, Initialize param names from params dict if not provided., Coefficient of determination (R²)., Set r_squared (for backward compat initialization).          Note: This setter i, Adjusted R² accounting for number of parameters., Set adj_r_squared (for backward compat initialization).          Note: This sett (+68 more)
+Cohesion: 0.04
+Nodes (26): CurveFitResult (native NLSQ 0.6.0), Test predictions delegates to native_result and returns numpy array., Test confidence_intervals property delegates to native_result., Test get_confidence_interval method for single parameter., Test get_prediction_interval delegates to native_result., Test diagnostics property returns native diagnostics., Test is_healthy property., Test health_score property. (+18 more)
 
 ### Community 60 - "Community 60"
-Cohesion: 0.08
-Nodes (15): BayesianDiagnosisWindow, Bayesian diagnosis window for MCMC fit results.  Provides a shared diagnostic wi, Diagnostic window showing Bayesian fit results and MCMC diagnostics.      Reused, Set axis labels for the posterior predictive plot., Refresh all panels with new fit results.          Parameters         ----------, Redraw the posterior predictive plot (Tab 1)., Redraw ArviZ diagnostic plots (Tab 2)., Save the Fit + 95% CI plot to file. (+7 more)
+Cohesion: 0.09
+Nodes (15): BayesianDiagnosisWindow, ConvergenceSummaryWidget, Bayesian diagnosis window for MCMC fit results.  Provides a shared diagnostic wi, Diagnostic window showing Bayesian fit results and MCMC diagnostics.      Reused, Set axis labels for the posterior predictive plot., Refresh all panels with new fit results.          Parameters         ----------, Redraw the posterior predictive plot (Tab 1)., Redraw ArviZ diagnostic plots (Tab 2). (+7 more)
 
 ### Community 62 - "Community 62"
-Cohesion: 0.10
-Nodes (28): apply_all_layout_improvements(), _apply_compact_density_to_sidebars(), create_separator(), improve_file_panel_layout(), improve_tab_content_spacing(), mark_primary_action_buttons(), optimize_g2map_tab(), Layout helper utilities for XPCS-TOOLKIT GUI.  This module provides functions to (+20 more)
+Cohesion: 0.09
+Nodes (37): _add_labeled_spinbox(), apply_all_layout_improvements(), _apply_compact_density_to_sidebars(), apply_group_box_styling(), improve_control_panel_layout(), improve_file_panel_layout(), improve_tab_content_spacing(), mark_primary_action_buttons() (+29 more)
 
 ### Community 63 - "Community 63"
 Cohesion: 0.04
@@ -929,8 +950,8 @@ Cohesion: 0.08
 Nodes (17): Unit tests for Q-map integration in SimpleMask window.  Tests the Q-map generati, Tests for Generate Q-Map toolbar action., Window should have Generate Q-Map toolbar action., Window should have Show Q-Map toggle action in toolbar., Tests for Q-map overlay display., Window should track Q-map overlay state., Q-map toggle should require loaded data., Tests for qmap_exported signal. (+9 more)
 
 ### Community 65 - "Community 65"
-Cohesion: 0.25
-Nodes (5): Test statistical properties of fitting algorithms, Test analysis of parameter correlations in fitting, Test that confidence intervals have correct coverage probability, Test statistical properties of fitting residuals, TestFittingStatisticalValidation
+Cohesion: 0.17
+Nodes (7): Algorithm-specific validation tests  This module contains comprehensive validati, Fitting Algorithm Validation Tests  This module provides comprehensive validatio, Test statistical properties of fitting algorithms, Test analysis of parameter correlations in fitting, Test that confidence intervals have correct coverage probability, Test statistical properties of fitting residuals, TestFittingStatisticalValidation
 
 ### Community 66 - "Community 66"
 Cohesion: 0.05
@@ -941,16 +962,16 @@ Cohesion: 0.06
 Nodes (19): MockH5py, MockH5pyFile, Edge case and boundary condition tests.  This module tests boundary conditions,, Test handling of arrays at maximum reasonable dimensions., Test handling of minimum positive floating point values., Test handling of maximum finite floating point values., Test handling of extreme array shapes and dimensions., Test handling of very long 1D arrays. (+11 more)
 
 ### Community 68 - "Community 68"
-Cohesion: 0.07
-Nodes (19): _process_file_for_average, BUG-009: AverageToolbox.is_killed must be threading.Event not plain bool, AverageToolbox, Sequential file processing (original implementation), Parallel file processing using ThreadPoolExecutor, Thread-pool runnable for averaging multiple XPCS datasets.      Manages a file l, Process a batch of files, Unit tests for BUG-009: threading.Event cross-thread cancellation in AverageTool (+11 more)
+Cohesion: 0.08
+Nodes (18): _process_file_for_average, BUG-009: AverageToolbox.is_killed must be threading.Event not plain bool, AverageToolbox, Thread-pool runnable for averaging multiple XPCS datasets.      Manages a file l, Process a batch of files, WorkerSignal, Unit tests for BUG-009: threading.Event cross-thread cancellation in AverageTool, Calling kill() multiple times must not raise and event stays set. (+10 more)
 
 ### Community 69 - "Community 69"
 Cohesion: 0.05
 Nodes (26): Unit tests for ViewerKernel export methods.  This module tests the export functi, Ring ROI addition returns ROI index., Test sector ROI addition (VK-009)., VK-009: Sector ROI geometry creation., Sector ROI with various angles., Test edge case: export to non-existent directory., Edge case: Export to non-existent directory should be handled., Export should be able to create missing directories. (+18 more)
 
 ### Community 70 - "Community 70"
-Cohesion: 0.05
-Nodes (30): AnalyticalValidator, ComprehensiveCrossValidationFramework, Cross-Validation Framework for XPCS Algorithms  This module provides a comprehen, Cross-validator using statistical methods like k-fold validation, Perform k-fold cross-validation on fitting algorithm          Args:, Abstract base class for reference validation, Validator that compares against reference software implementations, Validate against reference software implementation          Args:             in (+22 more)
+Cohesion: 0.04
+Nodes (33): create_custom_analytical_benchmark(), Analytical Benchmarks for XPCS Algorithm Validation  This module provides compre, Create a custom analytical benchmark      Args:         function: Analytical fun, AnalyticalValidator, ComprehensiveCrossValidationFramework, Cross-Validation Framework for XPCS Algorithms  This module provides a comprehen, Cross-validator using statistical methods like k-fold validation, Perform k-fold cross-validation on fitting algorithm          Args: (+25 more)
 
 ### Community 71 - "Community 71"
 Cohesion: 0.17
@@ -964,13 +985,9 @@ Nodes (24): Unit tests for FileLocator class and related functions.  This module
 Cohesion: 0.10
 Nodes (18): run_coverage_analysis, cprofile_hotpaths script, calculate_safe_levels(), clean_c2_for_visualization(), plot_twotime(), plot_twotime_g2(), Two-time correlation analysis module.  Provides two-time correlation map visuali, Calculate vmin/vmax levels while safely handling NaN/inf values.      Args: (+10 more)
 
-### Community 74 - "Community 74"
-Cohesion: 0.04
-Nodes (19): MockH5py, MockH5pyFile, Tests for file operations and data loading GUI functionality.  This module tests, Test suite for file loading and validation., Create temporary HDF5 files for testing., Test loading a single HDF5 file., Test loading multiple files simultaneously., Test file validation status display. (+11 more)
-
 ### Community 75 - "Community 75"
-Cohesion: 0.04
-Nodes (41): Light theme should return light-colored matplotlib params., Dark theme should return dark-colored matplotlib params., Matplotlib params should have all required rcParams keys., All matplotlib param values should be valid hex colors., Tests for Matplotlib theme parameter generation., TestMatplotlibParams, Unit tests for ThemeManager., Basic ThemeManager tests. (+33 more)
+Cohesion: 0.03
+Nodes (55): Light theme should return light-colored matplotlib params., Dark theme should return dark-colored matplotlib params., Matplotlib params should have all required rcParams keys., All matplotlib param values should be valid hex colors., Tests for Matplotlib theme parameter generation., Tests for PyQtGraph theme integration., apply_to_pyqtgraph should not raise any errors., apply_to_pyqtgraph should set PyQtGraph config options. (+47 more)
 
 ### Community 76 - "Community 76"
 Cohesion: 0.05
@@ -997,52 +1014,52 @@ Cohesion: 0.06
 Nodes (34): 1. Q-map Computation (`xpcsviewer/simplemask/qmap.py`), 2. Two-time Correlation C2 Cleaning (`xpcsviewer/module/twotime.py`), 3. G2 Vectorized Operations (`xpcsviewer/module/g2mod.py`), 4. SAXS 1D Processing (`xpcsviewer/module/saxs1d.py`), 5. NLSQ Fitting (`xpcsviewer/fitting/nlsq.py`), 6. HDF5 I/O / FFT Cache (`xpcsviewer/xpcs_file.py`), Analysis, Analysis (+26 more)
 
 ### Community 83 - "Community 83"
-Cohesion: 0.10
-Nodes (15): batch_read_fields(), get(), Get or create a lock for a specific file.          Tracks last-access time per e, get the values for the various keys listed in fields for a single     file;, Optimized batch reading of multiple fields from HDF5 file.      Parameters     -, Test suite for get() function., Test getting simple field from HDF5 file., Test getting field with slice. (+7 more)
+Cohesion: 0.12
+Nodes (12): batch_read_fields(), Optimized batch reading of multiple fields from HDF5 file.      Parameters     -, Test suite for batch_read_fields() function., Test basic batch reading of fields., Test batch reading with missing field., test_batch_read_fields_missing_field(), TestBatchReadFields, Backward compatibility property for SAXS 2D data access.          This property (+4 more)
 
 ### Community 84 - "Community 84"
-Cohesion: 0.12
-Nodes (13): GraphicsLayoutWidget, ImageView, ImageViewPlotItem, PlotWidgetDev, Apply theme colors to this plot widget.          Parameters         ----------, configure_pyqtgraph_for_qt_compatibility(), qt_connection_context(), Context manager for Qt operations that may generate connection warnings.      Th (+5 more)
+Cohesion: 0.16
+Nodes (10): GraphicsLayoutWidget, ImageView, ImageViewPlotItem, PlotWidgetDev, configure_pyqtgraph_for_qt_compatibility(), Configure PyQtGraph settings to minimize Qt connection warnings.      This shoul, QListView, QStatusBar (+2 more)
 
 ### Community 85 - "Community 85"
-Cohesion: 0.11
-Nodes (23): Integration tests for theme switching functionality., Integration tests for theme preferences persistence., Preferences should save and load correctly., Default preferences should be created if file doesn't exist., TestThemePreferencesIntegration, theme_manager(), load_preferences, save_preferences (+15 more)
+Cohesion: 0.13
+Nodes (20): Integration tests for theme switching functionality., Integration tests for theme preferences persistence., Preferences should save and load correctly., Default preferences should be created if file doesn't exist., TestThemePreferencesIntegration, theme_manager(), load_preferences, save_preferences (+12 more)
 
 ### Community 86 - "Community 86"
-Cohesion: 0.06
-Nodes (21): Test that lazy loading provides performance benefits., Test that lazy loading doesn't cause memory leaks., Basic test for thread safety of lazy loading., Test that module cache persists across multiple calls., Test suite for lazy loading functionality., Integration test for lazy loading with viewer kernel., Set up test fixtures., Clean up after tests. (+13 more)
+Cohesion: 0.04
+Nodes (30): ModuleType, Test that lazy loading provides performance benefits., Test that lazy loading doesn't cause memory leaks., Basic test for thread safety of lazy loading., Test that module cache persists across multiple calls., Test suite for lazy loading functionality., Integration test for lazy loading with viewer kernel., Set up test fixtures. (+22 more)
 
 ### Community 87 - "Community 87"
-Cohesion: 0.09
-Nodes (21): Tests for Task Group 8: Code Quality and Cleanup.  Covers BUG-035 through BUG-06, is_healthy should not use str(status) == 'healthy' fragile string check., QMapSchema.to_dict() should return copies of internal arrays (BUG-047)., GeometryMetadata.from_dict() should reject NaN values in critical fields (BUG-04, GeometryMetadata.from_dict() should reject inf values (BUG-048)., G2Data.from_dict() should coerce arrays to float64 (BUG-058)., WorkerResult __post_init__ should reject negative execution_time (BUG-061)., WorkerStats __post_init__ should reject negative job counts (BUG-061). (+13 more)
+Cohesion: 0.10
+Nodes (19): Tests for Task Group 8: Code Quality and Cleanup.  Covers BUG-035 through BUG-06, is_healthy should not use str(status) == 'healthy' fragile string check., QMapSchema.to_dict() should return copies of internal arrays (BUG-047)., GeometryMetadata.from_dict() should reject NaN values in critical fields (BUG-04, GeometryMetadata.from_dict() should reject inf values (BUG-048)., G2Data.from_dict() should coerce arrays to float64 (BUG-058)., WorkerResult __post_init__ should reject negative execution_time (BUG-061)., WorkerStats __post_init__ should reject negative job counts (BUG-061). (+11 more)
 
 ### Community 88 - "Community 88"
 Cohesion: 0.09
 Nodes (17): isolated_test_environment, Create reliable test environment with isolation., reliable_test_environment(), Thread, isolated_test_environment(), isolation_manager(), Perform comprehensive cleanup of all registered resources., Provide test isolation manager with automatic cleanup. (+9 more)
 
 ### Community 89 - "Community 89"
-Cohesion: 0.11
-Nodes (12): memory_test_data(), Benchmark tests for memory-efficient operations.  Verifies memory reduction from, Generate data for memory efficiency benchmarks., Tests for partition combination memory efficiency., Record timing for partition combination., Memory efficiency tests for partition operations., Verify linear partition produces correct results., Verify logarithmic partition produces correct results. (+4 more)
+Cohesion: 0.06
+Nodes (30): memory_test_data(), Benchmark tests for memory-efficient operations.  Verifies memory reduction from, Tests for integer array optimization., Verify uint8 optimization for small values., Verify uint16 optimization for medium values., Verify float arrays are not optimized., Generate data for memory efficiency benchmarks., Tests for partition combination memory efficiency. (+22 more)
 
 ### Community 90 - "Community 90"
 Cohesion: 0.09
 Nodes (15): Tests for angular computation precision (T083).  Tests that angular computations, Tests for sin/cos precision in angular computations., Test sin²x + cos²x = 1 precision., Test angle to Q conversion precision., Tests for hypot (Euclidean distance) precision., Test hypot produces correct Pythagorean results., Test hypot precision for small values., Test hypot doesn't overflow for large values. (+7 more)
 
 ### Community 91 - "Community 91"
-Cohesion: 0.06
-Nodes (37): batch_g2_normalization(), Batch normalization of multiple G2 datasets using vectorized operations.      Ar, Vectorized q-space binning for SAXS data with optimized memory usage.      Uses, Vectorized intensity normalization using various methods.      Args:         q_v, vectorized_intensity_normalization(), vectorized_q_binning(), _area_norm_loop(), batch_norm_data() (+29 more)
+Cohesion: 0.08
+Nodes (24): batch_norm_data(), _batch_norm_loop(), binning_2d_data(), Benchmarks for G2 and SAXS vectorized operation optimizations.  Measures the imp, Batch of 50 G2 datasets, each (100 time points x 36 q values)., Baseline: nested Python loop (1-D)., Optimized: np.add.at scatter-accumulate (1-D)., Baseline: doubly nested Python loop (2-D phi x bins). (+16 more)
 
 ### Community 92 - "Community 92"
-Cohesion: 0.10
-Nodes (17): Generate ArviZ diagnostic plots.          Parameters         ----------, _extract_figure(), generate_arviz_diagnostics(), Extract matplotlib Figure from ArviZ 1.0 PlotCollection/PlotMatrix or legacy axe, Generate complete ArviZ diagnostic suite (FR-013).      Plots generated:     1., FR-013: generate_arviz_diagnostics with 6 standard plots, T093: ArviZ diagnostic plot generation test, Tests for generate_arviz_diagnostics function. (+9 more)
+Cohesion: 0.03
+Nodes (37): Axes, End-to-end tests for visualization workflow., Test visualization generation and export workflow., TestVisualizationWorkflow, JAX-accelerated NLSQ solver using the nlsq library.  This module provides nonlin, Result dataclasses for Bayesian fitting.  This module defines the data structure, Generate ArviZ diagnostic plots.          Parameters         ----------, _extract_figure() (+29 more)
 
 ### Community 93 - "Community 93"
 Cohesion: 0.25
 Nodes (8): aps_8idi key map, constants.defaults, constants.fitting, constants.__init__, constants.limits, constants.thresholds, constants.timeouts, HDF5Reader
 
 ### Community 94 - "Community 94"
-Cohesion: 0.08
-Nodes (23): assemble_fit_summary, BUG-022: double-exp warm-start sorts tau, BUG-020 PRNG non-deterministic seed, BUG-021 per-chain init jitter, Verify max_treedepth_reached is computed, not hardcoded to 0., _build_fit_result must reference num_steps for max_treedepth., _run_mcmc must request num_steps as an extra field., FitDiagnostics must have max_treedepth_reached field. (+15 more)
+Cohesion: 0.14
+Nodes (16): assemble_fit_summary, BUG-022: double-exp warm-start sorts tau, fit_double_exp, fit_power_law, fit_single_exp, double_exp_func, double_exp_model, single_exp_func (+8 more)
 
 ### Community 95 - "Community 95"
 Cohesion: 0.09
@@ -1054,23 +1071,23 @@ Nodes (23): ensure_numpy, Integration tests for SimpleMask to XPCS Viewer data f
 
 ### Community 97 - "Community 97"
 Cohesion: 0.07
-Nodes (26): plot_posterior_predictive must call model with correct arg order.          Regre, plot_posterior_predictive(), Plot Bayesian fit with posterior credible interval (FR-014).      Parameters, FR-014: Bayesian fit visualization with credible intervals, T094: Posterior predictive plot test, mock_fit_result(), Tests for posterior predictive plot with 95% CI (T094).  Tests for plot_posterio, Test credible interval band is plotted. (+18 more)
+Nodes (25): plot_posterior_predictive(), Plot Bayesian fit with posterior credible interval (FR-014).      Parameters, FR-014: Bayesian fit visualization with credible intervals, T094: Posterior predictive plot test, mock_fit_result(), Tests for posterior predictive plot with 95% CI (T094).  Tests for plot_posterio, Test credible interval band is plotted., Test custom credible level works. (+17 more)
 
 ### Community 98 - "Community 98"
 Cohesion: 0.06
 Nodes (21): Integration tests for HDF5Facade.  This module tests the HDF5 facade functionali, Test HDF5Facade connection pool statistics., Connection pool statistics retrieval., Pool stats contain valid values., Test mock call tracking for facade methods., Verify read operations track calls., Verify write operations track calls., Test HDF5Facade error handling. (+13 more)
 
 ### Community 99 - "Community 99"
-Cohesion: 0.11
-Nodes (18): fit_with_fixed(), Fitting with fixed parameters using nlsq.curve_fit.      Parameters     --------, _make_synthetic_data(), Integration tests: NLSQ and Bayesian power-law fitting consistency.  Verifies:, When p0 is None and b is fixed, use midpoint of bounds., Verify both paths agree on the same physics., NLSQ b and Bayesian alpha must satisfy b ≈ -alpha., Generate synthetic power-law diffusion data with known parameters. (+10 more)
+Cohesion: 0.07
+Nodes (30): fit_with_fixed(), Fitting with fixed parameters using nlsq.curve_fit.      Parameters     --------, Run power law fit with NLSQ warm-start.      Parameters     ----------     q : a, run_power_law_fit(), Verify tau_err is threaded through the Bayesian diffusion pipeline.      Before, run_power_law_fit must have a tau_err parameter., Public fit_power_law must have a tau_err parameter., run_power_law_fit must NOT hardcode tau_err = None. (+22 more)
 
 ### Community 100 - "Community 100"
-Cohesion: 0.08
-Nodes (29): F, gaussian_filter, scipy_replacements.__init__, JAX replacements for SciPy functions using interpax, optimistix, and optax.  Thi, Interp1d, interp2d_jax(), JAX replacements for scipy.interpolate functions using interpax.  This module pr, Interpolation using interpax library. (+21 more)
+Cohesion: 0.05
+Nodes (31): refresh icon, Integration test for signal safety during shutdown.      Verifies:     - cancel_, BUG-012: cancel_all_operations() disconnects all tracked signal connections., BUG-031: WorkerManager protects active_workers with a threading.Lock., BUG-031: Concurrent insertion and removal of active_workers is race-free., BUG-013: closeEvent calls thread_pool.waitForDone to prevent post-deletion signa, BUG-012 + BUG-031: Cancellation followed by re-submission does not leave stale c, TestChain2SignalChaosAtShutdown (+23 more)
 
 ### Community 101 - "Community 101"
-Cohesion: 0.09
-Nodes (26): ButtonSize, ButtonStyle, QPushButton, apply_destructive_buttons(), apply_secondary_buttons(), Style helper utilities for XPCS-TOOLKIT GUI.  This module provides functions to, Apply destructive styling to multiple buttons by object name.      Useful for bu, Apply secondary styling to multiple buttons by object name.      Args:         w (+18 more)
+Cohesion: 0.08
+Nodes (31): ButtonSize, ButtonStyle, QPushButton, apply_destructive_buttons(), apply_secondary_buttons(), Style helper utilities for XPCS-TOOLKIT GUI.  This module provides functions to, Apply destructive styling to multiple buttons by object name.      Useful for bu, Apply secondary styling to multiple buttons by object name.      Args:         w (+23 more)
 
 ### Community 102 - "Community 102"
 Cohesion: 0.06
@@ -1082,43 +1099,43 @@ Nodes (18): ToastWidget should have a label with the message., ToastWidget shoul
 
 ### Community 104 - "Community 104"
 Cohesion: 0.06
-Nodes (27): PUBLICATION_STYLE constant, Save figure in multiple formats (FR-018).      Parameters     ----------     fig, save_figure(), FR-018: save_figure at 300 DPI, T096: Plot export test, Tests for plot export functionality (T096).  Tests for save_figure() function th, Test saving in multiple formats in one call., Tests for publication style preset. (+19 more)
+Nodes (29): apply_publication_style(), PUBLICATION_STYLE constant, Apply publication-quality matplotlib style (FR-019)., Save figure in multiple formats (FR-018).      Parameters     ----------     fig, save_figure(), FR-018: save_figure at 300 DPI, T096: Plot export test, Tests for plot export functionality (T096).  Tests for save_figure() function th (+21 more)
 
 ### Community 105 - "Community 105"
-Cohesion: 0.06
-Nodes (31): Test visualization generation and export workflow., Plot fit with uncertainty band.          Parameters         ----------         m, Tests for NLSQ visualization enhancements (T070-T073).  Tests programmatic figur, Test that prediction interval is not shown by default., Tests for diagnostics display (T072)., Test that metrics are shown by default., Test that metrics annotation contains expected values., Tests for diagnostics 2x2 subplot layout (T073). (+23 more)
+Cohesion: 0.09
+Nodes (19): Tests for NLSQ visualization enhancements (T070-T073).  Tests programmatic figur, Tests for diagnostics 2x2 subplot layout (T073)., Test that plot_diagnostics creates a figure with 4 axes., Tests for plot aesthetics and labels., Test that custom labels are applied., Single exponential model for testing., Test that legend is present., Tests for handling invalid covariance. (+11 more)
 
 ### Community 106 - "Community 106"
-Cohesion: 0.08
-Nodes (20): batch_c2_matrix_operations(), compute_c2_statistics_vectorized(), Vectorized batch operations on multiple C2 matrices.      Args:         c2_matri, Compute statistical measures for C2 matrices using vectorized operations.      U, c2_batch_data(), Benchmark tests for vectorized batch processing.  Verifies performance improveme, Record timing for vectorized diagonal correction., Benchmark tests for batch C2 operations. (+12 more)
+Cohesion: 0.18
+Nodes (9): batch_c2_matrix_operations(), Vectorized batch operations on multiple C2 matrices.      Args:         c2_matri, c2_batch_data(), Benchmark tests for vectorized batch processing.  Verifies performance improveme, Benchmark tests for batch C2 operations., Verify batch C2 operations produce correct results., Generate C2 matrix batch data for benchmarks., Record timing for batch C2 operations. (+1 more)
 
 ### Community 107 - "Community 107"
 Cohesion: 0.06
 Nodes (31): Confirmed Correct Patterns, Debugger Agent Supplementary Findings (Phase 2), Executive Summary, Items Verified Correct by Debugger Analysis, P0-1: Missing `@Slot` decorators on `QMetaObject.invokeMethod` targets, P0-2: `cancel_all_operations` races with in-flight completion callbacks, P0 — Critical: Crash or data-loss risk, P1-1: `_emit_operation_progress` iterates `active_operations` without a lock (+23 more)
 
 ### Community 108 - "Community 108"
-Cohesion: 0.10
-Nodes (16): Test vectorized G2 operations for correctness and performance, Test vectorized baseline correction, Test batch normalization methods, Test ensemble statistics computation, Test error propagation for G2 operations, TestG2VectorizedOperations, compute_g2_ensemble_statistics(), optimize_g2_error_propagation() (+8 more)
+Cohesion: 0.06
+Nodes (34): Worker execution states., Container for worker execution results., Validate WorkerResult fields at construction (BUG-061)., Statistics for worker execution monitoring., Validate WorkerStats fields at construction (BUG-061)., WorkerResult, WorkerState, WorkerStats (+26 more)
 
 ### Community 109 - "Community 109"
-Cohesion: 0.05
-Nodes (30): DRAWING_TOOLS dict, ROI, SimpleMaskKernel, LineROI, ImageViewROI, LineROI, Custom PyQtGraph components for SimpleMask.  This module provides customized PyQ, Remove an ROI by label.          Args:             label: Label of the ROI to re (+22 more)
+Cohesion: 0.04
+Nodes (34): DRAWING_TOOLS dict, ROI, SimpleMaskKernel, LineROI, ImageViewROI, LineROI, Custom PyQtGraph components for SimpleMask.  This module provides customized PyQ, Remove an ROI by label.          Args:             label: Label of the ROI to re (+26 more)
 
 ### Community 110 - "Community 110"
 Cohesion: 0.07
 Nodes (29): compute_prediction_interval(), compute_uncertainty_band(), Compute prediction interval including residual variance (NLSQ 0.6.0).      Predi, Compute prediction uncertainty band via error propagation (FR-016).      Uses Ja, FR-016: Prediction uncertainty via Jacobian/variance propagation, T091: NLSQ uncertainty band computation test, linear_model(), Tests for NLSQ uncertainty band computation (T091).  Tests for compute_uncertain (+21 more)
 
 ### Community 111 - "Community 111"
-Cohesion: 0.13
-Nodes (13): fit_multi_start(), fit_single_start(), Single TRF start from a reasonable initial guess., Multi-start TRF (simulates nlsq preset='robust')., Bottleneck #5 (baseline P0): nlsq_optimize multi-start overhead.      Demonstrat, Single start from ground truth region converges correctly., Multi-start converges correctly (ground truth as oracle)., Single-start and multi-start agree when single-start has good p0. (+5 more)
+Cohesion: 0.12
+Nodes (15): fit_multi_start(), fit_single_start(), Return mean wall-clock time (ms) for fn() over n iterations., Single TRF start from a reasonable initial guess., Multi-start TRF (simulates nlsq preset='robust')., Bottleneck #5 (baseline P0): nlsq_optimize multi-start overhead.      Demonstrat, Single start from ground truth region converges correctly., Multi-start converges correctly (ground truth as oracle). (+7 more)
 
 ### Community 112 - "Community 112"
-Cohesion: 0.13
-Nodes (8): ImageViewDev, PieROI, r"""     Equilateral triangle ROI subclass with one scale handle and one rotatio, Apply theme colors to this image view.          Parameters         ----------, reset the viewbox's limits so updating image won't break the layout;, calculate_safe_levels, clean_c2_for_visualization, plot_twotime
+Cohesion: 0.25
+Nodes (5): ImageViewDev, reset the viewbox's limits so updating image won't break the layout;, calculate_safe_levels, clean_c2_for_visualization, plot_twotime
 
 ### Community 113 - "Community 113"
 Cohesion: 0.02
-Nodes (72): NumPyBackend, Element-wise arctangent., Element-wise arctangent of y/x, handling quadrants., Element-wise sqrt(x^2 + y^2)., Convert degrees to radians., Convert radians to degrees., Element-wise ceiling., Round to given number of decimals. (+64 more)
+Nodes (70): NumPyBackend, Element-wise arctangent., Element-wise arctangent of y/x, handling quadrants., Element-wise sqrt(x^2 + y^2)., Convert degrees to radians., Convert radians to degrees., Element-wise ceiling., Round to given number of decimals. (+62 more)
 
 ### Community 115 - "Community 115"
 Cohesion: 0.07
@@ -1133,24 +1150,24 @@ Cohesion: 0.07
 Nodes (27): Additional Findings, Algorithmic Bottleneck Analysis, `batch_g2_normalization` -- Python loop over stackable data, Bottleneck #1 — NLSQ multi-start: `preset="robust"` runs 5 TRF solves per fit call, Bottleneck #2 — `compute_g2_ensemble_statistics`: `np.median` = 85% of runtime, Bottleneck #3 — `clean_c2_for_visualization`: 3 separate sort passes = 67% of runtime, Complexity, Complexity (+19 more)
 
 ### Community 118 - "Community 118"
-Cohesion: 0.07
-Nodes (40): bool_, double_exp(), double_exp_all(), _fit_single_qvalue(), fit_with_fixed_sequential(), make_double_exp(), make_double_exp_all(), make_single_exp() (+32 more)
+Cohesion: 0.05
+Nodes (56): bool_, BUG-026: Legacy model factory get_backend once, _compute_fit_line(), Assemble Bayesian fitting results into NLSQ-compatible fit_summary format.  Conv, Compute fitted curve from Bayesian posterior means., grad(), minimize_with_grad(), Create a function that computes both value and gradient.      Wraps JAX's value_ (+48 more)
 
 ### Community 119 - "Community 119"
 Cohesion: 0.10
 Nodes (17): Validate covariance matrix before computing uncertainty bands (FR-021).      Che, validate_pcov(), FR-021: validate_pcov for finite values and positive semi-definiteness, T092: pcov validation test, Tests for pcov validation (T092).  Tests for validate_pcov() function that valid, Tests for validate_pcov function., Test validation passes for valid covariance matrix., Test validation fails for None covariance. (+9 more)
 
 ### Community 120 - "Community 120"
-Cohesion: 0.11
-Nodes (19): _make_hdl(), _make_xf(), Regression tests for tauq.plot rendering.  Tests cover:     BUG-F: Fit line must, ax.plot() must NOT be called when tauq_success is False., ax.plot() must NOT be called when tauq_fit_line is None., Verify error bars use tauq_tau_err when available., yerr in ax.errorbar() must match tauq_tau_err, not fit_val., When tauq keys are missing, fall back to fit_val[:, :, 1]. (+11 more)
+Cohesion: 0.07
+Nodes (28): ABC, dtype, Calculate optimal chunk shape for dataset based on access pattern.          Para, AdaptiveChunkSizer, calculate_chunk_slices(), ChunkInfo, process_roi_streaming(), process_saxs_log_streaming() (+20 more)
 
 ### Community 121 - "Community 121"
-Cohesion: 0.08
-Nodes (17): Exceptions related to scientific computations and analysis.      Used for:     -, Exceptions related to memory management and resource exhaustion.      Used for:, Exceptions related to configuration and setup issues.      Used for:     - Inval, Exceptions related to GUI operations and Qt interactions.      Used for:     - Q, Exceptions related to network operations and remote access.      Used for:     -, Critical system errors that require immediate attention.      Used for:     - Sy, Non-fatal issues that should be reported but don't stop execution.      Used for, Add context information to the error (fluent interface). (+9 more)
+Cohesion: 0.07
+Nodes (19): _make_hdf5_g2_file(), BUG-025: FitDiagnostics __post_init__ rejects negative divergences., BUG-025: FitDiagnostics __post_init__ rejects negative ESS values., Create a minimal HDF5 file containing G2 data for integration tests.      Return, Full NLSQ-to-NUTS pipeline integrity test with bad input.      Verifies:     - c, End-to-end test for the silent-scientific-corruption chain.      Steps:     1. L, BUG-017: getattr(native_result, 'success', False) — missing attribute defaults F, BUG-020: MCMC PRNG seed is time-based (non-deterministic), not hardcoded 0. (+11 more)
 
 ### Community 122 - "Community 122"
-Cohesion: 0.05
-Nodes (41): batch_g2_normalization_baseline(), batch_g2_normalization_candidate(), c2_clean_baseline(), c2_clean_candidate(), c2_data(), data(), fit_data(), g2_ensemble_statistics_baseline() (+33 more)
+Cohesion: 0.16
+Nodes (9): c2_data(), data(), fit_data(), make_c2_with_nans(), make_g2_ensemble_data(), make_g2_fitting_data(), Micro-benchmarks isolating the top 3 algorithmic bottlenecks.  Each section isol, Single-exponential G2 model. (+1 more)
 
 ### Community 123 - "Community 123"
 Cohesion: 0.09
@@ -1161,12 +1178,12 @@ Cohesion: 0.09
 Nodes (5): Tests for complete user interaction scenarios and workflows.  This module provid, Test suite for accessibility and keyboard navigation scenarios., Test complete workflow using keyboard navigation., Test tooltip availability for accessibility., TestAccessibilityScenarios
 
 ### Community 125 - "Community 125"
-Cohesion: 0.12
-Nodes (13): batch_saxs_analysis(), optimize_roi_extraction(), Batch processing of multiple SAXS datasets with vectorized operations.      Args, Vectorized ROI extraction from image stacks.      Args:         image_stack: Ima, SAXS Analysis Algorithm Validation Tests  This module provides comprehensive val, Test batch processing of multiple SAXS datasets, Test Region of Interest (ROI) extraction from SAXS images, Set up test images and ROI definitions (+5 more)
+Cohesion: 0.16
+Nodes (10): optimize_roi_extraction(), Vectorized ROI extraction from image stacks.      Args:         image_stack: Ima, SAXS Analysis Algorithm Validation Tests  This module provides comprehensive val, Test Region of Interest (ROI) extraction from SAXS images, Set up test images and ROI definitions, Create synthetic SAXS image with known features, Test rectangular ROI extraction, Test circular ROI extraction (+2 more)
 
 ### Community 126 - "Community 126"
-Cohesion: 0.11
-Nodes (10): Get performance statistics for the worker's progress handling.          Returns:, Log performance statistics to help validate optimizations., Emit any cached progress data and force final progress emission.         Called, Emit status update signal., Emit partial result for incremental updates., Check if cancelled and raise exception if so., Main entry point for the worker thread.         Handles error catching, timing,, Execute the plot function with provided arguments. (+2 more)
+Cohesion: 0.10
+Nodes (15): get_session_context(), Get the current session context as a dictionary.      Returns:         Dictionar, get_current returns None when no context is active., get_current returns context info when context is active., Operation is truncated to 100 characters., Tests for LoggingContext class., LoggingContext generates a UUID4-like session_id when not provided., LoggingContext uses explicitly provided session_id. (+7 more)
 
 ### Community 127 - "Community 127"
 Cohesion: 0.07
@@ -1177,44 +1194,44 @@ Cohesion: 0.08
 Nodes (24): ADR-001: JAX Migration and Backend Abstraction, Architecture, Consequences, Context, Decision, Environment Variables, Key Design Choices, Status (+16 more)
 
 ### Community 129 - "Community 129"
-Cohesion: 0.04
-Nodes (35): icons_rc (Qt resources), Unit tests for Qmap Colormap Selector (Feature 2).  Tests the colormap dropdown, Tests for the cb_qmap_cmap QComboBox widget in viewer_ui.py., Verify cb_qmap_cmap widget is defined in UI., Scientific tests for colormap visual properties., tab20b colors should be perceptually distinct for ROI visualization., viridis should provide smooth perceptual progression., Gray colormap should be strictly monotonic in luminance. (+27 more)
+Cohesion: 0.12
+Nodes (18): icons_rc (Qt resources), FileLocator, XPCS Viewer - X-ray Photon Correlation Spectroscopy data analysis tool.  This pa, Placeholder XpcsFile class for documentation builds., Placeholder FileLocator class for documentation builds., Placeholder ViewerKernel class for documentation builds., Placeholder ViewerUI class for documentation builds., Placeholder XpcsViewer class for documentation builds. (+10 more)
 
 ### Community 130 - "Community 130"
-Cohesion: 0.15
-Nodes (9): CleanupScheduler, Schedules and manages cleanup operations., Schedule a cleanup task., Execute all pending cleanup tasks., Execute all pending cleanup tasks.          Tasks are collected under the lock b, Smart garbage collection with memory pressure awareness., Determine if garbage collection should be triggered., Perform smart garbage collection. (+1 more)
+Cohesion: 0.05
+Nodes (55): CLI modules for XPCS Viewer., cleanup_system_shutdown(), CleanupPriority, get_cleanup_system(), get_object_registry(), initialize_optimized_cleanup(), OptimizedCleanupSystem, Optimized cleanup system for XPCS Viewer threading operations.  This module prov (+47 more)
 
 ### Community 131 - "Community 131"
-Cohesion: 0.09
-Nodes (15): get_validation_cache(), Evict least recently used entries., Clear all cached results., Result of validation operation with caching support., Get performance statistics for an operation., Thread-safe cache for validation results with TTL support., Generate cache key from function call signature., Get the global validation cache instance. (+7 more)
+Cohesion: 0.14
+Nodes (13): put(), save the result to hdf5 file     Parameters     ----------     save_path: str, do_average(), _process_file_for_average(), Sequential file processing (original implementation), Parallel file processing using ThreadPoolExecutor, Helper function for parallel file processing in do_average, Average multiple XPCS datasets with baseline filtering.      Reads each file in (+5 more)
 
 ### Community 132 - "Community 132"
-Cohesion: 0.40
-Nodes (3): Analyze memory usage trends to predict future pressure.          Returns, Check if proactive cleanup is recommended based on trends.          Returns, Get a summary of current memory predictions and trends.
+Cohesion: 0.05
+Nodes (40): Enum, AccessPattern, HDF5 data access patterns for optimization., get_lazy_loader(), Lazy Loading System for XPCS Data  This module provides smart data loading that, Get or create the global lazy loader instance.      Uses double-checked locking, Convenience function for registering HDF5 data for lazy loading., register_lazy_hdf5() (+32 more)
 
 ### Community 133 - "Community 133"
-Cohesion: 0.15
-Nodes (10): Check if accesses follow sequential pattern., Check if accesses follow block pattern., Check if accesses follow sparse pattern., Predict next likely access patterns for read-ahead.          Parameters, Check if recent accesses show sequential pattern., Check if accesses show sliding window pattern., Predict next slices for sequential access., Predict next slices for sliding window access. (+2 more)
+Cohesion: 0.13
+Nodes (9): Save cache index to disk., Clean up cache if it exceeds size limit., Clear all cached data., Clean up temporary files., Convert to dictionary for hashing., Generate unique hash key for this specification., Cache for generated test data to avoid regeneration., Load cache index from disk. (+1 more)
 
 ### Community 134 - "Community 134"
-Cohesion: 0.08
-Nodes (22): benchmark_timer(), BenchmarkResult, BenchmarkTimer, compare_benchmarks(), Compare two benchmark results.      Parameters     ----------     baseline : Ben, Provide BenchmarkTimer class for tests., Provide run_benchmark function for tests., Generate synthetic G2 correlation data for benchmarks. (+14 more)
+Cohesion: 0.07
+Nodes (24): run_benchmark, benchmark_timer(), BenchmarkResult, BenchmarkTimer, compare_benchmarks(), Compare two benchmark results.      Parameters     ----------     baseline : Ben, Provide BenchmarkTimer class for tests., Provide run_benchmark function for tests. (+16 more)
 
 ### Community 136 - "Community 136"
-Cohesion: 0.05
-Nodes (55): Schema definitions and validators for XPCS data structures.  This module provide, Unit tests for XPCS schema validators.  This module tests the schema validation, Invalid phis unit should raise ValueError., Test QMapSchema shape validation., Mismatched sqmap/dqmap shapes should raise ValueError., Mismatched mask shape should raise ValueError., Test G2Data schema validation., Valid G2Data instantiation. (+47 more)
+Cohesion: 0.07
+Nodes (48): Schema definitions and validators for XPCS data structures.  This module provide, Unit tests for XPCS schema validators.  This module tests the schema validation, Invalid phis unit should raise ValueError., Test QMapSchema shape validation., Mismatched sqmap/dqmap shapes should raise ValueError., Mismatched mask shape should raise ValueError., Test G2Data schema validation., Valid G2Data instantiation. (+40 more)
 
 ### Community 137 - "Community 137"
 Cohesion: 0.11
 Nodes (14): get_analysis_type(), determine the analysis type of the file     Parameters     ----------     fname:, Test suite for get_analysis_type() function., Test successful analysis type retrieval., Test analysis type retrieval with exception., Test suite for edge cases and error conditions., Test connection pool with zero health check interval., Test connection pool with negative health check interval. (+6 more)
 
 ### Community 139 - "Community 139"
-Cohesion: 0.04
-Nodes (21): Tests for main window functionality and tab management.  This module tests the m, Test two-time correlation tab functionality., Test suite for main window functionality., Test suite for Qt signals and slots integration., Test tab change signal emission., Test main window initializes correctly., Test suite for keyboard shortcuts and accessibility., Test escape key handling. (+13 more)
+Cohesion: 0.05
+Nodes (20): Tests for main window functionality and tab management.  This module tests the m, Test suite for window state persistence and management., Test that tab states are maintained during switching., Test window closing behavior., Test suite for main window functionality., Test behavior with multiple window instances., Test suite for Qt signals and slots integration., Test tab change signal emission. (+12 more)
 
 ### Community 141 - "Community 141"
-Cohesion: 0.13
-Nodes (20): Tests for SessionState dataclass., SessionState should have sensible defaults., SessionState should accept custom values., TestSessionState, Integration tests for session persistence functionality., Integration tests for session state dataclasses., SessionState should serialize and deserialize correctly., Create a sample session state for testing. (+12 more)
+Cohesion: 0.04
+Nodes (73): Unit tests for SessionManager., Tests for SessionState dataclass., SessionState should have sensible defaults., SessionState should accept custom values., Tests for get_session_path function., Tests for SessionManager.save_session., save_session should create session.json file., save_session should write correct JSON content. (+65 more)
 
 ### Community 142 - "Community 142"
 Cohesion: 0.09
@@ -1229,12 +1246,12 @@ Cohesion: 0.10
 Nodes (27): backend(), gpu_available(), jax_backend(), numpy_backend(), pytest_collection_modifyitems(), Pytest fixtures for JAX migration tests.  Provides:     - Backend fixtures (jax_, Generate sample G2 correlation data for fitting tests., Generate sample stretched exponential data. (+19 more)
 
 ### Community 145 - "Community 145"
-Cohesion: 0.09
-Nodes (21): configure_qt_for_testing(), gui_test_helper(), instance(), mock_qt_signal(), mock_qt_thread(), MockQt, qt_application(), qt_click_helper() (+13 more)
+Cohesion: 0.08
+Nodes (22): configure_qt_for_testing(), instance(), mock_qt_signal(), mock_qt_thread(), MockQApplication, MockQt, qt_application(), qt_cleanup() (+14 more)
 
 ### Community 146 - "Community 146"
-Cohesion: 0.15
-Nodes (13): Tests for type annotations in helper/utils.py (Task T064).  This test verifies t, Verify norm_saxs_data returns correct tuple., Verify create_slice returns a slice object., Test that typed functions work correctly., Verify get_min_max returns a tuple of floats., TestFunctionBehavior, create_slice(), get_min_max() (+5 more)
+Cohesion: 0.08
+Nodes (22): Tests for type annotations in helper/utils.py (Task T064).  This test verifies t, Verify norm_saxs_data returns correct tuple., Verify create_slice returns a slice object., Verify helper/utils.py functions have complete type annotations., T064: Verify all functions have return and parameter type annotations., T060: Verify get_min_max has correct type signature., T061: Verify norm_saxs_data has correct type signature., T062: Verify create_slice has correct type signature. (+14 more)
 
 ### Community 147 - "Community 147"
 Cohesion: 0.08
@@ -1245,28 +1262,28 @@ Cohesion: 0.08
 Nodes (23): 1.1 Functions With JIT — Confirmed, 1.2 Functions Without JIT — Opportunities, 1.3 XLA Recompilation Risk — `static_argnums` Gaps, 1. JIT Compilation Audit, 2.1 vmap Usage — Confirmed, 2.2 Sequential Loops — vmap Opportunities, 2. vmap Audit, 3.1 Correct I/O Boundary Usage — Confirmed (+15 more)
 
 ### Community 149 - "Community 149"
-Cohesion: 0.08
-Nodes (17): Test sphere form factor against analytical solution, Test Guinier approximation for small q, Property-based test for form factor scaling, Test vectorized SAXS operations for correctness and performance, Create synthetic 1D SAXS intensity with realistic features, Helper method for sphere form factor, Create synthetic 2D SAXS intensity (multiple phi sectors), Test that q-binning conserves total intensity (+9 more)
+Cohesion: 0.14
+Nodes (10): Test sphere form factor against analytical solution, Test Guinier approximation for small q, Property-based test for form factor scaling, Helper method for sphere form factor, Test mathematical properties that SAXS intensity must satisfy, Set up test data and parameters, Test that scattering intensity is always non-negative, Analytical sphere form factor for validation (+2 more)
 
 ### Community 150 - "Community 150"
 Cohesion: 0.12
 Nodes (10): Tests for standalone plot_themes module functions., MATPLOTLIB_LIGHT dict should exist and have proper structure., MATPLOTLIB_DARK dict should exist and have proper structure., Light and dark params should have different values., get_plot_colors should return colors dict for light theme., get_plot_colors should return colors dict for dark theme., get_pyqtgraph_options should return config dict., TestPlotThemesModule (+2 more)
 
 ### Community 151 - "Community 151"
-Cohesion: 0.08
-Nodes (14): Test the get_color_cycle function., Test the get_marker_cycle function., Test that the module provides backwards compatibility for common use cases., Test that accessing constants is performant (no heavy computation)., Test that constants work well for scientific plotting scenarios., Test that constants don't use excessive memory., Test suite for centralized plot constants., Test that all expected constants exist and are non-empty. (+6 more)
+Cohesion: 0.07
+Nodes (21): get_color_cycle(), get_color_marker(), get_marker_cycle(), Centralized plotting constants for consistent styling across all plot handlers., Get the full color cycle for a backend.      Parameters     ----------     backe, Get the marker cycle for a backend.      Parameters     ----------     backend :, Get color and marker for plotting by index.      Parameters     ----------     n, Test the get_color_cycle function. (+13 more)
 
 ### Community 152 - "Community 152"
-Cohesion: 0.05
-Nodes (27): ADR-004 Backend Abstraction, ADR-001 JAX Migration, module.saxs1d, module.saxs2d, module.twotime, Backend protocol interface for JAX/NumPy array operations.  This module defines, arrays_compatible(), ensure_backend_array() (+19 more)
+Cohesion: 0.11
+Nodes (10): Test connection close handles exceptions., Test connection close when file handle lacks close method., Test suite for PooledConnection class., Test PooledConnection initialization., Test touch method updates access info., Test successful health check., Test health check when file doesn't exist., Test health check when file handle raises error. (+2 more)
 
 ### Community 153 - "Community 153"
-Cohesion: 0.05
-Nodes (31): Test rate limiting behavior under high-frequency logging (T093)., Verify rate limiter suppresses messages beyond rate limit., Verify rate limiter allows messages again after time passes., TestRateLimitingUnderLoad, _get_env_float(), RateLimitedLogger, Exit the context manager, restoring previous contextvars., Rate-limited logger wrapper using token bucket algorithm.      Prevents log floo (+23 more)
+Cohesion: 0.12
+Nodes (8): Generate a key for the message (first 50 chars for grouping)., Try to consume a token for the given message key.          Returns True if messa, Internal logging method with rate limiting., Log DEBUG message if not rate-limited. Returns True if logged., Log INFO message if not rate-limited. Returns True if logged., Log WARNING message if not rate-limited. Returns True if logged., Log ERROR message if not rate-limited. Returns True if logged., Log CRITICAL message if not rate-limited. Returns True if logged.
 
 ### Community 154 - "Community 154"
-Cohesion: 0.13
-Nodes (12): EnhancedHDF5Reader, get_enhanced_hdf5_reader(), get_enhanced_reader(), Clear all cached data., Enhanced HDF5 reader with intelligent chunking and read-ahead caching., Get HDF5 file connection with connection pooling., Check if slice is valid for dataset shape., Efficiently read multiple datasets from the same file.          Parameters (+4 more)
+Cohesion: 0.17
+Nodes (9): Manages toast notifications for a parent window.      Handles creating, displayi, Show a toast notification.          Args:             message: Text to display, Show a success toast., Show a warning toast., Dismiss all visible toasts immediately., Set the default duration for toasts.          Args:             duration_ms: Def, Dismiss a specific toast., Position all toasts in bottom-right corner. (+1 more)
 
 ### Community 155 - "Community 155"
 Cohesion: 0.22
@@ -1281,12 +1298,12 @@ Cohesion: 0.08
 Nodes (24): 2. P1 — High: Observable Wrong Behaviour / Reliability, P1-01 — Stale plot data applied to GUI after `cancel_all_operations`, P1-02 — `del self.active_plot_operations[operation_id]` raises `KeyError` after cancel, P1-03 — `WeakValueDictionary` read from worker thread without lock, P1-04 — `_g2_bayesian_worker_active` flag not reset on `signals.cancelled`, P1-05 — `HealthMonitor.stop_monitoring()` deadlocks: holds lock while joining thread, P1-06 — `TwotimePlotWorker` forks child processes while parent holds HDF5 connection, P1-07 — `SimpleMask` signal connections doubled on window re-creation (+16 more)
 
 ### Community 158 - "Community 158"
-Cohesion: 0.15
-Nodes (15): run_benchmark, get_pyqtgraph_anchor_params(), _log_array_dims(), offset_intensity(), pg_plot(), plot_line_with_marker(), SAXS 1D analysis module.  Provides radial averaging and intensity profile analys, Apply a vertical offset to intensity curves for visual separation.      For line (+7 more)
+Cohesion: 0.03
+Nodes (50): Configure logger for test sessions with appropriate level., test_logger(), Integration tests for compound bug chains.  Verifies that all 6 cross-component, Integration test for concurrent HDF5 reads without deadlock.      Verifies:, BUG-033: file_locator holds cache lock only for insertion, not during HDF5 I/O., BUG-008: Pool health checks run outside file locks to prevent lock inversion., TestChain3LockChainDeadlock, Logger (+42 more)
 
 ### Community 159 - "Community 159"
-Cohesion: 0.20
-Nodes (6): Tests for user-defined gradient functions (T067a).  Tests auto-diff with user-de, Tests for gradient API usability and ergonomics., Test backend.grad with multiple arguments., Test JIT compilation combined with gradient computation., Test gradients work through JAX control flow primitives., TestGradientAPIUsability
+Cohesion: 0.08
+Nodes (16): Tests for user-defined gradient functions (T067a).  Tests auto-diff with user-de, Tests for gradient API usability and ergonomics., Test backend.grad with multiple arguments., Test JIT compilation combined with gradient computation., Test gradients work through JAX control flow primitives., Tests for gradient edge cases., Test gradient handling of NaN values., Test gradient computation on large arrays. (+8 more)
 
 ### Community 160 - "Community 160"
 Cohesion: 0.12
@@ -1301,8 +1318,8 @@ Cohesion: 0.16
 Nodes (7): Main monitoring loop running in background thread., Update system-level metrics using psutil., Update application-specific metrics., Update garbage collection metrics.          ``initial_stats`` must be the GC sta, Get current HDF5 connection count., Clean up dead weak references., Update metric value and history.
 
 ### Community 163 - "Community 163"
-Cohesion: 0.06
-Nodes (27): Filter, LogRecord, ColoredConsoleFormatter, Format exception with colors., Format the log record for file output., Format the log record as JSON., Internal JSON formatting method., Colored console formatter with clean, readable output.      Features:     - Colo (+19 more)
+Cohesion: 0.11
+Nodes (11): LogRecord, Format exception with colors., Format the log record for file output., Format the log record as JSON., Internal JSON formatting method., Check if a value can be JSON serialized., Format record with performance timing., Apply color to text if colors are enabled. (+3 more)
 
 ### Community 164 - "Community 164"
 Cohesion: 0.08
@@ -1337,16 +1354,16 @@ Cohesion: 0.11
 Nodes (18): Executive Summary, Non-Issues (Investigated but Dismissed), Numerical and JAX Audit Report, P0-001: Python control flow inside `@jax.jit` in reflection Q-map, P0 — Critical (Silent Correctness Failure), P1-001: `converged` always `False` due to missing `success` attribute, P1-002: NaN gradient from `jnp.clip(tau, 1e-30)` inside NumPyro model, P1-003: `model_fn(x, *popt)` unpacking JAX arrays inside NLSQ residual computation (+10 more)
 
 ### Community 172 - "Community 172"
-Cohesion: 0.13
-Nodes (7): Handle async plot completion., Apply SAXS 2D plot result to the GUI., Apply G2 plot result to the GUI.          Uses the pre-computed data returned by, Apply two-time plot result to the GUI., Apply intensity plot result to the GUI., Apply stability plot result to the GUI., Apply Q-map plot result to the GUI.
+Cohesion: 0.15
+Nodes (7): NavigationToolbar2QT, adjust_yerr(), MplCanvasBar, MplCanvasBarH, NavigationToolbarSimple, MplWidget combines a MplCanvas with a vertical toolbar, MplWidget combines a MplCanvas with a Toolbar
 
 ### Community 173 - "Community 173"
-Cohesion: 0.13
-Nodes (13): Atomic file I/O utilities.  Provides ``safe_json_write`` which writes JSON data, Write *data* as JSON to *path* atomically.      Creates the parent directory if, safe_json_write(), Tests for atomic I/O utilities., Tests for safe_json_write., Write a dict and read it back., Overwriting an existing file replaces content., Parent directories are created automatically. (+5 more)
+Cohesion: 0.09
+Nodes (22): QSS files should not use outline, outline-offset, or letter-spacing., Path, Atomic file I/O utilities.  Provides ``safe_json_write`` which writes JSON data, Write *data* as JSON to *path* atomically.      Creates the parent directory if, safe_json_write(), ArtifactManager, collect_test_artifacts(), Manage test artifacts for CI/CD systems. (+14 more)
 
 ### Community 174 - "Community 174"
-Cohesion: 0.14
-Nodes (3): create_custom_analytical_benchmark(), Analytical Benchmarks for XPCS Algorithm Validation  This module provides compre, Create a custom analytical benchmark      Args:         function: Analytical fun
+Cohesion: 0.12
+Nodes (6): Unit tests for Qmap Colormap Selector (Feature 2).  Tests the colormap dropdown, Tests for signal connection between combobox and plot update., Create a mock viewer with required attributes., Changing colormap should trigger plot update., test_tab20b_has_distinct_colors(), TestQmapColormapSignalConnection
 
 ### Community 175 - "Community 175"
 Cohesion: 0.10
@@ -1409,8 +1426,8 @@ Cohesion: 0.06
 Nodes (15): Unit tests for g2_partial Safety Check (Feature 3).  Tests the safety check in v, Tests for handling when no Multitau files are available., Create a mock statusbar., Create a mock plot handler., Should return early with warning when no Multitau files found., Tests for g2_partial attribute handling in XpcsFile., XpcsFile.g2_partial should return None when data is not in HDF5., g2_partial lazy loading should handle exceptions gracefully. (+7 more)
 
 ### Community 191 - "Community 191"
-Cohesion: 0.14
-Nodes (7): Apply theme based on current mode setting., Detect the operating system theme preference.          Returns:             "lig, Load and apply the combined stylesheet., Build combined stylesheet with token substitution.          Returns:, Load a QSS file from the styles directory., Substitute @token references in stylesheet.          Tokens are referenced as @t, Initialize the ThemeManager.          Args:             parent: Parent QObject
+Cohesion: 0.15
+Nodes (11): c2_clean_baseline(), c2_clean_candidate(), Current implementation: three separate sort passes (verbatim from twotime.py)., Proposed fix: one finite filtering pass and one triple-percentile call., Bottleneck #4 (baseline P1): clean_c2_for_visualization — 3 sort passes → 1., Candidate produces finite output consistent with baseline., Replacement values should be within data range., Baseline timing — three separate percentile calls. (+3 more)
 
 ### Community 192 - "Community 192"
 Cohesion: 0.13
@@ -1420,17 +1437,13 @@ Nodes (13): ConnectionType, PyQtGraphWrapper, QtConnectionFixer, Validate and es
 Cohesion: 0.10
 Nodes (11): Line tool should be defined., Ellipse tool should be defined., All drawing tools should have keyboard shortcuts., All drawing tools should have tooltips., All drawing tools should default to exclusive mode., Tests for DRAWING_TOOLS dictionary., DRAWING_TOOLS should contain tool definitions., Rectangle tool should be defined. (+3 more)
 
-### Community 194 - "Community 194"
-Cohesion: 0.08
-Nodes (13): Valid files should not generate warnings., Corrupted session file should not crash application., Empty session file should be handled gracefully., Session restore should complete within 3 seconds for 20 files., Integration tests for session save/restore cycle., Clearing session should remove session file., Create SessionManager with temporary storage., Session should save and restore all state correctly. (+5 more)
-
 ### Community 195 - "Community 195"
-Cohesion: 0.03
-Nodes (67): background_cleanup_tester(), BackgroundCleanupTester, _CaptureContext, is_main_thread(), qapp(), qt_error_capture(), qt_threading_validator(), QtErrorCapture (+59 more)
+Cohesion: 0.09
+Nodes (16): is_main_thread(), qt_threading_validator(), QtThreadingValidator, Validate Qt threading compliance., Check if running in main Qt thread., Validate that timer is created in appropriate thread context., Validate signal/slot connection syntax., Fixture for Qt threading validation. (+8 more)
 
 ### Community 196 - "Community 196"
-Cohesion: 0.08
-Nodes (17): Unit tests for SimpleMask partition (Q-binning) functionality.  Tests the partit, Tests for partition metadata., Partition should contain beam center., Partition should contain mask array., Tests for partition overlay display., Window should track partition overlay state., Partition toggle should require computed partition., Tests for partition export functionality. (+9 more)
+Cohesion: 0.06
+Nodes (23): Unit tests for SimpleMask partition (Q-binning) functionality.  Tests the partit, Tests for partition metadata., Partition should contain beam center., Partition should contain mask array., Tests for partition controls in SimpleMask window., Window should have partition parameter spinboxes., Window should have Compute Partition button., Window should have Show Partition toggle button. (+15 more)
 
 ### Community 197 - "Community 197"
 Cohesion: 0.10
@@ -1441,108 +1454,108 @@ Cohesion: 0.12
 Nodes (14): loop_based_binning(), Baseline benchmarks for SAXS 1D binning.  Establishes performance baselines befo, Verify loop and vectorized produce same results., Record baseline timing for loop-based binning., Record timing for vectorized binning (comparison)., Generate data for SAXS binning benchmarks., Original loop-based binning implementation (baseline)., Vectorized binning using np.bincount (target optimization). (+6 more)
 
 ### Community 199 - "Community 199"
-Cohesion: 0.20
-Nodes (3): File, MockH5pyFile, Create basic NeXus structure.
+Cohesion: 0.29
+Nodes (3): File, Get or create a lock for a specific file.          Tracks last-access time per e, RLock
 
 ### Community 200 - "Community 200"
-Cohesion: 0.06
-Nodes (36): temporary_xpcs_file, AdvancedTestDataFactory, create_minimal_test_data(), create_performance_test_data(), create_realistic_xpcs_dataset(), get_test_data_factory(), HDF5TestDataManager, MockH5py (+28 more)
+Cohesion: 0.07
+Nodes (31): temporary_xpcs_file, AdvancedTestDataFactory, create_minimal_test_data(), create_performance_test_data(), create_realistic_xpcs_dataset(), get_hdf5_manager(), get_test_data_factory(), HDF5TestDataManager (+23 more)
 
 ### Community 201 - "Community 201"
-Cohesion: 0.14
-Nodes (8): Tests for Q-map gradient computation (T062).  Tests that gradients can be comput, Test backend.grad wrapper for gradient computation., Test backend.value_and_grad wrapper., Tests for Q-map gradient computation., Test gradient of Q-map with respect to beam center., Test gradient of Q-map with respect to detector distance., Test value_and_grad for Q-map computation., TestQmapGradients
+Cohesion: 0.10
+Nodes (12): Tests for Q-map gradient computation (T062).  Tests that gradients can be comput, Test backend.grad wrapper for gradient computation., Test backend.value_and_grad wrapper., Tests for gradient numerical accuracy., Test JAX gradients match finite difference approximation., Test second-order gradients (Hessian)., Tests for Q-map gradient computation., Test gradient of Q-map with respect to beam center. (+4 more)
 
 ### Community 202 - "Community 202"
 Cohesion: 0.12
 Nodes (14): capture_logs(), fixtures_dir(), performance_timer(), Core test fixtures for XPCS Toolkit tests.  This module provides basic fixtures, Suppress common scientific computing warnings during tests., Create temporary directory for test files., Create temporary file path., Path to test fixtures directory. (+6 more)
 
 ### Community 203 - "Community 203"
-Cohesion: 0.22
-Nodes (6): Tests for float64 as default precision., Test JAX x64 mode is enabled by default., Test backend.linspace produces float64 arrays., Test array creation preserves float64., TestFloat64Default, T082: Float32 vs float64 precision test
+Cohesion: 0.09
+Nodes (15): Tests for float32 vs float64 precision (T082).  Tests that float64 precision is, Test exponential functions maintain precision., Tests for fitting precision., Test NLSQ residual computation precision., Tests for float64 as default precision., Test JAX x64 mode is enabled by default., Test backend.linspace produces float64 arrays., Test array creation preserves float64. (+7 more)
 
 ### Community 204 - "Community 204"
-Cohesion: 0.04
-Nodes (47): End-to-end workflow tests for JAX migration (SC-005).  SC-005: 100% of existing, End-to-end tests for partition generation workflow., Test complete partition generation from Q-map to binned regions.          Workfl, End-to-end tests for Q-map computation workflow., Test complete Q-map computation from parameters to output.          Workflow:, End-to-end tests for complete integrated analysis pipeline., Test complete XPCS analysis pipeline from Q-map to fitted parameters.          T, Test workflow stability when switching backends. (+39 more)
+Cohesion: 0.05
+Nodes (38): End-to-end workflow tests for JAX migration (SC-005).  SC-005: 100% of existing, End-to-end tests for partition generation workflow., Test complete partition generation from Q-map to binned regions.          Workfl, End-to-end tests for complete integrated analysis pipeline., Test complete XPCS analysis pipeline from Q-map to fitted parameters.          T, Test workflow stability when switching backends., Test that workflows work correctly after backend reset., Test memory is properly cleaned up after workflow completion. (+30 more)
 
 ### Community 205 - "Community 205"
-Cohesion: 0.13
-Nodes (14): Specific validation failures with detailed field information.      Used for:, Exceptions related to data validation, corruption, or format issues.      Used f, XPCSDataError, XPCSValidationError, Tests for validation utility data integrity features.  Tests for Technical Guide, Test legacy validation function is deprecated., Verify legacy function emits DeprecationWarning., TestLegacyValidation (+6 more)
+Cohesion: 0.16
+Nodes (11): g2_ensemble_statistics_baseline(), g2_ensemble_statistics_candidate(), Bottleneck #1: compute_g2_ensemble_statistics — O(Q*B^2*T) matmul + list copy., Candidate produces same ensemble_mean as baseline., Candidate temporal_correlation has same data, different container type., Baseline timing — current g2mod implementation., Candidate timing — proposed fix., Assert the candidate is at least 15% faster (conservative threshold). (+3 more)
 
 ### Community 206 - "Community 206"
-Cohesion: 0.22
-Nodes (8): manager(), Unit tests for RecentPathsManager., Tests for get_recent_paths_file function., get_recent_paths_file should return a Path object., Recent paths file should be in .xpcsviewer directory., TestGetRecentPathsFile, get_recent_paths_file(), Get the path to the recent paths file.
+Cohesion: 0.15
+Nodes (9): Check if any timer-related errors were captured., Test timer creation in background thread (should fail)., Test proper Qt thread-based cleanup., Test Qt timer threading error detection., Test timer creation in main thread (should succeed)., Test detection of timer threading violations., Test proper Qt thread-based cleanup operations., Test background cleanup integration with error detection. (+1 more)
 
 ### Community 207 - "Community 207"
 Cohesion: 0.29
 Nodes (4): Disconnect all three terminal signal slots from the current preload.          Mu, Reset preload state on async error (Codex Major #1)., Reset preload state on cancellation (Codex Major #1)., Clear all cached data.
 
 ### Community 208 - "Community 208"
-Cohesion: 0.20
-Nodes (7): svmem, Update the memory usage snapshot for trend analysis., _get_virtual_memory(), is_memory_pressure_high(), Memory monitoring utilities for XpcsFile.  This module provides memory monitorin, Return psutil.virtual_memory(), cached with a 2-second TTL., Check if memory pressure is above threshold (static method for backward compatib
+Cohesion: 0.14
+Nodes (11): svmem, Update the memory usage snapshot for trend analysis., get_memory_pressure(), _get_virtual_memory(), is_memory_pressure_high(), MemoryStatus, Memory monitoring utilities for XpcsFile.  This module provides memory monitorin, Return psutil.virtual_memory(), cached with a 2-second TTL. (+3 more)
 
 ### Community 209 - "Community 209"
-Cohesion: 0.24
-Nodes (7): Tests for RecentPath dataclass., RecentPath should store all fields., RecentPath should default to access_count=1., TestRecentPath, Get recent paths ordered by last access time.          Returns:             List, A recently accessed directory., RecentPath
+Cohesion: 0.18
+Nodes (8): batch_g2_normalization_baseline(), batch_g2_normalization_candidate(), make_g2_batch(), Verbatim copy of current implementation (g2mod.py:832-868)., Proposed fix: stack → single vectorised kernel → unstack.      Complexity: O(B*T, Bottleneck #3: batch_g2_normalization — Python loop over stackable data., Speedup should increase with larger batch (more Python loop overhead)., TestBottleneck3BatchNormalization
 
 ### Community 210 - "Community 210"
-Cohesion: 0.24
-Nodes (7): Tests for RecentPathsState dataclass., RecentPathsState should have sensible defaults., RecentPathsState should accept custom values., TestRecentPathsState, Recent paths management for XPCS-TOOLKIT GUI.  This module handles tracking and, Recent directories state., RecentPathsState
+Cohesion: 0.13
+Nodes (9): MplCanvasBarV, Apply theme colors to this matplotlib canvas.          Parameters         ------, Apply theme colors to the embedded canvas., MplWidget combines a MplCanvas with a horizontal toolbar, Apply theme colors to the embedded canvas., get_theme_colors(), Get plot colors for the specified theme.      If theme is None, attempts to get, Apply theme colors to this plot widget.          Parameters         ---------- (+1 more)
 
 ### Community 211 - "Community 211"
-Cohesion: 0.20
-Nodes (5): Tests for ArviZ diagnostic plot generation (T093).  Tests for generate_arviz_dia, Tests for diagnostic plot content., Create simple trace for content tests., Test generated figures have axes., TestDiagnosticPlotContent
+Cohesion: 0.14
+Nodes (10): background_cleanup_tester(), BackgroundCleanupTester, _CaptureContext, qapp(), qt_error_capture(), Qt Error Detection Test Framework.  This module provides comprehensive testing f, Test background cleanup operations for Qt compliance., Fixture for Qt error capture. (+2 more)
 
 ### Community 212 - "Community 212"
-Cohesion: 0.15
-Nodes (9): Verify helper/utils.py functions have complete type annotations., T064: Verify all functions have return and parameter type annotations., T060: Verify get_min_max has correct type signature., T061: Verify norm_saxs_data has correct type signature., T062: Verify create_slice has correct type signature., TestTypeAnnotations, create_slice, get_min_max (+1 more)
+Cohesion: 0.16
+Nodes (10): QtErrorCapture, Capture and analyze Qt error messages., Context manager to capture Qt warnings., Qt message handler to capture Qt warnings and errors., Test performance of Qt error detection framework., Test performance of error capture mechanism., Test memory usage during error detection., test_error_capture_performance() (+2 more)
 
 ### Community 213 - "Community 213"
-Cohesion: 0.22
-Nodes (6): BUG-026: Legacy model factory get_backend once, BUG-026: Legacy model functions must call get_backend() once at construction., Factory functions make_single_exp, make_double_exp, etc. must exist., Factory-produced function must evaluate single exponential correctly., Model factories must use jnp directly, independent of xpcsviewer backend., TestBug026LegacyModelFactory
+Cohesion: 0.14
+Nodes (8): Tests for NLSQResult when native_result is None (backward compat)., Create legacy NLSQResult without native_result., Test r_squared uses stored value when native_result is None., Test residuals returns stored array when native_result is None., Test diagnostics returns None when native_result is None., Test is_healthy defaults to False when no diagnostics available., Test health_score returns 0 when no diagnostics available., TestNLSQResultWithoutNativeResult
 
 ### Community 214 - "Community 214"
-Cohesion: 0.15
-Nodes (9): Tests for get_session_path function., get_session_path should return a Path object., Session path should be in .xpcsviewer directory., TestGetSessionPath, get_session_path(), Save the current session state to disk.          Args:             session: Comp, Clear saved session state., Check if a saved session exists.          Returns:             True if valid ses (+1 more)
+Cohesion: 0.17
+Nodes (7): get_session_path should return a Path object., Session path should be in .xpcsviewer directory., get_session_path(), Save the current session state to disk.          Args:             session: Comp, Clear saved session state., Check if a saved session exists.          Returns:             True if valid ses, Get the path to the session file.
 
 ### Community 215 - "Community 215"
 Cohesion: 0.17
 Nodes (7): Tests for CommandPalette initialization., CommandPalette should be created., CommandPalette should have search input., CommandPalette should have results list., CommandPalette should have action_triggered signal., CommandPalette should have correct objectName., TestCommandPaletteInit
 
 ### Community 216 - "Community 216"
-Cohesion: 0.07
-Nodes (26): Axes, plot_comparison(), Overlay NLSQ confidence band and Bayesian credible interval (FR-020).      Param, FR-020: plot_comparison overlaying NLSQ and Bayesian results, T095: Comparison plot test, mock_fit_result(), mock_nlsq_result(), Tests for comparison plot (T095).  Tests for plot_comparison() function that ove (+18 more)
+Cohesion: 0.08
+Nodes (23): plot_comparison(), Overlay NLSQ confidence band and Bayesian credible interval (FR-020).      Param, FR-020: plot_comparison overlaying NLSQ and Bayesian results, T095: Comparison plot test, mock_fit_result(), Tests for comparison plot (T095).  Tests for plot_comparison() function that ove, Test function creates new axes if none provided., Test data points are plotted. (+15 more)
 
 ### Community 217 - "Community 217"
 Cohesion: 0.25
 Nodes (5): Test suite for memory and resource limitation scenarios., Test handling of memory errors with large datasets., Test handling of disk space errors during operations., Test behavior when thread pool is exhausted., TestMemoryAndResourceErrors
+
+### Community 218 - "Community 218"
+Cohesion: 0.10
+Nodes (11): Test batch reading with I/O errors., Test chunked dataset reading with errors., Test file info extraction with corrupted metadata., Test metadata reading with various error conditions., Test file I/O error conditions and recovery., Test handling of corrupted HDF5 files., Test handling of files that aren't valid HDF5., Test handling of non-existent files. (+3 more)
 
 ### Community 219 - "Community 219"
 Cohesion: 0.21
 Nodes (17): create_analytical_diffusion_data(), create_analytical_g2_data(), create_analytical_saxs_data(), initialize_reference_data(), list_available_datasets(), load_reference_data(), Reference Data Management for Scientific Validation  This module provides utilit, List available datasets in a category      Args:         category: Data category (+9 more)
 
 ### Community 220 - "Community 220"
-Cohesion: 0.17
-Nodes (7): Tests for RecentPathsManager.add_path., Create manager with temporary storage., add_path should add path to recent list., add_path should update existing path., add_path should move existing path to front., add_path should trim list to max_entries., TestRecentPathsManagerAddPath
+Cohesion: 0.04
+Nodes (60): manager(), Unit tests for RecentPathsManager., RecentPathsManager should have default max_entries=10., RecentPathsManager should accept custom max_entries., Tests for RecentPathsManager.add_path., Create manager with temporary storage., add_path should add path to recent list., add_path should update existing path. (+52 more)
 
 ### Community 221 - "Community 221"
-Cohesion: 0.08
-Nodes (22): interpolate_g2_data, vectorized_background_subtraction, Vectorized background subtraction with error propagation.      Args:         for, vectorized_background_subtraction(), Tests for JAX-native interpolation migration.  Tests for Technical Guidelines co, T042: Test vectorized_background_subtraction produces correct output., Verify background subtraction with same q-values., Verify background subtraction with different q-values requiring interpolation. (+14 more)
-
-### Community 222 - "Community 222"
-Cohesion: 0.25
-Nodes (5): Tests for gradient edge cases., Test gradient handling of NaN values., Test gradient computation on large arrays., Test gradients through matrix operations match finite differences., TestGradientEdgeCases
+Cohesion: 0.21
+Nodes (8): Tests for JAX-native interpolation migration.  Tests for Technical Guidelines co, T043: Test optimized_c2_sampling with JAX-based zoom replacement., Verify bilinear downsampling produces correct output size., Verify uniform downsampling produces correct output., Verify no change when target_size >= current_size., TestOptimizedC2Sampling, optimized_c2_sampling(), Optimized C2 matrix downsampling using vectorized operations.      Args:
 
 ### Community 224 - "Community 224"
-Cohesion: 0.25
-Nodes (5): Test metadata validation errors., Test handling of missing critical metadata., Test handling of metadata with wrong types., Test handling of conflicting metadata values., TestMetadataValidation
+Cohesion: 0.15
+Nodes (9): Check if any signal/slot connection errors were captured., Get summary of all captured errors., Test framework for Qt error regression testing., Establish baseline for Qt error detection., Test recognition of specific error patterns., Test integrated Qt error scenarios., Test Qt errors in XPCS viewer context., TestErrorRegressionFramework (+1 more)
 
 ### Community 225 - "Community 225"
 Cohesion: 0.13
 Nodes (12): auto_performance_monitoring(), performance_monitor(), Monitor test performance and resource usage., Automatically monitor test performance., get_performance_monitor(), Monitor test performance and detect slow/flaky tests., Record execution time for a test., Get list of tests that exceed the slow threshold. (+4 more)
 
 ### Community 226 - "Community 226"
-Cohesion: 0.07
-Nodes (18): jax_backend_active(), Ensure JAX backend is active for the test.      Sets environment variables and r, Tests for JIT compilation speedup., Test repeated JIT calls are faster than first call., Test JIT version is faster than non-JIT for repeated calls., TestJITSpeedup, Tests for JIT compilation warmup (T055).  Tests that JIT compilation triggers on, Tests for Q-map JIT compilation warmup. (+10 more)
+Cohesion: 0.11
+Nodes (13): jax_backend_active(), Ensure JAX backend is active for the test.      Sets environment variables and r, Tests for JIT compilation speedup., Test repeated JIT calls are faster than first call., Test JIT version is faster than non-JIT for repeated calls., TestJITSpeedup, Tests for JIT compilation warmup behavior., Test first call triggers JIT compilation (slower). (+5 more)
 
 ### Community 227 - "Community 227"
 Cohesion: 0.14
@@ -1561,12 +1574,12 @@ Cohesion: 0.17
 Nodes (11): ADR-003: HDF5 Facade Pattern with Connection Pooling, Architecture, Connection Pooling, Consequences, Context, Decision, Facade Design, Schema Design (+3 more)
 
 ### Community 231 - "Community 231"
-Cohesion: 0.06
-Nodes (20): NavigationToolbar2QT, BASIC_COLORS, EXTENDED_MARKERS, get_theme_colors, adjust_yerr(), LineBuilder, MplCanvas, MplCanvasBar (+12 more)
+Cohesion: 0.14
+Nodes (8): BASIC_COLORS, EXTENDED_MARKERS, get_theme_colors, LineBuilder, MplCanvas, code copied from         http://chuanshuoge2.blogspot.com/2019/12/matplotlib-mou, plot (tau-q), plot_pre
 
 ### Community 232 - "Community 232"
-Cohesion: 0.20
-Nodes (6): Verify tau_err is threaded through the Bayesian diffusion pipeline.      Before, run_power_law_fit must have a tau_err parameter., Public fit_power_law must have a tau_err parameter., run_power_law_fit must NOT hardcode tau_err = None., Power-law fit with tau_err should run without error., TestBugG_PowerLawTauErr
+Cohesion: 0.19
+Nodes (4): PieROI, r"""     Equilateral triangle ROI subclass with one scale handle and one rotatio, qt_connection_context(), Context manager for Qt operations that may generate connection warnings.      Th
 
 ### Community 233 - "Community 233"
 Cohesion: 0.18
@@ -1581,8 +1594,8 @@ Cohesion: 0.05
 Nodes (33): assemble_fit_summary(), _extract_double_exp_params(), _extract_single_exp_params(), Convert per-Q Bayesian results into NLSQ-compatible fit_summary.      Parameters, Extract single-exp params as (values, errors) in legacy order., Extract double-exp params as (values, errors) in legacy order., _identity_double_model(), _identity_model() (+25 more)
 
 ### Community 236 - "Community 236"
-Cohesion: 0.12
-Nodes (23): _add_fit_param_annotation(), compute_geometry(), get_data(), get_g2_stability_data(), _log_array_dims(), pg_plot(), pg_plot_from_data(), pg_plot_one_g2() (+15 more)
+Cohesion: 0.04
+Nodes (61): F, G2 Analysis Algorithm Validation Tests  This module provides comprehensive valid, Test vectorized G2 operations for correctness and performance, Test vectorized baseline correction, Test batch normalization methods, Test ensemble statistics computation, Test error propagation for G2 operations, Test G2 interpolation accuracy and preservation of properties (+53 more)
 
 ### Community 238 - "Community 238"
 Cohesion: 0.17
@@ -1593,20 +1606,20 @@ Cohesion: 0.03
 Nodes (48): c2_matrix(), fft_data(), fitting_data(), g2_data(), measure_cold_warm(), measure_memory(), qmap_geometry(), qmap_geometry_large() (+40 more)
 
 ### Community 240 - "Community 240"
-Cohesion: 0.09
-Nodes (12): Tests for numerical equivalence between CPU and GPU (US1).  Tests FR-008: Numeri, Test meshgrid produces equivalent results on CPU and GPU., Test Q-map-like computations for CPU/GPU equivalence., Test Q-map computation produces equivalent results., Test numerical equivalence between CPU and GPU computations., Test basic array operations produce equivalent results on CPU and GPU., Test arctan2 produces equivalent results on CPU and GPU., Test hypot produces equivalent results on CPU and GPU. (+4 more)
+Cohesion: 0.07
+Nodes (16): Tests for numerical equivalence between CPU and GPU (US1).  Tests FR-008: Numeri, Test meshgrid produces equivalent results on CPU and GPU., Test Q-map-like computations for CPU/GPU equivalence., Test Q-map computation produces equivalent results., Test numerical equivalence between CPU and GPU computations., Test equivalence through the backend abstraction layer., Test NumPy and JAX backends produce equivalent results., Test basic array operations produce equivalent results on CPU and GPU. (+8 more)
 
 ### Community 241 - "Community 241"
 Cohesion: 0.25
 Nodes (5): BUG-019: power_law_model must use LogNormal prior for tau0 and clamp q., power_law_model source must reference dist.LogNormal for tau0., power_law_model source must clamp q to prevent log(0) = -inf., LogNormal distribution never samples negative values., TestBug019PowerLawModelPriors
 
 ### Community 242 - "Community 242"
-Cohesion: 0.20
-Nodes (9): Routing checks for XpcsViewer.update_tab_availability.  Exercises the format-pre, Minimal stand-in for the parts of XpcsViewer the method touches., _Recorder, _run(), test_both_file_enables_all_tabs(), test_mixed_single_type_files_enable_all_tabs(), test_multitau_only_disables_twotime(), test_twotime_only_disables_g2_group() (+1 more)
+Cohesion: 0.24
+Nodes (8): Routing checks for XpcsViewer.update_tab_availability.  Exercises the format-pre, Minimal stand-in for the parts of XpcsViewer the method touches., _Recorder, _run(), test_both_file_enables_all_tabs(), test_mixed_single_type_files_enable_all_tabs(), test_multitau_only_disables_twotime(), test_twotime_only_disables_g2_group()
 
 ### Community 243 - "Community 243"
-Cohesion: 0.20
-Nodes (6): Test suite for XpcsFile data loading methods., Test load_data method for Multitau analysis., Test load_data method for Twotime analysis., Test load_data method with extra fields., Test load_data method removes duplicate field names., TestXpcsFileLoadData
+Cohesion: 0.17
+Nodes (7): blemish(), Combine this mask with another mask.          Args:             mask: Existing m, Apply a mask type and add to history.          Args:             target: Mask ty, Get mask from a single worker.          Args:             target: Mask type key, Return a read-only view of the current mask without copying.          For intern, Get the current combined mask.          Returns:             A copy of the curre, Get the blemish mask (pixels marked as bad in blemish file).          Returns:
 
 ### Community 244 - "Community 244"
 Cohesion: 0.07
@@ -1621,40 +1634,40 @@ Cohesion: 0.12
 Nodes (9): Test suite for APS 8IDI path format validation., Test that all path values are strings., Test that most paths start with '/' (absolute paths)., Test that qmap paths follow consistent structure., Test that multitau paths follow consistent structure., Test that two-time paths follow consistent structure., Test that temporal mean paths follow consistent structure., Test that entry-level paths follow consistent structure. (+1 more)
 
 ### Community 247 - "Community 247"
-Cohesion: 0.05
-Nodes (34): double_exp, single_exp, Test compatibility with scipy.optimize.curve_fit interface., Set up scipy compatibility tests., Test that robust_curve_fit can replace scipy.optimize.curve_fit., Test that all scipy curve_fit parameters work with robust_curve_fit., Test that error handling is compatible with scipy expectations., Test compatibility with existing g2mod module. (+26 more)
+Cohesion: 0.18
+Nodes (7): double_exp, Test that API remains stable and backward compatible., Test that key function signatures haven't changed., Test that return values maintain expected structure., Test that exceptions are raised consistently., Test that imports remain stable., TestAPIStability
 
 ### Community 248 - "Community 248"
-Cohesion: 0.25
-Nodes (5): Test suite for window state persistence and management., Test that tab states are maintained during switching., Test window closing behavior., Test behavior with multiple window instances., TestWindowStateManagement
+Cohesion: 0.15
+Nodes (7): ObjectRegistry, Registry for tracking objects that need cleanup., Register an object for tracking., Unregister an object., Get a registered object., Clear all registered objects, calling close() on each (P1-16)., Get all registered objects of a specific type.          Args:             obj_ty
 
 ### Community 249 - "Community 249"
-Cohesion: 0.22
-Nodes (4): CommonExceptionHandler, Context manager for common exception handling.          Args:             func_n, Context manager for standardized exception handling in plot workers., Initialize base plot worker.          Args:             viewer_kernel: The viewe
+Cohesion: 0.17
+Nodes (7): Rectangle should have updated default size [200, 150]., Tests for Rectangle ROI scale handles (8 handles: 4 corners + 4 midpoints)., Create a minimal SimpleMaskKernel mock for testing., Rectangle ROI should have 8 scale handles., Rectangle should have handles at all 4 corners., Rectangle should have handles at all 4 midpoints., TestRectangleScaleHandles
 
 ### Community 250 - "Community 250"
 Cohesion: 0.15
 Nodes (9): BUG-030: The three global singletons must use double-checked locking     to be t, Helper: call getter_fn from many threads simultaneously and         verify only, UnifiedThreadingManager singleton must be thread-safe under concurrency., MemoryManager singleton must be thread-safe under concurrency., LazyLoader singleton must be thread-safe under concurrency., get_unified_threading_manager source must contain a Lock., get_memory_manager source must contain a Lock., get_lazy_loader source must contain a Lock. (+1 more)
 
 ### Community 251 - "Community 251"
-Cohesion: 0.14
-Nodes (10): Algorithm-specific validation tests  This module contains comprehensive validati, Fitting Algorithm Validation Tests  This module provides comprehensive validatio, Property-based test for fitting robustness to noise, Test that fitting results are independent of initial conditions, Test general properties that all fitting algorithms should satisfy, Set up common test parameters, Create test function with known parameters, Test that fitting algorithms recover known parameters accurately (+2 more)
+Cohesion: 0.19
+Nodes (8): Property-based test for fitting robustness to noise, Test that fitting results are independent of initial conditions, Test general properties that all fitting algorithms should satisfy, Set up common test parameters, Create test function with known parameters, Test that fitting algorithms recover known parameters accurately, test_fitting_robustness_to_noise(), TestFittingAlgorithmProperties
 
 ### Community 252 - "Community 252"
-Cohesion: 0.25
-Nodes (5): Tests for user-defined gradient computation., Test gradient of user-defined loss function., Test gradient for custom g2 correlation model., Test value_and_grad for custom function., TestUserDefinedGradients
+Cohesion: 0.18
+Nodes (7): Tests for NLSQResult delegation to CurveFitResult (US1 - T008-T017).  This modul, Tests for covariance matrix handling., Test covariance property delegates to native pcov., Test covariance falls back to _covariance when no native_result., result_with_native(), result_without_native(), TestNLSQResultCovariance
 
 ### Community 253 - "Community 253"
-Cohesion: 0.25
-Nodes (5): Tests for DragDropListView with a model attached., get_item_order should return empty list for empty model., get_item_order should return indices in order., get_item_order should return empty list when no model., TestDragDropListViewWithModel
+Cohesion: 0.22
+Nodes (3): MockH5pyFile, Create temporary HDF5 files for testing., temp_hdf5_files()
 
 ### Community 254 - "Community 254"
-Cohesion: 0.25
-Nodes (5): RecentPathsManager should have default max_entries=10., RecentPathsManager should accept custom max_entries., Tests for RecentPathsManager initialization., RecentPathsManager should be created., TestRecentPathsManagerInit
+Cohesion: 0.20
+Nodes (8): vectorized_background_subtraction, Vectorized background subtraction with error propagation.      Args:         for, vectorized_background_subtraction(), T042: Test vectorized_background_subtraction produces correct output., Verify background subtraction with same q-values., Verify background subtraction with different q-values requiring interpolation., TestVectorizedBackgroundSubtraction, Test background subtraction with error propagation
 
 ### Community 255 - "Community 255"
-Cohesion: 0.25
-Nodes (5): Tests for RecentPathsManager persistence., Manager should load existing recent_paths.json., Manager should persist data to file., Manager should handle corrupted JSON gracefully., TestRecentPathsManagerPersistence
+Cohesion: 0.18
+Nodes (9): batch_saxs_analysis(), Vectorized intensity normalization using various methods.      Args:         q_v, Batch processing of multiple SAXS datasets with vectorized operations.      Args, vectorized_intensity_normalization(), _area_norm_loop(), Original list-comprehension area normalization (baseline)., test_area_norm_correctness(), Test various intensity normalization methods (+1 more)
 
 ### Community 257 - "Community 257"
 Cohesion: 0.20
@@ -1676,6 +1689,10 @@ Nodes (10): ADR-002: Migration from scipy.optimize to NLSQ 0.6.0, Architecture, 
 Cohesion: 0.26
 Nodes (14): generate_report(), get_project_root(), main(), Run code quality checks., Run test coverage analysis., Generate validation report., Get the project root directory., Main validation runner. (+6 more)
 
+### Community 262 - "Community 262"
+Cohesion: 0.15
+Nodes (6): Regression tests for nlsq JIT-tracing compatibility.  Verifies that model functi, Model functions must use jnp.exp, not np.exp., Lint rule: xpcs_file/fitting.py must not use numpy math functions.      Model fu, xpcs_file/fitting.py must not contain numpy math calls., TestModelFunctionsUseJaxNumpy, TestNoNumpyMathInModelFile
+
 ### Community 263 - "Community 263"
 Cohesion: 0.08
 Nodes (17): create_minimal_hdf5_file(), MockH5py, MockH5pyFile, monitor_performance(), Factory for creating consistent test data across test suites., Create a minimal HDF5 file for testing., Create synthetic XPCS data for testing., Decorator to ensure test data is available before running test. (+9 more)
@@ -1689,16 +1706,16 @@ Cohesion: 0.08
 Nodes (16): create_mock_hdf5_file, create_mock_hdf5_file(), create_mock_xpcs_file(), MockH5pyFile, MockXpcsFile, Shared H5py mock objects for testing.  This module provides standardized mock im, Set up default XPCS file structure., Mock flush operation. (+8 more)
 
 ### Community 266 - "Community 266"
-Cohesion: 0.25
-Nodes (5): Unit tests for SessionManager., Tests for AnalysisParameters dataclass., AnalysisParameters should have sensible defaults., AnalysisParameters should accept custom values., TestAnalysisParameters
+Cohesion: 0.20
+Nodes (6): Test suite for file loading and validation., Test loading a single HDF5 file., Test loading multiple files simultaneously., Test file validation status display., Test handling of invalid or corrupted files., TestFileLoading
 
 ### Community 267 - "Community 267"
 Cohesion: 0.15
 Nodes (6): MockQtSignal, MockQtThread, qt_performance_monitor(), Mock Qt signal for testing without Qt., Mock Qt thread for testing without Qt., Monitor Qt application performance during tests.
 
 ### Community 268 - "Community 268"
-Cohesion: 0.25
-Nodes (5): Tests for SessionManager.save_session., save_session should create session.json file., save_session should write correct JSON content., save_session should update timestamp., TestSessionManagerSave
+Cohesion: 0.20
+Nodes (6): Test two-time correlation tab functionality., Test suite for tab-specific functionality., Test SAXS 2D analysis tab functionality., Test G2 correlation analysis tab functionality., Test stability analysis tab functionality., TestTabManagement
 
 ### Community 269 - "Community 269"
 Cohesion: 0.16
@@ -1725,8 +1742,8 @@ Cohesion: 0.19
 Nodes (9): get_shortcut_map(), Get mapping of keyboard shortcuts to tool names.      Returns:         Dictionar, Tests for get_shortcut_map function., Shortcut map should not be empty., Shortcut map should contain all drawing tool shortcuts., Shortcut map should contain eraser shortcut., All shortcut keys should be strings., All shortcut values should be tool name strings. (+1 more)
 
 ### Community 276 - "Community 276"
-Cohesion: 0.18
-Nodes (9): get_tool_color(), Get the pen color for a mask mode.      Args:         mode: "exclusive" or "incl, SimpleMask window for mask editing.  This module provides the main QMainWindow f, Tests for get_tool_color function., get_tool_color should return red for exclusive., get_tool_color should return green for inclusive., get_tool_color should return red for unknown mode., get_tool_color should return red for empty mode. (+1 more)
+Cohesion: 0.21
+Nodes (8): get_tool_color(), Get the pen color for a mask mode.      Args:         mode: "exclusive" or "incl, Tests for get_tool_color function., get_tool_color should return red for exclusive., get_tool_color should return green for inclusive., get_tool_color should return red for unknown mode., get_tool_color should return red for empty mode., TestGetToolColor
 
 ### Community 277 - "Community 277"
 Cohesion: 0.19
@@ -1737,24 +1754,24 @@ Cohesion: 0.21
 Nodes (13): _make_viewer(), _make_xf(), Unit tests for TG3 — GUI Critical Fixes: Mask Export and Plot Data.  Tests for B, check_g2_number must assign val = default_val[n] in the except block.      When, Exported mask must be visible on all XpcsFiles before update_plot is called., Return a minimal XpcsFile-like mock., Return a minimal XpcsViewer-like mock with the methods under test.      We impor, import_mask must set xf.mask on every loaded XpcsFile and call update_plot. (+5 more)
 
 ### Community 279 - "Community 279"
-Cohesion: 0.05
-Nodes (32): DropAction, Unit tests for DragDropListView widget., Tests for DragDropListView initialization., move_item should return False for invalid target index., move_item should return False when source equals target., move_item should successfully reorder items., DragDropListView should initialize with drag-drop enabled., move_item should emit items_reordered signal on success. (+24 more)
+Cohesion: 0.04
+Nodes (39): DropAction, Unit tests for DragDropListView widget., Tests for DragDropListView initialization., move_item should return False for invalid target index., move_item should return False when source equals target., move_item should successfully reorder items., DragDropListView should initialize with drag-drop enabled., move_item should emit items_reordered signal on success. (+31 more)
 
 ### Community 280 - "Community 280"
-Cohesion: 0.25
-Nodes (5): Verify Bayesian path recovers known power-law parameters., run_power_law_fit must recover tau0 and alpha from synthetic data., run_power_law_fit must accept the bounds parameter., Custom bounds should override defaults for NLSQ warm-start., TestBayesianPowerLaw
+Cohesion: 0.27
+Nodes (8): loadable_files(), _make_geometry(), _make_tab_widget(), End-to-end regression test for target-file session persistence.  Guards the bug, Make ``add_target(preload=True)`` accept any existing file.      Empty ``.h5`` f, test_target_files_survive_restart_from_other_cwd(), object, SimpleNamespace
 
 ### Community 281 - "Community 281"
 Cohesion: 0.12
 Nodes (9): unregister_shortcut should return False for unknown ID., Tests for shortcut registration., Create window and manager for testing., register_shortcut should accept string key sequence., register_shortcut should accept QKeySequence., register_shortcut should return False for duplicate ID., register_shortcut should return False without parent., unregister_shortcut should remove shortcut. (+1 more)
 
 ### Community 282 - "Community 282"
-Cohesion: 0.25
-Nodes (5): Tests for FileEntry dataclass., FileEntry should store path and order., FileEntry exists should default to True., FileEntry exists can be set explicitly., TestFileEntry
+Cohesion: 0.20
+Nodes (6): Test compatibility with scipy.optimize.curve_fit interface., Set up scipy compatibility tests., Test that robust_curve_fit can replace scipy.optimize.curve_fit., Test that all scipy curve_fit parameters work with robust_curve_fit., Test that error handling is compatible with scipy expectations., TestScipyCompatibility
 
 ### Community 283 - "Community 283"
-Cohesion: 0.16
-Nodes (13): _get_analysis_param_fields(), _get_collect_state_keywords(), Test that _collect_session_state covers all AnalysisParameters fields.  Uses AST, Return all field names from AnalysisParameters dataclass., Parse _collect_session_state and return keyword arg names     used in the Analys, Ensure _collect_session_state maps all AnalysisParameters fields., Every AnalysisParameters field must appear as a keyword arg in         _collect_, _NO_WIDGET_FIELDS should not contain names that don't exist         in AnalysisP (+5 more)
+Cohesion: 0.17
+Nodes (11): _get_analysis_param_fields(), _get_collect_state_keywords(), Test that _collect_session_state covers all AnalysisParameters fields.  Uses AST, Return all field names from AnalysisParameters dataclass., Parse _collect_session_state and return keyword arg names     used in the Analys, Ensure _collect_session_state maps all AnalysisParameters fields., Every AnalysisParameters field must appear as a keyword arg in         _collect_, _NO_WIDGET_FIELDS should not contain names that don't exist         in AnalysisP (+3 more)
 
 ### Community 284 - "Community 284"
 Cohesion: 0.18
@@ -1773,12 +1790,12 @@ Cohesion: 0.25
 Nodes (5): Decorators for enforcing Qt thread safety., Decorator to ensure function runs in main Qt thread., Decorator to validate QTimer creation., Decorator to monitor function for threading violations., ThreadSafeQtDecorator
 
 ### Community 288 - "Community 288"
-Cohesion: 0.17
-Nodes (10): Regression tests for nlsq JIT-tracing compatibility.  Verifies that model functi, create_id(), double_exp_all(), power_law(), Fitting functions for XPCS analysis.  This module provides fitting functions for, Single exponential fitting for XPCS-multitau analysis.      Parameters     -----, Double exponential fitting for XPCS-multitau analysis.      Parameters     -----, Power-law fitting for diffusion behavior.      Parameters     ----------     x : (+2 more)
+Cohesion: 0.25
+Nodes (9): create_id(), double_exp_all(), power_law(), Fitting functions for XPCS analysis.  This module provides fitting functions for, Single exponential fitting for XPCS-multitau analysis.      Parameters     -----, Double exponential fitting for XPCS-multitau analysis.      Parameters     -----, Power-law fitting for diffusion behavior.      Parameters     ----------     x :, Generate a simplified or customized ID string from a filename.      Parameters (+1 more)
 
 ### Community 289 - "Community 289"
-Cohesion: 0.25
-Nodes (5): get_memory_pressure(), MemoryStatus, Container for memory status information., Get memory status object.          Returns         -------         MemoryStatus, Calculate memory pressure as a percentage (0-1) (static method for backward comp
+Cohesion: 0.24
+Nodes (6): Test compatibility with legacy XPCS analysis workflows., Test a typical XPCS analysis workflow., Test compatibility with batch processing workflows., Test compatibility with parameter extraction routines., Fallback to scipy curve_fit., TestLegacyWorkflowCompatibility
 
 ### Community 290 - "Community 290"
 Cohesion: 0.20
@@ -1786,27 +1803,27 @@ Nodes (6): Test specific fitting models used in XPCS analysis, Test G2 single ex
 
 ### Community 291 - "Community 291"
 Cohesion: 0.03
-Nodes (64): Array, check_numpyro(), double_exp_func(), double_exp_model(), _maybe_jit(), power_law_func(), power_law_model(), NumPyro model definitions for G2 correlation fitting.  This module defines proba (+56 more)
+Nodes (70): Array, check_numpyro(), double_exp_func(), double_exp_model(), _maybe_jit(), power_law_func(), power_law_model(), NumPyro model definitions for G2 correlation fitting.  This module defines proba (+62 more)
 
 ### Community 292 - "Community 292"
 Cohesion: 0.20
 Nodes (9): Array Type Transitions, Convergence Thresholds, Data Flow, Fitting Data Flow, HDF5 File Schema, I/O Boundary Summary, Signal Payload Schemas, SimpleMask Data Flow (+1 more)
 
 ### Community 293 - "Community 293"
-Cohesion: 0.08
-Nodes (21): G2 Analysis Algorithm Validation Tests  This module provides comprehensive valid, Test G2 interpolation accuracy and preservation of properties, Test that interpolation preserves G2 mathematical properties, Test interpolation accuracy against analytical solution, Test G2 fitting algorithms for accuracy and robustness, Set up fitting test data, Single exponential G2 model, Test single exponential fitting accuracy (+13 more)
+Cohesion: 0.22
+Nodes (7): Test G2 fitting algorithms for accuracy and robustness, Set up fitting test data, Single exponential G2 model, Test single exponential fitting accuracy, Property-based test for fitting robustness to noise, test_fitting_robustness_to_noise(), TestG2FittingValidation
 
 ### Community 294 - "Community 294"
 Cohesion: 0.14
 Nodes (8): BUG-027: All JAX arrays must be converted via ensure_numpy() before     reaching, ensure_numpy must accept JAX arrays and return NumPy arrays., ensure_numpy must be a no-op for NumPy arrays., apply_saxs_2d_result in xpcs_viewer.py must wrap image_data with ensure_numpy., apply_qmap_result in xpcs_viewer.py must wrap image_data with ensure_numpy., simplemask_kernel.py refresh_detector_image must use ensure_numpy., simplemask_window.py _refresh_mask_display must use ensure_numpy., TestEnsureNumpyAtPyQtGraphBoundaries
 
 ### Community 295 - "Community 295"
-Cohesion: 0.29
-Nodes (5): Tests for wavelength/energy conversion precision., Test energy to wavelength conversion precision., Test Q-map uses correct wavelength., TestWavelengthPrecision, E2KCONST = 12.398 keV Angstrom
+Cohesion: 0.20
+Nodes (6): Integration test for async G2 result handler.      Verifies:     - apply_g2_resu, BUG-014: apply_g2_result uses pre-computed worker result without re-calling plot, BUG-014: apply_g2_result routes worker data to renderer without re-computation., BUG-049: make_async decorator actually submits to WorkerManager (not a no-op pas, BUG-014: G2PlotWorker produces a result dict with expected keys., TestChain4AsyncArchitecture
 
 ### Community 296 - "Community 296"
-Cohesion: 0.33
-Nodes (7): apply_group_box_styling(), improve_control_panel_layout(), Improve the layout of a control panel group box.      Args:         group_box: T, Apply semantic styling to a QGroupBox.      Args:         group_box: The group b, QGroupBox, Apply card styling to a QGroupBox.      Card style provides a elevated, bordered, set_card_style()
+Cohesion: 0.22
+Nodes (7): compute_c2_statistics_vectorized(), Compute statistical measures for C2 matrices using vectorized operations.      U, Benchmark tests for C2 statistics vectorization., Verify vectorized C2 statistics produces correct results., Record timing for vectorized C2 statistics., Verify off-diagonal mean matches loop-based calculation., TestC2StatisticsVectorized
 
 ### Community 297 - "Community 297"
 Cohesion: 0.33
@@ -1853,8 +1870,8 @@ Cohesion: 0.07
 Nodes (17): AnalyticalBenchmarkSuite, Single exponential G2 correlation function          G2(τ) = baseline + β * exp(-, Double exponential G2 correlation function          G2(τ) = baseline + β₁*exp(-γ, Suite of analytical benchmarks for XPCS algorithm validation, Stretched exponential (Kohlrausch-Williams-Watts) G2 correlation          G2(τ), Sphere form factor (Rayleigh scattering)          F(q) = 3[sin(qR) - qR*cos(qR)], Infinite cylinder form factor (averaged over orientations)          I(q) = I₀ *, Initialize all analytical benchmarks (+9 more)
 
 ### Community 309 - "Community 309"
-Cohesion: 0.33
-Nodes (4): Tests for power law model., Test model function can be imported., Test model includes power law exponent alpha., TestPowerLawModel
+Cohesion: 0.20
+Nodes (6): BUG-010: list fields in frozen dataclasses must be stored as tuples., G2Data.q_values must be a tuple after construction., G2Data.q_values as tuple cannot be mutated (frozen dataclass guarantee)., PartitionSchema.val_list must be a tuple after construction., PartitionSchema.num_list must be a tuple after construction., TestFrozenDataclassTupleFields
 
 ### Community 310 - "Community 310"
 Cohesion: 0.33
@@ -1877,8 +1894,8 @@ Cohesion: 0.17
 Nodes (7): Tests for ERASER_TOOL definition., ERASER_TOOL should be defined., Eraser tool should have correct name., Eraser tool should use Rectangle type., Eraser tool should use inclusive mode., Eraser tool should have keyboard shortcut., TestEraserTool
 
 ### Community 315 - "Community 315"
-Cohesion: 0.23
-Nodes (8): Save recent paths to disk., Add or update a path in the recent list.          Args:             path: Direct, Remove a path that no longer exists.          Args:             path: Path to re, Clear all recent paths., Manages recent directory paths.      Tracks recently accessed directories with t, RecentPathsManager, TestRecentPathsManager, TestRecentPathsPersistence
+Cohesion: 0.20
+Nodes (6): Tests for the cb_qmap_cmap QComboBox widget in viewer_ui.py., Verify cb_qmap_cmap widget is defined in UI., Verify all expected colormaps are available., Verify tab20b is the first (default) option., Verify tab20b provides distinct colors for ROI visualization., TestQmapColormapUIWidget
 
 ### Community 316 - "Community 316"
 Cohesion: 0.14
@@ -1893,8 +1910,8 @@ Cohesion: 0.17
 Nodes (7): register_action should add action to palette., register_action should store shortcut., register_action should raise ValueError for duplicate ID., unregister_action should remove action., unregister_action should return False for unknown ID., Tests for action registration., TestCommandPaletteActions
 
 ### Community 319 - "Community 319"
-Cohesion: 0.03
-Nodes (45): Test basic FileLocator initialization., Test that initialization creates required components., Test suite for FileLocator path management., Test set_path method., Test direct path property access., Test suite for FileLocator clear method., Test clear method clears source models., Test that clear method only affects source models. (+37 more)
+Cohesion: 0.06
+Nodes (24): Test basic FileLocator initialization., Test that initialization creates required components., Test suite for FileLocator get_xf_list method., Test get_xf_list with no rows specified., Test get_xf_list with specific rows., Test get_xf_list creates cache entries for missing files., Test get_xf_list skips files that failed to load., Test get_xf_list with filter_fitted=True. (+16 more)
 
 ### Community 320 - "Community 320"
 Cohesion: 0.17
@@ -1909,52 +1926,52 @@ Cohesion: 0.25
 Nodes (8): 1. HDF5 I/O Facade (Priority: HIGH), 2. Backend Array Adapter (Priority: MEDIUM), 3. Data Schema Validators (Priority: HIGH), 5.1 Critical Facades Needed, 5.2 Circular Dependency Risks, 5.3 Tight Coupling Analysis, 5. Integration Points Requiring Attention, High Coupling: XpcsFile ↔ Analysis Modules
 
 ### Community 323 - "Community 323"
-Cohesion: 0.33
-Nodes (4): Tests for PyQtGraph theme integration., apply_to_pyqtgraph should not raise any errors., apply_to_pyqtgraph should set PyQtGraph config options., TestPyQtGraphIntegration
+Cohesion: 0.22
+Nodes (5): MemoryTestUtils, Memory Testing Utilities.  Minimal implementation to support Qt error detection, Memory testing utilities for test framework., Get current memory usage in bytes., Get current memory usage as percentage.
 
 ### Community 324 - "Community 324"
 Cohesion: 0.25
 Nodes (5): Verify Bayesian extraction prefers tauq keys over fit_val., When tauq_q/tauq_tau/tauq_tau_err exist, they should be used., When tauq keys are missing, fall back to fit_val., Source inspection: _extract_diffusion_for_bayesian must check tauq_q., TestBugH_ExtractionDataSource
 
 ### Community 325 - "Community 325"
-Cohesion: 0.20
-Nodes (9): _extract_selectors(), Lint tests for QSS stylesheets.  Catches duplicate selectors and unsupported CSS, Detect CSS properties not supported by Qt's QSS engine., QSS files should not use outline, outline-offset, or letter-spacing., Extract (selector, line_number) pairs from QSS text.      Returns normalised sel, Detect duplicate selectors within a single QSS file., Each selector should appear at most once per file., TestQssDuplicateSelectors (+1 more)
+Cohesion: 0.24
+Nodes (8): _extract_selectors(), Lint tests for QSS stylesheets.  Catches duplicate selectors and unsupported CSS, Detect CSS properties not supported by Qt's QSS engine., Extract (selector, line_number) pairs from QSS text.      Returns normalised sel, Detect duplicate selectors within a single QSS file., Each selector should appear at most once per file., TestQssDuplicateSelectors, TestQssUnsupportedProperties
 
 ### Community 326 - "Community 326"
 Cohesion: 0.33
 Nodes (5): Validate signal/slot connection for Qt5+ compatibility.          Args:, Test signal/slot connections across threads., Safely connect signal to slot with validation.      Args:         signal: Qt sig, safe_signal_connect(), validate_signal_connection()
 
 ### Community 327 - "Community 327"
-Cohesion: 0.33
-Nodes (7): Comprehensive HDF5 file integrity validation with caching.      Args:         fi, Comprehensive scientific array validation with domain-specific checks.      Args, Specialized validation for G2 correlation data.      Args:         g2_array: G2, validate_g2_data(), validate_hdf5_file_integrity(), validate_scientific_array(), ValidationResult
+Cohesion: 0.22
+Nodes (6): BUG-004 tau clamping NaN, BUG-004: All NumPyro models must clamp tau to avoid NaN gradients near zero., single_exp_model: tau is clipped before use, preventing NaN in mu.          With, stretched_exp_model: tau is clipped to prevent overflow in (2x/tau)^beta., power_law_model: q is clipped before log(q) to prevent log(0) = -inf.          T, TestNumPyroModelTauClamping
 
 ### Community 328 - "Community 328"
-Cohesion: 0.33
-Nodes (5): get_cached_memory_monitor(), get_memory_usage(), Get or create a cached memory monitor instance.      Returns     -------     Mem, Get current memory usage information.          Returns         -------         t, Get current memory usage in MB (static method for backward compatibility).
+Cohesion: 0.19
+Nodes (10): get_cached_memory_monitor, get_cached_memory_monitor(), get_memory_usage(), MemoryMonitor, Get or create a cached memory monitor instance.      Returns     -------     Mem, Simple memory monitoring utilities using psutil., Get current memory usage information.          Returns         -------         t, Get current memory usage in MB (static method for backward compatibility). (+2 more)
 
 ### Community 329 - "Community 329"
 Cohesion: 0.20
 Nodes (9): Unit tests for basic package functionality.  This module provides unit tests for, Test that package version is accessible., Test that CLI module can be imported., Test that basic modules can be imported., Test that threading components can be imported without metaclass conflicts., test_basic_imports(), test_cli_module_importable(), test_package_version() (+1 more)
 
 ### Community 330 - "Community 330"
-Cohesion: 0.33
-Nodes (4): Tests for gradient numerical accuracy., Test JAX gradients match finite difference approximation., Test second-order gradients (Hessian)., TestGradientNumericalAccuracy
+Cohesion: 0.25
+Nodes (7): single_exp, Test compatibility with existing g2mod module., Test that existing g2mod functions still work., Test that old and new fitting functions can coexist., Mock RobustOptimizer for testing backward compatibility., RobustOptimizer, TestG2ModCompatibility
 
 ### Community 331 - "Community 331"
-Cohesion: 0.33
-Nodes (4): Test suite for XpcsFile edge cases and error conditions., Test handling of empty data arrays., Test handling when extra_fields is None., TestXpcsFileEdgeCases
+Cohesion: 0.28
+Nodes (5): Test vectorized SAXS operations for correctness and performance, Create synthetic 1D SAXS intensity with realistic features, Create synthetic 2D SAXS intensity (multiple phi sectors), Test q-binning for 2D intensity data, TestSAXSVectorizedOperations
 
 ### Community 332 - "Community 332"
-Cohesion: 0.29
-Nodes (3): MockQApplication, qt_cleanup(), Auto-cleanup Qt state after each test to ensure test isolation.      This fixtur
+Cohesion: 0.25
+Nodes (5): Drag-and-drop enabled list view for XPCS-TOOLKIT GUI.  This module provides a QL, GUI widgets for XPCS Viewer.  Custom widgets for enhanced user interaction., Toast notification system for XPCS-TOOLKIT GUI.  This module provides non-blocki, Types of toast notifications with associated styling., ToastType
 
 ### Community 333 - "Community 333"
 Cohesion: 0.33
 Nodes (4): Near-zero tau must not produce NaN when computing (2x/tau)^beta., BUG-018: stretched_exp_model must clamp tau so (2x/tau)^beta is finite., Verify that stretched_exp_model contains tau = jnp.clip(tau, 1e-30)., TestBug018StretchedExpTauClamping
 
 ### Community 334 - "Community 334"
-Cohesion: 0.33
-Nodes (4): Tests for RecentPathsManager.get_recent_paths., get_recent_paths should return empty list initially., get_recent_paths should return a copy., TestRecentPathsManagerGetPaths
+Cohesion: 0.25
+Nodes (5): Test suite for drag and drop file operations., Test drag and drop file loading., Test drag and drop of multiple files., Test drag and drop of invalid files., TestDragAndDrop
 
 ### Community 335 - "Community 335"
 Cohesion: 0.33
@@ -1977,16 +1994,16 @@ Cohesion: 0.13
 Nodes (9): Restore original QTimer methods., Restore original QObject methods., Get current stack trace for violation context., Clear all recorded violations., Check if any timer violations were detected., Get summary of detected violations., Detect Qt threading violations in real-time., Stop monitoring and restore original methods. (+1 more)
 
 ### Community 341 - "Community 341"
-Cohesion: 0.33
-Nodes (4): Tests for RecentPathsManager.remove_invalid_path., remove_invalid_path should remove the path., remove_invalid_path should return False for unknown path., TestRecentPathsManagerRemoveInvalid
+Cohesion: 0.25
+Nodes (6): interpolate_g2_data, T040: Verify no scipy.interpolate imports in module/ directory., Verify grep finds no scipy.interpolate imports in module/., Verify grep finds no direct scipy.ndimage imports in module/., TestNoScipyInterpolateImports, TestInterpolateG2Data
 
 ### Community 342 - "Community 342"
-Cohesion: 0.33
-Nodes (4): Tests for SessionManager warning handling., get_warnings should return a list., get_warnings should clear warnings after being called., TestSessionManagerWarnings
+Cohesion: 0.29
+Nodes (7): Vectorized q-space binning for SAXS data with optimized memory usage.      Uses, vectorized_q_binning(), _q_binning_loop(), Original nested-loop implementation (baseline)., test_q_binning_1d_correctness(), test_q_binning_2d_correctness(), Test that q-binning conserves total intensity
 
 ### Community 343 - "Community 343"
-Cohesion: 0.33
-Nodes (4): Tests for SessionManager.has_saved_session., has_saved_session should return False if no file exists., has_saved_session should return True if file exists., TestSessionManagerHasSavedSession
+Cohesion: 0.29
+Nodes (8): get_all_c2_from_hdf_enhanced(), get_optimal_worker_count(), get_process_pool(), process_c2_batch(), Optimized batch processing of C2 matrices with vectorized operations.      Args:, Get optimal number of worker processes based on system resources., Enhanced version of get_all_c2_from_hdf with better multiprocessing and progress, Get or create a reusable process pool.      Args:         num_workers: Number of
 
 ### Community 344 - "Community 344"
 Cohesion: 0.25
@@ -1997,8 +2014,8 @@ Cohesion: 0.29
 Nodes (4): Unit test suite for scientific validation framework., Test that the validation framework initializes correctly., Test fitting algorithm validation methods., ScientificValidationTestSuite
 
 ### Community 346 - "Community 346"
-Cohesion: 0.33
-Nodes (4): Tests for WindowGeometry dataclass., WindowGeometry should have sensible defaults., WindowGeometry should accept custom values., TestWindowGeometry
+Cohesion: 0.29
+Nodes (5): CleanupScheduler, Schedules and manages cleanup operations., Schedule a cleanup task., Execute all pending cleanup tasks., Execute all pending cleanup tasks.          Tasks are collected under the lock b
 
 ### Community 347 - "Community 347"
 Cohesion: 0.38
@@ -2017,8 +2034,8 @@ Cohesion: 0.33
 Nodes (6): I/O Boundary Array Conversion, Structured Logging System, Schema Validation at I/O Boundaries, API Contract Audit, Master Fix List, Threading Audit Report
 
 ### Community 351 - "Community 351"
-Cohesion: 0.33
-Nodes (4): Test equivalence through the backend abstraction layer., Test NumPy and JAX backends produce equivalent results., Test statistical operations produce equivalent results., TestBackendAbstractionEquivalence
+Cohesion: 0.25
+Nodes (5): Two calls with identical params return the same cached dict object., Test 3: Q-map cache hit returns the cached dict directly, no deep copy., compute_transmission_qmap must not call copy.deepcopy on cache hit., compute_reflection_qmap must not call copy.deepcopy on cache hit., TestQMapCacheNoCopy
 
 ### Community 352 - "Community 352"
 Cohesion: 0.20
@@ -2053,8 +2070,8 @@ Cohesion: 0.36
 Nodes (7): configure_offscreen_env(), main(), parse_args(), Force deterministic, headless Qt settings., Launch the viewer offscreen and capture a snapshot to the given path., take_snapshot(), Namespace
 
 ### Community 360 - "Community 360"
-Cohesion: 0.50
-Nodes (3): Lint rule: xpcs_file/fitting.py must not use numpy math functions.      Model fu, xpcs_file/fitting.py must not contain numpy math calls., TestNoNumpyMathInModelFile
+Cohesion: 0.25
+Nodes (5): Scientific tests for colormap visual properties., tab20b colors should be perceptually distinct for ROI visualization., viridis should provide smooth perceptual progression., Gray colormap should be strictly monotonic in luminance., TestColormapVisualProperties
 
 ### Community 361 - "Community 361"
 Cohesion: 0.20
@@ -2113,8 +2130,8 @@ Cohesion: 0.40
 Nodes (5): `/diffusion_analysis/`, Directory Structure, `/g2_analysis/`, `/saxs_analysis/`, `/twotime_analysis/`
 
 ### Community 375 - "Community 375"
-Cohesion: 0.50
-Nodes (3): PlaceholderModule, XPCS analysis modules.  This package contains specialized modules for X-ray Phot, Placeholder module for documentation builds.
+Cohesion: 0.25
+Nodes (5): Integration tests for scale handle behavior during interaction., Create a minimal SimpleMaskKernel mock for testing., Verify each ROI type has the minimum expected handles., All added handles should be interactive (not static markers)., TestHandleScalingBehavior
 
 ### Community 376 - "Community 376"
 Cohesion: 0.17
@@ -2125,12 +2142,16 @@ Cohesion: 0.40
 Nodes (4): detect_threading_violations(), Get all detected violations., Detect threading violations during operation execution.      Args:         opera, Context manager to detect Qt threading violations.
 
 ### Community 378 - "Community 378"
-Cohesion: 0.29
-Nodes (3): Context manager for enhanced reliability with retries and exponential backoff., Execute ``func(*args, **kwargs)`` with automatic retry on failure.          Retr, ReliabilityContext
+Cohesion: 0.33
+Nodes (4): Test suite for FileLocator path management., Test set_path method., Test direct path property access., TestFileLocatorPathManagement
+
+### Community 379 - "Community 379"
+Cohesion: 0.33
+Nodes (4): Test suite for FileLocator clear method., Test clear method clears source models., Test that clear method only affects source models., TestFileLocatorClearMethod
 
 ### Community 380 - "Community 380"
-Cohesion: 0.50
-Nodes (3): Test suite for QMap detector extent calculation., Test get_detector_extent method., TestQMapDetectorExtent
+Cohesion: 0.33
+Nodes (4): Test suite for FileLocator get_hdf_info method., Test successful HDF info retrieval., Test HDF info retrieval without filter string., TestFileLocatorGetHdfInfo
 
 ### Community 381 - "Community 381"
 Cohesion: 0.40
@@ -2213,32 +2234,32 @@ Cohesion: 0.25
 Nodes (5): Unit tests for SimpleMask drawing tools configuration.  Tests the drawing tool d, Tests that tool types match expected ROI types., All drawing tools should have valid tool types., Eraser should have valid tool type., TestToolTypeValidity
 
 ### Community 401 - "Community 401"
-Cohesion: 0.18
-Nodes (12): ConvergenceSummaryWidget, Rich-text summary of MCMC convergence diagnostics., _add_labeled_spinbox(), Move Bayesian controls out of gridLayout_12 into a separate group.      Creates, Add a label + spinbox pair to a horizontal layout (skips if None)., rearrange_g2_fitting_buttons(), QHBoxLayout, QWidget (+4 more)
+Cohesion: 0.33
+Nodes (4): Test suite for FileLocator caching behavior., Test that cache persists between calls., Test that cache keys use full path format., TestFileLocatorCaching
 
 ### Community 402 - "Community 402"
-Cohesion: 0.50
-Nodes (3): Test suite for get_qmap function., Test get_qmap function., TestGetQmapFunction
+Cohesion: 0.33
+Nodes (4): Test suite for FileLocator performance characteristics., Test FileLocator initialization performance., Test that cached access is faster than creation., TestFileLocatorPerformance
 
 ### Community 403 - "Community 403"
 Cohesion: 0.08
-Nodes (20): ADR-003 HDF5 Facade, io.hdf5_facade (proposed), get_chunked_dataset(), get_connection(), get_file_info(), HDF5 file reading utilities with connection pooling.  Provides optimized HDF5 fi, Read a large dataset in chunks to manage memory usage.      Parameters     -----, Dynamically adapt pool size based on system memory pressure.          Throttled (+12 more)
+Nodes (24): ADR-003 HDF5 Facade, io.hdf5_facade (proposed), ConnectionStats, get(), get_chunked_dataset(), get_connection(), get_file_info(), HDF5 file reading utilities with connection pooling.  Provides optimized HDF5 fi (+16 more)
 
 ### Community 404 - "Community 404"
 Cohesion: 0.50
 Nodes (3): Test suite for QMap compute_qmap method., Test basic qmap computation., TestQMapComputeQmap
 
 ### Community 405 - "Community 405"
-Cohesion: 0.50
-Nodes (3): Test suite for QMap create_qbin_labels method., Test qbin labels creation., TestQMapCreateQbinLabels
+Cohesion: 0.33
+Nodes (4): Test suite for get() function., Test getting simple field from HDF5 file., Test getting field with slice., TestGetFunction
 
 ### Community 406 - "Community 406"
-Cohesion: 0.50
-Nodes (3): Tests for RecentPathsManager.clear., clear should remove all paths., TestRecentPathsManagerClear
+Cohesion: 0.33
+Nodes (4): Test suite for QMap edge cases., Test QMap with None filename., Test QMap with empty root key., TestQMapEdgeCases
 
 ### Community 407 - "Community 407"
-Cohesion: 0.50
-Nodes (3): Tests for pixel position precision., Test pixel grid computation precision., TestPixelPositionPrecision
+Cohesion: 0.40
+Nodes (3): Get standard error for a parameter from the covariance matrix.          Paramete, Get confidence interval for a parameter.          Parameters         ----------, Generate a formatted summary of the fit results.          Returns         ------
 
 ### Community 408 - "Community 408"
 Cohesion: 0.20
@@ -2300,17 +2321,25 @@ Nodes (5): Tests for single exponential model., Test model function can be impor
 Cohesion: 0.33
 Nodes (4): Test suite for error handling and recovery scenarios., Test recovery from analysis computation errors., Test handling of memory pressure situations., TestErrorRecoveryScenarios
 
+### Community 425 - "Community 425"
+Cohesion: 0.33
+Nodes (4): Test that prediction interval is not shown by default., Tests for prediction interval display (T071)., Test that fill_between collection is present when show_prediction_interval=True., TestPlotNLSQFitPredictionInterval
+
 ### Community 427 - "Community 427"
 Cohesion: 0.25
 Nodes (5): Test 5: GC metrics use per-interval delta, not stale start time., _update_gc_metrics must compute delta against last-interval stats, not start., GC metric update computes delta relative to previous interval's stats., _get_hdf5_connection_count must actually try to query pool size (BUG-053)., TestHealthMonitorGCDelta
 
 ### Community 428 - "Community 428"
-Cohesion: 0.50
-Nodes (4): hdf5_test_manager(), Get HDF5 test file manager., get_hdf5_manager(), Get the global HDF5 test data manager.
+Cohesion: 0.33
+Nodes (4): Tests for diagnostics display (T072)., Test that metrics are shown by default., Test that metrics annotation contains expected values., TestPlotNLSQFitDiagnostics
 
 ### Community 429 - "Community 429"
 Cohesion: 0.06
 Nodes (22): Task Group 7 tests: GUI and I/O P1 fixes.  Tests for BUG-013, BUG-014, BUG-015,, apply_g2_result must consume figure or axes handles from result dict., BUG-015: XpcsFile.__dict__.update() must not silently overwrite     existing att, The collision guard logic must prevent 'qmap'/'label' from being overwritten., XpcsFile.__init__ source must contain a collision guard., BUG-016: init_average must only set the default save_name when the     text fiel, init_average must check if save_name field is empty before overwriting., BUG-013: closeEvent must call thread_pool.waitForDone() to prevent     signals f (+14 more)
+
+### Community 430 - "Community 430"
+Cohesion: 0.33
+Nodes (4): Test compatibility with existing XpcsFile workflows., Test that robust fitting integrates with XpcsFile workflows., Test that parameter names and conventions are compatible., TestXpcsFileCompatibility
 
 ### Community 431 - "Community 431"
 Cohesion: 0.12
@@ -2327,6 +2356,10 @@ Nodes (6): palette_with_actions(), Unit tests for CommandPalette., Tests for key
 ### Community 442 - "Community 442"
 Cohesion: 0.14
 Nodes (6): PerformanceTimer, Context manager for measuring execution time with statistical analysis., Standard deviation of execution time., Minimum execution time., Maximum execution time., Generate performance report.
+
+### Community 446 - "Community 446"
+Cohesion: 0.04
+Nodes (30): NLSQResult, Result from nonlinear least squares fitting.      This class wraps NLSQ 0.6.0's, Initialize param names from params dict if not provided., Coefficient of determination (R²)., Set r_squared (for backward compat initialization).          Note: This setter i, Adjusted R² accounting for number of parameters., Set adj_r_squared (for backward compat initialization).          Note: This sett, Set mae (for backward compat initialization).          Note: This setter is a no (+22 more)
 
 ### Community 447 - "Community 447"
 Cohesion: 0.48
@@ -2352,25 +2385,53 @@ Nodes (6): Unit tests for GIXPCS Display Precision (Feature 4).  Tests the enhan
 Cohesion: 0.50
 Nodes (3): Stop background health monitoring.          The lock is released before joining, Stop background health monitoring., stop_health_monitoring()
 
+### Community 475 - "Community 475"
+Cohesion: 0.33
+Nodes (4): Test that configuration and settings remain compatible., Test that default behavior hasn't changed., Test that bounds format remains compatible., TestConfigurationCompatibility
+
+### Community 476 - "Community 476"
+Cohesion: 0.33
+Nodes (4): T041: Test vectorized_g2_interpolation produces correct output., Verify G2 interpolation produces reasonable output., Verify G2 interpolation output shape is correct., TestG2Interpolation
+
 ### Community 477 - "Community 477"
-Cohesion: 0.11
-Nodes (23): Unit tests for plot_themes module., get_color_cycle(), get_color_marker(), get_marker_cycle(), get_theme_colors(), Centralized plotting constants for consistent styling across all plot handlers., Get the full color cycle for a backend.      Parameters     ----------     backe, Get the marker cycle for a backend.      Parameters     ----------     backend : (+15 more)
+Cohesion: 0.19
+Nodes (14): Unit tests for plot_themes module., Theme system for XPCS-TOOLKIT GUI.  This module provides theming infrastructure, apply_matplotlib_theme(), apply_pyqtgraph_theme(), get_matplotlib_params(), get_plot_colors(), get_pyqtgraph_options(), Plot theme definitions for Matplotlib and PyQtGraph.  This module provides theme (+6 more)
+
+### Community 478 - "Community 478"
+Cohesion: 0.33
+Nodes (4): Record timing for vectorized diagonal correction., Benchmark tests for diagonal correction., Verify vectorized diagonal correction produces correct results., TestDiagonalCorrectionPerformance
+
+### Community 479 - "Community 479"
+Cohesion: 0.33
+Nodes (4): Test Qt signal/slot connection error detection., Test detection of QStyleHints connection errors., Test proper Qt5+ signal/slot connection syntax., TestQtConnectionErrors
 
 ### Community 480 - "Community 480"
-Cohesion: 0.18
-Nodes (10): _decode_unit(), _log_qmap_shape(), _normalize_unit(), Log Q-map array shapes at DEBUG level., Normalize num_pts to be a 2-element array [n_dim0, n_dim1].          Args:, Get default values for missing qmap keys., Create a minimal default qmap when file doesn't have qmap data., Provide dictionary-like access to QMap attributes. (+2 more)
+Cohesion: 0.20
+Nodes (9): _decode_unit(), get_qmap(), _log_qmap_shape(), _normalize_unit(), Log Q-map array shapes at DEBUG level., Normalize a unit string to canonical Unicode form., Decode a raw byte string from HDF5 into a canonical unit string., test_qmap_manager() (+1 more)
 
 ### Community 481 - "Community 481"
 Cohesion: 0.40
 Nodes (6): comprehensive_xpcs_hdf5 (fixture), detector_geometry (fixture), minimal_xpcs_hdf5 (fixture), qmap_data (fixture), synthetic_correlation_data (fixture), synthetic_scattering_data (fixture)
 
-### Community 483 - "Community 483"
-Cohesion: 0.10
-Nodes (17): Tests for SessionManager.load_session., load_session should return None if no session file exists., load_session should restore saved session., load_session should validate file existence., load_session should handle corrupted JSON gracefully., load_session should validate active_tab range., Tests for SessionManager.clear_session., clear_session should remove the session file. (+9 more)
+### Community 482 - "Community 482"
+Cohesion: 0.33
+Nodes (4): Test Qt GUI initialization error detection., Test monitoring of Qt application creation., Test widget creation in proper Qt context., TestQtGuiInitialization
 
 ### Community 484 - "Community 484"
 Cohesion: 0.33
 Nodes (6): correct_diagonal_c2_vectorized, get_all_c2_from_hdf_enhanced, process_c2_batch, ProcessPoolExecutor (module-level), read_single_c2_enhanced, _reconstruct_c2_matrix_vectorized
+
+### Community 485 - "Community 485"
+Cohesion: 0.50
+Nodes (3): Test suite for QMap performance characteristics., Test QMap initialization performance., TestQMapPerformance
+
+### Community 486 - "Community 486"
+Cohesion: 0.50
+Nodes (3): Integration tests for file operations with other GUI components., Test that file loading updates analysis tabs., TestFileOperationIntegration
+
+### Community 487 - "Community 487"
+Cohesion: 0.50
+Nodes (4): correct_diagonal_c2_vectorized(), Vectorized version of read_single_c2 with optimized matrix operations.      Args, Vectorized diagonal correction for C2 matrices.     Optimized to eliminate loops, read_single_c2_enhanced()
 
 ### Community 493 - "Community 493"
 Cohesion: 0.67
@@ -2379,6 +2440,10 @@ Nodes (3): Error Handling Test Suite, GUI Interactive Testing (pytest-qt), Multi
 ### Community 494 - "Community 494"
 Cohesion: 0.40
 Nodes (5): qapp (fixture), qt_application (fixture), qt_cleanup (autouse fixture), qt_main_window (fixture), qt_widget (fixture)
+
+### Community 495 - "Community 495"
+Cohesion: 0.67
+Nodes (3): create_separator(), Create a visual separator line.      Args:         orientation: Line direction, QFrame
 
 ### Community 498 - "Community 498"
 Cohesion: 0.50
@@ -2410,7 +2475,7 @@ Nodes (3): Test suite for performance characteristics., Test get_data performanc
 
 ### Community 514 - "Community 514"
 Cohesion: 0.04
-Nodes (48): ensure_numpy(), Convert any array type to NumPy for I/O boundaries.      Use this function at bo, BUG-027: ensure_numpy converts JAX arrays to writable NumPy arrays., ensure_numpy is a no-op for writable NumPy arrays (fast path)., ensure_numpy copies read-only NumPy arrays to make them writable., Tests for Qt/JAX interoperability (T074).  Tests that Qt widgets work correctly, Test mask arrays convert properly for Qt display., Tests for Qt/JAX threading compatibility. (+40 more)
+Nodes (47): ensure_numpy(), Convert any array type to NumPy for I/O boundaries.      Use this function at bo, BUG-027: ensure_numpy converts JAX arrays to writable NumPy arrays., ensure_numpy is a no-op for writable NumPy arrays (fast path)., ensure_numpy copies read-only NumPy arrays to make them writable., Tests for Qt/JAX interoperability (T074).  Tests that Qt widgets work correctly, Test mask arrays convert properly for Qt display., Tests for Qt/JAX threading compatibility. (+39 more)
 
 ### Community 531 - "Community 531"
 Cohesion: 0.67
@@ -2433,16 +2498,12 @@ Cohesion: 0.67
 Nodes (3): compute_center_from_ring, minimize_with_grad, refine_beam_center
 
 ### Community 622 - "Community 622"
-Cohesion: 0.08
-Nodes (20): ADR-002 NLSQ Migration, module.g2mod, ViewerKernel, XpcsFile (God Object), Default configuration values for xpcsviewer.  These constants define default val, Fitting and model parameter constants for xpcsviewer.  These constants define pa, Centralized constants module for xpcsviewer.  This module provides application-w, Size and count limit constants for xpcsviewer.  These constants define maximum s (+12 more)
-
-### Community 785 - "Community 785"
-Cohesion: 0.20
-Nodes (6): Test suite for MemoryMonitor class., Test memory usage retrieval., Test memory pressure calculation., Test memory pressure threshold check., Test array memory estimation., TestMemoryMonitor
+Cohesion: 0.04
+Nodes (43): ADR-004 Backend Abstraction, ADR-001 JAX Migration, ADR-002 NLSQ Migration, module.g2mod, module.twotime, ViewerKernel, XpcsFile (God Object), xpcsviewer.backends (+35 more)
 
 ### Community 819 - "Community 819"
-Cohesion: 0.14
-Nodes (12): QMapManager, Test suite for QMapManager class., Test QMapManager initialization., Test getting new QMap., Test getting cached QMap., Test getting QMaps for different files., Test QMapManager cache behavior with different sizes., test_get_qmap_cached() (+4 more)
+Cohesion: 0.07
+Nodes (23): QMapManager, Unit tests for QMap utilities module.  This module provides comprehensive unit t, Test suite for QMapManager class., Test QMapManager initialization., Test getting new QMap., Test suite for QMap detector extent calculation., Test get_detector_extent method., Test suite for QMap create_qbin_labels method. (+15 more)
 
 ### Community 824 - "Community 824"
 Cohesion: 0.25
@@ -2585,23 +2646,23 @@ Cohesion: 0.23
 Nodes (7): Validate test environment prerequisites., Check if sufficient memory is available., Check if sufficient disk space is available., Check if network connectivity is available., Check if display is available for GUI tests., Validate multiple environment requirements., TestEnvironmentValidator
 
 ### Community 1149 - "Community 1149"
-Cohesion: 0.24
-Nodes (10): safe_json_write, create_id, double_exp_all, power_law, single_exp_all, get_cached_memory_monitor, xpcs_file package __init__, MemoryMonitor (+2 more)
+Cohesion: 0.47
+Nodes (6): safe_json_write, create_id, double_exp_all, power_law, single_exp_all, xpcs_file package __init__
 
 ## Knowledge Gaps
 - **886 isolated node(s):** `rerun_baselines.sh script`, `JAX_PLATFORMS`, `MockH5py`, `MockH5py`, `Documentation Tree` (+881 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **151 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **162 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `XpcsViewer` connect `Community 8` to `Community 129`, `Community 1`, `Community 258`, `Community 7`, `Community 139`, `Community 11`, `Community 141`, `Community 270`, `Community 1039`, `Community 19`, `Community 278`, `Community 279`, `Community 153`, `Community 1050`, `Community 27`, `Community 283`, `Community 29`, `Community 26`, `Community 34`, `Community 294`, `Community 39`, `Community 424`, `Community 172`, `Community 429`, `Community 175`, `Community 49`, `Community 52`, `Community 57`, `Community 58`, `Community 315`, `Community 60`, `Community 316`, `Community 185`, `Community 319`, `Community 195`, `Community 966`, `Community 457`, `Community 75`, `Community 337`, `Community 982`, `Community 472`, `Community 96`, `Community 483`, `Community 359`, `Community 233`, `Community 242`, `Community 116`, `Community 248`, `Community 250`?**
-  _High betweenness centrality (0.152) - this node is a cross-community bridge._
-- **Why does `XpcsFile` connect `Community 32` to `Community 129`, `Community 1`, `Community 899`, `Community 7`, `Community 9`, `Community 10`, `Community 11`, `Community 142`, `Community 143`, `Community 785`, `Community 273`, `Community 25`, `Community 27`, `Community 30`, `Community 294`, `Community 297`, `Community 45`, `Community 429`, `Community 49`, `Community 56`, `Community 190`, `Community 319`, `Community 63`, `Community 67`, `Community 68`, `Community 74`, `Community 331`, `Community 78`, `Community 83`, `Community 982`, `Community 218`, `Community 224`, `Community 96`, `Community 99`, `Community 1002`, `Community 235`, `Community 243`, `Community 244`, `Community 1012`, `Community 118`, `Community 247`, `Community 121`, `Community 250`, `Community 1149`, `Community 895`?**
-  _High betweenness centrality (0.111) - this node is a cross-community bridge._
-- **Why does `ViewerKernel` connect `Community 7` to `Community 32`, `Community 129`, `Community 68`, `Community 69`, `Community 8`, `Community 11`, `Community 142`, `Community 431`, `Community 80`, `Community 49`, `Community 272`, `Community 982`, `Community 86`, `Community 29`, `Community 190`, `Community 319`?**
-  _High betweenness centrality (0.075) - this node is a cross-community bridge._
+- **Why does `XpcsViewer` connect `Community 8` to `Community 129`, `Community 130`, `Community 258`, `Community 7`, `Community 139`, `Community 268`, `Community 141`, `Community 11`, `Community 1039`, `Community 270`, `Community 19`, `Community 278`, `Community 279`, `Community 280`, `Community 1050`, `Community 27`, `Community 154`, `Community 29`, `Community 158`, `Community 26`, `Community 34`, `Community 294`, `Community 295`, `Community 424`, `Community 39`, `Community 429`, `Community 175`, `Community 49`, `Community 52`, `Community 185`, `Community 58`, `Community 60`, `Community 316`, `Community 319`, `Community 195`, `Community 966`, `Community 457`, `Community 75`, `Community 206`, `Community 337`, `Community 211`, `Community 212`, `Community 982`, `Community 472`, `Community 220`, `Community 479`, `Community 224`, `Community 96`, `Community 482`, `Community 100`, `Community 101`, `Community 359`, `Community 233`, `Community 242`, `Community 116`, `Community 121`, `Community 250`?**
+  _High betweenness centrality (0.138) - this node is a cross-community bridge._
+- **Why does `XpcsFile` connect `Community 32` to `Community 129`, `Community 899`, `Community 132`, `Community 131`, `Community 6`, `Community 7`, `Community 9`, `Community 10`, `Community 266`, `Community 142`, `Community 143`, `Community 273`, `Community 403`, `Community 23`, `Community 25`, `Community 282`, `Community 27`, `Community 30`, `Community 289`, `Community 294`, `Community 39`, `Community 297`, `Community 45`, `Community 430`, `Community 429`, `Community 49`, `Community 190`, `Community 319`, `Community 63`, `Community 67`, `Community 68`, `Community 328`, `Community 74`, `Community 330`, `Community 334`, `Community 78`, `Community 83`, `Community 982`, `Community 218`, `Community 475`, `Community 96`, `Community 100`, `Community 486`, `Community 1002`, `Community 235`, `Community 244`, `Community 1012`, `Community 247`, `Community 120`, `Community 250`, `Community 253`, `Community 895`?**
+  _High betweenness centrality (0.110) - this node is a cross-community bridge._
+- **Why does `ViewerKernel` connect `Community 7` to `Community 129`, `Community 130`, `Community 8`, `Community 142`, `Community 272`, `Community 29`, `Community 158`, `Community 32`, `Community 174`, `Community 431`, `Community 49`, `Community 315`, `Community 190`, `Community 319`, `Community 68`, `Community 69`, `Community 80`, `Community 982`, `Community 86`, `Community 360`?**
+  _High betweenness centrality (0.063) - this node is a cross-community bridge._
 - **Are the 61 inferred relationships involving `XpcsViewer` (e.g. with `_QtErrorCapture` and `QtTestRunner`) actually correct?**
   _`XpcsViewer` has 61 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 79 inferred relationships involving `XpcsFile` (e.g. with `TestCreateId` and `TestMemoryMonitor`) actually correct?**
@@ -2609,4 +2670,4 @@ _Questions this graph is uniquely positioned to answer:_
 - **Are the 74 inferred relationships involving `FitResult` (e.g. with `ConvergenceSummaryWidget` and `TestBugC_GetHdi`) actually correct?**
   _`FitResult` has 74 INFERRED edges - model-reasoned connections that need verification._
 - **What connects `Enhanced mock for Qt modules that provides common Qt patterns`, `Setup function for Sphinx extension.`, `# NOTE: Only mock EXTERNAL dependencies here (Qt, pyqtgraph, etc.).` to the rest of the system?**
-  _5616 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _5620 weakly-connected nodes found - possible documentation gaps or missing edges._

@@ -1,20 +1,15 @@
-"""JAX replacements for SciPy functions using interpax, optimistix, and optax.
+"""JAX replacements for SciPy functions used in the SimpleMask module.
 
-This module provides JAX-compatible implementations of SciPy functions
-that are used in the SimpleMask module:
-- interpax for interpolation
-- optimistix for optimization and root-finding
-- optax for gradient-based optimization
+Provides JAX-compatible implementations backed by interpax:
 
 Available modules:
     ndimage: gaussian_filter, gaussian_filter1d, zoom, etc.
     interpolate: interp1d, interp2d_jax, etc.
-    optimize: minimize, curve_fit, least_squares, root
 """
 
 from __future__ import annotations
 
-from xpcsviewer.backends.scipy_replacements import ndimage
+from xpcsviewer.backends.scipy_replacements import interpolate, ndimage
 from xpcsviewer.backends.scipy_replacements.interpolate import (
     Interp1d,
     interp1d,
@@ -25,19 +20,11 @@ from xpcsviewer.backends.scipy_replacements.ndimage import (
     gaussian_filter1d,
     zoom,
 )
-from xpcsviewer.backends.scipy_replacements.optimize import (
-    OptimizeResult,
-    curve_fit,
-    least_squares,
-    minimize,
-    root,
-)
 
 __all__ = [
     # Modules
     "ndimage",
     "interpolate",
-    "optimize",
     # Interpolation functions
     "Interp1d",
     "interp1d",
@@ -46,10 +33,4 @@ __all__ = [
     "gaussian_filter",
     "gaussian_filter1d",
     "zoom",
-    # Optimization functions
-    "OptimizeResult",
-    "minimize",
-    "curve_fit",
-    "least_squares",
-    "root",
 ]
