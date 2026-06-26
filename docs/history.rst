@@ -9,6 +9,17 @@ Recent Changes
 Unreleased
 ~~~~~~~~~~
 
+Version 0.1.9 (2026-06-26)
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- CLI: ``xv`` and ``xv-gui`` short command aliases
+- Python 3.14 support; OSTI GitLab mirror CI workflow; refined GUI tab availability
+- Session: persist absolute target paths so restore is working-directory independent
+- GUI: resolve 13 verified defects from combined code-review pass
+- Backends: drop stale ``optimize`` re-exports from ``scipy_replacements``
+- Remove over-engineering and unused modules per repo-wide audit
+- Docs: cover command aliases and batch all-Q Bayesian fitting; drop stale API module references
+
 Version 0.1.8 (2026-05-07)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 

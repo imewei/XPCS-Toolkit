@@ -4,6 +4,28 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.1.9] - 2026-06-26
+
+### Added
+
+- CLI: `xv` and `xv-gui` short command aliases for `xpcsviewer` / `xpcsviewer-gui`
+- Python 3.14 support
+- OSTI GitLab mirror CI workflow
+- Docs: README now covers command aliases and batch all-Q Bayesian fitting
+
+### Changed
+
+- Refine GUI tab availability logic
+- Remove over-engineering and unused modules per repo-wide audit
+
+### Fixed
+
+- Session: persist absolute target paths so sessions restore correctly regardless of working directory
+- GUI: resolve 13 verified defects from combined code-review pass
+- Backends: drop stale `optimize` re-exports from `scipy_replacements`
+- Resolve verified defects surfaced by multi-tool and adversarial review
+- Docs (API): remove stale `backend` and `performance_monitor` module references
+
 ## [0.1.8] - 2026-05-07
 
 ### Changed

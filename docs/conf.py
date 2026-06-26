@@ -104,7 +104,7 @@ try:
     version = xpcsviewer.__version__
 except ImportError:
     # Fallback version if package can't be imported
-    version = "0.1.8"
+    version = "0.1.9"
 
 # Simple logger for docs build
 logging.info(f"Building documentation for XPCS Viewer version {version}")
