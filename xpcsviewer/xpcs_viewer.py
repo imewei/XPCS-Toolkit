@@ -1041,7 +1041,6 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
             "xpcsviewer.threading.unified_threading.shutdown_unified_threading",
             "xpcsviewer.utils.memory_manager.shutdown_memory_manager",
             "xpcsviewer.utils.lazy_loader.shutdown_lazy_loader",
-            "xpcsviewer.utils.reliability_manager.shutdown_reliability",
         ):
             try:
                 _mod_path, _fn_name = _shutdown_path.rsplit(".", 1)

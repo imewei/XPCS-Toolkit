@@ -53,13 +53,3 @@ Supports both "nexus" and legacy data formats from APS-8IDI.
    :show-inheritance:
    :no-index:
 
-File Type Utilities
--------------------
-
-File format detection and validation utilities for XPCS data files.
-
-.. automodule:: xpcsviewer.fileIO.ftype_utils
-   :members:
-   :undoc-members:
-   :show-inheritance:
-   :no-index:

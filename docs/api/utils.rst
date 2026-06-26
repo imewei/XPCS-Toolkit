@@ -106,15 +106,6 @@ files gracefully rather than silently trimming data.
    :members:
    :no-index:
 
-Common Checks
--------------
-
-Lightweight guard functions for quick input pre-checks.
-
-.. automodule:: xpcsviewer.utils.common_checks
-   :members:
-   :no-index:
-
 Data Processing
 ---------------
 
@@ -147,16 +138,6 @@ Crash-safe JSON writes via atomic file replacement.
    :members:
    :no-index:
 
-Device Detection
-----------------
-
-GPU detection, system CUDA discovery, JAX backend diagnostics, and
-CUDA plugin conflict detection.
-
-.. automodule:: xpcsviewer.utils.device
-   :members:
-   :no-index:
-
 Health Monitoring
 -----------------
 
@@ -176,25 +157,6 @@ in XPCS data analysis workflows.
    :members:
    :no-index:
 
-Reliability Manager
--------------------
-
-Unified entry point for enabling and configuring reliability features.
-
-.. automodule:: xpcsviewer.utils.reliability_manager
-   :members:
-   :no-index:
-
-Startup Optimization
---------------------
-
-Application startup performance optimization via lazy loading,
-parallel initialization, and resource preloading.
-
-.. automodule:: xpcsviewer.utils.startup_optimizer
-   :members:
-   :no-index:
-
 State Validation
 ----------------
 
@@ -204,16 +166,6 @@ and weak references.
 .. automodule:: xpcsviewer.utils.state_validator
    :members:
    :no-index:
-
-Visualization Optimization
---------------------------
-
-Performance optimization for the visualization layer including
-PyQtGraph and matplotlib backends.
-
-This module conditionally imports PyQtGraph and cannot be introspected
-during the documentation build.  See the source at
-``xpcsviewer/utils/visualization_optimizer.py`` for the full API.
 
 See Also
 --------

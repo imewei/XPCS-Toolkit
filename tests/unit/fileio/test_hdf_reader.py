@@ -598,22 +598,6 @@ class TestBatchReadFields:
             batch_read_fields("/test/file.hdf", ["field1", "field2"], use_pool=False)
 
 
-class TestPerformanceIntegration:
-    """Test suite for performance monitoring integration."""
-
-    @patch("xpcsviewer.fileIO.hdf_reader._perf_monitor")
-    @patch("xpcsviewer.fileIO.hdf_reader.HDF5ConnectionPool")
-    def test_performance_monitoring(self, mock_pool_class, mock_perf_monitor):
-        """Test that performance monitoring is integrated."""
-        # This test ensures performance monitoring objects are created
-        # and would be used in actual operations
-
-        HDF5ConnectionPool()
-
-        # Verify performance monitor is available
-        assert mock_perf_monitor is not None
-
-
 class TestThreadSafety:
     """Test suite for thread safety."""
 

@@ -150,43 +150,6 @@ class TestMemoryLimits:
 
 
 @pytest.mark.skipif(not JAX_AVAILABLE, reason="JAX not installed")
-class TestMemoryMonitoring:
-    """Tests for memory monitoring capabilities."""
-
-    def test_device_manager_reports_memory(self, monkeypatch) -> None:
-        """Test DeviceManager can report memory usage."""
-        monkeypatch.setenv("XPCS_USE_JAX", "1")
-
-        from xpcsviewer.backends import _reset_backend
-        from xpcsviewer.backends._device import DeviceManager
-
-        _reset_backend()
-
-        manager = DeviceManager()
-        info = manager.get_memory_info()
-
-        # Should return None or dict (depending on platform)
-        assert info is None or isinstance(info, dict)
-
-    def test_memory_info_keys(self, monkeypatch) -> None:
-        """Test memory info contains expected keys if available."""
-        monkeypatch.setenv("XPCS_USE_JAX", "1")
-
-        from xpcsviewer.backends import _reset_backend
-        from xpcsviewer.backends._device import DeviceManager
-
-        _reset_backend()
-
-        manager = DeviceManager()
-        info = manager.get_memory_info()
-
-        if info is not None and manager.has_gpu:
-            # On GPU systems, should have memory keys
-            # Keys might be platform-specific
-            assert isinstance(info, dict)
-
-
-@pytest.mark.skipif(not JAX_AVAILABLE, reason="JAX not installed")
 class TestMemoryThreshold:
     """Tests for SC-007: Memory usage stays within 90% of available device memory."""
 

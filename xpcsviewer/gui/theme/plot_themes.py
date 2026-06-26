@@ -126,7 +126,7 @@ def apply_matplotlib_theme(theme: ThemeName) -> None:
     import matplotlib.pyplot as plt
 
     params = get_matplotlib_params(theme)
-    plt.rcParams.update(params)
+    plt.rcParams.update(params)  # type: ignore[arg-type]
 
 
 def apply_pyqtgraph_theme(theme: ThemeName) -> None:

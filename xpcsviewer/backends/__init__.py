@@ -7,9 +7,6 @@ Public API:
     get_backend() -> BackendProtocol
     set_backend(name: str) -> None
     BackendProtocol
-    DeviceManager
-    DeviceConfig
-    DeviceType
     ensure_numpy(array) -> np.ndarray
     ensure_backend_array(array) -> BackendArray
 
@@ -63,6 +60,7 @@ def _configure_jax() -> None:
         except ValueError:
             # Handle invalid float gracefully (e.g. if set to "invalid" in tests)
             import logging
+
             logger = logging.getLogger(__name__)
             logger.warning(
                 f"Invalid XPCS_GPU_MEMORY_FRACTION value: '{os.environ.get('XPCS_GPU_MEMORY_FRACTION')}', defaulting to 0.9"
@@ -207,23 +205,9 @@ def _parse_bool_env(name: str, default: bool = False) -> bool:
 # Convenience re-exports
 from ._base import BackendProtocol
 from ._conversions import ensure_backend_array, ensure_numpy
-from ._device import DeviceConfig, DeviceManager, DeviceType
-from .io_adapter import (
-    HDF5Adapter,
-    MatplotlibAdapter,
-    PyQtGraphAdapter,
-    create_adapters,
-)
 
 __all__ = [
     "BackendProtocol",
-    "DeviceConfig",
-    "DeviceManager",
-    "DeviceType",
-    "HDF5Adapter",
-    "MatplotlibAdapter",
-    "PyQtGraphAdapter",
-    "create_adapters",
     "ensure_backend_array",
     "ensure_numpy",
     "get_backend",

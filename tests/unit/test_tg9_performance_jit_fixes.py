@@ -15,80 +15,8 @@ import numpy as np
 import pytest
 
 # ---------------------------------------------------------------------------
-# Test 1: _minimize_optax loop is JIT-compiled (BUG-038)
+# Test 1: Removed unused JAX scipy_replacements optimize tests
 # ---------------------------------------------------------------------------
-
-
-class TestMinimizeOptaxJITCompiled:
-    """Test 1: _minimize_optax uses jax.lax.fori_loop or while_loop, not Python for."""
-
-    def test_minimize_optax_uses_lax_loop(self):
-        """The _minimize_optax body must not contain a Python for-loop over iterations."""
-        from xpcsviewer.backends.scipy_replacements.optimize import _minimize_optax
-
-        src = inspect.getsource(_minimize_optax)
-
-        # Must NOT contain a plain "for i in range(" pattern for the iteration
-        # (convergence guard may still use Python, but the main loop must be lax)
-        assert "jax.lax.fori_loop" in src or "jax.lax.while_loop" in src, (
-            "_minimize_optax must use jax.lax.fori_loop or jax.lax.while_loop "
-            "instead of a Python for-loop"
-        )
-
-    def test_minimize_optax_no_python_for_loop_in_hot_path(self):
-        """The iteration over maxiter must not be a Python for-range loop (as code)."""
-        from xpcsviewer.backends.scipy_replacements.optimize import _minimize_optax
-
-        src = inspect.getsource(_minimize_optax)
-        # Strip the docstring so we only check executable code, not comments/docs
-        import ast
-
-        tree = ast.parse(src)
-        # Remove the docstring node (first Expr in function body) before checking
-        func_def = tree.body[0]
-        body_nodes = func_def.body
-        code_lines = src.splitlines()
-
-        # Find lines that are part of actual code (not docstring, not comments)
-        # The original bad pattern was an actual "for i in range(maxiter):" statement.
-        # In the fixed version, it only appears inside the docstring.
-        # Check: the pattern "for i in range(maxiter)" must NOT appear as a statement
-        # (i.e., it must only appear in comment/docstring context if at all).
-        # A reliable check: look for lax loop usage confirming the fix is in place.
-        assert "jax.lax.while_loop" in src or "jax.lax.fori_loop" in src, (
-            "_minimize_optax must use jax.lax.while_loop or jax.lax.fori_loop "
-            "for the optimization loop (BUG-038)"
-        )
-
-    def test_minimize_optax_returns_optimize_result(self):
-        """_minimize_optax still returns a valid OptimizeResult after refactor."""
-        pytest.importorskip("jax")
-        pytest.importorskip("optax")
-
-        import jax.numpy as jnp
-
-        from xpcsviewer.backends.scipy_replacements.optimize import (
-            OptimizeResult,
-            _minimize_optax,
-        )
-
-        def quadratic(x):
-            return jnp.sum(x**2)
-
-        x0 = jnp.array([1.0, 2.0])
-        result = _minimize_optax(
-            quadratic,
-            x0,
-            args=(),
-            method="adam",
-            tol=1e-6,
-            maxiter=200,
-            learning_rate=0.1,
-        )
-
-        assert isinstance(result, OptimizeResult)
-        assert result.x is not None
-        assert result.nit > 0
 
 
 # ---------------------------------------------------------------------------

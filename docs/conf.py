@@ -82,7 +82,6 @@ import types as _types
 _INTERNAL_QT_MODULES = [
     "xpcsviewer.gui.qt_compat",
     "xpcsviewer.gui.layout_helpers",
-    "xpcsviewer.gui.initialization_validator",
     "xpcsviewer.gui.icons",
     "xpcsviewer.gui.widgets.category_tab_bar",
     "xpcsviewer.helper.listmodel",
@@ -271,7 +270,6 @@ autodoc_mock_imports = [
     "xpcsviewer.threading.async_kernel",
     "xpcsviewer.threading.plot_workers",
     "xpcsviewer.threading.base_plot_worker",
-    "xpcsviewer.threading.gui_integration",
     "xpcsviewer.threading.unified_threading",
     "xpcsviewer.threading.cleanup_optimized",
     "xpcsviewer.threading.progress_manager",
@@ -298,7 +296,6 @@ autodoc_mock_imports = [
     # GUI core modules (depend on Qt)
     "xpcsviewer.gui.qt_compat",
     "xpcsviewer.gui.layout_helpers",
-    "xpcsviewer.gui.initialization_validator",
     # Viewer modules (depend on Qt)
     "xpcsviewer.viewer_kernel",
     "xpcsviewer.file_locator",

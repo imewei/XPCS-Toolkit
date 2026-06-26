@@ -391,7 +391,6 @@ ignore = [
 "xpcsviewer/xpcs_file/fitting.py" = ["PLR"]
 "xpcsviewer/xpcs_file/memory.py" = ["F811"]
 "xpcsviewer/utils/vectorized_roi.py" = ["PLR", "PLC"]
-"xpcsviewer/utils/visualization_optimizer.py" = ["E402", "PLC", "SIM", "PLR"]
 "xpcsviewer/viewer_kernel.py" = ["PLC", "PLR"]
 "xpcsviewer/viewer_ui.py" = ["F401", "UP", "PLR"]
 
@@ -424,15 +423,8 @@ omit = [
     "xpcsviewer/viewer_ui.py",
     "xpcsviewer/ui/resources/*",
     "xpcsviewer/default_setting.py",
-    "xpcsviewer/helper/logwriter.py",
-    "xpcsviewer/fileIO/ftype_utils.py",
     "xpcsviewer/helper/utils.py",
     "xpcsviewer/module/tauq.py",
-    "xpcsviewer/utils/common_checks.py",
-    "xpcsviewer/utils/performance_monitor.py",
-    "xpcsviewer/utils/reliability_manager.py",
-    "xpcsviewer/utils/startup_optimizer.py",
-    "xpcsviewer/utils/visualization_optimizer.py",
     "xpcsviewer/file_locator.py",
     "xpcsviewer/helper/listmodel.py",
     "xpcsviewer/module/average_toolbox.py",

@@ -14,15 +14,6 @@ Qt-compatible list and table data models for the GUI file lists.
    :members:
    :no-index:
 
-Logger Writer
--------------
-
-Stream-like wrapper that redirects ``stdout``/``stderr`` writes to the
-Python logging system.
-
-.. automodule:: xpcsviewer.helper.logwriter
-   :members:
-   :no-index:
 
 Utility Functions
 -----------------

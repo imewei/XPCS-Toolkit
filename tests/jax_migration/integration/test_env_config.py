@@ -69,18 +69,16 @@ class TestEnvVarOverrides:
         )
 
     def test_xpcs_gpu_fallback_respected(self, monkeypatch) -> None:
-        """Test XPCS_GPU_FALLBACK enables CPU fallback."""
+        """Test XPCS_GPU_FALLBACK configuration."""
         monkeypatch.setenv("XPCS_USE_JAX", "1")
         monkeypatch.setenv("XPCS_GPU_FALLBACK", "1")
 
-        from xpcsviewer.backends import _reset_backend
-        from xpcsviewer.backends._device import DeviceManager
+        from xpcsviewer.backends import _reset_backend, get_backend
 
         _reset_backend()
 
-        manager = DeviceManager()
-        # Should not fail even if GPU is unavailable
-        assert manager is not None
+        backend = get_backend()
+        assert backend is not None
 
     def test_case_insensitive_env_values(self, monkeypatch) -> None:
         """Test environment variable values are case-insensitive."""
@@ -118,15 +116,12 @@ class TestEnvVarMemoryConfig:
         monkeypatch.setenv("XPCS_USE_JAX", "1")
         monkeypatch.setenv("XPCS_GPU_MEMORY_FRACTION", "0.5")
 
-        from xpcsviewer.backends import _reset_backend
-        from xpcsviewer.backends._device import DeviceManager
+        from xpcsviewer.backends import _reset_backend, get_backend
 
         _reset_backend()
 
-        manager = DeviceManager()
-        # If GPU memory fraction setting exists, it should be respected
-        # This is informational - the actual enforcement depends on JAX config
-        assert manager is not None
+        backend = get_backend()
+        assert backend is not None
 
     def test_invalid_memory_fraction_handled(self, monkeypatch) -> None:
         """Test invalid memory fraction is handled gracefully."""

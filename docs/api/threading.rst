@@ -37,13 +37,6 @@ Base Plot Worker
    :undoc-members:
    :show-inheritance:
 
-GUI Integration
----------------
-
-.. automodule:: xpcsviewer.threading.gui_integration
-   :members:
-   :undoc-members:
-   :show-inheritance:
 
 Unified Threading
 -----------------

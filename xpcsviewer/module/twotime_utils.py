@@ -23,7 +23,9 @@ logger = get_logger(__name__)
 # Global process pool for reuse
 _process_pool: ProcessPoolExecutor | None = None
 _pool_size: int | None = None
-_shared_arrays = {}
+import typing
+
+_shared_arrays: dict[str, tuple[typing.Any, np.ndarray]] = {}
 
 
 def get_optimal_worker_count() -> int:

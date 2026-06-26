@@ -7,42 +7,13 @@ and other core support functions.
 
 import os
 
-
-# Import modules gracefully for documentation builds
-# Define PlaceholderModule once
-class PlaceholderModule:
-    """Placeholder module for documentation builds."""
-
-    def __getattr__(self, name):
-        return lambda *args, **kwargs: None
-
-
-# Import modules gracefully for documentation builds
-if os.environ.get("BUILDING_DOCS"):
-    visualization_optimizer = PlaceholderModule()
-
-    # Import log formatters normally as they should work
-    from .log_formatters import (
-        ColoredConsoleFormatter,
-        JSONFormatter,
-        PerformanceFormatter,
-        StructuredFileFormatter,
-        create_formatter,
-    )
-else:
-    from .log_formatters import (
-        ColoredConsoleFormatter,
-        JSONFormatter,
-        PerformanceFormatter,
-        StructuredFileFormatter,
-        create_formatter,
-    )
-
-    try:
-        from . import visualization_optimizer  # type: ignore[assignment]
-    except ImportError:
-        # Create placeholder if import fails
-        visualization_optimizer = PlaceholderModule()
+from .log_formatters import (
+    ColoredConsoleFormatter,
+    JSONFormatter,
+    PerformanceFormatter,
+    StructuredFileFormatter,
+    create_formatter,
+)
 
 
 # Core logging utilities - lazy import to avoid initialization cascade
@@ -133,8 +104,6 @@ __all__ = [
     "RateLimitedLogger",
     "log_timing",
     "sanitize_path",
-    # Graphics utilities
-    "visualization_optimizer",
 ]
 
 

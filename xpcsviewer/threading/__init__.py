@@ -15,17 +15,6 @@ from .async_workers import (
     WorkerSignals,
 )
 from .batch_bayesian_coordinator import BatchBayesianCoordinator
-from .gui_integration import (
-    AsyncMethodMixin,
-    ThreadingIntegrator,
-    async_generate_g2_plot,
-    async_generate_saxs_plot,
-    async_load_xpcs_files,
-    create_completion_callback,
-    create_progress_callback,
-    make_async,
-    setup_enhanced_threading,
-)
 from .plot_workers import (
     G2PlotWorker,
     IntensityPlotWorker,
@@ -49,8 +38,6 @@ __all__ = [
     "AsyncDataPreloader",
     # Batch Bayesian coordinator
     "BatchBayesianCoordinator",
-    # GUI integration
-    "AsyncMethodMixin",
     "AsyncViewerKernel",
     # Basic workers
     "BaseAsyncWorker",
@@ -70,19 +57,11 @@ __all__ = [
     # Unified threading
     "TaskPriority",
     "TaskType",
-    "ThreadingIntegrator",
     "TwotimePlotWorker",
     "UnifiedTask",
     "UnifiedThreadingManager",
     "WorkerManager",
     "WorkerSignals",
-    "async_generate_g2_plot",
-    "async_generate_saxs_plot",
-    "async_load_xpcs_files",
-    "create_completion_callback",
-    "create_progress_callback",
     "get_unified_threading_manager",
-    "make_async",
-    "setup_enhanced_threading",
     "shutdown_unified_threading",
 ]

@@ -38,14 +38,15 @@ class TestGPULaunch:
         """Test GPU device is listed in available devices."""
         monkeypatch.setenv("XPCS_USE_JAX", "1")
 
-        from xpcsviewer.backends import _reset_backend
-        from xpcsviewer.backends._device import DeviceManager
+        from xpcsviewer.backends import _reset_backend, get_backend
 
         _reset_backend()
+        backend = get_backend()
+        assert backend is not None
 
-        manager = DeviceManager()
-        devices = manager.available_devices
+        import jax
 
+        devices = jax.devices()
         assert any("gpu" in str(d).lower() or "cuda" in str(d).lower() for d in devices)
 
     def test_qmap_on_gpu(self, monkeypatch) -> None:
@@ -77,64 +78,20 @@ class TestGPUDetection:
         """Test GPU detection doesn't raise exceptions."""
         monkeypatch.setenv("XPCS_USE_JAX", "1")
 
-        from xpcsviewer.backends import _reset_backend
+        from xpcsviewer.backends import _reset_backend, get_backend
 
         _reset_backend()
-
-        # Should not raise even if no GPU
-        from xpcsviewer.backends._device import DeviceManager
-
-        manager = DeviceManager()
-        _ = manager.has_gpu  # Should not raise
+        backend = get_backend()
+        _ = backend.supports_gpu  # Should not raise
 
     def test_gpu_detection_returns_bool(self, monkeypatch) -> None:
         """Test GPU detection returns boolean."""
         monkeypatch.setenv("XPCS_USE_JAX", "1")
 
-        from xpcsviewer.backends import _reset_backend
+        from xpcsviewer.backends import _reset_backend, get_backend
 
         _reset_backend()
-
-        from xpcsviewer.backends._device import DeviceManager
-
-        manager = DeviceManager()
-        result = manager.has_gpu
+        backend = get_backend()
+        result = backend.supports_gpu
 
         assert isinstance(result, bool)
-
-
-class TestGPUMemoryInfo:
-    """Tests for GPU memory information."""
-
-    @pytest.mark.gpu
-    @pytest.mark.skipif(not GPU_AVAILABLE, reason="GPU not available")
-    def test_memory_info_available(self, monkeypatch) -> None:
-        """Test memory info is available on GPU systems."""
-        monkeypatch.setenv("XPCS_USE_JAX", "1")
-
-        from xpcsviewer.backends import _reset_backend
-        from xpcsviewer.backends._device import DeviceManager
-
-        _reset_backend()
-
-        manager = DeviceManager()
-        if manager.has_gpu:
-            # Memory info should be retrievable
-            info = manager.get_memory_info()
-            assert info is not None
-
-    def test_memory_info_graceful_on_cpu(self, monkeypatch) -> None:
-        """Test memory info returns gracefully on CPU."""
-        monkeypatch.setenv("XPCS_USE_JAX", "1")
-        monkeypatch.setenv("JAX_PLATFORMS", "cpu")
-
-        from xpcsviewer.backends import _reset_backend
-        from xpcsviewer.backends._device import DeviceManager
-
-        _reset_backend()
-
-        manager = DeviceManager()
-        # Should not raise even on CPU-only systems
-        info = manager.get_memory_info()
-        # Returns None or empty dict on CPU
-        assert info is None or isinstance(info, dict)
