@@ -1095,12 +1095,17 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         """
         # Collect target files. The target model is a ListDataModel (list-like
         # API: len()/[]); it has no QStandardItemModel-style item()/text().
+        # Its entries are filenames relative to vk.path, so persist the
+        # *absolute* path to honor FileEntry.path's contract and survive a
+        # restart whose working directory differs from the data directory.
         target_files = []
         if self.target_model is not None:
+            base = self.vk.path if self.vk is not None else ""
             for row in range(len(self.target_model)):
-                path = self.target_model[row]
-                if path:
-                    target_files.append(FileEntry(path=str(path), order=row))
+                name = self.target_model[row]
+                if name:
+                    abs_path = os.path.normpath(os.path.join(base, str(name)))
+                    target_files.append(FileEntry(path=abs_path, order=row))
 
         # Collect window geometry
         geom = self.geometry()
@@ -1199,8 +1204,16 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         ):
             sorted_files = sorted(session.target_files, key=lambda f: f.order)
             for entry in sorted_files:
-                if os.path.isfile(entry.path):
-                    self.vk.add_target([entry.path])
+                # FileEntry.path is absolute (current sessions); tolerate
+                # legacy relative entries by resolving against the data dir.
+                abs_path = (
+                    entry.path
+                    if os.path.isabs(entry.path)
+                    else os.path.join(self.vk.path, entry.path)
+                )
+                if os.path.isfile(abs_path):
+                    # add_target expects names relative to vk.path.
+                    self.vk.add_target([os.path.relpath(abs_path, self.vk.path)])
 
         # Restore active tab (block signals to prevent spurious plot updates)
         if 0 <= session.active_tab < self.tabWidget.count():
