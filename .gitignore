@@ -220,10 +220,6 @@ archived_scripts/
 .optimization/
 
 # Runtime debug and log files only
-debug_*.log
-test_*.log
-*_debug*.log
-*_qselection*.log
 *.log
 
 # Generated test reports only - preserve test source code
