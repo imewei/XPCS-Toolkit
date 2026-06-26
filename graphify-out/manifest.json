@@ -1,1846 +1,2327 @@
 {
-  "/Users/b80985/Projects/xpcsviewer/tests/conftest.py": {
-    "mtime": 1777581885.1848326,
-    "hash": "c2fea8ecf914d6b20ec71df8767c2f99"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/__init__.py": {
-    "mtime": 1767517095.084206,
-    "hash": "08f028daa1a130b5f0516bdb590aef31"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/scientific_validation.py": {
-    "mtime": 1767516476.9263804,
-    "hash": "9ef1491e08b95ae81a38b8427d4e5ecf"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/coverage_manager.py": {
-    "mtime": 1767743771.2700334,
-    "hash": "217288a630c1b144187652610f05015b"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/unit/test_tg4_backend_io_fixes.py": {
-    "mtime": 1771363031.3946505,
-    "hash": "4e21b0efd9b656769ccb8854dc6d548f"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/unit/test_tg8_code_quality.py": {
-    "mtime": 1771783353.4635358,
-    "hash": "c27494c52f00af55a25ad1319a09288c"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/unit/test_qmap_constants.py": {
-    "mtime": 1767517095.1009421,
-    "hash": "7c1170b9a729d49246f56cb42f482c95"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/unit/test_tg9_performance_jit_fixes.py": {
-    "mtime": 1772424387.044631,
-    "hash": "d89ac7b11563ade3550ced05735366de"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/unit/__init__.py": {
-    "mtime": 1767516476.5986717,
-    "hash": "15b7dad3a9ea360303710cc99612acf6"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/unit/test_lazy_loading.py": {
-    "mtime": 1767517095.0996203,
-    "hash": "02f6f112cfc76f9db732131af9c90df6"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/unit/test_plot_constants.py": {
-    "mtime": 1767517095.1001015,
-    "hash": "ce0726c3403e3a674d9919e7e544b5ac"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/unit/test_package_basics.py": {
-    "mtime": 1767517095.09985,
-    "hash": "00a556663d9f78222f2e18046ff9e9f2"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/unit/test_tg7_gui_io_p1_fixes.py": {
-    "mtime": 1771363031.3947494,
-    "hash": "a09c8dce3b0197b51a13abec0c006daa"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/unit/fitting/test_bayesian_integration.py": {
-    "mtime": 1773331856.293091,
-    "hash": "c1b7d65c1dba65d83c0fab4d2160113f"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/unit/fitting/test_bayesian_viz.py": {
-    "mtime": 1773331856.2933173,
-    "hash": "347f9c46cf442811389a99292c19beed"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/unit/fitting/test_results.py": {
-    "mtime": 1768783109.7679758,
-    "hash": "eab5c16eb1085542e3b6e3dc93eac2e2"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/unit/fitting/test_bayesian_dual_storage.py": {
-    "mtime": 1773331856.2928596,
-    "hash": "f987bb5e2765a085bf276378dfc8d253"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/unit/fitting/__init__.py": {
-    "mtime": 1768783109.7677908,
-    "hash": "ba1e77923514bb51a41ed4c11994f257"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/unit/fitting/test_nlsq_bayesian_integration.py": {
-    "mtime": 1771783353.461383,
-    "hash": "702a00d4fdf4e508b2fc7b6d42cb8631"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/unit/fitting/test_nlsq_jit_tracing.py": {
-    "mtime": 1771783353.461499,
-    "hash": "ca55505b46f5f53e26ce6f9b708530fc"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/unit/fitting/test_bayesian_assembly.py": {
-    "mtime": 1772424387.0433981,
-    "hash": "9e44607666ad879f94edd0fd054c660f"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/unit/fitting/test_bug_fixes_rca.py": {
-    "mtime": 1773331856.2935529,
-    "hash": "19ddff325c663eebab6a4d693d62181c"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/unit/fitting/test_tg6_fitting_p1.py": {
-    "mtime": 1772424387.0443504,
-    "hash": "6a3de61ec900b0dbacb62cefabe3b0a6"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/unit/core/test_viewer_kernel_plotting.py": {
-    "mtime": 1767853553.714209,
-    "hash": "683833814e652617af0306476532c948"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/unit/core/__init__.py": {
-    "mtime": 1767516476.5462317,
-    "hash": "9b2c31ac2a6c4d54a23f42e2b589f696"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/unit/core/test_file_locator.py": {
-    "mtime": 1768206073.4161055,
-    "hash": "c67b8de6656c094f4c054a5bd848f35d"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/unit/core/test_viewer_kernel.py": {
-    "mtime": 1771345772.9580765,
-    "hash": "e9b79721e6e3ce379d4c8c088e2a9a22"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/unit/core/test_xpcs_file_fitting.py": {
-    "mtime": 1767853553.714873,
-    "hash": "9cb304416a7aa8f4c07422d061c25f03"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/unit/core/test_xpcs_file_roi.py": {
-    "mtime": 1767853553.7152634,
-    "hash": "5c0f8a95bcc8cff2d08df8bde36cd8fc"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/unit/core/test_xpcs_file.py": {
-    "mtime": 1767554817.0725913,
-    "hash": "3895a7dbed1e292f2c92d83deec40a72"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/unit/core/test_viewer_kernel_export.py": {
-    "mtime": 1767853553.7140079,
-    "hash": "598142023fd44ed1d35df789ed923ba9"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/unit/core/test_xpcs_file_data_access.py": {
-    "mtime": 1767853553.7145908,
-    "hash": "0e806c62ee4f329f3621b21b5e581838"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/unit/analysis/__init__.py": {
-    "mtime": 1767516476.5741339,
-    "hash": "a144c78e43cb7dde8c34081b6a66c7c2"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/unit/fileio/test_hdf_reader.py": {
-    "mtime": 1767517095.095756,
-    "hash": "aa53b9deabe293f515645e8c75686259"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/unit/fileio/__init__.py": {
-    "mtime": 1767516476.5826333,
-    "hash": "b83e6d1dc13de306bed4abc9c36473d3"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/unit/fileio/test_qmap_utils.py": {
-    "mtime": 1774563946.4172547,
-    "hash": "63af0124eada7eb98c77eb10fc5b43ad"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/unit/fileio/test_aps_8idi.py": {
-    "mtime": 1767517095.0952544,
-    "hash": "0a64e86485dc0c359c95cf815afb3060"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/unit/module/test_interpolation.py": {
-    "mtime": 1771345827.5931835,
-    "hash": "a6b0e40b00541caa7b11d4e9135f2bc3"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/unit/module/test_tauq_rendering.py": {
-    "mtime": 1773331856.2937849,
-    "hash": "9d3b90150054220572f25ddaaf6c6fbc"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/unit/module/__init__.py": {
-    "mtime": 1768783109.7684247,
-    "hash": "b69793f9db9444069be4e02cc6e05c1d"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/unit/simplemask/test_area_mask.py": {
-    "mtime": 1767712453.0790114,
-    "hash": "5d1b2a5e99e2ddc34083060ded6a0807"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/unit/simplemask/__init__.py": {
-    "mtime": 1767712453.0787969,
-    "hash": "342211b198dd55bfaf78d4103c0b9ee5"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/unit/simplemask/test_qmap.py": {
-    "mtime": 1771363131.7342947,
-    "hash": "424f909c5e6bde6feb3aacf7b06ffa01"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/unit/simplemask/test_partition_precision.py": {
-    "mtime": 1771311014.9539309,
-    "hash": "5410f6c6a15c4a9dd2e523a70dcff45b"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/unit/simplemask/test_partition.py": {
-    "mtime": 1767712453.0795937,
-    "hash": "d2ab23a8945b59ebd5cee79f92245b18"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/unit/simplemask/test_qmap_pixel_indices.py": {
-    "mtime": 1771345732.004395,
-    "hash": "afd3003b4990200fb79c2ffcb456c507"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/unit/simplemask/test_qmap_integration.py": {
-    "mtime": 1768783109.7691302,
-    "hash": "22e3b39618dd812003b0983dacba72be"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/unit/simplemask/test_drawing_tools.py": {
-    "mtime": 1767712453.0792046,
-    "hash": "0c8b71ddaf1aa954b16fff0233506d8f"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/unit/simplemask/test_mask_io.py": {
-    "mtime": 1767712453.079403,
-    "hash": "00ac5a8b120127962b917e53b8c95710"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/unit/utils/test_validation.py": {
-    "mtime": 1768783109.7694068,
-    "hash": "d91c2feda4933c7703ff19580469cc90"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/unit/utils/test_visualization_optimizer.py": {
-    "mtime": 1768783109.769565,
-    "hash": "bba28a2be25ba2c85dc79c90217a6945"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/unit/utils/test_atomic_io.py": {
-    "mtime": 1771783353.4637544,
-    "hash": "75ae9f40f26ff4f2fbc3344678287e39"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/unit/utils/__init__.py": {
-    "mtime": 1767516476.6029975,
-    "hash": "d2c6f0f309b3e8dc405f911c95fc28b9"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/unit/utils/test_log_utils.py": {
-    "mtime": 1773331856.2941594,
-    "hash": "f20c147fd4560e9129954eac6d62ba9e"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/unit/schemas/__init__.py": {
-    "mtime": 1767853553.716607,
-    "hash": "d41d8cd98f00b204e9800998ecf8427e"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/unit/schemas/test_validators.py": {
-    "mtime": 1771345624.254869,
-    "hash": "c378fa46d259c7a63e46238ad081e3fd"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/unit/gui/test_toast_notification.py": {
-    "mtime": 1767517095.0990257,
-    "hash": "a62aeafc77116c035a38fdc79a8e0725"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/unit/gui/test_tg3_mask_export_and_g2_plot.py": {
-    "mtime": 1771363031.3945541,
-    "hash": "006b82d56e9cfa18fe5b0b38a8790360"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/unit/gui/test_plot_themes.py": {
-    "mtime": 1771472952.6506867,
-    "hash": "28dfcff49d8691b7a942c2cc2993ab15"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/unit/gui/__init__.py": {
-    "mtime": 1767516476.6199608,
-    "hash": "0107b0c68984f5686112d2b5137121df"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/unit/gui/test_drag_drop_list.py": {
-    "mtime": 1767517095.0966763,
-    "hash": "ed963d9696158cba941576a4b86d3061"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/unit/gui/test_session_field_completeness.py": {
-    "mtime": 1771783353.4618068,
-    "hash": "be8301473c490416d582f434667fe549"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/unit/gui/test_recent_paths.py": {
-    "mtime": 1767517095.0976155,
-    "hash": "34324e5819f43510a931f8e5ba20b88f"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/unit/gui/test_shortcut_manager.py": {
-    "mtime": 1771783353.462386,
-    "hash": "f06a74bd73050b18afdc461c5149649f"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/unit/gui/test_session_manager.py": {
-    "mtime": 1771453423.0551066,
-    "hash": "eb49cf2c9adf52f30993381f72f46835"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/unit/gui/test_command_palette.py": {
-    "mtime": 1767517095.0963778,
-    "hash": "1036c39425e433f5e1c16e2506c850d7"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/unit/gui/test_theme_manager.py": {
-    "mtime": 1767517095.0987196,
-    "hash": "d1a87c0defd50398d8b2fcc584d2d036"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/unit/gui/test_qss_lint.py": {
-    "mtime": 1771783353.4616237,
-    "hash": "f36fe608afb680ddc9d12e350b8c385a"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/unit/threading/test_async_workers.py": {
-    "mtime": 1767517095.1012158,
-    "hash": "350e86db71fd0081f9dc4803e188c81a"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/unit/threading/test_signal_safety.py": {
-    "mtime": 1771363031.395099,
-    "hash": "b22e9b629e958b53703c1aac6589f141"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/unit/threading/test_qt_error_detection.py": {
-    "mtime": 1777585872.308601,
-    "hash": "22a0e44b7491e7e351a3b5b2c9e0a239"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/unit/threading/test_batch_coordinator.py": {
-    "mtime": 1772424387.0448368,
-    "hash": "a395cfbe3dfcb306ae1d151a63c04310"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/unit/threading/__init__.py": {
-    "mtime": 1767516476.6831298,
-    "hash": "addf0c89cc8283307540433859de97cc"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/unit/threading/test_average_toolbox_threading.py": {
-    "mtime": 1774563946.4178095,
-    "hash": "aa00e0e462feab6f2d00103f2b49d520"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/unit/helper/test_utils_types.py": {
-    "mtime": 1771345827.5930927,
-    "hash": "963eb914c644a708d22367e7cc6d5311"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/unit/upstream_features/test_blemish_export.py": {
-    "mtime": 1769692375.8214557,
-    "hash": "58a36bd6f3b65f6cd460f1b83ec9b2e4"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/unit/upstream_features/test_qmap_colormap.py": {
-    "mtime": 1769692375.8286703,
-    "hash": "39aa23bd6621428b1afee7eb8e1295db"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/unit/upstream_features/test_g2_partial_safety.py": {
-    "mtime": 1769692375.8244083,
-    "hash": "efb6c03040ce45bd14ad326fd3bdf53f"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/unit/upstream_features/__init__.py": {
-    "mtime": 1769666208.6952689,
-    "hash": "aa17306ddfc468a96bc9ead83f6d080a"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/unit/upstream_features/test_roi_scale_handles.py": {
-    "mtime": 1771398012.5624604,
-    "hash": "5e2523d04955dfe6f366f61f9882ad2e"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/unit/upstream_features/test_gixpcs_precision.py": {
-    "mtime": 1769692375.8265328,
-    "hash": "34d44c2347baa493702c0c64e86205a7"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/analysis/__init__.py": {
-    "mtime": 1767516476.7128162,
-    "hash": "bd8373743150c3e5d7e4873a4d227140"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/analysis/g2_analysis/test_g2_analysis.py": {
-    "mtime": 1771546247.7845025,
-    "hash": "46905ebd9ffbf74f14313126038624b0"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/analysis/g2_analysis/__init__.py": {
-    "mtime": 1767516476.722448,
-    "hash": "1c2f0e5bc206ada7e1a840338e44b9eb"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/analysis/g2_analysis/test_g2mod.py": {
-    "mtime": 1774563946.4156468,
-    "hash": "d1159bd4a263255b13e0b5561437fe61"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/analysis/twotime_analysis/test_twotime_analysis.py": {
-    "mtime": 1767516476.7322092,
-    "hash": "d41cd6cb671cc25cd5a4092563d0b2c3"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/analysis/saxs_analysis/test_saxs_analysis.py": {
-    "mtime": 1767523727.4756093,
-    "hash": "72f60a3143b8d5c2d665c9145513bc16"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/end_to_end/__init__.py": {
-    "mtime": 1767517095.0862772,
-    "hash": "817006ab6a05b090330820337f7205f0"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/end_to_end/test_jax_migration_workflows.py": {
-    "mtime": 1771363131.734078,
-    "hash": "ea6d6b3b2d7fad9edfe6b1587cacd02b"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/framework/__init__.py": {
-    "mtime": 1767516476.7500916,
-    "hash": "9ad708f8492f1ebcab39a399b1c3ae9d"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/framework/utils.py": {
-    "mtime": 1767516476.7546742,
-    "hash": "b6b650745332dde9a1f678a655f0f065"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/framework/qt_test_runner.py": {
-    "mtime": 1767517095.0883558,
-    "hash": "648ee9db178b8c18ef85455315e7dc30"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/framework/runners/__init__.py": {
-    "mtime": 1767516476.7592452,
-    "hash": "667bb468051ce308877278ff105d169d"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/framework/runners/run_validation.py": {
-    "mtime": 1767517095.088692,
-    "hash": "e96ce8c35b5ec5e7d7181841cc0ba4b9"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/jax_migration/conftest.py": {
-    "mtime": 1767743771.2741947,
-    "hash": "8e69e5bdcfc8dd531a21da0de798720a"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/jax_migration/__init__.py": {
-    "mtime": 1767743771.2709172,
-    "hash": "d61319cc1023f61fb6995f56a317e498"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/jax_migration/visualization/test_plot_export.py": {
-    "mtime": 1767743771.2847483,
-    "hash": "6a7dbddc5bedd1be41fec44b8c8fdda9"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/jax_migration/visualization/test_comparison_plot.py": {
-    "mtime": 1768206054.792256,
-    "hash": "36f0d4bfc630c03d84f144b07d11e473"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/jax_migration/visualization/test_arviz_diagnostics.py": {
-    "mtime": 1773331856.292683,
-    "hash": "8b44d4f5424b81aba0536d130069d883"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/jax_migration/visualization/test_nlsq_uncertainty_bands.py": {
-    "mtime": 1767922166.192685,
-    "hash": "cb40af84cfb6d8359bd8e7e3b790dfef"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/jax_migration/visualization/test_posterior_predictive.py": {
-    "mtime": 1767743771.2849941,
-    "hash": "0acc8a0a99cc2c4046ae16797cfedbca"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/jax_migration/visualization/__init__.py": {
-    "mtime": 1767743771.2822723,
-    "hash": "c657b16e9e0af4fbaece97eec4d52aa7"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/jax_migration/visualization/test_pcov_validation.py": {
-    "mtime": 1767743771.2839139,
-    "hash": "83ea1ffe5f4cd6b7e86a6f6b269aaaba"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/jax_migration/fitting/test_results.py": {
-    "mtime": 1771783353.4587224,
-    "hash": "a116c3b8d3b2adfdc2a6892bef63c45a"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/jax_migration/fitting/__init__.py": {
-    "mtime": 1767743771.2745633,
-    "hash": "5c3809b2681800aedb70f9bcc5924c84"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/jax_migration/fitting/test_scipy_nlsq_equivalence.py": {
-    "mtime": 1768007340.8510494,
-    "hash": "508ac992383dad6d514c5c67ebfe946c"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/jax_migration/fitting/test_nlsq_result_delegation.py": {
-    "mtime": 1771229871.055266,
-    "hash": "8617a5b3d18a170a366a397d3ba5bdad"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/jax_migration/fitting/test_nlsq.py": {
-    "mtime": 1771783353.4579575,
-    "hash": "96ee8b892fff79ec066d939faf7ef72f"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/jax_migration/fitting/test_models.py": {
-    "mtime": 1767743771.2749162,
-    "hash": "39277348621475e60235b58d75467959"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/jax_migration/fitting/test_visualization_nlsq.py": {
-    "mtime": 1768007360.9937885,
-    "hash": "7273bdb602d44a0e4ccd4b0f4686c86e"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/jax_migration/fitting/test_tg1_corruption_chain.py": {
-    "mtime": 1771783353.4591713,
-    "hash": "84b00f6dca66f1304247c9efbc3d99fd"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/jax_migration/fitting/test_sampler.py": {
-    "mtime": 1767743771.2757337,
-    "hash": "576987c1ceeded0c66ddcd23331be150"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/jax_migration/numerical/__init__.py": {
-    "mtime": 1767743771.278361,
-    "hash": "cd59aab6b16e2e9ada43e36e222c26aa"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/jax_migration/numerical/test_fitting_equivalence.py": {
-    "mtime": 1771783353.4604626,
-    "hash": "85c5e3dd4015a001685686f8f8aa7664"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/jax_migration/numerical/test_cpu_gpu_equivalence.py": {
-    "mtime": 1767743771.2786465,
-    "hash": "59f2a54e918013edb3bae49a72679d40"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/jax_migration/numerical/test_partition_equivalence.py": {
-    "mtime": 1767743771.2791376,
-    "hash": "71458e69697f212e396b927885a4b389"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/jax_migration/numerical/test_qmap_equivalence.py": {
-    "mtime": 1767743771.2793858,
-    "hash": "70c31a6f3d79f808a9026f4e0fc3aae6"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/jax_migration/autograd/test_qmap_gradients.py": {
-    "mtime": 1772424387.0418286,
-    "hash": "78d8930a450d2501d1a142daa0e72f4e"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/jax_migration/autograd/__init__.py": {
-    "mtime": 1767743771.2713823,
-    "hash": "10e779d24af49960638e3ce040af02c6"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/jax_migration/autograd/test_calibration.py": {
-    "mtime": 1772424387.0414758,
-    "hash": "21ef1ca518813393e5b5d506eb11d269"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/jax_migration/autograd/test_user_defined_gradients.py": {
-    "mtime": 1772424387.042022,
-    "hash": "42897cb0b5642ab7657e79fab18e6059"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/jax_migration/integration/test_cpu_only_launch.py": {
-    "mtime": 1767743771.2764223,
-    "hash": "7641e7759cd7b0a59be57a880cef5ac5"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/jax_migration/integration/test_memory_limits.py": {
-    "mtime": 1771783353.4599152,
-    "hash": "857b7225317c652b7007feb6b0ee8e06"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/jax_migration/integration/test_gpu_launch.py": {
-    "mtime": 1772424387.0425682,
-    "hash": "364da6080895c4a13c81bc146a47a6ee"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/jax_migration/integration/test_hdf5_jax_io.py": {
-    "mtime": 1767743771.2772884,
-    "hash": "4efdc458551ce9a47cde83e7247d24d8"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/jax_migration/integration/__init__.py": {
-    "mtime": 1767743771.2761626,
-    "hash": "1e264e78e875b424e094c436f175a9d7"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/jax_migration/integration/test_env_config.py": {
-    "mtime": 1771783353.459456,
-    "hash": "0c827e09783d0d9b5a673e87a3c55b9d"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/jax_migration/integration/test_qt_jax_interop.py": {
-    "mtime": 1767743771.2780252,
-    "hash": "d6f0071fee757665f3126485f198e682"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/jax_migration/backend/__init__.py": {
-    "mtime": 1767743771.2725399,
-    "hash": "a58848f3f9ea14427e3ca084e885a7f7"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/jax_migration/backend/test_backend_detection.py": {
-    "mtime": 1767743771.272893,
-    "hash": "2f40466903f37f4c229496b0de9a7123"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/jax_migration/backend/test_device_transfer.py": {
-    "mtime": 1772424387.0421984,
-    "hash": "d52b86694f2b623742561ec06e06cc98"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/jax_migration/backend/test_fallback.py": {
-    "mtime": 1772424387.0423727,
-    "hash": "6183f44f57c20dbb3210d9964e703eb6"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/jax_migration/backend/test_gpu_detection.py": {
-    "mtime": 1767743771.2738485,
-    "hash": "59b6d983f470a3474d86e7da364f4cb8"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/jax_migration/precision/test_qmap_tolerance.py": {
-    "mtime": 1767743771.281966,
-    "hash": "3e8714b1269ce05d0c1cd28ade6bd929"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/jax_migration/precision/__init__.py": {
-    "mtime": 1767743771.2809386,
-    "hash": "c632c41e68c87d9877384c05c8f085b9"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/jax_migration/precision/test_angular_computations.py": {
-    "mtime": 1767743771.2814124,
-    "hash": "9600dc1515a1a7f70ff44b4cf6fb168f"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/jax_migration/precision/test_float32_vs_float64.py": {
-    "mtime": 1767743771.2817307,
-    "hash": "2467b4dd14fcfa88c36b7609e5d3fab8"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/jax_migration/performance/conftest.py": {
-    "mtime": 1772424387.0428174,
-    "hash": "4dd74974a3ee6403699b002213f5dcf8"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/jax_migration/performance/test_benchmarks.py": {
-    "mtime": 1767745497.9822214,
-    "hash": "1e2864581de070ba2c8c00ef28a506e9"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/jax_migration/performance/test_jit_speedup.py": {
-    "mtime": 1774563946.416677,
-    "hash": "c19da3eee89fc3bcac4892af5cc08acd"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/jax_migration/performance/__init__.py": {
-    "mtime": 1767743771.2797313,
-    "hash": "9954bad65e53979d24bbb12fa2c27f68"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/jax_migration/performance/test_jit_warmup.py": {
-    "mtime": 1772424387.0431545,
-    "hash": "0093b0497ae3c990e23a4de6468bbfaa"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/integration/test_backward_compatibility.py": {
-    "mtime": 1767743771.2704809,
-    "hash": "6978400401eb636830c323355ba0355f"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/integration/__init__.py": {
-    "mtime": 1767517095.090553,
-    "hash": "1712b42e048bc9db7f07459d972455dd"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/integration/test_logging_integration.py": {
-    "mtime": 1767968974.2526946,
-    "hash": "43b14b3edeb1286e7611b2a029768e1a"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/integration/test_compound_bug_chains.py": {
-    "mtime": 1771363031.3941984,
-    "hash": "c2cd0b4df9f31967b555084bfd90ab98"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/integration/test_hdf5_facade.py": {
-    "mtime": 1767853553.7137854,
-    "hash": "10b8483f6489f9cb5bec1992262cd9c8"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/integration/test_simplemask_integration.py": {
-    "mtime": 1767712453.0785615,
-    "hash": "cb9e3eb782607eade022d630e7a9598f"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/integration/gui/test_qt_compat.py": {
-    "mtime": 1772424387.0407379,
-    "hash": "00976468d8851a0d4a7a0167d09fa927"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/integration/gui/test_session_persistence.py": {
-    "mtime": 1767517095.0908322,
-    "hash": "5899737528958f1d6ab133e2ab594af6"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/integration/gui/__init__.py": {
-    "mtime": 1767516476.793161,
-    "hash": "dce623dcfb449c24081d9e9fba622bdf"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/integration/gui/test_theme_switching.py": {
-    "mtime": 1772424387.041154,
-    "hash": "4c8f94b20b9b116926f0c2b808188957"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/gui_interactive/test_plot_interactions.py": {
-    "mtime": 1773331856.2916765,
-    "hash": "a4148213403e7864a9711341ce79e1b6"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/gui_interactive/conftest.py": {
-    "mtime": 1771345772.9572532,
-    "hash": "30173faeae2984a40d01d9fb361e7c90"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/gui_interactive/test_analysis_tabs.py": {
-    "mtime": 1773331856.2906103,
-    "hash": "19201487f36fc49fc998a6c0f09eb4ed"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/gui_interactive/test_file_operations.py": {
-    "mtime": 1773331856.2912872,
-    "hash": "fb138c83f1d87c9389b86c9dfac811dc"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/gui_interactive/test_simplemask_window.py": {
-    "mtime": 1771783353.45745,
-    "hash": "af6e2d9939c6c63391fc1ea424cfd10a"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/gui_interactive/test_main_window.py": {
-    "mtime": 1773331856.2914984,
-    "hash": "3ae4b239cf36e8f4314ce7480585b52e"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/gui_interactive/test_error_handling.py": {
-    "mtime": 1773331856.2909331,
-    "hash": "99d562ba4551a8f9b618b6cabbec3bc0"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/gui_interactive/__init__.py": {
-    "mtime": 1767516476.8643281,
-    "hash": "6b07a2133f440bf677c7b6b516c88869"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/gui_interactive/test_user_scenarios.py": {
-    "mtime": 1773331856.2920928,
-    "hash": "b1ee59b19eb8a17f34511e5e1ee16018"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/gui_interactive/run_gui_tests.py": {
-    "mtime": 1767517095.0894992,
-    "hash": "c844760dd1e6dd792d24e6e1fb332e97"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/gui_interactive/offscreen_snap.py": {
-    "mtime": 1771345772.9576447,
-    "hash": "96008e664daccf6fb808704b139df4b1"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/utils/isolation.py": {
-    "mtime": 1767516476.8868918,
-    "hash": "1ca850d7bd01282f2f66847945d65364"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/utils/reliability.py": {
-    "mtime": 1767516476.8913085,
-    "hash": "2d310b9eba606e5293ce6b40ec015b29"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/utils/ci_integration.py": {
-    "mtime": 1767516476.898141,
-    "hash": "9090b785d195c30c2a9890c41e401618"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/utils/h5py_mocks.py": {
-    "mtime": 1767516476.9023445,
-    "hash": "5281cf7d363c0e4987f32b47af7f4c00"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/utils/__init__.py": {
-    "mtime": 1767516476.9065278,
-    "hash": "b509048987c21fc081ccb0fe11dcbc97"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/utils/qt_threading_utils.py": {
-    "mtime": 1767516476.9110267,
-    "hash": "5743d9f9a6bdc4c46cd8a259242a770b"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/utils/memory_testing_utils.py": {
-    "mtime": 1767516476.9150853,
-    "hash": "76d078993f59182716805c08c471aded"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/utils/data_management.py": {
-    "mtime": 1767516476.9215868,
-    "hash": "3ea0a55faf53dcc6cd0b25846dc9bbac"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/error_handling/test_data_validation_errors.py": {
-    "mtime": 1767517095.0865533,
-    "hash": "918be7cd941d8a176651af56200eed66"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/error_handling/__init__.py": {
-    "mtime": 1767516476.9423282,
-    "hash": "bcd0b6c8c1a3ac856be38d7ef251ff3f"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/error_handling/test_file_io_errors.py": {
-    "mtime": 1774563946.4161954,
-    "hash": "d566cdf38a40f4ce62f8fd40465ea494"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/error_handling/test_edge_cases.py": {
-    "mtime": 1773331856.2901099,
-    "hash": "5f5c8b8dfad1b13ef2be873e6a2f2c2a"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/benchmarks/performance/test_g2_saxs_opt.py": {
-    "mtime": 1773331856.2897193,
-    "hash": "4e3e4ce985e3b7032cd0e3c01c0c52c8"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/benchmarks/performance/test_fitting_jit.py": {
-    "mtime": 1767868750.8090785,
-    "hash": "4510b8fcc647c89ce4413352feeea805"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/benchmarks/performance/conftest.py": {
-    "mtime": 1772424387.0388463,
-    "hash": "f49e15fcadf0f840cfb69f55baccdb97"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/benchmarks/performance/test_memory_efficiency.py": {
-    "mtime": 1767868750.8097327,
-    "hash": "db53cf2c24f517fcacb2960146691cc7"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/benchmarks/performance/test_calibration_baseline.py": {
-    "mtime": 1767868750.8086152,
-    "hash": "1dff18a31e289e8026287df7e7f9c5e3"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/benchmarks/performance/test_hotpath_baseline.py": {
-    "mtime": 1772424387.0393913,
-    "hash": "cbb3d65e89106fefa7e73790dad8a3b3"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/benchmarks/performance/test_bottleneck_analysis.py": {
-    "mtime": 1778097846.9664276,
-    "hash": "c1ad901763e297574a0b1891bc47e880"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/benchmarks/performance/test_batch_vectorize.py": {
-    "mtime": 1767868750.8067436,
-    "hash": "4d4c4b67e88cf08407350a219867f8a4"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/benchmarks/performance/test_models_baseline.py": {
-    "mtime": 1767868750.8105454,
-    "hash": "a5aca4667c8f12919ff3d2735476d67b"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/benchmarks/performance/test_c2_baseline.py": {
-    "mtime": 1767868750.808145,
-    "hash": "d4584b1c257672eb3de6ce572c892ea4"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/benchmarks/performance/_cprofile_hotpaths.py": {
-    "mtime": 1771548134.924305,
-    "hash": "4a9d705aef909bbbe22e0541af729735"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/benchmarks/performance/test_saxs_baseline.py": {
-    "mtime": 1767868750.8115606,
-    "hash": "fbc7526f61ba1fd4816d49dae3c1d181"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/fixtures/xpcs_synthetic.py": {
-    "mtime": 1767853553.713569,
-    "hash": "0dbe38c5040bd4277b0bfbabfb536510"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/fixtures/__init__.py": {
-    "mtime": 1767516476.9919658,
-    "hash": "4a08a5658fe5fdebf076edceab2b8c11"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/fixtures/scientific_fixtures.py": {
-    "mtime": 1767516476.9988697,
-    "hash": "69163bd7a01bd1c7b81ebd625473d473"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/fixtures/synthetic_data.py": {
-    "mtime": 1767516477.0056632,
-    "hash": "8c3322fc1ae30f6b009feadc0f6c808c"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/fixtures/qt_fixtures.py": {
-    "mtime": 1767897554.2071428,
-    "hash": "25b7b8348c925b88a21937efb469528a"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/fixtures/core_fixtures.py": {
-    "mtime": 1767517095.0880518,
-    "hash": "ee4c21c5834fe2a3a1277917e5637742"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/fixtures/reference_data/__init__.py": {
-    "mtime": 1767516477.017761,
-    "hash": "102c5fc45f6da0d9d82f5462d6248747"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/scientific/constants.py": {
-    "mtime": 1767516477.0330746,
-    "hash": "3822532554b8c9000e79e36f2f947085"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/scientific/__init__.py": {
-    "mtime": 1767516477.0474575,
-    "hash": "bcfd8d9a00b840fd262b0db829feae33"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/scientific/algorithms/test_fitting_algorithms.py": {
-    "mtime": 1767516477.0372128,
-    "hash": "c80138bc1c86ccc2715509482be53f36"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/scientific/algorithms/__init__.py": {
-    "mtime": 1767516477.0432868,
-    "hash": "5c93ebe60170316d41b5b88be8dba6c7"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/scientific/properties/mathematical_invariants.py": {
-    "mtime": 1767523738.731509,
-    "hash": "121203e243030d62608f9420e006e511"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/scientific/properties/physical_constraints.py": {
-    "mtime": 1767516477.056223,
-    "hash": "d064a6b47c47c3cfbb2290b695747a31"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/scientific/properties/__init__.py": {
-    "mtime": 1767516477.0602503,
-    "hash": "d092ef53e595e23f350c96481346225a"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/scientific/properties/statistical_properties.py": {
-    "mtime": 1767516477.0642438,
-    "hash": "ca2ce15b1e56eae98b67102d50dcb000"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/scientific/reference_validation/__init__.py": {
-    "mtime": 1767516477.0687428,
-    "hash": "bf260c425f083d52132466d6f6f1632e"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/scientific/reference_validation/analytical_benchmarks.py": {
-    "mtime": 1767516477.0758073,
-    "hash": "0ebbfa9c27a0daa1415bacb9d126cf5e"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/scientific/reference_validation/cross_validation_framework.py": {
-    "mtime": 1767516477.0804257,
-    "hash": "bf53a88dca55883e775d3306a36167b3"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/scientific/reference_validation/reference_implementations.py": {
-    "mtime": 1767516477.084973,
-    "hash": "65c25ace47b542b5c8cc45840c2cbc56"
-  },
-  "/Users/b80985/Projects/xpcsviewer/docs/conf.py": {
-    "mtime": 1777599745.1835897,
-    "hash": "9639f250728dcfab9ec00c1273bfc61c"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/xpcs_viewer.py": {
-    "mtime": 1778110447.6158006,
-    "hash": "d3aea6e716cbbfe4695eb01d290d75a2"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/icons_rc.py": {
-    "mtime": 1767668105.876917,
-    "hash": "f30dae3012735cdcf8c2cc8e83866151"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/__init__.py": {
-    "mtime": 1777599732.8441002,
-    "hash": "474f9a835632bbee339ab2a8679da17a"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/xpcs_file.py": {
-    "mtime": 1777580173.4275954,
-    "hash": "27fb16ab634c51a2de9e4b02490d0662"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/file_locator.py": {
-    "mtime": 1773331856.300538,
-    "hash": "a5f98e5527224f3ea21dff4ccbb78e05"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/cli_main.py": {
-    "mtime": 1773331856.2987685,
-    "hash": "b4f8a05b5ed95d2e1e3ecefc0481b287"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/viewer_kernel.py": {
-    "mtime": 1778110418.481363,
-    "hash": "d912071be1bc4fc7fca0f4d5427a24e5"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/default_setting.py": {
-    "mtime": 1767517095.1040254,
-    "hash": "e944b63336f62a6bafa577d5d8293828"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/viewer_ui.py": {
-    "mtime": 1771453374.2042043,
-    "hash": "0f28d19458f3714dbc1282f3676f2506"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/fitting/legacy.py": {
-    "mtime": 1773331856.3012836,
-    "hash": "fe016ec08bd7b734b989e7134db0a1d5"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/fitting/models.py": {
-    "mtime": 1771541537.1584892,
-    "hash": "91db645ccdac3664282033573deab046"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/fitting/results.py": {
-    "mtime": 1773331856.3015409,
-    "hash": "65e51915d4a1210f180498d37faf7d10"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/fitting/bayesian_assembly.py": {
-    "mtime": 1773331856.3011081,
-    "hash": "7e62b69a177ae6e9a00447f392420a36"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/fitting/__init__.py": {
-    "mtime": 1773331856.300872,
-    "hash": "361b761cc93e8effab94506106765a91"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/fitting/visualization.py": {
-    "mtime": 1773331856.301943,
-    "hash": "fb4fa01728e79a65ed67d28f1763f72b"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/fitting/nlsq.py": {
-    "mtime": 1772424387.0475886,
-    "hash": "42c867aa315d542b7f1b70e847b165ec"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/fitting/sampler.py": {
-    "mtime": 1773331856.3017542,
-    "hash": "e929013eb54048072e21d16cd57892a8"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/fitting/viz.py": {
-    "mtime": 1773331856.3021848,
-    "hash": "2e7f29982229248dcf5b0323fbcf8ae5"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/xpcs_file/memory.py": {
-    "mtime": 1773331856.3152173,
-    "hash": "ce2c550d69ebf7e315ae87432c2a19ec"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/xpcs_file/cache.py": {
-    "mtime": 1767554817.0848093,
-    "hash": "5abb42f4db746a47d4b36bf4ab89a269"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/xpcs_file/__init__.py": {
-    "mtime": 1777580173.4194667,
-    "hash": "edb76b31d7b6adc666812708d1ae1ecd"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/xpcs_file/fitting.py": {
-    "mtime": 1773331856.3149424,
-    "hash": "a0abd36c5a183e77256079c20f0260b6"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/fileIO/__init__.py": {
-    "mtime": 1767517095.1040685,
-    "hash": "d41d8cd98f00b204e9800998ecf8427e"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/fileIO/hdf_reader_enhanced.py": {
-    "mtime": 1773331856.2999957,
-    "hash": "8b51684677ddcbc28c0d90fc2b703f3c"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/fileIO/aps_8idi.py": {
-    "mtime": 1773331856.2993524,
-    "hash": "23cb3e1e2f76b489d85d68283fe9269d"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/fileIO/ftype_utils.py": {
-    "mtime": 1771345624.2553654,
-    "hash": "f6b0a14c212f78195b01c6b7376c7411"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/fileIO/qmap_utils.py": {
-    "mtime": 1773331856.3002234,
-    "hash": "45d2fdf8e6f0b9ef29d4fc7e0fb01f85"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/fileIO/hdf_reader.py": {
-    "mtime": 1773331856.2997127,
-    "hash": "038f2f8f4be9b770a613c7d132d92267"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/module/intt.py": {
-    "mtime": 1771382932.0273576,
-    "hash": "30d8b92efdfb226474ada37b61a932dd"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/module/stability.py": {
-    "mtime": 1771382932.0282068,
-    "hash": "f424fa02b551644e25faae5ef0ffbd1a"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/module/g2mod.py": {
-    "mtime": 1773331856.3041043,
-    "hash": "74e8f6e02fef08619b25dc1fe39bec84"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/module/saxs1d.py": {
-    "mtime": 1777580110.1349108,
-    "hash": "847ea913121c76ed2ef365ff65c46559"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/module/saxs2d.py": {
-    "mtime": 1771382932.0280516,
-    "hash": "d101b4d9164681e3f1f9cc430e1dec41"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/module/__init__.py": {
-    "mtime": 1768195415.5289102,
-    "hash": "894bb07661863087da8ed0dc56cbd128"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/module/twotime_utils.py": {
-    "mtime": 1773331856.3047404,
-    "hash": "11ec79472e831d9fb5c0f17143085967"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/module/average_toolbox.py": {
-    "mtime": 1777580173.4245937,
-    "hash": "1c21dae32b034741bbe808ebb36b4edc"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/module/twotime.py": {
-    "mtime": 1773331856.304526,
-    "hash": "5612132b0a796b561b40e24fd8449eac"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/module/tauq.py": {
-    "mtime": 1773331856.3043444,
-    "hash": "b85585dcfb0d0a275238916d0fb515f0"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/constants/limits.py": {
-    "mtime": 1767554817.0746932,
-    "hash": "4df53e429a766d4d307930d8878b844d"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/constants/thresholds.py": {
-    "mtime": 1767554817.0748887,
-    "hash": "682762dc70a00cbbc44023cddda29f6b"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/constants/__init__.py": {
-    "mtime": 1767669164.9363592,
-    "hash": "5bc0277277d82d430c303063574f186f"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/constants/timeouts.py": {
-    "mtime": 1767554817.0750961,
-    "hash": "a6ffad84964b6ca006191fab516cc7cb"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/constants/fitting.py": {
-    "mtime": 1767554817.0744328,
-    "hash": "4ae111cb6dfff3d719fcbc4edb672706"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/constants/defaults.py": {
-    "mtime": 1767554817.0741541,
-    "hash": "39515520043f28b28d0ac406fb593ad8"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/backends/_base.py": {
-    "mtime": 1771541537.1581786,
-    "hash": "6aa82c69c86ecdf9dc1901dd02678386"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/backends/io_adapter.py": {
-    "mtime": 1771362944.3830497,
-    "hash": "03dc494824e4d39cb41cf4a3bb3e3761"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/backends/_conversions.py": {
-    "mtime": 1767743771.2887917,
-    "hash": "2e2d37fcdf3dc4717cf3a85e21634c30"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/backends/__init__.py": {
-    "mtime": 1773331856.2965915,
-    "hash": "abed5200b00c0eb00c4fda63f0c27688"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/backends/_numpy_backend.py": {
-    "mtime": 1771345624.2552524,
-    "hash": "c18376a7f9eefca29aacd4dc543d0085"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/backends/_device.py": {
-    "mtime": 1773331856.2968476,
-    "hash": "6b7378d34b5e24e1925ca4a9f7bc266f"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/backends/_jax_backend.py": {
-    "mtime": 1771229718.2977598,
-    "hash": "b985819fd6a76a2694045d96c5c3002b"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/backends/scipy_replacements/optimize.py": {
-    "mtime": 1773331856.2981486,
-    "hash": "f51a5a61c3029c1a8868304cad3f84fa"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/backends/scipy_replacements/__init__.py": {
-    "mtime": 1768783109.7717903,
-    "hash": "3951d2f2daec76ea524e1fb21a2fa788"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/backends/scipy_replacements/interpolate.py": {
-    "mtime": 1773331856.2971575,
-    "hash": "8c84f97da56e21bd08ab9aa8d337d0fa"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/backends/scipy_replacements/ndimage.py": {
-    "mtime": 1773331856.2979338,
-    "hash": "d02c577b6bcadde44bfd5e86854c0ac8"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/io/__init__.py": {
-    "mtime": 1767747066.2865915,
-    "hash": "e1716ef639454acd7e88568b9e40dd73"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/io/hdf5_facade.py": {
-    "mtime": 1773331856.303191,
-    "hash": "238da3aa9e35ae7d15edd050e02a6b11"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/simplemask/pyqtgraph_mod.py": {
-    "mtime": 1771398012.5627396,
-    "hash": "f1dfee99aee22c114c77f46bf8fff508"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/simplemask/__init__.py": {
-    "mtime": 1767713596.7934616,
-    "hash": "f950e5d19512a3701fe8b6959ea742a4"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/simplemask/utils.py": {
-    "mtime": 1773331856.3091536,
-    "hash": "0c254e439e10d101a0553eae50743580"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/simplemask/qmap.py": {
-    "mtime": 1773331856.3077512,
-    "hash": "0be989481841d1410a0d7d4a81e2a121"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/simplemask/simplemask_window.py": {
-    "mtime": 1773331856.3084118,
-    "hash": "2884ce965249db95c70c37124852eb7e"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/simplemask/simplemask_kernel.py": {
-    "mtime": 1773331856.307955,
-    "hash": "c5acc9e27e7ba05f47edd889fec9adf2"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/simplemask/area_mask.py": {
-    "mtime": 1773331856.3073676,
-    "hash": "f1b7a9faf00f49861b22a30f4c2f4ec4"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/simplemask/calibration.py": {
-    "mtime": 1777580608.2293096,
-    "hash": "3c0c266b98b39fd155c55f61abd3b5f1"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/simplemask/drawing_tools.py": {
-    "mtime": 1768783109.7865214,
-    "hash": "9131f0ba84fe1c77bfb877c29c0210eb"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/simplemask/ui/__init__.py": {
-    "mtime": 1767712453.0832858,
-    "hash": "3393e9e2dd6e9fe6a6e2f4732a2d18d1"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/simplemask/ui/simplemask_ui.py": {
-    "mtime": 1773331856.3087182,
-    "hash": "40f4e1c7b777d285d902ac63ef64f9c6"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/utils/startup_optimizer.py": {
-    "mtime": 1768237308.4957204,
-    "hash": "a85d57402a8cb2574479de07071b1f21"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/utils/memory_manager.py": {
-    "mtime": 1773331856.3119442,
-    "hash": "70d8c130711d8cb060e3eb0e32b5fa20"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/utils/logging_config.py": {
-    "mtime": 1768783109.7909825,
-    "hash": "9e61d7cd2da2417fa2ffc9fcebd9f92a"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/utils/lazy_loader.py": {
-    "mtime": 1771363092.2125452,
-    "hash": "6352e1a2946f9b0154c6151ea37dba80"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/utils/reliability.py": {
-    "mtime": 1771446803.163251,
-    "hash": "94a8976c6a2fbd4d8164abca7d7ad80b"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/utils/visualization_optimizer.py": {
-    "mtime": 1771783353.4776883,
-    "hash": "ff811f01361ab3f6ee2705ec5afe98fe"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/utils/log_utils.py": {
-    "mtime": 1773331856.3116152,
-    "hash": "8e3f02dc91eea2c205cd65ceb61b09b9"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/utils/device.py": {
-    "mtime": 1773331856.3112674,
-    "hash": "8823c4d703ad2bbddd38682d120a04b4"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/utils/streaming_processor.py": {
-    "mtime": 1773331856.3130817,
-    "hash": "a6a3e1d5a0c0e586c6750da8f8f295b8"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/utils/performance_monitor.py": {
-    "mtime": 1768195385.37396,
-    "hash": "49bb0c64e14ab468c46d5d288862d686"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/utils/__init__.py": {
-    "mtime": 1768237308.4950812,
-    "hash": "4e93678a0c4970ebe7f23283d3cbfb07"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/utils/health_monitor.py": {
-    "mtime": 1771512175.4283903,
-    "hash": "2b63c070d5ce93e4fa24e7ef2cfa0918"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/utils/memory_predictor.py": {
-    "mtime": 1773331856.3124328,
-    "hash": "e5e5e25764089e77a4cd2ce2d3cfeb49"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/utils/reliability_manager.py": {
-    "mtime": 1768196212.14666,
-    "hash": "5d5d0ba6003aeb85d6736284b9e538f3"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/utils/log_formatters.py": {
-    "mtime": 1768237308.4953823,
-    "hash": "6f24173d5647351bf3826933637534d1"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/utils/state_validator.py": {
-    "mtime": 1773331856.3127484,
-    "hash": "842eff629105073ac2ce983470388d3f"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/utils/common_checks.py": {
-    "mtime": 1768237308.4952042,
-    "hash": "56095b04b1fa53aecec8155e3c2f0f95"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/utils/vectorized_roi.py": {
-    "mtime": 1773331856.3134968,
-    "hash": "61e19994f515df8f3ca2b1da4d1e049c"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/utils/exceptions.py": {
-    "mtime": 1767669164.941819,
-    "hash": "4a4d1a7563f031b872f4bc0febe2d9fa"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/utils/atomic_io.py": {
-    "mtime": 1771783353.4773207,
-    "hash": "2a75547fe39df504b5178ecfb16bb42c"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/utils/validation.py": {
-    "mtime": 1768783109.7913115,
-    "hash": "87fef9e8304b6800a57258df4df04c16"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/cli/twotime_batch.py": {
-    "mtime": 1768237349.4161704,
-    "hash": "d5b640df1cd09d5bbbab3da7c4059d4a"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/cli/__init__.py": {
-    "mtime": 1767517095.103245,
-    "hash": "0859b777ac27cdda398de786572d8c37"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/schemas/validators.py": {
-    "mtime": 1778111107.7566564,
-    "hash": "143b35243c27e58d7f89f0465b546cdf"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/schemas/__init__.py": {
-    "mtime": 1773331856.3063865,
-    "hash": "bda1f7b6a860667d6e93dbb788054532"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/plothandler/plot_constants.py": {
-    "mtime": 1768783109.785983,
-    "hash": "1ff20d9d26055819a3150e6cf495fb20"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/plothandler/matplot_qt.py": {
-    "mtime": 1773331856.3049772,
-    "hash": "1a90e6ab711bd8ff2985f4291c75bef7"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/plothandler/__init__.py": {
-    "mtime": 1777580173.423456,
-    "hash": "d7c90d01fa7e7c874561aeaa666fce8e"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/plothandler/lazy_proxy.py": {
-    "mtime": 1777580173.4194555,
-    "hash": "ff6c78f26f4d554807a79dec4a167902"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/plothandler/qt_signal_fixes.py": {
-    "mtime": 1773331856.3060474,
-    "hash": "3370b106fb9818ce1cb40cbcf961e8b9"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/plothandler/pyqtgraph_handler.py": {
-    "mtime": 1773331856.3054643,
-    "hash": "66d5cb299e8b603478a4c223656105d2"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/gui/layout_helpers.py": {
-    "mtime": 1773331856.3027294,
-    "hash": "3d0ce997dc4e659bec95a0ae72a8d19e"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/gui/initialization_validator.py": {
-    "mtime": 1771783353.4694884,
-    "hash": "3c9b2760d865211545a9afe0c6264e6f"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/gui/icons.py": {
-    "mtime": 1773331856.302551,
-    "hash": "7ba35afeb53562762d17b9bf0aa507ff"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/gui/__init__.py": {
-    "mtime": 1767517727.7296107,
-    "hash": "ab841abc509ba2adf77b733e697f0b09"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/gui/qt_compat.py": {
-    "mtime": 1771345772.958632,
-    "hash": "ab88b50c4953f8d218ceffcbb420a44c"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/gui/bayesian_diagnosis.py": {
-    "mtime": 1773331856.3023787,
-    "hash": "7b84912cfa7db43a1db2342f47bc26c2"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/gui/state/session_manager.py": {
-    "mtime": 1771783353.470859,
-    "hash": "d6ac0559f51d45d1d1a1e1e33a8b2d90"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/gui/state/preferences.py": {
-    "mtime": 1771783353.4704716,
-    "hash": "7446b584ccfd3e8295b06a63efc6d0ad"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/gui/state/__init__.py": {
-    "mtime": 1767517727.7313273,
-    "hash": "f2907052c89ed774cfcb98dd94f22392"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/gui/state/recent_paths.py": {
-    "mtime": 1771783353.4706392,
-    "hash": "6a529203c12896bd193f8003e49b8a85"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/gui/theme/plot_themes.py": {
-    "mtime": 1767517095.1075919,
-    "hash": "010a0ba5650cd4d01265b0720c08d1b4"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/gui/theme/__init__.py": {
-    "mtime": 1768436801.353684,
-    "hash": "a392180c3aaec28295eaa8a22bd8ccd4"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/gui/theme/manager.py": {
-    "mtime": 1771783353.4713082,
-    "hash": "e743b91f0019eb2e37e660ac0fb64786"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/gui/theme/style_helpers.py": {
-    "mtime": 1771783353.4715726,
-    "hash": "6d27e8077f2bffabded4f912842d9c7a"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/gui/shortcuts/__init__.py": {
-    "mtime": 1767517095.1058254,
-    "hash": "bbd69c465f4092413a32d2cf9c8d613f"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/gui/shortcuts/shortcut_manager.py": {
-    "mtime": 1771783353.4702764,
-    "hash": "90fe2c1d77d4d274b285ca15d69d8805"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/gui/widgets/error_dialog.py": {
-    "mtime": 1771783353.4740195,
-    "hash": "598ec53f75523d6b7447e2575a7c2c4a"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/gui/widgets/category_tab_bar.py": {
-    "mtime": 1771783353.4733562,
-    "hash": "98539be4106021febd4b5dd21019c6f2"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/gui/widgets/__init__.py": {
-    "mtime": 1767554817.0760803,
-    "hash": "83f6d1c1541b622e34ed9e248fe338fe"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/gui/widgets/command_palette.py": {
-    "mtime": 1771783353.4735465,
-    "hash": "e07c7bce2651418ba80748881f981ec7"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/gui/widgets/toast_notification.py": {
-    "mtime": 1771783353.4744055,
-    "hash": "a3c7828ed4fbf56ca2161452efb2723f"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/gui/widgets/drag_drop_list.py": {
-    "mtime": 1771783353.4737377,
-    "hash": "4ba7608e52134888c99d784bed478ddd"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/gui/widgets/empty_state.py": {
-    "mtime": 1771398549.0937326,
-    "hash": "0b4276bcd5104e64e97584458c5cbc82"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/threading/cleanup_optimized.py": {
-    "mtime": 1778110379.8787034,
-    "hash": "7fcc34f52d14299b8bb6c053fae67b2a"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/threading/plot_workers.py": {
-    "mtime": 1773331856.3104048,
-    "hash": "1f42728757944cf5cd8409047526f3c7"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/threading/base_plot_worker.py": {
-    "mtime": 1767669164.9412103,
-    "hash": "a43d209608f19fd65c9edfb298bec8a5"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/threading/async_workers.py": {
-    "mtime": 1778111128.2482476,
-    "hash": "1648b2f4870136c62a4c6f9488638192"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/threading/bayesian_worker.py": {
-    "mtime": 1772424387.0498903,
-    "hash": "ac9849b10a842445e03f1e3df545ce2a"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/threading/__init__.py": {
-    "mtime": 1773331856.3093147,
-    "hash": "cda382bc0cb4a507b227b1fa295da3a6"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/threading/progress_manager.py": {
-    "mtime": 1773331856.3108895,
-    "hash": "8f0db6327ce059f595c348385c98fd30"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/threading/gui_integration.py": {
-    "mtime": 1773331856.3101785,
-    "hash": "9b9e9febcc240ab7a2eaa6b7a0c78905"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/threading/unified_threading.py": {
-    "mtime": 1778111112.7115185,
-    "hash": "38624369272b9243bdc2632bc0998eb6"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/threading/async_kernel.py": {
-    "mtime": 1778110609.6665506,
-    "hash": "0d90196f348f68adf598369da64842e6"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/threading/batch_bayesian_coordinator.py": {
-    "mtime": 1772424387.0497544,
-    "hash": "d345e0a49f5ec8ea6ffff5d79e1f05e1"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/helper/logwriter.py": {
-    "mtime": 1767517095.1098151,
-    "hash": "488b943e74a39bfd79718fc706cefeed"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/helper/__init__.py": {
-    "mtime": 1767517095.1092384,
-    "hash": "d41d8cd98f00b204e9800998ecf8427e"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/helper/utils.py": {
-    "mtime": 1768783109.780613,
-    "hash": "cc18fb8c8c8395584a3c3b349a317ba1"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/helper/listmodel.py": {
-    "mtime": 1771345772.9590695,
-    "hash": "cbbb589d585ccf3d5285581a76d6151a"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/README.md": {
-    "mtime": 1767853553.7125542,
-    "hash": "47e263c5462a653d0ff806b95fa52de8"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/gui_interactive/README.md": {
-    "mtime": 1765354660.2647917,
-    "hash": "48ddcb831ef1ac895ddd6db52d73e30c"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/error_handling/README.md": {
-    "mtime": 1758559341.95324,
-    "hash": "7a7f11fe0547aaf9d3b1166cfd784891"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/fixtures/reference_data/README.md": {
-    "mtime": 1758559341.8726375,
-    "hash": "17eed703d37fffda24c97f8dc81969b3"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/reports/numerical_audit.md": {
-    "mtime": 1771549155.335077,
-    "hash": "4f5ed20666c58633b67bcaae3e40b475"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/reports/master_fix_list.md": {
-    "mtime": 1771549346.633669,
-    "hash": "440ed59171a5a708713fa5bd03a9ad0b"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/reports/jax_audit.md": {
-    "mtime": 1771544303.4249005,
-    "hash": "227ade05976dec9dd18341a30487129d"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/reports/baseline_profile.md": {
-    "mtime": 1771544524.0367892,
-    "hash": "676c7a45e7f358e1896615b6c79cf8d0"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/reports/type_design_audit.md": {
-    "mtime": 1771549568.9603398,
-    "hash": "49a5f6d998fbdb276c7c826082de0fd7"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/reports/optimization_summary.md": {
-    "mtime": 1771547928.8508012,
-    "hash": "5899dc8f4234fff583b6fe90d7ed60b2"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/reports/bottleneck_analysis.md": {
-    "mtime": 1771546295.429796,
-    "hash": "8503806355cd9391d8f1eb09563d01d7"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/reports/python_optimization.md": {
-    "mtime": 1771546570.0754192,
-    "hash": "89b46eccfa876f9871352e2faa497bd1"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/reports/contract_audit.md": {
-    "mtime": 1771549363.200099,
-    "hash": "69fe99148f5dd147d04389ca4a39daa7"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/reports/architecture_map.md": {
-    "mtime": 1771548531.4644861,
-    "hash": "b1cfa1d41e9916a2aeae0c91f6a022ae"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/reports/threading_audit.md": {
-    "mtime": 1771548925.6277213,
-    "hash": "39ee7d4ff89d89d34d4b137707432043"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/reports/post_optimization/cold_warm_memory.txt": {
-    "mtime": 1771552525.0848215,
-    "hash": "b324c6f8b34456073b6ca72d85f03ce9"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/reports/post_optimization/numerical_accuracy.txt": {
-    "mtime": 1771545156.4374816,
-    "hash": "1935e3ae6445ac76b03c876f4fb2372e"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/reports/post_optimization/benchmark_timing.txt": {
-    "mtime": 1771544748.999517,
-    "hash": "4867627ff6966d8544656aef7407b862"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/reports/post_optimization/test_suite_results.txt": {
-    "mtime": 1771545089.9386358,
-    "hash": "9ef72b0653caa62a11eb59b5a9f0ddcb"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/scientific/README.md": {
-    "mtime": 1758559341.9020483,
-    "hash": "f59a0819cfb352bb230d732fd626cd58"
-  },
-  "/Users/b80985/Projects/xpcsviewer/docs/index.rst": {
-    "mtime": 1772424387.0138958,
-    "hash": "8597b26ead5f136fef577346ad86506e"
-  },
-  "/Users/b80985/Projects/xpcsviewer/docs/STRUCTURE.md": {
-    "mtime": 1772424387.006355,
-    "hash": "1d96e280dfca87ee7b9831508f7d30e1"
-  },
-  "/Users/b80985/Projects/xpcsviewer/docs/requirements.txt": {
-    "mtime": 1773331856.287883,
-    "hash": "12647ce85e4aa922a42a0a1e08678814"
-  },
-  "/Users/b80985/Projects/xpcsviewer/docs/contributing.rst": {
-    "mtime": 1772424387.007451,
-    "hash": "ed49313c3321c67f8ad79eda35e7e54e"
-  },
-  "/Users/b80985/Projects/xpcsviewer/docs/usage.rst": {
-    "mtime": 1771439242.6690993,
-    "hash": "18efffdedceacef027225d8414e523d6"
-  },
-  "/Users/b80985/Projects/xpcsviewer/docs/history.rst": {
-    "mtime": 1777599720.7477212,
-    "hash": "04462b6e631c2061f8b65482de631604"
-  },
-  "/Users/b80985/Projects/xpcsviewer/docs/authors.rst": {
-    "mtime": 1767923081.0747724,
-    "hash": "f6670d238668dff4e6d705a7ab7e9384"
-  },
-  "/Users/b80985/Projects/xpcsviewer/docs/_includes/installation_snippet.rst": {
-    "mtime": 1772424387.0066426,
-    "hash": "18d3aa7fd2607b6c18c9929b6caf6299"
-  },
-  "/Users/b80985/Projects/xpcsviewer/docs/_includes/mask_editor_overview.rst": {
-    "mtime": 1771438828.6787534,
-    "hash": "10ea24f7d4efc56ab4c399e9311a5da1"
-  },
-  "/Users/b80985/Projects/xpcsviewer/docs/_includes/geometry_parameters_table.rst": {
-    "mtime": 1771438833.6163409,
-    "hash": "6f8d40c397e4276f1f22acf769df5791"
-  },
-  "/Users/b80985/Projects/xpcsviewer/docs/_includes/g2_fitting_basics.rst": {
-    "mtime": 1771438881.081534,
-    "hash": "e5d4f745d842cd6ca6b556a47a65184b"
-  },
-  "/Users/b80985/Projects/xpcsviewer/docs/_includes/xpcsfile_basics.rst": {
-    "mtime": 1771438875.741649,
-    "hash": "5e78cc6b198c9faca712e57eb73ff908"
-  },
-  "/Users/b80985/Projects/xpcsviewer/docs/_includes/drawing_tools_table.rst": {
-    "mtime": 1771438831.3664057,
-    "hash": "92ddeff79682fc90f8310c766f2a89de"
-  },
-  "/Users/b80985/Projects/xpcsviewer/docs/developer/optimization.rst": {
-    "mtime": 1767516092.0373628,
-    "hash": "6505796c996b744a27f5c1286c1d3106"
-  },
-  "/Users/b80985/Projects/xpcsviewer/docs/explanation/mask_qmap_internals.rst": {
-    "mtime": 1771439055.4629126,
-    "hash": "d894ff4c5459ab5ade7f871d3edf0aaf"
-  },
-  "/Users/b80985/Projects/xpcsviewer/docs/explanation/index.rst": {
-    "mtime": 1771439061.3719814,
-    "hash": "8422ec1a80f2282ba404c3d0909b10a2"
-  },
-  "/Users/b80985/Projects/xpcsviewer/docs/explanation/backend_architecture.rst": {
-    "mtime": 1771439003.1205666,
-    "hash": "96e79ead3d3b3766c7a02fef8d7ef9db"
-  },
-  "/Users/b80985/Projects/xpcsviewer/docs/explanation/twotime_analysis.rst": {
-    "mtime": 1771438946.0679345,
-    "hash": "04ccae456e74894df6c527ddcad5bee1"
-  },
-  "/Users/b80985/Projects/xpcsviewer/docs/explanation/g2_theory.rst": {
-    "mtime": 1771438917.9187756,
-    "hash": "34b017492698478cced34d8a474aab30"
-  },
-  "/Users/b80985/Projects/xpcsviewer/docs/explanation/xpcs_data_formats.rst": {
-    "mtime": 1771438881.9350076,
-    "hash": "f0887614f84bc5bae32a17d2b97f8aac"
-  },
-  "/Users/b80985/Projects/xpcsviewer/docs/operations/index.rst": {
-    "mtime": 1771376114.4124649,
-    "hash": "fb1d560b20551d2ef24f70559ea23d7f"
-  },
-  "/Users/b80985/Projects/xpcsviewer/docs/operations/configuration.rst": {
-    "mtime": 1771376006.961163,
-    "hash": "711039359deb925cc84bf4eb13806e3f"
-  },
-  "/Users/b80985/Projects/xpcsviewer/docs/operations/logging.rst": {
-    "mtime": 1771376048.1484575,
-    "hash": "74e351a8e2fd75ab24ffd0ded5825247"
-  },
-  "/Users/b80985/Projects/xpcsviewer/docs/operations/performance.rst": {
-    "mtime": 1771376096.8278754,
-    "hash": "5b725a025644f4a86ef5124d68058eae"
-  },
-  "/Users/b80985/Projects/xpcsviewer/docs/how-to/index.rst": {
-    "mtime": 1771439242.6682692,
-    "hash": "87a3780bcb9e6aa5c97e26742bc4f858"
-  },
-  "/Users/b80985/Projects/xpcsviewer/docs/how-to/examples.rst": {
-    "mtime": 1771439299.0791855,
-    "hash": "b81de5c307369a9acce1b03f5dcccd2c"
-  },
-  "/Users/b80985/Projects/xpcsviewer/docs/how-to/quickstart.rst": {
-    "mtime": 1771438896.9331613,
-    "hash": "570baac3640f21c6b30e2f87ef7665d9"
-  },
-  "/Users/b80985/Projects/xpcsviewer/docs/how-to/installation.rst": {
-    "mtime": 1773331856.2874663,
-    "hash": "9a0278269bc19dac9503c2b59edb3cb6"
-  },
-  "/Users/b80985/Projects/xpcsviewer/docs/how-to/mask_editor_guide.rst": {
-    "mtime": 1771439026.0015678,
-    "hash": "85d97c57da7034263e1927c5c6021171"
-  },
-  "/Users/b80985/Projects/xpcsviewer/docs/architecture/index.rst": {
-    "mtime": 1777581885.1800787,
-    "hash": "8eaaa1204260b6ba78c35c2a76f9e337"
-  },
-  "/Users/b80985/Projects/xpcsviewer/docs/architecture/ADR-004-backend-abstraction.md": {
-    "mtime": 1771439082.722354,
-    "hash": "dd24206adf7e76f7171c4b859d837edf"
-  },
-  "/Users/b80985/Projects/xpcsviewer/docs/architecture/system_overview.md": {
-    "mtime": 1771439194.7479603,
-    "hash": "c37f2198c9c92512831697ce2e886efa"
-  },
-  "/Users/b80985/Projects/xpcsviewer/docs/architecture/dependency_diagram.md": {
-    "mtime": 1771439155.1780431,
-    "hash": "b39ecb70e7e20518b208d5e65711aa98"
-  },
-  "/Users/b80985/Projects/xpcsviewer/docs/architecture/integration_catalog.md": {
-    "mtime": 1771439095.0526643,
-    "hash": "c69e5a8ee55ed960d258b80d08140a35"
-  },
-  "/Users/b80985/Projects/xpcsviewer/docs/architecture/FACADE_INFRASTRUCTURE.md": {
-    "mtime": 1771783353.4405272,
-    "hash": "45490607b58d9f264d483433fbf4f19f"
-  },
-  "/Users/b80985/Projects/xpcsviewer/docs/architecture/dependency_analysis.md": {
-    "mtime": 1771439131.9509356,
-    "hash": "2c36c1dc47ac6928999f4a2b6a6b8fce"
-  },
-  "/Users/b80985/Projects/xpcsviewer/docs/architecture/data_flow.md": {
-    "mtime": 1773331856.286906,
-    "hash": "da9ceafe8d7f14c4a414a71b5e13f8c1"
-  },
-  "/Users/b80985/Projects/xpcsviewer/docs/architecture/ADR-003-hdf5-facade.md": {
-    "mtime": 1771375852.1107097,
-    "hash": "459782a2a3b8472d128c566464b3b48a"
-  },
-  "/Users/b80985/Projects/xpcsviewer/docs/architecture/ADR-002-nlsq-migration.md": {
-    "mtime": 1771375809.7076025,
-    "hash": "5b24ba36809f43594f861fde78cc03aa"
-  },
-  "/Users/b80985/Projects/xpcsviewer/docs/architecture/ADR-001-jax-migration.md": {
-    "mtime": 1771439077.4246948,
-    "hash": "71c137dfbd4ee484e15a20bdeeac4a79"
-  },
-  "/Users/b80985/Projects/xpcsviewer/docs/api/index.rst": {
-    "mtime": 1771439259.6097639,
-    "hash": "39412f9de22168db5d4a916ba1659bec"
-  },
-  "/Users/b80985/Projects/xpcsviewer/docs/api/package.rst": {
-    "mtime": 1771439259.6098425,
-    "hash": "872e38f3be7c79430d839663a32a67e5"
-  },
-  "/Users/b80985/Projects/xpcsviewer/docs/api/threading.rst": {
-    "mtime": 1771783353.4393065,
-    "hash": "634f4e161c49931ccf5829af9dc7b821"
-  },
-  "/Users/b80985/Projects/xpcsviewer/docs/api/cli.rst": {
-    "mtime": 1767528561.3891919,
-    "hash": "8e4ca23b70abe9ff95ed1e38d6152286"
-  },
-  "/Users/b80985/Projects/xpcsviewer/docs/api/io.rst": {
-    "mtime": 1771375927.536165,
-    "hash": "4c9a0cda673b57896f7c4143cd31f505"
-  },
-  "/Users/b80985/Projects/xpcsviewer/docs/api/gui.rst": {
-    "mtime": 1771783353.438906,
-    "hash": "fd86fe7bb62fe3aa4440bef93dac7e5b"
-  },
-  "/Users/b80985/Projects/xpcsviewer/docs/api/modules.rst": {
-    "mtime": 1773331856.2856808,
-    "hash": "f7f5a4dee84450aea297fe63caf60653"
-  },
-  "/Users/b80985/Projects/xpcsviewer/docs/api/schemas.rst": {
-    "mtime": 1773331856.2860968,
-    "hash": "329dc61b7abbfd811cdaa0e9e26efd9d"
-  },
-  "/Users/b80985/Projects/xpcsviewer/docs/api/plotting.rst": {
-    "mtime": 1767517095.0780637,
-    "hash": "b3b067eeae24aae116a8e5d67d2270a5"
-  },
-  "/Users/b80985/Projects/xpcsviewer/docs/api/fileio.rst": {
-    "mtime": 1773331856.2849565,
-    "hash": "21377481446f77b8fc0210336e597eff"
-  },
-  "/Users/b80985/Projects/xpcsviewer/docs/api/helper.rst": {
-    "mtime": 1771439127.97877,
-    "hash": "612727bad0f4ce93c09795d4a10d74f3"
-  },
-  "/Users/b80985/Projects/xpcsviewer/docs/api/constants.rst": {
-    "mtime": 1771382911.9939609,
-    "hash": "d7b1ca51f4bb81dbe7718661dd4538f8"
-  },
-  "/Users/b80985/Projects/xpcsviewer/docs/api/fitting.rst": {
-    "mtime": 1773331856.285189,
-    "hash": "c8b76bb1195bcf8af0ea70ba9e218c24"
-  },
-  "/Users/b80985/Projects/xpcsviewer/docs/api/backends.rst": {
-    "mtime": 1773331856.2845838,
-    "hash": "c41c52f7c1384f01842bc0799caf5700"
-  },
-  "/Users/b80985/Projects/xpcsviewer/docs/api/utils.rst": {
-    "mtime": 1773331856.2865052,
-    "hash": "82cfa3d837cfa0adf42096f27a19d443"
-  },
-  "/Users/b80985/Projects/xpcsviewer/docs/api/simplemask.rst": {
-    "mtime": 1771439259.6099439,
-    "hash": "d8c7fa59eac05d50fd95cd0c49c035f3"
-  },
-  "/Users/b80985/Projects/xpcsviewer/docs/tutorials/index.rst": {
-    "mtime": 1771439242.6687489,
-    "hash": "54699cf0dff28ed6f9f6297f1e5e0c99"
-  },
-  "/Users/b80985/Projects/xpcsviewer/docs/tutorials/getting_started.rst": {
-    "mtime": 1772424387.0143852,
-    "hash": "72eb8eb4cc641bb053837fbe57c86257"
-  },
-  "/Users/b80985/Projects/xpcsviewer/docs/tutorials/fitting_guide.rst": {
-    "mtime": 1773331856.2890158,
-    "hash": "c5ffa695837f49bf2f38b12c167f0d2a"
-  },
-  "/Users/b80985/Projects/xpcsviewer/docs/tutorials/quickstart.rst": {
-    "mtime": 1771439250.6998968,
-    "hash": "e848e6ac5b0d74f85829fa9fd4fd2806"
-  },
-  "/Users/b80985/Projects/xpcsviewer/docs/tutorials/mask_editor.rst": {
-    "mtime": 1771439242.6689363,
-    "hash": "1be68bda2f4d736bb7eb6b2acccab85a"
-  },
-  "/Users/b80985/Projects/xpcsviewer/docs/tutorials/backend_selection.rst": {
-    "mtime": 1773331856.2881598,
-    "hash": "e1076e1c89cba1256ea51994130b8794"
-  },
-  "/Users/b80985/Projects/xpcsviewer/docs/tutorials/cookbook.rst": {
-    "mtime": 1773331856.2884905,
-    "hash": "5a76e1ba757bee242d7af485948b8fd6"
-  },
-  "/Users/b80985/Projects/xpcsviewer/tests/artifacts/offscreen_snap.png": {
-    "mtime": 1765354660.2641785,
-    "hash": "47a8c953d5f41c2c342a06b9ae9b9698"
-  },
-  "/Users/b80985/Projects/xpcsviewer/docs/images/saxs1d.png": {
-    "mtime": 1772424387.0122976,
-    "hash": "8de1d0ae1fe58c365ff154a36c070919"
-  },
-  "/Users/b80985/Projects/xpcsviewer/docs/images/average.png": {
-    "mtime": 1772424387.0084198,
-    "hash": "00fc5443f4f7c580f2ff5bc14c52eb98"
-  },
-  "/Users/b80985/Projects/xpcsviewer/docs/images/diffusion.png": {
-    "mtime": 1772424387.0089438,
-    "hash": "7015f85867899d5a3dbbc6453d94cb14"
-  },
-  "/Users/b80985/Projects/xpcsviewer/docs/images/hdf_info.png": {
-    "mtime": 1772424387.0110054,
-    "hash": "67a013c7f5743bbd3e5722ccb31f99a8"
-  },
-  "/Users/b80985/Projects/xpcsviewer/docs/images/g2mod.png": {
-    "mtime": 1772424387.010605,
-    "hash": "901558ab34303176a2eb08b1c4a35f31"
-  },
-  "/Users/b80985/Projects/xpcsviewer/docs/images/stability.png": {
-    "mtime": 1772424387.0131767,
-    "hash": "0b448d99a12121f3f9cdcd3d75836889"
-  },
-  "/Users/b80985/Projects/xpcsviewer/docs/images/intt.png": {
-    "mtime": 1772424387.0113916,
-    "hash": "82abf0febc12d4e88e6cbccaac0eff87"
-  },
-  "/Users/b80985/Projects/xpcsviewer/docs/images/twotime.png": {
-    "mtime": 1772424387.0136774,
-    "hash": "ca212a5b7b1761bb6179ee65114eeb70"
-  },
-  "/Users/b80985/Projects/xpcsviewer/docs/images/g2_fit.png": {
-    "mtime": 1772424387.0095139,
-    "hash": "1e2c12819c73a92aa2e69b87777100e8"
-  },
-  "/Users/b80985/Projects/xpcsviewer/docs/images/saxs2d.png": {
-    "mtime": 1772424387.0127625,
-    "hash": "5e6761760d58fc86351ce5b53a3f1c1d"
-  },
-  "/Users/b80985/Projects/xpcsviewer/docs/images/qmap.png": {
-    "mtime": 1772424387.0116513,
-    "hash": "d780a6da73de5382babba0eae693633c"
-  },
-  "/Users/b80985/Projects/xpcsviewer/docs/images/g2_map.png": {
-    "mtime": 1772424387.0100827,
-    "hash": "288397ce01d71c934c4adeb00d53d52a"
-  },
-  "/Users/b80985/Projects/xpcsviewer/docs/_static/xpcsviewer_logo.png": {
-    "mtime": 1767657831.0455933,
-    "hash": "d53a038be8c299877bd6c4c40be71aec"
-  },
-  "/Users/b80985/Projects/xpcsviewer/docs/_static/xpcsviewer_logo.jpg": {
-    "mtime": 1778016514.686274,
-    "hash": "0b6313480c78dca7c37854be4d04a970"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/ui/resources/xpcsviewer_logo.png": {
-    "mtime": 1767657644.020088,
-    "hash": "d53a038be8c299877bd6c4c40be71aec"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/ui/resources/icons/play-circle.svg": {
-    "mtime": 1771541932.637772,
-    "hash": "738d84a45ffa59e60ae86470b8f08886"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/ui/resources/icons/xpcs_logo_128x128.png": {
-    "mtime": 1767657653.9247801,
-    "hash": "38e35b0449711926125c1083825c2849"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/ui/resources/icons/folder-open.svg": {
-    "mtime": 1771541926.7699373,
-    "hash": "85b13587b14afa7ad65903b8a57e647f"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/ui/resources/icons/grid-mask.svg": {
-    "mtime": 1771541945.5596967,
-    "hash": "ca92f32892de68ef523c3993cfbe7462"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/ui/resources/icons/xpcs_logo_512x512.png": {
-    "mtime": 1767657654.0640628,
-    "hash": "45d43f31f690f7c9b485bb9c5799c370"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/ui/resources/icons/tab-setup.svg": {
-    "mtime": 1771541963.4912145,
-    "hash": "c0f99b01cc03b72167097f367c453d99"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/ui/resources/icons/xpcs_logo_16x16.png": {
-    "mtime": 1767657653.737655,
-    "hash": "f0002a23887e75529a9ad9990ea07294"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/ui/resources/icons/xpcs_logo_32x32.png": {
-    "mtime": 1767657653.800422,
-    "hash": "e86eaed081da683ec6bd02cc02e083aa"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/ui/resources/icons/tab-correlation.svg": {
-    "mtime": 1771541955.6662433,
-    "hash": "992b908972ff5ddcdcefad5ab8ecd908"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/ui/resources/icons/refresh.svg": {
-    "mtime": 1771541929.733978,
-    "hash": "80eb51bf88f69f5dd5a756739f4dc3b6"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/ui/resources/icons/xpcs_logo_64x64.png": {
-    "mtime": 1767657653.8611507,
-    "hash": "d8d90afcc1cee61834e1c5b1df9ce852"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/ui/resources/icons/tab-scattering.svg": {
-    "mtime": 1771541949.4358768,
-    "hash": "63dd3e0dbab9fe13e042fcee858219c7"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/ui/resources/icons/sun.svg": {
-    "mtime": 1771541936.652415,
-    "hash": "6a14b86c71477cb5826a1d06a03bbc1b"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/ui/resources/icons/tab-diagnostics.svg": {
-    "mtime": 1771541952.192586,
-    "hash": "313ea178ad10fd7f25472c8862663d3f"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/ui/resources/icons/xpcs_logo_256x256.png": {
-    "mtime": 1767657653.9954343,
-    "hash": "e86b63e84b8de19a0c625e58655ee73f"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/ui/resources/icons/activity.svg": {
-    "mtime": 1771541941.749826,
-    "hash": "8772db68fcedd9a64bd4a5b2dd0740c7"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/ui/resources/icons/tab-analysis.svg": {
-    "mtime": 1771541959.5624533,
-    "hash": "fd25bdddecfdc5245d55cae82f5f3cec"
-  },
-  "/Users/b80985/Projects/xpcsviewer/xpcsviewer/ui/resources/icons/moon.svg": {
-    "mtime": 1771541939.0543287,
-    "hash": "21c159285a09e159c9985ebadfc95f41"
+  "docs/conf.py": {
+    "mtime": 1778388374.9399004,
+    "ast_hash": "3d68d1e944a4594607aed8a4a25b8fdb",
+    "semantic_hash": ""
+  },
+  "tests/__init__.py": {
+    "mtime": 1767580306.4579997,
+    "ast_hash": "08f028daa1a130b5f0516bdb590aef31",
+    "semantic_hash": ""
+  },
+  "tests/analysis/__init__.py": {
+    "mtime": 1759638157.5378826,
+    "ast_hash": "bd8373743150c3e5d7e4873a4d227140",
+    "semantic_hash": ""
+  },
+  "tests/analysis/g2_analysis/__init__.py": {
+    "mtime": 1759638157.5378826,
+    "ast_hash": "1c2f0e5bc206ada7e1a840338e44b9eb",
+    "semantic_hash": ""
+  },
+  "tests/analysis/g2_analysis/test_g2_analysis.py": {
+    "mtime": 1771568091.3916266,
+    "ast_hash": "46905ebd9ffbf74f14313126038624b0",
+    "semantic_hash": ""
+  },
+  "tests/analysis/g2_analysis/test_g2mod.py": {
+    "mtime": 1773341470.6824598,
+    "ast_hash": "d1159bd4a263255b13e0b5561437fe61",
+    "semantic_hash": ""
+  },
+  "tests/analysis/saxs_analysis/test_saxs_analysis.py": {
+    "mtime": 1767580306.4589999,
+    "ast_hash": "72f60a3143b8d5c2d665c9145513bc16",
+    "semantic_hash": ""
+  },
+  "tests/analysis/twotime_analysis/test_twotime_analysis.py": {
+    "mtime": 1759638157.5388827,
+    "ast_hash": "d41cd6cb671cc25cd5a4092563d0b2c3",
+    "semantic_hash": ""
+  },
+  "tests/benchmarks/performance/_cprofile_hotpaths.py": {
+    "mtime": 1771568091.3916266,
+    "ast_hash": "4a9d705aef909bbbe22e0541af729735",
+    "semantic_hash": ""
+  },
+  "tests/benchmarks/performance/conftest.py": {
+    "mtime": 1771788225.4945655,
+    "ast_hash": "f49e15fcadf0f840cfb69f55baccdb97",
+    "semantic_hash": ""
+  },
+  "tests/benchmarks/performance/registry.json": {
+    "mtime": 1768252293.5225883,
+    "ast_hash": "9a5ba559d60c8be0a28eed54130abc13",
+    "semantic_hash": ""
+  },
+  "tests/benchmarks/performance/rerun_baselines.sh": {
+    "mtime": 1771568091.3916266,
+    "ast_hash": "e6ed8ab0831194e2f480353f1a652529",
+    "semantic_hash": ""
+  },
+  "tests/benchmarks/performance/test_batch_vectorize.py": {
+    "mtime": 1768252293.5225883,
+    "ast_hash": "4d4c4b67e88cf08407350a219867f8a4",
+    "semantic_hash": ""
+  },
+  "tests/benchmarks/performance/test_bottleneck_analysis.py": {
+    "mtime": 1782444865.1612444,
+    "ast_hash": "81eef73d4304ae62218917ec49dfd67b",
+    "semantic_hash": ""
+  },
+  "tests/benchmarks/performance/test_c2_baseline.py": {
+    "mtime": 1768252293.5225883,
+    "ast_hash": "d4584b1c257672eb3de6ce572c892ea4",
+    "semantic_hash": ""
+  },
+  "tests/benchmarks/performance/test_calibration_baseline.py": {
+    "mtime": 1768252293.5225883,
+    "ast_hash": "1dff18a31e289e8026287df7e7f9c5e3",
+    "semantic_hash": ""
+  },
+  "tests/benchmarks/performance/test_fitting_jit.py": {
+    "mtime": 1768252293.5225883,
+    "ast_hash": "4510b8fcc647c89ce4413352feeea805",
+    "semantic_hash": ""
+  },
+  "tests/benchmarks/performance/test_g2_saxs_opt.py": {
+    "mtime": 1772605172.9392185,
+    "ast_hash": "4e3e4ce985e3b7032cd0e3c01c0c52c8",
+    "semantic_hash": ""
+  },
+  "tests/benchmarks/performance/test_hotpath_baseline.py": {
+    "mtime": 1771801775.6478066,
+    "ast_hash": "cbb3d65e89106fefa7e73790dad8a3b3",
+    "semantic_hash": ""
+  },
+  "tests/benchmarks/performance/test_memory_efficiency.py": {
+    "mtime": 1768252293.5225883,
+    "ast_hash": "db53cf2c24f517fcacb2960146691cc7",
+    "semantic_hash": ""
+  },
+  "tests/benchmarks/performance/test_models_baseline.py": {
+    "mtime": 1768252293.5225883,
+    "ast_hash": "a5aca4667c8f12919ff3d2735476d67b",
+    "semantic_hash": ""
+  },
+  "tests/benchmarks/performance/test_saxs_baseline.py": {
+    "mtime": 1768252293.5225883,
+    "ast_hash": "fbc7526f61ba1fd4816d49dae3c1d181",
+    "semantic_hash": ""
+  },
+  "tests/conftest.py": {
+    "mtime": 1771920209.3780546,
+    "ast_hash": "c2fea8ecf914d6b20ec71df8767c2f99",
+    "semantic_hash": ""
+  },
+  "tests/coverage_manager.py": {
+    "mtime": 1767762001.8144808,
+    "ast_hash": "217288a630c1b144187652610f05015b",
+    "semantic_hash": ""
+  },
+  "tests/end_to_end/__init__.py": {
+    "mtime": 1767580306.4599998,
+    "ast_hash": "817006ab6a05b090330820337f7205f0",
+    "semantic_hash": ""
+  },
+  "tests/end_to_end/test_jax_migration_workflows.py": {
+    "mtime": 1771374322.8447592,
+    "ast_hash": "ea6d6b3b2d7fad9edfe6b1587cacd02b",
+    "semantic_hash": ""
+  },
+  "tests/error_handling/__init__.py": {
+    "mtime": 1759638157.5388827,
+    "ast_hash": "bcd0b6c8c1a3ac856be38d7ef251ff3f",
+    "semantic_hash": ""
+  },
+  "tests/error_handling/test_data_validation_errors.py": {
+    "mtime": 1767580306.4599998,
+    "ast_hash": "918be7cd941d8a176651af56200eed66",
+    "semantic_hash": ""
+  },
+  "tests/error_handling/test_edge_cases.py": {
+    "mtime": 1772608754.2351177,
+    "ast_hash": "5f5c8b8dfad1b13ef2be873e6a2f2c2a",
+    "semantic_hash": ""
+  },
+  "tests/error_handling/test_file_io_errors.py": {
+    "mtime": 1773341484.3085938,
+    "ast_hash": "d566cdf38a40f4ce62f8fd40465ea494",
+    "semantic_hash": ""
+  },
+  "tests/fixtures/__init__.py": {
+    "mtime": 1759638157.5398827,
+    "ast_hash": "4a08a5658fe5fdebf076edceab2b8c11",
+    "semantic_hash": ""
+  },
+  "tests/fixtures/core_fixtures.py": {
+    "mtime": 1767580306.461,
+    "ast_hash": "ee4c21c5834fe2a3a1277917e5637742",
+    "semantic_hash": ""
+  },
+  "tests/fixtures/qt_fixtures.py": {
+    "mtime": 1768252293.5235882,
+    "ast_hash": "25b7b8348c925b88a21937efb469528a",
+    "semantic_hash": ""
+  },
+  "tests/fixtures/reference_data/__init__.py": {
+    "mtime": 1759638157.5398827,
+    "ast_hash": "102c5fc45f6da0d9d82f5462d6248747",
+    "semantic_hash": ""
+  },
+  "tests/fixtures/scientific_fixtures.py": {
+    "mtime": 1759638157.5398827,
+    "ast_hash": "69163bd7a01bd1c7b81ebd625473d473",
+    "semantic_hash": ""
+  },
+  "tests/fixtures/synthetic_data.py": {
+    "mtime": 1759638157.5398827,
+    "ast_hash": "8c3322fc1ae30f6b009feadc0f6c808c",
+    "semantic_hash": ""
+  },
+  "tests/fixtures/xpcs_synthetic.py": {
+    "mtime": 1768252293.5235882,
+    "ast_hash": "0dbe38c5040bd4277b0bfbabfb536510",
+    "semantic_hash": ""
+  },
+  "tests/framework/__init__.py": {
+    "mtime": 1759638157.5398827,
+    "ast_hash": "9ad708f8492f1ebcab39a399b1c3ae9d",
+    "semantic_hash": ""
+  },
+  "tests/framework/qt_test_runner.py": {
+    "mtime": 1767580306.461,
+    "ast_hash": "648ee9db178b8c18ef85455315e7dc30",
+    "semantic_hash": ""
+  },
+  "tests/framework/runners/__init__.py": {
+    "mtime": 1759638157.5398827,
+    "ast_hash": "667bb468051ce308877278ff105d169d",
+    "semantic_hash": ""
+  },
+  "tests/framework/runners/run_validation.py": {
+    "mtime": 1767580306.461,
+    "ast_hash": "e96ce8c35b5ec5e7d7181841cc0ba4b9",
+    "semantic_hash": ""
+  },
+  "tests/framework/utils.py": {
+    "mtime": 1759638157.5408826,
+    "ast_hash": "b6b650745332dde9a1f678a655f0f065",
+    "semantic_hash": ""
+  },
+  "tests/gui_interactive/__init__.py": {
+    "mtime": 1759638157.5408826,
+    "ast_hash": "6b07a2133f440bf677c7b6b516c88869",
+    "semantic_hash": ""
+  },
+  "tests/gui_interactive/conftest.py": {
+    "mtime": 1771374322.8457592,
+    "ast_hash": "30173faeae2984a40d01d9fb361e7c90",
+    "semantic_hash": ""
+  },
+  "tests/gui_interactive/offscreen_snap.py": {
+    "mtime": 1771374322.8467593,
+    "ast_hash": "96008e664daccf6fb808704b139df4b1",
+    "semantic_hash": ""
+  },
+  "tests/gui_interactive/run_gui_tests.py": {
+    "mtime": 1767580306.462,
+    "ast_hash": "c844760dd1e6dd792d24e6e1fb332e97",
+    "semantic_hash": ""
+  },
+  "tests/gui_interactive/test_analysis_tabs.py": {
+    "mtime": 1772600460.3581135,
+    "ast_hash": "19201487f36fc49fc998a6c0f09eb4ed",
+    "semantic_hash": ""
+  },
+  "tests/gui_interactive/test_error_handling.py": {
+    "mtime": 1772604932.5211163,
+    "ast_hash": "99d562ba4551a8f9b618b6cabbec3bc0",
+    "semantic_hash": ""
+  },
+  "tests/gui_interactive/test_file_operations.py": {
+    "mtime": 1772604932.5221162,
+    "ast_hash": "fb138c83f1d87c9389b86c9dfac811dc",
+    "semantic_hash": ""
+  },
+  "tests/gui_interactive/test_main_window.py": {
+    "mtime": 1772604932.5201163,
+    "ast_hash": "3ae4b239cf36e8f4314ce7480585b52e",
+    "semantic_hash": ""
+  },
+  "tests/gui_interactive/test_plot_interactions.py": {
+    "mtime": 1772600500.7969575,
+    "ast_hash": "a4148213403e7864a9711341ce79e1b6",
+    "semantic_hash": ""
+  },
+  "tests/gui_interactive/test_simplemask_window.py": {
+    "mtime": 1771700599.986508,
+    "ast_hash": "af6e2d9939c6c63391fc1ea424cfd10a",
+    "semantic_hash": ""
+  },
+  "tests/gui_interactive/test_user_scenarios.py": {
+    "mtime": 1772600453.9311483,
+    "ast_hash": "b1ee59b19eb8a17f34511e5e1ee16018",
+    "semantic_hash": ""
+  },
+  "tests/integration/__init__.py": {
+    "mtime": 1767580306.4629998,
+    "ast_hash": "1712b42e048bc9db7f07459d972455dd",
+    "semantic_hash": ""
+  },
+  "tests/integration/gui/__init__.py": {
+    "mtime": 1766027172.5858827,
+    "ast_hash": "dce623dcfb449c24081d9e9fba622bdf",
+    "semantic_hash": ""
+  },
+  "tests/integration/gui/test_qt_compat.py": {
+    "mtime": 1771742187.3569615,
+    "ast_hash": "00976468d8851a0d4a7a0167d09fa927",
+    "semantic_hash": ""
+  },
+  "tests/integration/gui/test_session_persistence.py": {
+    "mtime": 1767580306.4629998,
+    "ast_hash": "5899737528958f1d6ab133e2ab594af6",
+    "semantic_hash": ""
+  },
+  "tests/integration/gui/test_theme_switching.py": {
+    "mtime": 1771799434.412837,
+    "ast_hash": "4c8f94b20b9b116926f0c2b808188957",
+    "semantic_hash": ""
+  },
+  "tests/integration/test_backward_compatibility.py": {
+    "mtime": 1767762001.8154807,
+    "ast_hash": "6978400401eb636830c323355ba0355f",
+    "semantic_hash": ""
+  },
+  "tests/integration/test_compound_bug_chains.py": {
+    "mtime": 1771374322.8477592,
+    "ast_hash": "c2cd0b4df9f31967b555084bfd90ab98",
+    "semantic_hash": ""
+  },
+  "tests/integration/test_hdf5_facade.py": {
+    "mtime": 1768252293.5235882,
+    "ast_hash": "10b8483f6489f9cb5bec1992262cd9c8",
+    "semantic_hash": ""
+  },
+  "tests/integration/test_logging_integration.py": {
+    "mtime": 1768252293.524588,
+    "ast_hash": "43b14b3edeb1286e7611b2a029768e1a",
+    "semantic_hash": ""
+  },
+  "tests/integration/test_simplemask_integration.py": {
+    "mtime": 1767762001.8154807,
+    "ast_hash": "cb9e3eb782607eade022d630e7a9598f",
+    "semantic_hash": ""
+  },
+  "tests/jax_migration/__init__.py": {
+    "mtime": 1767762001.8154807,
+    "ast_hash": "d61319cc1023f61fb6995f56a317e498",
+    "semantic_hash": ""
+  },
+  "tests/jax_migration/autograd/__init__.py": {
+    "mtime": 1767762001.8154807,
+    "ast_hash": "10e779d24af49960638e3ce040af02c6",
+    "semantic_hash": ""
+  },
+  "tests/jax_migration/autograd/test_calibration.py": {
+    "mtime": 1771924776.3489196,
+    "ast_hash": "21ef1ca518813393e5b5d506eb11d269",
+    "semantic_hash": ""
+  },
+  "tests/jax_migration/autograd/test_qmap_gradients.py": {
+    "mtime": 1771924792.1220355,
+    "ast_hash": "78d8930a450d2501d1a142daa0e72f4e",
+    "semantic_hash": ""
+  },
+  "tests/jax_migration/autograd/test_user_defined_gradients.py": {
+    "mtime": 1771924726.372553,
+    "ast_hash": "42897cb0b5642ab7657e79fab18e6059",
+    "semantic_hash": ""
+  },
+  "tests/jax_migration/backend/__init__.py": {
+    "mtime": 1767762001.8154807,
+    "ast_hash": "a58848f3f9ea14427e3ca084e885a7f7",
+    "semantic_hash": ""
+  },
+  "tests/jax_migration/backend/test_backend_detection.py": {
+    "mtime": 1767762001.8154807,
+    "ast_hash": "2f40466903f37f4c229496b0de9a7123",
+    "semantic_hash": ""
+  },
+  "tests/jax_migration/backend/test_device_transfer.py": {
+    "mtime": 1771742170.029758,
+    "ast_hash": "d52b86694f2b623742561ec06e06cc98",
+    "semantic_hash": ""
+  },
+  "tests/jax_migration/backend/test_fallback.py": {
+    "mtime": 1771742165.5574422,
+    "ast_hash": "6183f44f57c20dbb3210d9964e703eb6",
+    "semantic_hash": ""
+  },
+  "tests/jax_migration/backend/test_gpu_detection.py": {
+    "mtime": 1767762001.8154807,
+    "ast_hash": "59b6d983f470a3474d86e7da364f4cb8",
+    "semantic_hash": ""
+  },
+  "tests/jax_migration/conftest.py": {
+    "mtime": 1767762001.8154807,
+    "ast_hash": "8e69e5bdcfc8dd531a21da0de798720a",
+    "semantic_hash": ""
+  },
+  "tests/jax_migration/fitting/__init__.py": {
+    "mtime": 1767762001.8154807,
+    "ast_hash": "5c3809b2681800aedb70f9bcc5924c84",
+    "semantic_hash": ""
+  },
+  "tests/jax_migration/fitting/test_models.py": {
+    "mtime": 1767762001.8154807,
+    "ast_hash": "39277348621475e60235b58d75467959",
+    "semantic_hash": ""
+  },
+  "tests/jax_migration/fitting/test_nlsq.py": {
+    "mtime": 1771723376.9556115,
+    "ast_hash": "96ee8b892fff79ec066d939faf7ef72f",
+    "semantic_hash": ""
+  },
+  "tests/jax_migration/fitting/test_nlsq_result_delegation.py": {
+    "mtime": 1771374322.8477592,
+    "ast_hash": "8617a5b3d18a170a366a397d3ba5bdad",
+    "semantic_hash": ""
+  },
+  "tests/jax_migration/fitting/test_results.py": {
+    "mtime": 1771694733.156545,
+    "ast_hash": "a116c3b8d3b2adfdc2a6892bef63c45a",
+    "semantic_hash": ""
+  },
+  "tests/jax_migration/fitting/test_sampler.py": {
+    "mtime": 1767762001.8154807,
+    "ast_hash": "576987c1ceeded0c66ddcd23331be150",
+    "semantic_hash": ""
+  },
+  "tests/jax_migration/fitting/test_scipy_nlsq_equivalence.py": {
+    "mtime": 1768252293.524588,
+    "ast_hash": "508ac992383dad6d514c5c67ebfe946c",
+    "semantic_hash": ""
+  },
+  "tests/jax_migration/fitting/test_tg1_corruption_chain.py": {
+    "mtime": 1771700599.9945078,
+    "ast_hash": "84b00f6dca66f1304247c9efbc3d99fd",
+    "semantic_hash": ""
+  },
+  "tests/jax_migration/fitting/test_visualization_nlsq.py": {
+    "mtime": 1768252293.524588,
+    "ast_hash": "7273bdb602d44a0e4ccd4b0f4686c86e",
+    "semantic_hash": ""
+  },
+  "tests/jax_migration/integration/__init__.py": {
+    "mtime": 1767762001.8154807,
+    "ast_hash": "1e264e78e875b424e094c436f175a9d7",
+    "semantic_hash": ""
+  },
+  "tests/jax_migration/integration/test_cpu_only_launch.py": {
+    "mtime": 1767762001.8154807,
+    "ast_hash": "7641e7759cd7b0a59be57a880cef5ac5",
+    "semantic_hash": ""
+  },
+  "tests/jax_migration/integration/test_env_config.py": {
+    "mtime": 1771694771.7786,
+    "ast_hash": "0c827e09783d0d9b5a673e87a3c55b9d",
+    "semantic_hash": ""
+  },
+  "tests/jax_migration/integration/test_gpu_launch.py": {
+    "mtime": 1771924733.034602,
+    "ast_hash": "364da6080895c4a13c81bc146a47a6ee",
+    "semantic_hash": ""
+  },
+  "tests/jax_migration/integration/test_hdf5_jax_io.py": {
+    "mtime": 1767762001.8154807,
+    "ast_hash": "4efdc458551ce9a47cde83e7247d24d8",
+    "semantic_hash": ""
+  },
+  "tests/jax_migration/integration/test_memory_limits.py": {
+    "mtime": 1782445483.966007,
+    "ast_hash": "0605199040bd7d3048be8cb83c2a7f0c",
+    "semantic_hash": ""
+  },
+  "tests/jax_migration/integration/test_qt_jax_interop.py": {
+    "mtime": 1767762001.8164809,
+    "ast_hash": "d6f0071fee757665f3126485f198e682",
+    "semantic_hash": ""
+  },
+  "tests/jax_migration/numerical/__init__.py": {
+    "mtime": 1767762001.8164809,
+    "ast_hash": "cd59aab6b16e2e9ada43e36e222c26aa",
+    "semantic_hash": ""
+  },
+  "tests/jax_migration/numerical/test_cpu_gpu_equivalence.py": {
+    "mtime": 1767762001.8164809,
+    "ast_hash": "59f2a54e918013edb3bae49a72679d40",
+    "semantic_hash": ""
+  },
+  "tests/jax_migration/numerical/test_fitting_equivalence.py": {
+    "mtime": 1771715509.1521568,
+    "ast_hash": "85c5e3dd4015a001685686f8f8aa7664",
+    "semantic_hash": ""
+  },
+  "tests/jax_migration/numerical/test_partition_equivalence.py": {
+    "mtime": 1767762001.8164809,
+    "ast_hash": "71458e69697f212e396b927885a4b389",
+    "semantic_hash": ""
+  },
+  "tests/jax_migration/numerical/test_qmap_equivalence.py": {
+    "mtime": 1767762001.8164809,
+    "ast_hash": "70c31a6f3d79f808a9026f4e0fc3aae6",
+    "semantic_hash": ""
+  },
+  "tests/jax_migration/performance/__init__.py": {
+    "mtime": 1767762001.8164809,
+    "ast_hash": "9954bad65e53979d24bbb12fa2c27f68",
+    "semantic_hash": ""
+  },
+  "tests/jax_migration/performance/conftest.py": {
+    "mtime": 1771788230.4306037,
+    "ast_hash": "4dd74974a3ee6403699b002213f5dcf8",
+    "semantic_hash": ""
+  },
+  "tests/jax_migration/performance/test_benchmarks.py": {
+    "mtime": 1767762001.8164809,
+    "ast_hash": "1e2864581de070ba2c8c00ef28a506e9",
+    "semantic_hash": ""
+  },
+  "tests/jax_migration/performance/test_jit_speedup.py": {
+    "mtime": 1773341465.931413,
+    "ast_hash": "c19da3eee89fc3bcac4892af5cc08acd",
+    "semantic_hash": ""
+  },
+  "tests/jax_migration/performance/test_jit_warmup.py": {
+    "mtime": 1771788200.3563747,
+    "ast_hash": "0093b0497ae3c990e23a4de6468bbfaa",
+    "semantic_hash": ""
+  },
+  "tests/jax_migration/precision/__init__.py": {
+    "mtime": 1767762001.8164809,
+    "ast_hash": "c632c41e68c87d9877384c05c8f085b9",
+    "semantic_hash": ""
+  },
+  "tests/jax_migration/precision/test_angular_computations.py": {
+    "mtime": 1767762001.8164809,
+    "ast_hash": "9600dc1515a1a7f70ff44b4cf6fb168f",
+    "semantic_hash": ""
+  },
+  "tests/jax_migration/precision/test_float32_vs_float64.py": {
+    "mtime": 1767762001.8164809,
+    "ast_hash": "2467b4dd14fcfa88c36b7609e5d3fab8",
+    "semantic_hash": ""
+  },
+  "tests/jax_migration/precision/test_qmap_tolerance.py": {
+    "mtime": 1767762001.8164809,
+    "ast_hash": "3e8714b1269ce05d0c1cd28ade6bd929",
+    "semantic_hash": ""
+  },
+  "tests/jax_migration/visualization/__init__.py": {
+    "mtime": 1767762001.8164809,
+    "ast_hash": "c657b16e9e0af4fbaece97eec4d52aa7",
+    "semantic_hash": ""
+  },
+  "tests/jax_migration/visualization/test_arviz_diagnostics.py": {
+    "mtime": 1772583306.3033948,
+    "ast_hash": "8b44d4f5424b81aba0536d130069d883",
+    "semantic_hash": ""
+  },
+  "tests/jax_migration/visualization/test_comparison_plot.py": {
+    "mtime": 1768252293.524588,
+    "ast_hash": "36f0d4bfc630c03d84f144b07d11e473",
+    "semantic_hash": ""
+  },
+  "tests/jax_migration/visualization/test_nlsq_uncertainty_bands.py": {
+    "mtime": 1768252293.524588,
+    "ast_hash": "cb40af84cfb6d8359bd8e7e3b790dfef",
+    "semantic_hash": ""
+  },
+  "tests/jax_migration/visualization/test_pcov_validation.py": {
+    "mtime": 1767762001.8164809,
+    "ast_hash": "83ea1ffe5f4cd6b7e86a6f6b269aaaba",
+    "semantic_hash": ""
+  },
+  "tests/jax_migration/visualization/test_plot_export.py": {
+    "mtime": 1767762001.8164809,
+    "ast_hash": "6a7dbddc5bedd1be41fec44b8c8fdda9",
+    "semantic_hash": ""
+  },
+  "tests/jax_migration/visualization/test_posterior_predictive.py": {
+    "mtime": 1767762001.8164809,
+    "ast_hash": "0acc8a0a99cc2c4046ae16797cfedbca",
+    "semantic_hash": ""
+  },
+  "tests/scientific/__init__.py": {
+    "mtime": 1759638157.5418828,
+    "ast_hash": "bcfd8d9a00b840fd262b0db829feae33",
+    "semantic_hash": ""
+  },
+  "tests/scientific/algorithms/__init__.py": {
+    "mtime": 1759638157.5418828,
+    "ast_hash": "5c93ebe60170316d41b5b88be8dba6c7",
+    "semantic_hash": ""
+  },
+  "tests/scientific/algorithms/test_fitting_algorithms.py": {
+    "mtime": 1759638157.5418828,
+    "ast_hash": "c80138bc1c86ccc2715509482be53f36",
+    "semantic_hash": ""
+  },
+  "tests/scientific/constants.py": {
+    "mtime": 1759638157.5418828,
+    "ast_hash": "3822532554b8c9000e79e36f2f947085",
+    "semantic_hash": ""
+  },
+  "tests/scientific/properties/__init__.py": {
+    "mtime": 1759638157.5418828,
+    "ast_hash": "d092ef53e595e23f350c96481346225a",
+    "semantic_hash": ""
+  },
+  "tests/scientific/properties/mathematical_invariants.py": {
+    "mtime": 1767580306.4629998,
+    "ast_hash": "121203e243030d62608f9420e006e511",
+    "semantic_hash": ""
+  },
+  "tests/scientific/properties/physical_constraints.py": {
+    "mtime": 1759638157.5428827,
+    "ast_hash": "d064a6b47c47c3cfbb2290b695747a31",
+    "semantic_hash": ""
+  },
+  "tests/scientific/properties/statistical_properties.py": {
+    "mtime": 1759638157.5428827,
+    "ast_hash": "ca2ce15b1e56eae98b67102d50dcb000",
+    "semantic_hash": ""
+  },
+  "tests/scientific/reference_validation/__init__.py": {
+    "mtime": 1759638157.5428827,
+    "ast_hash": "bf260c425f083d52132466d6f6f1632e",
+    "semantic_hash": ""
+  },
+  "tests/scientific/reference_validation/analytical_benchmarks.py": {
+    "mtime": 1759638157.5428827,
+    "ast_hash": "0ebbfa9c27a0daa1415bacb9d126cf5e",
+    "semantic_hash": ""
+  },
+  "tests/scientific/reference_validation/cross_validation_framework.py": {
+    "mtime": 1759638157.5428827,
+    "ast_hash": "bf53a88dca55883e775d3306a36167b3",
+    "semantic_hash": ""
+  },
+  "tests/scientific/reference_validation/reference_implementations.py": {
+    "mtime": 1759638157.5428827,
+    "ast_hash": "65c25ace47b542b5c8cc45840c2cbc56",
+    "semantic_hash": ""
+  },
+  "tests/scientific_validation.py": {
+    "mtime": 1759638157.5428827,
+    "ast_hash": "9ef1491e08b95ae81a38b8427d4e5ecf",
+    "semantic_hash": ""
+  },
+  "tests/unit/__init__.py": {
+    "mtime": 1759638157.5438828,
+    "ast_hash": "15b7dad3a9ea360303710cc99612acf6",
+    "semantic_hash": ""
+  },
+  "tests/unit/analysis/__init__.py": {
+    "mtime": 1759638157.5438828,
+    "ast_hash": "a144c78e43cb7dde8c34081b6a66c7c2",
+    "semantic_hash": ""
+  },
+  "tests/unit/core/__init__.py": {
+    "mtime": 1759638157.5438828,
+    "ast_hash": "9b2c31ac2a6c4d54a23f42e2b589f696",
+    "semantic_hash": ""
+  },
+  "tests/unit/core/test_file_locator.py": {
+    "mtime": 1768252293.525588,
+    "ast_hash": "c67b8de6656c094f4c054a5bd848f35d",
+    "semantic_hash": ""
+  },
+  "tests/unit/core/test_viewer_kernel.py": {
+    "mtime": 1771374322.8477592,
+    "ast_hash": "e9b79721e6e3ce379d4c8c088e2a9a22",
+    "semantic_hash": ""
+  },
+  "tests/unit/core/test_viewer_kernel_export.py": {
+    "mtime": 1768252293.525588,
+    "ast_hash": "598142023fd44ed1d35df789ed923ba9",
+    "semantic_hash": ""
+  },
+  "tests/unit/core/test_viewer_kernel_plotting.py": {
+    "mtime": 1768252293.525588,
+    "ast_hash": "683833814e652617af0306476532c948",
+    "semantic_hash": ""
+  },
+  "tests/unit/core/test_xpcs_file.py": {
+    "mtime": 1767580306.464,
+    "ast_hash": "3895a7dbed1e292f2c92d83deec40a72",
+    "semantic_hash": ""
+  },
+  "tests/unit/core/test_xpcs_file_data_access.py": {
+    "mtime": 1768252293.525588,
+    "ast_hash": "0e806c62ee4f329f3621b21b5e581838",
+    "semantic_hash": ""
+  },
+  "tests/unit/core/test_xpcs_file_fitting.py": {
+    "mtime": 1768252293.525588,
+    "ast_hash": "9cb304416a7aa8f4c07422d061c25f03",
+    "semantic_hash": ""
+  },
+  "tests/unit/core/test_xpcs_file_roi.py": {
+    "mtime": 1768252293.525588,
+    "ast_hash": "5c0f8a95bcc8cff2d08df8bde36cd8fc",
+    "semantic_hash": ""
+  },
+  "tests/unit/fileio/__init__.py": {
+    "mtime": 1759638157.5438828,
+    "ast_hash": "b83e6d1dc13de306bed4abc9c36473d3",
+    "semantic_hash": ""
+  },
+  "tests/unit/fileio/test_aps_8idi.py": {
+    "mtime": 1767580306.464,
+    "ast_hash": "0a64e86485dc0c359c95cf815afb3060",
+    "semantic_hash": ""
+  },
+  "tests/unit/fileio/test_hdf_reader.py": {
+    "mtime": 1767580306.464,
+    "ast_hash": "aa53b9deabe293f515645e8c75686259",
+    "semantic_hash": ""
+  },
+  "tests/unit/fileio/test_qmap_utils.py": {
+    "mtime": 1773341492.0976703,
+    "ast_hash": "63af0124eada7eb98c77eb10fc5b43ad",
+    "semantic_hash": ""
+  },
+  "tests/unit/fitting/__init__.py": {
+    "mtime": 1768467397.3728435,
+    "ast_hash": "ba1e77923514bb51a41ed4c11994f257",
+    "semantic_hash": ""
+  },
+  "tests/unit/fitting/test_bayesian_assembly.py": {
+    "mtime": 1771819688.2891607,
+    "ast_hash": "9e44607666ad879f94edd0fd054c660f",
+    "semantic_hash": ""
+  },
+  "tests/unit/fitting/test_bayesian_dual_storage.py": {
+    "mtime": 1772605172.9392185,
+    "ast_hash": "f987bb5e2765a085bf276378dfc8d253",
+    "semantic_hash": ""
+  },
+  "tests/unit/fitting/test_bayesian_integration.py": {
+    "mtime": 1772605172.9392185,
+    "ast_hash": "c1b7d65c1dba65d83c0fab4d2160113f",
+    "semantic_hash": ""
+  },
+  "tests/unit/fitting/test_bayesian_viz.py": {
+    "mtime": 1772605172.9472182,
+    "ast_hash": "347f9c46cf442811389a99292c19beed",
+    "semantic_hash": ""
+  },
+  "tests/unit/fitting/test_bug_fixes_rca.py": {
+    "mtime": 1772605172.9472182,
+    "ast_hash": "19ddff325c663eebab6a4d693d62181c",
+    "semantic_hash": ""
+  },
+  "tests/unit/fitting/test_nlsq_bayesian_integration.py": {
+    "mtime": 1771700599.9955077,
+    "ast_hash": "702a00d4fdf4e508b2fc7b6d42cb8631",
+    "semantic_hash": ""
+  },
+  "tests/unit/fitting/test_nlsq_jit_tracing.py": {
+    "mtime": 1771700599.9945078,
+    "ast_hash": "ca55505b46f5f53e26ce6f9b708530fc",
+    "semantic_hash": ""
+  },
+  "tests/unit/fitting/test_results.py": {
+    "mtime": 1768467397.3728435,
+    "ast_hash": "eab5c16eb1085542e3b6e3dc93eac2e2",
+    "semantic_hash": ""
+  },
+  "tests/unit/fitting/test_tg6_fitting_p1.py": {
+    "mtime": 1771789938.9726949,
+    "ast_hash": "6a3de61ec900b0dbacb62cefabe3b0a6",
+    "semantic_hash": ""
+  },
+  "tests/unit/gui/__init__.py": {
+    "mtime": 1766027172.5858827,
+    "ast_hash": "0107b0c68984f5686112d2b5137121df",
+    "semantic_hash": ""
+  },
+  "tests/unit/gui/test_command_palette.py": {
+    "mtime": 1767580306.464,
+    "ast_hash": "1036c39425e433f5e1c16e2506c850d7",
+    "semantic_hash": ""
+  },
+  "tests/unit/gui/test_drag_drop_list.py": {
+    "mtime": 1767580306.464,
+    "ast_hash": "ed963d9696158cba941576a4b86d3061",
+    "semantic_hash": ""
+  },
+  "tests/unit/gui/test_plot_themes.py": {
+    "mtime": 1771523143.8791404,
+    "ast_hash": "28dfcff49d8691b7a942c2cc2993ab15",
+    "semantic_hash": ""
+  },
+  "tests/unit/gui/test_qss_lint.py": {
+    "mtime": 1771700599.9965076,
+    "ast_hash": "f36fe608afb680ddc9d12e350b8c385a",
+    "semantic_hash": ""
+  },
+  "tests/unit/gui/test_recent_paths.py": {
+    "mtime": 1767580306.464,
+    "ast_hash": "34324e5819f43510a931f8e5ba20b88f",
+    "semantic_hash": ""
+  },
+  "tests/unit/gui/test_session_field_completeness.py": {
+    "mtime": 1771689064.3061655,
+    "ast_hash": "be8301473c490416d582f434667fe549",
+    "semantic_hash": ""
+  },
+  "tests/unit/gui/test_session_manager.py": {
+    "mtime": 1771523143.8791404,
+    "ast_hash": "eb49cf2c9adf52f30993381f72f46835",
+    "semantic_hash": ""
+  },
+  "tests/unit/gui/test_shortcut_manager.py": {
+    "mtime": 1771689064.3061655,
+    "ast_hash": "f06a74bd73050b18afdc461c5149649f",
+    "semantic_hash": ""
+  },
+  "tests/unit/gui/test_tab_availability.py": {
+    "mtime": 1782445175.316684,
+    "ast_hash": "e9d31a73240fe133f6657a0046717b29",
+    "semantic_hash": ""
+  },
+  "tests/unit/gui/test_tg3_mask_export_and_g2_plot.py": {
+    "mtime": 1771374322.8487592,
+    "ast_hash": "006b82d56e9cfa18fe5b0b38a8790360",
+    "semantic_hash": ""
+  },
+  "tests/unit/gui/test_theme_manager.py": {
+    "mtime": 1767580306.465,
+    "ast_hash": "d1a87c0defd50398d8b2fcc584d2d036",
+    "semantic_hash": ""
+  },
+  "tests/unit/gui/test_toast_notification.py": {
+    "mtime": 1767580306.465,
+    "ast_hash": "a62aeafc77116c035a38fdc79a8e0725",
+    "semantic_hash": ""
+  },
+  "tests/unit/helper/test_utils_types.py": {
+    "mtime": 1771374322.8487592,
+    "ast_hash": "963eb914c644a708d22367e7cc6d5311",
+    "semantic_hash": ""
+  },
+  "tests/unit/module/__init__.py": {
+    "mtime": 1768467397.3728435,
+    "ast_hash": "b69793f9db9444069be4e02cc6e05c1d",
+    "semantic_hash": ""
+  },
+  "tests/unit/module/test_interpolation.py": {
+    "mtime": 1771374322.8487592,
+    "ast_hash": "a6b0e40b00541caa7b11d4e9135f2bc3",
+    "semantic_hash": ""
+  },
+  "tests/unit/module/test_tauq_rendering.py": {
+    "mtime": 1772605172.9472182,
+    "ast_hash": "9d3b90150054220572f25ddaaf6c6fbc",
+    "semantic_hash": ""
+  },
+  "tests/unit/schemas/__init__.py": {
+    "mtime": 1768252293.525588,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  "tests/unit/schemas/test_validators.py": {
+    "mtime": 1771374322.8497593,
+    "ast_hash": "c378fa46d259c7a63e46238ad081e3fd",
+    "semantic_hash": ""
+  },
+  "tests/unit/simplemask/__init__.py": {
+    "mtime": 1767762001.8164809,
+    "ast_hash": "342211b198dd55bfaf78d4103c0b9ee5",
+    "semantic_hash": ""
+  },
+  "tests/unit/simplemask/test_area_mask.py": {
+    "mtime": 1767762001.8164809,
+    "ast_hash": "5d1b2a5e99e2ddc34083060ded6a0807",
+    "semantic_hash": ""
+  },
+  "tests/unit/simplemask/test_drawing_tools.py": {
+    "mtime": 1767762001.8164809,
+    "ast_hash": "0c8b71ddaf1aa954b16fff0233506d8f",
+    "semantic_hash": ""
+  },
+  "tests/unit/simplemask/test_mask_io.py": {
+    "mtime": 1767762001.8174808,
+    "ast_hash": "00ac5a8b120127962b917e53b8c95710",
+    "semantic_hash": ""
+  },
+  "tests/unit/simplemask/test_partition.py": {
+    "mtime": 1767762001.8174808,
+    "ast_hash": "d2ab23a8945b59ebd5cee79f92245b18",
+    "semantic_hash": ""
+  },
+  "tests/unit/simplemask/test_partition_precision.py": {
+    "mtime": 1771374322.8497593,
+    "ast_hash": "5410f6c6a15c4a9dd2e523a70dcff45b",
+    "semantic_hash": ""
+  },
+  "tests/unit/simplemask/test_qmap.py": {
+    "mtime": 1771374322.8497593,
+    "ast_hash": "424f909c5e6bde6feb3aacf7b06ffa01",
+    "semantic_hash": ""
+  },
+  "tests/unit/simplemask/test_qmap_integration.py": {
+    "mtime": 1768571097.7635458,
+    "ast_hash": "22e3b39618dd812003b0983dacba72be",
+    "semantic_hash": ""
+  },
+  "tests/unit/simplemask/test_qmap_pixel_indices.py": {
+    "mtime": 1771374322.8497593,
+    "ast_hash": "afd3003b4990200fb79c2ffcb456c507",
+    "semantic_hash": ""
+  },
+  "tests/unit/test_lazy_loading.py": {
+    "mtime": 1767580306.465,
+    "ast_hash": "02f6f112cfc76f9db732131af9c90df6",
+    "semantic_hash": ""
+  },
+  "tests/unit/test_package_basics.py": {
+    "mtime": 1767580306.465,
+    "ast_hash": "00a556663d9f78222f2e18046ff9e9f2",
+    "semantic_hash": ""
+  },
+  "tests/unit/test_plot_constants.py": {
+    "mtime": 1767580306.465,
+    "ast_hash": "ce0726c3403e3a674d9919e7e544b5ac",
+    "semantic_hash": ""
+  },
+  "tests/unit/test_qmap_constants.py": {
+    "mtime": 1767580306.465,
+    "ast_hash": "7c1170b9a729d49246f56cb42f482c95",
+    "semantic_hash": ""
+  },
+  "tests/unit/test_tg4_backend_io_fixes.py": {
+    "mtime": 1771374322.8497593,
+    "ast_hash": "4e21b0efd9b656769ccb8854dc6d548f",
+    "semantic_hash": ""
+  },
+  "tests/unit/test_tg7_gui_io_p1_fixes.py": {
+    "mtime": 1771374322.8497593,
+    "ast_hash": "a09c8dce3b0197b51a13abec0c006daa",
+    "semantic_hash": ""
+  },
+  "tests/unit/test_tg8_code_quality.py": {
+    "mtime": 1771600107.9547484,
+    "ast_hash": "c27494c52f00af55a25ad1319a09288c",
+    "semantic_hash": ""
+  },
+  "tests/unit/test_tg9_performance_jit_fixes.py": {
+    "mtime": 1771801784.9047923,
+    "ast_hash": "d89ac7b11563ade3550ced05735366de",
+    "semantic_hash": ""
+  },
+  "tests/unit/threading/__init__.py": {
+    "mtime": 1759638157.5438828,
+    "ast_hash": "addf0c89cc8283307540433859de97cc",
+    "semantic_hash": ""
+  },
+  "tests/unit/threading/test_async_workers.py": {
+    "mtime": 1767580306.465,
+    "ast_hash": "350e86db71fd0081f9dc4803e188c81a",
+    "semantic_hash": ""
+  },
+  "tests/unit/threading/test_average_toolbox_threading.py": {
+    "mtime": 1773342284.4324791,
+    "ast_hash": "aa00e0e462feab6f2d00103f2b49d520",
+    "semantic_hash": ""
+  },
+  "tests/unit/threading/test_batch_coordinator.py": {
+    "mtime": 1771820434.9875865,
+    "ast_hash": "a395cfbe3dfcb306ae1d151a63c04310",
+    "semantic_hash": ""
+  },
+  "tests/unit/threading/test_qt_error_detection.py": {
+    "mtime": 1777873230.6066368,
+    "ast_hash": "22a0e44b7491e7e351a3b5b2c9e0a239",
+    "semantic_hash": ""
+  },
+  "tests/unit/threading/test_signal_safety.py": {
+    "mtime": 1771374322.8507593,
+    "ast_hash": "b22e9b629e958b53703c1aac6589f141",
+    "semantic_hash": ""
+  },
+  "tests/unit/upstream_features/__init__.py": {
+    "mtime": 1770953375.3585348,
+    "ast_hash": "aa17306ddfc468a96bc9ead83f6d080a",
+    "semantic_hash": ""
+  },
+  "tests/unit/upstream_features/test_blemish_export.py": {
+    "mtime": 1770953375.3595347,
+    "ast_hash": "58a36bd6f3b65f6cd460f1b83ec9b2e4",
+    "semantic_hash": ""
+  },
+  "tests/unit/upstream_features/test_g2_partial_safety.py": {
+    "mtime": 1770953375.3595347,
+    "ast_hash": "efb6c03040ce45bd14ad326fd3bdf53f",
+    "semantic_hash": ""
+  },
+  "tests/unit/upstream_features/test_gixpcs_precision.py": {
+    "mtime": 1770953375.3595347,
+    "ast_hash": "34d44c2347baa493702c0c64e86205a7",
+    "semantic_hash": ""
+  },
+  "tests/unit/upstream_features/test_qmap_colormap.py": {
+    "mtime": 1770953375.3595347,
+    "ast_hash": "39aa23bd6621428b1afee7eb8e1295db",
+    "semantic_hash": ""
+  },
+  "tests/unit/upstream_features/test_roi_scale_handles.py": {
+    "mtime": 1782444896.9761949,
+    "ast_hash": "e482e47be15434167a30b76e7c3408e5",
+    "semantic_hash": ""
+  },
+  "tests/unit/utils/__init__.py": {
+    "mtime": 1759638157.5438828,
+    "ast_hash": "d2c6f0f309b3e8dc405f911c95fc28b9",
+    "semantic_hash": ""
+  },
+  "tests/unit/utils/test_atomic_io.py": {
+    "mtime": 1771700599.9825077,
+    "ast_hash": "75ae9f40f26ff4f2fbc3344678287e39",
+    "semantic_hash": ""
+  },
+  "tests/unit/utils/test_log_utils.py": {
+    "mtime": 1772605172.9392185,
+    "ast_hash": "f20c147fd4560e9129954eac6d62ba9e",
+    "semantic_hash": ""
+  },
+  "tests/unit/utils/test_validation.py": {
+    "mtime": 1768467397.3728435,
+    "ast_hash": "d91c2feda4933c7703ff19580469cc90",
+    "semantic_hash": ""
+  },
+  "tests/unit/utils/test_visualization_optimizer.py": {
+    "mtime": 1768467397.3728435,
+    "ast_hash": "bba28a2be25ba2c85dc79c90217a6945",
+    "semantic_hash": ""
+  },
+  "tests/utils/__init__.py": {
+    "mtime": 1759638157.5438828,
+    "ast_hash": "b509048987c21fc081ccb0fe11dcbc97",
+    "semantic_hash": ""
+  },
+  "tests/utils/ci_integration.py": {
+    "mtime": 1759638157.5448828,
+    "ast_hash": "9090b785d195c30c2a9890c41e401618",
+    "semantic_hash": ""
+  },
+  "tests/utils/data_management.py": {
+    "mtime": 1759638157.5448828,
+    "ast_hash": "3ea0a55faf53dcc6cd0b25846dc9bbac",
+    "semantic_hash": ""
+  },
+  "tests/utils/h5py_mocks.py": {
+    "mtime": 1759638157.5448828,
+    "ast_hash": "5281cf7d363c0e4987f32b47af7f4c00",
+    "semantic_hash": ""
+  },
+  "tests/utils/isolation.py": {
+    "mtime": 1759638157.5448828,
+    "ast_hash": "1ca850d7bd01282f2f66847945d65364",
+    "semantic_hash": ""
+  },
+  "tests/utils/memory_testing_utils.py": {
+    "mtime": 1759638157.5448828,
+    "ast_hash": "76d078993f59182716805c08c471aded",
+    "semantic_hash": ""
+  },
+  "tests/utils/qt_threading_utils.py": {
+    "mtime": 1759638157.5448828,
+    "ast_hash": "5743d9f9a6bdc4c46cd8a259242a770b",
+    "semantic_hash": ""
+  },
+  "tests/utils/reliability.py": {
+    "mtime": 1759638157.5448828,
+    "ast_hash": "2d310b9eba606e5293ce6b40ec015b29",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/__init__.py": {
+    "mtime": 1778388374.9679008,
+    "ast_hash": "ac4cd97537f64381397c6279d948ba29",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/backends/__init__.py": {
+    "mtime": 1782445488.698996,
+    "ast_hash": "0af3f9e9b901b545c26f897467edc407",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/backends/_base.py": {
+    "mtime": 1771568091.3946266,
+    "ast_hash": "6aa82c69c86ecdf9dc1901dd02678386",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/backends/_conversions.py": {
+    "mtime": 1767762001.819481,
+    "ast_hash": "2e2d37fcdf3dc4717cf3a85e21634c30",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/backends/_device.py": {
+    "mtime": 1772547807.724911,
+    "ast_hash": "6b7378d34b5e24e1925ca4a9f7bc266f",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/backends/_jax_backend.py": {
+    "mtime": 1771374322.8557594,
+    "ast_hash": "b985819fd6a76a2694045d96c5c3002b",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/backends/_numpy_backend.py": {
+    "mtime": 1771374322.8557594,
+    "ast_hash": "c18376a7f9eefca29aacd4dc543d0085",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/backends/io_adapter.py": {
+    "mtime": 1771374322.8557594,
+    "ast_hash": "03dc494824e4d39cb41cf4a3bb3e3761",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/backends/scipy_replacements/__init__.py": {
+    "mtime": 1768467397.3748434,
+    "ast_hash": "3951d2f2daec76ea524e1fb21a2fa788",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/backends/scipy_replacements/interpolate.py": {
+    "mtime": 1772547807.724911,
+    "ast_hash": "8c84f97da56e21bd08ab9aa8d337d0fa",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/backends/scipy_replacements/ndimage.py": {
+    "mtime": 1772582805.8567173,
+    "ast_hash": "d02c577b6bcadde44bfd5e86854c0ac8",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/backends/scipy_replacements/optimize.py": {
+    "mtime": 1772604356.2209344,
+    "ast_hash": "f51a5a61c3029c1a8868304cad3f84fa",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/cli/__init__.py": {
+    "mtime": 1767580306.467,
+    "ast_hash": "0859b777ac27cdda398de786572d8c37",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/cli/twotime_batch.py": {
+    "mtime": 1768252293.528588,
+    "ast_hash": "d5b640df1cd09d5bbbab3da7c4059d4a",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/cli_main.py": {
+    "mtime": 1772605063.666817,
+    "ast_hash": "b4f8a05b5ed95d2e1e3ecefc0481b287",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/configure/aps_8idi.json": {
+    "mtime": 1767580306.468,
+    "ast_hash": "3e9845b70c654a8589bca9de589269b5",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/constants/__init__.py": {
+    "mtime": 1767762001.819481,
+    "ast_hash": "5bc0277277d82d430c303063574f186f",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/constants/defaults.py": {
+    "mtime": 1767580306.468,
+    "ast_hash": "39515520043f28b28d0ac406fb593ad8",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/constants/fitting.py": {
+    "mtime": 1767580306.468,
+    "ast_hash": "4ae111cb6dfff3d719fcbc4edb672706",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/constants/limits.py": {
+    "mtime": 1767580306.468,
+    "ast_hash": "4df53e429a766d4d307930d8878b844d",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/constants/thresholds.py": {
+    "mtime": 1767580306.468,
+    "ast_hash": "682762dc70a00cbbc44023cddda29f6b",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/constants/timeouts.py": {
+    "mtime": 1767580306.468,
+    "ast_hash": "a6ffad84964b6ca006191fab516cc7cb",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/default_setting.py": {
+    "mtime": 1767580306.468,
+    "ast_hash": "e944b63336f62a6bafa577d5d8293828",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/fileIO/__init__.py": {
+    "mtime": 1767580306.468,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/fileIO/aps_8idi.py": {
+    "mtime": 1772558633.3908405,
+    "ast_hash": "23cb3e1e2f76b489d85d68283fe9269d",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/fileIO/ftype_utils.py": {
+    "mtime": 1771374322.8567593,
+    "ast_hash": "f6b0a14c212f78195b01c6b7376c7411",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/fileIO/hdf_reader.py": {
+    "mtime": 1772596778.6732097,
+    "ast_hash": "038f2f8f4be9b770a613c7d132d92267",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/fileIO/hdf_reader_enhanced.py": {
+    "mtime": 1772558656.427507,
+    "ast_hash": "8b51684677ddcbc28c0d90fc2b703f3c",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/fileIO/qmap_utils.py": {
+    "mtime": 1772558643.1521256,
+    "ast_hash": "45d2fdf8e6f0b9ef29d4fc7e0fb01f85",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/file_locator.py": {
+    "mtime": 1772557954.0807295,
+    "ast_hash": "a5f98e5527224f3ea21dff4ccbb78e05",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/fitting/__init__.py": {
+    "mtime": 1772547807.728911,
+    "ast_hash": "361b761cc93e8effab94506106765a91",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/fitting/bayesian_assembly.py": {
+    "mtime": 1772547875.5215073,
+    "ast_hash": "7e62b69a177ae6e9a00447f392420a36",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/fitting/legacy.py": {
+    "mtime": 1772582805.8477173,
+    "ast_hash": "fe016ec08bd7b734b989e7134db0a1d5",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/fitting/models.py": {
+    "mtime": 1771568091.3946266,
+    "ast_hash": "91db645ccdac3664282033573deab046",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/fitting/nlsq.py": {
+    "mtime": 1771727712.7010226,
+    "ast_hash": "42c867aa315d542b7f1b70e847b165ec",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/fitting/results.py": {
+    "mtime": 1772572795.1120691,
+    "ast_hash": "65e51915d4a1210f180498d37faf7d10",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/fitting/sampler.py": {
+    "mtime": 1772582847.4623547,
+    "ast_hash": "e929013eb54048072e21d16cd57892a8",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/fitting/visualization.py": {
+    "mtime": 1772583415.4540715,
+    "ast_hash": "fb4fa01728e79a65ed67d28f1763f72b",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/fitting/viz.py": {
+    "mtime": 1772572822.6848614,
+    "ast_hash": "2e7f29982229248dcf5b0323fbcf8ae5",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/gui/__init__.py": {
+    "mtime": 1767580306.468,
+    "ast_hash": "ab841abc509ba2adf77b733e697f0b09",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/gui/bayesian_diagnosis.py": {
+    "mtime": 1772572834.3410149,
+    "ast_hash": "7b84912cfa7db43a1db2342f47bc26c2",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/gui/icons.py": {
+    "mtime": 1772605063.665817,
+    "ast_hash": "7ba35afeb53562762d17b9bf0aa507ff",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/gui/initialization_validator.py": {
+    "mtime": 1771700599.9785078,
+    "ast_hash": "3c9b2760d865211545a9afe0c6264e6f",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/gui/layout_helpers.py": {
+    "mtime": 1772547852.9593086,
+    "ast_hash": "3d0ce997dc4e659bec95a0ae72a8d19e",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/gui/qt_compat.py": {
+    "mtime": 1771374322.8577592,
+    "ast_hash": "ab88b50c4953f8d218ceffcbb420a44c",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/gui/shortcuts/__init__.py": {
+    "mtime": 1767580306.468,
+    "ast_hash": "bbd69c465f4092413a32d2cf9c8d613f",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/gui/shortcuts/shortcut_manager.py": {
+    "mtime": 1771700599.9955077,
+    "ast_hash": "90fe2c1d77d4d274b285ca15d69d8805",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/gui/state/__init__.py": {
+    "mtime": 1767580306.468,
+    "ast_hash": "f2907052c89ed774cfcb98dd94f22392",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/gui/state/preferences.py": {
+    "mtime": 1771700600.0005076,
+    "ast_hash": "7446b584ccfd3e8295b06a63efc6d0ad",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/gui/state/recent_paths.py": {
+    "mtime": 1771689064.3071654,
+    "ast_hash": "6a529203c12896bd193f8003e49b8a85",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/gui/state/session_manager.py": {
+    "mtime": 1771689064.3071654,
+    "ast_hash": "d6ac0559f51d45d1d1a1e1e33a8b2d90",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/gui/theme/__init__.py": {
+    "mtime": 1768337764.3945973,
+    "ast_hash": "a392180c3aaec28295eaa8a22bd8ccd4",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/gui/theme/manager.py": {
+    "mtime": 1771689064.3071654,
+    "ast_hash": "e743b91f0019eb2e37e660ac0fb64786",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/gui/theme/plot_themes.py": {
+    "mtime": 1767580306.469,
+    "ast_hash": "010a0ba5650cd4d01265b0720c08d1b4",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/gui/theme/style_helpers.py": {
+    "mtime": 1771689064.3071654,
+    "ast_hash": "6d27e8077f2bffabded4f912842d9c7a",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/gui/widgets/__init__.py": {
+    "mtime": 1767580306.469,
+    "ast_hash": "83f6d1c1541b622e34ed9e248fe338fe",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/gui/widgets/category_tab_bar.py": {
+    "mtime": 1771700653.922119,
+    "ast_hash": "98539be4106021febd4b5dd21019c6f2",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/gui/widgets/command_palette.py": {
+    "mtime": 1771689064.3081656,
+    "ast_hash": "e07c7bce2651418ba80748881f981ec7",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/gui/widgets/drag_drop_list.py": {
+    "mtime": 1771689064.3081656,
+    "ast_hash": "4ba7608e52134888c99d784bed478ddd",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/gui/widgets/empty_state.py": {
+    "mtime": 1771523143.8831406,
+    "ast_hash": "0b4276bcd5104e64e97584458c5cbc82",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/gui/widgets/error_dialog.py": {
+    "mtime": 1771700657.5270936,
+    "ast_hash": "598ec53f75523d6b7447e2575a7c2c4a",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/gui/widgets/toast_notification.py": {
+    "mtime": 1771700651.1391385,
+    "ast_hash": "a3c7828ed4fbf56ca2161452efb2723f",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/helper/__init__.py": {
+    "mtime": 1767580306.469,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/helper/listmodel.py": {
+    "mtime": 1771374322.8587594,
+    "ast_hash": "cbbb589d585ccf3d5285581a76d6151a",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/helper/logwriter.py": {
+    "mtime": 1767580306.469,
+    "ast_hash": "488b943e74a39bfd79718fc706cefeed",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/helper/utils.py": {
+    "mtime": 1768467397.3758435,
+    "ast_hash": "cc18fb8c8c8395584a3c3b349a317ba1",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/icons_rc.py": {
+    "mtime": 1767762001.842481,
+    "ast_hash": "f30dae3012735cdcf8c2cc8e83866151",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/io/__init__.py": {
+    "mtime": 1767762001.842481,
+    "ast_hash": "e1716ef639454acd7e88568b9e40dd73",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/io/hdf5_facade.py": {
+    "mtime": 1772582805.8497171,
+    "ast_hash": "238da3aa9e35ae7d15edd050e02a6b11",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/module/__init__.py": {
+    "mtime": 1768252293.5305882,
+    "ast_hash": "894bb07661863087da8ed0dc56cbd128",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/module/average_toolbox.py": {
+    "mtime": 1777873230.6156368,
+    "ast_hash": "1c21dae32b034741bbe808ebb36b4edc",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/module/g2mod.py": {
+    "mtime": 1772578783.2496886,
+    "ast_hash": "74e8f6e02fef08619b25dc1fe39bec84",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/module/intt.py": {
+    "mtime": 1771523143.8831406,
+    "ast_hash": "30d8b92efdfb226474ada37b61a932dd",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/module/saxs1d.py": {
+    "mtime": 1777873230.6166368,
+    "ast_hash": "847ea913121c76ed2ef365ff65c46559",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/module/saxs2d.py": {
+    "mtime": 1771523143.8841405,
+    "ast_hash": "d101b4d9164681e3f1f9cc430e1dec41",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/module/stability.py": {
+    "mtime": 1771523143.8841405,
+    "ast_hash": "f424fa02b551644e25faae5ef0ffbd1a",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/module/tauq.py": {
+    "mtime": 1772547807.726911,
+    "ast_hash": "b85585dcfb0d0a275238916d0fb515f0",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/module/twotime.py": {
+    "mtime": 1772547807.730911,
+    "ast_hash": "5612132b0a796b561b40e24fd8449eac",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/module/twotime_utils.py": {
+    "mtime": 1772578783.2496886,
+    "ast_hash": "11ec79472e831d9fb5c0f17143085967",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/plothandler/__init__.py": {
+    "mtime": 1777873230.6166368,
+    "ast_hash": "d7c90d01fa7e7c874561aeaa666fce8e",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/plothandler/lazy_proxy.py": {
+    "mtime": 1777873230.6166368,
+    "ast_hash": "ff6c78f26f4d554807a79dec4a167902",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/plothandler/matplot_qt.py": {
+    "mtime": 1772547828.8130963,
+    "ast_hash": "1a90e6ab711bd8ff2985f4291c75bef7",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/plothandler/plot_constants.py": {
+    "mtime": 1768467397.3768435,
+    "ast_hash": "1ff20d9d26055819a3150e6cf495fb20",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/plothandler/pyqtgraph_handler.py": {
+    "mtime": 1772547840.6862006,
+    "ast_hash": "66d5cb299e8b603478a4c223656105d2",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/plothandler/qt_signal_fixes.py": {
+    "mtime": 1772547807.728911,
+    "ast_hash": "3370b106fb9818ce1cb40cbcf961e8b9",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/schemas/__init__.py": {
+    "mtime": 1772547807.725911,
+    "ast_hash": "bda1f7b6a860667d6e93dbb788054532",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/schemas/validators.py": {
+    "mtime": 1778388374.9679008,
+    "ast_hash": "143b35243c27e58d7f89f0465b546cdf",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/simplemask/__init__.py": {
+    "mtime": 1767762001.8434808,
+    "ast_hash": "f950e5d19512a3701fe8b6959ea742a4",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/simplemask/area_mask.py": {
+    "mtime": 1772605063.666817,
+    "ast_hash": "f1b7a9faf00f49861b22a30f4c2f4ec4",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/simplemask/calibration.py": {
+    "mtime": 1777873230.6166368,
+    "ast_hash": "3c0c266b98b39fd155c55f61abd3b5f1",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/simplemask/drawing_tools.py": {
+    "mtime": 1768467397.3768435,
+    "ast_hash": "9131f0ba84fe1c77bfb877c29c0210eb",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/simplemask/pyqtgraph_mod.py": {
+    "mtime": 1771523143.8841405,
+    "ast_hash": "f1dfee99aee22c114c77f46bf8fff508",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/simplemask/qmap.py": {
+    "mtime": 1772549952.9415362,
+    "ast_hash": "0be989481841d1410a0d7d4a81e2a121",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/simplemask/simplemask_kernel.py": {
+    "mtime": 1772605063.6728168,
+    "ast_hash": "c5acc9e27e7ba05f47edd889fec9adf2",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/simplemask/simplemask_window.py": {
+    "mtime": 1772605063.6688168,
+    "ast_hash": "2884ce965249db95c70c37124852eb7e",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/simplemask/ui/__init__.py": {
+    "mtime": 1767762001.8444808,
+    "ast_hash": "3393e9e2dd6e9fe6a6e2f4732a2d18d1",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/simplemask/ui/simplemask_ui.py": {
+    "mtime": 1772605063.665817,
+    "ast_hash": "40f4e1c7b777d285d902ac63ef64f9c6",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/simplemask/utils.py": {
+    "mtime": 1772547807.739911,
+    "ast_hash": "0c254e439e10d101a0553eae50743580",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/threading/__init__.py": {
+    "mtime": 1772547807.730911,
+    "ast_hash": "cda382bc0cb4a507b227b1fa295da3a6",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/threading/async_kernel.py": {
+    "mtime": 1778388374.9689007,
+    "ast_hash": "3c65d361de5aaf664123f5d15e64f650",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/threading/async_workers.py": {
+    "mtime": 1778388374.9689007,
+    "ast_hash": "1648b2f4870136c62a4c6f9488638192",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/threading/base_plot_worker.py": {
+    "mtime": 1767762001.8444808,
+    "ast_hash": "a43d209608f19fd65c9edfb298bec8a5",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/threading/batch_bayesian_coordinator.py": {
+    "mtime": 1771820728.5360975,
+    "ast_hash": "d345e0a49f5ec8ea6ffff5d79e1f05e1",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/threading/bayesian_worker.py": {
+    "mtime": 1771823869.82743,
+    "ast_hash": "ac9849b10a842445e03f1e3df545ce2a",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/threading/cleanup_optimized.py": {
+    "mtime": 1778388374.9689007,
+    "ast_hash": "7fcc34f52d14299b8bb6c053fae67b2a",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/threading/gui_integration.py": {
+    "mtime": 1772547769.5795765,
+    "ast_hash": "9b9e9febcc240ab7a2eaa6b7a0c78905",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/threading/plot_workers.py": {
+    "mtime": 1772547913.9068458,
+    "ast_hash": "1f42728757944cf5cd8409047526f3c7",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/threading/progress_manager.py": {
+    "mtime": 1772547807.7359111,
+    "ast_hash": "8f0db6327ce059f595c348385c98fd30",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/threading/unified_threading.py": {
+    "mtime": 1782444866.5862422,
+    "ast_hash": "70836c0de9a5d8d6cbe637c1e7514a12",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/utils/__init__.py": {
+    "mtime": 1768252293.5335882,
+    "ast_hash": "4e93678a0c4970ebe7f23283d3cbfb07",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/utils/atomic_io.py": {
+    "mtime": 1771700600.0075076,
+    "ast_hash": "2a75547fe39df504b5178ecfb16bb42c",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/utils/common_checks.py": {
+    "mtime": 1768252293.5335882,
+    "ast_hash": "56095b04b1fa53aecec8155e3c2f0f95",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/utils/device.py": {
+    "mtime": 1772615552.777814,
+    "ast_hash": "8823c4d703ad2bbddd38682d120a04b4",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/utils/exceptions.py": {
+    "mtime": 1767762001.848481,
+    "ast_hash": "4a4d1a7563f031b872f4bc0febe2d9fa",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/utils/health_monitor.py": {
+    "mtime": 1771568091.3976266,
+    "ast_hash": "2b63c070d5ce93e4fa24e7ef2cfa0918",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/utils/lazy_loader.py": {
+    "mtime": 1771374322.8647594,
+    "ast_hash": "6352e1a2946f9b0154c6151ea37dba80",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/utils/log_formatters.py": {
+    "mtime": 1768252293.5335882,
+    "ast_hash": "6f24173d5647351bf3826933637534d1",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/utils/log_utils.py": {
+    "mtime": 1772547807.725911,
+    "ast_hash": "8e3f02dc91eea2c205cd65ceb61b09b9",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/utils/logging_config.py": {
+    "mtime": 1768467397.3778434,
+    "ast_hash": "9e61d7cd2da2417fa2ffc9fcebd9f92a",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/utils/memory_manager.py": {
+    "mtime": 1772547807.7359111,
+    "ast_hash": "70d8c130711d8cb060e3eb0e32b5fa20",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/utils/memory_predictor.py": {
+    "mtime": 1772547807.722911,
+    "ast_hash": "e5e5e25764089e77a4cd2ce2d3cfeb49",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/utils/performance_monitor.py": {
+    "mtime": 1768252293.534588,
+    "ast_hash": "49bb0c64e14ab468c46d5d288862d686",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/utils/reliability.py": {
+    "mtime": 1771523143.8851404,
+    "ast_hash": "94a8976c6a2fbd4d8164abca7d7ad80b",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/utils/reliability_manager.py": {
+    "mtime": 1768252293.534588,
+    "ast_hash": "5d5d0ba6003aeb85d6736284b9e538f3",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/utils/startup_optimizer.py": {
+    "mtime": 1768252293.534588,
+    "ast_hash": "a85d57402a8cb2574479de07071b1f21",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/utils/state_validator.py": {
+    "mtime": 1772556071.279899,
+    "ast_hash": "842eff629105073ac2ce983470388d3f",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/utils/streaming_processor.py": {
+    "mtime": 1772582805.8457172,
+    "ast_hash": "a6a3e1d5a0c0e586c6750da8f8f295b8",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/utils/validation.py": {
+    "mtime": 1768467397.3778434,
+    "ast_hash": "87fef9e8304b6800a57258df4df04c16",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/utils/vectorized_roi.py": {
+    "mtime": 1772547807.729911,
+    "ast_hash": "61e19994f515df8f3ca2b1da4d1e049c",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/utils/visualization_optimizer.py": {
+    "mtime": 1771700668.6910162,
+    "ast_hash": "ff811f01361ab3f6ee2705ec5afe98fe",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/viewer_kernel.py": {
+    "mtime": 1778388374.9689007,
+    "ast_hash": "44cb74a87f0715f844748899d5e00868",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/viewer_ui.py": {
+    "mtime": 1771523143.8861406,
+    "ast_hash": "0f28d19458f3714dbc1282f3676f2506",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/xpcs_file.py": {
+    "mtime": 1777873230.6176367,
+    "ast_hash": "27fb16ab634c51a2de9e4b02490d0662",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/xpcs_file/__init__.py": {
+    "mtime": 1777873230.6176367,
+    "ast_hash": "edb76b31d7b6adc666812708d1ae1ecd",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/xpcs_file/cache.py": {
+    "mtime": 1767580306.4740002,
+    "ast_hash": "5abb42f4db746a47d4b36bf4ab89a269",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/xpcs_file/fitting.py": {
+    "mtime": 1772547807.728911,
+    "ast_hash": "a0abd36c5a183e77256079c20f0260b6",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/xpcs_file/memory.py": {
+    "mtime": 1772605063.6648169,
+    "ast_hash": "ce2c550d69ebf7e315ae87432c2a19ec",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/xpcs_viewer.py": {
+    "mtime": 1782445151.148733,
+    "ast_hash": "660a7f368f852898aa8f30cfac16ab03",
+    "semantic_hash": ""
+  },
+  "docs/STRUCTURE.md": {
+    "mtime": 1771833060.206535,
+    "ast_hash": "1d96e280dfca87ee7b9831508f7d30e1",
+    "semantic_hash": ""
+  },
+  "docs/_includes/drawing_tools_table.rst": {
+    "mtime": 1771523143.8711402,
+    "ast_hash": "92ddeff79682fc90f8310c766f2a89de",
+    "semantic_hash": ""
+  },
+  "docs/_includes/g2_fitting_basics.rst": {
+    "mtime": 1771523143.8711402,
+    "ast_hash": "e5d4f745d842cd6ca6b556a47a65184b",
+    "semantic_hash": ""
+  },
+  "docs/_includes/geometry_parameters_table.rst": {
+    "mtime": 1771523143.8711402,
+    "ast_hash": "6f8d40c397e4276f1f22acf769df5791",
+    "semantic_hash": ""
+  },
+  "docs/_includes/installation_snippet.rst": {
+    "mtime": 1771827605.845602,
+    "ast_hash": "18d3aa7fd2607b6c18c9929b6caf6299",
+    "semantic_hash": ""
+  },
+  "docs/_includes/mask_editor_overview.rst": {
+    "mtime": 1771523143.8721404,
+    "ast_hash": "10ea24f7d4efc56ab4c399e9311a5da1",
+    "semantic_hash": ""
+  },
+  "docs/_includes/xpcsfile_basics.rst": {
+    "mtime": 1771523143.8721404,
+    "ast_hash": "5e78cc6b198c9faca712e57eb73ff908",
+    "semantic_hash": ""
+  },
+  "docs/api/backends.rst": {
+    "mtime": 1772604316.053472,
+    "ast_hash": "c41c52f7c1384f01842bc0799caf5700",
+    "semantic_hash": ""
+  },
+  "docs/api/cli.rst": {
+    "mtime": 1767580306.4549997,
+    "ast_hash": "8e4ca23b70abe9ff95ed1e38d6152286",
+    "semantic_hash": ""
+  },
+  "docs/api/constants.rst": {
+    "mtime": 1771523143.8721404,
+    "ast_hash": "d7b1ca51f4bb81dbe7718661dd4538f8",
+    "semantic_hash": ""
+  },
+  "docs/api/fileio.rst": {
+    "mtime": 1772596672.72311,
+    "ast_hash": "21377481446f77b8fc0210336e597eff",
+    "semantic_hash": ""
+  },
+  "docs/api/fitting.rst": {
+    "mtime": 1772604312.4084094,
+    "ast_hash": "c8b76bb1195bcf8af0ea70ba9e218c24",
+    "semantic_hash": ""
+  },
+  "docs/api/gui.rst": {
+    "mtime": 1771604131.231811,
+    "ast_hash": "fd86fe7bb62fe3aa4440bef93dac7e5b",
+    "semantic_hash": ""
+  },
+  "docs/api/helper.rst": {
+    "mtime": 1771523143.8721404,
+    "ast_hash": "612727bad0f4ce93c09795d4a10d74f3",
+    "semantic_hash": ""
+  },
+  "docs/api/index.rst": {
+    "mtime": 1771523143.8721404,
+    "ast_hash": "39412f9de22168db5d4a916ba1659bec",
+    "semantic_hash": ""
+  },
+  "docs/api/io.rst": {
+    "mtime": 1771523143.8721404,
+    "ast_hash": "4c9a0cda673b57896f7c4143cd31f505",
+    "semantic_hash": ""
+  },
+  "docs/api/modules.rst": {
+    "mtime": 1772596723.0981586,
+    "ast_hash": "f7f5a4dee84450aea297fe63caf60653",
+    "semantic_hash": ""
+  },
+  "docs/api/package.rst": {
+    "mtime": 1771523143.8721404,
+    "ast_hash": "872e38f3be7c79430d839663a32a67e5",
+    "semantic_hash": ""
+  },
+  "docs/api/plotting.rst": {
+    "mtime": 1767580306.4549997,
+    "ast_hash": "b3b067eeae24aae116a8e5d67d2270a5",
+    "semantic_hash": ""
+  },
+  "docs/api/schemas.rst": {
+    "mtime": 1772604317.9735053,
+    "ast_hash": "329dc61b7abbfd811cdaa0e9e26efd9d",
+    "semantic_hash": ""
+  },
+  "docs/api/simplemask.rst": {
+    "mtime": 1771523143.8731403,
+    "ast_hash": "d8c7fa59eac05d50fd95cd0c49c035f3",
+    "semantic_hash": ""
+  },
+  "docs/api/threading.rst": {
+    "mtime": 1771723089.429358,
+    "ast_hash": "634f4e161c49931ccf5829af9dc7b821",
+    "semantic_hash": ""
+  },
+  "docs/api/utils.rst": {
+    "mtime": 1772615693.2306094,
+    "ast_hash": "82cfa3d837cfa0adf42096f27a19d443",
+    "semantic_hash": ""
+  },
+  "docs/architecture/ADR-001-jax-migration.md": {
+    "mtime": 1771523143.8731403,
+    "ast_hash": "71c137dfbd4ee484e15a20bdeeac4a79",
+    "semantic_hash": ""
+  },
+  "docs/architecture/ADR-002-nlsq-migration.md": {
+    "mtime": 1771523143.8731403,
+    "ast_hash": "5b24ba36809f43594f861fde78cc03aa",
+    "semantic_hash": ""
+  },
+  "docs/architecture/ADR-003-hdf5-facade.md": {
+    "mtime": 1771523143.8731403,
+    "ast_hash": "459782a2a3b8472d128c566464b3b48a",
+    "semantic_hash": ""
+  },
+  "docs/architecture/ADR-004-backend-abstraction.md": {
+    "mtime": 1771523143.8731403,
+    "ast_hash": "dd24206adf7e76f7171c4b859d837edf",
+    "semantic_hash": ""
+  },
+  "docs/architecture/FACADE_INFRASTRUCTURE.md": {
+    "mtime": 1771722108.855738,
+    "ast_hash": "45490607b58d9f264d483433fbf4f19f",
+    "semantic_hash": ""
+  },
+  "docs/architecture/data_flow.md": {
+    "mtime": 1772574668.106107,
+    "ast_hash": "da9ceafe8d7f14c4a414a71b5e13f8c1",
+    "semantic_hash": ""
+  },
+  "docs/architecture/dependency_analysis.md": {
+    "mtime": 1771523143.8741403,
+    "ast_hash": "2c36c1dc47ac6928999f4a2b6a6b8fce",
+    "semantic_hash": ""
+  },
+  "docs/architecture/dependency_diagram.md": {
+    "mtime": 1771523143.8741403,
+    "ast_hash": "b39ecb70e7e20518b208d5e65711aa98",
+    "semantic_hash": ""
+  },
+  "docs/architecture/index.rst": {
+    "mtime": 1771523143.8741403,
+    "ast_hash": "8eaaa1204260b6ba78c35c2a76f9e337",
+    "semantic_hash": ""
+  },
+  "docs/architecture/integration_catalog.md": {
+    "mtime": 1771523143.8751404,
+    "ast_hash": "c69e5a8ee55ed960d258b80d08140a35",
+    "semantic_hash": ""
+  },
+  "docs/architecture/system_overview.md": {
+    "mtime": 1771523143.8751404,
+    "ast_hash": "c37f2198c9c92512831697ce2e886efa",
+    "semantic_hash": ""
+  },
+  "docs/authors.rst": {
+    "mtime": 1768252293.5205882,
+    "ast_hash": "f6670d238668dff4e6d705a7ab7e9384",
+    "semantic_hash": ""
+  },
+  "docs/contributing.rst": {
+    "mtime": 1771833024.035231,
+    "ast_hash": "ed49313c3321c67f8ad79eda35e7e54e",
+    "semantic_hash": ""
+  },
+  "docs/developer/optimization.rst": {
+    "mtime": 1759638157.4788814,
+    "ast_hash": "6505796c996b744a27f5c1286c1d3106",
+    "semantic_hash": ""
+  },
+  "docs/explanation/backend_architecture.rst": {
+    "mtime": 1771523143.8751404,
+    "ast_hash": "96e79ead3d3b3766c7a02fef8d7ef9db",
+    "semantic_hash": ""
+  },
+  "docs/explanation/g2_theory.rst": {
+    "mtime": 1771523143.8751404,
+    "ast_hash": "34b017492698478cced34d8a474aab30",
+    "semantic_hash": ""
+  },
+  "docs/explanation/index.rst": {
+    "mtime": 1771523143.8751404,
+    "ast_hash": "8422ec1a80f2282ba404c3d0909b10a2",
+    "semantic_hash": ""
+  },
+  "docs/explanation/mask_qmap_internals.rst": {
+    "mtime": 1771523143.8751404,
+    "ast_hash": "d894ff4c5459ab5ade7f871d3edf0aaf",
+    "semantic_hash": ""
+  },
+  "docs/explanation/twotime_analysis.rst": {
+    "mtime": 1771523143.8761404,
+    "ast_hash": "04ccae456e74894df6c527ddcad5bee1",
+    "semantic_hash": ""
+  },
+  "docs/explanation/xpcs_data_formats.rst": {
+    "mtime": 1771523143.8761404,
+    "ast_hash": "f0887614f84bc5bae32a17d2b97f8aac",
+    "semantic_hash": ""
+  },
+  "docs/history.rst": {
+    "mtime": 1778388374.9399004,
+    "ast_hash": "557d57a6cbfcd123b1534177c42f57a3",
+    "semantic_hash": ""
+  },
+  "docs/how-to/examples.rst": {
+    "mtime": 1771523143.8761404,
+    "ast_hash": "b81de5c307369a9acce1b03f5dcccd2c",
+    "semantic_hash": ""
+  },
+  "docs/how-to/index.rst": {
+    "mtime": 1771523143.8761404,
+    "ast_hash": "87a3780bcb9e6aa5c97e26742bc4f858",
+    "semantic_hash": ""
+  },
+  "docs/how-to/installation.rst": {
+    "mtime": 1772615688.6835825,
+    "ast_hash": "9a0278269bc19dac9503c2b59edb3cb6",
+    "semantic_hash": ""
+  },
+  "docs/how-to/mask_editor_guide.rst": {
+    "mtime": 1771523143.8761404,
+    "ast_hash": "85d97c57da7034263e1927c5c6021171",
+    "semantic_hash": ""
+  },
+  "docs/how-to/quickstart.rst": {
+    "mtime": 1771523143.8761404,
+    "ast_hash": "570baac3640f21c6b30e2f87ef7665d9",
+    "semantic_hash": ""
+  },
+  "docs/index.rst": {
+    "mtime": 1771832850.705631,
+    "ast_hash": "8597b26ead5f136fef577346ad86506e",
+    "semantic_hash": ""
+  },
+  "docs/operations/configuration.rst": {
+    "mtime": 1771523143.8761404,
+    "ast_hash": "711039359deb925cc84bf4eb13806e3f",
+    "semantic_hash": ""
+  },
+  "docs/operations/index.rst": {
+    "mtime": 1771523143.8761404,
+    "ast_hash": "fb1d560b20551d2ef24f70559ea23d7f",
+    "semantic_hash": ""
+  },
+  "docs/operations/logging.rst": {
+    "mtime": 1771523143.8761404,
+    "ast_hash": "74e351a8e2fd75ab24ffd0ded5825247",
+    "semantic_hash": ""
+  },
+  "docs/operations/performance.rst": {
+    "mtime": 1771523143.8771403,
+    "ast_hash": "5b725a025644f4a86ef5124d68058eae",
+    "semantic_hash": ""
+  },
+  "docs/requirements.txt": {
+    "mtime": 1772596478.2427778,
+    "ast_hash": "12647ce85e4aa922a42a0a1e08678814",
+    "semantic_hash": ""
+  },
+  "docs/tutorials/backend_selection.rst": {
+    "mtime": 1772574711.4630802,
+    "ast_hash": "e1076e1c89cba1256ea51994130b8794",
+    "semantic_hash": ""
+  },
+  "docs/tutorials/cookbook.rst": {
+    "mtime": 1772574710.736064,
+    "ast_hash": "5a76e1ba757bee242d7af485948b8fd6",
+    "semantic_hash": ""
+  },
+  "docs/tutorials/fitting_guide.rst": {
+    "mtime": 1772574666.8880794,
+    "ast_hash": "c5ffa695837f49bf2f38b12c167f0d2a",
+    "semantic_hash": ""
+  },
+  "docs/tutorials/getting_started.rst": {
+    "mtime": 1771830105.1910684,
+    "ast_hash": "72eb8eb4cc641bb053837fbe57c86257",
+    "semantic_hash": ""
+  },
+  "docs/tutorials/index.rst": {
+    "mtime": 1771523143.8771403,
+    "ast_hash": "54699cf0dff28ed6f9f6297f1e5e0c99",
+    "semantic_hash": ""
+  },
+  "docs/tutorials/mask_editor.rst": {
+    "mtime": 1771523143.8771403,
+    "ast_hash": "1be68bda2f4d736bb7eb6b2acccab85a",
+    "semantic_hash": ""
+  },
+  "docs/tutorials/quickstart.rst": {
+    "mtime": 1771523143.8771403,
+    "ast_hash": "e848e6ac5b0d74f85829fa9fd4fd2806",
+    "semantic_hash": ""
+  },
+  "docs/usage.rst": {
+    "mtime": 1771523143.8771403,
+    "ast_hash": "18efffdedceacef027225d8414e523d6",
+    "semantic_hash": ""
+  },
+  "tests/README.md": {
+    "mtime": 1768252293.521588,
+    "ast_hash": "47e263c5462a653d0ff806b95fa52de8",
+    "semantic_hash": ""
+  },
+  "tests/error_handling/README.md": {
+    "mtime": 1759638157.5388827,
+    "ast_hash": "7a7f11fe0547aaf9d3b1166cfd784891",
+    "semantic_hash": ""
+  },
+  "tests/fixtures/reference_data/README.md": {
+    "mtime": 1759638157.5398827,
+    "ast_hash": "17eed703d37fffda24c97f8dc81969b3",
+    "semantic_hash": ""
+  },
+  "tests/gui_interactive/README.md": {
+    "mtime": 1765320868.3640344,
+    "ast_hash": "48ddcb831ef1ac895ddd6db52d73e30c",
+    "semantic_hash": ""
+  },
+  "tests/reports/architecture_map.md": {
+    "mtime": 1771568091.3926265,
+    "ast_hash": "b1cfa1d41e9916a2aeae0c91f6a022ae",
+    "semantic_hash": ""
+  },
+  "tests/reports/baseline_profile.md": {
+    "mtime": 1771568091.3926265,
+    "ast_hash": "676c7a45e7f358e1896615b6c79cf8d0",
+    "semantic_hash": ""
+  },
+  "tests/reports/bottleneck_analysis.md": {
+    "mtime": 1771568091.3926265,
+    "ast_hash": "8503806355cd9391d8f1eb09563d01d7",
+    "semantic_hash": ""
+  },
+  "tests/reports/contract_audit.md": {
+    "mtime": 1771568091.3926265,
+    "ast_hash": "69fe99148f5dd147d04389ca4a39daa7",
+    "semantic_hash": ""
+  },
+  "tests/reports/jax_audit.md": {
+    "mtime": 1771568091.3926265,
+    "ast_hash": "227ade05976dec9dd18341a30487129d",
+    "semantic_hash": ""
+  },
+  "tests/reports/master_fix_list.md": {
+    "mtime": 1771568091.3936267,
+    "ast_hash": "440ed59171a5a708713fa5bd03a9ad0b",
+    "semantic_hash": ""
+  },
+  "tests/reports/numerical_audit.md": {
+    "mtime": 1771568091.3936267,
+    "ast_hash": "4f5ed20666c58633b67bcaae3e40b475",
+    "semantic_hash": ""
+  },
+  "tests/reports/optimization_summary.md": {
+    "mtime": 1771568091.3936267,
+    "ast_hash": "5899dc8f4234fff583b6fe90d7ed60b2",
+    "semantic_hash": ""
+  },
+  "tests/reports/post_optimization/benchmark_timing.txt": {
+    "mtime": 1771568091.3936267,
+    "ast_hash": "4867627ff6966d8544656aef7407b862",
+    "semantic_hash": ""
+  },
+  "tests/reports/post_optimization/cold_warm_memory.txt": {
+    "mtime": 1771568091.3936267,
+    "ast_hash": "b324c6f8b34456073b6ca72d85f03ce9",
+    "semantic_hash": ""
+  },
+  "tests/reports/post_optimization/numerical_accuracy.txt": {
+    "mtime": 1771568091.3936267,
+    "ast_hash": "1935e3ae6445ac76b03c876f4fb2372e",
+    "semantic_hash": ""
+  },
+  "tests/reports/post_optimization/test_suite_results.txt": {
+    "mtime": 1771568091.3936267,
+    "ast_hash": "9ef72b0653caa62a11eb59b5a9f0ddcb",
+    "semantic_hash": ""
+  },
+  "tests/reports/python_optimization.md": {
+    "mtime": 1771568091.3936267,
+    "ast_hash": "89b46eccfa876f9871352e2faa497bd1",
+    "semantic_hash": ""
+  },
+  "tests/reports/threading_audit.md": {
+    "mtime": 1771568091.3936267,
+    "ast_hash": "39ee7d4ff89d89d34d4b137707432043",
+    "semantic_hash": ""
+  },
+  "tests/reports/type_design_audit.md": {
+    "mtime": 1771568091.3946266,
+    "ast_hash": "49a5f6d998fbdb276c7c826082de0fd7",
+    "semantic_hash": ""
+  },
+  "tests/scientific/README.md": {
+    "mtime": 1759638157.5418828,
+    "ast_hash": "f59a0819cfb352bb230d732fd626cd58",
+    "semantic_hash": ""
+  },
+  "docs/_static/xpcsviewer_logo.jpg": {
+    "mtime": 1778104218.9037292,
+    "ast_hash": "0b6313480c78dca7c37854be4d04a970",
+    "semantic_hash": ""
+  },
+  "docs/_static/xpcsviewer_logo.png": {
+    "mtime": 1767762001.8124807,
+    "ast_hash": "d53a038be8c299877bd6c4c40be71aec",
+    "semantic_hash": ""
+  },
+  "docs/images/average.png": {
+    "mtime": 1771832402.3207579,
+    "ast_hash": "00fc5443f4f7c580f2ff5bc14c52eb98",
+    "semantic_hash": ""
+  },
+  "docs/images/diffusion.png": {
+    "mtime": 1771832401.7967489,
+    "ast_hash": "7015f85867899d5a3dbbc6453d94cb14",
+    "semantic_hash": ""
+  },
+  "docs/images/g2_fit.png": {
+    "mtime": 1771832401.2297392,
+    "ast_hash": "1e2c12819c73a92aa2e69b87777100e8",
+    "semantic_hash": ""
+  },
+  "docs/images/g2_map.png": {
+    "mtime": 1771832401.5047438,
+    "ast_hash": "288397ce01d71c934c4adeb00d53d52a",
+    "semantic_hash": ""
+  },
+  "docs/images/g2mod.png": {
+    "mtime": 1771832400.9807348,
+    "ast_hash": "901558ab34303176a2eb08b1c4a35f31",
+    "semantic_hash": ""
+  },
+  "docs/images/hdf_info.png": {
+    "mtime": 1771832402.555762,
+    "ast_hash": "67a013c7f5743bbd3e5722ccb31f99a8",
+    "semantic_hash": ""
+  },
+  "docs/images/intt.png": {
+    "mtime": 1771832400.7417307,
+    "ast_hash": "82abf0febc12d4e88e6cbccaac0eff87",
+    "semantic_hash": ""
+  },
+  "docs/images/qmap.png": {
+    "mtime": 1771832406.641832,
+    "ast_hash": "d780a6da73de5382babba0eae693633c",
+    "semantic_hash": ""
+  },
+  "docs/images/saxs1d.png": {
+    "mtime": 1771832400.2477221,
+    "ast_hash": "8de1d0ae1fe58c365ff154a36c070919",
+    "semantic_hash": ""
+  },
+  "docs/images/saxs2d.png": {
+    "mtime": 1771832399.9977179,
+    "ast_hash": "5e6761760d58fc86351ce5b53a3f1c1d",
+    "semantic_hash": ""
+  },
+  "docs/images/stability.png": {
+    "mtime": 1771832400.4987266,
+    "ast_hash": "0b448d99a12121f3f9cdcd3d75836889",
+    "semantic_hash": ""
+  },
+  "docs/images/twotime.png": {
+    "mtime": 1771832402.0707536,
+    "ast_hash": "ca212a5b7b1761bb6179ee65114eeb70",
+    "semantic_hash": ""
+  },
+  "tests/artifacts/offscreen_snap.png": {
+    "mtime": 1765324520.8707776,
+    "ast_hash": "47a8c953d5f41c2c342a06b9ae9b9698",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/ui/resources/icons/activity.svg": {
+    "mtime": 1771568091.3966267,
+    "ast_hash": "8772db68fcedd9a64bd4a5b2dd0740c7",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/ui/resources/icons/folder-open.svg": {
+    "mtime": 1771568091.3966267,
+    "ast_hash": "85b13587b14afa7ad65903b8a57e647f",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/ui/resources/icons/grid-mask.svg": {
+    "mtime": 1771568091.3966267,
+    "ast_hash": "ca92f32892de68ef523c3993cfbe7462",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/ui/resources/icons/moon.svg": {
+    "mtime": 1771568091.3966267,
+    "ast_hash": "21c159285a09e159c9985ebadfc95f41",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/ui/resources/icons/play-circle.svg": {
+    "mtime": 1771568091.3976266,
+    "ast_hash": "738d84a45ffa59e60ae86470b8f08886",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/ui/resources/icons/refresh.svg": {
+    "mtime": 1771568091.3976266,
+    "ast_hash": "80eb51bf88f69f5dd5a756739f4dc3b6",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/ui/resources/icons/sun.svg": {
+    "mtime": 1771568091.3976266,
+    "ast_hash": "6a14b86c71477cb5826a1d06a03bbc1b",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/ui/resources/icons/tab-analysis.svg": {
+    "mtime": 1771568091.3976266,
+    "ast_hash": "fd25bdddecfdc5245d55cae82f5f3cec",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/ui/resources/icons/tab-correlation.svg": {
+    "mtime": 1771568091.3976266,
+    "ast_hash": "992b908972ff5ddcdcefad5ab8ecd908",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/ui/resources/icons/tab-diagnostics.svg": {
+    "mtime": 1771568091.3976266,
+    "ast_hash": "313ea178ad10fd7f25472c8862663d3f",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/ui/resources/icons/tab-scattering.svg": {
+    "mtime": 1771568091.3976266,
+    "ast_hash": "63dd3e0dbab9fe13e042fcee858219c7",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/ui/resources/icons/tab-setup.svg": {
+    "mtime": 1771568091.3976266,
+    "ast_hash": "c0f99b01cc03b72167097f367c453d99",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/ui/resources/icons/xpcs_logo_128x128.png": {
+    "mtime": 1767762001.8444808,
+    "ast_hash": "38e35b0449711926125c1083825c2849",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/ui/resources/icons/xpcs_logo_16x16.png": {
+    "mtime": 1767762001.8444808,
+    "ast_hash": "f0002a23887e75529a9ad9990ea07294",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/ui/resources/icons/xpcs_logo_256x256.png": {
+    "mtime": 1767762001.8444808,
+    "ast_hash": "e86b63e84b8de19a0c625e58655ee73f",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/ui/resources/icons/xpcs_logo_32x32.png": {
+    "mtime": 1767762001.8444808,
+    "ast_hash": "e86eaed081da683ec6bd02cc02e083aa",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/ui/resources/icons/xpcs_logo_512x512.png": {
+    "mtime": 1767762001.8444808,
+    "ast_hash": "45d43f31f690f7c9b485bb9c5799c370",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/ui/resources/icons/xpcs_logo_64x64.png": {
+    "mtime": 1767762001.8444808,
+    "ast_hash": "d8d90afcc1cee61834e1c5b1df9ce852",
+    "semantic_hash": ""
+  },
+  "xpcsviewer/ui/resources/xpcsviewer_logo.png": {
+    "mtime": 1767762001.848481,
+    "ast_hash": "d53a038be8c299877bd6c4c40be71aec",
+    "semantic_hash": ""
   }
 }
