@@ -165,6 +165,8 @@ gpu_cuda12 = [
 [project.scripts]
 xpcsviewer = "xpcsviewer.cli_main:main"
 xpcsviewer-gui = "xpcsviewer.cli_main:main_gui"
+xv = "xpcsviewer.cli_main:main"
+xv-gui = "xpcsviewer.cli_main:main_gui"
 
 [project.urls]
 "Homepage" = "https://github.com/imewei/xpcsviewer"
