@@ -192,6 +192,8 @@ Usage
    # With debug logging
    xpcsviewer-gui --log-level DEBUG
 
+   # Short aliases also available: ``xv-gui`` (GUI) and ``xv`` (CLI)
+
 **CLI (Batch Processing):**
 
 .. code-block:: bash
@@ -331,6 +333,7 @@ Bayesian fitting with NumPyro NUTS sampler and JAX-accelerated NLSQ warm-start:
 * Models: single/double/stretched exponential, power law
 * Automatic bounds inference and fallback strategies
 * Model health diagnostics
+* Batch all-Q Bayesian fitting (fit every Q-bin in one background run)
 
 .. code-block:: python
 
