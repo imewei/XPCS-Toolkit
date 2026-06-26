@@ -240,9 +240,7 @@ class IntelligentLazyLoader:
         """Get memory usage statistics for lazy loader."""
         with self._lock:
             proxies = list(self.data_proxies.values())
-        total_registered_mb = sum(
-            proxy.estimated_size_mb for proxy in proxies
-        )
+        total_registered_mb = sum(proxy.estimated_size_mb for proxy in proxies)
         total_loaded_mb = sum(
             proxy._loaded_data.nbytes / (1024 * 1024)
             for proxy in proxies
@@ -254,9 +252,7 @@ class IntelligentLazyLoader:
             "total_loaded_data_mb": total_loaded_mb,
             "num_registered_datasets": len(proxies),
             "num_loaded_datasets": sum(
-                1
-                for proxy in proxies
-                if proxy._loaded_data is not None
+                1 for proxy in proxies if proxy._loaded_data is not None
             ),
             "memory_efficiency": 1.0
             - (total_loaded_mb / max(1.0, total_registered_mb)),
