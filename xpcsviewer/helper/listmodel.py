@@ -22,7 +22,9 @@ class ListDataModel(QtCore.QAbstractListModel):
         return None
 
     # overwrite parent method
-    def rowCount(self, index):
+    # index is optional so list-like Python callers can use rowCount() without a
+    # QModelIndex; Qt always passes one. (ListDataModel ignores the parent index.)
+    def rowCount(self, index=None):
         return min(self.max_display, len(self.input_list))
 
     def extend(self, new_input_list):
@@ -83,11 +85,11 @@ class TableDataModel(QtCore.QAbstractTableModel):
         return None
 
     # overwrite parent method
-    def rowCount(self, index):
+    def rowCount(self, index=None):
         return min(self.max_display, len(self.input_list))
 
     # overwrite parent method
-    def columnCount(self, index):
+    def columnCount(self, index=None):
         return len(self.xlabels)
 
     def headerData(self, section, orientation, role):

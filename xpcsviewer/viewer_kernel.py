@@ -955,7 +955,9 @@ class ViewerKernel(FileLocator):
         memory pressure to prevent out-of-memory conditions.
         """
         key, val = data[0], data[1]
-        if self.avg_worker_active[key] is None:
+        # .get() so a worker update for a key the GUI never pre-seeded (e.g. when
+        # driven headlessly) initializes the record instead of raising KeyError.
+        if self.avg_worker_active.get(key) is None:
             self.avg_worker_active[key] = [0, np.zeros(128, dtype=np.float32)]
         record = self.avg_worker_active[key]
         if record[0] == record[1].size:
