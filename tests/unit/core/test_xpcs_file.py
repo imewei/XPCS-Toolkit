@@ -15,6 +15,22 @@ from xpcsviewer.xpcs_file import MemoryMonitor, XpcsFile
 class TestMemoryMonitor:
     """Test suite for MemoryMonitor class."""
 
+    @pytest.fixture(autouse=True)
+    def _reset_vmem_cache(self):
+        """Clear the module-level 2s TTL vmem cache around each test.
+
+        is_memory_pressure_high reads through _get_virtual_memory()'s cache; a
+        warm cache from a prior test (or a mock leaking forward) makes the
+        psutil.virtual_memory mock/assertions flaky under parallel xdist.
+        """
+        import xpcsviewer.xpcs_file.memory as memory_mod
+
+        memory_mod._vmem_cache_result = None
+        memory_mod._vmem_cache_timestamp = 0.0
+        yield
+        memory_mod._vmem_cache_result = None
+        memory_mod._vmem_cache_timestamp = 0.0
+
     @patch("xpcsviewer.xpcs_file.memory.get_cached_memory_monitor")
     def test_get_memory_usage(self, mock_get_monitor):
         """Test memory usage retrieval."""

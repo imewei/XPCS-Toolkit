@@ -210,9 +210,8 @@ def plot_line_with_marker(
     if n_points > 2000:
         # Use logarithmic sampling for better feature preservation
         if log_x:
-            # Sample more points in log-space for log-scale data
-            np.log10(x_clean)
-            indices = np.linspace(0, n_points - 1, 1000).astype(int)
+            # Sample in log-space (denser at low indices) for log-scale data
+            indices = (np.geomspace(1, n_points, 1000) - 1).astype(int)
         else:
             # Use linear sampling for linear data
             indices = np.linspace(0, n_points - 1, 1000).astype(int)

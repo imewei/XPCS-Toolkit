@@ -18,7 +18,7 @@ from typing import Any
 import numpy as np
 import psutil
 
-from xpcsviewer.constants import CACHE_LONG_EXPIRY, MIN_CACHE_ENTRIES
+from xpcsviewer.constants import CACHE_LONG_EXPIRY
 from xpcsviewer.utils.logging_config import get_logger
 
 logger = get_logger(__name__)
@@ -341,7 +341,6 @@ class UnifiedMemoryManager:
         """Perform routine cache maintenance."""
         with self._global_lock:
             # Update cache generation for aging-based eviction
-            time.time()
 
             for cache_type in CacheType:
                 with self._cache_locks[cache_type]:
@@ -762,5 +761,5 @@ def memory_pressure_monitor():
             )
 
         memory_delta = final_memory - initial_memory
-        if abs(memory_delta) > MIN_CACHE_ENTRIES:  # 50MB threshold
+        if abs(memory_delta) > 50.0:  # 50 MB threshold
             logger.info(f"Significant memory change: {memory_delta:+.1f}MB")

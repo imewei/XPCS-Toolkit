@@ -673,7 +673,7 @@ class PartitionSchema:
             Dictionary representation of partition schema
         """
         result = {
-            "partition_map": self.partition_map,
+            "partition_map": np.copy(self.partition_map),
             "num_pts": self.num_pts,
             "val_list": self.val_list,
             "num_list": self.num_list,
@@ -681,7 +681,7 @@ class PartitionSchema:
             "version": self.version,
         }
         if self.mask is not None:
-            result["mask"] = self.mask
+            result["mask"] = np.copy(self.mask)
         if self.method is not None:
             result["method"] = self.method
         return result
@@ -769,7 +769,7 @@ class MaskSchema:
             Dictionary representation of mask schema
         """
         result = {
-            "mask": self.mask,
+            "mask": np.copy(self.mask),
             "metadata": self.metadata.to_dict(),
             "version": self.version,
         }

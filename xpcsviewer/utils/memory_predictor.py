@@ -317,7 +317,7 @@ class XPCSMemoryPredictor:
         ):
             recommendations.append("Consider using memory-mapped file access")
 
-        elif operation_type == "fit_g2" and predicted_mb > MAX_HISTORY_ENTRIES:
+        elif operation_type == "fit_g2" and predicted_mb > MEMORY_WARNING_THRESHOLD_MB:
             recommendations.append(
                 "Consider using sequential fitting instead of parallel"
             )
@@ -353,11 +353,13 @@ class XPCSMemoryPredictor:
             y = np.array(memory_values)
 
             if len(x) > 1 and np.std(x) > 0:
-                slope = np.polyfit(x, y, 1)[0]
+                coeffs = np.polyfit(x, y, 1)
+                slope = coeffs[0]
+                intercept = coeffs[1]
                 growth_rate_mb_per_hour = slope * 3600  # Convert to per hour
 
                 # Calculate volatility as standard deviation of residuals
-                y_pred = np.polyfit(x, y, 1)[0] * x + np.polyfit(x, y, 1)[1]
+                y_pred = slope * x + intercept
                 volatility = np.std(y - y_pred)
             else:
                 growth_rate_mb_per_hour = 0.0

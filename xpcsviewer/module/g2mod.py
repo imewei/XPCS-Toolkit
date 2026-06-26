@@ -200,6 +200,7 @@ def pg_plot_stability(
     hdl.clear()
 
     # Handle log scale for time range
+    t0_range = None
     if t_range:
         with np.errstate(divide="ignore", invalid="ignore"):
             t_range_positive = np.asarray(t_range)
@@ -786,9 +787,8 @@ def pg_plot_one_g2(ax, x, y, dy, color, label, symbol, symbol_size=5):
 
     # Create error bars more efficiently
     try:
-        log_x = np.log10(x_clean)
         line = pg.ErrorBarItem(
-            x=log_x, y=y_clean, top=dy_clean, bottom=dy_clean, pen=pen_line
+            x=x_clean, y=y_clean, top=dy_clean, bottom=dy_clean, pen=pen_line
         )
     except (ValueError, RuntimeWarning):
         # Handle edge cases in logarithm calculation

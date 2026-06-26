@@ -92,15 +92,24 @@ class AsyncViewerKernel(QObject):
         )
 
         # Connect signals
-        worker.signals.finished.connect(
-            lambda result: self._on_data_loaded(operation_id, result)
-        )
-        worker.signals.error.connect(
-            lambda wid, msg, tb, retry: self._on_operation_error(operation_id, msg, tb)
-        )
-        worker.signals.cancelled.connect(
-            lambda wid, reason: self._on_operation_cancelled(operation_id)
-        )
+        def finished_slot(result):
+            return self._on_data_loaded(operation_id, result)
+
+        def error_slot(wid, msg, tb, retry):
+            return self._on_operation_error(operation_id, msg, tb)
+
+        def cancelled_slot(wid, reason):
+            return self._on_operation_cancelled(operation_id)
+
+        worker.signals.finished.connect(finished_slot)
+        worker.signals.error.connect(error_slot)
+        worker.signals.cancelled.connect(cancelled_slot)
+
+        self._signal_connections[operation_id] = [
+            (worker.signals.finished, finished_slot),
+            (worker.signals.error, error_slot),
+            (worker.signals.cancelled, cancelled_slot),
+        ]
 
         # Submit to worker manager
         worker_id = self.worker_manager.submit_worker(worker)
@@ -232,15 +241,24 @@ class AsyncViewerKernel(QObject):
         )
 
         # Connect signals
-        worker.signals.finished.connect(
-            lambda result: self._on_computation_finished(operation_id, result)
-        )
-        worker.signals.error.connect(
-            lambda wid, msg, tb, retry: self._on_operation_error(operation_id, msg, tb)
-        )
-        worker.signals.cancelled.connect(
-            lambda wid, reason: self._on_operation_cancelled(operation_id)
-        )
+        def finished_slot(result):
+            return self._on_computation_finished(operation_id, result)
+
+        def error_slot(wid, msg, tb, retry):
+            return self._on_operation_error(operation_id, msg, tb)
+
+        def cancelled_slot(wid, reason):
+            return self._on_operation_cancelled(operation_id)
+
+        worker.signals.finished.connect(finished_slot)
+        worker.signals.error.connect(error_slot)
+        worker.signals.cancelled.connect(cancelled_slot)
+
+        self._signal_connections[operation_id] = [
+            (worker.signals.finished, finished_slot),
+            (worker.signals.error, error_slot),
+            (worker.signals.cancelled, cancelled_slot),
+        ]
 
         # Submit to worker manager
         worker_id = self.worker_manager.submit_worker(worker)
@@ -328,6 +346,7 @@ class AsyncViewerKernel(QObject):
         """Handle data loading completion."""
         if operation_id in self.active_operations:
             del self.active_operations[operation_id]
+        self._disconnect_signals(operation_id)
         self.data_loaded.emit(operation_id, result)
         logger.debug(f"Data loading completed: {operation_id}")
 
@@ -354,6 +373,7 @@ class AsyncViewerKernel(QObject):
         """Handle computation completion."""
         if operation_id in self.active_operations:
             del self.active_operations[operation_id]
+        self._disconnect_signals(operation_id)
         # For now, emit as data_loaded signal
         self.data_loaded.emit(operation_id, result)
         logger.debug(f"Computation completed: {operation_id}")

@@ -194,4 +194,3 @@ Correlation, Utilities) so users can visually parse the 12-tab interface.
 .. automodule:: xpcsviewer.gui.widgets.category_tab_bar
    :members:
    :no-index:
-

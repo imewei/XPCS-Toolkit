@@ -282,6 +282,7 @@ def plot_nlsq_fit(
     y_fit = model(x_pred, *popt)
 
     # Check covariance validity
+    fit_plotted = False
     if result.pcov_valid:
         try:
             # Prediction interval (wider, includes observation noise)
@@ -313,12 +314,14 @@ def plot_nlsq_fit(
         except Exception as e:
             logger.warning(f"Failed to compute uncertainty band: {e}")
             ax.plot(x_pred, y_fit, "C0-", lw=2, label="Fit (uncertainty unavailable)")
+            fit_plotted = True
     else:
         logger.warning(f"Covariance invalid: {result.pcov_message}")
         ax.plot(x_pred, y_fit, "C0-", lw=2, label="Fit (uncertainty unavailable)")
+        fit_plotted = True
 
     # Plot fit curve on top
-    if result.pcov_valid:
+    if result.pcov_valid and not fit_plotted:
         ax.plot(x_pred, y_fit, "C0-", lw=2, label="Fit")
 
     ax.set_xlabel(xlabel)

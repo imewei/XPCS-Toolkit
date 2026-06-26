@@ -107,7 +107,7 @@ def create_slice(
 
     while arr[end] >= x_range[1]:
         end -= 1
-        if end == 0:
+        if end < 0:
             break
 
     return slice(start, end + 1)

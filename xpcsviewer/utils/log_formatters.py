@@ -357,7 +357,7 @@ class PerformanceFormatter(StructuredFileFormatter):
         if delta_str:
             parts = base_msg.split("] ", 2)
             if len(parts) >= 2:
-                return f"{parts[0]}] {delta_str} {parts[1]}"
+                return f"{parts[0]}] {delta_str} {'] '.join(parts[1:])}"
 
         return base_msg
 

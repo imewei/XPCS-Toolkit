@@ -242,6 +242,10 @@ def _build_fit_result(
     # dict key iteration matches the model function's signature.
     samples_np = {k: np.asarray(samples[k]) for k in param_names if k in samples}
 
+    missing = set(param_names) - set(samples.keys())
+    if missing:
+        raise ValueError(f"MCMC did not sample: {missing}")
+
     # Convert to ArviZ DataTree first (needed for summary and BFMI)
     arviz_data = az.from_numpyro(mcmc)
 

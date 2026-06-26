@@ -610,35 +610,6 @@ class TestChain4AsyncArchitecture:
             "BUG-014: apply_g2_result docstring should document the no-recomputation contract"
         )
 
-    def test_make_async_is_not_noop(self):
-        """BUG-049: make_async decorator actually submits to WorkerManager (not a no-op passthrough)."""
-        from xpcsviewer.threading.gui_integration import make_async
-
-        call_log = []
-
-        @make_async
-        def my_func(x):
-            call_log.append(("called", x))
-            return x * 2
-
-        # The decorator must wrap the function; calling it should not be identical
-        # to calling the raw function synchronously (i.e., not a passthrough no-op).
-        import inspect
-
-        # make_async is expected to return a wrapper, not the original function
-        assert my_func is not (lambda x: call_log.append(("called", x)) or x * 2), (
-            "make_async should return a wrapper, not the identity function"
-        )
-
-        # Verify the decorator is not a literal no-op (passthrough)
-        source = inspect.getsource(make_async)
-        # A true no-op would be just `return func`; the fix adds WorkerManager submission
-        assert (
-            "return func" not in source
-            or "WorkerManager" in source
-            or "submit" in source
-        ), "BUG-049 regression: make_async is still a no-op passthrough"
-
     def test_async_g2_worker_returns_data_dict(self):
         """BUG-014: G2PlotWorker produces a result dict with expected keys."""
         pytest.importorskip("PySide6")

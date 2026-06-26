@@ -287,21 +287,29 @@ class AverageToolbox(QtCore.QRunnable):
                     logger.error("file %s is damaged, skip", fname)
 
                 if flag:
+                    # Gather this file's fields, then include all-or-nothing so
+                    # mask[m] reflects whether EVERY field was summed (consistent
+                    # per-key normalization).
+                    file_data = {}
                     for key in fields:
                         if key != "saxs_1d":
-                            data = getattr(xf, key)
+                            file_data[key] = getattr(xf, key)
                         else:
-                            data = getattr(xf, "saxs_1d")["data_raw"]
-                        if result[key] is None:
-                            result[key] = data.copy()  # Ensure we own the data
-                            mask[m] = 1
-                        elif result[key].shape == data.shape:
-                            result[key] += data
-                            mask[m] = 1
-                        else:
-                            logger.info(
-                                f"data shape does not match for key {key}, {fname}"
-                            )
+                            file_data[key] = getattr(xf, "saxs_1d")["data_raw"]
+                    shapes_ok = all(
+                        result[key] is None
+                        or result[key].shape == file_data[key].shape
+                        for key in fields
+                    )
+                    if shapes_ok:
+                        mask[m] = 1
+                        for key in fields:
+                            if result[key] is None:
+                                result[key] = file_data[key].copy()
+                            else:
+                                result[key] += file_data[key]
+                    else:
+                        logger.info(f"data shape does not match, skipping {fname}")
 
                 # Clear the XpcsFile to release memory immediately
                 if "xf" in locals():
@@ -642,21 +650,25 @@ def do_average(
                 baseline[m] = val
 
                 if flag and file_result is not None:
-                    mask[m] = 1
-                    for key in fields:
-                        data = file_result[key]
-                        if key == "saxs_1d":
-                            abs_cs_scale_tot += scale
-
-                        if result[key] is None:
-                            result[key] = data
-                        elif result[key].shape == data.shape:
-                            result[key] += data
-                        else:
-                            logger.info(
-                                f"data shape does not match for key {key}, {flist[m]}"
-                            )
-                            mask[m] = 0
+                    # All-or-nothing: include this file only if every field is
+                    # shape-compatible, so per-key normalization stays consistent.
+                    shapes_ok = all(
+                        result[key] is None
+                        or result[key].shape == file_result[key].shape
+                        for key in fields
+                    )
+                    if shapes_ok:
+                        mask[m] = 1
+                        for key in fields:
+                            data = file_result[key]
+                            if key == "saxs_1d":
+                                abs_cs_scale_tot += scale
+                            if result[key] is None:
+                                result[key] = data
+                            else:
+                                result[key] += data
+                    else:
+                        logger.info(f"data shape does not match, skipping {flist[m]}")
 
         except Exception as e:
             logger.warning(f"Parallel processing failed, falling back to serial: {e}")
@@ -676,21 +688,25 @@ def do_average(
                 baseline[m] = val
 
                 if flag and file_result is not None:
-                    mask[m] = 1
-                    for key in fields:
-                        data = file_result[key]
-                        if key == "saxs_1d":
-                            abs_cs_scale_tot += scale
-
-                        if result[key] is None:
-                            result[key] = data
-                        elif result[key].shape == data.shape:
-                            result[key] += data
-                        else:
-                            logger.info(
-                                f"data shape does not match for key {key}, {flist[m]}"
-                            )
-                            mask[m] = 0
+                    # All-or-nothing: include this file only if every field is
+                    # shape-compatible, so per-key normalization stays consistent.
+                    shapes_ok = all(
+                        result[key] is None
+                        or result[key].shape == file_result[key].shape
+                        for key in fields
+                    )
+                    if shapes_ok:
+                        mask[m] = 1
+                        for key in fields:
+                            data = file_result[key]
+                            if key == "saxs_1d":
+                                abs_cs_scale_tot += scale
+                            if result[key] is None:
+                                result[key] = data
+                            else:
+                                result[key] += data
+                    else:
+                        logger.info(f"data shape does not match, skipping {flist[m]}")
     else:
         # Sequential processing for small datasets
         logger.info("Using sequential processing")
@@ -709,32 +725,42 @@ def do_average(
             baseline[m] = val
 
             if flag and file_result is not None:
-                mask[m] = 1
-                for key in fields:
-                    data = file_result[key]
-                    if key == "saxs_1d":
-                        abs_cs_scale_tot += scale
-
-                    if result[key] is None:
-                        result[key] = data
-                    elif result[key].shape == data.shape:
-                        result[key] += data
-                    else:
-                        logger.info(
-                            f"data shape does not match for key {key}, {flist[m]}"
-                        )
-                        mask[m] = 0
+                # All-or-nothing: include this file only if every field is
+                # shape-compatible, so per-key normalization stays consistent.
+                shapes_ok = all(
+                    result[key] is None
+                    or result[key].shape == file_result[key].shape
+                    for key in fields
+                )
+                if shapes_ok:
+                    mask[m] = 1
+                    for key in fields:
+                        data = file_result[key]
+                        if key == "saxs_1d":
+                            abs_cs_scale_tot += scale
+                        if result[key] is None:
+                            result[key] = data
+                        else:
+                            result[key] += data
+                else:
+                    logger.info(f"data shape does not match, skipping {flist[m]}")
 
     if np.sum(mask) == 0:
         logger.info("no dataset is valid; check the baseline criteria.")
         return None
+    n_valid = np.sum(mask)
     for key in fields:
         if key == "saxs_1d":
-            result["saxs_1d"] /= abs_cs_scale_tot
+            # abs_cs_scale_tot can be 0 if every file's scale was 0; fall back to
+            # an unweighted mean instead of dividing by zero.
+            if abs_cs_scale_tot > 0:
+                result["saxs_1d"] /= abs_cs_scale_tot
+            else:
+                result["saxs_1d"] /= n_valid
         else:
-            result[key] /= np.sum(mask)
+            result[key] /= n_valid
         if key == "g2_err":
-            result[key] /= np.sqrt(np.sum(mask))
+            result[key] /= np.sqrt(n_valid)
 
     logger.info("the valid dataset number is %d / %d", int(np.sum(mask)), int(tot_num))
 

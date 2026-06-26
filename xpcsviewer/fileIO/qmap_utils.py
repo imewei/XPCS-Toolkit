@@ -599,6 +599,8 @@ class QMap:
         index_nature = self.dynamic_index_mapping
 
         # Create boolean mask for valid q-bins
+        if np.any(index_nature >= len(qselected_flat)) or np.any(index_nature < 0):
+            raise ValueError("dynamic_index_mapping contains out-of-bounds indices")
         valid_mask = qselected_flat[index_nature]
         qbin_valid = index_compressed[valid_mask]
 

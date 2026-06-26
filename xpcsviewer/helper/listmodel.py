@@ -54,8 +54,6 @@ class ListDataModel(QtCore.QAbstractListModel):
 
     def copy(self):
         return self.input_list.copy()
-        self.layoutChanged.emit()
-        return None
 
     def remove(self, x):
         self.input_list.remove(x)

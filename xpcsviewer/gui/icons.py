@@ -73,7 +73,8 @@ def _load_svg_icon(svg_path: Path) -> QIcon:
     svg_bytes = svg_bytes.replace(b"currentColor", _current_color.encode("ascii"))
 
     pixmap = QPixmap()
-    pixmap.loadFromData(svg_bytes)
+    if not pixmap.loadFromData(svg_bytes):
+        logger.warning("Failed to load SVG icon from %s", svg_path)
     return QIcon(pixmap)
 
 

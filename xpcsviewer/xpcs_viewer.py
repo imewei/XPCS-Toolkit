@@ -1099,12 +1099,18 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         # *absolute* path to honor FileEntry.path's contract and survive a
         # restart whose working directory differs from the data directory.
         target_files = []
-        if self.target_model is not None:
+        # Prefer the installed GUI model, but fall back to the kernel target
+        # list so a restored-but-not-yet-reattached model is never silently
+        # dropped on save.
+        target_list = self.target_model
+        if target_list is None and self.vk is not None:
+            target_list = self.vk.target
+        if target_list is not None:
             base = self.vk.path if self.vk is not None else ""
-            for row in range(len(self.target_model)):
-                name = self.target_model[row]
+            for row in range(len(target_list)):
+                name = target_list[row]
                 if name:
-                    abs_path = os.path.normpath(os.path.join(base, str(name)))
+                    abs_path = os.path.abspath(os.path.join(base, str(name)))
                     target_files.append(FileEntry(path=abs_path, order=row))
 
         # Collect window geometry
@@ -1161,7 +1167,11 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         )
 
         return SessionState(
-            data_path=self.work_dir.text() if hasattr(self, "work_dir") else None,
+            data_path=(
+                os.path.abspath(self.work_dir.text())
+                if hasattr(self, "work_dir") and self.work_dir.text()
+                else None
+            ),
             target_files=target_files,
             active_tab=self.tabWidget.currentIndex(),
             window_geometry=window_geometry,
@@ -1203,6 +1213,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
             and session.target_files
         ):
             sorted_files = sorted(session.target_files, key=lambda f: f.order)
+            restored_any = False
             for entry in sorted_files:
                 # FileEntry.path is absolute (current sessions); tolerate
                 # legacy relative entries by resolving against the data dir.
@@ -1214,6 +1225,13 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
                 if os.path.isfile(abs_path):
                     # add_target expects names relative to vk.path.
                     self.vk.add_target([os.path.relpath(abs_path, self.vk.path)])
+                    restored_any = True
+            # Attach the restored targets to the GUI target model so they are
+            # both visible in the target list AND persisted on the next save;
+            # otherwise self.target_model stays None and _collect_session_state
+            # would drop the restored targets on the next close.
+            if restored_any:
+                self.update_box(self.vk.target, mode="target")
 
         # Restore active tab (block signals to prevent spurious plot updates)
         if 0 <= session.active_tab < self.tabWidget.count():
@@ -3166,6 +3184,8 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
     def init_g2(self, qd_per_file, tel):
         if qd_per_file is None or tel is None:
             return
+        if len(qd_per_file) == 0 or len(tel) == 0:
+            return
 
         # Update Bayesian Q-index spinbox range.
         # qd_per_file is a list of per-file Q-arrays; use the first file's array length
@@ -3181,7 +3201,11 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         q_auto = self.g2_qauto.isChecked()
         t_auto = self.g2_tauto.isChecked()
 
-        # tel is a list of arrays, which may have diffent shape;
+        # tel is a list of arrays, which may have diffent shape; drop any empty
+        # arrays so [0]/[-1] indexing cannot raise.
+        tel = [t for t in tel if len(t) > 0]
+        if not tel:
+            return
         t_min = np.min([t[0] for t in tel])
         t_max = np.max([t[-1] for t in tel])
 
@@ -3196,8 +3220,12 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
             self.g2_tmax.setText(to_e(t_max * 1.1))
 
         if q_auto:
-            self.g2_qmin.setValue(np.min(qd_per_file) / 1.1)
-            self.g2_qmax.setValue(np.max(qd_per_file) * 1.1)
+            # qd_per_file arrays may be ragged (different Q-bin counts); reduce
+            # per file so np.min/np.max don't choke on a ragged object array.
+            q_min = min(np.min(q) for q in qd_per_file)
+            q_max = max(np.max(q) for q in qd_per_file)
+            self.g2_qmin.setValue(q_min / 1.1)
+            self.g2_qmax.setValue(q_max * 1.1)
 
     def plot_g2(self, dryrun=False):
         """
@@ -3613,6 +3641,9 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
             self.statusbar.showMessage(f"{folder} is not a folder.")
             folder = self.start_wd
 
+        # Normalize to an absolute path so vk.path, work_dir, and any persisted
+        # session paths survive a restart from a different working directory.
+        folder = os.path.abspath(folder)
         self.work_dir.setText(folder)
         logger.info(f"Loading data from: {sanitize_path(folder)}")
 
@@ -4130,7 +4161,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         t_range = (p[2], p[3])
 
         result = g2mod.get_data(xf_list, q_range=q_range, t_range=t_range)
-        if result[0] is False:
+        if result[0] is False or len(result[0]) == 0:
             self.statusbar.showMessage("No G2 data available", 2000)
             return None
 
@@ -4433,7 +4464,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         t_range = (p[2], p[3])
 
         result = g2mod.get_data(xf_list, q_range=q_range, t_range=t_range)
-        if result[0] is False:
+        if result[0] is False or len(result[0]) == 0:
             self.statusbar.showMessage("No G2 data available", 2000)
             return None
 
@@ -4710,7 +4741,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         result = g2mod.get_data(
             xf_list, q_range=current_q_range, t_range=current_t_range
         )
-        if result[0] is False:
+        if result[0] is False or len(result[0]) == 0:
             self.statusbar.showMessage("No G2 data available", 2000)
             return
         _, tel, g2, _g2_err, _ = result

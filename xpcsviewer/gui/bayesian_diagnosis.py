@@ -435,6 +435,9 @@ class BayesianDiagnosisWindow(QMainWindow):
 
         result = self._result
         param_names = result.param_names or list(result.samples.keys())
+        if not param_names:
+            logger.error("Cannot export fit data: no sampled parameters available")
+            return
         n_samples = len(result.samples[param_names[0]])
         x = self._x_data
         model = self._model_func

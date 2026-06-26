@@ -207,7 +207,7 @@ def compute_q_at_pixel(
     backend = get_backend()
 
     # Guard against zero or negative det_dist to prevent division by zero (BUG-051).
-    det_dist = max(det_dist, 1e-12)
+    det_dist = backend.clip(det_dist, 1e-12, float("inf"))
 
     # Wavevector magnitude: k0 = 2*pi/lambda, lambda = 12.39841984/E
     k0 = 2 * backend.pi / (E2KCONST / energy)
@@ -225,9 +225,7 @@ def compute_q_at_pixel(
     # Q magnitude
     q = backend.sin(alpha) * k0
 
-    # Always return a Python float for consistent display behavior.
-    # For gradient use cases, use compute_q_sum_squared or inline JAX computation.
-    return float(q)
+    return q
 
 
 def compute_q_sum_squared(

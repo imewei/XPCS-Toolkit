@@ -17,7 +17,7 @@ from typing import Any
 import h5py
 import numpy as np
 
-from xpcsviewer.constants import MIN_HISTORY_SAMPLES, NDIM_2D, STREAMING_CHUNK_SIZE_MB
+from xpcsviewer.constants import MAX_HISTORY_ENTRIES, MIN_HISTORY_SAMPLES
 
 from ..utils.log_utils import log_timing
 from ..utils.logging_config import get_logger
@@ -255,7 +255,7 @@ class ReadAheadCache:
         with self._lock:
             self.access_patterns[key].append((time.time(), slice_info))
             # Keep only recent accesses
-            if len(self.access_patterns[key]) > STREAMING_CHUNK_SIZE_MB:
+            if len(self.access_patterns[key]) > MAX_HISTORY_ENTRIES:
                 self.access_patterns[key].popleft()
 
     def predict_next_access(
@@ -284,7 +284,7 @@ class ReadAheadCache:
         with self._lock:
             if (
                 key not in self.access_patterns
-                or len(self.access_patterns[key]) < NDIM_2D
+                or len(self.access_patterns[key]) < MIN_HISTORY_SAMPLES
             ):
                 return predictions
 
@@ -571,7 +571,13 @@ class EnhancedHDF5Reader:
             dataset = f[dataset_path]
 
             # Read requested data
-            data = dataset[slice_info] if slice_info else dataset[:]
+            data = (
+                dataset[slice_info]
+                if slice_info
+                else dataset[()]
+                if dataset.shape == ()
+                else dataset[:]
+            )
 
             data = np.asarray(data)  # Zero-copy if already ndarray
             self.stats["bytes_read"] += data.nbytes
@@ -776,5 +782,3 @@ def get_enhanced_hdf5_reader() -> EnhancedHDF5Reader:
 def get_enhanced_reader() -> EnhancedHDF5Reader:
     """Alias for get_enhanced_hdf5_reader for backward compatibility."""
     return get_enhanced_hdf5_reader()
-
-

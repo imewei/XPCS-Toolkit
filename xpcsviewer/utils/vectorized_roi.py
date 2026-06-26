@@ -240,7 +240,6 @@ class VectorizedROICalculator(ABC):
 
         # Vectorized binning using np.bincount
         flat_qmap = np.where(roi_mask, qmap_idx, 0).ravel()
-        masked_chunk.ravel()
 
         # Process each time frame
         chunk_data = np.zeros(qsize)
@@ -458,9 +457,12 @@ class RingROICalculator(VectorizedROICalculator):
         # Calculate angular indices for binning
         pmap_roi = pmap[roi_mask]
         phi_min, phi_max = np.min(pmap_roi), np.max(pmap_roi)
-        phi_indices = np.floor((pmap - phi_min) / (phi_max - phi_min) * phi_num).astype(
-            int
-        )
+        if phi_max > phi_min:
+            phi_indices = np.floor(
+                (pmap - phi_min) / (phi_max - phi_min) * phi_num
+            ).astype(int)
+        else:
+            phi_indices = np.zeros_like(pmap, dtype=int)
         phi_indices = np.clip(phi_indices, 0, phi_num - 1)
 
         # Create angular binning mask

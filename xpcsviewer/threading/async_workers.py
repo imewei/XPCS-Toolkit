@@ -632,10 +632,10 @@ class WorkerManager(QObject):
     @Slot(str, object)
     def _on_worker_finished(self, worker_id: str, result: Any):
         """Handle worker finished signal."""
-        self.worker_results[worker_id] = result
-        if len(self.worker_results) > self._RESULT_MAX:
-            self.worker_results.pop(next(iter(self.worker_results)), None)
         with self._workers_lock:
+            self.worker_results[worker_id] = result
+            if len(self.worker_results) > self._RESULT_MAX:
+                self.worker_results.pop(next(iter(self.worker_results)), None)
             self.active_workers.pop(worker_id, None)
             no_remaining = not self.active_workers
         logger.debug(f"Worker {worker_id} finished")
@@ -646,10 +646,10 @@ class WorkerManager(QObject):
     @Slot(str, str, str)
     def _on_worker_error(self, worker_id: str, error_msg: str, traceback_str: str):
         """Handle worker error signal."""
-        self.worker_errors[worker_id] = (error_msg, traceback_str)
-        if len(self.worker_errors) > self._RESULT_MAX:
-            self.worker_errors.pop(next(iter(self.worker_errors)), None)
         with self._workers_lock:
+            self.worker_errors[worker_id] = (error_msg, traceback_str)
+            if len(self.worker_errors) > self._RESULT_MAX:
+                self.worker_errors.pop(next(iter(self.worker_errors)), None)
             self.active_workers.pop(worker_id, None)
         logger.error(f"Worker {worker_id} failed: {error_msg}")
 

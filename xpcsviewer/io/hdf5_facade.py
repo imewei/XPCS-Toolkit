@@ -14,7 +14,7 @@ Public API:
 from __future__ import annotations
 
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Literal, cast
 
 import h5py
 import hdf5plugin  # noqa: F401 - enables compression filters
@@ -130,10 +130,21 @@ class HDF5Facade:
                 dqmap = qmap_group["dqmap"][:]
                 phis = qmap_group["phis"][:]
 
-                # Read units (with defaults for backward compatibility)
-                sqmap_unit = _decode_h5_unit(qmap_group, "sqmap_unit", "nm^-1")
-                dqmap_unit = _decode_h5_unit(qmap_group, "dqmap_unit", "nm^-1")
-                phis_unit = _decode_h5_unit(qmap_group, "phis_unit", "rad")
+                # Read units (with defaults for backward compatibility).
+                # cast: QMapSchema.__post_init__ validates these at runtime,
+                # so the Literal narrowing reflects the post-construction guarantee.
+                sqmap_unit = cast(
+                    Literal["nm^-1", "A^-1"],
+                    _decode_h5_unit(qmap_group, "sqmap_unit", "nm^-1"),
+                )
+                dqmap_unit = cast(
+                    Literal["nm^-1", "A^-1"],
+                    _decode_h5_unit(qmap_group, "dqmap_unit", "nm^-1"),
+                )
+                phis_unit = cast(
+                    Literal["rad", "deg"],
+                    _decode_h5_unit(qmap_group, "phis_unit", "rad"),
+                )
 
                 # Read optional datasets
                 mask = qmap_group["mask"][:] if "mask" in qmap_group else None
@@ -391,10 +402,15 @@ class HDF5Facade:
 
                 g2_group = f[group]
 
-                # Read G2 data
+                # Read G2 data. g2 shape is (n_delay, n_q); the Q-bin is axis 1.
                 if q_idx is not None:
-                    g2 = g2_group["g2"][q_idx : q_idx + 1, :]
-                    g2_err = g2_group["g2_err"][q_idx : q_idx + 1, :]
+                    n_q = g2_group["g2"].shape[1]
+                    if q_idx < 0 or q_idx >= n_q:
+                        raise ValueError(
+                            f"q_idx {q_idx} out of bounds for {n_q} Q-bins"
+                        )
+                    g2 = g2_group["g2"][:, q_idx : q_idx + 1]
+                    g2_err = g2_group["g2_err"][:, q_idx : q_idx + 1]
                 else:
                     g2 = g2_group["g2"][:]
                     g2_err = g2_group["g2_err"][:]

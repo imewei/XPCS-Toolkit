@@ -488,7 +488,7 @@ class LineBuilder:
             delta_x = 2 * np.pi / abs(xa - xb)
             txt = f"$\\Delta_x={{{delta_x:.1f}}}\\AA$"
 
-            cen_x = np.sqrt(xa * xa)
+            cen_x = np.sqrt(xa * xb)
             cen_y = np.sqrt(ya * yb * 0.3)
         else:
             return

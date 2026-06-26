@@ -91,6 +91,7 @@ exclude: |
     dist/.*|
     build/.*|
     docs/_build/.*|
+    graphify-out/.*|
     .*\.pyc
   )$
 

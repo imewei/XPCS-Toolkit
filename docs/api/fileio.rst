@@ -52,4 +52,3 @@ Supports both "nexus" and legacy data formats from APS-8IDI.
    :undoc-members:
    :show-inheritance:
    :no-index:
-

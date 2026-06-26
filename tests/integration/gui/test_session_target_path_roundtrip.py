@@ -49,7 +49,9 @@ def _make_tab_widget():
 
 
 def _make_geometry():
-    return SimpleNamespace(x=lambda: 100, y=lambda: 120, width=lambda: 1200, height=lambda: 800)
+    return SimpleNamespace(
+        x=lambda: 100, y=lambda: 120, width=lambda: 1200, height=lambda: 800
+    )
 
 
 def test_target_files_survive_restart_from_other_cwd(
@@ -93,10 +95,10 @@ def test_target_files_survive_restart_from_other_cwd(
     state = XpcsViewer._collect_session_state(saver)
 
     # Persisted paths must be absolute and actually exist (so load_session keeps them)
-    assert [e.path for e in state.target_files] == [
-        str(data_dir / n) for n in names
-    ]
-    assert all(os.path.isabs(e.path) and os.path.isfile(e.path) for e in state.target_files)
+    assert [e.path for e in state.target_files] == [str(data_dir / n) for n in names]
+    assert all(
+        os.path.isabs(e.path) and os.path.isfile(e.path) for e in state.target_files
+    )
 
     session_manager.save_session(state)
 
@@ -106,13 +108,23 @@ def test_target_files_survive_restart_from_other_cwd(
     def fake_load_path(p):
         restorer.vk = FileLocator(p)
 
+    def fake_update_box(file_list, mode="source"):
+        # Mirror the real update_box bookkeeping that session save relies on.
+        if mode == "target":
+            restorer.target_model = file_list
+
     restorer = SimpleNamespace(
         vk=fresh_vk,
+        target_model=None,
         session_manager=session_manager,
         toast_manager=SimpleNamespace(show_warning=lambda _w: None),
         tabWidget=_make_tab_widget(),
         setGeometry=lambda *a: None,
         load_path=fake_load_path,
+        update_box=fake_update_box,
+        geometry=_make_geometry,
+        isMaximized=lambda: False,
+        work_dir=SimpleNamespace(text=lambda: str(data_dir)),
     )
     XpcsViewer._restore_session(restorer)
 
@@ -121,3 +133,48 @@ def test_target_files_survive_restart_from_other_cwd(
 
     # And no "File not found" warnings were emitted by the loader
     assert session_manager.get_warnings() == []
+
+    # Finding 1 (adversarial review): restored targets must be reattached to the
+    # GUI target model — otherwise target_model stays None and the NEXT save
+    # silently drops them. Verify the model is attached and that a SECOND save
+    # cycle still round-trips the full target list.
+    assert restorer.target_model is restorer.vk.target
+    state2 = XpcsViewer._collect_session_state(restorer)
+    assert [e.path for e in state2.target_files] == [str(data_dir / n) for n in names]
+
+
+def test_relative_data_path_persists_as_absolute(tmp_path, monkeypatch, loadable_files):
+    """Finding 2 (adversarial review): even when the data dir is opened via a
+    RELATIVE path, the persisted session must store absolute data + target paths
+    so a restart from a different cwd resolves them correctly instead of dropping
+    the target list."""
+    data_dir = tmp_path / "data"
+    data_dir.mkdir()
+    names = ["alpha.h5", "beta.h5"]
+    for n in names:
+        (data_dir / n).touch()
+
+    # Open the data dir via a RELATIVE path (cwd == tmp_path, path == "data").
+    monkeypatch.chdir(tmp_path)
+    rel_path = "data"
+    vk = FileLocator(rel_path)
+    vk.add_target(list(names))
+
+    saver = SimpleNamespace(
+        vk=vk,
+        target_model=vk.target,
+        session_manager=SimpleNamespace(),
+        geometry=_make_geometry,
+        isMaximized=lambda: False,
+        tabWidget=_make_tab_widget(),
+        work_dir=SimpleNamespace(text=lambda: rel_path),
+    )
+    state = XpcsViewer._collect_session_state(saver)
+
+    # data_path and every target path must be absolute despite the relative input
+    assert state.data_path is not None and os.path.isabs(state.data_path)
+    assert state.target_files
+    assert all(
+        os.path.isabs(e.path) and os.path.isfile(e.path) for e in state.target_files
+    )
+    assert [e.path for e in state.target_files] == [str(data_dir / n) for n in names]

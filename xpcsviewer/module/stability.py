@@ -60,7 +60,8 @@ def plot(
     plot_item.setTitle(fc.label)
     legend = plot_item.addLegend()
     anchor_param = get_pyqtgraph_anchor_params(loc, padding=15)
-    legend.anchor(**anchor_param)
+    if anchor_param:
+        legend.anchor(**anchor_param)
 
     norm_method = [None, "q2", "q4", "I0"][plot_norm]
     log_x = (False, True)[plot_type % 2]

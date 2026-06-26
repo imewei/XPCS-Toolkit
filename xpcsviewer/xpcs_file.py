@@ -29,9 +29,9 @@ from xpcsviewer.constants import (
     MEMORY_EFFICIENCY_HIGH,
     MEMORY_EFFICIENCY_LOW,
     MEMORY_EFFICIENCY_MEDIUM,
+    MEMORY_WARNING_THRESHOLD_MB,
     MIN_DISPLAY_POINTS,
     MIN_DOWNSAMPLE_POINTS,
-    MIN_PARALLEL_BATCH,
     NDIM_3D,
     SINGLE_EXP_PARAMS,
     WORKER_THRESHOLD_LARGE,
@@ -791,7 +791,7 @@ class XpcsFile:
 
             # Cache log data using unified memory manager if reasonable size
             if (
-                estimated_saxs_size_mb < MIN_PARALLEL_BATCH
+                estimated_saxs_size_mb < MEMORY_WARNING_THRESHOLD_MB
             ):  # Log data is typically smaller
                 self._memory_manager.cache_put(
                     log_cache_key, self.saxs_2d_log_data, CacheType.ARRAY_DATA
@@ -1372,9 +1372,10 @@ class XpcsFile:
         if use_absolute_crosssection and self.abs_cross_section_scale is not None:
             Iq *= self.abs_cross_section_scale
 
-        # apply sampling
+        # apply sampling (Iq is 2D (n_curves, n_q); sample the q-axis to stay
+        # aligned with q)
         if sampling > 1:
-            q, Iq = q[::sampling], Iq[::sampling]
+            q, Iq = q[::sampling], Iq[:, ::sampling]
         # apply normalization
         q, Iq, xlabel, ylabel = self.norm_saxs_data(q, Iq, norm_method=norm_method)
         return q, Iq, xlabel, ylabel

@@ -140,6 +140,7 @@ class IntelligentLazyLoader:
         # Storage for lazy data proxies
         self.data_proxies: dict[str, LazyHDF5Array] = {}
         self.weak_refs: weakref.WeakValueDictionary = weakref.WeakValueDictionary()
+        self._lock = threading.RLock()
 
         # Memory management
         self.memory_manager = get_memory_manager()
@@ -168,9 +169,10 @@ class IntelligentLazyLoader:
         LazyHDF5Array
             Lazy data proxy
         """
-        if data_key in self.data_proxies:
-            logger.debug(f"Data key {data_key} already registered")
-            return self.data_proxies[data_key]
+        with self._lock:
+            if data_key in self.data_proxies:
+                logger.debug(f"Data key {data_key} already registered")
+                return self.data_proxies[data_key]
 
         # Check memory pressure before registering large datasets
         if estimated_size_mb > 100:  # Large dataset
@@ -183,8 +185,9 @@ class IntelligentLazyLoader:
         proxy = LazyHDF5Array(data_key, hdf5_path, dataset_path, estimated_size_mb)
         proxy._loader = self  # Back-reference for cleanup-on-access
 
-        self.data_proxies[data_key] = proxy
-        self.weak_refs[data_key] = proxy
+        with self._lock:
+            self.data_proxies[data_key] = proxy
+            self.weak_refs[data_key] = proxy
 
         logger.debug(
             f"Registered lazy HDF5 data: {data_key} ({estimated_size_mb:.1f}MB)"
@@ -193,7 +196,8 @@ class IntelligentLazyLoader:
 
     def get_data(self, data_key: str) -> LazyHDF5Array | None:
         """Get lazy data proxy by key."""
-        return self.data_proxies.get(data_key)
+        with self._lock:
+            return self.data_proxies.get(data_key)
 
     def notify_access(self):
         """Called by a proxy on access; triggers cleanup under memory pressure."""
@@ -213,7 +217,9 @@ class IntelligentLazyLoader:
         cleanup_threshold = 300  # 5 minutes
 
         keys_to_cleanup = []
-        for key, proxy in self.data_proxies.items():
+        with self._lock:
+            proxies = list(self.data_proxies.items())
+        for key, proxy in proxies:
             if (
                 proxy._loaded_data is not None
                 and current_time - proxy._last_access > cleanup_threshold
@@ -221,7 +227,10 @@ class IntelligentLazyLoader:
                 keys_to_cleanup.append(key)
 
         for key in keys_to_cleanup:
-            proxy = self.data_proxies[key]
+            with self._lock:
+                proxy = self.data_proxies.get(key)
+            if proxy is None:
+                continue
             if proxy._loaded_data is not None:
                 memory_freed = proxy._loaded_data.nbytes / (1024 * 1024)
                 proxy._loaded_data = None
@@ -229,22 +238,24 @@ class IntelligentLazyLoader:
 
     def get_memory_stats(self) -> dict[str, Any]:
         """Get memory usage statistics for lazy loader."""
+        with self._lock:
+            proxies = list(self.data_proxies.values())
         total_registered_mb = sum(
-            proxy.estimated_size_mb for proxy in self.data_proxies.values()
+            proxy.estimated_size_mb for proxy in proxies
         )
         total_loaded_mb = sum(
             proxy._loaded_data.nbytes / (1024 * 1024)
-            for proxy in self.data_proxies.values()
+            for proxy in proxies
             if proxy._loaded_data is not None
         )
 
         return {
             "total_registered_data_mb": total_registered_mb,
             "total_loaded_data_mb": total_loaded_mb,
-            "num_registered_datasets": len(self.data_proxies),
+            "num_registered_datasets": len(proxies),
             "num_loaded_datasets": sum(
                 1
-                for proxy in self.data_proxies.values()
+                for proxy in proxies
                 if proxy._loaded_data is not None
             ),
             "memory_efficiency": 1.0
@@ -254,7 +265,9 @@ class IntelligentLazyLoader:
     def shutdown(self):
         """Shutdown the lazy loader system."""
         # Clear all loaded data
-        for proxy in self.data_proxies.values():
+        with self._lock:
+            proxies = list(self.data_proxies.values())
+        for proxy in proxies:
             proxy._loaded_data = None
 
         logger.info("IntelligentLazyLoader shutdown complete")

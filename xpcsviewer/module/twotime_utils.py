@@ -309,7 +309,6 @@ def read_single_c2(args):
     return c2, sampling_rate
 
 
-@lru_cache(maxsize=16)
 def get_all_c2_from_hdf(
     full_path,
     dq_selection=None,
@@ -334,7 +333,7 @@ def get_all_c2_from_hdf(
             if dq_selection is not None and int(idx[4:]) not in dq_selection:
                 continue
             idx_toload.append(idx)
-            if max_c2_num > 0 and len(idx_toload) > max_c2_num:
+            if max_c2_num > 0 and len(idx_toload) >= max_c2_num:
                 break
 
     # Parent HDF5 connection is now closed (SRE-7).
@@ -349,7 +348,7 @@ def get_all_c2_from_hdf(
     else:
         # Use single thread with a fresh connection for optimization
         with _connection_pool.get_connection(full_path, "r") as f:
-            args_list = [(f, index, max_size, correct_diag) for index in idx_toload]
+            args_list = [(f, index, max_size, correct_diag, True) for index in idx_toload]
             result = [read_single_c2(args) for args in args_list]
 
     c2_all = np.array([res[0] for res in result])
