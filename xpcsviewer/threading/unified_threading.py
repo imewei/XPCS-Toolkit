@@ -516,7 +516,6 @@ class UnifiedThreadingManager(QObject):
 
     def _adjust_pool_size(self, task_type: TaskType, delta: int):
         """Safely adjust thread pool size."""
-        pool = self._get_pool(task_type)
         # Use stored config rather than pool._max_workers (private CPython attr, P2-07).
         current_workers = self._pool_configs.get(task_type, {}).get(
             "max_workers", self.max_workers

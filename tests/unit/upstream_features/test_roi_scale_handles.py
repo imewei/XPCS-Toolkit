@@ -15,7 +15,7 @@ import numpy as np
 import pytest
 
 # Tests that require Qt GUI - marked for conditional execution
-pytestmark = pytest.mark.qt
+pytestmark = pytest.mark.gui
 
 
 class TestRectangleScaleHandles:

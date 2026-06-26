@@ -258,12 +258,15 @@ class TestMemoryThreshold:
         from xpcsviewer.backends import _reset_backend, get_backend
 
         _reset_backend()
+        # Delete XLA_PYTHON_CLIENT_MEM_FRACTION after reset_backend has imported other modules
+        # (e.g. nlsq, which defaults it to 0.8) so our custom 0.9 memory fraction is respected.
+        monkeypatch.delenv("XLA_PYTHON_CLIENT_MEM_FRACTION", raising=False)
         _ = get_backend()
 
         # Verify XLA memory fraction is set
         xla_fraction = os.environ.get("XLA_PYTHON_CLIENT_MEM_FRACTION")
-        if xla_fraction:
-            assert float(xla_fraction) == 0.9
+        assert xla_fraction is not None
+        assert float(xla_fraction) == 0.9
 
     def test_chunked_processing_for_large_arrays(self, monkeypatch) -> None:
         """Test that large arrays are processed in chunks to manage memory."""

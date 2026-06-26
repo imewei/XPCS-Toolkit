@@ -3662,9 +3662,10 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         Update tab availability based on the file formats in the target list.
 
         Disables incompatible tabs to prevent application freezing:
-        - Multitau format: Disables "Two Time" tab
-        - Twotime format: Disables "g2" and "Diffusion" tabs
-        - Mixed formats: Enables all tabs with warning
+        - Multitau only: Disables "Two Time" tab
+        - Twotime only: Disables "g2", "g2 fitting", "g2 map", and "Diffusion" tabs
+        - Both present (a combined "both" file or a multi-tau + two-time mix):
+          Enables all tabs
         """
         if not self.vk.target or len(self.vk.target) == 0:
             # No files selected, enable all tabs
@@ -3697,38 +3698,39 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
                 f"File format analysis: {file_formats}, Multitau: {multitau_count}, Twotime: {twotime_count}"
             )
 
-            # Determine tab availability based on formats
-            if len(file_formats) == 0:
+            # Determine tab availability based on which data kinds are present
+            # across the target list. A single "both" file (atype contains both
+            # "Multitau" and "Twotime") or a mix of single-type files both make
+            # all tabs valid; gating on presence, not the count of distinct
+            # formats, keeps "both" from being mislabeled as an accidental mix.
+            has_multitau = "Multitau" in file_formats
+            has_twotime = "Twotime" in file_formats
+
+            if has_multitau and has_twotime:
+                # Combined multi-tau + two-time data: every tab is usable.
+                self._enable_all_tabs()
+                self.statusbar.showMessage(
+                    f"Multitau + Two-time data detected - all tabs available "
+                    f"(Multitau: {multitau_count}, Twotime: {twotime_count})",
+                    5000,
+                )
+            elif has_multitau:
+                self._configure_for_multitau()
+                self.statusbar.showMessage(
+                    f"Multitau format detected - Two Time tab disabled ({multitau_count} files)",
+                    5000,
+                )
+            elif has_twotime:
+                self._configure_for_twotime()
+                self.statusbar.showMessage(
+                    f"Twotime format detected - G2 and Diffusion tabs disabled ({twotime_count} files)",
+                    5000,
+                )
+            else:
                 # No recognized formats, enable all tabs
                 self._enable_all_tabs()
                 self.statusbar.showMessage(
                     "Warning: File format not recognized - proceed with caution", 5000
-                )
-
-            elif len(file_formats) == 1:
-                # Single format detected
-                format_type = next(iter(file_formats))
-                if format_type == "Multitau":
-                    self._configure_for_multitau()
-                    self.statusbar.showMessage(
-                        f"Multitau format detected - Two Time tab disabled ({multitau_count} files)",
-                        5000,
-                    )
-                elif format_type == "Twotime":
-                    self._configure_for_twotime()
-                    self.statusbar.showMessage(
-                        f"Twotime format detected - G2 and Diffusion tabs disabled ({twotime_count} files)",
-                        5000,
-                    )
-                else:
-                    self._enable_all_tabs()
-
-            else:
-                # Mixed formats detected
-                self._enable_all_tabs()
-                self.statusbar.showMessage(
-                    f"Warning: Mixed formats detected (Multitau: {multitau_count}, Twotime: {twotime_count}) - use tabs carefully",
-                    8000,
                 )
 
         except Exception as e:

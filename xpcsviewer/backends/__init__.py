@@ -54,11 +54,20 @@ def _configure_jax() -> None:
         jax.config.update("jax_enable_x64", True)
 
         # Configure GPU memory fraction if specified
-        memory_fraction = float(os.environ.get("XPCS_GPU_MEMORY_FRACTION", "0.9"))
-        if 0.0 < memory_fraction < 1.0:
-            os.environ.setdefault(
-                "XLA_PYTHON_CLIENT_MEM_FRACTION", str(memory_fraction)
+        try:
+            memory_fraction = float(os.environ.get("XPCS_GPU_MEMORY_FRACTION", "0.9"))
+            if 0.0 < memory_fraction < 1.0:
+                os.environ.setdefault(
+                    "XLA_PYTHON_CLIENT_MEM_FRACTION", str(memory_fraction)
+                )
+        except ValueError:
+            # Handle invalid float gracefully (e.g. if set to "invalid" in tests)
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.warning(
+                f"Invalid XPCS_GPU_MEMORY_FRACTION value: '{os.environ.get('XPCS_GPU_MEMORY_FRACTION')}', defaulting to 0.9"
             )
+            os.environ.setdefault("XLA_PYTHON_CLIENT_MEM_FRACTION", "0.9")
 
         _jax_configured = True
     except ImportError:
@@ -151,8 +160,9 @@ def reset_backend() -> None:
 
     Also resets legacy fitting closures that capture a stale backend (JAX-N-07).
     """
-    global _current_backend
+    global _current_backend, _jax_configured
     _current_backend = None
+    _jax_configured = False
 
     # Invalidate legacy closures that captured the old backend (JAX-N-07).
     # Import is deferred to avoid circular import at module load time.
