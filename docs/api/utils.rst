@@ -66,15 +66,6 @@ and automatic cleanup.
    :members:
    :no-index:
 
-Performance Monitoring
-----------------------
-
-Real-time performance tracking for optimization and debugging.
-
-.. automodule:: xpcsviewer.utils.performance_monitor
-   :members:
-   :no-index:
-
 Reliability
 -----------
 

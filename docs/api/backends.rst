@@ -141,10 +141,6 @@ and optax. Used by the SimpleMask module for GPU-accelerated operations.
    :members:
    :no-index:
 
-.. automodule:: xpcsviewer.backends.scipy_replacements.optimize
-   :members:
-   :no-index:
-
 See Also
 --------
 
