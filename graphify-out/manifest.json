@@ -1,7 +1,7 @@
 {
   "docs/conf.py": {
-    "mtime": 1778388374.9399004,
-    "ast_hash": "3d68d1e944a4594607aed8a4a25b8fdb",
+    "mtime": 1782447763.2094572,
+    "ast_hash": "4b399a974efedae0bb4565cc93bdfc8b",
     "semantic_hash": ""
   },
   "tests/__init__.py": {
@@ -80,8 +80,8 @@
     "semantic_hash": ""
   },
   "tests/benchmarks/performance/test_fitting_jit.py": {
-    "mtime": 1768252293.5225883,
-    "ast_hash": "4510b8fcc647c89ce4413352feeea805",
+    "mtime": 1782447871.0314083,
+    "ast_hash": "e6d687f78f6a95256c7af2ed95fcdb3c",
     "semantic_hash": ""
   },
   "tests/benchmarks/performance/test_g2_saxs_opt.py": {
@@ -349,21 +349,6 @@
     "ast_hash": "2f40466903f37f4c229496b0de9a7123",
     "semantic_hash": ""
   },
-  "tests/jax_migration/backend/test_device_transfer.py": {
-    "mtime": 1771742170.029758,
-    "ast_hash": "d52b86694f2b623742561ec06e06cc98",
-    "semantic_hash": ""
-  },
-  "tests/jax_migration/backend/test_fallback.py": {
-    "mtime": 1771742165.5574422,
-    "ast_hash": "6183f44f57c20dbb3210d9964e703eb6",
-    "semantic_hash": ""
-  },
-  "tests/jax_migration/backend/test_gpu_detection.py": {
-    "mtime": 1767762001.8154807,
-    "ast_hash": "59b6d983f470a3474d86e7da364f4cb8",
-    "semantic_hash": ""
-  },
   "tests/jax_migration/conftest.py": {
     "mtime": 1767762001.8154807,
     "ast_hash": "8e69e5bdcfc8dd531a21da0de798720a",
@@ -425,13 +410,13 @@
     "semantic_hash": ""
   },
   "tests/jax_migration/integration/test_env_config.py": {
-    "mtime": 1771694771.7786,
-    "ast_hash": "0c827e09783d0d9b5a673e87a3c55b9d",
+    "mtime": 1782447853.2984183,
+    "ast_hash": "81937b91f5bf145bb73eb4f14ccfbe4c",
     "semantic_hash": ""
   },
   "tests/jax_migration/integration/test_gpu_launch.py": {
-    "mtime": 1771924733.034602,
-    "ast_hash": "364da6080895c4a13c81bc146a47a6ee",
+    "mtime": 1782447871.0324085,
+    "ast_hash": "20954a46b85480b3922d36c24a2d1adf",
     "semantic_hash": ""
   },
   "tests/jax_migration/integration/test_hdf5_jax_io.py": {
@@ -440,8 +425,8 @@
     "semantic_hash": ""
   },
   "tests/jax_migration/integration/test_memory_limits.py": {
-    "mtime": 1782445483.966007,
-    "ast_hash": "0605199040bd7d3048be8cb83c2a7f0c",
+    "mtime": 1782447871.0214083,
+    "ast_hash": "62bc5814e87ec6e3a008419d4dcdd28c",
     "semantic_hash": ""
   },
   "tests/jax_migration/integration/test_qt_jax_interop.py": {
@@ -685,8 +670,8 @@
     "semantic_hash": ""
   },
   "tests/unit/fileio/test_hdf_reader.py": {
-    "mtime": 1767580306.464,
-    "ast_hash": "aa53b9deabe293f515645e8c75686259",
+    "mtime": 1782447965.0493455,
+    "ast_hash": "be237ab7372bbfd371457778e073fd57",
     "semantic_hash": ""
   },
   "tests/unit/fileio/test_qmap_utils.py": {
@@ -915,13 +900,13 @@
     "semantic_hash": ""
   },
   "tests/unit/test_tg8_code_quality.py": {
-    "mtime": 1771600107.9547484,
-    "ast_hash": "c27494c52f00af55a25ad1319a09288c",
+    "mtime": 1782447712.27447,
+    "ast_hash": "87621c5c5adec2ead7122b5da2ca2a63",
     "semantic_hash": ""
   },
   "tests/unit/test_tg9_performance_jit_fixes.py": {
-    "mtime": 1771801784.9047923,
-    "ast_hash": "d89ac7b11563ade3550ced05735366de",
+    "mtime": 1782447719.6034687,
+    "ast_hash": "5e0102c1e0f4d753c23fca20089e8d2f",
     "semantic_hash": ""
   },
   "tests/unit/threading/__init__.py": {
@@ -1004,11 +989,6 @@
     "ast_hash": "d91c2feda4933c7703ff19580469cc90",
     "semantic_hash": ""
   },
-  "tests/unit/utils/test_visualization_optimizer.py": {
-    "mtime": 1768467397.3728435,
-    "ast_hash": "bba28a2be25ba2c85dc79c90217a6945",
-    "semantic_hash": ""
-  },
   "tests/utils/__init__.py": {
     "mtime": 1759638157.5438828,
     "ast_hash": "b509048987c21fc081ccb0fe11dcbc97",
@@ -1055,8 +1035,8 @@
     "semantic_hash": ""
   },
   "xpcsviewer/backends/__init__.py": {
-    "mtime": 1782445488.698996,
-    "ast_hash": "0af3f9e9b901b545c26f897467edc407",
+    "mtime": 1782447871.0204084,
+    "ast_hash": "eeef1fa680180ebe42301d312f2a77cb",
     "semantic_hash": ""
   },
   "xpcsviewer/backends/_base.py": {
@@ -1069,11 +1049,6 @@
     "ast_hash": "2e2d37fcdf3dc4717cf3a85e21634c30",
     "semantic_hash": ""
   },
-  "xpcsviewer/backends/_device.py": {
-    "mtime": 1772547807.724911,
-    "ast_hash": "6b7378d34b5e24e1925ca4a9f7bc266f",
-    "semantic_hash": ""
-  },
   "xpcsviewer/backends/_jax_backend.py": {
     "mtime": 1771374322.8557594,
     "ast_hash": "b985819fd6a76a2694045d96c5c3002b",
@@ -1082,11 +1057,6 @@
   "xpcsviewer/backends/_numpy_backend.py": {
     "mtime": 1771374322.8557594,
     "ast_hash": "c18376a7f9eefca29aacd4dc543d0085",
-    "semantic_hash": ""
-  },
-  "xpcsviewer/backends/io_adapter.py": {
-    "mtime": 1771374322.8557594,
-    "ast_hash": "03dc494824e4d39cb41cf4a3bb3e3761",
     "semantic_hash": ""
   },
   "xpcsviewer/backends/scipy_replacements/__init__.py": {
@@ -1102,11 +1072,6 @@
   "xpcsviewer/backends/scipy_replacements/ndimage.py": {
     "mtime": 1772582805.8567173,
     "ast_hash": "d02c577b6bcadde44bfd5e86854c0ac8",
-    "semantic_hash": ""
-  },
-  "xpcsviewer/backends/scipy_replacements/optimize.py": {
-    "mtime": 1772604356.2209344,
-    "ast_hash": "f51a5a61c3029c1a8868304cad3f84fa",
     "semantic_hash": ""
   },
   "xpcsviewer/cli/__init__.py": {
@@ -1174,11 +1139,6 @@
     "ast_hash": "23cb3e1e2f76b489d85d68283fe9269d",
     "semantic_hash": ""
   },
-  "xpcsviewer/fileIO/ftype_utils.py": {
-    "mtime": 1771374322.8567593,
-    "ast_hash": "f6b0a14c212f78195b01c6b7376c7411",
-    "semantic_hash": ""
-  },
   "xpcsviewer/fileIO/hdf_reader.py": {
     "mtime": 1772596778.6732097,
     "ast_hash": "038f2f8f4be9b770a613c7d132d92267",
@@ -1195,8 +1155,8 @@
     "semantic_hash": ""
   },
   "xpcsviewer/file_locator.py": {
-    "mtime": 1772557954.0807295,
-    "ast_hash": "a5f98e5527224f3ea21dff4ccbb78e05",
+    "mtime": 1782448034.496289,
+    "ast_hash": "bd3dd5798af987bb382f816cb74ee2b1",
     "semantic_hash": ""
   },
   "xpcsviewer/fitting/__init__.py": {
@@ -1259,11 +1219,6 @@
     "ast_hash": "7ba35afeb53562762d17b9bf0aa507ff",
     "semantic_hash": ""
   },
-  "xpcsviewer/gui/initialization_validator.py": {
-    "mtime": 1771700599.9785078,
-    "ast_hash": "3c9b2760d865211545a9afe0c6264e6f",
-    "semantic_hash": ""
-  },
   "xpcsviewer/gui/layout_helpers.py": {
     "mtime": 1772547852.9593086,
     "ast_hash": "3d0ce997dc4e659bec95a0ae72a8d19e",
@@ -1315,8 +1270,8 @@
     "semantic_hash": ""
   },
   "xpcsviewer/gui/theme/plot_themes.py": {
-    "mtime": 1767580306.469,
-    "ast_hash": "010a0ba5650cd4d01265b0720c08d1b4",
+    "mtime": 1782447921.3873768,
+    "ast_hash": "d525096ff36e1a55861c004994224193",
     "semantic_hash": ""
   },
   "xpcsviewer/gui/theme/style_helpers.py": {
@@ -1325,8 +1280,8 @@
     "semantic_hash": ""
   },
   "xpcsviewer/gui/widgets/__init__.py": {
-    "mtime": 1767580306.469,
-    "ast_hash": "83f6d1c1541b622e34ed9e248fe338fe",
+    "mtime": 1782447699.868472,
+    "ast_hash": "c841b597501e3d5a845fd71748ad765f",
     "semantic_hash": ""
   },
   "xpcsviewer/gui/widgets/category_tab_bar.py": {
@@ -1344,16 +1299,6 @@
     "ast_hash": "4ba7608e52134888c99d784bed478ddd",
     "semantic_hash": ""
   },
-  "xpcsviewer/gui/widgets/empty_state.py": {
-    "mtime": 1771523143.8831406,
-    "ast_hash": "0b4276bcd5104e64e97584458c5cbc82",
-    "semantic_hash": ""
-  },
-  "xpcsviewer/gui/widgets/error_dialog.py": {
-    "mtime": 1771700657.5270936,
-    "ast_hash": "598ec53f75523d6b7447e2575a7c2c4a",
-    "semantic_hash": ""
-  },
   "xpcsviewer/gui/widgets/toast_notification.py": {
     "mtime": 1771700651.1391385,
     "ast_hash": "a3c7828ed4fbf56ca2161452efb2723f",
@@ -1365,13 +1310,8 @@
     "semantic_hash": ""
   },
   "xpcsviewer/helper/listmodel.py": {
-    "mtime": 1771374322.8587594,
-    "ast_hash": "cbbb589d585ccf3d5285581a76d6151a",
-    "semantic_hash": ""
-  },
-  "xpcsviewer/helper/logwriter.py": {
-    "mtime": 1767580306.469,
-    "ast_hash": "488b943e74a39bfd79718fc706cefeed",
+    "mtime": 1782448027.1202953,
+    "ast_hash": "c34abb8478a44c36779b8c37acd98aef",
     "semantic_hash": ""
   },
   "xpcsviewer/helper/utils.py": {
@@ -1440,8 +1380,8 @@
     "semantic_hash": ""
   },
   "xpcsviewer/module/twotime_utils.py": {
-    "mtime": 1772578783.2496886,
-    "ast_hash": "11ec79472e831d9fb5c0f17143085967",
+    "mtime": 1782447962.7163472,
+    "ast_hash": "87b145182db3deec9fcc3cff6ddb3184",
     "semantic_hash": ""
   },
   "xpcsviewer/plothandler/__init__.py": {
@@ -1540,8 +1480,8 @@
     "semantic_hash": ""
   },
   "xpcsviewer/threading/__init__.py": {
-    "mtime": 1772547807.730911,
-    "ast_hash": "cda382bc0cb4a507b227b1fa295da3a6",
+    "mtime": 1782447684.534474,
+    "ast_hash": "87f2970c9125d0c2c6b4c8850cd39cef",
     "semantic_hash": ""
   },
   "xpcsviewer/threading/async_kernel.py": {
@@ -1574,11 +1514,6 @@
     "ast_hash": "7fcc34f52d14299b8bb6c053fae67b2a",
     "semantic_hash": ""
   },
-  "xpcsviewer/threading/gui_integration.py": {
-    "mtime": 1772547769.5795765,
-    "ast_hash": "9b9e9febcc240ab7a2eaa6b7a0c78905",
-    "semantic_hash": ""
-  },
   "xpcsviewer/threading/plot_workers.py": {
     "mtime": 1772547913.9068458,
     "ast_hash": "1f42728757944cf5cd8409047526f3c7",
@@ -1590,28 +1525,18 @@
     "semantic_hash": ""
   },
   "xpcsviewer/threading/unified_threading.py": {
-    "mtime": 1782444866.5862422,
-    "ast_hash": "70836c0de9a5d8d6cbe637c1e7514a12",
+    "mtime": 1782447926.8193731,
+    "ast_hash": "d7daa8f23569546e7e6520066a7257bf",
     "semantic_hash": ""
   },
   "xpcsviewer/utils/__init__.py": {
-    "mtime": 1768252293.5335882,
-    "ast_hash": "4e93678a0c4970ebe7f23283d3cbfb07",
+    "mtime": 1782447869.955409,
+    "ast_hash": "f7eb6e4a4c47835dcc4369483d50e63f",
     "semantic_hash": ""
   },
   "xpcsviewer/utils/atomic_io.py": {
     "mtime": 1771700600.0075076,
     "ast_hash": "2a75547fe39df504b5178ecfb16bb42c",
-    "semantic_hash": ""
-  },
-  "xpcsviewer/utils/common_checks.py": {
-    "mtime": 1768252293.5335882,
-    "ast_hash": "56095b04b1fa53aecec8155e3c2f0f95",
-    "semantic_hash": ""
-  },
-  "xpcsviewer/utils/device.py": {
-    "mtime": 1772615552.777814,
-    "ast_hash": "8823c4d703ad2bbddd38682d120a04b4",
     "semantic_hash": ""
   },
   "xpcsviewer/utils/exceptions.py": {
@@ -1654,24 +1579,9 @@
     "ast_hash": "e5e5e25764089e77a4cd2ce2d3cfeb49",
     "semantic_hash": ""
   },
-  "xpcsviewer/utils/performance_monitor.py": {
-    "mtime": 1768252293.534588,
-    "ast_hash": "49bb0c64e14ab468c46d5d288862d686",
-    "semantic_hash": ""
-  },
   "xpcsviewer/utils/reliability.py": {
     "mtime": 1771523143.8851404,
     "ast_hash": "94a8976c6a2fbd4d8164abca7d7ad80b",
-    "semantic_hash": ""
-  },
-  "xpcsviewer/utils/reliability_manager.py": {
-    "mtime": 1768252293.534588,
-    "ast_hash": "5d5d0ba6003aeb85d6736284b9e538f3",
-    "semantic_hash": ""
-  },
-  "xpcsviewer/utils/startup_optimizer.py": {
-    "mtime": 1768252293.534588,
-    "ast_hash": "a85d57402a8cb2574479de07071b1f21",
     "semantic_hash": ""
   },
   "xpcsviewer/utils/state_validator.py": {
@@ -1692,11 +1602,6 @@
   "xpcsviewer/utils/vectorized_roi.py": {
     "mtime": 1772547807.729911,
     "ast_hash": "61e19994f515df8f3ca2b1da4d1e049c",
-    "semantic_hash": ""
-  },
-  "xpcsviewer/utils/visualization_optimizer.py": {
-    "mtime": 1771700668.6910162,
-    "ast_hash": "ff811f01361ab3f6ee2705ec5afe98fe",
     "semantic_hash": ""
   },
   "xpcsviewer/viewer_kernel.py": {
@@ -1735,8 +1640,8 @@
     "semantic_hash": ""
   },
   "xpcsviewer/xpcs_viewer.py": {
-    "mtime": 1782445151.148733,
-    "ast_hash": "660a7f368f852898aa8f30cfac16ab03",
+    "mtime": 1782447703.9984713,
+    "ast_hash": "a3373fdb87114942986a6451748be2aa",
     "semantic_hash": ""
   },
   "docs/STRUCTURE.md": {
@@ -1790,8 +1695,8 @@
     "semantic_hash": ""
   },
   "docs/api/fileio.rst": {
-    "mtime": 1772596672.72311,
-    "ast_hash": "21377481446f77b8fc0210336e597eff",
+    "mtime": 1782447791.236447,
+    "ast_hash": "8b964ab90501914c9129075f38660c20",
     "semantic_hash": ""
   },
   "docs/api/fitting.rst": {
@@ -1800,13 +1705,13 @@
     "semantic_hash": ""
   },
   "docs/api/gui.rst": {
-    "mtime": 1771604131.231811,
-    "ast_hash": "fd86fe7bb62fe3aa4440bef93dac7e5b",
+    "mtime": 1782447778.123452,
+    "ast_hash": "34217fef236a3826b91f4a25245fcbb9",
     "semantic_hash": ""
   },
   "docs/api/helper.rst": {
-    "mtime": 1771523143.8721404,
-    "ast_hash": "612727bad0f4ce93c09795d4a10d74f3",
+    "mtime": 1782447799.8934436,
+    "ast_hash": "896c2be3dc86d9790bdbebd0994106e3",
     "semantic_hash": ""
   },
   "docs/api/index.rst": {
@@ -1845,13 +1750,13 @@
     "semantic_hash": ""
   },
   "docs/api/threading.rst": {
-    "mtime": 1771723089.429358,
-    "ast_hash": "634f4e161c49931ccf5829af9dc7b821",
+    "mtime": 1782447784.8564496,
+    "ast_hash": "d194526e92842ba776fe74982e906eaa",
     "semantic_hash": ""
   },
   "docs/api/utils.rst": {
-    "mtime": 1772615693.2306094,
-    "ast_hash": "82cfa3d837cfa0adf42096f27a19d443",
+    "mtime": 1782447770.4144547,
+    "ast_hash": "e86b3893af41fdd543fed2fadcfba097",
     "semantic_hash": ""
   },
   "docs/architecture/ADR-001-jax-migration.md": {
