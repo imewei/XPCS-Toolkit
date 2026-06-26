@@ -28,32 +28,6 @@ from xpcsviewer.gui.qt_compat import (
 )
 
 
-def set_panel_margins(widget: QWidget, margins: int = 12) -> None:
-    """
-    Set consistent margins on a widget's layout.
-
-    Args:
-        widget: Widget with a layout to modify
-        margins: Margin size in pixels (default 12)
-    """
-    layout = widget.layout()
-    if layout:
-        layout.setContentsMargins(margins, margins, margins, margins)
-
-
-def set_layout_spacing(widget: QWidget, spacing: int = 8) -> None:
-    """
-    Set consistent spacing on a widget's layout.
-
-    Args:
-        widget: Widget with a layout to modify
-        spacing: Spacing between items in pixels
-    """
-    layout = widget.layout()
-    if layout:
-        layout.setSpacing(spacing)
-
-
 def apply_group_box_styling(
     group_box: QGroupBox,
     style: Literal["panel", "card", "minimal"] = "panel",
@@ -129,25 +103,6 @@ def create_separator(
     separator.setFrameShadow(QFrame.Shadow.Plain)
     separator.setObjectName("themeSeparator")
     return separator
-
-
-def create_section_header(text: str, level: int = 1) -> QLabel:
-    """
-    Create a styled section header label.
-
-    Args:
-        text: Header text
-        level: Header level (1 = main, 2 = sub)
-
-    Returns:
-        Styled QLabel
-    """
-    label = QLabel(text)
-    if level == 1:
-        label.setProperty("role", "sectionTitle")
-    else:
-        label.setProperty("role", "subTitle")
-    return label
 
 
 def improve_file_panel_layout(parent: QWidget) -> None:
@@ -553,24 +508,6 @@ def apply_all_layout_improvements(main_window: QWidget) -> None:
 
     # Final pass: tighten scroll areas, splitters, inner layouts
     _tighten_all_containers(main_window)
-
-
-def add_visual_separator_before_action(
-    layout: QLayout,
-    position: int = -1,
-) -> None:
-    """
-    Add a visual separator before action buttons in a layout.
-
-    Args:
-        layout: The layout to modify
-        position: Position to insert (-1 for end)
-    """
-    separator = create_separator()
-    if position < 0:
-        position = layout.count() - 1
-    if hasattr(layout, "insertWidget"):
-        layout.insertWidget(position, separator)
 
 
 def _apply_compact_density_to_sidebars(main_window: QWidget) -> None:

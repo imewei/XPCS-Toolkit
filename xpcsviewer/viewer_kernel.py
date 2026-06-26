@@ -22,40 +22,23 @@ from .xpcs_file import MemoryMonitor, XpcsFile
 
 # Lazy-loaded modules cache
 _module_cache: dict[str, ModuleType | type] = {}
+# Analysis modules loaded lazily as whole modules (name == submodule name)
+_LAZY_MODULES = frozenset(
+    {"g2mod", "intt", "saxs1d", "saxs2d", "stability", "tauq", "twotime"}
+)
 
 
 def _get_module(module_name: str) -> ModuleType | type:
     """Lazy load analysis modules to improve startup time"""
     if module_name not in _module_cache:
-        if module_name == "g2mod":
-            from .module import g2mod
+        if module_name in _LAZY_MODULES:
+            import importlib
 
-            _module_cache[module_name] = g2mod
-        elif module_name == "intt":
-            from .module import intt
-
-            _module_cache[module_name] = intt
-        elif module_name == "saxs1d":
-            from .module import saxs1d
-
-            _module_cache[module_name] = saxs1d
-        elif module_name == "saxs2d":
-            from .module import saxs2d
-
-            _module_cache[module_name] = saxs2d
-        elif module_name == "stability":
-            from .module import stability
-
-            _module_cache[module_name] = stability
-        elif module_name == "tauq":
-            from .module import tauq
-
-            _module_cache[module_name] = tauq
-        elif module_name == "twotime":
-            from .module import twotime
-
-            _module_cache[module_name] = twotime
+            _module_cache[module_name] = importlib.import_module(
+                f".module.{module_name}", __package__
+            )
         elif module_name == "average_toolbox":
+            # Special case: callers expect the class, not the module
             from .module.average_toolbox import AverageToolbox
 
             _module_cache[module_name] = AverageToolbox

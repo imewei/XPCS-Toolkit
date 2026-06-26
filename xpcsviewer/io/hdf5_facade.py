@@ -37,6 +37,20 @@ if TYPE_CHECKING:
 logger = get_logger(__name__)
 
 
+def _decode_h5_unit(group: Any, key: str, default: str) -> str:
+    """Read a unit value from an HDF5 group, decoding bytes to str.
+
+    Handles values stored as a Dataset, raw bytes, or a plain default.
+    """
+    value = group.get(key, default)
+    if isinstance(value, h5py.Dataset):
+        raw = value[()]
+        return raw.decode("utf-8") if isinstance(raw, (bytes, np.bytes_)) else str(raw)
+    if isinstance(value, (bytes, np.bytes_)):
+        return value.decode("utf-8")
+    return value
+
+
 class HDF5ValidationError(Exception):
     """Raised when HDF5 data fails schema validation."""
 
@@ -117,38 +131,9 @@ class HDF5Facade:
                 phis = qmap_group["phis"][:]
 
                 # Read units (with defaults for backward compatibility)
-                sqmap_unit = qmap_group.get("sqmap_unit", "nm^-1")
-                if isinstance(sqmap_unit, h5py.Dataset):
-                    val = sqmap_unit[()]
-                    sqmap_unit = (
-                        val.decode("utf-8")
-                        if isinstance(val, (bytes, np.bytes_))
-                        else str(val)
-                    )
-                elif isinstance(sqmap_unit, (bytes, np.bytes_)):
-                    sqmap_unit = sqmap_unit.decode("utf-8")
-
-                dqmap_unit = qmap_group.get("dqmap_unit", "nm^-1")
-                if isinstance(dqmap_unit, h5py.Dataset):
-                    val = dqmap_unit[()]
-                    dqmap_unit = (
-                        val.decode("utf-8")
-                        if isinstance(val, (bytes, np.bytes_))
-                        else str(val)
-                    )
-                elif isinstance(dqmap_unit, (bytes, np.bytes_)):
-                    dqmap_unit = dqmap_unit.decode("utf-8")
-
-                phis_unit = qmap_group.get("phis_unit", "rad")
-                if isinstance(phis_unit, h5py.Dataset):
-                    val = phis_unit[()]
-                    phis_unit = (
-                        val.decode("utf-8")
-                        if isinstance(val, (bytes, np.bytes_))
-                        else str(val)
-                    )
-                elif isinstance(phis_unit, (bytes, np.bytes_)):
-                    phis_unit = phis_unit.decode("utf-8")
+                sqmap_unit = _decode_h5_unit(qmap_group, "sqmap_unit", "nm^-1")
+                dqmap_unit = _decode_h5_unit(qmap_group, "dqmap_unit", "nm^-1")
+                phis_unit = _decode_h5_unit(qmap_group, "phis_unit", "rad")
 
                 # Read optional datasets
                 mask = qmap_group["mask"][:] if "mask" in qmap_group else None

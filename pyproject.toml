@@ -88,14 +88,10 @@ dependencies = [
     "numpy>=2.3",
     "scipy>=1.17",
     "pandas>=3.0",
-    "scikit-learn>=1.8",
-    "scikit-image>=0.26",
     # JAX ecosystem
     "jax>=0.8, <0.10",
     "jaxlib>=0.8, <0.10",
     "interpax>=0.3",
-    "optimistix>=0.1",
-    "optax>=0.2",
     # Bayesian inference
     "numpyro>=0.20",
     "arviz>=1.0",
@@ -107,7 +103,6 @@ dependencies = [
     # Plotting
     "matplotlib>=3.10",
     # System utilities
-    "joblib>=1.5",
     "tqdm>=4.67.1",
     "psutil>=7.2",
     # Testing
@@ -139,10 +134,6 @@ dependencies = [
     "sphinx-copybutton>=0.5.2",
     "sphinx-design>=0.7",
     "sphinxcontrib-mermaid>=2.0",
-    # Profiling
-    "memory-profiler>=0.61",
-    "line-profiler>=5.0; sys_platform != 'win32'",
-    "pympler>=1.1",
     # Notebooks
     "nbconvert>=7.17",
     "ipykernel>=7.2",

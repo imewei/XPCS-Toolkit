@@ -28,41 +28,6 @@ from ..xpcs_file import XpcsFile as XF
 logger = get_logger(__name__)
 
 
-def average_plot_cluster(self, hdl1, num_clusters=2):
-    if (
-        self.meta["avg_file_list"] != tuple(self.target)
-        or "avg_intt_minmax" not in self.meta
-    ):
-        logger.info("avg cache not exist")
-        labels = ["Int_t"]
-        res = self.fetch(labels, file_list=self.target)
-        Int_t = res["Int_t"][:, 1, :].astype(np.float32)
-        Int_t = Int_t / np.max(Int_t)
-        intt_minmax = []
-        for n in range(len(self.target)):
-            intt_minmax.append([np.min(Int_t[n]), np.max(Int_t[n])])
-        intt_minmax = np.array(intt_minmax).T.astype(np.float32)
-
-        self.meta["avg_file_list"] = tuple(self.target)
-        self.meta["avg_intt_minmax"] = intt_minmax
-        self.meta["avg_intt_mask"] = np.ones(len(self.target))
-
-    else:
-        logger.info("using avg cache")
-        intt_minmax = self.meta["avg_intt_minmax"]
-
-    from sklearn.cluster import KMeans as sk_kmeans
-
-    y_pred = sk_kmeans(n_clusters=num_clusters).fit_predict(intt_minmax.T)
-    freq = np.bincount(y_pred)
-    self.meta["avg_intt_mask"] = y_pred == y_pred[freq.argmax()]
-    valid_num = np.sum(y_pred == y_pred[freq.argmax()])
-    title = f"{valid_num} / {y_pred.size}"
-    hdl1.show_scatter(
-        intt_minmax, color=y_pred, xlabel="Int-t min", ylabel="Int-t max", title=title
-    )
-
-
 class WorkerSignal(QObject):
     progress = QtCore.Signal(tuple)
     values = QtCore.Signal(tuple)

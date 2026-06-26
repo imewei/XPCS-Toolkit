@@ -1140,13 +1140,13 @@
     "semantic_hash": ""
   },
   "xpcsviewer/fileIO/hdf_reader.py": {
-    "mtime": 1772596778.6732097,
-    "ast_hash": "038f2f8f4be9b770a613c7d132d92267",
+    "mtime": 1782480353.713414,
+    "ast_hash": "bba07b49badf8690e4292c92aa8e2eaf",
     "semantic_hash": ""
   },
   "xpcsviewer/fileIO/hdf_reader_enhanced.py": {
-    "mtime": 1772558656.427507,
-    "ast_hash": "8b51684677ddcbc28c0d90fc2b703f3c",
+    "mtime": 1782480353.713414,
+    "ast_hash": "cd3689c76954ee6c62cdc33417d57d30",
     "semantic_hash": ""
   },
   "xpcsviewer/fileIO/qmap_utils.py": {
@@ -1155,8 +1155,8 @@
     "semantic_hash": ""
   },
   "xpcsviewer/file_locator.py": {
-    "mtime": 1782448662.626533,
-    "ast_hash": "a5f98e5527224f3ea21dff4ccbb78e05",
+    "mtime": 1782449497.8340142,
+    "ast_hash": "e1f8b5fa30873b677adbd06dfabad6e3",
     "semantic_hash": ""
   },
   "xpcsviewer/fitting/__init__.py": {
@@ -1220,8 +1220,8 @@
     "semantic_hash": ""
   },
   "xpcsviewer/gui/layout_helpers.py": {
-    "mtime": 1772547852.9593086,
-    "ast_hash": "3d0ce997dc4e659bec95a0ae72a8d19e",
+    "mtime": 1782480353.713414,
+    "ast_hash": "06de024229689c05bd989047db9e8c18",
     "semantic_hash": ""
   },
   "xpcsviewer/gui/qt_compat.py": {
@@ -1255,8 +1255,8 @@
     "semantic_hash": ""
   },
   "xpcsviewer/gui/state/session_manager.py": {
-    "mtime": 1782448326.2449806,
-    "ast_hash": "d6ac0559f51d45d1d1a1e1e33a8b2d90",
+    "mtime": 1782449497.8340142,
+    "ast_hash": "fbf527e28c0340c8c2d50b8816cd2e42",
     "semantic_hash": ""
   },
   "xpcsviewer/gui/theme/__init__.py": {
@@ -1275,8 +1275,8 @@
     "semantic_hash": ""
   },
   "xpcsviewer/gui/theme/style_helpers.py": {
-    "mtime": 1771689064.3071654,
-    "ast_hash": "6d27e8077f2bffabded4f912842d9c7a",
+    "mtime": 1782480353.713414,
+    "ast_hash": "001b2859fa271aa948153e08756d7b48",
     "semantic_hash": ""
   },
   "xpcsviewer/gui/widgets/__init__.py": {
@@ -1295,8 +1295,8 @@
     "semantic_hash": ""
   },
   "xpcsviewer/gui/widgets/drag_drop_list.py": {
-    "mtime": 1782448326.2449806,
-    "ast_hash": "4ba7608e52134888c99d784bed478ddd",
+    "mtime": 1782449497.8340142,
+    "ast_hash": "d7ec494cb1fd7f222b6a4227e976d470",
     "semantic_hash": ""
   },
   "xpcsviewer/gui/widgets/toast_notification.py": {
@@ -1310,8 +1310,8 @@
     "semantic_hash": ""
   },
   "xpcsviewer/helper/listmodel.py": {
-    "mtime": 1782448701.1354778,
-    "ast_hash": "c34abb8478a44c36779b8c37acd98aef",
+    "mtime": 1782480353.713414,
+    "ast_hash": "ebcceea7e600327f10d95c66506428c8",
     "semantic_hash": ""
   },
   "xpcsviewer/helper/utils.py": {
@@ -1340,8 +1340,8 @@
     "semantic_hash": ""
   },
   "xpcsviewer/module/average_toolbox.py": {
-    "mtime": 1777873230.6156368,
-    "ast_hash": "1c21dae32b034741bbe808ebb36b4edc",
+    "mtime": 1782480353.713414,
+    "ast_hash": "9604168cd72f7bca363becfe2b443731",
     "semantic_hash": ""
   },
   "xpcsviewer/module/g2mod.py": {
@@ -1455,8 +1455,8 @@
     "semantic_hash": ""
   },
   "xpcsviewer/simplemask/simplemask_kernel.py": {
-    "mtime": 1772605063.6728168,
-    "ast_hash": "c5acc9e27e7ba05f47edd889fec9adf2",
+    "mtime": 1782480353.7144141,
+    "ast_hash": "39dd13ef573cc118b53720a9acd4357b",
     "semantic_hash": ""
   },
   "xpcsviewer/simplemask/simplemask_window.py": {
@@ -1550,8 +1550,8 @@
     "semantic_hash": ""
   },
   "xpcsviewer/utils/lazy_loader.py": {
-    "mtime": 1771374322.8647594,
-    "ast_hash": "6352e1a2946f9b0154c6151ea37dba80",
+    "mtime": 1782480353.7144141,
+    "ast_hash": "77f0cab6ca14775e231216e7826a4ea7",
     "semantic_hash": ""
   },
   "xpcsviewer/utils/log_formatters.py": {
@@ -1565,8 +1565,8 @@
     "semantic_hash": ""
   },
   "xpcsviewer/utils/logging_config.py": {
-    "mtime": 1768467397.3778434,
-    "ast_hash": "9e61d7cd2da2417fa2ffc9fcebd9f92a",
+    "mtime": 1782480353.7144141,
+    "ast_hash": "e9efe4b637a02435f650b047f31e9e07",
     "semantic_hash": ""
   },
   "xpcsviewer/utils/memory_manager.py": {
@@ -1640,8 +1640,8 @@
     "semantic_hash": ""
   },
   "xpcsviewer/xpcs_viewer.py": {
-    "mtime": 1782448597.9726243,
-    "ast_hash": "a3373fdb87114942986a6451748be2aa",
+    "mtime": 1782449497.8350143,
+    "ast_hash": "26c9689153063863ebc6f8d7f67f753e",
     "semantic_hash": ""
   },
   "docs/STRUCTURE.md": {

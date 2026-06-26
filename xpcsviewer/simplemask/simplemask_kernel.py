@@ -160,20 +160,6 @@ class SimpleMaskKernel:
                 logger.debug(f"compute_qmap: result sqmap shape={sqmap.shape}")
         return self.qmap, self.qmap_unit
 
-    def mask_evaluate(self, target: str, **kwargs) -> str:
-        """Evaluate a mask type without applying.
-
-        Args:
-            target: Mask type key
-            **kwargs: Parameters for mask evaluation
-
-        Returns:
-            Description string from the mask worker
-        """
-        if self.mask_kernel is None:
-            return "Mask kernel not initialized"
-        return self.mask_kernel.evaluate(target, **kwargs)
-
     def mask_action(self, action: Literal["undo", "redo", "reset"] = "undo") -> None:
         """Execute undo/redo/reset on mask history.
 

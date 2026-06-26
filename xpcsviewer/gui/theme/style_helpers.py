@@ -157,20 +157,6 @@ def set_button_role(button: QPushButton, role: str) -> None:
     button.update()
 
 
-def apply_primary_buttons(widget: QWidget, button_names: list[str]) -> None:
-    """
-    Apply primary (emphasized) styling to action buttons.
-
-    Args:
-        widget: Parent widget containing the buttons
-        button_names: List of button object names to style
-    """
-    for name in button_names:
-        button = widget.findChild(QPushButton, name)
-        if button is not None:
-            set_button_role(button, "primary")
-
-
 def set_settings_panel(group_box: QGroupBox) -> None:
     """
     Apply settings panel styling to a QGroupBox.

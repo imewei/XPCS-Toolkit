@@ -36,18 +36,6 @@ class AccessPattern(Enum):
 
 
 @dataclass
-class ReadRequest:
-    """Request for HDF5 data reading."""
-
-    file_path: str
-    dataset_path: str
-    slice_info: tuple[slice, ...] | None
-    priority: float = 0.5
-    requested_time: float = 0.0
-    access_pattern: AccessPattern = AccessPattern.RANDOM
-
-
-@dataclass
 class CacheEntry:
     """Enhanced cache entry for HDF5 data."""
 
@@ -757,45 +745,6 @@ class EnhancedHDF5Reader:
                 "compression_opts": dataset.compression_opts,
             }
 
-    def optimize_chunking_for_dataset(
-        self,
-        file_path: str,
-        dataset_path: str,
-        access_pattern: AccessPattern | None = None,
-    ) -> tuple[int, ...]:
-        """
-        Get optimal chunk shape for dataset based on access pattern.
-
-        Parameters
-        ----------
-        file_path : str
-            Path to HDF5 file
-        dataset_path : str
-            Path to dataset
-        access_pattern : Optional[AccessPattern]
-            Known access pattern (auto-detected if None)
-
-        Returns
-        -------
-        tuple[int, ...]
-            Optimal chunk shape
-        """
-        info = self.get_dataset_info(file_path, dataset_path)
-
-        if access_pattern is None:
-            # Auto-detect pattern from access history
-            key = f"{file_path}:{dataset_path}"
-            recent_accesses = [
-                slice_info for _, slice_info in self.cache.access_patterns[key]
-            ]
-            access_pattern = self.chunker.analyze_access_pattern(
-                file_path, dataset_path, recent_accesses
-            )
-
-        return self.chunker.get_optimal_chunk_shape(
-            info["shape"], info["dtype"], access_pattern
-        )
-
     def clear_caches(self):
         """Clear all caches."""
         self.cache.clear_cache()
@@ -829,19 +778,3 @@ def get_enhanced_reader() -> EnhancedHDF5Reader:
     return get_enhanced_hdf5_reader()
 
 
-def read_hdf5_optimized(
-    file_path: str, dataset_path: str, slice_info: tuple[slice, ...] | None = None
-) -> np.ndarray:
-    """Convenience function for optimized HDF5 reading."""
-    return get_enhanced_hdf5_reader().read_dataset(file_path, dataset_path, slice_info)
-
-
-def read_multiple_hdf5_optimized(
-    file_path: str,
-    dataset_paths: list[str],
-    slice_info: tuple[slice, ...] | None = None,
-) -> dict[str, np.ndarray]:
-    """Convenience function for reading multiple datasets."""
-    return get_enhanced_hdf5_reader().read_multiple_datasets(
-        file_path, dataset_paths, slice_info
-    )

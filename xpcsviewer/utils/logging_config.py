@@ -43,24 +43,15 @@ from .log_formatters import (
 
 
 class LoggingConfig:
-    """Singleton logging configuration manager."""
+    """Logging configuration manager.
 
-    _instance = None
-    _lock = threading.Lock()
-    _initialized = False
-
-    def __new__(cls):
-        if cls._instance is None:
-            with cls._lock:
-                if cls._instance is None:
-                    cls._instance = super().__new__(cls)
-        return cls._instance
+    A single instance is held by the module-level ``_config`` and created via
+    :func:`initialize_logging`, which is the sole construction path.
+    """
 
     def __init__(self):
-        if not self._initialized:
-            self._setup_configuration()
-            self._configure_logging()
-            LoggingConfig._initialized = True
+        self._setup_configuration()
+        self._configure_logging()
 
     def setup_logging(self):
         """Public method to setup or reset logging configuration."""
@@ -392,8 +383,6 @@ def reset_logging_config():
                 handler.close()
 
         _config = None
-        LoggingConfig._instance = None
-        LoggingConfig._initialized = False
 
 
 def log_system_info():

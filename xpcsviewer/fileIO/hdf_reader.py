@@ -576,11 +576,6 @@ class HDF5ConnectionPool:
             self._last_health_check = 0  # Force immediate check
             self._perform_health_check()
 
-    def remove_unhealthy_file(self, fname: str):
-        """Remove a file from the unhealthy files set."""
-        self._unhealthy_files.discard(fname)
-        logger.debug(f"Removed {fname} from unhealthy files set")
-
     def batch_read_datasets(
         self, fname: str, dataset_paths: list[str], use_cache: bool = True
     ) -> dict[str, Any]:
@@ -664,17 +659,6 @@ class HDF5ConnectionPool:
 
         return results
 
-    def clear_read_cache(self, fname: str | None = None):
-        """Clear read cache for specific file or all files."""
-        with self._read_cache_lock:
-            if fname:
-                if fname in self._read_cache:
-                    del self._read_cache[fname]
-                    logger.debug(f"Cleared read cache for {fname}")
-            else:
-                self._read_cache.clear()
-                logger.debug("Cleared all read cache")
-
     def __del__(self):
         # Pass True to indicate this is called from destructor during shutdown
         with suppress(Exception):
@@ -715,20 +699,6 @@ def put(save_path, result, ftype="nexus", mode="raw"):
             )
             f[dest_key] = dest_value
         return
-
-
-def get_abs_cs_scale(fname, ftype="nexus", use_pool=True):
-    key = hdf_key[ftype]["abs_cross_section_scale"]
-
-    context_manager = (
-        _connection_pool.get_connection(fname, "r")
-        if use_pool
-        else h5py.File(fname, "r")
-    )
-    with context_manager as f:
-        if key not in f:
-            return None
-        return float(f[key][()])
 
 
 @log_timing(threshold_ms=500)
@@ -1032,30 +1002,11 @@ def get_file_info(fname: str, use_pool: bool = True) -> dict[str, Any]:
     return info
 
 
-def get_connection_pool_stats() -> dict[str, Any]:
-    """
-    Get comprehensive statistics about the global connection pool.
-
-    Returns
-    -------
-    Dict[str, Any]
-        Connection pool statistics
-    """
-    return _connection_pool.get_pool_stats()
-
-
 def clear_connection_pool():
     """
     Clear all connections in the global connection pool.
     """
     _connection_pool.clear_pool()
-
-
-def force_connection_health_check():
-    """
-    Force an immediate health check of all pooled connections.
-    """
-    _connection_pool.force_health_check()
 
 
 @log_timing(threshold_ms=1000)
