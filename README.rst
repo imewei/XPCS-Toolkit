@@ -4,9 +4,9 @@ XPCS Viewer
 
 Python-based XPCS data analysis and visualization tool.
 
-.. image:: https://github.com/imewei/XPCSViewer/actions/workflows/ci.yml/badge.svg
-   :target: https://github.com/imewei/XPCSViewer/actions/workflows/ci.yml
-   :alt: CI Status
+.. image:: https://img.shields.io/badge/PyPI-v0.0.4-blue.svg
+   :target: https://badge.fury.io/py/xpcsviewer-gui
+   :alt: PyPI Version
 
 .. image:: https://img.shields.io/badge/python-3.12%2B-blue.svg
    :target: https://python.org
@@ -16,9 +16,9 @@ Python-based XPCS data analysis and visualization tool.
    :target: LICENSE
    :alt: License
 
-.. image:: https://img.shields.io/badge/code%20style-ruff-000000.svg
-   :target: https://github.com/astral-sh/ruff
-   :alt: Ruff
+.. image:: https://img.shields.io/badge/docs-latest-brightgreen.svg
+   :target: https://xpcsviwer.readthedocs.io
+   :alt: Documentation
 
 **Features:**
 
