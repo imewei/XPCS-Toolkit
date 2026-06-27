@@ -4,7 +4,7 @@ XPCS Viewer
 
 Python-based XPCS data analysis and visualization tool.
 
-.. image:: https://img.shields.io/badge/PyPI-v0.0.4-blue.svg
+.. image:: https://badge.fury.io/py/xpcsviewer-gui.svg
    :target: https://badge.fury.io/py/xpcsviewer-gui
    :alt: PyPI Version
 
