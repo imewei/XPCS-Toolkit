@@ -42,7 +42,9 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  UV_CACHE_DIR: .uv-cache
+  # No UV_CACHE_DIR override: keep uv's default cache outside the source tree.
+  # A newer uv (setup-uv pins "latest") rejects `uv build` when the cache dir
+  # lives inside the build source directory. setup-uv caches the default dir.
   UV_SYSTEM_PYTHON: 1
 
 jobs:
