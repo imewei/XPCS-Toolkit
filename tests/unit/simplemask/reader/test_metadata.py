@@ -112,6 +112,31 @@ class TestReadNexusMetadata:
         assert metadata["energy"] == pytest.approx(9.0)
         assert meta_fname == meta_path
 
+    def test_explicit_metadata_fname_override_takes_priority(self, tmp_path):
+        # fname itself has valid fields too -- an explicit, valid override
+        # must still win over it per the documented discovery order.
+        fname = str(tmp_path / "data.h5")
+        _write_nexus(fname, energy=11.0, distance=3.0)
+        override_path = str(tmp_path / "override.h5")
+        _write_nexus(override_path, energy=99.0, distance=7.0)
+        metadata, meta_fname = read_nexus_metadata(
+            fname, KEYMAP, metadata_fname=override_path
+        )
+        assert metadata["energy"] == pytest.approx(99.0)
+        assert meta_fname == override_path
+
+    def test_invalid_metadata_fname_falls_back_to_discovery(self, tmp_path):
+        fname = str(tmp_path / "data.h5")
+        _write_nexus(fname, energy=11.0, distance=3.0)
+        bad_override = str(tmp_path / "missing_fields.h5")
+        with h5py.File(bad_override, "w") as f:
+            f.create_dataset("/some/other/path", data=1.0)
+        metadata, meta_fname = read_nexus_metadata(
+            fname, KEYMAP, metadata_fname=bad_override
+        )
+        assert metadata["energy"] == pytest.approx(11.0)
+        assert meta_fname == fname
+
     def test_raises_when_no_valid_metadata_anywhere(self, tmp_path):
         fname = str(tmp_path / "data.h5")
         with h5py.File(fname, "w") as f:

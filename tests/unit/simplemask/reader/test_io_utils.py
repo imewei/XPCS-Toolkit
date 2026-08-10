@@ -5,9 +5,26 @@ import numpy as np
 import pytest
 
 from xpcsviewer.simplemask.reader.io_utils import (
+    _cast_to_signed,
     average_frames_parallel,
     resolve_frame_range,
 )
+
+
+class TestCastToSigned:
+    def test_uint16_overflow_value_becomes_negative(self):
+        # 65535 is the max uint16 value (detector saturation/overflow marker
+        # upstream) -- bit-pattern-preserving cast to int16 must turn it
+        # negative (-1), not clip or wrap to something else.
+        arr = np.array([65535, 0, 100], dtype=np.uint16)
+        result = _cast_to_signed(arr)
+        assert result.dtype == np.int16
+        np.testing.assert_array_equal(result, [-1, 0, 100])
+
+    def test_signed_array_passthrough(self):
+        arr = np.array([1, -2, 3], dtype=np.int32)
+        result = _cast_to_signed(arr)
+        assert result is arr
 
 
 class TestResolveFrameRange:
@@ -71,6 +88,16 @@ class TestAverageFramesParallel:
             data[1] = 10
             f.create_dataset("/entry/data/data", data=data)
         result = average_frames_parallel(fname, start_frame=1, num_frames=1)
+        np.testing.assert_allclose(result, 10.0)
+
+    def test_averages_via_multiprocessing_pool_path(self, tmp_path):
+        # num_frames (40) >= default chunk_size (32) exercises the
+        # multiprocessing.Pool branch, not the single-process shortcut.
+        fname = str(tmp_path / "big_stack.h5")
+        self._write_stack(fname, n_frames=40, shape=(2, 2), fill_value=10)
+        result = average_frames_parallel(fname, num_frames=40)
+        assert result.shape == (2, 2)
+        assert result.dtype == np.float32
         np.testing.assert_allclose(result, 10.0)
 
     def test_rejects_non_3d_dataset(self, tmp_path):

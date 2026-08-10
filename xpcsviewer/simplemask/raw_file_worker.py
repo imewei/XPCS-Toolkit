@@ -8,7 +8,7 @@ automatically by the base class; this file only implements do_work()).
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, TypedDict
 
 import numpy as np
 
@@ -18,12 +18,19 @@ from xpcsviewer.simplemask.reader.exceptions import RawDataReadError
 from xpcsviewer.threading.async_workers import BaseAsyncWorker
 
 
+class RawFileLoadResult(TypedDict):
+    """Shape of the dict RawFileLoadWorker.do_work() returns on success."""
+
+    scattering: np.ndarray
+    metadata: dict[str, Any]
+    metadata_is_placeholder: bool
+
+
 class RawFileLoadWorker(BaseAsyncWorker):
     """Loads a raw detector file and adapts it to SimpleMaskKernel's schema.
 
-    On success, ``signals.finished`` carries a dict with keys
-    ``"scattering"``, ``"metadata"``, ``"metadata_is_placeholder"``. On
-    failure, ``signals.error`` carries the wrapped :class:`RawDataReadError`
+    On success, ``signals.finished`` carries a :class:`RawFileLoadResult`.
+    On failure, ``signals.error`` carries the wrapped :class:`RawDataReadError`
     message and traceback (see ``BaseAsyncWorker.run()``).
     """
 
@@ -32,12 +39,12 @@ class RawFileLoadWorker(BaseAsyncWorker):
         self.path = path
         self.beamline = beamline
 
-    def do_work(self) -> dict[str, Any]:
+    def do_work(self) -> RawFileLoadResult:
         """Load and adapt raw detector file data.
 
         Returns
         -------
-        dict
+        RawFileLoadResult
             Dictionary with keys:
             - "scattering": np.ndarray of shape (detector_shape_y, detector_shape_x)
             - "metadata": dict with kernel-adapted schema
@@ -52,9 +59,14 @@ class RawFileLoadWorker(BaseAsyncWorker):
         try:
             reader = get_reader(self.beamline, self.path)
             reader.prepare_data()
-            # After prepare_data(), metadata is guaranteed to be non-None.
-            # Narrow type for mypy.
+            # After prepare_data(), metadata/scat are guaranteed to be
+            # non-None -- narrow types for mypy. Both asserts live inside
+            # this try block so that if either ever fired (e.g. a future
+            # reader subclass bug), it still crosses the worker boundary as
+            # RawDataReadError like every other failure here, not a bare
+            # AssertionError.
             assert reader.metadata is not None
+            assert isinstance(reader.scat, np.ndarray)
             # Adaptation errors (missing field, unsupported Reflection
             # geometry) belong inside this same try block -- every failure
             # from this worker must cross the boundary as RawDataReadError,
@@ -64,8 +76,6 @@ class RawFileLoadWorker(BaseAsyncWorker):
             raise RawDataReadError(self.path, exc) from exc
 
         self.emit_status("Read complete")
-        # After prepare_data(), scat is guaranteed to be non-None.
-        assert isinstance(reader.scat, np.ndarray)
         return {
             "scattering": reader.scat,
             "metadata": metadata,

@@ -32,10 +32,17 @@ class _FakeFailingReader(FileReader):
         raise RuntimeError("simulated NeXus read failure")
 
 
-def test_get_fake_metadata_has_every_required_field():
+def test_get_fake_metadata_has_every_metadata_read_field():
     meta = get_fake_metadata()
     for key in ("energy", "detector_distance", "pixel_size", "beam_center_x", "beam_center_y"):
         assert key in meta
+    # detector_shape_x/y are NOT part of get_fake_metadata()'s own contract --
+    # prepare_data() adds them afterward from the actual image shape. Pin
+    # this down so the docstring's claim can't silently drift out of sync
+    # with the code again (see test_prepare_data_falls_back_to_placeholder_
+    # on_metadata_failure below for confirmation prepare_data() adds them).
+    assert "detector_shape_x" not in meta
+    assert "detector_shape_y" not in meta
 
 
 def test_prepare_data_success_sets_scat_shape_and_metadata():
@@ -73,13 +80,30 @@ def test_get_metadata_coerces_numpy_scalars_to_float():
     assert meta["energy"] == pytest.approx(9.5)
 
 
-def test_base_get_scattering_raises_not_implemented():
-    reader = FileReader("dummy.h5")
-    with pytest.raises(NotImplementedError):
-        reader.get_scattering()
+def test_base_file_reader_cannot_be_instantiated_directly():
+    # FileReader is abc.ABC with get_scattering/_get_metadata as
+    # @abstractmethod (matching the sibling ScatteringDataset ABC in
+    # reader/formats/base.py) -- a subclass missing either override can't
+    # be constructed at all. This catches a missing override at
+    # construction time rather than only once someone calls the
+    # unimplemented method.
+    with pytest.raises(TypeError):
+        FileReader("dummy.h5")
 
 
-def test_base_get_metadata_raises_not_implemented_via_get_metadata():
-    reader = FileReader("dummy.h5")
-    reader.get_metadata()  # base ._get_metadata() raises -> caught -> placeholder
-    assert reader.metadata_is_placeholder is True
+def test_subclass_missing_get_scattering_cannot_be_instantiated():
+    class _MissingGetScattering(FileReader):
+        def _get_metadata(self, *a, **k):
+            return {}
+
+    with pytest.raises(TypeError):
+        _MissingGetScattering("dummy.h5")
+
+
+def test_subclass_missing_get_metadata_cannot_be_instantiated():
+    class _MissingGetMetadata(FileReader):
+        def get_scattering(self, *a, **k):
+            return np.zeros((2, 2))
+
+    with pytest.raises(TypeError):
+        _MissingGetMetadata("dummy.h5")

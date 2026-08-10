@@ -7,6 +7,7 @@ helper methods are intentionally not ported here.
 
 from __future__ import annotations
 
+import abc
 import logging
 from typing import Any
 
@@ -18,9 +19,14 @@ logger = logging.getLogger(__name__)
 def get_fake_metadata() -> dict[str, Any]:
     """Return placeholder metadata used when real metadata cannot be read.
 
-    Includes every field the adapter (Task 6) requires so a failed NeXus
-    read still produces a fully-formed (if fabricated) metadata dict rather
-    than a partial one.
+    Covers every field the adapter (Task 6) needs from the *metadata read*
+    step specifically: energy, geometry, and beam center. It does NOT
+    include ``detector_shape_x``/``detector_shape_y`` -- those are added
+    afterward by :meth:`FileReader.prepare_data`, which derives them from
+    the actual scattering-image shape regardless of whether the metadata
+    read succeeded or fell back to this placeholder. ``prepare_data()`` is
+    the actual guarantor that every field the adapter requires is present;
+    this function alone is not.
     """
     return {
         "energy": 12.3,  # keV
@@ -42,10 +48,16 @@ def _coerce_float(value: object) -> object:
     return value
 
 
-class FileReader:
+class FileReader(abc.ABC):
     """Produces a scattering image + metadata dict for one raw detector file.
 
-    Subclasses implement :meth:`get_scattering` and :meth:`_get_metadata`.
+    Abstract base class: subclasses must implement :meth:`get_scattering`
+    and :meth:`_get_metadata` -- a subclass that misses either cannot be
+    constructed at all (matches the sibling :class:`ScatteringDataset` ABC
+    in ``reader/formats/base.py``, and turns a missing override into a
+    construction-time ``TypeError`` instead of a call-time
+    ``NotImplementedError`` a caller might not hit until much later).
+
     ``self.metadata`` uses upstream pySimpleMask's field names/units
     (``beam_center_x``/``beam_center_y`` in pixels, ``pixel_size``/
     ``detector_distance`` in meters) -- translated to this project's own
@@ -72,6 +84,7 @@ class FileReader:
         self.metadata["detector_shape_x"] = self.shape[1]
         self.metadata["detector_shape_y"] = self.shape[0]
 
+    @abc.abstractmethod
     def get_scattering(self, *args: Any, **kwargs: Any) -> np.ndarray:
         raise NotImplementedError
 
@@ -93,5 +106,6 @@ class FileReader:
             self.metadata_is_placeholder = True
         return {key: _coerce_float(value) for key, value in metadata.items()}
 
+    @abc.abstractmethod
     def _get_metadata(self, *args: Any, **kwargs: Any) -> dict[str, Any]:
         raise NotImplementedError

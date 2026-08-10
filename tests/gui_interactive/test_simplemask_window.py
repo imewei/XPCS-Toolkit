@@ -331,6 +331,35 @@ class TestSimpleMaskOpenRawFile:
         assert window.kernel is None
         assert "Failed to load raw file:" in window.status_bar.currentMessage()
 
+    def test_placeholder_metadata_shows_warning_status_message(
+        self, qapp, qtbot, tmp_path
+    ):
+        # No NeXus metadata fields present -- FileReader falls back to
+        # placeholder geometry, and _on_raw_file_loaded must surface that
+        # via a distinct status-bar warning rather than the plain
+        # "Raw file loaded" message.
+        import h5py
+
+        fname = str(tmp_path / "no_metadata.h5")
+        with h5py.File(fname, "w") as f:
+            f.create_dataset(
+                "/entry/data/data", data=np.full((2, 3, 3), 5, dtype=np.uint16)
+            )
+
+        window = SimpleMaskWindow()
+        qtbot.addWidget(window)
+        window.show()
+
+        window.load_from_raw_file(fname, "APS_8IDI")
+
+        for _ in range(200):
+            if window.kernel is not None and window.kernel.is_ready():
+                break
+            qtbot.wait(25)
+
+        assert window.kernel is not None
+        assert "placeholder geometry" in window.status_bar.currentMessage()
+
     def test_repeated_click_ignores_stale_completion(self, qapp, qtbot, tmp_path):
         # Two rapid loads: the second call must be a no-op while the first
         # is still in flight -- not queue a second worker whose completion

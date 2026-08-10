@@ -16,7 +16,7 @@ from .hdf import HdfDataset
 
 logger = logging.getLogger(__name__)
 
-__all__ = ["ScatteringDataset", "HdfDataset", "get_format_loader"]
+__all__ = ["HdfDataset", "ScatteringDataset", "get_format_loader"]
 
 
 def get_format_loader(fname: str, **kwargs: Any) -> ScatteringDataset:
