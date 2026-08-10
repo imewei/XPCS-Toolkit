@@ -278,12 +278,8 @@ class TestSimpleMaskOpenRawFile:
                 "/entry/instrument/incident_beam/incident_energy", data=10.0
             )
             f.create_dataset("/entry/instrument/detector_1/distance", data=5.0)
-            f.create_dataset(
-                "/entry/instrument/detector_1/x_pixel_size", data=0.000075
-            )
-            f.create_dataset(
-                "/entry/instrument/detector_1/y_pixel_size", data=0.000075
-            )
+            f.create_dataset("/entry/instrument/detector_1/x_pixel_size", data=0.000075)
+            f.create_dataset("/entry/instrument/detector_1/y_pixel_size", data=0.000075)
             f.create_dataset("/entry/instrument/detector_1/position_x", data=0.0)
             f.create_dataset("/entry/instrument/detector_1/position_y", data=0.0)
             f.create_dataset(

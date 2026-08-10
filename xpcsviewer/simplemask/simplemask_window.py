@@ -649,9 +649,7 @@ class SimpleMaskWindow(QMainWindow):
         except RuntimeError as e:
             logger.warning(f"Beam center detection unavailable: {e}")
             self.status_bar.showMessage("Beam center detection unavailable")
-            QMessageBox.warning(
-                self, "Beam Center Detection Unavailable", str(e)
-            )
+            QMessageBox.warning(self, "Beam Center Detection Unavailable", str(e))
             return
         except ValueError as e:
             logger.warning(f"Beam center detection failed: {e}")

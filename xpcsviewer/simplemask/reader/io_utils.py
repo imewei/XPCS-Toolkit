@@ -38,9 +38,7 @@ def process_chunk(
     """Return the per-pixel float32 sum over ``[start_idx, end_idx)`` of a dataset."""
     with h5py.File(file_path, "r") as f:
         chunk = _cast_to_signed(f[dataset_name][start_idx:end_idx])
-        return cast(
-            np.ndarray, np.sum(chunk, axis=0, dtype=np.float32)
-        )
+        return cast(np.ndarray, np.sum(chunk, axis=0, dtype=np.float32))
 
 
 def resolve_frame_range(

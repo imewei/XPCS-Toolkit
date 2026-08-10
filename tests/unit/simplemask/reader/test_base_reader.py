@@ -34,7 +34,13 @@ class _FakeFailingReader(FileReader):
 
 def test_get_fake_metadata_has_every_metadata_read_field():
     meta = get_fake_metadata()
-    for key in ("energy", "detector_distance", "pixel_size", "beam_center_x", "beam_center_y"):
+    for key in (
+        "energy",
+        "detector_distance",
+        "pixel_size",
+        "beam_center_x",
+        "beam_center_y",
+    ):
         assert key in meta
     # detector_shape_x/y are NOT part of get_fake_metadata()'s own contract --
     # prepare_data() adds them afterward from the actual image shape. Pin

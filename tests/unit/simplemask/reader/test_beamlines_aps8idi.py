@@ -35,8 +35,12 @@ def _write_8idi_file(
         f.create_dataset("/entry/instrument/detector_1/y_pixel_size", data=y_pixel_size)
         f.create_dataset("/entry/instrument/detector_1/position_x", data=ccdx)
         f.create_dataset("/entry/instrument/detector_1/position_y", data=ccdy)
-        f.create_dataset("/entry/instrument/detector_1/beam_center_position_x", data=ccdx0)
-        f.create_dataset("/entry/instrument/detector_1/beam_center_position_y", data=ccdy0)
+        f.create_dataset(
+            "/entry/instrument/detector_1/beam_center_position_x", data=ccdx0
+        )
+        f.create_dataset(
+            "/entry/instrument/detector_1/beam_center_position_y", data=ccdy0
+        )
         f.create_dataset("/entry/instrument/detector_1/beam_center_x", data=bcx0)
         f.create_dataset("/entry/instrument/detector_1/beam_center_y", data=bcy0)
 
@@ -112,7 +116,9 @@ class TestAPS8IDIReader:
     def test_prepare_data_falls_back_on_bad_metadata(self, tmp_path):
         fname = str(tmp_path / "no_metadata.h5")
         with h5py.File(fname, "w") as f:
-            f.create_dataset("/entry/data/data", data=np.full((2, 3, 4), 1, dtype=np.uint16))
+            f.create_dataset(
+                "/entry/data/data", data=np.full((2, 3, 4), 1, dtype=np.uint16)
+            )
         reader = APS8IDIReader(fname)
         reader.prepare_data()
         assert reader.metadata_is_placeholder is True

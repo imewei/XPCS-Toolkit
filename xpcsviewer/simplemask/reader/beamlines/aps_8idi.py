@@ -25,9 +25,7 @@ METADATA_KEYMAPS: dict[str, str] = {
 OPTIONAL_FIELDS: list[str] = []
 
 
-def get_nexus_metadata(
-    fname: str, metadata_fname: str | None = None
-) -> dict[str, Any]:
+def get_nexus_metadata(fname: str, metadata_fname: str | None = None) -> dict[str, Any]:
     """Read 8-ID-I NeXus metadata and derive the beam center.
 
     Args:
@@ -56,7 +54,16 @@ def get_nexus_metadata(
     )
     meta["pixel_size"] = meta["x_pixel_size"]
 
-    for key in ("bcx0", "bcy0", "ccdx", "ccdy", "ccdx0", "ccdy0", "x_pixel_size", "y_pixel_size"):
+    for key in (
+        "bcx0",
+        "bcy0",
+        "ccdx",
+        "ccdy",
+        "ccdx0",
+        "ccdy0",
+        "x_pixel_size",
+        "y_pixel_size",
+    ):
         meta.pop(key, None)
 
     return meta

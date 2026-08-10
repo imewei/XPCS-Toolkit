@@ -23,7 +23,9 @@ def _normalize(value: object) -> object:
     return value
 
 
-def has_nexus_fields(fname: str, keymap: dict[str, str], optional_fields: list[str] | None = None) -> bool:
+def has_nexus_fields(
+    fname: str, keymap: dict[str, str], optional_fields: list[str] | None = None
+) -> bool:
     """Return True if ``fname`` is an HDF5 file containing every required field."""
     if not h5py.is_hdf5(fname):
         return False
@@ -38,7 +40,9 @@ def has_nexus_fields(fname: str, keymap: dict[str, str], optional_fields: list[s
     return True
 
 
-def read_keymap(fname: str, keymap: dict[str, str], optional_fields: list[str] | None = None) -> dict[str, object | None]:
+def read_keymap(
+    fname: str, keymap: dict[str, str], optional_fields: list[str] | None = None
+) -> dict[str, object | None]:
     """Read metadata values from an HDF5 file using a key -> path mapping.
 
     Optional fields that are missing are returned as ``None``. Required
@@ -76,7 +80,12 @@ def find_metadata_file(fname: str) -> str:
     return matches[0]
 
 
-def read_nexus_metadata(fname: str, keymap: dict[str, str], optional_fields: list[str] | None = None, metadata_fname: str | None = None) -> tuple[dict[str, object | None], str]:
+def read_nexus_metadata(
+    fname: str,
+    keymap: dict[str, str],
+    optional_fields: list[str] | None = None,
+    metadata_fname: str | None = None,
+) -> tuple[dict[str, object | None], str]:
     """Locate and read NeXus metadata for ``fname``.
 
     Discovery order: an explicit valid ``metadata_fname`` override, then

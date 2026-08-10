@@ -342,7 +342,9 @@ def mock_viewer_kernel(mock_xpcs_file):
         mock_kernel.statusbar = None  # Add missing ViewerKernel.__init__ attribute
         mock_kernel.avg_worker_active = {}  # Add missing ViewerKernel.__init__ attribute
         mock_kernel._plot_kwargs_record = {}  # Add missing ViewerKernel.__init__ attribute
-        mock_kernel._memory_cleanup_threshold = 0.8  # Add missing ViewerKernel.__init__ attribute
+        mock_kernel._memory_cleanup_threshold = (
+            0.8  # Add missing ViewerKernel.__init__ attribute
+        )
         mock_kernel.avg_worker = None
         mock_kernel.meta = {"saxs1d_bkg_xf": None}  # Add missing meta attribute
 

@@ -29,7 +29,9 @@ class TestCastToSigned:
 
 class TestResolveFrameRange:
     def test_positive_num_frames_clamped_to_end(self):
-        assert resolve_frame_range(total_frames=100, start_frame=90, num_frames=50) == 10
+        assert (
+            resolve_frame_range(total_frames=100, start_frame=90, num_frames=50) == 10
+        )
 
     def test_positive_num_frames_within_range(self):
         assert resolve_frame_range(total_frames=100, start_frame=0, num_frames=20) == 20
@@ -38,19 +40,28 @@ class TestResolveFrameRange:
         assert resolve_frame_range(total_frames=100, start_frame=30, num_frames=0) == 70
 
     def test_none_means_all_remaining(self):
-        assert resolve_frame_range(total_frames=100, start_frame=30, num_frames=None) == 70
+        assert (
+            resolve_frame_range(total_frames=100, start_frame=30, num_frames=None) == 70
+        )
 
     def test_negative_means_representative_subset_floor(self):
         # total_frames // 5 = 200, max(1000, 200) = 1000
-        assert resolve_frame_range(total_frames=1000, start_frame=0, num_frames=-1) == 1000
+        assert (
+            resolve_frame_range(total_frames=1000, start_frame=0, num_frames=-1) == 1000
+        )
 
     def test_negative_means_representative_subset_fraction(self):
         # total_frames // 5 = 2000, max(1000, 2000) = 2000
-        assert resolve_frame_range(total_frames=10000, start_frame=0, num_frames=-1) == 2000
+        assert (
+            resolve_frame_range(total_frames=10000, start_frame=0, num_frames=-1)
+            == 2000
+        )
 
     def test_negative_subset_clamped_to_remaining(self):
         # representative subset would be 1000, but only 40 frames remain
-        assert resolve_frame_range(total_frames=100, start_frame=60, num_frames=-1) == 40
+        assert (
+            resolve_frame_range(total_frames=100, start_frame=60, num_frames=-1) == 40
+        )
 
     def test_start_frame_out_of_range_raises(self):
         with pytest.raises(ValueError):
@@ -65,9 +76,9 @@ class TestAverageFramesParallel:
     def _write_stack(self, path, n_frames=5, shape=(4, 6), fill_value=None):
         with h5py.File(path, "w") as f:
             if fill_value is None:
-                data = np.arange(n_frames * shape[0] * shape[1], dtype=np.uint16).reshape(
-                    (n_frames, *shape)
-                )
+                data = np.arange(
+                    n_frames * shape[0] * shape[1], dtype=np.uint16
+                ).reshape((n_frames, *shape))
             else:
                 data = np.full((n_frames, *shape), fill_value, dtype=np.uint16)
             f.create_dataset("/entry/data/data", data=data)

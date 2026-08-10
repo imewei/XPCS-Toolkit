@@ -20,9 +20,7 @@ OPTIONAL = ["detector_distance"]
 
 def _write_nexus(path, energy=12.0, distance=5.0, include_distance=True):
     with h5py.File(path, "w") as f:
-        f.create_dataset(
-            "/entry/instrument/incident_beam/incident_energy", data=energy
-        )
+        f.create_dataset("/entry/instrument/incident_beam/incident_energy", data=energy)
         if include_distance:
             f.create_dataset("/entry/instrument/detector_1/distance", data=distance)
 
@@ -75,7 +73,9 @@ class TestReadKeymap:
     def test_decodes_byte_strings(self, tmp_path):
         fname = str(tmp_path / "data.h5")
         with h5py.File(fname, "w") as f:
-            f.create_dataset("/entry/instrument/incident_beam/incident_energy", data=12.0)
+            f.create_dataset(
+                "/entry/instrument/incident_beam/incident_energy", data=12.0
+            )
             f.create_dataset(
                 "/entry/instrument/detector_1/distance", data=np.bytes_(b"5.0m")
             )

@@ -18,7 +18,9 @@ logger = logging.getLogger(__name__)
 class HdfDataset(ScatteringDataset):
     """Loader for 2-D or 3-D (frame, y, x) detector data stored in HDF5."""
 
-    def __init__(self, fname: str, data_path: str = "/entry/data/data", **kwargs: Any) -> None:
+    def __init__(
+        self, fname: str, data_path: str = "/entry/data/data", **kwargs: Any
+    ) -> None:
         super().__init__(fname)
         self.data_path: str = data_path
         with h5py.File(self.fname, "r") as f:

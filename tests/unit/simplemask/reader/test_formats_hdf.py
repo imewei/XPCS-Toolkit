@@ -12,7 +12,9 @@ class TestHdfDataset:
     def test_2d_dataset_shape_and_dtype(self, tmp_path):
         fname = str(tmp_path / "img.h5")
         with h5py.File(fname, "w") as f:
-            f.create_dataset("/entry/data/data", data=np.full((5, 7), 3, dtype=np.uint16))
+            f.create_dataset(
+                "/entry/data/data", data=np.full((5, 7), 3, dtype=np.uint16)
+            )
         loader = HdfDataset(fname)
         assert loader.det_size == (5, 7)
         img = loader.get_scattering()
@@ -23,7 +25,9 @@ class TestHdfDataset:
     def test_3d_dataset_shape_is_frame_shape(self, tmp_path):
         fname = str(tmp_path / "stack.h5")
         with h5py.File(fname, "w") as f:
-            f.create_dataset("/entry/data/data", data=np.zeros((10, 5, 7), dtype=np.uint16))
+            f.create_dataset(
+                "/entry/data/data", data=np.zeros((10, 5, 7), dtype=np.uint16)
+            )
         loader = HdfDataset(fname)
         assert loader.det_size == (5, 7)
 
@@ -47,7 +51,9 @@ class TestHdfDataset:
     def test_custom_data_path(self, tmp_path):
         fname = str(tmp_path / "custom.h5")
         with h5py.File(fname, "w") as f:
-            f.create_dataset("/my/custom/path", data=np.full((3, 3), 7, dtype=np.uint16))
+            f.create_dataset(
+                "/my/custom/path", data=np.full((3, 3), 7, dtype=np.uint16)
+            )
         loader = HdfDataset(fname, data_path="/my/custom/path")
         img = loader.get_scattering()
         np.testing.assert_allclose(img, 7.0)
@@ -55,7 +61,9 @@ class TestHdfDataset:
     def test_file_size_mb_positive(self, tmp_path):
         fname = str(tmp_path / "img.h5")
         with h5py.File(fname, "w") as f:
-            f.create_dataset("/entry/data/data", data=np.zeros((100, 100), dtype=np.uint16))
+            f.create_dataset(
+                "/entry/data/data", data=np.zeros((100, 100), dtype=np.uint16)
+            )
         loader = HdfDataset(fname)
         assert loader.file_size_mb > 0
 

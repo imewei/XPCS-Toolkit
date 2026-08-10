@@ -74,7 +74,9 @@ class FileReader(abc.ABC):
         self.shape: tuple[int, int] | None = None
         self.scat: np.ndarray | None = None
 
-    def prepare_data(self, *args: Any, metadata_fname: str | None = None, **kwargs: Any) -> None:
+    def prepare_data(
+        self, *args: Any, metadata_fname: str | None = None, **kwargs: Any
+    ) -> None:
         """Load metadata and the scattering image, deriving shape from the image."""
         self.metadata = self.get_metadata(metadata_fname=metadata_fname)
         self.scat = self.get_scattering(*args, **kwargs).astype(np.float32)
