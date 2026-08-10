@@ -98,6 +98,13 @@ def setup_ui(window) -> None:
     window.spin_bcy.setToolTip("Beam center Y (row)")
     geometry_layout.addRow("Beam Y:", window.spin_bcy)
 
+    # Auto beam-center finder (gradient-based ring refinement)
+    window.btn_find_beam_center = QPushButton("Find Beam Center")
+    window.btn_find_beam_center.setToolTip(
+        "Auto-detect beam center from the diffraction ring pattern"
+    )
+    geometry_layout.addRow(window.btn_find_beam_center)
+
     # Detector distance
     window.spin_det_dist = QDoubleSpinBox()
     window.spin_det_dist.setRange(1, 100000)

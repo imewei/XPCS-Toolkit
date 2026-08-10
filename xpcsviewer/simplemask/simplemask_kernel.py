@@ -17,6 +17,7 @@ from pyqtgraph.Qt import QtCore
 from xpcsviewer.backends._conversions import ensure_numpy
 from xpcsviewer.fileIO.qmap_utils import Q_UNIT_DISPLAY
 from xpcsviewer.simplemask.area_mask import MaskAssemble
+from xpcsviewer.simplemask.calibration import compute_center_from_ring
 from xpcsviewer.simplemask.pyqtgraph_mod import ImageViewROI, LineROI
 from xpcsviewer.simplemask.qmap import compute_qmap
 from xpcsviewer.simplemask.utils import (
@@ -655,3 +656,40 @@ class SimpleMaskKernel:
         if mode == "vh":
             return (bcy, bcx)
         return (bcx, bcy)
+
+    def find_beam_center(
+        self, intensity_threshold: float | None = None
+    ) -> tuple[float, float, dict]:
+        """Auto-detect beam center from the diffraction ring pattern.
+
+        Detects ring pixels in the detector image and refines the center
+        via gradient-based (JAX) optimization. Updates ``self.metadata``
+        with the result on success.
+
+        Args:
+            intensity_threshold: Threshold for detecting ring pixels.
+                If None, uses mean + 2*std of the (masked) image.
+
+        Returns:
+            Tuple of (bcx, bcy, diagnostics_dict).
+
+        Raises:
+            RuntimeError: If no detector image is loaded, or the JAX
+                backend is unavailable.
+            ValueError: If insufficient ring pixels are detected.
+        """
+        if self.detector_image is None:
+            raise RuntimeError("No detector image loaded.")
+
+        bcx, bcy = self.get_center(mode="xy")
+        initial_center = (bcx, bcy) if bcx is not None and bcy is not None else None
+
+        cx, cy, diagnostics = compute_center_from_ring(
+            self.detector_image,
+            mask=self.mask,
+            intensity_threshold=intensity_threshold,
+            initial_center=initial_center,
+        )
+
+        self.update_parameters({"bcx": cx, "bcy": cy})
+        return cx, cy, diagnostics

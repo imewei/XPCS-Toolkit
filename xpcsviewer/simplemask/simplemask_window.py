@@ -76,6 +76,8 @@ class SimpleMaskWindow(QMainWindow):
     btn_toggle_partition: QPushButton
     btn_export_partition: QPushButton
 
+    btn_find_beam_center: QPushButton
+
     # SpinBoxes
     spin_bcx: QDoubleSpinBox
     spin_bcy: QDoubleSpinBox
@@ -169,6 +171,9 @@ class SimpleMaskWindow(QMainWindow):
         self.spin_det_dist.valueChanged.connect(self._on_geometry_changed)
         self.spin_pix_dim.valueChanged.connect(self._on_geometry_changed)
         self.spin_energy.valueChanged.connect(self._on_geometry_changed)
+
+        # Auto beam-center finder
+        self.btn_find_beam_center.clicked.connect(self._on_find_beam_center)
 
         # Partition controls
         self.btn_compute_partition.clicked.connect(self._on_compute_partition)
@@ -551,6 +556,45 @@ class SimpleMaskWindow(QMainWindow):
         """Handle geometry parameter change."""
         # Mark that geometry has been modified
         # Q-map will be regenerated on demand
+
+    def _on_find_beam_center(self) -> None:
+        """Auto-detect beam center from the diffraction ring pattern."""
+        if self.kernel is None or not self.kernel.is_ready():
+            self.status_bar.showMessage("Load data first")
+            return
+
+        try:
+            cx, cy, diagnostics = self.kernel.find_beam_center()
+        except RuntimeError as e:
+            logger.warning(f"Beam center detection unavailable: {e}")
+            self.status_bar.showMessage("Beam center detection unavailable")
+            QMessageBox.warning(
+                self, "Beam Center Detection Unavailable", str(e)
+            )
+            return
+        except ValueError as e:
+            logger.warning(f"Beam center detection failed: {e}")
+            self.status_bar.showMessage("Beam center detection failed")
+            QMessageBox.warning(self, "Beam Center Detection Failed", str(e))
+            return
+
+        # Reflect the result in the spinboxes without re-triggering
+        # _on_geometry_changed (the kernel already applied it).
+        self.spin_bcx.blockSignals(True)
+        self.spin_bcy.blockSignals(True)
+        try:
+            self.spin_bcx.setValue(cx)
+            self.spin_bcy.setValue(cy)
+        finally:
+            self.spin_bcx.blockSignals(False)
+            self.spin_bcy.blockSignals(False)
+
+        converged = diagnostics.get("converged", False)
+        iterations = diagnostics.get("iterations", 0)
+        state = "converged" if converged else "stopped at max iterations"
+        self.status_bar.showMessage(
+            f"Beam center: ({cx:.2f}, {cy:.2f}) [{state} after {iterations} iterations]"
+        )
 
     def _on_compute_partition(self) -> None:
         """Compute partition from current Q-map and binning parameters."""
