@@ -39,7 +39,7 @@ mcmc = MCMC(
     num_warmup=config.num_warmup,
     num_samples=config.num_samples,
     num_chains=config.num_chains,
-    extra_fields=("diverging",),   # ADD THIS
+    extra_fields=("diverging",),  # ADD THIS
 )
 ```
 
@@ -146,8 +146,10 @@ for key in ("sqmap", "dqmap", "phis"):
 @Slot(str, str)
 def _emit_task_started_queued(self, task_id: str, task_type: str) -> None: ...
 
+
 @Slot(str, str)
 def _emit_task_failed_queued(self, task_id: str, error_msg: str) -> None: ...
+
 
 @Slot(str, object)
 def _emit_task_completed_queued(self, task_id: str, result: object) -> None: ...
@@ -180,7 +182,7 @@ QTimer.singleShot(0, lambda: widget.update_function(data))
 **Fix:**
 ```python
 # Worker side: snapshot at submission time
-target_snapshot = list(self.target)   # under a lock if target is mutated concurrently
+target_snapshot = list(self.target)  # under a lock if target is mutated concurrently
 # Pass snapshot to worker, not the live reference
 ```
 
@@ -249,6 +251,7 @@ def _on_g2_bayesian_cancelled(self, worker_id, reason):
     self.btn_g2_bayesian.setEnabled(True)
     self.btn_g2_bayesian.setText("Fit Bayesian")
 
+
 # In _fit_g2_bayesian:
 worker.signals.cancelled.connect(self._on_g2_bayesian_cancelled)
 ```
@@ -282,6 +285,7 @@ self._monitor_thread.join(timeout=5.0)
 **Fix:** Close all HDF5 connections before `Pool()` creation, or switch from `fork` to `spawn` start method:
 ```python
 from multiprocessing import get_context
+
 pool = get_context("spawn").Pool(...)
 ```
 
@@ -480,7 +484,11 @@ h5py returns byte strings as `numpy.bytes_` objects in NumPy 2.x. Without explic
 
 **Fix:**
 ```python
-unit = raw_unit.decode("utf-8") if isinstance(raw_unit, (bytes, np.bytes_)) else str(raw_unit)
+unit = (
+    raw_unit.decode("utf-8")
+    if isinstance(raw_unit, (bytes, np.bytes_))
+    else str(raw_unit)
+)
 ```
 Apply at all h5py unit string reads in `hdf5_facade.py`.
 
@@ -515,6 +523,7 @@ JAX arrays passed to PyQtGraph will fail or produce incorrect plots. `ensure_num
 **Fix:**
 ```python
 from xpcsviewer.backends._conversions import ensure_numpy
+
 # Before setData/setImage calls:
 plot_item.setData(ensure_numpy(x), ensure_numpy(y))
 ```
@@ -655,7 +664,9 @@ No eviction policy. Long sessions accumulate thousands of completed-worker paylo
 ```python
 q_data = self.qmap.get("q")
 if q_data is None:
-    raise ValueError(f"Q-map missing required 'q' field; available keys: {list(self.qmap.keys())}")
+    raise ValueError(
+        f"Q-map missing required 'q' field; available keys: {list(self.qmap.keys())}"
+    )
 ```
 
 ---

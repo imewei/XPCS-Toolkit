@@ -274,9 +274,10 @@ python -m pytest tests/error_handling/ --junitxml=error_handling_results.xml
 # Example: Custom error injection
 from tests.error_handling.conftest import ErrorInjector
 
+
 def test_custom_error_scenario(error_injector):
     # Inject specific error condition
-    error_injector.inject_io_error('target.function', CustomError)
+    error_injector.inject_io_error("target.function", CustomError)
 
     # Test system behavior under error
     with pytest.raises(CustomError):

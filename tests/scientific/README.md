@@ -62,7 +62,7 @@ Uses [Hypothesis](https://hypothesis.readthedocs.io/) for property-based testing
 ```python
 @given(
     beta=st.floats(min_value=0.1, max_value=2.0),
-    gamma=st.floats(min_value=1.0, max_value=10000.0)
+    gamma=st.floats(min_value=1.0, max_value=10000.0),
 )
 def test_g2_properties(self, beta, gamma):
     """Test G2 properties across parameter ranges"""
@@ -78,11 +78,11 @@ Validates against multiple reference sources:
 # Analytical validation
 analytical_validator = AnalyticalValidator(tolerance=1e-6)
 
-# Literature reference validation  
+# Literature reference validation
 literature_validator = LiteratureReferenceValidator()
 
 # Software package validation
-matlab_validator = SoftwarePackageValidator('matlab_dls')
+matlab_validator = SoftwarePackageValidator("matlab_dls")
 ```
 
 ### Statistical Validation
@@ -212,28 +212,34 @@ assert is_valid, f"G2 normalization failed: {message}"
 ### Cross-Validation
 
 ```python
-from tests.scientific.reference_validation.cross_validation_framework import ComprehensiveCrossValidationFramework
+from tests.scientific.reference_validation.cross_validation_framework import (
+    ComprehensiveCrossValidationFramework,
+)
 
 framework = ComprehensiveCrossValidationFramework()
-framework.add_validator('analytical', AnalyticalValidator())
+framework.add_validator("analytical", AnalyticalValidator())
 
 # Define test case and run validation
 test_cases = [...]  # Your test cases
-report = framework.run_comprehensive_validation('MyAlgorithm', test_cases)
+report = framework.run_comprehensive_validation("MyAlgorithm", test_cases)
 ```
 
 ### Analytical Benchmarks
 
 ```python
-from tests.scientific.reference_validation.analytical_benchmarks import AnalyticalBenchmarkSuite
+from tests.scientific.reference_validation.analytical_benchmarks import (
+    AnalyticalBenchmarkSuite,
+)
 
 benchmark_suite = AnalyticalBenchmarkSuite()
 
 # Evaluate specific benchmark
-domain, values = benchmark_suite.evaluate_benchmark('sphere_form_factor')
+domain, values = benchmark_suite.evaluate_benchmark("sphere_form_factor")
 
 # Validate properties
-properties = benchmark_suite.validate_benchmark_properties('sphere_form_factor', domain, values)
+properties = benchmark_suite.validate_benchmark_properties(
+    "sphere_form_factor", domain, values
+)
 ```
 
 ## Continuous Integration

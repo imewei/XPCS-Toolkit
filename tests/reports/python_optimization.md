@@ -132,14 +132,16 @@ Returns `list(result)` for backward compatibility (list of 2-D views).
 
 **Change:** Replaced:
 ```python
-finite_values = c2[finite_mask]          # intermediate copy (H*W floats)
-pos_replacement = np.percentile(finite_values, 99.9)   # sort #1
-neg_replacement = np.percentile(finite_values, 0.1)    # sort #2
-nan_replacement  = np.median(finite_values)            # sort #3
+finite_values = c2[finite_mask]  # intermediate copy (H*W floats)
+pos_replacement = np.percentile(finite_values, 99.9)  # sort #1
+neg_replacement = np.percentile(finite_values, 0.1)  # sort #2
+nan_replacement = np.median(finite_values)  # sort #3
 ```
 With:
 ```python
-neg_replacement, nan_replacement, pos_replacement = np.nanpercentile(c2, [0.1, 50.0, 99.9])
+neg_replacement, nan_replacement, pos_replacement = np.nanpercentile(
+    c2, [0.1, 50.0, 99.9]
+)
 ```
 `np.nanpercentile` handles NaN/inf natively (no boolean mask needed), computes all three
 quantiles in a single sort pass, and avoids the intermediate `finite_values` allocation.
