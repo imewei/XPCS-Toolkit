@@ -329,6 +329,7 @@ class TestSimpleMaskOpenRawFile:
 
         assert window.action_open_raw_file.isEnabled()
         assert window.kernel is None
+        assert "Failed to load raw file:" in window.status_bar.currentMessage()
 
     def test_repeated_click_ignores_stale_completion(self, qapp, qtbot, tmp_path):
         # Two rapid loads: the second call must be a no-op while the first
