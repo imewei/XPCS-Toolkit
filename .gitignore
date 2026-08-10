@@ -264,6 +264,7 @@ AGENTS.md
 CLAUDE.md
 GEMINI.md
 specs/
+three-brain-out/
 # Claude session scratch files in docs
 docs/.claude-progress.md
 
