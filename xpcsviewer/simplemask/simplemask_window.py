@@ -28,6 +28,7 @@ from xpcsviewer.gui.qt_compat import (
     QSpinBox,
     QSplitter,
     QStatusBar,
+    QThreadPool,
     QToolBar,
     QVBoxLayout,
     QWidget,
@@ -39,6 +40,7 @@ from xpcsviewer.simplemask.drawing_tools import (
     get_tool_color,
 )
 from xpcsviewer.simplemask.pyqtgraph_mod import ImageViewROI
+from xpcsviewer.simplemask.raw_file_worker import RawFileLoadWorker
 from xpcsviewer.simplemask.simplemask_kernel import SimpleMaskKernel
 from xpcsviewer.simplemask.ui.simplemask_ui import setup_ui
 
@@ -101,6 +103,7 @@ class SimpleMaskWindow(QMainWindow):
     action_toggle_mask: QAction
     action_save_mask: QAction
     action_load_mask: QAction
+    action_open_raw_file: QAction
     action_apply_to_viewer: QAction
     action_close: QAction
 
@@ -121,6 +124,8 @@ class SimpleMaskWindow(QMainWindow):
         self._show_qmap_overlay = False
         self._show_partition_overlay = False
         self._last_save_path: str | None = None
+        self.thread_pool = QThreadPool()
+        self._raw_file_worker: RawFileLoadWorker | None = None
 
         self.setWindowTitle("Mask Editor")
 
@@ -155,6 +160,7 @@ class SimpleMaskWindow(QMainWindow):
         # File menu actions
         self.action_save_mask.triggered.connect(self._on_save_mask)
         self.action_load_mask.triggered.connect(self._on_load_mask)
+        self.action_open_raw_file.triggered.connect(self._on_open_raw_file)
         self.action_apply_to_viewer.triggered.connect(self.export_mask_to_viewer)
         self.action_close.triggered.connect(self.close)
 
@@ -425,6 +431,81 @@ class SimpleMaskWindow(QMainWindow):
             return False
 
         return True
+
+    def _on_open_raw_file(self) -> None:
+        """Handle Open Raw File action: file dialog, then background load."""
+        start_path = self._last_save_path or str(Path.home())
+        file_path, _ = QFileDialog.getOpenFileName(
+            self,
+            "Open Raw File",
+            start_path,
+            "HDF5 Files (*.h5 *.hdf5 *.hdf);;All Files (*)",
+        )
+        if not file_path:
+            return
+
+        # Only APS_8IDI exists in this PR; PR2 adds a beamline selector
+        # once APS_9IDD/xpcs_result exist to choose between.
+        self.load_from_raw_file(file_path, "APS_8IDI")
+
+    def load_from_raw_file(self, file_path: str, beamline: str) -> None:
+        """Load a raw detector file directly, independent of the main Viewer.
+
+        The public entry point named in the design spec: submits a
+        RawFileLoadWorker to the thread pool for ``file_path``.
+
+        No-ops if a load is already in flight (``action_open_raw_file`` is
+        disabled exactly while one is running) rather than tracking and
+        discarding a stale second worker's result -- the simplest way to
+        satisfy the spec's "ignore a stale in-flight request" requirement
+        is to never let a second one start.
+        """
+        if not self.action_open_raw_file.isEnabled():
+            logger.debug("Raw file load already in progress; ignoring new request")
+            return
+
+        self.action_open_raw_file.setEnabled(False)
+        self.status_bar.showMessage(f"Loading {Path(file_path).name}...")
+
+        worker = RawFileLoadWorker(file_path, beamline)
+        self._raw_file_worker = worker
+
+        # Disconnect any previously connected slot before reconnecting
+        # (matches the guard in xpcs_viewer.py's avg-worker submission,
+        # preventing lambda/slot accumulation on repeated clicks).
+        try:
+            worker.signals.finished.disconnect(self._on_raw_file_loaded)
+        except (RuntimeError, TypeError):
+            pass
+        try:
+            worker.signals.error.disconnect(self._on_raw_file_error)
+        except (RuntimeError, TypeError):
+            pass
+        worker.signals.finished.connect(self._on_raw_file_loaded)
+        worker.signals.error.connect(self._on_raw_file_error)
+
+        self.thread_pool.start(worker)
+
+    def _on_raw_file_loaded(self, result: dict[str, Any]) -> None:
+        """Handle a completed RawFileLoadWorker result on the GUI thread."""
+        self.action_open_raw_file.setEnabled(True)
+        self.load_from_viewer(result["scattering"], result["metadata"])
+        if result["metadata_is_placeholder"]:
+            self.status_bar.showMessage(
+                "Loaded with placeholder geometry — the file's metadata "
+                "could not be read; edit the geometry fields by hand.",
+                8000,
+            )
+        else:
+            self.status_bar.showMessage("Raw file loaded", 3000)
+
+    def _on_raw_file_error(
+        self, worker_id: str, error_msg: str, tb_str: str, retry_count: int
+    ) -> None:
+        """Handle a failed RawFileLoadWorker on the GUI thread."""
+        self.action_open_raw_file.setEnabled(True)
+        logger.error(f"Raw file load failed: {error_msg}\n{tb_str}")
+        self.status_bar.showMessage(f"Failed to load raw file: {error_msg}", 8000)
 
     def _ensure_mask_overlay_visible(self) -> None:
         """Enable mask overlay and sync all toggle states.

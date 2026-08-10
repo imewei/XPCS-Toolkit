@@ -254,3 +254,110 @@ class TestSimpleMaskCloseEvent:
         qtbot.wait(50)
 
         assert not window.isVisible()
+
+
+class TestSimpleMaskOpenRawFile:
+    """Tests for the standalone raw-file open flow (Open Raw File action)."""
+
+    def test_action_open_raw_file_exists(self, qapp, qtbot):
+        window = SimpleMaskWindow()
+        qtbot.addWidget(window)
+        assert hasattr(window, "action_open_raw_file")
+        assert window.action_open_raw_file.isEnabled()
+
+    def test_successful_load_populates_kernel_and_reenables_action(
+        self, qapp, qtbot, tmp_path
+    ):
+        import h5py
+
+        fname = str(tmp_path / "scan.h5")
+        with h5py.File(fname, "w") as f:
+            data = np.full((2, 3, 3), 5, dtype=np.uint16)
+            f.create_dataset("/entry/data/data", data=data)
+            f.create_dataset(
+                "/entry/instrument/incident_beam/incident_energy", data=10.0
+            )
+            f.create_dataset("/entry/instrument/detector_1/distance", data=5.0)
+            f.create_dataset(
+                "/entry/instrument/detector_1/x_pixel_size", data=0.000075
+            )
+            f.create_dataset(
+                "/entry/instrument/detector_1/y_pixel_size", data=0.000075
+            )
+            f.create_dataset("/entry/instrument/detector_1/position_x", data=0.0)
+            f.create_dataset("/entry/instrument/detector_1/position_y", data=0.0)
+            f.create_dataset(
+                "/entry/instrument/detector_1/beam_center_position_x", data=0.0
+            )
+            f.create_dataset(
+                "/entry/instrument/detector_1/beam_center_position_y", data=0.0
+            )
+            f.create_dataset("/entry/instrument/detector_1/beam_center_x", data=1.5)
+            f.create_dataset("/entry/instrument/detector_1/beam_center_y", data=1.5)
+
+        window = SimpleMaskWindow()
+        qtbot.addWidget(window)
+        window.show()
+
+        window.load_from_raw_file(fname, "APS_8IDI")
+
+        # Poll until the worker finishes (real QThreadPool background thread).
+        for _ in range(200):
+            if window.kernel is not None and window.kernel.is_ready():
+                break
+            qtbot.wait(25)
+
+        assert window.kernel is not None
+        assert window.kernel.is_ready()
+        assert window.action_open_raw_file.isEnabled()
+
+    def test_failed_load_shows_error_and_reenables_action(self, qapp, qtbot, tmp_path):
+        fname = str(tmp_path / "not_hdf5.txt")
+        with open(fname, "w") as f:
+            f.write("not an hdf5 file")
+
+        window = SimpleMaskWindow()
+        qtbot.addWidget(window)
+        window.show()
+
+        window.load_from_raw_file(fname, "APS_8IDI")
+
+        for _ in range(200):
+            if window.action_open_raw_file.isEnabled():
+                break
+            qtbot.wait(25)
+
+        assert window.action_open_raw_file.isEnabled()
+        assert window.kernel is None
+
+    def test_repeated_click_ignores_stale_completion(self, qapp, qtbot, tmp_path):
+        # Two rapid loads: the second call must be a no-op while the first
+        # is still in flight -- not queue a second worker whose completion
+        # could race the first and silently win regardless of click order.
+        import h5py
+
+        fname = str(tmp_path / "scan.h5")
+        with h5py.File(fname, "w") as f:
+            f.create_dataset(
+                "/entry/data/data", data=np.full((3, 3), 4, dtype=np.uint16)
+            )
+
+        window = SimpleMaskWindow()
+        qtbot.addWidget(window)
+        window.show()
+
+        window.load_from_raw_file(fname, "APS_8IDI")
+        assert window.action_open_raw_file.isEnabled() is False
+        first_worker = window._raw_file_worker
+
+        # Second call while the first is still in flight must be a no-op:
+        # no new worker created, no crash, no double-connected signals.
+        window.load_from_raw_file(fname, "APS_8IDI")
+        assert window._raw_file_worker is first_worker
+
+        for _ in range(200):
+            if window.action_open_raw_file.isEnabled():
+                break
+            qtbot.wait(25)
+
+        assert window.action_open_raw_file.isEnabled()
