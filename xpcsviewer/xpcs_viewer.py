@@ -3,6 +3,7 @@ import json
 import os
 import shutil
 import time
+from collections import OrderedDict
 from pathlib import Path
 
 # Third-party imports
@@ -59,6 +60,9 @@ from .viewer_ui import Ui_mainWindow as Ui
 
 # Initialize centralized logging and get logger
 logger = get_logger(__name__)
+
+# Cap on remembered per-file twotime qbin selections (LRU-evicted).
+_TWOTIME_QBIN_MEMORY_MAX = 256
 
 # Setup exception logging
 setup_exception_logging()
@@ -250,6 +254,10 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         self.list_view_target.clicked.connect(self.update_plot)
 
         self.mp_2t_hdls = None
+        # fname -> last selected qbin index; bounded LRU so a long session
+        # analyzing many files doesn't grow this without limit.
+        self._twotime_qbin_memory: OrderedDict[str, int] = OrderedDict()
+        self._twotime_last_fname = None
         self._init_twotime_tab()
         self.init_twotime_plot_handler()
 
@@ -1540,6 +1548,7 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
 
         c2_result = result["c2_result"]
         new_qbin_labels = result["new_qbin_labels"]
+        fname = getattr(result.get("xfile"), "fname", None)
 
         # Update the two-time plots using lazy loading
         self.vk.get_module("twotime").plot_twotime_g2(self.mp_2t_hdls, c2_result)
@@ -1548,8 +1557,12 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
             logger.debug(
                 f"[ASYNC] Repopulating ComboBox with new labels: {new_qbin_labels}"
             )
-            # Preserve current selection when repopulating
+            # Preserve current selection when repopulating; on a dataset
+            # switch, prefer this file's remembered qbin over whatever the
+            # combobox still shows from the previous file.
             current_selection = self.comboBox_twotime_selection.currentIndex()
+            if fname is not None and fname != self._twotime_last_fname:
+                current_selection = self._twotime_qbin_memory.get(fname, 0)
             logger.debug(
                 f"COMBOBOX POPULATE: [ASYNC] Current selection before repopulation: {current_selection}"
             )
@@ -1581,6 +1594,8 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
                 # Always restore signal connections
                 self.comboBox_twotime_selection.blockSignals(False)
                 self.horizontalSlider_twotime_selection.blockSignals(False)
+        if fname is not None:
+            self._twotime_last_fname = fname
 
     def apply_intensity_result(self, result):
         """Apply intensity plot result to the GUI."""
@@ -1986,6 +2001,13 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         selection = self.spinBox_saxs2d_selection.value()
         self.plot_saxs_2d(selection=selection)
 
+    def _current_twotime_fname(self):
+        """Return fname of the currently selected Twotime file, or None."""
+        if self.vk is None:
+            return None
+        xf_list = self.vk.get_xf_list(self.get_selected_rows(), filter_atype="Twotime")
+        return xf_list[0].fname if xf_list else None
+
     def on_twotime_q_selection_changed(self, index):
         """Handle Q value selection changes in twotime ComboBox."""
         logger.debug(f"TWOTIME Q SELECTION CHANGED: ComboBox index changed to {index}")
@@ -2004,6 +2026,16 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
             self.horizontalSlider_twotime_selection.blockSignals(True)
             self.horizontalSlider_twotime_selection.setValue(index)
             self.horizontalSlider_twotime_selection.blockSignals(False)
+
+        # Remember this qbin choice per-file so switching datasets and back
+        # restores it, instead of carrying over whatever index the combobox
+        # happened to be showing.
+        fname = self._current_twotime_fname()
+        if fname is not None and index >= 0:
+            self._twotime_qbin_memory[fname] = index
+            self._twotime_qbin_memory.move_to_end(fname)
+            if len(self._twotime_qbin_memory) > _TWOTIME_QBIN_MEMORY_MAX:
+                self._twotime_qbin_memory.popitem(last=False)
 
         # Now trigger the plot update
         logger.debug("TWOTIME Q SELECTION CHANGED: Calling update_plot()")
@@ -2814,6 +2846,12 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
 
     def plot_twotime(self, dryrun=False, highlight_xy=None):
         current_selection = self.comboBox_twotime_selection.currentIndex()
+        fname = self._current_twotime_fname()
+        switched_dataset = fname is not None and fname != self._twotime_last_fname
+        if switched_dataset:
+            # New file: use its remembered qbin (default 0), not the old
+            # combobox index left over from the previous file.
+            current_selection = self._twotime_qbin_memory.get(fname, 0)
         logger.debug(
             f"plot_twotime called: dryrun={dryrun}, ComboBox currentIndex={current_selection}, count={self.comboBox_twotime_selection.count()}"
         )
@@ -2842,8 +2880,9 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         new_labels = self.vk.plot_twotime(self.mp_2t_hdls, **kwargs)
         if new_labels is not None:
             logger.debug(f"Repopulating ComboBox with new labels: {new_labels}")
-            # Preserve current selection when repopulating
-            current_selection = self.comboBox_twotime_selection.currentIndex()
+            # current_selection already holds the right target: the
+            # remembered qbin for this file on a dataset switch, or the
+            # combobox's current index when replotting the same file.
             logger.debug(
                 f"COMBOBOX POPULATE: [SYNC] Current selection before repopulation: {current_selection}"
             )
@@ -2873,6 +2912,8 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
                 # Always restore signal connections
                 self.comboBox_twotime_selection.blockSignals(False)
                 self.horizontalSlider_twotime_selection.blockSignals(False)
+        if fname is not None:
+            self._twotime_last_fname = fname
         return None
 
     def show_dataset(self):
