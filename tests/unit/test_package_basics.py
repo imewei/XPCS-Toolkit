@@ -13,6 +13,7 @@ from xpcsviewer.cli import main
 
 
 @pytest.mark.unit
+@pytest.mark.smoke
 def test_package_version():
     """Test that package version is accessible."""
     assert isinstance(__version__, str)
@@ -20,12 +21,14 @@ def test_package_version():
 
 
 @pytest.mark.unit
+@pytest.mark.smoke
 def test_cli_module_importable():
     """Test that CLI module can be imported."""
     assert callable(main)
 
 
 @pytest.mark.unit
+@pytest.mark.smoke
 def test_basic_imports():
     """Test that basic modules can be imported."""
     try:
