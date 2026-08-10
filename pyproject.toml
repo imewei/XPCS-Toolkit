@@ -347,6 +347,7 @@ ignore = [
     "RET504",  # unnecessary variable assignment before return
     "S101",    # use of assert
     "PLR0913", # too many arguments
+    "PLR0917", # too many positional arguments (curve-fit model fns need positional order)
     "PLC0415", # import-outside-top-level (lazy imports for startup perf)
     "PLR2004", # magic-value-comparison (scientific constants)
     "E402",    # module-import-not-at-top-of-file (conditional imports)
