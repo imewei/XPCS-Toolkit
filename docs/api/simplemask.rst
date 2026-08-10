@@ -209,3 +209,56 @@ Beam center refinement and detector geometry calibration utilities.
 .. automodule:: xpcsviewer.simplemask.calibration
    :members:
    :no-index:
+
+Raw File Reader
+================
+
+Qt-free reader stack for loading raw detector files directly (bypassing
+pre-processed XPCS HDF5 output), dispatched by beamline. Only ``APS_8IDI``
+is wired up; ``APS_9IDD`` and native-format readers are planned follow-ups.
+
+.. automodule:: xpcsviewer.simplemask.reader
+   :members:
+   :no-index:
+
+.. autoclass:: xpcsviewer.simplemask.reader.base_reader.FileReader
+   :members:
+   :no-index:
+
+.. autoclass:: xpcsviewer.simplemask.reader.beamlines.aps_8idi.APS8IDIReader
+   :members:
+   :no-index:
+
+.. autoclass:: xpcsviewer.simplemask.reader.formats.base.ScatteringDataset
+   :members:
+   :no-index:
+
+.. autoclass:: xpcsviewer.simplemask.reader.formats.hdf.HdfDataset
+   :members:
+   :no-index:
+
+.. automodule:: xpcsviewer.simplemask.reader.adapter
+   :members:
+   :no-index:
+
+.. automodule:: xpcsviewer.simplemask.reader.metadata
+   :members:
+   :no-index:
+
+.. automodule:: xpcsviewer.simplemask.reader.io_utils
+   :members:
+   :no-index:
+
+.. autoclass:: xpcsviewer.simplemask.reader.exceptions.RawDataReadError
+   :no-index:
+
+Raw File Load Worker
+=====================
+
+Off-GUI-thread worker that runs a raw-file read through the reader stack
+and adapts the result to :class:`~xpcsviewer.simplemask.simplemask_kernel.SimpleMaskKernel`'s
+metadata schema.
+
+.. automodule:: xpcsviewer.simplemask.raw_file_worker
+   :members:
+   :no-index:
