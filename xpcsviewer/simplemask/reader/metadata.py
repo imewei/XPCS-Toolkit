@@ -12,7 +12,7 @@ import numpy as np
 logger = logging.getLogger(__name__)
 
 
-def _normalize(value):
+def _normalize(value: object) -> object:
     """Turn a raw HDF5 value into a plain Python/NumPy scalar where possible."""
     if isinstance(value, bytes):
         return value.decode("utf-8", errors="replace")
@@ -23,33 +23,33 @@ def _normalize(value):
     return value
 
 
-def has_nexus_fields(fname, keymap, optional_fields=None):
+def has_nexus_fields(fname: str, keymap: dict[str, str], optional_fields: list[str] | None = None) -> bool:
     """Return True if ``fname`` is an HDF5 file containing every required field."""
     if not h5py.is_hdf5(fname):
         return False
 
-    optional_fields = set(optional_fields or ())
+    optional_set: set[str] = set(optional_fields or ())
     with h5py.File(fname, "r") as f:
         for key, hdf_path in keymap.items():
-            if key in optional_fields:
+            if key in optional_set:
                 continue
             if hdf_path not in f:
                 return False
     return True
 
 
-def read_keymap(fname, keymap, optional_fields=None):
+def read_keymap(fname: str, keymap: dict[str, str], optional_fields: list[str] | None = None) -> dict[str, object | None]:
     """Read metadata values from an HDF5 file using a key -> path mapping.
 
     Optional fields that are missing are returned as ``None``. Required
     fields that are missing raise ``KeyError``.
     """
-    optional_fields = set(optional_fields or ())
-    metadata = {}
+    optional_set: set[str] = set(optional_fields or ())
+    metadata: dict[str, object | None] = {}
     with h5py.File(fname, "r") as f:
         for key, hdf_path in keymap.items():
             if hdf_path not in f:
-                if key in optional_fields:
+                if key in optional_set:
                     metadata[key] = None
                     continue
                 raise KeyError(f"required field {hdf_path!r} missing in {fname}")
@@ -57,7 +57,7 @@ def read_keymap(fname, keymap, optional_fields=None):
     return metadata
 
 
-def find_metadata_file(fname):
+def find_metadata_file(fname: str) -> str:
     """Find a ``*_metadata.hdf`` file in the same folder as ``fname``.
 
     Raises:
@@ -76,7 +76,7 @@ def find_metadata_file(fname):
     return matches[0]
 
 
-def read_nexus_metadata(fname, keymap, optional_fields=None, metadata_fname=None):
+def read_nexus_metadata(fname: str, keymap: dict[str, str], optional_fields: list[str] | None = None, metadata_fname: str | None = None) -> tuple[dict[str, object | None], str]:
     """Locate and read NeXus metadata for ``fname``.
 
     Discovery order: an explicit valid ``metadata_fname`` override, then
