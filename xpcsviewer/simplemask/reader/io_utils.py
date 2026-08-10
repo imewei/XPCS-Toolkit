@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import logging
 from multiprocessing import Pool, cpu_count
+from typing import cast
 
 import h5py
 import hdf5plugin  # noqa: F401  # registers HDF5 compression plugins
@@ -31,14 +32,20 @@ def _cast_to_signed(arr: np.ndarray) -> np.ndarray:
     return arr
 
 
-def process_chunk(file_path, dataset_name, start_idx, end_idx):
+def process_chunk(
+    file_path: str, dataset_name: str, start_idx: int, end_idx: int
+) -> np.ndarray:
     """Return the per-pixel float32 sum over ``[start_idx, end_idx)`` of a dataset."""
     with h5py.File(file_path, "r") as f:
         chunk = _cast_to_signed(f[dataset_name][start_idx:end_idx])
-        return np.sum(chunk, axis=0, dtype=np.float32)
+        return cast(
+            np.ndarray, np.sum(chunk, axis=0, dtype=np.float32)
+        )
 
 
-def resolve_frame_range(total_frames, start_frame, num_frames):
+def resolve_frame_range(
+    total_frames: int, start_frame: int, num_frames: int | None
+) -> int:
     """Clamp a requested frame range to what the dataset contains.
 
     ``num_frames`` semantics, shared by every format loader:
@@ -60,13 +67,13 @@ def resolve_frame_range(total_frames, start_frame, num_frames):
 
 
 def average_frames_parallel(
-    file_path,
-    dataset_name="/entry/data/data",
-    start_frame=0,
-    num_frames=-1,
-    chunk_size=32,
-    num_processes=None,
-):
+    file_path: str,
+    dataset_name: str = "/entry/data/data",
+    start_frame: int = 0,
+    num_frames: int = -1,
+    chunk_size: int = 32,
+    num_processes: int | None = None,
+) -> np.ndarray:
     """Return the per-pixel mean image over a range of frames in a 3-D HDF5 stack.
 
     See :func:`resolve_frame_range` for ``num_frames`` semantics.
@@ -86,8 +93,11 @@ def average_frames_parallel(
         # Small ranges are cheaper to read in a single process.
         if num_frames < chunk_size:
             frames = _cast_to_signed(dataset[start_frame : start_frame + num_frames])
-            return (np.sum(frames, axis=0, dtype=np.float32) / num_frames).astype(
-                np.float32
+            return cast(
+                np.ndarray,
+                (np.sum(frames, axis=0, dtype=np.float32) / num_frames).astype(
+                    np.float32
+                ),
             )
 
         if num_processes is None:
@@ -105,4 +115,4 @@ def average_frames_parallel(
     with Pool(processes=num_processes) as pool:
         results = pool.starmap(process_chunk, chunks)
 
-    return (sum(results) / num_frames).astype(np.float32)
+    return (cast(np.ndarray, sum(results)) / num_frames).astype(np.float32)
