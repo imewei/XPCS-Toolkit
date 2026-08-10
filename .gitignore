@@ -250,6 +250,7 @@ run_phase*_temp.py
 .agent/
 .agents/
 .claude/
+.claude-flow
 .claude-progress.md
 .code/
 .codex/
