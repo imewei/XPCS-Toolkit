@@ -349,7 +349,7 @@ Focus: ensure_numpy() placement, dtype preservation, model function dual-backend
 
 - **Verified safe.** `plot_twotime_g2()` at lines 289-290 applies `np.nan_to_num()` to both `g2_full` and `g2_partial` before the `.plot()` calls:
   ```python
-  g2_full_clean = np.nan_to_num(g2_full, nan=1.0, posinf=1.0, neginf=0.0)   # → NumPy
+  g2_full_clean = np.nan_to_num(g2_full, nan=1.0, posinf=1.0, neginf=0.0)  # → NumPy
   g2_partial_clean = np.nan_to_num(g2_partial, nan=1.0, posinf=1.0, neginf=0.0)
   ```
   `xaxis` is produced by `np.arange(...) * acquire_period` — also NumPy. All arguments to `hdl["c2g2"].plot()` are NumPy arrays at that point.
@@ -460,12 +460,15 @@ For the Bayesian fitter, `_g2_bayesian_results` is not included in `export_g2()`
    popt = np.asarray(native_result.popt, dtype=np.float64)
    pcov = np.asarray(native_result.pcov, dtype=np.float64)
    # and in sampler.py:
-   samples_np = {k: np.asarray(v, dtype=np.float64) for k, v in samples.items() if k in param_names}
+   samples_np = {
+       k: np.asarray(v, dtype=np.float64) for k, v in samples.items() if k in param_names
+   }
    ```
 
 4. **C-020**: In `intt.py` FFT plot:
    ```python
    from xpcsviewer.backends._conversions import ensure_numpy
+
    tf.plot(ensure_numpy(x_fft), ensure_numpy(y_fft), ...)
    ```
 

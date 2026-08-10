@@ -343,6 +343,13 @@ def _setup_menubar(window) -> None:
     window.action_load_mask.setToolTip("Load mask from HDF5 file (Ctrl+O)")
     file_menu.addAction(window.action_load_mask)
 
+    # Open Raw File action
+    window.action_open_raw_file = QAction("Open &Raw File...", window)
+    window.action_open_raw_file.setToolTip(
+        "Open a raw detector file (HDF5) directly, independent of XPCS Viewer"
+    )
+    file_menu.addAction(window.action_open_raw_file)
+
     file_menu.addSeparator()
 
     # Apply to Viewer action

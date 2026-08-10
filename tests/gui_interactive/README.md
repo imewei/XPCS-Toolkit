@@ -274,8 +274,8 @@ Extend mock data for new analysis types:
 @pytest.fixture
 def mock_new_analysis_data():
     return {
-        'new_analysis/result': np.random.random(100),
-        'new_analysis/parameters': {'param1': 1.0}
+        "new_analysis/result": np.random.random(100),
+        "new_analysis/parameters": {"param1": 1.0},
     }
 ```
 

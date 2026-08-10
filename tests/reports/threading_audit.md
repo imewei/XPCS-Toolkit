@@ -52,10 +52,10 @@ decorators to the three affected methods.
 
 ```python
 def cancel_all_operations(self):
-    self.worker_manager.cancel_all_workers()          # (1) sets cancel flags
+    self.worker_manager.cancel_all_workers()  # (1) sets cancel flags
     for operation_id in list(self._signal_connections.keys()):
-        self._disconnect_signals(operation_id)        # (2) disconnects lambdas
-    self.active_operations.clear()                    # (3) clears dict
+        self._disconnect_signals(operation_id)  # (2) disconnects lambdas
+    self.active_operations.clear()  # (3) clears dict
 ```
 
 Between steps (1) and (2), a worker that is past its cancellation check can
@@ -258,9 +258,7 @@ the signal, or use `auto_reconnect=False` and track the connection object.
 **File:** `xpcsviewer/threading/async_workers.py:568-584`
 
 ```python
-worker.signals.started.connect(
-    lambda wid, priority: self._on_worker_started(worker_id)
-)
+worker.signals.started.connect(lambda wid, priority: self._on_worker_started(worker_id))
 ```
 
 The lambda captures `worker_id` (a string — fine) but `worker.signals` holds
@@ -288,8 +286,8 @@ capturing lambdas, and decide consistently on `setAutoDelete`.
 **File:** `xpcsviewer/threading/async_workers.py:631, 643`
 
 ```python
-self.worker_results[worker_id] = result    # never evicted
-self.worker_errors[worker_id] = (...)      # never evicted
+self.worker_results[worker_id] = result  # never evicted
+self.worker_errors[worker_id] = ...  # never evicted
 ```
 
 For a long-running application session, completed-worker results accumulate
@@ -439,7 +437,7 @@ to observe it. The cancellation only takes effect when the fit completes.
 ```python
 # bayesian_worker.py
 fit_result = self.fit_func(self.x, self.y, self.yerr, **self.sampler_kwargs)
-self.check_cancelled()   # too late — entire MCMC has run
+self.check_cancelled()  # too late — entire MCMC has run
 ```
 
 **Impact:** The "fitting..." button state and `_g2_bayesian_worker_active` flag are locked for
@@ -459,7 +457,7 @@ optionally add a host-callback via `jax.debug.callback` to check the cancel flag
 ```python
 def clear_all(self):
     with self._lock:
-        self.objects.clear()   # drops all refs — no cleanup called
+        self.objects.clear()  # drops all refs — no cleanup called
 ```
 
 `XpcsFile` registers itself via `register_for_cleanup()` at `__init__:224`. On shutdown,

@@ -123,23 +123,30 @@ python tests/framework/quality_standards.py --check-all --format json
 ### Writing Quality Tests
 
 ```python
-from tests.framework.utils import ScientificAssertions, scientific_test, PerformanceTimer
+from tests.framework.utils import (
+    ScientificAssertions,
+    scientific_test,
+    PerformanceTimer,
+)
+
 
 class TestCorrelationAnalysis:
     @scientific_test(tolerance=1e-6)
     def test_g2_calculation_accuracy(self, synthetic_correlation_data):
         """Test G2 calculation maintains scientific accuracy."""
-        result = calculate_g2(synthetic_correlation_data['raw'])
+        result = calculate_g2(synthetic_correlation_data["raw"])
 
         ScientificAssertions.assert_arrays_close(
-            result, synthetic_correlation_data['expected'],
-            rtol=1e-6, atol=1e-12,
-            msg="G2 calculation accuracy validation"
+            result,
+            synthetic_correlation_data["expected"],
+            rtol=1e-6,
+            atol=1e-12,
+            msg="G2 calculation accuracy validation",
         )
 
         # Validate physical constraints
         ScientificAssertions.assert_correlation_properties(
-            synthetic_correlation_data['tau'], result
+            synthetic_correlation_data["tau"], result
         )
 ```
 

@@ -37,7 +37,7 @@ one used at first trace.
 @jax.jit
 def _reflection_qmap_core(k0, v, h, pix_dim, det_dist, alpha_i_deg):
     ...
-    if orientation == "west":      # BUG: captured Python constant, not traced value
+    if orientation == "west":  # BUG: captured Python constant, not traced value
         vg, hg = -hg, vg
     elif orientation == "south":
         vg, hg = -vg, -hg
@@ -90,8 +90,9 @@ triggering fallback paths that skip valid results.
 
 **Proposed fix:**
 ```python
-converged = bool(getattr(native_result, "converged",
-                         getattr(native_result, "success", False)))
+converged = bool(
+    getattr(native_result, "converged", getattr(native_result, "success", False))
+)
 ```
 Check `.converged` first; fall back to `.success`; finally default `False`.
 
@@ -184,7 +185,9 @@ declared NumPyro sample sites before running MCMC:
 model_sites = numpyro.infer.util.get_parameter_transforms(model, *model_args)
 unknown = set(init_params) - set(model_sites)
 if unknown:
-    logger.warning(f"init_params keys {unknown} do not match NumPyro sites; warm-start ignored")
+    logger.warning(
+        f"init_params keys {unknown} do not match NumPyro sites; warm-start ignored"
+    )
 ```
 
 ---
@@ -212,7 +215,7 @@ non-reproducible results on the next run if the process is not restarted.
 **Root cause:**  
 ```python
 if i % 10 == 0 or i == max_iterations - 1:
-    loss_val = float(loss)   # triggers host-device sync every 10 steps
+    loss_val = float(loss)  # triggers host-device sync every 10 steps
 ```
 The pattern is intentional for convergence checking, but `float(loss)` on a JAX array
 forces a device-to-host transfer and blocks until the XLA computation completes. Since

@@ -5,6 +5,7 @@ using pytest-qt with PySide6 components.
 """
 
 import os
+import threading
 from pathlib import Path
 from unittest.mock import Mock, patch
 
@@ -51,6 +52,7 @@ from PySide6 import QtCore, QtGui, QtWidgets
 # Import pytest-qt for GUI testing
 pytest_qt = pytest.importorskip("pytestqt", reason="PySide6/Qt tests require pytest-qt")
 
+from xpcsviewer.fileIO.qmap_utils import QMapManager
 from xpcsviewer.viewer_kernel import ViewerKernel
 from xpcsviewer.xpcs_file import XpcsFile
 
@@ -329,8 +331,20 @@ def mock_viewer_kernel(mock_xpcs_file):
         mock_kernel.source = ListDataModel([])
         mock_kernel.source_search = ListDataModel([])  # Add missing attribute
         mock_kernel.cache = {}  # Add cache attribute for FileLocator compatibility
+        # Add qmap_manager/_cache_lock for FileLocator compatibility (needed by
+        # add_target(), which _restore_session() calls whenever a persisted
+        # session exists).
+        mock_kernel.qmap_manager = QMapManager()
+        mock_kernel._cache_lock = threading.Lock()
         mock_kernel.timestamp = "test_timestamp_123"  # Add missing timestamp attribute
         mock_kernel._current_dset_cache = {}  # Add missing current dataset cache
+        mock_kernel._dset_cache_lock = threading.Lock()  # Add missing dset cache lock
+        mock_kernel.statusbar = None  # Add missing ViewerKernel.__init__ attribute
+        mock_kernel.avg_worker_active = {}  # Add missing ViewerKernel.__init__ attribute
+        mock_kernel._plot_kwargs_record = {}  # Add missing ViewerKernel.__init__ attribute
+        mock_kernel._memory_cleanup_threshold = (
+            0.8  # Add missing ViewerKernel.__init__ attribute
+        )
         mock_kernel.avg_worker = None
         mock_kernel.meta = {"saxs1d_bkg_xf": None}  # Add missing meta attribute
 

@@ -40,8 +40,11 @@ and `np.add.at` — the correct O(N) single-pass algorithm. **No fix needed here
 
 ```python
 native_result = nlsq.fit(
-    model_fn, x, y, ...,
-    preset=preset,   # "robust" -> 5 Latin-Hypercube TRF starts
+    model_fn,
+    x,
+    y,
+    ...,
+    preset=preset,  # "robust" -> 5 Latin-Hypercube TRF starts
 )
 ```
 
@@ -83,6 +86,7 @@ Linear scaling confirms each start is an independent solve.
 
 # Pre-JIT the model function before entering the fitting loop:
 import jax
+
 model_jit = jax.jit(model_fn)  # trace once, reuse for all q-bins
 ```
 
@@ -130,7 +134,7 @@ creates Q separate Python objects from a contiguous 3-D array -- O(Q) heap alloc
 # Remove np.median from the hot path -- not used by any known caller.
 # Callers that need median can call np.median(g2_stack, axis=0) explicitly.
 # Return temporal_correlation as ndarray[Q, B, B] -- not a Python list.
-stats["temporal_correlation"] = corr_batch   # [Q, B, B] 3-D ndarray
+stats["temporal_correlation"] = corr_batch  # [Q, B, B] 3-D ndarray
 ```
 
 ---
@@ -144,10 +148,10 @@ stats["temporal_correlation"] = corr_batch   # [Q, B, B] 3-D ndarray
 #### Root Cause
 
 ```python
-finite_values = c2[finite_mask]               # copies ~250k floats
+finite_values = c2[finite_mask]  # copies ~250k floats
 pos_replacement = np.percentile(finite_values, 99.9)  # sort pass #1 -> 2.5ms
-neg_replacement = np.percentile(finite_values, 0.1)   # sort pass #2 -> 2.5ms
-nan_replacement = np.median(finite_values)             # sort pass #3 -> 0.3ms
+neg_replacement = np.percentile(finite_values, 0.1)  # sort pass #2 -> 2.5ms
+nan_replacement = np.median(finite_values)  # sort pass #3 -> 0.3ms
 ```
 
 Three separate `np.percentile` / `np.median` calls each trigger an independent
@@ -176,7 +180,9 @@ before any statistics are computed.
 # Replace three separate sort passes with one nanpercentile call:
 pcts = np.nanpercentile(c2, [0.1, 50.0, 99.9])
 neg_replacement, nan_replacement, pos_replacement = (
-    float(pcts[0]), float(pcts[1]), float(pcts[2])
+    float(pcts[0]),
+    float(pcts[1]),
+    float(pcts[2]),
 )
 return np.nan_to_num(
     c2, nan=nan_replacement, posinf=pos_replacement, neginf=neg_replacement

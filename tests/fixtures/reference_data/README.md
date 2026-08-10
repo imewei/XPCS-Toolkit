@@ -69,11 +69,16 @@ Reference data is loaded using the `load_reference_data()` function:
 from tests.fixtures.reference_data import load_reference_data
 
 # Load G2 single exponential data
-data = load_reference_data('g2_analysis', 'single_exponential_standard')
-x, y, y_err, metadata = data['x_values'], data['y_values'], data['y_errors'], data['metadata']
+data = load_reference_data("g2_analysis", "single_exponential_standard")
+x, y, y_err, metadata = (
+    data["x_values"],
+    data["y_values"],
+    data["y_errors"],
+    data["metadata"],
+)
 
 # Validate against expected parameters
-expected_params = metadata['theoretical_params']
+expected_params = metadata["theoretical_params"]
 ```
 
 ## Adding New Reference Data
