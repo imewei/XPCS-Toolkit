@@ -4,10 +4,6 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
-### Fixed
-
-- pyproject.toml: `Changelog` project URL pointed at nonexistent `HISTORY.rst`; now points to `CHANGELOG.md`
-
 ## [0.1.10] - 2026-08-11
 
 ### Added
@@ -18,14 +14,17 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
-- Bump JAX requirement to 0.11, add `optimistix` dependency, update CUDA install flow
+- Add `optimistix` dependency, update CUDA install flow
 - README: dynamic PyPI version badge
+- SAXS-2D: debounce selection spinbox and tune two-time splitter ratios
 
 ### Fixed
 
 - Two-time: preserve per-file q-bin selection across dataset switches
+- Deps: keep `jax`/`jaxlib` lower bound at `>=0.8` (`interpax<=0.3.14` transitively caps `jax<0.11`; a `>=0.11` bound is unresolvable via a real `pip install`)
 - CI: fix smoke-test collection gap, ruff format drift, missing Qt system libraries in smoke-test job
 - Tests: stub startup dialog prompt in GUI conftest fixture; prune redundant GPU migration test classes; restore missing `ViewerKernel` mock fixture attributes
+- pyproject.toml: `Changelog` project URL pointed at nonexistent `HISTORY.rst`; now points to `CHANGELOG.md`
 
 ## [0.1.9] - 2026-06-26
 

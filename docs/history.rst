@@ -6,16 +6,15 @@ See the full changelog in `CHANGELOG.md <https://github.com/imewei/xpcsviewer/bl
 Recent Changes
 --------------
 
-Unreleased
-~~~~~~~~~~
-
 Version 0.1.10 (2026-08-11)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 - Mask Editor: Open Raw File action, APS 8-ID-I raw reader stack, automatic beam center detection
-- Bump JAX requirement to 0.11, add ``optimistix`` dependency, update CUDA install flow
+- Add ``optimistix`` dependency, update CUDA install flow; keep ``jax``/``jaxlib`` lower bound at ``>=0.8`` (``interpax`` caps ``jax<0.11``)
+- SAXS-2D: debounce selection spinbox and tune two-time splitter ratios
 - Two-time: preserve per-file q-bin selection across dataset switches
 - CI: fix smoke-test collection gap, ruff format drift, missing Qt system libraries in smoke-test job
+- pyproject.toml: fix ``Changelog`` project URL to point at ``CHANGELOG.md``
 
 Version 0.1.9 (2026-06-26)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
