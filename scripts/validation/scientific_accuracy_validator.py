@@ -337,8 +337,8 @@ class G2AccuracyValidator(AccuracyValidator):
         try:
             if "vectorized_g2_interpolation" in globals():
                 computed_g2 = vectorized_g2_interpolation(
-                    tau_values, reference_g2, tau_values
-                )
+                    tau_values, reference_g2.reshape(-1, 1), tau_values
+                ).reshape(-1)
             else:
                 # Fallback: use reference implementation as "optimized"
                 computed_g2 = reference_g2.copy()
@@ -469,10 +469,9 @@ class SAXSAccuracyValidator(AccuracyValidator):
 
         try:
             if "vectorized_q_binning" in globals():
-                _bin_counts, computed_I = vectorized_q_binning(
+                computed_q, computed_I, _bin_counts = vectorized_q_binning(
                     q_map.flatten(), image_2d.flatten(), q_bins[0], q_bins[-1], len(q_bins) - 1
                 )
-                computed_q = (q_bins[:-1] + q_bins[1:]) / 2.0
             else:
                 # Use reference implementation
                 computed_q, computed_I = reference_q.copy(), reference_I.copy()

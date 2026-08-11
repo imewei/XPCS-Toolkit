@@ -160,7 +160,6 @@ def validate_single_dataset(generator, scenario, bounds, verbose=False):
     try:
         # Generate synthetic data
         tau, _g2, g2_err, true_params = generator.generate_dataset(
-            model_type="single_exp",
             **{k: v for k, v in scenario.items() if k != "name"},
         )
 
@@ -252,7 +251,6 @@ def compare_with_standard_optimizer(generator, scenarios, bounds, n_samples=10):
             try:
                 # Generate data
                 tau, _g2, g2_err, true_params = generator.generate_dataset(
-                    model_type="single_exp",
                     **{k: v for k, v in scenario.items() if k != "name"},
                 )
 
