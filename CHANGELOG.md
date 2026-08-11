@@ -4,6 +4,25 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.1.10] - 2026-08-11
+
+### Added
+
+- Mask Editor: Open Raw File action with off-thread loading and status-bar error reporting
+- Mask Editor: APS 8-ID-I raw scattering-format reader stack (HDF5 loader, reader dispatch, NeXus metadata helpers, frame-range/parallel averaging)
+- Mask Editor: automatic beam center detection UI wired to kernel
+
+### Changed
+
+- Bump JAX requirement to 0.11, add `optimistix` dependency, update CUDA install flow
+- README: dynamic PyPI version badge
+
+### Fixed
+
+- Two-time: preserve per-file q-bin selection across dataset switches
+- CI: fix smoke-test collection gap, ruff format drift, missing Qt system libraries in smoke-test job
+- Tests: stub startup dialog prompt in GUI conftest fixture; prune redundant GPU migration test classes; restore missing `ViewerKernel` mock fixture attributes
+
 ## [0.1.9] - 2026-06-26
 
 ### Added

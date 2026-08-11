@@ -9,6 +9,14 @@ Recent Changes
 Unreleased
 ~~~~~~~~~~
 
+Version 0.1.10 (2026-08-11)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- Mask Editor: Open Raw File action, APS 8-ID-I raw reader stack, automatic beam center detection
+- Bump JAX requirement to 0.11, add ``optimistix`` dependency, update CUDA install flow
+- Two-time: preserve per-file q-bin selection across dataset switches
+- CI: fix smoke-test collection gap, ruff format drift, missing Qt system libraries in smoke-test job
+
 Version 0.1.9 (2026-06-26)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
