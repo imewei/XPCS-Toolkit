@@ -432,8 +432,15 @@ def gui_main_window(qapp, qtbot, mock_viewer_kernel):
     except ImportError:
         pass  # PyQtGraph not available
 
-    # Mock the initialization to avoid actual file system operations
-    with patch("xpcsviewer.xpcs_viewer.ViewerKernel") as mock_vk_class:
+    # Mock the initialization to avoid actual file system operations.
+    # Also stub out the startup dialog: it calls dialog.exec() (modal) and
+    # only skips itself when QT_QPA_PLATFORM is literally "offscreen", so it
+    # hangs the test under any other platform (e.g. xcb) until pytest's
+    # thread-based timeout fires mid-Qt-call.
+    with (
+        patch("xpcsviewer.xpcs_viewer.ViewerKernel") as mock_vk_class,
+        patch.object(XpcsViewer, "_maybe_prompt_start_path"),
+    ):
         mock_vk_class.return_value = mock_viewer_kernel
 
         # Create the main window
