@@ -480,7 +480,7 @@ def apply_all_layout_improvements(main_window: QWidget) -> None:
         "groupBox_2",  # G2 Fitting
         "groupBox_8",  # Two-time settings
         "groupBox_9",  # Two-time controls
-        "groupBox_5",  # Q-Map settings
+        "groupBox_5",  # Diffusion (Power Law Fitting) settings
         "groupBox_10",  # Average settings
     ]
 
@@ -523,8 +523,6 @@ def _apply_compact_density_to_sidebars(main_window: QWidget) -> None:
     sidebar_splitter_names = [
         "splitter_3",
         "splitter_2",
-        "widget_saxs2d_controls",
-        "widget_g2_controls",
     ]
 
     for name in sidebar_splitter_names:

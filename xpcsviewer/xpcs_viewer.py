@@ -225,6 +225,13 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         self._apply_button_styles()
         self.timer = QtCore.QTimer()
 
+        # Debounce SAXS-2D file-selection spinbox: each tick otherwise
+        # triggers a full image re-render + ROI recreation immediately.
+        self._saxs2d_selection_timer = QtCore.QTimer(self)
+        self._saxs2d_selection_timer.setSingleShot(True)
+        self._saxs2d_selection_timer.setInterval(120)
+        self._saxs2d_selection_timer.timeout.connect(self.plot_saxs_2d_selection)
+
         # Must be initialized before load_path() which checks it
         self._g2_batch_coordinator: object | None = None
 
@@ -316,7 +323,9 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
         self.btn_deselect.clicked.connect(self.clear_target_selection)
         self.list_view_target.doubleClicked.connect(self.show_dataset)
         self.btn_select_bkgfile.clicked.connect(self.select_bkgfile)
-        self.spinBox_saxs2d_selection.valueChanged.connect(self.plot_saxs_2d_selection)
+        self.spinBox_saxs2d_selection.valueChanged.connect(
+            lambda: self._saxs2d_selection_timer.start()
+        )
         self.comboBox_twotime_selection.currentIndexChanged.connect(
             self.on_twotime_q_selection_changed
         )
@@ -2212,6 +2221,10 @@ class XpcsViewer(QtWidgets.QMainWindow, Ui):
 
         # Set initial proportions (~25% left, ~75% right)
         self.splitter_2t_main.setSizes([250, 750])
+        self.splitter_2t_main.setStretchFactor(0, 1)
+        self.splitter_2t_main.setStretchFactor(1, 3)
+        self.splitter_2t_right.setStretchFactor(0, 3)
+        self.splitter_2t_right.setStretchFactor(1, 1)
 
         # Place new splitter at the same grid position as the old one
         self.gridLayout_33.addWidget(self.splitter_2t_main, 0, 0, 1, 1)

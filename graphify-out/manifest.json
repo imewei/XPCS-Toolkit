@@ -1,8 +1,8 @@
 {
   "docs/conf.py": {
-    "mtime": 1782495768.2600071,
-    "ast_hash": "181681f61eb68f23a48dae6aa9388110",
-    "semantic_hash": "181681f61eb68f23a48dae6aa9388110"
+    "mtime": 1786475566.6442018,
+    "ast_hash": "0d3a247557321a7c62c4883b15837f81",
+    "semantic_hash": "0d3a247557321a7c62c4883b15837f81"
   },
   "tests/__init__.py": {
     "mtime": 1767580306.4579997,
@@ -1030,9 +1030,9 @@
     "semantic_hash": "2d310b9eba606e5293ce6b40ec015b29"
   },
   "xpcsviewer/__init__.py": {
-    "mtime": 1782495767.3479917,
-    "ast_hash": "e6eb9804554ef4ba545e840f2ef75b71",
-    "semantic_hash": "e6eb9804554ef4ba545e840f2ef75b71"
+    "mtime": 1786475575.7133136,
+    "ast_hash": "c1136353837b509af79671d19622937e",
+    "semantic_hash": "c1136353837b509af79671d19622937e"
   },
   "xpcsviewer/backends/__init__.py": {
     "mtime": 1782448597.9706242,
@@ -1220,9 +1220,9 @@
     "semantic_hash": "c979f4dba4affe01d79b3b6c4a8f8b79"
   },
   "xpcsviewer/gui/layout_helpers.py": {
-    "mtime": 1782480353.713414,
-    "ast_hash": "06de024229689c05bd989047db9e8c18",
-    "semantic_hash": "06de024229689c05bd989047db9e8c18"
+    "mtime": 1786477500.9314373,
+    "ast_hash": "85b9c7029a7d0982c17a350b0df4e175",
+    "semantic_hash": "85b9c7029a7d0982c17a350b0df4e175"
   },
   "xpcsviewer/gui/qt_compat.py": {
     "mtime": 1771374322.8577592,
@@ -1640,9 +1640,9 @@
     "semantic_hash": "ce2c550d69ebf7e315ae87432c2a19ec"
   },
   "xpcsviewer/xpcs_viewer.py": {
-    "mtime": 1786374269.212159,
-    "ast_hash": "eb3ed228367871937c932bc6abf51a68",
-    "semantic_hash": "eb3ed228367871937c932bc6abf51a68"
+    "mtime": 1786477506.5314262,
+    "ast_hash": "34a706a3239f6b53a66e7bd943f757bc",
+    "semantic_hash": "34a706a3239f6b53a66e7bd943f757bc"
   },
   "docs/STRUCTURE.md": {
     "mtime": 1771833060.206535,
