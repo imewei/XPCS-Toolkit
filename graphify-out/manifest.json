@@ -51,8 +51,8 @@
   },
   "tests/benchmarks/performance/registry.json": {
     "mtime": 1768252293.5225883,
-    "ast_hash": "9a5ba559d60c8be0a28eed54130abc13",
-    "semantic_hash": "9a5ba559d60c8be0a28eed54130abc13"
+    "ast_hash": "",
+    "semantic_hash": ""
   },
   "tests/benchmarks/performance/rerun_baselines.sh": {
     "mtime": 1771568091.3916266,
@@ -1091,8 +1091,8 @@
   },
   "xpcsviewer/configure/aps_8idi.json": {
     "mtime": 1767580306.468,
-    "ast_hash": "3e9845b70c654a8589bca9de589269b5",
-    "semantic_hash": "3e9845b70c654a8589bca9de589269b5"
+    "ast_hash": "",
+    "semantic_hash": ""
   },
   "xpcsviewer/constants/__init__.py": {
     "mtime": 1767762001.819481,
@@ -1860,9 +1860,9 @@
     "semantic_hash": "f0887614f84bc5bae32a17d2b97f8aac"
   },
   "docs/history.rst": {
-    "mtime": 1782495785.8093026,
-    "ast_hash": "80ad34d911c61ee4757215f0fa9ea4d0",
-    "semantic_hash": "80ad34d911c61ee4757215f0fa9ea4d0"
+    "mtime": 1786475555.0420568,
+    "ast_hash": "9e0a9f96f2a1422bf16794a3d83101a5",
+    "semantic_hash": ""
   },
   "docs/how-to/examples.rst": {
     "mtime": 1771523143.8761404,
@@ -2070,39 +2070,39 @@
     "semantic_hash": "d53a038be8c299877bd6c4c40be71aec"
   },
   "docs/images/average.png": {
-    "mtime": 1771832402.3207579,
-    "ast_hash": "00fc5443f4f7c580f2ff5bc14c52eb98",
-    "semantic_hash": "00fc5443f4f7c580f2ff5bc14c52eb98"
+    "mtime": 1786482769.2364907,
+    "ast_hash": "0e9f19eadebac649ed581accb83d67af",
+    "semantic_hash": ""
   },
   "docs/images/diffusion.png": {
-    "mtime": 1771832401.7967489,
-    "ast_hash": "7015f85867899d5a3dbbc6453d94cb14",
-    "semantic_hash": "7015f85867899d5a3dbbc6453d94cb14"
+    "mtime": 1786482768.6904817,
+    "ast_hash": "2361ad39b2fd9374726be34c18321d86",
+    "semantic_hash": ""
   },
   "docs/images/g2_fit.png": {
-    "mtime": 1771832401.2297392,
-    "ast_hash": "1e2c12819c73a92aa2e69b87777100e8",
-    "semantic_hash": "1e2c12819c73a92aa2e69b87777100e8"
+    "mtime": 1786482768.0184703,
+    "ast_hash": "879fd843b28a3cbdc6857729818abf90",
+    "semantic_hash": ""
   },
   "docs/images/g2_map.png": {
-    "mtime": 1771832401.5047438,
-    "ast_hash": "288397ce01d71c934c4adeb00d53d52a",
-    "semantic_hash": "288397ce01d71c934c4adeb00d53d52a"
+    "mtime": 1786482768.293475,
+    "ast_hash": "2f88b438b6f3fdd82e698ee2e439a22b",
+    "semantic_hash": ""
   },
   "docs/images/g2mod.png": {
-    "mtime": 1771832400.9807348,
-    "ast_hash": "901558ab34303176a2eb08b1c4a35f31",
-    "semantic_hash": "901558ab34303176a2eb08b1c4a35f31"
+    "mtime": 1786482767.7424657,
+    "ast_hash": "f7f51c989d67957ca9c1f19002b6174e",
+    "semantic_hash": ""
   },
   "docs/images/hdf_info.png": {
-    "mtime": 1771832402.555762,
-    "ast_hash": "67a013c7f5743bbd3e5722ccb31f99a8",
-    "semantic_hash": "67a013c7f5743bbd3e5722ccb31f99a8"
+    "mtime": 1786482769.5034952,
+    "ast_hash": "dafd4ff77c0aaae7ad0b1d9676a36d31",
+    "semantic_hash": ""
   },
   "docs/images/intt.png": {
-    "mtime": 1771832400.7417307,
-    "ast_hash": "82abf0febc12d4e88e6cbccaac0eff87",
-    "semantic_hash": "82abf0febc12d4e88e6cbccaac0eff87"
+    "mtime": 1786482767.4794612,
+    "ast_hash": "b3a32d21c4ca97a1242e6a64f7f32e5c",
+    "semantic_hash": ""
   },
   "docs/images/qmap.png": {
     "mtime": 1771832406.641832,
@@ -2110,24 +2110,24 @@
     "semantic_hash": "d780a6da73de5382babba0eae693633c"
   },
   "docs/images/saxs1d.png": {
-    "mtime": 1771832400.2477221,
-    "ast_hash": "8de1d0ae1fe58c365ff154a36c070919",
-    "semantic_hash": "8de1d0ae1fe58c365ff154a36c070919"
+    "mtime": 1786482766.990453,
+    "ast_hash": "47398dcb9250f6635c63a60f02bd7ed3",
+    "semantic_hash": ""
   },
   "docs/images/saxs2d.png": {
-    "mtime": 1771832399.9977179,
-    "ast_hash": "5e6761760d58fc86351ce5b53a3f1c1d",
-    "semantic_hash": "5e6761760d58fc86351ce5b53a3f1c1d"
+    "mtime": 1786482766.7104483,
+    "ast_hash": "dcea0324e446ff17d13407203f7b6ca4",
+    "semantic_hash": ""
   },
   "docs/images/stability.png": {
-    "mtime": 1771832400.4987266,
-    "ast_hash": "0b448d99a12121f3f9cdcd3d75836889",
-    "semantic_hash": "0b448d99a12121f3f9cdcd3d75836889"
+    "mtime": 1786482767.2424574,
+    "ast_hash": "e2829b1becafb81cc535defac081c3c6",
+    "semantic_hash": ""
   },
   "docs/images/twotime.png": {
-    "mtime": 1771832402.0707536,
-    "ast_hash": "ca212a5b7b1761bb6179ee65114eeb70",
-    "semantic_hash": "ca212a5b7b1761bb6179ee65114eeb70"
+    "mtime": 1786482768.9644861,
+    "ast_hash": "26f67a8c20695ff1bf391b9fb8d55271",
+    "semantic_hash": ""
   },
   "tests/artifacts/offscreen_snap.png": {
     "mtime": 1765324520.8707776,
