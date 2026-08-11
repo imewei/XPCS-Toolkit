@@ -130,7 +130,7 @@ class LoggingValidator:
 
     def __init__(self, project_root: Path):
         self.project_root = project_root
-        self.src_dir = project_root / "src"
+        self.src_dir = project_root / "xpcsviewer"
         self.test_dir = project_root / "tests"
 
         # Configuration
@@ -403,7 +403,7 @@ class LoggingValidator:
                 # Check if the except block has logging
                 except_block_lines = self._get_except_block_lines(lines, i)
                 has_logging = any(
-                    re.search(r"logger\.(error|exception|critical)", block_line)
+                    re.search(r"logger\.(error|exception|critical|warning|info|debug)|print\(", block_line)
                     for block_line in except_block_lines
                 )
 

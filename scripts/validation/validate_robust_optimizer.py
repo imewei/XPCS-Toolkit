@@ -15,19 +15,70 @@ import sys
 import time
 from pathlib import Path
 
-# Add XPCS-Toolkit to Python path
-sys.path.insert(0, str(Path(__file__).parent.parent))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
-# ruff: noqa: E402
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.optimize import curve_fit
 
-from xpcsviewer.helper.fitting import (
-    RobustOptimizer,
-    SyntheticG2DataGenerator,
-    single_exp,
-)
+from xpcsviewer.fitting import robust_curve_fit, single_exp
+
+
+class RobustOptimizer:
+    """Robust multi-strategy curve fitter delegating to xpcsviewer.fitting."""
+
+    def __init__(self, performance_tracking: bool = False):
+        self.performance_tracking = performance_tracking
+
+    def robust_curve_fit(self, f, x, y, bounds=None, sigma=None, **kwargs):
+        popt, pcov = robust_curve_fit(f, x, y, bounds=bounds, sigma=sigma, **kwargs)
+        residuals = y - f(x, *popt)
+        ss_res = np.sum(residuals**2)
+        ss_tot = np.sum((y - np.mean(y)) ** 2)
+        r_squared = 1.0 - (ss_res / ss_tot) if ss_tot > 0 else 0.0
+        info = {"method": "robust_curve_fit", "r_squared": float(r_squared)}
+        return popt, pcov, info
+
+
+class SyntheticG2DataGenerator:
+    """Generator for synthetic G2 correlation data."""
+
+    def __init__(self, random_state: int = 42):
+        self.rng = np.random.default_rng(random_state)
+
+    def generate_dataset(
+        self,
+        _model_type: str = "single_exp",
+        tau_range: tuple[float, float] = (1e-5, 1e-2),
+        noise_level: float = 0.02,
+        n_points: int = 50,
+        outlier_fraction: float = 0.0,
+        systematic_error: bool = False,
+    ):
+        tau = np.logspace(np.log10(tau_range[0]), np.log10(tau_range[1]), n_points)
+        gamma_true = 2.0 / (tau_range[0] * 10)
+        baseline_true = 1.0
+        beta_true = 0.8
+
+        g2_clean = baseline_true + beta_true * np.exp(-gamma_true * tau)
+        noise = self.rng.normal(0, noise_level, size=n_points)
+        g2 = g2_clean + noise
+
+        if outlier_fraction > 0:
+            n_outliers = int(n_points * outlier_fraction)
+            outlier_idx = self.rng.choice(n_points, size=n_outliers, replace=False)
+            g2[outlier_idx] += self.rng.uniform(0.1, 0.5, size=n_outliers)
+
+        if systematic_error:
+            g2 += 0.02 * np.sin(np.linspace(0, 2 * np.pi, n_points))
+
+        g2_err = np.full(n_points, noise_level)
+        true_params = {
+            "gamma": gamma_true,
+            "baseline": baseline_true,
+            "beta": beta_true,
+        }
+        return tau, g2, g2_err, true_params
 
 
 def create_diverse_test_scenarios():

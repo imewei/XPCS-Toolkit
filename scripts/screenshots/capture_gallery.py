@@ -12,7 +12,7 @@ import sys
 import time
 from pathlib import Path
 
-from PySide6 import QtWidgets
+from qtpy import QtWidgets
 
 from xpcsviewer.xpcs_viewer import XpcsViewer
 

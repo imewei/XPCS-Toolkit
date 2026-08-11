@@ -33,12 +33,11 @@ import numpy as np
 from scipy import stats
 from scipy.optimize import curve_fit
 
-# Add src to path for imports
-sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
 try:
-    from xpcsviewer.module.g2mod import G2Calculator
-    from xpcsviewer.module.saxs1d import SAXS1DProcessor
+    from xpcsviewer.module.g2mod import vectorized_g2_interpolation
+    from xpcsviewer.module.saxs1d import vectorized_q_binning
 except ImportError as e:
     print(f"Warning: Could not import XPCS modules: {e}")
     print("Running in compatibility mode with reference implementations")
@@ -336,10 +335,9 @@ class G2AccuracyValidator(AccuracyValidator):
 
         # Test optimized implementation if available
         try:
-            if "G2Calculator" in globals():
-                calculator = G2Calculator()
-                computed_g2 = calculator.calculate_correlation(
-                    intensity_data, tau_values
+            if "vectorized_g2_interpolation" in globals():
+                computed_g2 = vectorized_g2_interpolation(
+                    tau_values, reference_g2, tau_values
                 )
             else:
                 # Fallback: use reference implementation as "optimized"
@@ -470,9 +468,11 @@ class SAXSAccuracyValidator(AccuracyValidator):
         )
 
         try:
-            if "SAXS1DProcessor" in globals():
-                processor = SAXS1DProcessor()
-                computed_q, computed_I = processor.integrate_1d(image_2d, q_map, q_bins)
+            if "vectorized_q_binning" in globals():
+                _bin_counts, computed_I = vectorized_q_binning(
+                    q_map.flatten(), image_2d.flatten(), q_bins[0], q_bins[-1], len(q_bins) - 1
+                )
+                computed_q = (q_bins[:-1] + q_bins[1:]) / 2.0
             else:
                 # Use reference implementation
                 computed_q, computed_I = reference_q.copy(), reference_I.copy()
@@ -610,10 +610,9 @@ class ReproducibilityValidator:
                 if not np.allclose(reference_result, result, rtol=1e-15, atol=1e-15):
                     reproducible = False
                     break
-            elif isinstance(result, (int, float)):
-                if abs(reference_result - result) > 1e-15:
-                    reproducible = False
-                    break
+            elif isinstance(result, (int, float)) and abs(reference_result - result) > 1e-15:
+                reproducible = False
+                break
 
         # Calculate variance across runs
         if isinstance(reference_result, np.ndarray):

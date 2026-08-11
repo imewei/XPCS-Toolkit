@@ -55,6 +55,7 @@ bandit_report.json
 .nlsq_cache/
 .ruff_cache/
 test-*/
+comprehensive_validation_results/*
 
 # Translations
 *.mo

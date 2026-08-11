@@ -12,7 +12,7 @@ import os
 import pathlib
 import sys
 
-from PySide6 import QtCore, QtWidgets
+from qtpy import QtCore, QtWidgets
 
 from xpcsviewer.xpcs_viewer import XpcsViewer
 
