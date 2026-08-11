@@ -163,9 +163,9 @@ xv-gui = "xpcsviewer.cli_main:main_gui"
 [project.urls]
 "Homepage" = "https://github.com/imewei/xpcsviewer"
 "Bug Tracker" = "https://github.com/imewei/xpcsviewer/issues"
-"Documentation" = "https://github.com/imewei/xpcsviewer/tree/master/docs"
+"Documentation" = "https://xpcsviwer.readthedocs.io"
 "Source Code" = "https://github.com/imewei/xpcsviewer"
-"Changelog" = "https://github.com/imewei/xpcsviewer/blob/master/HISTORY.rst"
+"Changelog" = "https://github.com/imewei/xpcsviewer/blob/master/CHANGELOG.md"
 
 [tool.uv]
 # Prefer uv-managed Python to guarantee reproducible environments

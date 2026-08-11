@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+
+- pyproject.toml: `Changelog` project URL pointed at nonexistent `HISTORY.rst`; now points to `CHANGELOG.md`
+
 ## [0.1.10] - 2026-08-11
 
 ### Added

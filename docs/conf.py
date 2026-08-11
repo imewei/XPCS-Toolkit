@@ -185,6 +185,7 @@ exclude_patterns = [
     "Thumbs.db",
     ".DS_Store",
     "plans",
+    "superpowers/**",
     "_includes/*",
     "STRUCTURE.md",
 ]
