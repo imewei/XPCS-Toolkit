@@ -2781,7 +2781,7 @@ wheels = [
 
 [[package]]
 name = "orbax-checkpoint"
-version = "0.12.2"
+version = "0.12.3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "absl-py" },
@@ -2801,9 +2801,9 @@ dependencies = [
     { name = "typing-extensions" },
     { name = "uvloop", marker = "sys_platform != 'win32'" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/8d/0b/f8fb6ab6828670c3deb1c20d5f4b4379add5d27c2eab2ead088a975df72a/orbax_checkpoint-0.12.2.tar.gz", hash = "sha256:36df86f8e4ac36ed3e63990222382f5d7c4a1a46e1c4bb134f1d515ce283d0b3", size = 743045, upload-time = "2026-08-03T21:51:16.957Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/6f/00/652ac433c53fb14569b1b707bf5c29750893c2b584283173dc8a54969446/orbax_checkpoint-0.12.3.tar.gz", hash = "sha256:46ed87a418b91924e620e170318c75c78a740ab7bb4715718132ef3a2afd23c8", size = 749314, upload-time = "2026-08-11T22:34:00.071Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/d9/9d/69b87c3898048815119e4f02343feb120239a9ab3ef5217bf0b50228a681/orbax_checkpoint-0.12.2-py3-none-any.whl", hash = "sha256:97d71b407e6381427a51d8653fff8a2ba6e825b1413ad1409aae07ef92c35fe8", size = 1361755, upload-time = "2026-08-03T21:51:15.131Z" },
+    { url = "https://files.pythonhosted.org/packages/e1/2a/129b868f66fd757aec5d62ff6aee6508a5d4fb73106f7040eafbb178c8fa/orbax_checkpoint-0.12.3-py3-none-any.whl", hash = "sha256:1c947a5eddc6601fdad2f127ba7a9f81409662c0faeb2c973c7b6a6b95d614ad", size = 1369508, upload-time = "2026-08-11T22:33:58.264Z" },
 ]
 
 [[package]]
@@ -4606,14 +4606,14 @@ wheels = [
 
 [[package]]
 name = "wheel"
-version = "0.47.0"
+version = "0.48.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "packaging" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/39/62/75f18a0f03b4219c456652c7780e4d749b929eb605c098ce3a5b6b6bc081/wheel-0.47.0.tar.gz", hash = "sha256:cc72bd1009ba0cf63922e28f94d9d83b920aa2bb28f798a31d0691b02fa3c9b3", size = 63854, upload-time = "2026-04-22T15:51:27.727Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/d0/20/50ed6bdf27dec98b568a8ae25dc599f35baa3d9709f9e83fd1edb56b9a90/wheel-0.48.0.tar.gz", hash = "sha256:94800765601e9171bf5d58d066e640662842bcedcbab982b2c90787a2c987322", size = 66471, upload-time = "2026-08-11T22:02:27.327Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/87/1b/9e33c09813d65e248f7f773119148a612516a4bea93e9c6f545f78455b7c/wheel-0.47.0-py3-none-any.whl", hash = "sha256:212281cab4dff978f6cedd499cd893e1f620791ca6ff7107cf270781e587eced", size = 32218, upload-time = "2026-04-22T15:51:26.296Z" },
+    { url = "https://files.pythonhosted.org/packages/2e/29/69cfbb602cd91690c55d38ba9fe53e6a7e76a6fa647bf38f19c138d25449/wheel-0.48.0-py3-none-any.whl", hash = "sha256:3217dcc807155e45db462d7ef2431f5ddda0d7273b700d05a67b271ceb1287ab", size = 33320, upload-time = "2026-08-11T22:02:26.1Z" },
 ]
 
 [[package]]
