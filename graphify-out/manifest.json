@@ -415,9 +415,9 @@
     "semantic_hash": "81937b91f5bf145bb73eb4f14ccfbe4c"
   },
   "tests/jax_migration/integration/test_gpu_launch.py": {
-    "mtime": 1782448597.9706242,
-    "ast_hash": "20954a46b85480b3922d36c24a2d1adf",
-    "semantic_hash": "20954a46b85480b3922d36c24a2d1adf"
+    "mtime": 1786470594.774325,
+    "ast_hash": "9f1908cec328320c93d40ac93e1f3a07",
+    "semantic_hash": "9f1908cec328320c93d40ac93e1f3a07"
   },
   "tests/jax_migration/integration/test_hdf5_jax_io.py": {
     "mtime": 1767762001.8154807,
@@ -440,9 +440,9 @@
     "semantic_hash": "cd59aab6b16e2e9ada43e36e222c26aa"
   },
   "tests/jax_migration/numerical/test_cpu_gpu_equivalence.py": {
-    "mtime": 1767762001.8164809,
-    "ast_hash": "59f2a54e918013edb3bae49a72679d40",
-    "semantic_hash": "59f2a54e918013edb3bae49a72679d40"
+    "mtime": 1786470812.0635855,
+    "ast_hash": "bc558914eeb5d68a5ef4d06666eead98",
+    "semantic_hash": "bc558914eeb5d68a5ef4d06666eead98"
   },
   "tests/jax_migration/numerical/test_fitting_equivalence.py": {
     "mtime": 1771715509.1521568,
