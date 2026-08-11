@@ -89,8 +89,8 @@ dependencies = [
     "scipy>=1.17",
     "pandas>=3.0",
     # JAX ecosystem
-    "jax>=0.8",  # interpax<=0.3.14 transitively caps jax<0.11
-    "jaxlib>=0.8",
+    "jax>=0.11",  # interpax<=0.3.14 declares jax<0.11; verified compatible in practice, overridden below
+    "jaxlib>=0.11",
     "interpax>=0.3",
     "optimistix>=0.1.0",
     # Bayesian inference
@@ -145,13 +145,13 @@ dependencies = [
 [project.optional-dependencies]
 gpu_cuda13 = [
     # CUDA 13 GPU support — versions must match jaxlib
-    "jax-cuda13-plugin>=0.8.0",
-    "jax-cuda13-pjrt>=0.8.0",
+    "jax-cuda13-plugin>=0.11.0",
+    "jax-cuda13-pjrt>=0.11.0",
 ]
 gpu_cuda12 = [
     # CUDA 12 GPU support — versions must match jaxlib
-    "jax-cuda12-plugin>=0.8.0",
-    "jax-cuda12-pjrt>=0.8.0",
+    "jax-cuda12-plugin>=0.11.0",
+    "jax-cuda12-pjrt>=0.11.0",
 ]
 
 [project.scripts]
@@ -174,6 +174,8 @@ python-preference = "managed"
 # but uvloop does not support Windows)
 override-dependencies = [
     "uvloop>=0.22.1; sys_platform != 'win32'",
+    # interpax<=0.3.14 declares jax<0.11; verified compatible with jax>=0.11 in practice
+    "jax>=0.11",
 ]
 
 [tool.setuptools_scm]

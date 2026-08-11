@@ -70,15 +70,6 @@ else
     RUN_CMD :=
 endif
 
-# GPU installation packages (system CUDA - uses -local suffix)
-ifeq ($(PLATFORM),linux)
-    JAX_GPU_CUDA13_PKG := "jax[cuda13-local]"
-    JAX_GPU_CUDA12_PKG := "jax[cuda12-local]"
-else
-    JAX_GPU_CUDA13_PKG :=
-    JAX_GPU_CUDA12_PKG :=
-endif
-
 # All JAX/CUDA packages that must be removed before a clean install
 JAX_ALL_PKGS := jax jaxlib jax-cuda12-plugin jax-cuda12-pjrt jax-cuda13-plugin jax-cuda13-pjrt
 
@@ -538,17 +529,20 @@ ifeq ($(PLATFORM),linux)
 	fi; \
 	echo "GPU: $$GPU_NAME (SM $$SM_DISPLAY) - compatible with CUDA $(CUDA_VER)"
 	@echo ""
-	@echo "Step 1/2: Removing all existing JAX/CUDA packages..."
+	@echo "Step 1/3: Removing all existing JAX/CUDA packages..."
 	@$(UNINSTALL_CMD) $(JAX_ALL_PKGS) 2>/dev/null || true
 	@echo ""
-	@echo "Step 2/2: Installing JAX with system CUDA $(CUDA_VER)..."
-	@echo "Command: $(INSTALL_CMD) $(JAX_PKG)"
-	@$(INSTALL_CMD) $(JAX_PKG)
+	@echo "Step 2/3: Restoring jax/jaxlib from project lockfile..."
+	@$(SYNC_CMD)
+	@echo ""
+	@echo "Step 3/3: Installing matching CUDA $(CUDA_VER) plugin (system CUDA)..."
+	@JAXLIB_VER=$$($(RUN_CMD) python -c "import jaxlib; print(jaxlib.__version__)"); \
+	echo "Command: $(INSTALL_CMD) jax-cuda$(CUDA_VER)-plugin==$$JAXLIB_VER jax-cuda$(CUDA_VER)-pjrt==$$JAXLIB_VER"; \
+	$(INSTALL_CMD) jax-cuda$(CUDA_VER)-plugin==$$JAXLIB_VER jax-cuda$(CUDA_VER)-pjrt==$$JAXLIB_VER
 	@echo ""
 	@$(MAKE) gpu-check
 	@echo ""
 	@echo "$(BOLD)$(GREEN)JAX GPU support installed successfully$(RESET)"
-	@echo "  Package: $(JAX_PKG)"
 	@echo "  Uses: System CUDA $(CUDA_VER).x installation"
 else
 	@echo "$(RED)Error: GPU acceleration only available on Linux$(RESET)"
@@ -574,9 +568,9 @@ ifeq ($(PLATFORM),linux)
 	echo "Detected system CUDA: $$CUDA_FULL (major: $$CUDA_VERSION)"; \
 	echo ""; \
 	if [ "$$CUDA_VERSION" = "13" ]; then \
-		$(MAKE) _jax-gpu-install CUDA_VER=13 MIN_SM=75 MIN_SM_DISP=7.5 JAX_PKG=$(JAX_GPU_CUDA13_PKG); \
+		$(MAKE) _jax-gpu-install CUDA_VER=13 MIN_SM=75 MIN_SM_DISP=7.5; \
 	elif [ "$$CUDA_VERSION" = "12" ]; then \
-		$(MAKE) _jax-gpu-install CUDA_VER=12 MIN_SM=52 MIN_SM_DISP=5.2 JAX_PKG=$(JAX_GPU_CUDA12_PKG); \
+		$(MAKE) _jax-gpu-install CUDA_VER=12 MIN_SM=52 MIN_SM_DISP=5.2; \
 	else \
 		echo "$(RED)Error: CUDA $$CUDA_VERSION not supported by JAX 0.8+$(RESET)"; \
 		echo "JAX requires CUDA 12.x or 13.x"; \
@@ -591,12 +585,12 @@ endif
 install-jax-gpu-cuda13:
 	@echo "$(BOLD)$(BLUE)Installing JAX with system CUDA 13...$(RESET)"
 	@echo "======================================"
-	@$(MAKE) _jax-gpu-install CUDA_VER=13 MIN_SM=75 MIN_SM_DISP=7.5 JAX_PKG=$(JAX_GPU_CUDA13_PKG)
+	@$(MAKE) _jax-gpu-install CUDA_VER=13 MIN_SM=75 MIN_SM_DISP=7.5
 
 install-jax-gpu-cuda12:
 	@echo "$(BOLD)$(BLUE)Installing JAX with system CUDA 12...$(RESET)"
 	@echo "======================================"
-	@$(MAKE) _jax-gpu-install CUDA_VER=12 MIN_SM=52 MIN_SM_DISP=5.2 JAX_PKG=$(JAX_GPU_CUDA12_PKG)
+	@$(MAKE) _jax-gpu-install CUDA_VER=12 MIN_SM=52 MIN_SM_DISP=5.2
 
 # GPU verification (backend + devices + SVD compute check)
 gpu-check:
